@@ -550,6 +550,8 @@
    * bugfix for SAC files containing null terminated strings
  - obspy.seg2:
    * bugfix in parsing starttime from seg2 header
+ - obspy.seisan:
+   * bugfix the actual data were misaligned by one
  - obspy.signal:
    * adding toolbox to calculate Time-Frequency Misfits
    * fixed bug in calculation of time derivatives

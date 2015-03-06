@@ -146,6 +146,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
+        KNOWN_FALSE = [
+            os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
+                         '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+        ]
         formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Collect all false positives.
@@ -174,7 +178,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
+                    if any([n in file for n in KNOWN_FALSE]):
+                        continue
                     if isFormat(file) is True:  # pragma: no cover
+                        print(file)
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
