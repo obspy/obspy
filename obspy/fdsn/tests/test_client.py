@@ -42,7 +42,7 @@ def failmsg(got, expected, ignore_lines=[]):
     For diffs, lines that contain any string given in ignore_lines will be
     excluded from the comparison.
     """
-    if isinstance(got, bytes) and isinstance(expected, bytes):
+    if isinstance(got, str) and isinstance(expected, str):
         got = [l for l in got.splitlines(True)
                if all([x not in l for x in ignore_lines])]
         expected = [l for l in expected.splitlines(True)
