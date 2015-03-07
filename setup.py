@@ -43,6 +43,13 @@ except:
            "before installing ObsPy.")
     raise ImportError(msg)
 
+try:
+    import matplotlib  # @UnusedImport # NOQA
+except:
+    msg = ("No module named matplotlib. Please install matplotlib first, it "
+           "is needed before installing ObsPy.")
+    raise ImportError(msg)
+
 import sys
 if sys.version_info[0] == 2:
     try:
