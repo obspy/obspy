@@ -23,7 +23,7 @@ from scipy.optimize import fminbound
 from obspy.signal.invsim import cosTaper
 
 
-def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
+def eigval(datax, datay, dataz, fk, normf=1.0):
     """
     Polarization attributes of a signal.
 
@@ -39,19 +39,19 @@ def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
     just the numerical differentiation by central differences (carried out by
     the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
-    :param data_x: Data of x component. Note this is most useful with
+    :param datax: Data of x component. Note this is most useful with
         windowed data, represented by a 2 dimensional array. First
         dimension is the window number, second dimension is the data.
-    :type data_x: :class:`~numpy.ndarray`
-    :param data_y: Data of y component. See description of data_x.
-    :type data_y: :class:`~numpy.ndarray`
-    :param data_z: Data of z component. See description of data_x.
-    :type data_z: :class:`~numpy.ndarray`
+    :type datax: :class:`~numpy.ndarray`
+    :param datay: Data of y component. See description of datax.
+    :type datay: :class:`~numpy.ndarray`
+    :param dataz: Data of z component. See description of datax.
+    :type dataz: :class:`~numpy.ndarray`
     :param fk: Coefficients of polynomial used to calculate the time
         derivatives.
     :type fk: list
-    :param norm_factor: Factor for normalization.
-    :type norm_factor: float
+    :param normf: Factor for normalization.
+    :type normf: float
     :return: **leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect,
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
@@ -59,27 +59,27 @@ def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
     """
     # The function is made for windowed data (two dimensional input).
     # However be nice and allow one dimensional input, see #919
-    data_x = np.atleast_2d(data_x)
-    data_y = np.atleast_2d(data_y)
-    data_z = np.atleast_2d(data_z)
+    datax = np.atleast_2d(datax)
+    datay = np.atleast_2d(datay)
+    dataz = np.atleast_2d(dataz)
     covmat = np.zeros([3, 3])
-    leigenv1 = np.zeros(data_x.shape[0], dtype=np.float64)
-    leigenv2 = np.zeros(data_x.shape[0], dtype=np.float64)
-    leigenv3 = np.zeros(data_x.shape[0], dtype=np.float64)
-    dleigenv = np.zeros([data_x.shape[0], 3], dtype=np.float64)
-    rect = np.zeros(data_x.shape[0], dtype=np.float64)
-    plan = np.zeros(data_x.shape[0], dtype=np.float64)
+    leigenv1 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv2 = np.zeros(datax.shape[0], dtype=np.float64)
+    leigenv3 = np.zeros(datax.shape[0], dtype=np.float64)
+    dleigenv = np.zeros([datax.shape[0], 3], dtype=np.float64)
+    rect = np.zeros(datax.shape[0], dtype=np.float64)
+    plan = np.zeros(datax.shape[0], dtype=np.float64)
     i = 0
-    for i in range(data_x.shape[0]):
-        covmat[0][0] = np.cov(data_x[i, :], rowvar=False)
-        covmat[0][1] = covmat[1][0] = np.cov(data_x[i, :], data_y[i, :],
+    for i in range(datax.shape[0]):
+        covmat[0][0] = np.cov(datax[i, :], rowvar=False)
+        covmat[0][1] = covmat[1][0] = np.cov(datax[i, :], datay[i, :],
                                              rowvar=False)[0, 1]
-        covmat[0][2] = covmat[2][0] = np.cov(data_x[i, :], data_z[i, :],
+        covmat[0][2] = covmat[2][0] = np.cov(datax[i, :], dataz[i, :],
                                              rowvar=False)[0, 1]
-        covmat[1][1] = np.cov(data_y[i, :], rowvar=False)
-        covmat[1][2] = covmat[2][1] = np.cov(data_z[i, :], data_y[i, :],
+        covmat[1][1] = np.cov(datay[i, :], rowvar=False)
+        covmat[1][2] = covmat[2][1] = np.cov(dataz[i, :], datay[i, :],
                                              rowvar=False)[0, 1]
-        covmat[2][2] = np.cov(data_z[i, :], rowvar=False)
+        covmat[2][2] = np.cov(dataz[i, :], rowvar=False)
         _eigvec, eigenval, _v = (np.linalg.svd(covmat))
         eigenv = np.sort(eigenval)
         leigenv1[i] = eigenv[0]
@@ -87,9 +87,9 @@ def eigval(data_x, data_y, data_z, fk, norm_factor=1.0):
         leigenv3[i] = eigenv[2]
         rect[i] = 1 - ((eigenv[1] + eigenv[0]) / (2 * eigenv[2]))
         plan[i] = 1 - ((2 * eigenv[0]) / (eigenv[1] + eigenv[2]))
-    leigenv1 = leigenv1 / norm_factor
-    leigenv2 = leigenv2 / norm_factor
-    leigenv3 = leigenv3 / norm_factor
+    leigenv1 = leigenv1 / normf
+    leigenv2 = leigenv2 / normf
+    leigenv3 = leigenv3 / normf
 
     leigenv1_add = np.append(np.append([leigenv1[0]] * (np.size(fk) // 2),
                                        leigenv1),
