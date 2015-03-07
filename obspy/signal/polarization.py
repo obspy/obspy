@@ -535,7 +535,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         raise ValueError(msg)
 
     npt = len(res[:, 0])
-    npt /= 2
+    npt //= 2
 
     if method == "pm":
         return {
