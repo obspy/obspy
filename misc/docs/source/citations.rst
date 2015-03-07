@@ -41,6 +41,10 @@ Citations
        | **A proposed basis for geographical and seismic regionalization**,
        | *Reviews of Geophysics*, 3 (1), 123-149.
        | http://dx.doi.org/10.1029/RG003i001p00123
+   * - .. [Flinn1965b]  
+     - | Flinn, E. A. (1965),
+       | **Signal analysis using rectilinearity and direction of particle motion**,
+       | *Proceedings of the IEEE*, 53 (12), 1874-1876.
    * - .. [Flinn1974]
      - | Flinn, E. A., Engdahl, E. R., and Hill, A. R. (1974),
        | **Seismic and Geographical Regionalization**,
@@ -139,6 +143,10 @@ Citations
      - | Tsuboi, S., Tromp, J., and Komatitsch, D. (2004),
        | **An XML-SEED Format for the Exchange of Synthetic Seismograms**,
        | *AGU Fall Meeting Abstracts*, B3.
+   * - .. [Vidale1986]  
+     - | Vidale, J. E. (1986),
+       | **Complex polarization analysis of particle motion**,
+       | *Bulletin of the Seismological Society of America*, 76 (5), 1393-1405.
    * - .. [Wiemer2001]
      - | Wiemer, S. (2001),
        | **A software package to analyze seismicity: ZMAP**,

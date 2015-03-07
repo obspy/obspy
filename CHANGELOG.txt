@@ -122,6 +122,7 @@
      frequency (see #804)
    * PPSD: water level in instrument correction can now be specified by user
      on PPSD initialization
+   * New polarization analysis methods: flinn, vidale, pm
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
