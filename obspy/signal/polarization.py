@@ -131,26 +131,23 @@ def flinn(stream, noise_thres=0):
     eigenstructure decomposition method of [Flinn1965b]_.
 
     :param stream: ZNE sorted trace data
-    :type stream: :class:`~obspy.core.stream.Stream`
+    :type stream: List of ZNE sorted numpy arrays
     :param noise_tresh: Variance of the noise sphere; data points are excluded
         when falling within the sphere of radius sqrt(noise_thres),
         default is set to 0.
     :type noise_thres: float
     :returns:  azimuth, incidence, rectilinearity, and planarity
     """
-    Z = []
-    N = []
-    E = []
-    comp, npts = np.shape(stream)
+    mask = (stream[0][:] ** 2 + stream[1][:] ** 2 + stream[2][:] ** 2
+            ) > noise_thres
+    X = np.zeros((3, mask.sum()), dtype=np.float64)
+    # East
+    X[0, :] = stream[2][mask]
+    # North
+    X[1, :] = stream[1][mask]
+    # Z
+    X[2, :] = stream[0][mask]
 
-    for i in range(0, npts):
-        if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
-                > noise_thres:
-            Z.append(stream[0][i])
-            N.append(stream[1][i])
-            E.append(stream[2][i])
-
-    X = np.vstack((E, N, Z))
     covmat = np.cov(X)
     eigvec, eigenval, v = np.linalg.svd(covmat)
     # Rectilinearity defined after Montalbetti & Kanasewich, 1970
