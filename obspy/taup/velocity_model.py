@@ -31,30 +31,30 @@ class VelocityModel(object):
         :type modelName: str
         :param modelName: name of the velocity model.
         :type radiusOfEarth: float
-        :param radiusOfEarth: reference radius (km), usually radius of
-            the earth.
+        :param radiusOfEarth: reference radius (km), usually radius of the
+            Earth.
         :type mohoDepth: float
-        :param mohoDepth: Depth (km) of the moho. It can be input from
-            velocity model (*.nd) or should be explicitly set. By
-            default it is 35 kilometers (from Iasp91).  For phase
-            naming, the tau model will choose the closest 1st order
-            discontinuity. Thus for most simple earth models these
-            values are satisfactory. Take proper care if your model
-            has a thicker crust and a discontinuity near 35 km depth.
+        :param mohoDepth: Depth (km) of the Moho. It can be input from
+            velocity model (``*.nd``) or should be explicitly set. By default
+            it is 35 kilometers (from IASP91).  For phase naming, the tau model
+            will choose the closest first order discontinuity. Thus for most
+            simple Earth models these values are satisfactory. Take proper care
+            if your model has a thicker crust and a discontinuity near 35 km
+            depth.
         :type cmbDepth: float
-        :param cmbDepth: Depth (km) of the cmb (core mantle
-            boundary). It can be input from velocity model (*.nd) or
-            should be explicitly set. By default it is 2889 kilometers
-            (from Iasp91). For phase naming, the tau model will choose
-            the closest 1st order discontinuity. Thus for most simpleearth
-            models these values are satisfactory.
+        :param cmbDepth: Depth (km) of the CMB (core mantle boundary). It can
+            be input from velocity model (``*.nd``) or should be explicitly
+            set. By default it is 2889 kilometers (from IASP91). For phase
+            naming, the tau model will choose the closest 1st order
+            discontinuity. Thus for most simple Earth models these values are
+            satisfactory.
         :type iocbDepth: float
-        :param iocbDepth: Depth (km) of the iocb (inner core outer
-            core boundary). It can be input from velocity model (*.nd)
-            or should be explicitly set. By default it is 5153.9
-            kilometers (from Iasp91).  For phase naming, the tau model
-            will choose the closest 1st order discontinuity. Thus for
-            most simple earth models these values are satisfactory.
+        :param iocbDepth: Depth (km) of the IOCB (inner core-outer core
+            boundary). It can be input from velocity model (``*.nd``) or should
+            be explicitly set. By default it is 5153.9 kilometers (from
+            IASP91). For phase naming, the tau model will choose the closest
+            first order discontinuity. Thus for most simple Earth models these
+            values are satisfactory.
         :type minRadius: float
         :param minRadius: Minimum radius of the model (km).
         :type maxRadius: float

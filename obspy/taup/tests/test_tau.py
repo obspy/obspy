@@ -74,7 +74,7 @@ class TauPyModelTestCase(unittest.TestCase):
         # Zero travel time result in the other parameters being undefined.
         if arr.time == 0.0:
             return
-        self.assertEqual(arr.get_modulo_dist_deg(), expected_arr["distance"])
+        self.assertEqual(arr.distance, expected_arr["distance"])
         self.assertEqual(arr.source_depth, expected_arr["depth"])
         self.assertEqual(arr.name, expected_arr["name"])
         self.assertAlmostEqual(arr.time, expected_arr["time"], 2)
