@@ -220,7 +220,8 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param etime: end time for the analysis
     :type etime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :returns: azimuth, incidence, rectilinearity planarity, and ellipticity
+    :returns: list of tuples containing azimuth, incidence, rectilinearity,
+        planarity, and ellipticity
     """
     W = 3.0
     # sort for ZNE
@@ -308,8 +309,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         if azimuth > 180.0:
             azimuth -= 180.0
 
-        res.append(np.array([newstart.timestamp, azimuth, incidence, rect,
-                             plan, ellip]))
+        res.append((newstart.timestamp, azimuth, incidence, rect, plan, ellip))
         offset += 1
 
     return res
