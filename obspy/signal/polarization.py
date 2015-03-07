@@ -43,9 +43,9 @@ def eigval(datax, datay, dataz, fk, normf=1.0):
         windowed data, represented by a 2 dimensional array. First
         dimension is the window number, second dimension is the data.
     :type datax: :class:`~numpy.ndarray`
-    :param datay: Data of y component. See description of datax.
+    :param datay: Data of y component. See description of ``datax``.
     :type datay: :class:`~numpy.ndarray`
-    :param dataz: Data of z component. See description of datax.
+    :param dataz: Data of z component. See description of ``datax``.
     :type dataz: :class:`~numpy.ndarray`
     :param fk: Coefficients of polynomial used to calculate the time
         derivatives.
@@ -133,7 +133,7 @@ def flinn(stream, noise_thres=0):
     :param stream: ZNE sorted trace data
     :type stream: :class:`~obspy.core.stream.Stream`
     :param noise_tresh: Variance of the noise sphere; data points are excluded
-        when falling within the sphere with radius sqrt(noise_thres),
+        when falling within the sphere of radius sqrt(noise_thres),
         default is set to 0.
     :type noise_thres: float
     :returns:  azimuth, incidence, rectilinearity, and planarity
@@ -152,7 +152,7 @@ def flinn(stream, noise_thres=0):
 
     X = np.vstack((E, N, Z))
     covmat = np.cov(X)
-    eigvec, eigenval, v = (np.linalg.svd(covmat))
+    eigvec, eigenval, v = np.linalg.svd(covmat)
     # Rectilinearity defined after Montalbetti & Kanasewich, 1970
     rect = 1.0 - np.sqrt(eigenval[1] / eigenval[0])
     # Planarity defined after Jurkevics, 1988
@@ -186,8 +186,7 @@ def instantaneous_frequency(data, sampling_rate):
     :param sampling_rate: The sampling rate in Hz.
     :type sampling_rate: float
     """
-    x = data.copy()
-    X = signal.hilbert(x)
+    X = signal.hilbert(data)
     DX = np.gradient(X) * sampling_rate
 
     instf = (X.real * DX.imag - X.imag * DX.real) / \
@@ -203,10 +202,10 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     instantaneous frequency. It returns the azimuth, incidence, rectilinearity
     planarity and ellipticity.
 
-    :param stream: ZNE sorted trace data
+    :param stream: ZNE containing trace data
     :type stream: :class:`~obspy.core.stream.Stream`
     :param noise_thres: Variance of the noise sphere; data points are excluded
-        when falling within the sphere with radius sqrt(noise_thres),
+        when falling within the sphere of radius sqrt(noise_thres),
         Default = 0
     :type noise_thres: float
     :param fs: sampling rate
@@ -215,7 +214,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :type flow: float
     :param fhigh: upper frequency limit for analysis
     :type fhigh: float
-    :param spoint: array with traces` individual start times in sample
+    :param spoint: array with traces individual start times in sample
     :type spoint: :class:`numpy.ndarray`
     :param stime: start time of the analysis
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -224,10 +223,11 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :returns: azimuth, incidence, rectilinearity planarity, and ellipticity
     """
     W = 3.0
+    # sort for ZNE
     stream.sort(reverse=True)
-    Z = stream[0].data.copy()
-    N = stream[1].data.copy()
-    E = stream[2].data.copy()
+    Z = stream[0].data
+    N = stream[1].data
+    E = stream[2].data
 
     Zi = instantaneous_frequency(Z, fs)
     Za = signal.hilbert(Z)
@@ -238,6 +238,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     res = []
 
     offset = int(3 * fs / flow)
+    covmat = np.zeros([3, 3], dtype=np.complex128)
     while True:
         adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
         # in order to account for errors in the inst freq estimation
@@ -245,7 +246,8 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
             adapt = int(3 * fs / flow)
         if adapt < int(3 * fs / fhigh):
             adapt = int(3 * fs / fhigh)
-        adapt /= 2
+        # XXX: was adapt /= 2
+        adapt //= 2
         adapt = (2 * adapt) + 1
         newstart = stime + offset / fs
         if (newstart + (adapt / 2) / fs) > etime:
@@ -261,8 +263,6 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         Nx -= Nx.mean()
         Ex -= Ex.mean()
 
-        covmat = np.zeros([3, 3], dtype=np.complex128)
-
         covmat[0][0] = np.dot(Ex, Ex.conjugate())
         covmat[0][1] = np.dot(Ex, Nx.conjugate())
         covmat[1][0] = covmat[0][1].conjugate()
@@ -273,8 +273,9 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         covmat[2][1] = covmat[1][2].conjugate()
         covmat[2][2] = np.dot(Zx, Zx.conjugate())
 
-        eigvec, eigenval, v = (np.linalg.svd(covmat))
+        eigvec, eigenval, v = np.linalg.svd(covmat)
 
+        # very similar to function flinn, possible could be unified
         def fun(x):
             return 1. - math.sqrt(
                 ((eigvec[0][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 +
@@ -322,7 +323,7 @@ def particle_motion_odr(stream, noise_thres=0):
     :param stream: ZNE sorted trace data
     :type stream: :class:`~obspy.core.stream.Stream`
     :param noise_tres: variance of the noise sphere; data points are excluded
-        when falling within the sphere with radius sqrt(noise_thres)
+        when falling within the sphere of radius sqrt(noise_thres)
     :type noise_thres: float
     :returns: azimuth, incidence, error of azimuth, error of incidence
     """
@@ -339,7 +340,7 @@ def particle_motion_odr(stream, noise_thres=0):
             E.append(stream[2][i])
 
     def fit_func(beta, x):
-        # Eventually this is correct: return beta[0] * x + beta[1]
+        # XXX: Eventually this is correct: return beta[0] * x + beta[1]
         return beta[0] * x
 
     data = scipy.odr.Data(E, N)
@@ -354,7 +355,7 @@ def particle_motion_odr(stream, noise_thres=0):
     Z = np.asarray(Z)
     R = np.sqrt(N ** 2 + E ** 2)
 
-    data = scipy.odr.Data(R, np.sqrt(Z ** 2))
+    data = scipy.odr.Data(R, abs(Z))
     model = scipy.odr.Model(fit_func)
     odr = scipy.odr.ODR(data, model, beta0=[1.0])
     out = odr.run()
@@ -369,7 +370,7 @@ def particle_motion_odr(stream, noise_thres=0):
     return math.degrees(azim), math.degrees(inc), az_error, in_error
 
 
-def get_s_point(stream, stime, etime):
+def _get_s_point(stream, stime, etime):
     """
     Function for computing the trace dependent start time in samples
 
@@ -388,28 +389,28 @@ def get_s_point(stream, stime, etime):
             eearliest = tr.stats.endtime
 
     nostat = len(stream)
-    spoint = np.empty(nostat, dtype=np.int32, order="C")
-    epoint = np.empty(nostat, dtype=np.int32, order="C")
+    spoint = np.empty(nostat, dtype=np.int32)
+    epoint = np.empty(nostat, dtype=np.int32)
     # now we have to adjust to the beginning of real start time
     if slatest > stime:
-        msg = "Specified start-time is smaller than starttime in stream"
+        msg = "Specified start time is smaller than start time in stream"
         raise ValueError(msg)
     if eearliest < etime:
-        msg = "Specified end-time bigger is than endtime in stream"
+        msg = "Specified end time is later than end time in stream"
         raise ValueError(msg)
     for i in range(nostat):
         offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
         negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
         diffstart = slatest - stream[i].stats.starttime
-        frac, ddummy = math.modf(diffstart)
-        spoint[i] = int(ddummy)
+        frac, _ = math.modf(diffstart)
+        spoint[i] = int(diffstart)
         if frac > stream[i].stats.delta * 0.25:
-            msg = "Difference in start times exceeds 25% of samp rate"
+            msg = "Difference in start times exceeds 25% of sampling rate"
             warnings.warn(msg)
         spoint[i] += offset
         diffend = stream[i].stats.endtime - eearliest
-        frac, ddummy = math.modf(diffend)
-        epoint[i] = int(ddummy)
+        frac, _ = math.modf(diffend)
+        epoint[i] = int(diffend)
         epoint[i] += negoffset
 
     return spoint, epoint
@@ -471,9 +472,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
     # offset of arrays
-    spoint, _epoint = get_s_point(stream, stime, etime)
-    # loop with a sliding window over the dat trace array and apply bbfk
-    fs = stream[0].stats.sampling_rate
+    spoint, _epoint = _get_s_point(stream, stime, etime)
     if method.lower() == "vidale":
         res = vidale_adapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
                            stime, etime)
@@ -481,7 +480,6 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         nsamp = int(win_len * fs)
         nstep = int(nsamp * win_frac)
         newstart = stime
-        # 0.22 matches 0.2 of historical C bbfk.c
         tap = cosTaper(nsamp, p=0.22)
         offset = 0
         while (newstart + (nsamp + nstep) / fs) < etime:
@@ -520,14 +518,17 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                                      incidence, reclin, plan]))
 
             if verbose:
-                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+                print(newstart, newstart + nsamp / fs, res[-1][1:])
             offset += nstep
 
             newstart += nstep / fs
     res = np.array(res)
+    # XXX: not used for any return
     if timestamp == "julsec":
         pass
     elif timestamp == "mlabday":
+        # XXX: most probably wrong, see corresponding code
+        # in array_analysis.
         # 719162 == hours between 1970 and 0001
         res[:, 0] = res[:, 0] / (24. * 3600) + 719162
     else:
@@ -537,14 +538,14 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     npt = len(res[:, 0])
     npt //= 2
 
-    if method == "pm":
+    if method.lower() == "pm":
         return {
             "azimuth": res[npt, 1],
             "incidence": res[npt, 2],
             "azimuth_error": res[npt, 3],
             "incidence_error": res[npt, 4]
         }
-    elif method == "vidale":
+    elif method.lower() == "vidale":
         return {
             "azimuth": res[npt, 1],
             "incidence": res[npt, 2],
@@ -552,7 +553,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
             "planarity": res[npt, 4],
             "ellipticity": res[npt, 5]
         }
-    elif method == "flinn":
+    elif method.lower() == "flinn":
         return {
             "azimuth": res[npt, 1],
             "incidence": res[npt, 2],
