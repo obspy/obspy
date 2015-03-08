@@ -18,6 +18,13 @@ from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
                              evaluateVelocityAtTop)
 
 
+def _fixCriticalDepths(criticalDepths, layerNum, isPWave):
+    name = 'pLayerNum' if isPWave else 'sLayerNum'
+
+    mask = criticalDepths[name] > layerNum
+    criticalDepths[name][mask] += 1
+
+
 class SlownessModel(object):
     """
     This class provides storage and methods for generating slowness-depth
@@ -1426,16 +1433,16 @@ class SlownessModel(object):
             outLayers = np.insert(outLayers, layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
             outCriticalDepths = self.criticalDepths
-            self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
+            _fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
             if isPWave:
                 outPLayers = outLayers
-                outSLayers = self.fixOtherLayers(self.SLayers, p, sLayer,
-                                                 topLayer, botLayer,
-                                                 outCriticalDepths, False)
+                outSLayers = self._fixOtherLayers(self.SLayers, p, sLayer,
+                                                  topLayer, botLayer,
+                                                  outCriticalDepths, False)
             else:
-                outPLayers = self.fixOtherLayers(self.PLayers, p, sLayer,
-                                                 topLayer, botLayer,
-                                                 outCriticalDepths, True)
+                outPLayers = self._fixOtherLayers(self.PLayers, p, sLayer,
+                                                  topLayer, botLayer,
+                                                  outCriticalDepths, True)
                 outSLayers = outLayers
             out = self
             out.criticalDepths = outCriticalDepths
@@ -1443,15 +1450,8 @@ class SlownessModel(object):
             out.SLayers = outSLayers
             return SplitLayerInfo(out, True, False, p)
 
-    @staticmethod
-    def fixCriticalDepths(criticalDepths, layerNum, isPWave):
-        name = 'pLayerNum' if isPWave else 'sLayerNum'
-
-        mask = criticalDepths[name] > layerNum
-        criticalDepths[name][mask] += 1
-
-    def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
-                       newBotLayer, criticalDepths, isPWave):
+    def _fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
+                        newBotLayer, criticalDepths, isPWave):
         out = otherLayers
         # Make sure to keep sampling consistent. If in a fluid, both wave
         # types will share a single slowness layer.
@@ -1475,8 +1475,7 @@ class SlownessModel(object):
                 out[otherLayerNum] = botLayer
                 out = np.insert(out, otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
-                self.fixCriticalDepths(criticalDepths, otherLayerNum,
-                                       not isPWave)
+                _fixCriticalDepths(criticalDepths, otherLayerNum, not isPWave)
                 # Skip next layer as it was just added: achieved by slicing
                 # the list iterator.
 
