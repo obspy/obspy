@@ -301,24 +301,14 @@ class VelocityModel(object):
         Raises exception if the type of file cannot be determined.
         .nd files are not currently supported!
         """
-        # filename formatting
         if filename.endswith(".nd"):
-            fileType = ".nd"
+            raise NotImplementedError(".nd files are not currently supported. "
+                                      "Sorry.")
         elif filename.endswith(".tvel"):
-            fileType = ".tvel"
+            vMod = cls.readTVelFile(filename)
         else:
             raise ValueError("File type could not be determined, please "
                              "rename your file to end with .tvel or .nd")
-        fileType = fileType[1:]
-
-        # the actual reading of the velocity file
-        if fileType.lower() == "nd":
-            raise NotImplementedError(".nd files are not curently supported. "
-                                      "Sorry.")
-        elif fileType.lower() == "tvel":
-            vMod = cls.readTVelFile(filename)
-        else:
-            raise ValueError("File type invalid")
 
         vMod.fixDisconDepths()
         return vMod
