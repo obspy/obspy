@@ -338,7 +338,7 @@ class SlownessModel(object):
                     print("layer contains the bottom of a P " +
                           "high slowness zone. minPSoFar=" + str(minPSoFar),
                           currPLayer)
-                highSlownessZoneP.botDepth = self.findDepth(
+                highSlownessZoneP.botDepth = self.findDepth_from_layers(
                     minPSoFar, layerNum, layerNum, self.PWAVE)
                 self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                 inHighSlownessZoneP = False
@@ -353,7 +353,7 @@ class SlownessModel(object):
                 # in fluid layers we want to check PWAVE structure
                 # when looking for S wave critical points
                 porS = (self.PWAVE if currSLayer == currPLayer else self.SWAVE)
-                highSlownessZoneS.botDepth = self.findDepth(
+                highSlownessZoneS.botDepth = self.findDepth_from_layers(
                     minSSoFar, layerNum, layerNum, porS)
                 self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                 inHighSlownessZoneS = False
@@ -420,15 +420,18 @@ class SlownessModel(object):
     def findDepth_from_depths(self, ray_param, topDepth, botDepth, isPWave):
         """
         Finds a depth corresponding to a slowness between two given depths
-        in the Velocity Model by calling findDepth with layer numbers.
+        in the Velocity Model by calling findDepth_from_layers with layer
+        numbers.
         """
-        topLayerNum = self.vMod.layerNumberBelow(topDepth)
-        if self.vMod.layers[topLayerNum].botDepth == topDepth:
+        topLayerNum = self.vMod.layerNumberBelow(topDepth)[0]
+        if self.vMod.layers[topLayerNum]['botDepth'] == topDepth:
             topLayerNum += 1
-        botLayerNum = self.vMod.layerNumberAbove(botDepth)
-        return self.findDepth(ray_param, topLayerNum, botLayerNum, isPWave)
+        botLayerNum = self.vMod.layerNumberAbove(botDepth)[0]
+        return self.findDepth_from_layers(ray_param, topLayerNum, botLayerNum,
+                                          isPWave)
 
-    def findDepth(self, p, topCriticalLayer, botCriticalLayer, isPWave):
+    def findDepth_from_layers(self, p, topCriticalLayer, botCriticalLayer,
+                              isPWave):
         """
         Finds a depth corresponding to a slowness p (here defined as (
         6731-depth) / velocity, and sometimes called ray parameter)  between
@@ -451,19 +454,6 @@ class SlownessModel(object):
         # topP = 1.1e300  # dummy numbers
         # botP = 1.1e300
         waveType = 'P' if isPWave else 'S'
-
-        # top/botCriticalLayer are meant to be layer numbers. Some methods call
-        # this one with the relevant depths instead, which will be a float. So
-        # can check if that's the case and convert to layer numbers (Java
-        # version uses method overloading).
-        if not isinstance(topCriticalLayer,
-                          int) or not isinstance(botCriticalLayer, int):
-            topDepth = topCriticalLayer
-            botDepth = botCriticalLayer
-            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)[0]
-            if self.vMod.layers[topCriticalLayer]['botDepth'] == topDepth:
-                topCriticalLayer += 1
-            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)[0]
 
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(

@@ -850,15 +850,17 @@ class SeismicPhase(object):
             else:
                 if (isPWave or self.tMod.sMod.depthInFluid((
                         tauBranch.topDepth + tauBranch.botDepth) / 2)):
-                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
-                                                         tauBranch.topDepth,
-                                                         tauBranch.botDepth,
-                                                         True)
+                    turnDepth = self.tMod.sMod.findDepth_from_depths(
+                        distRayParam,
+                        tauBranch.topDepth,
+                        tauBranch.botDepth,
+                        True)
                 else:
-                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
-                                                         tauBranch.topDepth,
-                                                         tauBranch.botDepth,
-                                                         isPWave)
+                    turnDepth = self.tMod.sMod.findDepth_from_depths(
+                        distRayParam,
+                        tauBranch.topDepth,
+                        tauBranch.botDepth,
+                        isPWave)
 
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
