@@ -207,11 +207,11 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :type noise_thres: float
     :param fs: sampling rate
     :type fs: float
-    :param flow: lower frequency for analysis
+    :param flow: lower frequency limit for analysis
     :type flow: float
     :param fhigh: upper frequency limit for analysis
     :type fhigh: float
-    :param spoint: array with traces individual start times in sample
+    :param spoint: array with traces' individual start times in samples
     :type spoint: :class:`numpy.ndarray`
     :param stime: start time of the analysis
     :type stime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -390,10 +390,10 @@ def _get_s_point(stream, stime, etime):
     epoint = np.empty(nostat, dtype=np.int32)
     # now we have to adjust to the beginning of real start time
     if slatest > stime:
-        msg = "Specified start time is smaller than start time in stream"
+        msg = "Specified start time is before latest start time in stream"
         raise ValueError(msg)
     if eearliest < etime:
-        msg = "Specified end time is later than end time in stream"
+        msg = "Specified end time is after earliest end time in stream"
         raise ValueError(msg)
     for i in range(nostat):
         offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
@@ -524,10 +524,8 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     if timestamp == "julsec":
         pass
     elif timestamp == "mlabday":
-        # XXX: most probably wrong, see corresponding code
-        # in array_analysis.
-        # 719162 == hours between 1970 and 0001
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+        # 719163 == hours between 1970 and 0001 + 1
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
