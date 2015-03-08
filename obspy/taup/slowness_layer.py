@@ -15,11 +15,31 @@ from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
 
 def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     """
-    Calculates the time and distance (in radians) increments accumulated
-    by a ray of spherical ray parameter p when passing through this
-    layer. Note that this gives 1/2 of the true range and time
-    increments since there will be both an upgoing and a downgoing path.
-    Here we use the Mohorovicic or Bullen law: p=A*r^B"""
+    Calculate time and distance increments of a spherical ray.
+
+    The time and distance (in radians) increments accumulated by a ray of
+    spherical ray parameter p when passing through this layer. Note that this
+    gives half of the true range and time increments since there will be both
+    an upgoing and a downgoing path. Here we use the Mohorovicic or Bullen
+    law: p=A*r^B
+
+    The ``layer`` and ``p`` parameters must be either 0-D, or both of the same
+    shape.
+
+    :param layer: The layer(s) in which to calculate the increments.
+    :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :param p: The spherical ray paramater to use for calculation.
+    :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
+    :param radiusOfEarth: The radius of the Earth to use.
+    :type radiusOfEarth: float
+    :param check: Check that the calculated results are not invalid. This
+        check may be disabled if the layers requested are expected not to
+        include the specified ray.
+    :type check: bool
+
+    :returns: Time and distance increments.
+    :rtype: tuple of :class:`~numpy.ndarray`
+    """
     ldim = np.ndim(layer)
     pdim = np.ndim(p)
     if ldim == 1 and pdim == 0:
@@ -51,10 +71,22 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
 
 def bullenDepthFor(layer, ray_param, radiusOfEarth):
     """
-    Finds the depth for a ray parameter within this layer. Uses a Bullen
-    interpolant, Ar^B. Special case for botP == 0 or
-    botDepth == radiusOfEarth as these cause div by 0, use linear
+    Finds the depth for a ray parameter within this layer.
+
+    Uses a Bullen interpolant, Ar^B. Special case for ``botP == 0`` or
+    ``botDepth == radiusOfEarth`` as these cause division by 0; use linear
     interpolation in this case.
+
+    :param layer: The layer to check.
+    :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
+        :const:`SlownessLayer`)
+    :param ray_param: The ray paramater to use for calculation.
+    :type ray_param: float
+    :param radiusOfEarth: The radius of the Earth to use.
+    :type radiusOfEarth: float
+
+    :returns: The depth for the specified ray parameter.
+    :rtype: float
     """
     if (layer['topP'] - ray_param) * (ray_param - layer['botP']) >= 0:
         # Easy cases for 0 thickness layer, or ray parameter found at
@@ -128,13 +160,22 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
 
 def evaluateAtBullen(layer, depth, radiusOfEarth):
     """
-    Finds the slowness at the given depth. Note that this method assumes
-    a Bullen type of slowness interpolation, ie p(r) = a*r^b. This will
-    produce results consistent with a tau model that uses this
-    interpolant, but it may differ slightly from going directly to the
-    velocity model. Also, if the tau model is generated using another
+    Find the slowness at the given depth.
+
+    Note that this method assumes a Bullen type of slowness interpolation,
+    i.e., p(r) = a*r^b. This will produce results consistent with a tau model
+    that uses this interpolant, but it may differ slightly from going directly
+    to the velocity model. Also, if the tau model is generated using another
     interpolant, linear for instance, then the result may not be consistent
     with the tau model.
+
+    :param layer: The layer to use for the calculation.
+    :type layer: :class:`numpy.ndarray`, dtype = :const:`SlownessLayer`
+    :param depth: The depth to use for the calculation. It must be contained
+        within the provided ``layer`` or else results are undefined.
+    :type depth: float
+    :param radiusOfEarth: The radius of the Earth to use.
+    :type radiusOfEarth: float
     """
     topP = layer['topP']
     botP = layer['botP']
@@ -179,6 +220,17 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
                        isSpherical=True):
     """
     Compute the slowness layer from a velocity layer.
+
+    :param vLayer: The velocity layer to convert.
+    :type vLayer: :class:`numpy.ndarray`, dtype = :const:`VelocityLayer`
+    :param isPWave: Whether this velocity layer is for compressional/P
+         (``True``) or shear/S (``False``) waves.
+    :type isPWave: bool
+    :param radiusOfEarth: The radius of the Earth to use.
+    :type radiusOfEarth: float
+    :param isSpherical: Whether the model is spherical. Non-spherical models
+        are not currently supported.
+    :type isSpherical: bool
     """
     ret = np.empty(shape=vLayer.shape, dtype=SlownessLayer)
     ret['topDepth'] = vLayer['topDepth']
