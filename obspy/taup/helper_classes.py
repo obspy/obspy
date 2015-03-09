@@ -74,19 +74,31 @@ class Arrival(object):
     """
     Convenience class for storing parameters associated with a phase arrival.
 
-    :ivar phase: :class:`~obspy.taup.seismic_phase.SeismicPhase` that
-        generated this arrival
+    :ivar phase: Phase that generated this arrival
+    :vartype phase: :class:`~obspy.taup.seismic_phase.SeismicPhase`
     :ivar distance: Actual distance in degrees
+    :vartype distance: float
     :ivar time: Travel time in seconds
+    :vartype time: float
     :ivar purist_dist: Purist angular distance (great circle) in radians
+    :vartype purist_dist: float
     :ivar ray_param: Ray parameter in seconds per radians
+    :vartype ray_param: float
     :ivar name: Phase name
+    :vartype name: str
     :ivar purist_name: Phase name changed for true depths
+    :vartype purist_name: str
     :ivar source_depth: Source depth in kilometers
-    :ivar incident_angle:
-    :ivar takeoff_angle:
-    :ivar pierce: pierce points
-    :ivar path: path points
+    :vartype source_depth: float
+    :ivar incident_angle: Angle (in degrees) at which the ray arrives at the
+        receiver
+    :vartype incident_angle: float
+    :ivar takeoff_angle: Angle (in degrees) at which the ray leaves the source
+    :vartype takeoff_angle: float
+    :ivar pierce: Points pierced by ray
+    :vartype pierce: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
+    :ivar path: Path taken by ray
+    :vartype path: :class:`~numpy.ndarray` (dtype = :const:`~TimeDist`)
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
