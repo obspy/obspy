@@ -49,6 +49,8 @@ except:
     msg = ("No module named matplotlib. Please install matplotlib first, it "
            "is needed before installing ObsPy.")
     raise ImportError(msg)
+else:
+    matplotlib.use("AGG")
 
 import sys
 if sys.version_info[0] == 2:
