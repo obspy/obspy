@@ -1254,9 +1254,9 @@ class SlownessModel(object):
             ``sphericalRayParam.shape`` or ``layerNum.shape``)
 
         :raises SlownessModelError: If the ray with the given spherical ray
-        parameter cannot propagate within this layer, or if the ray turns
-        within this layer but not at the bottom. These checks may be bypassed
-        by specifying ``check=False``.
+            parameter cannot propagate within this layer, or if the ray turns
+            within this layer but not at the bottom. These checks may be
+            bypassed by specifying ``check=False``.
         """
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
 
