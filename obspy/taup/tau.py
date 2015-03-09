@@ -202,7 +202,7 @@ class Arrivals(list):
                         loc = "upper right"
                 else:
                     loc = legend
-                plt.legend(loc=loc, fontsize="small")
+                plt.legend(loc=loc, prop=dict(size="small"))
 
         elif plot_type == "cartesian":
             if not ax:
@@ -219,7 +219,7 @@ class Arrivals(list):
                     loc = "lower left"
                 else:
                     loc = legend
-                ax.legend(fontsize="small", loc=loc)
+                ax.legend(loc=loc, prop=dict(size="small"))
             ax.set_xlabel("Distance [deg]")
             # Pretty station marker.
             ms = 14
