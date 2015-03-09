@@ -57,11 +57,11 @@ def evaluateVelocityAtBottom(layer, prop):
     :param prop: The material property to evaluate. One of:
 
         * ``p``
-            Compressional (P) velocity
+            Compressional (P) velocity (km/s)
         * ``s``
-            Shear (S) velocity
+            Shear (S) velocity (km/s)
         * ``r`` or ``d``
-            Density
+            Density (g/cm^3)
     :type prop: str
 
     :returns: The value of the material property requested.
@@ -89,11 +89,11 @@ def evaluateVelocityAtTop(layer, prop):
     :param prop: The material property to evaluate. One of:
 
         * ``p``
-            Compressional (P) velocity
+            Compressional (P) velocity (km/s)
         * ``s``
-            Shear (S) velocity
+            Shear (S) velocity (km/s)
         * ``r`` or ``d``
-            Density
+            Density (g/cm^3)
     :type prop: str
 
     :returns: The value of the material property requested.
@@ -126,11 +126,11 @@ def evaluateVelocityAt(layer, depth, prop):
     :param prop: The material property to evaluate. One of:
 
         * ``p``
-            Compressional (P) velocity
+            Compressional (P) velocity (km/s)
         * ``s``
-            Shear (S) velocity
+            Shear (S) velocity (km/s)
         * ``r`` or ``d``
-            Density
+            Density (g/cm^3)
     :type prop: str
 
     :returns: The value of the material property requested.

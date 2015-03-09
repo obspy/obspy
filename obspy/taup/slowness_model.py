@@ -435,16 +435,16 @@ class SlownessModel(object):
         The given depths are converted to layer numbers before calling
         :meth:`findDepth_from_layers`.
 
-        :param ray_param: Slowness (aka ray parameter) to find.
+        :param ray_param: Slowness (aka ray parameter) to find, in s/km.
         :type ray_param: float
-        :param topDepth: Top depth to search.
+        :param topDepth: Top depth to search, in km.
         :type topDepth: float
-        :param botDepth: Bottom depth to search.
+        :param botDepth: Bottom depth to search, in km.
         :type botDepth: float
         :param isPWave: ``True`` if P wave or ``False`` for S wave.
         :type isPWave: bool
 
-        :returns: Depth corresponding to the desired slowness.
+        :returns: Depth (in km) corresponding to the desired slowness.
         :rtype: float
 
         :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
@@ -476,7 +476,7 @@ class SlownessModel(object):
         with the given slowness. This means we return the first depth that we
         find.
 
-        :param p: Slowness (aka ray parameter) to find.
+        :param p: Slowness (aka ray parameter) to find, in s/km.
         :type p: float
         :param topCriticalLayer: Top layer number to search.
         :type topCriticalLayer: int
@@ -485,7 +485,7 @@ class SlownessModel(object):
         :param isPWave: ``True`` if P wave or ``False`` for S wave.
         :type isPWave: bool
 
-        :returns: Depth corresponding to the desired slowness.
+        :returns: Depth (in km) corresponding to the desired slowness.
         :rtype: float
 
         :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
@@ -567,14 +567,14 @@ class SlownessModel(object):
         """
         Convert velocity at some depth to slowness.
 
-        :param velocity: The velocity to convert.
+        :param velocity: The velocity to convert, in km/s.
         :type velocity: float
-        :param depth: The depth at which to perform the calculation. Must be
-            less than the radius of the Earth defined in this model, or the
-            result is undefined.
+        :param depth: The depth (in km) at which to perform the calculation.
+            Must be less than the radius of the Earth defined in this model, or
+            the result is undefined.
         :type depth: float
 
-        :returns: The slowness.
+        :returns: The slowness, in s/km.
         :rtype: float
         """
         if velocity == 0:
@@ -593,16 +593,16 @@ class SlownessModel(object):
 
         All parameters must be of the same shape.
 
-        :param p: The slowness to interpolate
+        :param p: The slowness to interpolate, in s/km.
         :type p: :class:`float` or :class:`~numpy.ndarray`
-        :param topVelocity: The velocity at the top of the layer.
+        :param topVelocity: The velocity (in km/s) at the top of the layer.
         :type topVelocity: :class:`float` or :class:`~numpy.ndarray`
-        :param topDepth: The depth for the top of the layer.
+        :param topDepth: The depth (in km) for the top of the layer.
         :type topDepth: :class:`float` or :class:`~numpy.ndarray`
-        :param slope: The slope for velocity versus depth.
+        :param slope: The slope (in (km/s)/km)  for velocity versus depth.
         :type slope: :class:`float` or :class:`~numpy.ndarray`
 
-        :returns: The depth of the slowness below the layer boundary.
+        :returns: The depth (in km) of the slowness below the layer boundary.
         :rtype: :class:`float` or :class:`~numpy.ndarray`
         """
         denominator = p * slope + 1
@@ -624,10 +624,10 @@ class SlownessModel(object):
         The top and bottom of the fluid zone are not returned as a DepthRange,
         just like in the Java code, despite its claims to the contrary.
 
-        :param depth:
+        :param depth: The depth to check, in km.
         :type depth: :class:`~numpy.ndarray`, dtype = :class:`float`
 
-        :returns: ``True`` if the depth is withn a fluid zone, ``False``
+        :returns: ``True`` if the depth is within a fluid zone, ``False``
             otherwise.
         :rtype: :class:`~numpy.ndarray` (dtype = :class:`bool`)
         """
@@ -757,7 +757,7 @@ class SlownessModel(object):
 
         .. seealso:: :meth:`layerNumberBelow`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
         :param isPWave: Whether to look at P (``True``) velocity or S
             (``False``) velocity.
@@ -801,7 +801,7 @@ class SlownessModel(object):
 
         .. seealso:: :meth:`layerNumberAbove`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
         :param isPWave: Whether to look at P (``True``) velocity or S
             (``False``) velocity.
@@ -866,7 +866,7 @@ class SlownessModel(object):
         consistent within fluid layers. Note, this makes use of the velocity
         model, so all interpolation is linear in velocity, not in slowness!
 
-        :param p: The slowness value to add.
+        :param p: The slowness value to add, in s/km.
         :type p: float
         :param isPWave: Whether to add to the P wave (``True``) or the S wave
             (``False``) sampling.
@@ -1161,9 +1161,9 @@ class SlownessModel(object):
         useless copying of the values in tempRange, which I think are not used
         anywhere else.
 
-        :param depth: The depth to check.
+        :param depth: The depth to check, in km.
         :type depth: float
-        :param ray_param: The slowness to check.
+        :param ray_param: The slowness to check, in s/km.
         :type ray_param: float
         :param isPWave: Whether to check the P wave (``True``) or the S wave
             (``False``).
@@ -1194,12 +1194,12 @@ class SlownessModel(object):
         :param slownessTurnLayer: The number of the layer at which the ray
             should turn.
         :type slownessTurnLayer: int
-        :param p: The slowness to calculate.
+        :param p: The slowness to calculate, in s/km.
         :type p: float
         :param isPWave: Whether to use the P (``True``) or S (``False``) wave.
         :type isPWave: bool
 
-        :returns: The time and distance the ray travels.
+        :returns: The time (in s) and distance (in rad) the ray travels.
         :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
             (``slownessTurnLayer``, ))
         """
@@ -1238,7 +1238,8 @@ class SlownessModel(object):
         Either ``sphericalRayParam`` or ``layerNum`` must be 0-D, or they must
         have the same shape.
 
-        :param sphericalRayParam: The spherical ray parameter of the ray(s).
+        :param sphericalRayParam: The spherical ray parameter of the ray(s), in
+            s/km.
         :type sphericalRayParam: :class:`float` or :class:`~numpy.ndarray`
         :param layerNum: The layer(s) in which the calculation should be done.
         :type layerNum: :class:`float` or :class:`~numpy.ndarray`
@@ -1248,8 +1249,8 @@ class SlownessModel(object):
         :param check: Whether to perform checks of input consistency.
         :type check: bool
 
-        :returns: The time and distance increments for the specified ray(s) and
-            layer(s).
+        :returns: The time (in s) and distance (in rad) increments for the
+            specified ray(s) and layer(s).
         :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
             ``sphericalRayParam.shape`` or ``layerNum.shape``)
 
@@ -1511,13 +1512,13 @@ class SlownessModel(object):
         Normally this is the slowness sample at the given depth, but if the
         depth is within a high slowness zone, then it may be smaller.
 
-        :param depth: The depth to search for.
+        :param depth: The depth to search for, in km.
         :type depth: float
         :param isPWave: Whether to search the P (``True``) or S (``False``)
             wave.
         :type isPWave: bool
 
-        :returns: The minimum ray parameter.
+        :returns: The minimum ray parameter, in s/km.
         :rtype: float
         """
         minPSoFar = 1e300
@@ -1551,13 +1552,13 @@ class SlownessModel(object):
         first order discontinuities, there may be many slowness samples at the
         same depth.
 
-        :param depth: The depth to search for.
+        :param depth: The depth to search for, in km.
         :type depth: float
         :param isPWave: Whether to search the P (``True``) or S (``False``)
             wave.
         :type isPWave: bool
 
-        :returns: The minimum ray parameter.
+        :returns: The minimum ray parameter, in s/km.
         :rtype: float
         """
         minPSoFar = self.getMinTurnRayParam(depth, isPWave)
@@ -1577,7 +1578,7 @@ class SlownessModel(object):
         The interpolation for splitting a layer is a Bullen p=Ar^B and so does
         not directly use information from the VelocityModel.
 
-        :param depth: The depth at which attempt a split.
+        :param depth: The depth at which attempt a split, in km.
         :type depth: float
         :param isPWave: Whether to split based on P (``True``) or S (``False``)
             wave.
@@ -1589,7 +1590,8 @@ class SlownessModel(object):
             * ``neededSplit=True`` if a layer was actually split;
             * ``movedSample=True`` if a layer was very close, and so moving the
               layer's depth is better than making a very thin layer;
-            * ``ray_param=...``, the new ray parameter, if the layer was split.
+            * ``ray_param=...``, the new ray parameter (in s/km), if the layer
+              was split.
 
         :rtype: :class:`~.SplitLayerInfo`
         """

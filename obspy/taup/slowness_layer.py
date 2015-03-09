@@ -28,16 +28,16 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
 
     :param layer: The layer(s) in which to calculate the increments.
     :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
-    :param p: The spherical ray paramater to use for calculation.
+    :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
-    :param radiusOfEarth: The radius of the Earth to use.
+    :param radiusOfEarth: The radius of the Earth to use, in km.
     :type radiusOfEarth: float
     :param check: Check that the calculated results are not invalid. This
         check may be disabled if the layers requested are expected not to
         include the specified ray.
     :type check: bool
 
-    :returns: Time and distance increments.
+    :returns: Time (in s) and distance (in rad) increments.
     :rtype: tuple of :class:`~numpy.ndarray`
     """
     ldim = np.ndim(layer)
@@ -80,12 +80,12 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
     :param layer: The layer to check.
     :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
         :const:`SlownessLayer`)
-    :param ray_param: The ray paramater to use for calculation.
+    :param ray_param: The ray paramater to use for calculation, in s/km.
     :type ray_param: float
-    :param radiusOfEarth: The radius of the Earth to use.
+    :param radiusOfEarth: The radius (in km) of the Earth to use.
     :type radiusOfEarth: float
 
-    :returns: The depth for the specified ray parameter.
+    :returns: The depth (in km) for the specified ray parameter.
     :rtype: float
     """
     if (layer['topP'] - ray_param) * (ray_param - layer['botP']) >= 0:
@@ -171,10 +171,10 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
 
     :param layer: The layer to use for the calculation.
     :type layer: :class:`numpy.ndarray`, dtype = :const:`SlownessLayer`
-    :param depth: The depth to use for the calculation. It must be contained
-        within the provided ``layer`` or else results are undefined.
+    :param depth: The depth (in km) to use for the calculation. It must be
+        contained within the provided ``layer`` or else results are undefined.
     :type depth: float
-    :param radiusOfEarth: The radius of the Earth to use.
+    :param radiusOfEarth: The radius of the Earth to use, in km.
     :type radiusOfEarth: float
     """
     topP = layer['topP']
@@ -226,7 +226,7 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     :param isPWave: Whether this velocity layer is for compressional/P
          (``True``) or shear/S (``False``) waves.
     :type isPWave: bool
-    :param radiusOfEarth: The radius of the Earth to use.
+    :param radiusOfEarth: The radius of the Earth to use, in km.
     :type radiusOfEarth: float
     :param isSpherical: Whether the model is spherical. Non-spherical models
         are not currently supported.

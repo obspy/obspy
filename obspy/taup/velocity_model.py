@@ -114,7 +114,7 @@ class VelocityModel(object):
 
         .. seealso:: :meth:`layerNumberBelow`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
 
         :returns: The layer number for the specified depth.
@@ -140,7 +140,7 @@ class VelocityModel(object):
 
         .. seealso:: :meth:`layerNumberAbove`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
 
         :returns: The layer number for the specified depth.
@@ -166,16 +166,16 @@ class VelocityModel(object):
 
         .. seealso:: :meth:`evaluateBelow`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
         :param prop: The material property to evaluate. One of:
 
             * ``p``
-                Compressional (P) velocity
+                Compressional (P) velocity (km/s)
             * ``s``
-                Shear (S) velocity
+                Shear (S) velocity (km/s)
             * ``r`` or ``d``
-                Density
+                Density (in g/cm^3)
         :type prop: str
 
         :returns: The value of the given material property
@@ -194,16 +194,16 @@ class VelocityModel(object):
 
         .. seealso:: :meth:`evaluateBelow`
 
-        :param depth: The depth to find.
+        :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
         :param prop: The material property to evaluate. One of:
 
             * ``p``
-                Compressional (P) velocity
+                Compressional (P) velocity (km/s)
             * ``s``
-                Shear (S) velocity
+                Shear (S) velocity (km/s)
             * ``r`` or ``d``
-                Density
+                Density (in g/cm^3)
         :type prop: str
 
         :returns: the value of the given material property
@@ -222,6 +222,7 @@ class VelocityModel(object):
         :param layer: The layer number
         :type layer: :class:`int` or :class:`~numpy.ndarray`
 
+        :returns: The depth of the top, in km.
         :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
             :class:`float`, shape equivalent to ``layer``)
         """
@@ -237,6 +238,7 @@ class VelocityModel(object):
         :param layer: The layer number
         :type layer: :class:`int` or :class:`~numpy.ndarray`
 
+        :returns: The depth of the bottom, in km.
         :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
             :class:`float`, shape equivalent to ``layer``)
         """

@@ -382,6 +382,7 @@ class TauPyModel(object):
 def create_taup_model(model_name, output_dir, input_dir):
     """
     Create a .taup model from a .tvel file.
+
     :param model_name:
     :param output_dir:
     """
