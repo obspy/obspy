@@ -114,7 +114,6 @@ class SLClient(object):
         logging.basicConfig(level=numeric_level)
         logger.setLevel(numeric_level)
 
-        self.slconn = None
         self.verbose = 0
         self.ppackets = False
         self.streamfile = None

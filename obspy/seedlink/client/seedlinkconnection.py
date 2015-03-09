@@ -821,12 +821,8 @@ class SeedLinkConnection(object):
             # Connect to remote SeedLink server
             if self.state.state == SLState.SL_DOWN and \
                self.state.netdly_trig == 0:
-                try:
-                    self.connect()
-                    self.state.state = SLState.SL_UP
-                except Exception as e:
-                    logger.error(str(e))
-                    # traceback.print_exc()
+                self.connect()
+                self.state.state = SLState.SL_UP
                 self.state.netto_trig = -1
                 self.state.netdly_trig = -1
 
