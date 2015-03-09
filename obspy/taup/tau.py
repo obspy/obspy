@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+High-level interface to travel-time calculation routines.
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -62,11 +65,12 @@ class _SmartPolarText(matplotlib.text.Text):
 
 class Arrivals(list):
     """
-    List of arrivals returned by the
-    methods of the :class:`~obspy.taup.tau.TauPyModel` class.
+    List of arrivals returned by :class:`TauPyModel` methods.
 
-    :param arrivals: List of arrivals.
+    :param arrivals: Initial arrivals to store.
+    :type arrivals: list
     :param model: The model used to calculate the arrivals.
+    :type model: :class:`~TauPyModel`
     """
     __slots__ = ["model"]
 
@@ -91,13 +95,13 @@ class Arrivals(list):
         Plot the ray paths if any have been calculated.
 
         :param plot_type: Either ``"spherical"`` or ``"cartesian"``.
-            A spherical plot is always global whereas a cartesian one can
+            A spherical plot is always global whereas a Cartesian one can
             also be local.
         :type plot_type: str
         :param plot_all: By default all rays, even those travelling in the
-            other direction and thus arriving at a distance of 360 - x
+            other direction and thus arriving at a distance of *360 - x*
             degrees are shown. Set this to ``False`` to only show rays
-            arriving at exactly x degrees.
+            arriving at exactly *x* degrees.
         :type plot_all: bool
         :param legend: If boolean, specify whether or not to show the legend
             (at the default location.) If a str, specify the location of the
@@ -112,7 +116,7 @@ class Arrivals(list):
         :type label_arrivals: bool
         :param ax: Axes to plot to. If not given, a new figure with an axes
             will be created. Must be a polar axes for the spherical plot and
-            a regular one for the cartesian plot.
+            a regular one for the Cartesian plot.
         :type ax: :class:`matplotlib.axes.Axes`
         :param show: Show the plot.
         :type show: bool
@@ -274,6 +278,10 @@ class Arrivals(list):
 
 
 class TauPyModel(object):
+    """
+    Representation of a seismic model and methods for ray paths through it.
+    """
+
     def __init__(self, model="iasp91", verbose=False):
         """
         Loads an already created TauPy model.
@@ -297,7 +305,7 @@ class TauPyModel(object):
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
                          phase_list=("ttall",)):
         """
-        Returns travel times of every given phase.
+        Return travel times of every given phase.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
@@ -307,9 +315,10 @@ class TauPyModel(object):
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
 
-        :return Arrivals:  List of ``Arrival`` objects, each of which has the
-            time, corresponding phase name, ray parameter, takeoff angle, etc.
-            as attributes.
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
         """
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
@@ -323,7 +332,7 @@ class TauPyModel(object):
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
                           phase_list=("ttall",)):
         """
-        Returns pierce points of every given phase.
+        Return pierce points of every given phase.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
@@ -333,9 +342,10 @@ class TauPyModel(object):
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
 
-        :return Arrivals:  List of ``Arrival`` objects, each of which has the
-            time, corresponding phase name, ray parameter, takeoff angle, etc.
-            as attributes.
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
         """
         pp = TauP_Pierce(self.model, phase_list, source_depth_in_km,
                          distance_in_degree)
@@ -346,7 +356,7 @@ class TauPyModel(object):
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
                       phase_list=("ttall",)):
         """
-        Returns ray paths of every given phase.
+        Return ray paths of every given phase.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
@@ -356,9 +366,10 @@ class TauPyModel(object):
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
 
-        :return Arrivals:  List of ``Arrival`` objects, each of which has the
-            time, corresponding phase name, ray parameter, takeoff angle, etc.
-            as attributes.
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
         """
         rp = TauP_Path(self.model, phase_list, source_depth_in_km,
                        distance_in_degree)
