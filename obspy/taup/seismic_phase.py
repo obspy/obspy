@@ -10,8 +10,7 @@ import re
 
 import numpy as np
 
-from .arrival import Arrival
-from .helper_classes import TauModelError, TimeDist
+from .helper_classes import Arrival, TauModelError, TimeDist
 
 from .c_wrappers import clibtau
 

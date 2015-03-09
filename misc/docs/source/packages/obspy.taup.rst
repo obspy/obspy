@@ -19,7 +19,6 @@
        :toctree: autogen
        :nosignatures:
 
-       arrival
        c_wrappers
        helper_classes
        seismic_phase

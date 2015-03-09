@@ -68,7 +68,8 @@ class Arrivals(list):
     List of arrivals returned by :class:`TauPyModel` methods.
 
     :param arrivals: Initial arrivals to store.
-    :type arrivals: :class:`list` of :class:`~obspy.taup.arrival.Arrival`
+    :type arrivals: :class:`list` of
+        :class:`~obspy.taup.helper_classes.Arrival`
     :param model: The model used to calculate the arrivals.
     :type model: :class:`~TauPyModel`
     """
