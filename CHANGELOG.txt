@@ -109,7 +109,10 @@
      correctly (see #807)
    * New submodule `easyseedlink` providing an easier way to create
      SeedLink clients
-   * Fix MiniSEED record leak in packet parser (see #918)
+   * New `Client` class providing a basic seedlink client for individual
+     requests of finite time windows (i.e. non-continuous programs)
+   * Fix memory leak in `SLClient` (MiniSEED record leak in packet parser,
+     see #918)
  - obspy.seishub:
    * use specified timeout in all requests to server (see #786)
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object

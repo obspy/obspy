@@ -6,8 +6,10 @@ obspy.seedlink - SeedLink client for ObsPy
 The obspy.seedlink module provides an implementation of the SeedLink client
 protocol for ObsPy.
 
-A higher level client is provided in the :mod:`obspy.seedlink.easyseedlink`
-module.
+For simple requests of finite time windows see
+:class:`~obspy.seedlink.basic_client.Client`. To work with continuous data
+streams see :class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient`, or for
+lower-level packet handling see :class:`~obspy.seedlink.slclient.SLClient`.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
@@ -26,6 +28,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from .basic_client import Client  # NOQA
+from .slclient import SLClient  # NOQA
+from .easyseedlink import EasySeedLinkClient  # NOQA
 
 if __name__ == '__main__':
     import doctest
