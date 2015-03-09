@@ -9,32 +9,36 @@ from math import pi
 
 class Arrival(object):
     """
-    Convenience class for storing the parameters associated with a phase
-    arrival.
+    Convenience class for storing parameters associated with a phase arrival.
+
+    :ivar phase: :class:`~obspy.taup.seismic_phase.SeismicPhase` that
+        generated this arrival
+    :ivar distance: Actual distance in degrees
+    :ivar time: Travel time in seconds
+    :ivar purist_dist: Purist angular distance (great circle) in radians
+    :ivar ray_param: Ray parameter in seconds per radians
+    :ivar name: Phase name
+    :ivar purist_name: Phase name changed for true depths
+    :ivar source_depth: Source depth in kilometers
+    :ivar incident_angle:
+    :ivar takeoff_angle:
+    :ivar pierce: pierce points
+    :ivar path: path points
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
                  takeoff_angle, incident_angle):
-        # phase that generated this arrival
         self.phase = phase
-        # actual distance in degrees
         self.distance = distance
-        # travel time in seconds
         self.time = time
-        # purist angular distance (great circle) in radians
         self.purist_dist = purist_dist
-        # ray parameter in seconds per radians
         self.ray_param = ray_param
         self.ray_param_index = ray_param_index
-        # phase name
         self.name = name
-        # phase name changed for true depths
         self.purist_name = purist_name
-        # source depth in kilometers
         self.source_depth = source_depth
         self.incident_angle = incident_angle
         self.takeoff_angle = takeoff_angle
-        # pierce and path points
         self.pierce = None
         self.path = None
 
@@ -45,10 +49,13 @@ class Arrival(object):
     @property
     def ray_param_sec_degree(self):
         """
-        Returns the ray parameter in seconds per degree.
+        Return the ray parameter in seconds per degree.
         """
         return self.ray_param * pi / 180.0
 
     @property
     def purist_distance(self):
+        """
+        Return the purist distance in degrees.
+        """
         return self.purist_dist * 180.0 / pi
