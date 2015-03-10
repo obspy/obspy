@@ -4,8 +4,8 @@
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/obspy)
 [![PEP8 Status](http://docs.obspy.org/master/_images/pep8.svg)](http://pep8.obspy.org)
 [![Coverage Status](https://img.shields.io/coveralls/obspy/obspy.svg)](https://coveralls.io/r/obspy/obspy?branch=master)
-[![PyPI Version](https://pypip.in/v/obspy/badge.svg)](https://crate.io/packages/obspy/)
-[![Downloads](https://pypip.in/d/obspy/badge.svg)](https://crate.io/packages/obspy/)
+[![PyPI Version](https://pypip.in/v/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
+[![Downloads](https://pypip.in/d/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
