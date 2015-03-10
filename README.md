@@ -1,6 +1,7 @@
 <img alt="ObsPy: A Python Toolbox for seismology/seismological observatories." class="right" style="width: 60%" src="https://raw.github.com/obspy/website/master/logo/obspy_logo_full_highres.png" />
 
-[![Build Status](https://travis-ci.org/obspy/obspy.svg?branch=master)](https://travis-ci.org/obspy/obspy)
+[![TravisCI Status](https://travis-ci.org/obspy/obspy.svg?branch=master)](https://travis-ci.org/obspy/obspy)
+[![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/obspy)
 [![PEP8 Status](http://docs.obspy.org/master/_images/pep8.svg)](http://pep8.obspy.org)
 [![Coverage Status](https://img.shields.io/coveralls/obspy/obspy.svg)](https://coveralls.io/r/obspy/obspy?branch=master)
 [![PyPI Version](https://pypip.in/v/obspy/badge.svg)](https://crate.io/packages/obspy/)
