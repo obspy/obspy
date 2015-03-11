@@ -85,6 +85,7 @@
          with non-zero exit code.
        - Faster reading of a single record header
        - Added option "-a" to print information of all records
+   * upgrade to libmseed 2.14
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:

@@ -1,0 +1,48 @@
+.TH MS_READLEAPSECONDS 3 2015/03/02 "Libmseed API"
+.SH DESCRIPTION
+Read a leap second file into a global buffer
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_readleapseconds\fP ( char *" envvarname " );"
+
+.BI "int  \fBms_readleapsecondfile\fP ( char *" filename " );"
+.fi
+
+.SH DESCRIPTION
+These functions read a leap seconds file and store a list of leap
+seconds in an internal, global list.  The leap seconds are used to
+determine the proper end time of a record (and consquently a trace).
+The use of this facility causes the leap second indication in the
+fixed section data header to be ignored.
+
+The \fBms_readleapseconds\fP function takes and environment variable
+name that is expected to contain the name of a leap seconds file.  The
+\fBms_readleapsecondfile\fP function takes the name of a leap second
+file.
+
+.SH LEAP SECOND LIST FILE
+The leap second list file is expected to contain a list of leap second
+times and TAI-UTC difference values.  The first column should be time
+stamps as seconds since the NTP epoch (Jan. 1 1900).  The second
+column should be an integer number of seconds that specify the
+difference between TAI and UTC.
+
+Usually the most recent version of this file is available here:
+http://www.ietf.org/timezones/data/leap-seconds.list
+
+.SH RETURN VALUES
+\fBms_readleapseconds\fP returns the number of leap seconds read on
+success, -1 on file read errors and -2 when the environment variable
+is not set.
+
+\fBms_readleapsecondfile\fP returns the number leap seconds read on
+success and -1 on errors.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

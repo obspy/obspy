@@ -1,7 +1,7 @@
 /***************************************************************************
  * gswap.c:
  *
- * Functions for generalized, in-pace byte swapping between LSBF and
+ * Functions for generalized, in-place byte swapping between LSBF and
  * MSBF byte orders.
  *
  * Some standard integer types are needed, namely uint8_t and

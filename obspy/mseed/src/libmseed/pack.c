@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2014.197
+ * modified: 2015.062
  ***************************************************************************/
 
 #include <stdio.h>
@@ -279,6 +279,7 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
       if ( ! msr_addblockette (msr, (char *) &blkt1000, sizeof(struct blkt_1000_s), 1000, 0) )
 	{
 	  ms_log (2, "msr_pack(%s): Error adding 1000 Blockette\n", PACK_SRCNAME);
+          free (rawrec);
 	  return -1;
 	}
     }
@@ -288,6 +289,7 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
   if ( headerlen == -1 )
     {
       ms_log (2, "msr_pack(%s): Error packing header\n", PACK_SRCNAME);
+      free (rawrec);
       return -1;
     }
   
@@ -342,6 +344,7 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
       if ( packret )
 	{
 	  ms_log (2, "msr_pack(%s): Error packing record\n", PACK_SRCNAME);
+          free (rawrec);
 	  return -1;
 	}
       

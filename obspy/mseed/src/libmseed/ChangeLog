@@ -1,3 +1,23 @@
+2015.062: 2.14
+	- Fix memory leak when msr_pack() returns after an error. Patch
+	contributed by Larry Baker and Eric Thomas.
+	- Change casting of values passed to isdigit() to int intead of
+	unsigned character.  Apparently this was consufing on ARM archs.
+	
+2015.061:
+	- Add ms_readleapseconds() and ms_readleapsecondfile() routines to
+	read a leap seconds file into an internal list.
+	- Modify msr_endtime() to check for an internal leap second list,
+	check for overlap with the record and adjust the end time as needed
+	when leap seconds are present.  When a leap second list is present
+	any indication of positive leap seconds in the fixed section data
+	header are ignored.
+
+2014.248:
+	- Add casting to size_t and int to avoid build warnings on certain
+	build systems (e.g. older MS Visual Studio).
+	The effective maximum sample buffer and record buffer size is ~2GB.
+
 2014.234: 2.13
 	- Clean up Makefile and example/Makefile, remove all GCC-specific and
 	debug targets.  Makefiles are compatible with both GNU and BSD make. 
