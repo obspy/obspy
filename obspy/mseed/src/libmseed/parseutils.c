@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2013.050
+ * modified: 2014.248
  ***************************************************************************/
 
 #include <stdio.h>
@@ -164,7 +164,7 @@ msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
   
   while ( *offset < recbuflen )
     {
-      retval = msr_parse (recbuf+*offset, recbuflen-*offset, ppmsr, reclen, 0, verbose);
+      retval = msr_parse (recbuf+*offset, (int)(recbuflen-*offset), ppmsr, reclen, 0, verbose);
       
       if ( retval )
         {
@@ -288,10 +288,10 @@ ms_detect ( const char *record, int recbuflen )
 	  break;
         }
       
-      /* Safety check for invalid offset */
-      if ( next_blkt != 0 && ( next_blkt < 4 || next_blkt - 4 <= blkt_offset ) )
+      /* Saftey check for invalid offset */
+      if ( next_blkt != 0 && next_blkt < blkt_offset )
 	{
-	  ms_log (2, "Invalid blockette offset (%d) less than or equal to current offset (%d)\n",
+	  ms_log (2, "Invalid blockette offset (%d) less than current offset (%d)\n",
 		  next_blkt, blkt_offset);
 	  return -1;
 	}
@@ -411,9 +411,9 @@ ms_parse_raw ( char *record, int maxreclen, flag details, flag swapflag )
   X = record;  /* Pointer of convenience */
   
   /* Check record sequence number, 6 ASCII digits */
-  if ( ! isdigit((unsigned char) *(X)) || ! isdigit ((unsigned char) *(X+1)) ||
-       ! isdigit((unsigned char) *(X+2)) || ! isdigit ((unsigned char) *(X+3)) ||
-       ! isdigit((unsigned char) *(X+4)) || ! isdigit ((unsigned char) *(X+5)) )
+  if ( ! isdigit((int) *(X))   || ! isdigit ((int) *(X+1)) ||
+       ! isdigit((int) *(X+2)) || ! isdigit ((int) *(X+3)) ||
+       ! isdigit((int) *(X+4)) || ! isdigit ((int) *(X+5)) )
     {
       ms_log (2, "%s: Invalid sequence number: '%c%c%c%c%c%c'\n", srcname, X, X+1, X+2, X+3, X+4, X+5);
       retval++;

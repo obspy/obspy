@@ -1,4 +1,4 @@
-.TH MSR_STARTTIME 3 2006/02/27 "Libmseed API"
+.TH MSR_STARTTIME 3 2015/03/02 "Libmseed API"
 .SH DESCRIPTION
 Start and end time determination for MSRecord structures
 
@@ -36,6 +36,14 @@ This function calculates the record start time with
 \fBmsr_starttime\fP and then adds the time covered by the samples in
 the record which is calculated from the number of samples and sample
 rate.
+
+\fBmsr_endtime\fP will adjust the end time appropriately if the record
+is known to contain a positive leap second.  If the
+\fBms_readleapseconds\fP or \fBms_readleapsecondfile\fP routines have
+been called to read a leap second file into an internal list, it will
+be checked to know when leap seconds occur.  If a leap second list is
+not available the fixed section data header is checked for a positive
+leap second indicator.
 
 .SH RETURN VALUES
 \fBmsr_starttime\fP, \fBmsr_starttime_uc\fP and \fBmsr_endtime\fP

@@ -597,19 +597,38 @@ hptime_t
 msr_endtime (MSRecord *msr)
 {
   hptime_t span = 0;
+  LeapSecond *lslist = leapsecondlist;
   
   if ( ! msr )
     return HPTERROR;
-
+  
   if ( msr->samprate > 0.0 && msr->samplecnt > 0 )
     span = (hptime_t)(((double) (msr->samplecnt - 1) / msr->samprate * HPTMODULUS) + 0.5);
-
-  /* If a positive leap second occurred during this record as denoted by
-   * bit 4 of the activity flags being set, reduce the end time to match
-   * the now shifted UTC time. */
-  if ( msr->fsdh )
-    if ( msr->fsdh->act_flags & 0x10 )
-      span -= HPTMODULUS;
+  
+  /* Check if the record contains a leap second, if list is available */
+  if ( lslist )
+    {
+      while ( lslist )
+        {
+          if ( lslist->leapsecond > msr->starttime &&
+               lslist->leapsecond < (msr->starttime + span) )
+            {
+              span -= HPTMODULUS;
+              break;
+            }
+          
+          lslist = lslist->next;
+        }
+    }
+  else
+    {
+      /* If a positive leap second occurred during this record as denoted by
+       * bit 4 of the activity flags being set, reduce the end time to match
+       * the now shifted UTC time. */
+      if ( msr->fsdh )
+        if ( msr->fsdh->act_flags & 0x10 )
+          span -= HPTMODULUS;
+    }
   
   return (msr->starttime + span);
 } /* End of msr_endtime() */

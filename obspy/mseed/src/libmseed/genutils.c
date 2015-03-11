@@ -7,12 +7,13 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2013.053
+ * modified: 2015.061
  ***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <time.h>
 
 #include "lmplatform.h"
@@ -22,6 +23,10 @@ static hptime_t ms_time2hptime_int (int year, int day, int hour,
 				    int min, int sec, int usec);
 
 static struct tm *ms_gmtime_r (int64_t *timep, struct tm *result);
+
+
+/* Global variable to hold a leap second list */
+LeapSecond *leapsecondlist = NULL;
 
 
 /***************************************************************************
@@ -1112,6 +1117,140 @@ ms_nomsamprate (int factor, int multiplier)
   
   return samprate;
 }  /* End of ms_nomsamprate() */
+
+
+/***************************************************************************
+ * ms_readleapseconds:
+ *
+ * Read leap seconds from a file indicated by the specified
+ * environment variable and populate the global leapsecondlist.
+ * 
+ * Returns positive number of leap seconds read, -1 on file read
+ * error, and -2 when the environment variable is not set.
+ ***************************************************************************/
+int
+ms_readleapseconds (char *envvarname)
+{
+  char *filename;
+  
+  if ( (filename = getenv(envvarname)) )
+    {
+      return ms_readleapsecondfile (filename);
+    }
+  
+  return -2;
+}  /* End of ms_readleapseconds() */
+
+
+/***************************************************************************
+ * ms_readleapsecondfile:
+ *
+ * Read leap seconds from the specified file and populate the global
+ * leapsecondlist.  The file is expected to be standard IETF leap
+ * second list format.  The list is usually available from:
+ * http://www.ietf.org/timezones/data/leap-seconds.list
+ * 
+ * Returns positive number of leap seconds read on success and -1 on error.
+ ***************************************************************************/
+int
+ms_readleapsecondfile (char *filename)
+{
+  FILE *fp = NULL;
+  LeapSecond *ls = NULL;
+  LeapSecond *lastls = NULL;
+  long long int expires;
+  char readline[200];
+  char *cp;
+  long long int leapsecond;
+  int TAIdelta;
+  int fields;
+  int count = 0;
+  
+  if ( ! filename )
+    return -1;
+  
+  if ( ! (fp = fopen(filename, "rb")) )
+    {
+      ms_log (2, "Cannot open file %s: %s\n", filename, strerror(errno));
+      return -1;
+    }
+  
+  while ( fgets (readline, sizeof(readline)-1, fp) )
+    {
+      /* Guarantee termination */
+      readline[sizeof(readline)-1] = '\0';
+      
+      /* Terminate string at first newline character if any */
+      if ( (cp = strchr(readline, '\n')) )
+        *cp = '\0';
+      
+      /* Skip empty lines */
+      if ( ! strlen (readline) )
+        continue;
+      
+      /* Check for and parse expiration date */
+      if ( ! strncmp (readline, "#@", 2) )
+        {
+          expires = 0;
+          fields = sscanf (readline, "#@ %lld", &expires);
+          
+          if ( fields == 1 )
+            {
+              /* Convert expires to Unix epoch */
+              expires = expires - 2208988800;
+
+              /* Compare expire time to current time */
+              if ( time(NULL) > expires )
+                {
+                  char timestr[100];
+                  ms_hptime2mdtimestr (MS_EPOCH2HPTIME(expires), timestr, 0);
+                  ms_log (1, "Warning: leap second file (%s) has expired as of %s\n",
+                          filename, timestr);
+                }
+            }
+          
+          continue;
+        }
+      
+      /* Skip comment lines */
+      if ( *readline == '#' )
+        continue;
+      
+      fields = sscanf (readline, "%lld %d ", &leapsecond, &TAIdelta);
+      
+      if ( fields == 2 )
+        {
+          if ( (ls = malloc (sizeof(LeapSecond))) == NULL )
+            {
+              ms_log (2, "Cannot allocate LeapSecond, out of memory?\n");
+              return -1;
+            }
+          
+          /* Convert NTP epoch time to Unix epoch time and then to HPT */
+          ls->leapsecond = MS_EPOCH2HPTIME( (leapsecond - 2208988800) );
+          ls->TAIdelta = TAIdelta;
+          ls->next = NULL;
+          
+          /* Add leap second to global list */
+          if ( ! leapsecondlist )
+            {
+              leapsecondlist = ls;
+              lastls = ls;
+            }
+          else
+            {
+              lastls->next = ls;
+              lastls = ls;
+            }
+        }
+      else
+        {
+          ms_log (1, "Unrecognized leap second file line: '%s'\n", readline);
+        }
+    }
+  
+  return count;
+}  /* End of ms_readleapsecondfile() */
 
 
 /***************************************************************************
