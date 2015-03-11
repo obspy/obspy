@@ -8,7 +8,9 @@ import ctypes as C
 import io
 import multiprocessing
 import os
+import platform
 import random
+import signal
 import sys
 import unittest
 import warnings
@@ -678,6 +680,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
         fail = process.is_alive()
         process.terminate()
+        if process.is_alive():
+            if platform.system() == 'Windows':
+                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
 
