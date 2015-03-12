@@ -22,8 +22,9 @@ import numpy as np
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.mseed.headers import HPTMODULUS, clibmseed
-from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray
+from obspy.mseed.headers import clibmseed
+from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray, \
+    _convertMSTimeToDatetime
 from obspy.seedlink.seedlinkexception import SeedLinkException
 
 
@@ -161,7 +162,7 @@ class SLPacket(object):
                 header[key] = value.decode()
 
         # 20111201 AJL - bug fix?
-        header['starttime'] = header['starttime'] / HPTMODULUS
+        header['starttime'] = _convertMSTimeToDatetime(header['starttime'])
         # 20111205 AJL - bug fix?
         if 'samprate' in header:
             header['sampling_rate'] = header['samprate']
