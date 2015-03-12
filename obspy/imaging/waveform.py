@@ -805,6 +805,15 @@ class WaveformPlotting(object):
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         """
+        if self.equal_scale:
+            ylims = np.vstack([ax.get_ylim() for ax in self.axis])
+            yranges = np.diff(ylims).flatten()
+            yrange_max = yranges.max()
+            yrange_paddings = -yranges + yrange_max
+            ylims[:, 0] -= yrange_paddings[:] / 2
+            ylims[:, 1] += yrange_paddings[:] / 2
+            for ax, ylims_ in zip(self.axis, ylims):
+                ax.set_ylim(*ylims_)
         for _i, ax in enumerate(self.axis):
             # Set the title of each plot.
             ax.text(0.02, 0.95, self.ids[_i], transform=ax.transAxes,
