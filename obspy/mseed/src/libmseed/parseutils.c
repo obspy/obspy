@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2014.248
+ * modified: 2015.070
  ***************************************************************************/
 
 #include <stdio.h>
@@ -288,10 +288,10 @@ ms_detect ( const char *record, int recbuflen )
 	  break;
         }
       
-      /* Saftey check for invalid offset */
-      if ( next_blkt != 0 && next_blkt < blkt_offset )
+      /* Safety check for invalid offset */
+      if ( next_blkt != 0 && ( next_blkt < 4 || (next_blkt - 4) <= blkt_offset ) )
 	{
-	  ms_log (2, "Invalid blockette offset (%d) less than current offset (%d)\n",
+	  ms_log (2, "Invalid blockette offset (%d) less than or equal to current offset (%d)\n",
 		  next_blkt, blkt_offset);
 	  return -1;
 	}

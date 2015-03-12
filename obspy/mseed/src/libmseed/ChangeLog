@@ -1,3 +1,7 @@
+2015.070: 2.15
+	- Fix infinite loop if blockette chain is corrupt.  Patch submitted
+	by Elliott Sales de Andrade.
+
 2015.062: 2.14
 	- Fix memory leak when msr_pack() returns after an error. Patch
 	contributed by Larry Baker and Eric Thomas.
