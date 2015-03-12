@@ -2717,6 +2717,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             not be merged together, ``0.5`` means traces will be merged
             together disregarding of any sub-sample shifts of sampling points.
         """
+        # first of all throw away all empty traces
+        self.traces = [_i for _i in self.traces if _i.stats.npts]
         # check sampling rates and dtypes
         try:
             self._mergeChecks()

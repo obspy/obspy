@@ -1661,29 +1661,6 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             st1[0].data[:-1], st2[0].data[:-1], decimal=5)
 
-    def test_cleanupNonDefaultPrecisionUTCDateTime(self):
-        """
-        Testing cleanup with a non-default precision of UTCDateTime.
-        """
-        # default precision of 6 decimals
-        tr1 = Trace(data=np.ones(1000))
-        tr2 = Trace(data=np.ones(1000))
-        tr1.stats.starttime = UTCDateTime(0)
-        tr2.stats.starttime = UTCDateTime(0) + 1000.000001
-        st = Stream([tr1, tr2])
-        st._cleanup()
-        self.assertEqual(len(st), 2)
-        # precision of 4 decimals
-        UTCDateTime.DEFAULT_PRECISION = 4
-        tr1 = Trace(data=np.ones(1000))
-        tr2 = Trace(data=np.ones(1000))
-        tr1.stats.starttime = UTCDateTime(0)
-        tr2.stats.starttime = UTCDateTime(0) + 1000.000001
-        st = Stream([tr1, tr2])
-        st._cleanup()
-        self.assertEqual(len(st), 1)
-        UTCDateTime.DEFAULT_PRECISION = 6
-
     def test_read(self):
         """
         Testing read function.
