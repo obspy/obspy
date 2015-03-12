@@ -2167,6 +2167,88 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate(method='cumtrapz')
         self.assertEqual(st1, st2)
 
+    def test_misaligned_traces(self):
+        """
+        Tests the option to correct misaligned traces in `Stream._cleanup()`,
+        which is the first thing done in any `Stream.merge()` operation.
+
+        We create a simple trace and then prepare other traces that are shifted
+        on sub-sample scale. With these shifted traces create different traces
+        that are a) contained, b) overlapping, c) directly adjacent and d)
+        separated by a "real" gap. In two loops we test a wide variety of
+        combinations of actual misalignment ratio (percentage of sampling
+        interval) and to-be-fixed misalignment threshold in cleanup().
+        """
+        samp_rate = 1.23
+        delta = 1.0 / samp_rate
+        tr = Trace(data=np.arange(10), header=dict(sampling_rate=samp_rate))
+        t1 = tr.stats.starttime
+        t2 = tr.stats.endtime
+
+        def _gets_merged(tr_, ratio):
+            st = Stream([tr.copy(), tr_.copy()])
+            st._cleanup(misalignment_threshold=ratio)
+            if len(st) == 1:
+                return True
+            elif len(st) == 2:
+                return False
+            raise Exception()
+
+        for actual_misalign_percentage in np.linspace(0.01, 0.5, 6):
+            # prepare two identical traces, misaligned
+            tr_early = tr.copy()
+            tr_early.stats.starttime -= actual_misalign_percentage * delta
+            tr_late = tr.copy()
+            tr_late.stats.starttime += actual_misalign_percentage * delta
+            # prepare contained traces
+            tr_contained1 = tr_early.copy()
+            tr_contained1.trim(t1 + 2 * delta, t2 - delta)
+            tr_contained2 = tr_late.copy()
+            tr_contained2.trim(t1 + delta, t2 - 3 * delta)
+            traces_contained = [tr_contained1, tr_contained2]
+            # prepare overlapping traces
+            tr_overlap1 = tr_early.copy()
+            tr_overlap1.trim(t1 + 4 * delta, t2 + 4 * delta,
+                             pad=True, fill_value=99)
+            tr_overlap2 = tr_late.copy()
+            tr_overlap2.trim(t1 - 5 * delta, t2 - 5 * delta,
+                             pad=True, fill_value=99)
+            traces_overlap = [tr_overlap1, tr_overlap2]
+            # prepare directly adjacent traces
+            tr_adjacent1 = tr_early.copy()
+            tr_adjacent1.stats.starttime -= len(tr_adjacent1) * delta
+            tr_adjacent2 = tr_late.copy()
+            tr_adjacent2.stats.starttime -= len(tr_adjacent2) * delta
+            tr_adjacent3 = tr_early.copy()
+            tr_adjacent3.stats.starttime += len(tr) * delta
+            tr_adjacent4 = tr_late.copy()
+            tr_adjacent4.stats.starttime += len(tr) * delta
+            traces_adjacent = [tr_adjacent1, tr_adjacent2, tr_adjacent3,
+                               tr_adjacent4]
+            # prepare traces with normal gap
+            tr_gap1 = tr_adjacent1.copy()
+            tr_gap1.stats.starttime -= delta
+            tr_gap2 = tr_adjacent2.copy()
+            tr_gap2.stats.starttime -= delta
+            tr_gap3 = tr_adjacent3.copy()
+            tr_gap3.stats.starttime += delta
+            tr_gap4 = tr_adjacent4.copy()
+            tr_gap4.stats.starttime += delta
+            traces_gap = [tr_gap1, tr_gap2, tr_gap3, tr_gap4]
+            for to_be_fixed_misalignmnt_ratio in np.linspace(0.011, 0.49, 5):
+                # first test traces with normal gap, these should never change
+                for trx in traces_gap:
+                    self.assertFalse(_gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio))
+                # now lets check the cases for which depending on
+                # the combination of actual/to-be-fixed misalignment ratios
+                # there should be a change/merge or not
+                should_change = (to_be_fixed_misalignmnt_ratio >=
+                                 actual_misalign_percentage)
+                for trx in traces_contained + traces_overlap + traces_adjacent:
+                    self.assertEqual(should_change, _gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio))
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

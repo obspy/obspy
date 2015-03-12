@@ -44,6 +44,8 @@
      textwrap module which provides similar functionality.
    * new plugin for CNV event format (used by VELEST) for
      Catalog/Event.write() (see obspy.cnv and #905)
+   * better customizable control during merging traces with sub-sample shift of
+     sampling points (see #980)
  - obspy.cnv:
    * new plugin to write CNV event files (used by VELEST) from
      Catalog/Event objects. (see #905)
