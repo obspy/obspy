@@ -1744,12 +1744,13 @@ class Stream(object):
         Merge ObsPy Trace objects with same IDs.
 
         :type method: int, optional
-        :param method: Methodology to handle overlaps of traces. Defaults
+        :param method: Methodology to handle overlaps/gaps of traces. Defaults
             to ``0``.
             See :meth:`obspy.core.trace.Trace.__add__` for details on
             methods ``0`` and ``1``,
             see :meth:`obspy.core.stream.Stream._cleanup` for details on
-            method ``-1``.
+            method ``-1``. Any merge operation performs a cleanup merge as
+            a first step (method ``-1``).
         :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
@@ -1781,8 +1782,8 @@ class Stream(object):
             except ValueError:
                 return -1
 
+        self._cleanup(**kwargs)
         if method == -1:
-            self._cleanup()
             return
         # check sampling rates and dtypes
         self._mergeChecks()
