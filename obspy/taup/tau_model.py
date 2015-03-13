@@ -8,6 +8,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
+import base64
+import json
 import os
 # use cPickle on Python2
 try:
@@ -23,6 +25,14 @@ import numpy as np
 from .helper_classes import SlownessModelError, TauModelError
 from .tau_branch import TauBranch
 from .utils import _get_model_filename
+
+
+TAU_MODEL_KEYS = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch',
+                  'iocbDepth', 'mohoBranch', 'mohoDepth', 'noDisconDepths',
+                  'radiusOfEarth', 'ray_params', 'sourceBranch',
+                  'source_depth', 'spherical', 'tauBranches']
+TAU_BRANCH_KEYS = ['botDepth', 'DEBUG', 'dist', 'isPWave', 'maxRayParam',
+                   'minRayParam', 'minTurnRayParam', 'tau', 'time', 'topDepth']
 
 
 class TauModel(object):
@@ -413,3 +423,92 @@ class TauModel(object):
         branchDepths += [self.getTauBranch(
             i - 1, True).botDepth for i in range(1, len(self.tauBranches[0]))]
         return branchDepths
+
+    def serialize(self, filename):
+        data = _dumps(self)
+        with open(filename, "w") as fh:
+            fh.write(data.decode())
+
+    @staticmethod
+    def deserialize(filename):
+        with open(filename, "r") as fh:
+            data = fh.read()
+        return _loads(data)
+
+
+class TauEncoder(json.JSONEncoder):
+    def default(self, obj):
+        """
+        if input object is a ndarray, TauBranch or TauModel it will be
+        converted into a dict holding dtype, shape and the data base64 encoded
+        """
+        if isinstance(obj, np.ndarray):
+            # handle array of TauBranch objects
+            if obj.flatten()[0].__class__ == TauBranch:
+                __ndarray_list__ = [_dumps(x) for x in obj.flatten()]
+                data_b64 = [base64.b64encode(x) for x in __ndarray_list__]
+                return dict(__ndarray_list__=data_b64,
+                            dtype="TauBranch",
+                            shape=obj.shape)
+            # handle other arrays (e.g. int, float)
+            else:
+                data_b64 = base64.b64encode(obj.data)
+                return dict(__ndarray__=data_b64,
+                            dtype=str(obj.dtype),
+                            shape=obj.shape)
+        elif isinstance(obj, TauBranch):
+            data = dict([(key, getattr(obj, key)) for key in TAU_BRANCH_KEYS])
+            data['dtype'] = "TauBranch"
+            return data
+        elif isinstance(obj, TauModel):
+            data = dict([(key, getattr(obj, key)) for key in TAU_MODEL_KEYS])
+            data['dtype'] = "TauModel"
+            return data
+        return json.JSONEncoder(self, obj)
+
+
+def _json_obj_hook(dct):
+    """
+    Decodes previously encoded numpy ndarrays and TauBranch and TauModel.
+
+    :type dct: dict
+    :param dct: json encoded ndarray, TauBranch or TauModel
+    :return: deserialized object
+    """
+    if isinstance(dct, dict) and '__ndarray__' in dct:
+        data = base64.b64decode(dct['__ndarray__'])
+        return np.frombuffer(data, dct['dtype']).reshape(dct['shape'])
+    elif isinstance(dct, dict) and '__ndarray_list__' in dct:
+        data = [_loads(base64.b64decode(x)) for x in dct['__ndarray_list__']]
+        return np.array(data, dtype=TauBranch).reshape(dct['shape'])
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "TauBranch":
+        return _deserialize_TauBranch(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "TauModel":
+        return _deserialize_TauModel(dct)
+    return dct
+
+
+def _deserialize_TauBranch(dct):
+    tb = TauBranch()
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(tb, k, v)
+    return tb
+
+
+def _deserialize_TauModel(dct):
+    tm = TauModel(sMod=None, skip_calc=True)
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(tm, k, v)
+    return tm
+
+
+def _dumps(*args, **kwargs):
+    kwargs.setdefault('cls', TauEncoder)
+    return json.dumps(*args, **kwargs)
+
+
+def _loads(*args, **kwargs):
+    kwargs.setdefault('object_hook', _json_obj_hook)
+    return json.loads(*args, **kwargs)
