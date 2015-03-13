@@ -63,6 +63,27 @@ class DepthRange:
         self.botDepth = botDepth
         self.ray_param = ray_param
 
+    def _to_array(self):
+        """
+        Store all attributes for serialization in a structured array.
+        """
+        arr = np.empty(3, dtype=np.float_)
+        arr[0] = self.topDepth
+        arr[1] = self.botDepth
+        arr[2] = self.ray_param
+        return arr
+
+    @staticmethod
+    def _from_array(arr):
+        """
+        Create instance object from a structured array used in serialization.
+        """
+        depth_range = DepthRange()
+        depth_range.topDepth = arr[0]
+        depth_range.botDepth = arr[1]
+        depth_range.ray_param = arr[2]
+        return depth_range
+
 
 SplitLayerInfo = namedtuple(
     'SplitLayerInfo',

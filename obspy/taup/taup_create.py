@@ -7,12 +7,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import argparse
+import glob
 import os
+import sys
 
-from .slowness_model import SlownessModel
-from .tau_model import TauModel
-from .velocity_model import VelocityModel
+from obspy.taup.slowness_model import SlownessModel
+from obspy.taup.tau_model import TauModel
+from obspy.taup.velocity_model import VelocityModel
 
 
 class TauP_Create(object):
@@ -125,7 +126,7 @@ class TauP_Create(object):
 
             if not os.path.exists(os.path.dirname(self.output_filename)):
                 os.makedirs(os.path.dirname(self.output_filename))
-            self.tMod.save(self.output_filename)
+            self.tMod.serialize(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
         except IOError as e:
@@ -138,25 +139,24 @@ class TauP_Create(object):
                 print("Method run is done, but not necessarily successful.")
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbose', '-d', '--debug',
-                        action='store_true',
-                        help='increase output verbosity')
-    parser.add_argument('-i', '--input_dir',
-                        help='set directory of input velocity models '
-                             '(default: ./data)')
-    parser.add_argument('-o', '--output_dir',
-                        help='set where to write the .taup model - be '
-                             'careful, this will overwrite any previous '
-                             'models of the same name (default: '
-                             './data/taup_models)')
-    parser.add_argument('-mod', '--filename',
-                        help='the velocity model name '
-                             '(default: iasp91.tvel)')
-    args = parser.parse_args()
+def build_taup_models():
+    """
+    Builds the obspy.taup models.
+    """
+    model_input = os.path.join(os.path.dirname(__file__), "data")
+    model_path = os.path.join(model_input, 'models')
 
-    tauPCreate = TauP_Create(modelFilename=args.mod, output_dir=args.o,
-                             input_dir=args.i, verbose=args.verbose)
-    tauPCreate.loadVMod()
-    tauPCreate.run()
+    for model in glob.glob(os.path.join(model_input, "*.tvel")):
+        model_name = os.path.splitext(os.path.basename(model))[0]
+        output_filename = os.path.join(model_path, model_name + ".npz")
+
+        print("Building obspy.taup model for '%s' ..." % (model, ))
+        sys.stdout.flush()
+        mod_create = TauP_Create(input_filename=model,
+                                 output_filename=output_filename)
+        mod_create.loadVMod()
+        mod_create.run()
+
+
+if __name__ == '__main__':
+    build_taup_models()

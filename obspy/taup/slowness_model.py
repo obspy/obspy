@@ -60,7 +60,8 @@ class SlownessModel(object):
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115,
                  maxRangeInterval=2.5 * math.pi / 180, maxInterpError=0.05,
                  allowInnerCoreS=True,
-                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):
+                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE,
+                 skip_model_creation=False):
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -70,6 +71,8 @@ class SlownessModel(object):
         self.maxInterpError = maxInterpError
         self.allowInnerCoreS = allowInnerCoreS
         self.slowness_tolerance = slowness_tolerance
+        if skip_model_creation:
+            return
         self.createSample()
 
     def __str__(self):

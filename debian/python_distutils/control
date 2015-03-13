@@ -6,7 +6,6 @@ X-Python-Version: >= 2.6
 Build-Depends: debhelper (>= 5), python (>= 2.6),
  python (>= 2.7) | python-argparse, python-all-dev,
  python-support (>= 0.7.1), python-numpy, python-setuptools (>=0.6.21), gcc,
- python-future (>= 0.12.4), python-mock,
  gfortran, help2man, quilt
 Standards-Version: 3.9.3
 Vcs-Git: git://github.com/obspy/obspy.git

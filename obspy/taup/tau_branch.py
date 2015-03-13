@@ -6,6 +6,7 @@ Object dealing with branches in the model.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import numpy as np
 
@@ -419,3 +420,33 @@ class TauBranch(object):
 
         tempPath = thePath[:pathIndex]
         return tempPath
+
+    def _to_array(self):
+        """
+        Store all attributes for serialization in a structured array.
+        """
+        dtypes = [(native_str('DEBUG'), np.bool_),
+                  (native_str('botDepth'), np.float_),
+                  (native_str('dist'), np.float_, self.dist.shape),
+                  (native_str('isPWave'), np.float_),
+                  (native_str('maxRayParam'), np.float_),
+                  (native_str('minRayParam'), np.float_),
+                  (native_str('minTurnRayParam'),  np.float_),
+                  (native_str('tau'), np.float_, self.tau.shape),
+                  (native_str('time'), np.float_, self.time.shape),
+                  (native_str('topDepth'),  np.float_)]
+        arr = np.empty(shape=(), dtype=dtypes)
+        for dtype in dtypes:
+            key = dtype[0]
+            arr[key] = getattr(self, key)
+        return arr
+
+    @staticmethod
+    def _from_array(arr):
+        """
+        Create instance object from a structured array used in serialization.
+        """
+        branch = TauBranch()
+        for key in arr.dtype.names:
+            setattr(branch, key, arr[key])
+        return branch
