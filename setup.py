@@ -55,13 +55,13 @@ else:
 import sys
 if sys.version_info[0] == 2:
     try:
-        from mock import patch  # PY2
+        from mock import Mock, patch  # PY2
     except:
         msg = ("No module named mock. Please install mock first, it is needed "
                "before installing ObsPy.")
         raise ImportError(msg)
 else:
-    from unittest.mock import patch
+    from unittest.mock import Mock, patch
 
 import ctypes
 import fnmatch
@@ -664,14 +664,28 @@ class BuildExtAndTauPy(build_ext):
             dist_models = []
             self.distribution.data_files.append((model_path, dist_models))
 
-        libname = _get_lib_name('tau', add_extension_suffix=True)
-        libpath = os.path.join(os.curdir if self.inplace else self.build_lib,
-                               'obspy', 'lib', libname)
-        taulib = ctypes.CDLL(libpath)
+        def _load_CDLL(name):
+            libname = _get_lib_name(name, add_extension_suffix=True)
+            basedir = os.curdir if self.inplace else self.build_lib
+            libpath = os.path.join(basedir, 'obspy', 'lib', libname)
+            return ctypes.CDLL(libpath)
+
+        orig_import = __import__
+        obspy_mock = Mock()
+        obspy_mock._load_CDLL = _load_CDLL
+
+        def import_mock(name, *args, **kwargs):
+            if name == 'obspy.core.util.libnames':
+                return obspy_mock
+            return orig_import(name, *args, **kwargs)
 
         sys.path.insert(0, obspy_taup_path)
-        with patch('obspy.core.util.libnames._load_CDLL') as load:
-            load.return_value = taulib
+        if sys.version_info[0] == 2:
+            module = '__builtin__'
+        else:
+            module = 'builtins'
+        with patch(module + '.__import__') as load:
+            load.side_effect = import_mock
             from taup.taup_create import TauP_Create
             from taup.utils import _get_model_filename
 
