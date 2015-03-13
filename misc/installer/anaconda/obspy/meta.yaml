@@ -1,3 +1,7 @@
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml
+
 package:
   name: obspy
   version: "0.10.0rc1"
@@ -19,18 +23,21 @@ requirements:
   build:
     - python
     - setuptools
+    - future
     - numpy
     - mock  # [py2k]
-    - argparse # [py26]
-    - future
+    - scipy
     - matplotlib
     - lxml
     - sqlalchemy
-    - scipy
+    - argparse # [py26]
+    - flake8
   run:
     - python
+    - setuptools
     - future
     - numpy
+    - mock  # [py2k]
     - scipy
     - matplotlib
     - lxml
