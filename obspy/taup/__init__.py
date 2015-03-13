@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.taup - Travel time calculation tool
-=========================================
+obspy.taup - Ray Theoretical Travel Times and Paths
+===================================================
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -9,13 +9,12 @@ obspy.taup - Travel time calculation tool
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-This package started out as port of the Java TauP Toolkit by [Crotwell1999]_
-so please look there for more details about the used algorithms and further
-details. It can be used to calculate theoretical arrival times for arbitrary
-seismic phases in a 1D spherically symmetric background model. Furthermore
-it can output ray paths for all phases and derive pierce points of rays with
-model discontinuities.
-
+This package started out as port of the Java TauP Toolkit by [Crotwell1999]_ so
+please look there for more details about the used algorithms and further
+information. It can be used to calculate theoretical arrival times for
+arbitrary seismic phases in a 1D spherically symmetric background model.
+Furthermore it can output ray paths for all phases and derive pierce points of
+rays with model discontinuities.
 
 Basic Usage
 -----------
@@ -25,14 +24,15 @@ Start by initializing a :class:`~obspy.taup.tau.TauPyModel` class.
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
 
+Model initialization is a fairly expensive operation so make sure to do it only
+if necessary.
+
 Travel Times
 ^^^^^^^^^^^^
-
-Model initialization is a fairly expensive operation so make sure to do it only
-if necessary. The models' main method is the
+The models' main method is the
 :meth:`~obspy.taup.tau.TauPyModel.get_travel_times` method; as the name
-suggests it returns travel times for the chosen phases, distance, source
-depth, and model. Per default it returns arrivals for a number of phases.
+suggests it returns travel times for the chosen phases, distance, source depth,
+and model. Per default it returns arrivals for a number of phases.
 
 >>> arrivals = model.get_travel_times(source_depth_in_km=55,
 ...                                   distance_in_degree=67)
@@ -114,6 +114,57 @@ results in pierce points being stored as a record array on the arrival object.
 >>> arrivals = model.get_pierce_points(500, 130)
 >>> arrivals[0].pierce.dtype
 dtype([('p', '<f8'), ('time', '<f8'), ('dist', '<f8'), ('depth', '<f8')])
+
+
+Plotting
+--------
+
+If ray paths have been calculated, they can be plotted using the
+:meth:`~obspy.taup.tau.Arrivals.plot` method:
+
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+                                   distance_in_degree=130)
+>>> arrivals.plot()  # doctest: +SKIP
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    TauPyModel().get_ray_paths(500, 130).plot()
+
+It will only plot rays for requested phases.
+
+
+>>> arrivals = model.get_ray_paths(
+...     source_depth_in_km=500,
+...     distance_in_degree=130,
+...     phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"])
+>>> arrivals.plot()  # doctest: +SKIP
+
+.. plot::
+    :width: 50%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    TauPyModel().get_ray_paths(
+        500, 130,
+        phase_list=["Pdiff", "Sdiff", "pPdiff", "sSdiff"]).plot()
+
+Additionally it can also plot on a Cartesian instead of a polar grid.
+
+>>> arrivals = model.get_ray_paths(source_depth_in_km=500,
+...                                distance_in_degree=130,
+...                                phase_list=["ttbasic"])
+>>> arrivals.plot(plot_type="cartesian")  # doctest: +SKIP
+
+.. plot::
+    :width: 75%
+    :align: center
+
+    from obspy.taup import TauPyModel
+    TauPyModel().get_ray_paths(
+        500, 130, phase_list=["ttbasic"]).plot(plot_type="cartesian")
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
