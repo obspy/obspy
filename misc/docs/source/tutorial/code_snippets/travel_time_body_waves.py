@@ -39,12 +39,17 @@ phase_name_radius = model.model.radiusOfEarth * 1.1
 
 # ax_right is used for paths plotted on the right half.
 fig, ax_right = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
+ax_right.set_theta_zero_location('N')
+ax_right.set_theta_direction(-1)
 # ax_left is used for paths plotted on the left half.
 ax_left = fig.add_axes(ax_right.get_position(), projection='polar',
                        label='twin', frameon=False)
+ax_left.set_theta_zero_location('N')
+ax_left.set_theta_direction(+1)
 ax_left.xaxis.set_visible(False)
 ax_left.yaxis.set_visible(False)
 
+# Plot all pre-determined phases
 for phase, distance in PHASES:
     if distance < 0:
         realdist = -distance
@@ -74,8 +79,5 @@ mr = model.model.radiusOfEarth - model.model.sMod.vMod.cmbDepth / 2
 ax_right.text(np.deg2rad(180), mr, 'Solid mantle',
               horizontalalignment='center',
               bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
-
-# Change directions so ray paths appear on left half
-ax_left.set_theta_direction(+1)
 
 plt.show()
