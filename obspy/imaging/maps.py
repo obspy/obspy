@@ -23,8 +23,8 @@ from matplotlib.colorbar import Colorbar
 from matplotlib.colors import Normalize
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
 import matplotlib.patheffects as PathEffects
-from matplotlib.ticker import (FixedLocator, FormatStrFormatter, Formatter,
-                               FuncFormatter, MaxNLocator)
+from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
+                               MaxNLocator)
 
 from obspy import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
@@ -542,48 +542,13 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     map_ax.add_feature(cfeature.LAND, facecolor=continent_fill_color)
     map_ax.add_feature(cfeature.BORDERS, edgecolor='0.75')
     map_ax.coastlines(resolution=_CARTOPY_RESOLUTIONS[resolution], color='0.4')
-    # Draw the edge of the bmap projection region (the projection limb)
-    # bmap.drawmapboundary(fill_color=water_fill_color)
 
-    # Draw grid lines
+    # Draw grid lines - TODO: draw_labels=True doesn't work yet.
     if projection == 'local':
-        gl = map_ax.gridlines()  # draw_labels=True) - TODO: doesn't work yet.
-
-        # Not most elegant way to calculate some round lats/lons
-        def linspace2(val1, val2, N):
-            """
-            returns around N 'nice' values between val1 and val2
-            """
-            dval = val2 - val1
-            round_pos = int(round(-np.log10(1. * dval / N)))
-            # Fake negative rounding as not supported by future as of now.
-            if round_pos < 0:
-                factor = 10 ** (abs(round_pos))
-                delta = round(2. * dval / N / factor) * factor / 2
-            else:
-                delta = round(2. * dval / N, round_pos) / 2
-            new_val1 = np.ceil(val1 / delta) * delta
-            new_val2 = np.floor(val2 / delta) * delta
-            N = (new_val2 - new_val1) / delta + 1
-            return np.linspace(new_val1, new_val2, N)
-
-        N1 = int(np.ceil(height / max(width, height) * 8))
-        N2 = int(np.ceil(width / max(width, height) * 8))
-        gl.ylocator = FixedLocator(linspace2(lat_0 - height / 2,
-                                             lat_0 + height / 2,
-                                             N1))
-        # labels=[0, 1, 1, 0]
-        if min(lons) < -150 and max(lons) > 150:
-            lon_0 %= 360
-        meridians = linspace2(lon_0 - width / 2, lon_0 + width / 2, N2)
-        meridians[meridians > 180] -= 360
-        gl.xlocator = FixedLocator(meridians)
-        # labels=[1, 0, 0, 1]
+        map_ax.gridlines()
     else:
-        gl = map_ax.gridlines()
         # Draw lat/lon grid lines every 30 degrees.
-        gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
-        gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
+        map_ax.gridlines(xlocs=range(-180, 181, 30), ylocs=range(-90, 91, 30))
 
     # Plot labels
     if labels and len(lons) > 0:
