@@ -85,8 +85,8 @@ Each arrival is represented by an :class:`~obspy.taup.helper_classes.Arrival`
 object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
->>> arr.ray_param, arr.time, arr.incident_angle
-(453.71881662349625, 485.20416952979105, 24.396848002294515)
+>>> arr.ray_param, arr.time, arr.incident_angle #  doctest: +ELLIPSIS
+(453.7188..., 485.2041..., 24.3968...)
 
 Ray Paths
 ^^^^^^^^^
