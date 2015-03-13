@@ -52,12 +52,26 @@ else:
     HAS_CARTOPY = False
 
 
-RESOLUTIONS = {
+_BASEMAP_RESOLUTIONS = {
+    '110m': 'l',
+    '50m': 'i',
+    '10m': 'f',
+    'c': 'c',
+    'l': 'l',
+    'i': 'i',
+    'h': 'h',
+    'f': 'f',
+}
+
+_CARTOPY_RESOLUTIONS = {
     'c': '110m',
     'l': '110m',
     'i': '50m',
     'h': '50m',
     'f': '10m',
+    '110m': '110m',
+    '50m': '50m',
+    '10m': '10m',
 }
 
 
@@ -97,7 +111,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         * ``"i"`` (intermediate)
         * ``"h"`` (high)
         * ``"f"`` (full)
-        Defaults to ``"l"``
+        Defaults to ``"l"``. For compatibility, you may also specify any of the
+        Cartopy resolutions defined in :func:`plot_cartopy`.
     :type continent_fill_color: Valid matplotlib color, optional
     :param continent_fill_color:  Color of the continents. Defaults to
         ``"0.9"`` which is a light gray.
@@ -171,9 +186,10 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
     if projection == 'global':
         bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
-                       resolution=resolution, ax=map_ax)
+                       resolution=_BASEMAP_RESOLUTIONS[resolution], ax=map_ax)
     elif projection == 'ortho':
-        bmap = Basemap(projection='ortho', resolution=resolution,
+        bmap = Basemap(projection='ortho',
+                       resolution=_BASEMAP_RESOLUTIONS[resolution],
                        area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
                        lon_0=round(np.mean(lons), 4), ax=map_ax)
     elif projection == 'local':
@@ -209,7 +225,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         else:
             height = width / aspect
 
-        bmap = Basemap(projection='aea', resolution=resolution,
+        bmap = Basemap(projection='aea',
+                       resolution=_BASEMAP_RESOLUTIONS[resolution],
                        area_thresh=1000.0, lat_0=round(lat_0, 4),
                        lon_0=round(lon_0, 4),
                        width=width, height=height, ax=map_ax)
@@ -329,7 +346,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
 
 def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
-                 resolution='l', continent_fill_color='0.8',
+                 resolution='110m', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
                  show=True, proj_kwargs=None, **kwargs):  # @UnusedVariable
@@ -355,17 +372,17 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         * ``"global"`` (Will plot the whole world.)
         * ``"ortho"`` (Will center around the mean lat/long.)
         * ``"local"`` (Will plot around local events)
-        * Any other Cartopy projection
+        * Any other Cartopy :class:`~cartopy.crs.Projection`. An instance of
+          this class will be created using the supplied ``proj_kwargs``.
         Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
-        based directly to the Cartopy module. Possible values are
-        * ``"c"`` (crude)
-        * ``"l"`` (low)
-        * ``"i"`` (intermediate)
-        * ``"h"`` (high)
-        * ``"f"`` (full)
-        Defaults to ``"l"``
+        passed directly to the Cartopy module. Possible values are
+        * ``"110m"``
+        * ``"50m"``
+        * ``"10m"``
+        Defaults to ``"110m"``. For compatibility, you may also specify any of
+        the Basemap resolutions defined in :func:`plot_basemap`.
     :type continent_fill_color: Valid matplotlib color, optional
     :param continent_fill_color:  Color of the continents. Defaults to
         ``"0.9"`` which is a light gray.
@@ -515,7 +532,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     map_ax.add_feature(cfeature.OCEAN, facecolor=water_fill_color)
     map_ax.add_feature(cfeature.LAND, facecolor=continent_fill_color)
     map_ax.add_feature(cfeature.BORDERS, edgecolor='0.75')
-    map_ax.coastlines(resolution=RESOLUTIONS[resolution], color='0.4')
+    map_ax.coastlines(resolution=_CARTOPY_RESOLUTIONS[resolution], color='0.4')
     # Draw the edge of the bmap projection region (the projection limb)
     # bmap.drawmapboundary(fill_color=water_fill_color)
 
