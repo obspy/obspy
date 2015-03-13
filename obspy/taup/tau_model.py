@@ -22,17 +22,30 @@ from math import pi
 
 import numpy as np
 
+from obspy.core.compatibility import frombuffer
+
 from .helper_classes import SlownessModelError, TauModelError
+from .slowness_model import SlownessModel
 from .tau_branch import TauBranch
 from .utils import _get_model_filename
+from .velocity_model import VelocityModel
 
 
 TAU_MODEL_KEYS = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch',
                   'iocbDepth', 'mohoBranch', 'mohoDepth', 'noDisconDepths',
-                  'radiusOfEarth', 'ray_params', 'sourceBranch',
+                  'radiusOfEarth', 'ray_params', 'sMod', 'sourceBranch',
                   'source_depth', 'spherical', 'tauBranches']
 TAU_BRANCH_KEYS = ['botDepth', 'DEBUG', 'dist', 'isPWave', 'maxRayParam',
                    'minRayParam', 'minTurnRayParam', 'tau', 'time', 'topDepth']
+TAU_SLOWNESS_MODEL_KEYS = [
+    'allowInnerCoreS', 'criticalDepths', 'DEBUG', 'DEFAULT_SLOWNESS_TOLERANCE',
+    'maxDeltaP', 'maxDepthInterval', 'maxInterpError', 'maxRangeInterval',
+    'minDeltaP', 'PLayers', 'PWAVE', 'radiusOfEarth', 'SLayers',
+    'slowness_tolerance', 'SWAVE', 'vMod']
+TAU_VELOCITY_MODEL_KEYS = [
+    'cmbDepth', 'default_cmb', 'default_iocb', 'default_moho', 'iocbDepth',
+    'isSpherical', 'layers', 'maxRadius', 'minRadius', 'modelName',
+    'mohoDepth', 'radiusOfEarth']
 
 
 class TauModel(object):
@@ -464,6 +477,16 @@ class TauEncoder(json.JSONEncoder):
             data = dict([(key, getattr(obj, key)) for key in TAU_MODEL_KEYS])
             data['dtype'] = "TauModel"
             return data
+        elif isinstance(obj, SlownessModel):
+            data = dict([(key, getattr(obj, key))
+                         for key in TAU_SLOWNESS_MODEL_KEYS])
+            data['dtype'] = "SlownessModel"
+            return data
+        elif isinstance(obj, VelocityModel):
+            data = dict([(key, getattr(obj, key))
+                         for key in TAU_VELOCITY_MODEL_KEYS])
+            data['dtype'] = "VelocityModel"
+            return data
         return json.JSONEncoder(self, obj)
 
 
@@ -477,7 +500,14 @@ def _json_obj_hook(dct):
     """
     if isinstance(dct, dict) and '__ndarray__' in dct:
         data = base64.b64decode(dct['__ndarray__'])
-        return np.frombuffer(data, dct['dtype']).reshape(dct['shape'])
+        try:
+            return frombuffer(data, dct['dtype']).reshape(dct['shape'])
+        # if we run into an exception we have a structured array, likely
+        except ValueError:
+            dtype = np.array(dct['dtype'].split("'")[1::2])
+            dtype = dtype.reshape((-1, 2)).tolist()
+            dtype = [tuple([native_str(x), native_str(y)]) for x, y in dtype]
+            return frombuffer(data, dtype=dtype).reshape(dct['shape'])
     elif isinstance(dct, dict) and '__ndarray_list__' in dct:
         data = [_loads(base64.b64decode(x)) for x in dct['__ndarray_list__']]
         return np.array(data, dtype=TauBranch).reshape(dct['shape'])
@@ -485,6 +515,10 @@ def _json_obj_hook(dct):
         return _deserialize_TauBranch(dct)
     elif isinstance(dct, dict) and dct.get("dtype", "") == "TauModel":
         return _deserialize_TauModel(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "SlownessModel":
+        return _deserialize_SlownessModel(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "VelocityModel":
+        return _deserialize_VelocityModel(dct)
     return dct
 
 
@@ -502,6 +536,22 @@ def _deserialize_TauModel(dct):
     for k, v in dct.iteritems():
         setattr(tm, k, v)
     return tm
+
+
+def _deserialize_SlownessModel(dct):
+    sm = SlownessModel(vMod=None, skip_model_creation=True)
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(sm, k, v)
+    return sm
+
+
+def _deserialize_VelocityModel(dct):
+    vm = VelocityModel()
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(vm, k, v)
+    return vm
 
 
 def _dumps(*args, **kwargs):
