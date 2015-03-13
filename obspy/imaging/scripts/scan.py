@@ -364,13 +364,6 @@ def main(argv=None):
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
-    # set x-axis limits according to given start/end time
-    if args.start_time and args.end_time:
-        ax.set_xlim(left=args.start_time, right=args.end_time)
-    elif args.start_time:
-        ax.set_xlim(left=args.start_time, auto=None)
-    elif args.end_time:
-        ax.set_xlim(right=args.end_time, auto=None)
     fig.autofmt_xdate()  # rotate date
     ax.xaxis_date()
     # set custom formatters to always show date in first tick
@@ -381,6 +374,17 @@ def main(argv=None):
         formatter.scaled.pop(1/(24.*60.))
     ax.xaxis.set_major_formatter(formatter)
     plt.subplots_adjust(left=0.2)
+    # set x-axis limits according to given start/end time
+    if args.start_time and args.end_time:
+        ax.set_xlim(left=args.start_time, right=args.end_time)
+    elif args.start_time:
+        ax.set_xlim(left=args.start_time, auto=None)
+    elif args.end_time:
+        ax.set_xlim(right=args.end_time, auto=None)
+    else:
+        left, right = ax.xaxis.get_data_interval()
+        x_axis_range = right - left
+        ax.set_xlim(left - 0.05 * x_axis_range, right + 0.05 * x_axis_range)
     if args.output is None:
         plt.show()
     else:
