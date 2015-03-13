@@ -1738,17 +1738,19 @@ class Stream(object):
                       "calibration factors.!"
                 raise Exception(msg)
 
-    def merge(self, method=0, fill_value=None, interpolation_samples=0):
+    def merge(self, method=0, fill_value=None, interpolation_samples=0,
+              **kwargs):
         """
         Merge ObsPy Trace objects with same IDs.
 
         :type method: int, optional
-        :param method: Methodology to handle overlaps of traces. Defaults
+        :param method: Methodology to handle overlaps/gaps of traces. Defaults
             to ``0``.
             See :meth:`obspy.core.trace.Trace.__add__` for details on
             methods ``0`` and ``1``,
             see :meth:`obspy.core.stream.Stream._cleanup` for details on
-            method ``-1``.
+            method ``-1``. Any merge operation performs a cleanup merge as
+            a first step (method ``-1``).
         :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
@@ -1780,8 +1782,8 @@ class Stream(object):
             except ValueError:
                 return -1
 
+        self._cleanup(**kwargs)
         if method == -1:
-            self._cleanup()
             return
         # check sampling rates and dtypes
         self._mergeChecks()
@@ -2634,13 +2636,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.traces = []
         return self
 
-    def _cleanup(self):
+    def _cleanup(self, misalignment_threshold=1e-2):
         """
         Merge consistent trace objects but leave everything else alone.
 
         This can mean traces with matching header that are directly adjacent or
         are contained/equal/overlapping traces with exactly the same waveform
         data in the overlapping part.
+        If option `misalignment_threshold` is non-zero then
+        contained/overlapping/directly adjacent traces with the sampling points
+        misaligned by less than `misalignment_threshold` times the sampling
+        interval are aligned on the same sampling points (see example below).
 
         .. rubric:: Notes
 
@@ -2691,7 +2697,28 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             after:
             Trace 1: AAAAAAABBBBB
+
+        Misaligned traces are aligned, depending on set parameters, e.g. for a
+        directly adjacent trace with slight misalignment (with two common
+        samples at start of Trace 2 for better visualization)::
+
+            before:
+            Trace 1: A---------A---------A
+            Trace 2:            A---------A---------B---------B
+
+            after:
+            Trace 1: A---------A---------A---------B---------B
+
+        :type misalignment_threshold: float
+        :param misalignment_threshold: Threshold value for sub-sample
+            misalignments of sampling points of two traces that should be
+            merged together (fraction of sampling interval, from 0 to 0.5).
+            ``0`` means traces with even just the slightest misalignment will
+            not be merged together, ``0.5`` means traces will be merged
+            together disregarding of any sub-sample shifts of sampling points.
         """
+        # first of all throw away all empty traces
+        self.traces = [_i for _i in self.traces if _i.stats.npts]
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
@@ -2720,11 +2747,66 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         for id_ in traces_dict.keys():
             trace_list = traces_dict[id_]
             cur_trace = trace_list.pop(0)
+            delta = cur_trace.stats.delta
+            allowed_micro_shift = misalignment_threshold * delta
             # work through all traces of same id
             while trace_list:
                 trace = trace_list.pop(0)
+                # `gap` is the deviation (in seconds) of the actual start
+                # time of the second trace from the expected start time
+                # (for the ideal case of directly adjacent and perfectly
+                # aligned traces).
+                gap = trace.stats.starttime - (cur_trace.stats.endtime + delta)
+                # if `gap` is larger than the designated allowed shift,
+                # we treat it as a real gap and leave as is.
+                if misalignment_threshold > 0 and gap <= allowed_micro_shift:
+                    # `gap` is smaller than allowed shift (or equal),
+                    #  the traces could be
+                    #  - overlapping without being misaligned or..
+                    #  - overlapping with misalignment or..
+                    #  - misaligned with a micro gap
+                    # check if the sampling points are misaligned:
+                    misalignment = gap % delta
+                    if misalignment != 0:
+                        # determine the position of the second trace's
+                        # sampling points in the interval between two
+                        # sampling points of first trace.
+                        # a `misalign_percentage` of close to 0.0 means a
+                        # sampling point of the first trace is just a bit
+                        # to the left of our sampling point:
+                        #
+                        #  Trace 1: --|---------|---------|---------|--
+                        #  Trace 2: ---|---------|---------|---------|-
+                        # misalign_percentage:  0.........1
+                        #
+                        # a `misalign_percentage` of close to 1.0 means a
+                        # sampling point of the first trace is just a bit
+                        # to the right of our sampling point:
+                        #
+                        #  Trace 1: --|---------|---------|---------|--
+                        #  Trace 2: -|---------|---------|---------|---
+                        # misalign_percentage:  0.........1
+                        misalign_percentage = misalignment / delta
+                        if (misalign_percentage <= misalignment_threshold or
+                                misalign_percentage >=
+                                1 - misalignment_threshold):
+                            # now we align the sampling points of both traces
+                            trace.stats.starttime = (
+                                cur_trace.stats.starttime +
+                                round((trace.stats.starttime -
+                                       cur_trace.stats.starttime) / delta) *
+                                delta)
                 # we have some common parts: check if consistent
-                if trace.stats.starttime <= cur_trace.stats.endtime:
+                # (but only if sampling points are matching to specified
+                #  accuracy, which is checked and conditionally corrected in
+                #  previous code block)
+                subsample_shift_percentage = (
+                    trace.stats.starttime.timestamp -
+                    cur_trace.stats.starttime.timestamp) % delta / delta
+                subsample_shift_percentage = min(
+                    subsample_shift_percentage, 1 - subsample_shift_percentage)
+                if (trace.stats.starttime <= cur_trace.stats.endtime and
+                        subsample_shift_percentage < misalignment_threshold):
                     # check if common time slice [t1 --> t2] is equal:
                     t1 = trace.stats.starttime
                     t2 = min(cur_trace.stats.endtime, trace.stats.endtime)
@@ -2747,6 +2829,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     cur_trace = trace
             self.traces.append(cur_trace)
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def split(self):
         """
