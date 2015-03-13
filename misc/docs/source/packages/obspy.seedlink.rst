@@ -9,6 +9,8 @@
        :toctree: autogen
        :nosignatures:
 
+       ~basic_client.Client
+       ~easyseedlink.EasySeedLinkClient
        ~slclient.SLClient
        ~slpacket.SLPacket
        ~client.slnetstation.SLNetStation
@@ -23,6 +25,7 @@
        :toctree: autogen
        :nosignatures:
 
+       basic_client
        easyseedlink
        slclient
        slpacket
