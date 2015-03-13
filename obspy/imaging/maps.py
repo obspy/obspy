@@ -521,7 +521,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
     # Draw grid lines
     if projection == 'local':
-        gl = map_ax.gridlines() # draw_labels=True) - TODO: doesn't work yet.
+        gl = map_ax.gridlines()  # draw_labels=True) - TODO: doesn't work yet.
 
         # Not most elegant way to calculate some round lats/lons
         def linspace2(val1, val2, N):
@@ -608,3 +608,40 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         plt.show()
 
     return fig
+
+
+def plot_map(method, *args, **kwargs):
+    '''
+    Creates a map plot with a data point scatter plot.
+
+    :type method: str
+    :param method: Method to use for plotting. Possible values are:
+
+        * ``'basemap'`` to use the Basemap library. For other arguments, see
+          the :func:`plot_basemap` function.
+        * ``'cartopy'`` to use the Cartopy library. For other arguments, see
+          the :func:`plot_cartopy` function.
+        * ``None`` to use either the Basemap or Cartopy library, whichever is
+          available.
+    '''
+
+    if method is None:
+        if HAS_BASEMAP:
+            return plot_basemap(*args, **kwargs)
+        elif HAS_CARTOPY:
+            return plot_cartopy(*args, **kwargs)
+        else:
+            raise ImportError('Neither Basemap nor Cartopy could be imported.')
+    elif method == 'basemap':
+        if not HAS_BASEMAP:
+            raise ImportError('Basemap cannot be imported but was explicitly '
+                              'requested.')
+        return plot_basemap(*args, **kwargs)
+    elif method == 'cartopy':
+        if not HAS_CARTOPY:
+            raise ImportError('Cartopy cannot be imported but was explicitly '
+                              'requested.')
+        return plot_cartopy(*args, **kwargs)
+    else:
+        raise ValueError("The method argument must be either 'basemap' or "
+                         "'cartopy', not '%s'." % (method, ))

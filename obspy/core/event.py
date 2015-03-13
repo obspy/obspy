@@ -3205,7 +3205,7 @@ class Catalog(object):
              water_fill_color='1.0',
              label='magnitude',
              color='depth',
-             colormap=None, show=True, outfile=None,
+             colormap=None, show=True, outfile=None, method=None,
              **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
@@ -3270,6 +3270,14 @@ class Catalog(object):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type method: str
+        :param method: Method to use for plotting. Possible values are:
+
+            * ``'basemap'`` to use the Basemap library
+            * ``'cartopy'`` to use the Cartopy library
+            * ``None`` to pick the best available library
+
+            Defaults to ``None``.
 
         .. rubric:: Examples
 
@@ -3304,7 +3312,7 @@ class Catalog(object):
             cat = read_events()
             cat.plot(projection="local")
         """
-        from obspy.imaging.maps import plot_basemap
+        from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
 
         if color not in ('date', 'depth'):
@@ -3378,12 +3386,12 @@ class Catalog(object):
         else:
             size_plot = 15.0 ** 2
 
-        fig = plot_basemap(lons, lats, size_plot, colors, labels,
-                           projection=projection, resolution=resolution,
-                           continent_fill_color=continent_fill_color,
-                           water_fill_color=water_fill_color,
-                           colormap=colormap, marker="o", title=title,
-                           show=False, **kwargs)
+        fig = plot_map(method, lons, lats, size_plot, colors, labels,
+                       projection=projection, resolution=resolution,
+                       continent_fill_color=continent_fill_color,
+                       water_fill_color=water_fill_color,
+                       colormap=colormap, marker="o", title=title,
+                       show=False, **kwargs)
 
         if outfile:
             fig.savefig(outfile)
