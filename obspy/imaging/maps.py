@@ -473,17 +473,19 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         lon_0 = max_lons / 2. + min_lons / 2.
         if lon_0 > 180:
             lon_0 -= 360
+        deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
+        deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
         if len(lats) > 1:
-            height = max(lats) - min(lats)
-            width = max_lons - min_lons
+            height = (max(lats) - min(lats)) * deg2m_lat
+            width = (max_lons - min_lons) * deg2m_lon
             margin = 0.2 * (width + height)
             height += margin
             width += margin
         else:
-            height = 2.0
-            width = 5.0
+            height = 2.0 * deg2m_lat
+            width = 5.0 * deg2m_lon
         # Do intelligent aspect calculation for local projection
-        # adjust to figure dimensions.
+        # adjust to figure dimensions
         w, h = fig.get_size_inches()
         aspect = w / h
         if show_colorbar:
@@ -531,8 +533,9 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                               projection=proj)
 
     if projection == 'local':
-        map_ax.set_extent((lon_0 - width / 2, lon_0 + width / 2,
-                           lat_0 - height / 2, lat_0 + height / 2))
+        x0, y0 = proj.transform_point(lon_0, lat_0, proj.as_geodetic())
+        map_ax.set_xlim(x0 - width / 2, x0 + width / 2)
+        map_ax.set_ylim(y0 - height / 2, y0 + height / 2)
     else:
         map_ax.set_global()
 
