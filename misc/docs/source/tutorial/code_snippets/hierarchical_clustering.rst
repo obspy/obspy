@@ -2,8 +2,8 @@
 Hierarchical Clustering
 =======================
 
-An implementation of hierarchical clustering is provided in the package
-`hcluster`_. Among other things, it allows to build clusters from similarity
+An implementation of hierarchical clustering is provided in the `SciPy`_
+package. Among other things, it allows to build clusters from similarity
 matrices and make dendrogram plots. The following example shows how to do this
 for an already computed similarity matrix. The similarity data are computed
 from events in an area with induced seismicity (using the cross-correlation
@@ -15,12 +15,16 @@ webserver:
 
 .. doctest::
 
-    >>> import pickle, urllib
+    >>> import io, urllib
+    >>> import numpy as np
     >>> import matplotlib.pyplot as plt
-    >>> import hcluster
+    >>> from scipy.cluster import hierarchy
+    >>> from scipy.spatial import distance
     >>> 
-    >>> url = "http://examples.obspy.org/dissimilarities.pkl"
-    >>> dissimilarity = pickle.load(urllib.urlopen(url))
+    >>> url = "http://examples.obspy.org/dissimilarities.npz"
+    >>> with io.BytesIO(urllib.urlopen(url).read()) as fh:
+    ...     with np.load(fh) as data:
+    ...         dissimilarity = data['dissimilarity']
 
 Now, we can start building up the plots. First, we plot the dissimilarity
 matrix:
@@ -30,18 +34,18 @@ matrix:
     >>> plt.subplot(121)
     >>> plt.imshow(1 - dissimilarity, interpolation="nearest")
 
-After that, we use `hcluster`_ to build up and plot the dendrogram into the
+After that, we use `SciPy`_ to build up and plot the dendrogram into the
 right-hand subplot:
 
 .. doctest::
 
-    >>> dissimilarity = hcluster.squareform(dissimilarity)
+    >>> dissimilarity = distance.squareform(dissimilarity)
     >>> threshold = 0.3
-    >>> linkage = hcluster.linkage(dissimilarity, method="single")
-    >>> clusters = hcluster.fcluster(linkage, 0.3, criterion="distance")
+    >>> linkage = hierarchy.linkage(dissimilarity, method="single")
+    >>> clusters = hierarchy.fcluster(linkage, threshold, criterion="distance")
     >>> 
     >>> plt.subplot(122)
-    >>> hcluster.dendrogram(linkage, color_threshold=0.3)
+    >>> hierarchy.dendrogram(linkage, color_threshold=0.3)
     >>> plt.xlabel("Event number")
     >>> plt.ylabel("Dissimilarity")
     >>> plt.show()
@@ -49,5 +53,5 @@ right-hand subplot:
 .. plot:: tutorial/code_snippets/hierarchical_clustering.py
 
 
-.. _`hcluster`: https://pypi.python.org/pypi/hcluster
+.. _`SciPy`: http://docs.scipy.org/doc/scipy/reference/cluster.html
 .. _`examples webserver`: http://examples.obspy.org

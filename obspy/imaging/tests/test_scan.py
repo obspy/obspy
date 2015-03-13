@@ -6,15 +6,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
-from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
-from obspy.core.util.decorator import skipIf
-from obspy.imaging.scripts.scan import main as obspy_scan
-from os.path import dirname, abspath, join, pardir
-import shutil
 import os
+import shutil
 import unittest
+from os.path import abspath, dirname, join, pardir
+
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.misc import TemporaryWorkingDirectory
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.imaging.scripts.scan import main as obspy_scan
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -42,48 +42,35 @@ class ScanTestCase(unittest.TestCase):
                           for i in gse2_files])
         self.all_files = all_files
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_scan(self):
         """
         Run obspy-scan on selected tests/data directories
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
-                with CatchOutput():
-                    obspy_scan([os.curdir] + ['--output', ic.name])
+            with ImageComparison(self.path, 'scan.png') as ic:
+                obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_scanTimes(self):
         """
         Checks for timing related options
         """
-        reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
-
         # Copy files to a temp folder to avoid wildcard scans.
         with TemporaryWorkingDirectory():
             for filename in self.all_files:
                 shutil.copy(filename, os.curdir)
 
-            with ImageComparison(self.path, 'scan_times.png',
-                                 reltol=reltol) as ic:
-                with CatchOutput():
-                    obspy_scan([os.curdir] + ['--output', ic.name] +
-                               ['--start-time', '2004-01-01'] +
-                               ['--end-time', '2004-12-31'] +
-                               ['--event-time', '2004-03-14T15:09:26'] +
-                               ['--event-time', '2004-02-07T18:28:18'])
+            with ImageComparison(self.path, 'scan_times.png') as ic:
+                obspy_scan([os.curdir] + ['--output', ic.name] +
+                           ['--start-time', '2004-01-01'] +
+                           ['--end-time', '2004-12-31'] +
+                           ['--event-time', '2004-03-14T15:09:26'] +
+                           ['--event-time', '2004-02-07T18:28:18'] +
+                           ['--quiet'])
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_multipleSamplingrates(self):
         """
         Check for multiple sampling rates
@@ -96,9 +83,11 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
+
         reltol = 1
-        if MATPLOTLIB_VERSION < [1, 3, 0]:
-            reltol = 60
+        if MATPLOTLIB_VERSION >= [1, 4, 0]:
+            reltol = 10
+
         files = []
         with NamedTemporaryFile() as f1:
             with NamedTemporaryFile() as f2:
@@ -111,8 +100,7 @@ class ScanTestCase(unittest.TestCase):
                         files.append(fp.name)
                     with ImageComparison(self.path, 'scan_mult_sampl.png',
                                          reltol=reltol) as ic:
-                        with CatchOutput():
-                            obspy_scan(files + ['--output', ic.name])
+                        obspy_scan(files + ['--output', ic.name, '--quiet'])
 
 
 def suite():

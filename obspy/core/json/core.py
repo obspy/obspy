@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import json
+
 from obspy.core.json import Default
 
 
@@ -27,13 +28,6 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
     """
     Write object to a file in JSON format
 
-    .. note::
-        This function is registered via the
-        :meth:`~obspy.core.event.Catalog.write` method of an ObsPy
-        :class:`~obspy.core.event.Catalog` object, but is also valid for any
-        obspy event-type object (or any serializable python object that
-        contains an obspy event-type object)
-
     :type obj: :mod:`~obspy.core.event` class object
     :param obj: The ObsPy Event-type object to write.
     :type filename: str or file
@@ -42,6 +36,13 @@ def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
     :param omit_nulls: Don't include empty-valued attributes
     :type pretty_print: bool
     :param pretty_print: Indent for readability
+
+    .. note::
+        This function is registered via the
+        :meth:`~obspy.core.event.Catalog.write` method of an ObsPy
+        :class:`~obspy.core.event.Catalog` object, but is also valid for any
+        obspy event-type object (or any serializable python object that
+        contains an obspy event-type object)
 
     """
     try:

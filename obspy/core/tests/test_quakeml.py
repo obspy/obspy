@@ -4,7 +4,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import difflib
 import math
 import os
 import unittest
@@ -12,14 +11,16 @@ import warnings
 
 from lxml import etree
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
-    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents, \
-    Pick
-from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
+from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
+                              MomentTensor, Origin, Pick, ResourceIdentifier,
+                              Tensor, WaveformStreamID, readEvents)
+from obspy.core.quakeml import Pickler, readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
+from obspy.core.util.testing import compare_xml_strings
+
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
@@ -37,37 +38,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.neries_filename = os.path.join(self.path, 'neries_events.xml')
         self.neries_catalog = readQuakeML(self.neries_filename)
-
-    def _compareStrings(self, doc1, doc2):
-        """
-        Simple helper function to compare two XML strings.
-        """
-        # Compat py2k and py3k
-        try:
-            doc1 = doc1.encode()
-            doc2 = doc2.encode()
-        except:
-            pass
-        obj1 = etree.fromstring(doc1).getroottree()
-        obj2 = etree.fromstring(doc2).getroottree()
-
-        buf = io.BytesIO()
-        obj1.write_c14n(buf)
-        buf.seek(0, 0)
-        str1 = buf.read()
-        str1 = [_i.strip() for _i in str1.splitlines()]
-
-        buf = io.BytesIO()
-        obj2.write_c14n(buf)
-        buf.seek(0, 0)
-        str2 = buf.read()
-        str2 = [_i.strip() for _i in str2.splitlines()]
-
-        unified_diff = difflib.unified_diff(str1, str2)
-
-        err_msg = "\n".join(unified_diff)
-        if err_msg:  # pragma: no cover
-            raise AssertionError("Strings are not equal.\n" + err_msg)
 
     def test_readQuakeML(self):
         """
@@ -96,6 +66,14 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             catalog[2].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
+
+    def test_USGS_eventype(self):
+        filename = os.path.join(self.path, 'usgs_event.xml')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore")
+            catalog = readQuakeML(filename)
+        self.assertEqual(len(catalog), 1)
+        self.assertEqual(catalog[0].event_type, 'quarry blast')
 
     def test_event(self):
         """
@@ -148,7 +126,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_origin(self):
         """
@@ -249,7 +227,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_magnitude(self):
         """
@@ -294,7 +272,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitudecontribution(self):
         """
@@ -328,7 +306,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_stationmagnitude(self):
         """
@@ -366,7 +344,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_data_used_in_moment_tensor(self):
         """
@@ -408,7 +386,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_arrival(self):
         """
@@ -444,7 +422,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_pick(self):
         """
@@ -482,7 +460,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rt") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_focalmechanism(self):
         """
@@ -576,7 +554,7 @@ class QuakeMLTestCase(unittest.TestCase):
         with open(filename, "rb") as fp:
             original = fp.read()
         processed = Pickler().dumps(catalog)
-        self._compareStrings(original, processed)
+        compare_xml_strings(original, processed)
 
     def test_writeQuakeML(self):
         """

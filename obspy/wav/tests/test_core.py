@@ -8,13 +8,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import read, Stream, Trace
+import os
+import unittest
+
+import numpy as np
+
+from obspy import Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.wav.core import WIDTH2DTYPE
-import numpy as np
-import os
-import unittest
 
 
 numpy_version = float(".".join(np.version.version.split('.')[:2]))

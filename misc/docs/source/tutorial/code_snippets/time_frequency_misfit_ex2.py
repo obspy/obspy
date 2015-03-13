@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import hilbert
+
 from obspy.signal.tf_misfit import plotTfMisfits
+
 
 # general constants
 tmax = 6.
@@ -25,8 +27,8 @@ amp_fac = 1.1
 
 # generate the signal
 H1 = (np.sign(t - t1) + 1) / 2
-st1 = A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
-        np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H1
+st1 = A1 * (t - t1) * np.exp(-2 * (t - t1))
+st1 *= np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H1
 
 # reference signal
 st2 = st1.copy()

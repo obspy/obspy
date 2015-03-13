@@ -14,8 +14,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import datetime
-import time
 import math
+import time
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
@@ -901,6 +901,9 @@ class UTCDateTime(object):
         """
         return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __unicode__(self):
         """

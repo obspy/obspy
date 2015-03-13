@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import obspy
-from obspy.core.util.testing import check_flake8
 import os
 from shutil import copyfile
+
+import obspy
+from obspy.core.util.testing import check_flake8
 
 
 ROOT = os.path.dirname(__file__)

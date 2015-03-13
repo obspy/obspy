@@ -6,18 +6,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import unittest
+from struct import unpack
+
 import numpy as np
+
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
-from obspy.segy.core import SEGYSampleIntervalError
-from obspy.segy.core import isSU, readSU, writeSU
-from obspy.segy.segy import SEGYError
+from obspy.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
+                             isSEGY, isSU, readSEGY, readSU, writeSEGY,
+                             writeSU)
 from obspy.segy.segy import readSEGY as readSEGYInternal
-from obspy.segy.tests.header import FILES, DTYPES
-import os
-from struct import unpack
-import unittest
+from obspy.segy.segy import SEGYError
+from obspy.segy.tests.header import DTYPES, FILES
 
 
 class SEGYCoreTestCase(unittest.TestCase):
@@ -91,16 +93,16 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1.stats.textual_file_header[3:21]
-                        == b'CLIENT: LITHOPROBE')
+        self.assertTrue(st1.stats.textual_file_header[3:21] ==
+                        b'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
-        self.assertFalse(st2.stats.textual_file_header[3:21]
-                         == b'CLIENT: LITHOPROBE')
+        self.assertFalse(st2.stats.textual_file_header[3:21] ==
+                         b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
         # Autodetection should also write the textual file header encoding to

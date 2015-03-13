@@ -4,7 +4,20 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace, read
+import ctypes as C
+import io
+import multiprocessing
+import os
+import platform
+import random
+import signal
+import sys
+import unittest
+import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
@@ -14,16 +27,6 @@ from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
 
-import ctypes as C
-import io
-import multiprocessing
-import numpy as np
-import os
-import random
-import sys
-import unittest
-import warnings
-
 
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
@@ -31,6 +34,17 @@ try:
     UTCDateTime(-50000)
 except:
     NO_NEGATIVE_TIMESTAMPS = True
+
+
+def _testFunction(filename):
+    """
+    Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
+    """
+    try:
+        st = read(filename)  # noqa @UnusedVariable
+    except ValueError:
+        # Should occur with broken files
+        pass
 
 
 class MSEEDSpecialIssueTestCase(unittest.TestCase):
@@ -659,20 +673,18 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
 
-        def testFunction(filename):
-            try:
-                st = read(filename)  # noqa
-            except ValueError:
-                # Should occur with broken files
-                pass
-
-        process = multiprocessing.Process(target=testFunction,
+        process = multiprocessing.Process(target=_testFunction,
                                           args=(filename, ))
         process.start()
-        process.join(5)
+        process.join(60)
 
         fail = process.is_alive()
         process.terminate()
+        if process.is_alive():
+            if platform.system() == 'Windows':
+                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
 

@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.station.util import BaseNode
-from obspy.station.station import Station
+import copy
+import fnmatch
 import textwrap
 import warnings
-import fnmatch
-import copy
+
+from obspy.station.station import Station
+from obspy.station.util import BaseNode
 
 
 class Network(BaseNode):
@@ -81,19 +82,21 @@ class Network(BaseNode):
         ret = ("Network {id} {description}\n"
                "\tStation Count: {selected}/{total} (Selected/Total)\n"
                "\t{start_date} - {end_date}\n"
-               "\tAccess: {restricted} {alternate_code}{historical_code}\n")
+               "\tAccess: {restricted}\n"
+               "{alternate_code}"
+               "{historical_code}")
         ret = ret.format(
             id=self.code,
             description="(%s)" % self.description if self.description else "",
             selected=self.selected_number_of_stations,
             total=self.total_number_of_stations,
-            start_date=str(self.start_date),
-            end_date=str(self.end_date) if self.end_date else "",
-            restricted=self.restricted_status,
-            alternate_code="Alternate Code: %s " % self.alternate_code if
-            self.alternate_code else "",
-            historical_code="historical Code: %s " % self.historical_code if
-            self.historical_code else "")
+            start_date=str(self.start_date) if self.start_date else "--",
+            end_date=str(self.end_date) if self.end_date else "--",
+            restricted=self.restricted_status or "UNKNOWN",
+            alternate_code=("\tAlternate Code: %s\n" % self.alternate_code
+                            if self.alternate_code else ""),
+            historical_code=("\tHistorical Code: %s\n" % self.historical_code
+                             if self.historical_code else ""))
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
@@ -104,6 +107,9 @@ class Network(BaseNode):
             contents["channels"]), initial_indent="\t\t\t",
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def get_contents(self):
         """
@@ -165,12 +171,12 @@ class Network(BaseNode):
             responses = []
         else:
             channels = [cha for sta in self.stations for cha in sta.channels
-                        if sta.code == station
-                        and cha.code == channel
-                        and cha.location_code == location
-                        and (cha.start_date is None
-                             or cha.start_date <= datetime)
-                        and (cha.end_date is None or cha.end_date >= datetime)]
+                        if sta.code == station and
+                        cha.code == channel and
+                        cha.location_code == location and
+                        (cha.start_date is None or
+                         cha.start_date <= datetime) and
+                        (cha.end_date is None or cha.end_date >= datetime)]
             responses = [cha.response for cha in channels
                          if cha.response is not None]
         if len(responses) > 1:
@@ -271,8 +277,8 @@ class Network(BaseNode):
         >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
         Network GR (GRSN)
             Station Count: None/None (Selected/Total)
-            None -
-            Access: None
+            -- - --
+            Access: UNKNOWN
             Contains:
                 Stations (2):
                     GR.FUR (Fuerstenfeldbruck, Bavaria, GR-Net)
@@ -327,7 +333,7 @@ class Network(BaseNode):
         net.stations = stations
         return net
 
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', time=None, show=True,
              outfile=None, **kwargs):  # @UnusedVariable
@@ -337,11 +343,11 @@ class Network(BaseNode):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to "cyl"
+            Defaults to "global"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -381,7 +387,7 @@ class Network(BaseNode):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> net = read_inventory()[0]
@@ -403,7 +409,7 @@ class Network(BaseNode):
             net = read_inventory()[0]
             net.plot(projection="ortho")
 
-        Local (azimuthal equidistant) projection:
+        Local (Albers equal area) projection:
 
         >>> net.plot(projection="local")  # doctest:+SKIP
 

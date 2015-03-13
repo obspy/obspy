@@ -15,12 +15,11 @@ from future.builtins import *  # NOQA
 
 import fnmatch
 import inspect
-
-import os
-import unittest
-import re
-
 import io
+import os
+import re
+import unittest
+
 import obspy
 import obspy.station
 

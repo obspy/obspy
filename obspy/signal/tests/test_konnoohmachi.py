@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import konnoOhmachiSmoothing
-from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \
-    calculateSmoothingMatrix
-import numpy as np
 import unittest
 import warnings
+
+import numpy as np
+
+from obspy.signal import konnoOhmachiSmoothing
+from obspy.signal.konnoohmachismoothing import (calculateSmoothingMatrix,
+                                                konnoOhmachiSmoothingWindow)
 
 
 class KonnoOhmachiTestCase(unittest.TestCase):

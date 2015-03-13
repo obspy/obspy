@@ -1,10 +1,10 @@
 package:
   name: obspy
-  version: !!str 0.9.2
+  version: !!str 0.10.0
 
 source:
-  fn: master.zip
-  url: https://github.com/obspy/obspy/archive/master.zip
+  fn: taupy.zip
+  url: https://github.com/obspy/obspy/archive/taupy.zip
 #  patches:
    # List any patch files here
    # - fix.patch

@@ -7,15 +7,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream, UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
-    welch_taper
-import numpy as np
-import os
 import gzip
+import os
 import unittest
 import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
+                                              welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')

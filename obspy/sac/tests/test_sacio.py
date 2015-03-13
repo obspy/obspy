@@ -8,13 +8,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy import Trace, read
-from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
 import io
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.util import NamedTemporaryFile
+from obspy.sac import SacError, SacIO, SacIOError, attach_paz, attach_resp
 
 
 class SacIOTestCase(unittest.TestCase):
@@ -30,7 +32,8 @@ class SacIOTestCase(unittest.TestCase):
         Test for SacIO '_get_date_'-function to calculate timestamp
         """
         fn = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        t = SacIO(fn)
+        with open(fn, "rb") as fh:
+            t = SacIO(fh)
         self.assertEqual(t.reftime.timestamp, 269596800.0)
         diff = t.GetHvalue('npts')
         self.assertEqual(int(t.endtime - t.starttime), diff)
@@ -47,7 +50,8 @@ class SacIOTestCase(unittest.TestCase):
                         dtype=native_str('<f4'))
         sacfile = os.path.join(self.path, 'test.sac')
         t = SacIO()
-        t.ReadSacFile(sacfile)
+        with open(sacfile, "rb") as fh:
+            t.ReadSacFile(fh)
         np.testing.assert_array_equal(t.seis[0:11], data)
         self.assertEqual(t.GetHvalue('npts'), 100)
         self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
@@ -60,29 +64,37 @@ class SacIOTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             t = SacIO()
-            t.ReadSacFile(sacfile)
+            with open(sacfile, "rb") as fh:
+                t.ReadSacFile(fh)
             self.assertEqual(t.GetHvalue('npts'), 100)
             self.assertEqual(t.GetHvalue("kcmpnm"), "Q       ")
             self.assertEqual(t.GetHvalue("kstnm"), "STA     ")
             t.SetHvalue("kstnm", "spiff")
             self.assertEqual(t.GetHvalue('kstnm'), 'spiff   ')
-            t.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacBinary(fh)
             self.assertEqual(os.stat(sacfile)[6], os.stat(tempfile)[6])
             self.assertEqual(os.path.exists(tempfile), True)
-            t.ReadSacHeader(tempfile)
+            with open(tempfile, "rb") as fh:
+                t.ReadSacHeader(fh)
             self.assertEqual((t.hf is not None), True)
             t.SetHvalue("kstnm", "spoff")
             self.assertEqual(t.GetHvalue('kstnm'), 'spoff   ')
-            t.WriteSacHeader(tempfile)
+            # Open with modification!
+            with open(tempfile, "rb+") as fh:
+                t.WriteSacHeader(fh)
             t.SetHvalueInFile(tempfile, "kcmpnm", 'Z       ')
             self.assertEqual(t.GetHvalueFromFile(tempfile, "kcmpnm"),
                              'Z       ')
-            self.assertEqual(
-                SacIO(tempfile, headonly=True).GetHvalue('kcmpnm'), 'Z       ')
-            self.assertEqual(t.IsValidSacFile(tempfile), True)
+            with open(tempfile, "rb") as fh:
+                self.assertEqual(
+                    SacIO(fh, headonly=True).GetHvalue('kcmpnm'), 'Z       ')
+            with open(tempfile, "rb") as fh:
+                self.assertEqual(t.IsValidSacFile(fh), True)
             self.assertEqual(t.IsValidXYSacFile(tempfile), False)
             self.assertEqual(SacIO().GetHvalueFromFile(sacfile, 'npts'), 100)
-            self.assertEqual(SacIO(sacfile).GetHvalue('npts'), 100)
+            with open(sacfile, "rb") as fh:
+                self.assertEqual(SacIO(fh).GetHvalue('npts'), 100)
 
     def test_readWriteXY(self):
         """
@@ -91,17 +103,24 @@ class SacIOTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-            t = SacIO(tfile)
-            t.WriteSacXY(tempfile)
-            d = SacIO(tempfile, alpha=True)
+            with open(tfile, "rb") as fh:
+                t = SacIO(fh)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacXY(fh)
+            with open(tempfile, "rb") as fh:
+                d = SacIO(fh, alpha=True)
             e = SacIO()
-            e.ReadSacXY(tempfile)
+            with open(tempfile, "rb") as fh:
+                e.ReadSacXY(fh)
             self.assertEqual(e.GetHvalue('npts'), d.GetHvalue('npts'))
-            self.assertEqual(e.IsValidXYSacFile(tempfile), True)
-            self.assertEqual(e.IsValidSacFile(tempfile), False)
+            with open(tempfile, "rb") as fh:
+                self.assertEqual(e.IsValidXYSacFile(fh), True)
+            with open(tempfile, "rb") as fh:
+                self.assertEqual(e.IsValidSacFile(fh), False)
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            d.WriteSacBinary(tempfile)
+            with open(tempfile, "wb") as fh:
+                d.WriteSacBinary(fh)
             size1 = os.stat(tempfile)[6]
             size2 = os.stat(tfile)[6]
         self.assertEqual(size1, size2)
@@ -111,16 +130,21 @@ class SacIOTestCase(unittest.TestCase):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            t = SacIO(tfile)
-            t.WriteSacXY(tempfile)
-            d = SacIO(tempfile, alpha=True)
+            with open(tfile, "rb") as fh:
+                t = SacIO(fh)
+            with open(tempfile, 'wb') as fh:
+                t.WriteSacXY(fh)
+            with open(tempfile, "rb") as fh:
+                d = SacIO(fh, alpha=True)
             e = SacIO()
-            e.ReadSacXYHeader(tempfile)
+            with open(tempfile, "rb") as fh:
+                e.ReadSacXYHeader(fh)
             self.assertEqual(e.GetHvalue('npts'), d.GetHvalue('npts'))
             self.assertEqual(e.GetHvalue('depmen'), d.GetHvalue('depmen'))
             self.assertEqual(e.starttime, d.starttime)
             self.assertNotEqual(e.seis.size, d.seis.size)
-            c = SacIO(tempfile, alpha=True, headonly=True)
+            with open(tempfile, "rb") as fh:
+                c = SacIO(fh, alpha=True, headonly=True)
         self.assertEqual(e.seis.size, c.seis.size)
 
     def test_readBigEnd(self):
@@ -130,12 +154,13 @@ class SacIOTestCase(unittest.TestCase):
         tfilel = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         tfileb = os.path.join(os.path.dirname(__file__), 'data',
                               'test.sac.swap')
-        tl = SacIO(tfilel)
-        tb = SacIO(tfileb)
+        with open(tfilel, "rb") as fh:
+            tl = SacIO(fh)
+        with open(tfileb, "rb") as fh:
+            tb = SacIO(fh)
         self.assertEqual(tl.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
         self.assertEqual(tl.GetHvalue('npts'), tb.GetHvalue('npts'))
-        self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                         tb.GetHvalueFromFile(tfileb, 'kcmpnm'))
+        self.assertEqual(tl.GetHvalue('delta'), tb.GetHvalue('delta'))
         np.testing.assert_array_equal(tl.seis, tb.seis)
 
     def test_swapbytes(self):
@@ -144,29 +169,50 @@ class SacIOTestCase(unittest.TestCase):
                               'test.sac.swap')
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            tb = SacIO(tfileb)
+            with open(tfileb, "rb") as fh:
+                tb = SacIO(fh)
             tb.swap_byte_order()
-            tb.WriteSacBinary(tempfile)
-            tr1 = SacIO(tempfile)
-            tl = SacIO(tfilel)
-            np.testing.assert_array_equal(tl.seis, tr1.seis)
-            self.assertEqual(tl.GetHvalue('kevnm'), tr1.GetHvalue('kevnm'))
-            self.assertEqual(tl.GetHvalue('npts'), tr1.GetHvalue('npts'))
-            self.assertEqual(tl.GetHvalueFromFile(tfilel, 'kcmpnm'),
-                             tr1.GetHvalueFromFile(tempfile, 'kcmpnm'))
+            with open(tempfile, "wb") as fh:
+                tb.WriteSacBinary(fh)
+            with open(tempfile, "rb") as fh:
+                t = SacIO(fh)
+            with open(tfilel, "rb") as fh:
+                tl = SacIO(fh)
+            self.assertEqual(t.GetHvalue('kevnm'), tl.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tl.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tl.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tl.seis)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            with open(tfilel, "rb") as fh:
+                tl = SacIO(fh)
+            tl.swap_byte_order()
+            with open(tempfile, "wb") as fh:
+                tl.WriteSacBinary(fh)
+            with open(tempfile, "rb") as fh:
+                t = SacIO(fh)
+            with open(tfileb, "rb") as fh:
+                tb = SacIO(fh)
+            self.assertEqual(t.GetHvalue('kevnm'), tb.GetHvalue('kevnm'))
+            self.assertEqual(t.GetHvalue('npts'), tb.GetHvalue('npts'))
+            self.assertEqual(t.GetHvalue('delta'), tb.GetHvalue('delta'))
+            np.testing.assert_array_equal(t.seis, tb.seis)
 
     def test_getdist(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            t = SacIO(tfile)
+            with open(tfile, "rb") as fh:
+                t = SacIO(fh)
             t.SetHvalue('evla', 48.15)
             t.SetHvalue('evlo', 11.58333)
             t.SetHvalue('stla', -41.2869)
             t.SetHvalue('stlo', 174.7746)
             t.SetHvalue('lcalda', 1)
-            t.WriteSacBinary(tempfile)
-            t2 = SacIO(tempfile)
+            with open(tempfile, "wb") as fh:
+                t.WriteSacBinary(fh)
+            with open(tempfile, "rb") as fh:
+                t2 = SacIO(fh)
         b = np.array([18486532.5788 / 1000., 65.654154562, 305.975459869],
                      dtype=native_str('>f4'))
         self.assertEqual(t2.GetHvalue('dist'), b[0])
@@ -178,11 +224,13 @@ class SacIOTestCase(unittest.TestCase):
         Assertion is raised if file is not a SAC file
         """
         t = SacIO()
-        self.assertRaises(SacError, t.ReadSacFile, __file__)
+        with open(__file__, "rb") as fh:
+            self.assertRaises(SacError, t.ReadSacFile, fh)
 
     def test_getattr(self):
         tfile = os.path.join(os.path.dirname(__file__), 'data', 'test.sac')
-        tr = SacIO(tfile)
+        with open(tfile, "rb") as fh:
+            tr = SacIO(fh)
         self.assertEqual(tr.npts, tr.GetHvalue('npts'))
         self.assertEqual(tr.kstnm, tr.GetHvalue('kstnm'))
 
@@ -326,10 +374,14 @@ class SacIOTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format="SAC")
-            trace = SacIO(tempfile)
+            with open(tempfile, "rb") as fh:
+                trace = SacIO(fh)
             trace.SetHvalue('stel', 91.0)
-            trace.WriteSacHeader(tempfile)
-            trace = SacIO(tempfile)
+            # Open with modification!
+            with open(tempfile, "rb+") as fh:
+                trace.WriteSacHeader(fh)
+            with open(tempfile, "rb") as fh:
+                SacIO(fh)
 
     def test_read_with_fsize(self):
         """
@@ -340,16 +392,22 @@ class SacIOTestCase(unittest.TestCase):
         shorter_file = os.path.join(self.path, 'seism-shorter.sac')
         t = SacIO()
         # default
-        self.assertRaises(SacError, t.ReadSacFile, longer_file)
-        self.assertRaises(SacError, t.ReadSacFile, shorter_file)
+        with open(longer_file, "rb") as fh:
+            self.assertRaises(SacError, t.ReadSacFile, fh)
+        with open(shorter_file, "rb") as fh:
+            self.assertRaises(SacError, t.ReadSacFile, fh)
         # fsize=True
-        self.assertRaises(SacError, t.ReadSacFile, longer_file, fsize=True)
-        self.assertRaises(SacError, t.ReadSacFile, shorter_file, fsize=True)
+        with open(longer_file, "rb") as fh:
+            self.assertRaises(SacError, t.ReadSacFile, fh, fsize=True)
+        with open(shorter_file, "rb") as fh:
+            self.assertRaises(SacError, t.ReadSacFile, fh, fsize=True)
         # using fsize=False should not work for shorter file
         # (this is not supported by SAC) ...
-        self.assertRaises(SacIOError, t.ReadSacFile, shorter_file, fsize=False)
+        with open(shorter_file, "rb") as fh:
+            self.assertRaises(SacIOError, t.ReadSacFile, fh, fsize=False)
         # ...but it should work for longer file
-        t.ReadSacFile(longer_file, fsize=False)
+        with open(longer_file, "rb") as fh:
+            t.ReadSacFile(fh, fsize=False)
         # checking trace
         self.assertEqual(t.GetHvalue('nzyear'), 1981)
         self.assertEqual(t.GetHvalue('nzjday'), 88)

@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.13"
-#define LIBMSEED_RELEASE "2014.234"
+#define LIBMSEED_VERSION "2.15"
+#define LIBMSEED_RELEASE "2015.070"
 
 #define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
                              /* Note: the SEED specification minimum is 256 */
@@ -107,18 +107,18 @@ extern "C" {
  * Usage:
  *   MS_ISVALIDHEADER ((char *)X)  X buffer must contain at least 27 bytes
  */
-#define MS_ISVALIDHEADER(X) (                                           \
-  (isdigit ((unsigned char) *(X)) || *(X) == ' ' || !*(X) ) &&		\
-  (isdigit ((unsigned char) *(X+1)) || *(X+1) == ' ' || !*(X+1) ) &&	\
-  (isdigit ((unsigned char) *(X+2)) || *(X+2) == ' ' || !*(X+2) ) &&	\
-  (isdigit ((unsigned char) *(X+3)) || *(X+3) == ' ' || !*(X+3) ) &&	\
-  (isdigit ((unsigned char) *(X+4)) || *(X+4) == ' ' || !*(X+4) ) &&	\
-  (isdigit ((unsigned char) *(X+5)) || *(X+5) == ' ' || !*(X+5) ) &&	\
-  MS_ISDATAINDICATOR(*(X+6)) &&						\
-  (*(X+7) == ' ' || *(X+7) == '\0') &&					\
-  (int)(*(X+24)) >= 0 && (int)(*(X+24)) <= 23 &&			\
-  (int)(*(X+25)) >= 0 && (int)(*(X+25)) <= 59 &&			\
-  (int)(*(X+26)) >= 0 && (int)(*(X+26)) <= 60)
+#define MS_ISVALIDHEADER(X) (                               \
+  (isdigit ((int) *(X))   || *(X)   == ' ' || !*(X) )   &&  \
+  (isdigit ((int) *(X+1)) || *(X+1) == ' ' || !*(X+1) ) &&  \
+  (isdigit ((int) *(X+2)) || *(X+2) == ' ' || !*(X+2) ) &&  \
+  (isdigit ((int) *(X+3)) || *(X+3) == ' ' || !*(X+3) ) &&  \
+  (isdigit ((int) *(X+4)) || *(X+4) == ' ' || !*(X+4) ) &&  \
+  (isdigit ((int) *(X+5)) || *(X+5) == ' ' || !*(X+5) ) &&  \
+  MS_ISDATAINDICATOR(*(X+6)) &&                             \
+  (*(X+7) == ' ' || *(X+7) == '\0') &&                      \
+  (int)(*(X+24)) >= 0 && (int)(*(X+24)) <= 23 &&            \
+  (int)(*(X+25)) >= 0 && (int)(*(X+25)) <= 59 &&            \
+  (int)(*(X+26)) >= 0 && (int)(*(X+26)) <= 60 )
 
 /* Macro to test memory for a blank/noise SEED data record signature
  * by checking for a valid SEED sequence number and padding characters
@@ -131,26 +131,27 @@ extern "C" {
  * Usage:
  *   MS_ISVALIDBLANK ((char *)X)  X buffer must contain at least 27 bytes
  */
-#define MS_ISVALIDBLANK(X) ((isdigit ((unsigned char) *(X)) || !*(X) ) &&     \
-			    (isdigit ((unsigned char) *(X+1)) || !*(X+1) ) && \
-			    (isdigit ((unsigned char) *(X+2)) || !*(X+2) ) && \
-			    (isdigit ((unsigned char) *(X+3)) || !*(X+3) ) && \
-			    (isdigit ((unsigned char) *(X+4)) || !*(X+4) ) && \
-			    (isdigit ((unsigned char) *(X+5)) || !*(X+5) ) && \
-			    (*(X+6)==' ')&&(*(X+7)==' ')&&(*(X+8)==' ') &&    \
-			    (*(X+9)==' ')&&(*(X+10)==' ')&&(*(X+11)==' ') &&  \
-			    (*(X+12)==' ')&&(*(X+13)==' ')&&(*(X+14)==' ') && \
-			    (*(X+15)==' ')&&(*(X+16)==' ')&&(*(X+17)==' ') && \
-			    (*(X+18)==' ')&&(*(X+19)==' ')&&(*(X+20)==' ') && \
-			    (*(X+21)==' ')&&(*(X+22)==' ')&&(*(X+23)==' ') && \
-			    (*(X+24)==' ')&&(*(X+25)==' ')&&(*(X+26)==' ') && \
-			    (*(X+27)==' ')&&(*(X+28)==' ')&&(*(X+29)==' ') && \
-			    (*(X+30)==' ')&&(*(X+31)==' ')&&(*(X+32)==' ') && \
-			    (*(X+33)==' ')&&(*(X+34)==' ')&&(*(X+35)==' ') && \
-			    (*(X+36)==' ')&&(*(X+37)==' ')&&(*(X+38)==' ') && \
-			    (*(X+39)==' ')&&(*(X+40)==' ')&&(*(X+41)==' ') && \
-			    (*(X+42)==' ')&&(*(X+43)==' ')&&(*(X+44)==' ') && \
-			    (*(X+45)==' ')&&(*(X+46)==' ')&&(*(X+47)==' ') )
+#define MS_ISVALIDBLANK(X) (                             \
+  (isdigit ((int) *(X))   || !*(X) ) &&                  \
+  (isdigit ((int) *(X+1)) || !*(X+1) ) &&                \
+  (isdigit ((int) *(X+2)) || !*(X+2) ) &&                \
+  (isdigit ((int) *(X+3)) || !*(X+3) ) &&                \
+  (isdigit ((int) *(X+4)) || !*(X+4) ) &&                \
+  (isdigit ((int) *(X+5)) || !*(X+5) ) &&                \
+  (*(X+6) ==' ') && (*(X+7) ==' ') && (*(X+8) ==' ') &&  \
+  (*(X+9) ==' ') && (*(X+10)==' ') && (*(X+11)==' ') &&  \
+  (*(X+12)==' ') && (*(X+13)==' ') && (*(X+14)==' ') &&  \
+  (*(X+15)==' ') && (*(X+16)==' ') && (*(X+17)==' ') &&  \
+  (*(X+18)==' ') && (*(X+19)==' ') && (*(X+20)==' ') &&  \
+  (*(X+21)==' ') && (*(X+22)==' ') && (*(X+23)==' ') &&  \
+  (*(X+24)==' ') && (*(X+25)==' ') && (*(X+26)==' ') &&  \
+  (*(X+27)==' ') && (*(X+28)==' ') && (*(X+29)==' ') &&  \
+  (*(X+30)==' ') && (*(X+31)==' ') && (*(X+32)==' ') &&  \
+  (*(X+33)==' ') && (*(X+34)==' ') && (*(X+35)==' ') &&  \
+  (*(X+36)==' ') && (*(X+37)==' ') && (*(X+38)==' ') &&  \
+  (*(X+39)==' ') && (*(X+40)==' ') && (*(X+41)==' ') &&  \
+  (*(X+42)==' ') && (*(X+43)==' ') && (*(X+44)==' ') &&  \
+  (*(X+45)==' ') && (*(X+46)==' ') && (*(X+47)==' ') )
 
 /* A simple bitwise AND test to return 0 or 1 */
 #define bit(x,y) (x&y)?1:0
@@ -709,6 +710,18 @@ extern int      ms_addselect_comp (Selections **ppselections, char *net, char* s
 extern int      ms_readselectionsfile (Selections **ppselections, char *filename);
 extern void     ms_freeselections (Selections *selections);
 extern void     ms_printselections (Selections *selections);
+
+/* Leap second declarations, implementation in gentutils.c */
+typedef struct LeapSecond_s
+{
+  hptime_t leapsecond;
+  int32_t  TAIdelta;
+  struct LeapSecond_s *next;
+} LeapSecond;
+
+extern LeapSecond *leapsecondlist;
+extern int ms_readleapseconds (char *envvarname);
+extern int ms_readleapsecondfile (char *filename);
 
 /* Generic byte swapping routines */
 extern void     ms_gswap2 ( void *data2 );

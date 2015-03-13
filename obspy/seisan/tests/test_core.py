@@ -6,11 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy.core import read
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
 
 
 class CoreTestCase(unittest.TestCase):
@@ -71,14 +74,14 @@ class CoreTestCase(unittest.TestCase):
         # compare with ASCII values of trace
         # XXX: extracted ASCII file contains less values than the original
         # Seisan file!
-        self.assertEqual(list(st1[20].data[0:3665]),
+        self.assertEqual(list(st1[20].data[1:3666]),
                          np.loadtxt(datafile, dtype=np.int32).tolist())
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         st2 = readSEISAN(file)
         st2.verify()
         self.assertEqual(len(st2), 4)
-        self.assertEqual(list(st2[0].data[0:3]), [492, 519, 542])
+        self.assertEqual(list(st2[0].data[1:4]), [492, 519, 542])
 
     def test_readSEISANHeadOnly(self):
         """
@@ -100,6 +103,18 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st1[0].stats.npts, 3675)
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         self.assertEqual(list(st1[0].data), [])  # no data
+
+    def test_readSEISANVsReference(self):
+        """
+        Test for #970
+        """
+        _file = os.path.join(self.path, 'SEISAN_Bug',
+                             '2011-09-06-1311-36S.A1032_001BH_Z')
+        st = read(_file, format='SEISAN')
+        _file_ref = os.path.join(self.path, 'SEISAN_Bug',
+                                 '2011-09-06-1311-36S.A1032_001BH_Z_MSEED')
+        st_ref = read(_file_ref, format='MSEED')
+        self.assertTrue(np.allclose(st[0].data, st_ref[0].data))
 
 
 def suite():

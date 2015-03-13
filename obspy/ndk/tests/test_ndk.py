@@ -4,15 +4,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import io
 import inspect
+import io
 import os
 import unittest
 import warnings
 
-from obspy import readEvents, UTCDateTime
-from obspy.ndk.core import is_ndk, read_ndk, ObsPyNDKException, \
-    _parse_date_time
+from obspy import UTCDateTime, readEvents
+from obspy.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
+                            read_ndk)
 
 
 class NDKTestCase(unittest.TestCase):

@@ -4,8 +4,9 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import unittest
-from obspy.core.util.decorator import map_example_filename
+
 from obspy.core.util import getExampleFile
+from obspy.core.util.decorator import map_example_filename
 
 
 class TestCase(unittest.TestCase):

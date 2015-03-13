@@ -32,13 +32,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import os
+import sys
 import warnings
-from obspy import __version__, read, UTCDateTime
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, SUPPRESS
+from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
+
 import numpy as np
+
+from obspy import UTCDateTime, __version__, read
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction, \
+    getMatplotlibVersion
+from obspy.imaging.util import ObsPyAutoDateFormatter, \
+    decimal_seconds_format_date_first_tick
 
 
 def compressStartend(x, stop_iteration):
@@ -73,23 +78,23 @@ def compressStartend(x, stop_iteration):
 
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
-                       verbose=False, ignore_links=False):
+                       verbose=False, quiet=False, ignore_links=False):
     from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
-        print("Ignoring symlink: %s" % (file))
+        if verbose or not quiet:
+            print("Ignoring symlink: %s" % (file))
         return counter
     try:
         stream = read(file, format=format, headonly=True)
     except:
-        print("Can not read %s" % (file))
+        if verbose or not quiet:
+            print("Can not read %s" % (file))
         return counter
     s = "%s %s" % (counter, file)
-    if verbose:
+    if verbose and not quiet:
         sys.stdout.write("%s\n" % s)
         for line in str(stream).split("\n"):
             sys.stdout.write("    " + line + "\n")
-    else:
-        sys.stdout.write("\r" + s)
         sys.stdout.flush()
     for tr in stream:
         _id = tr.getId()
@@ -101,25 +106,28 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
             samp_int_dict[_id].\
                 append(1. / (24 * 3600 * tr.stats.sampling_rate))
         except ZeroDivisionError:
-            print("Skipping file with zero samlingrate: %s" % (file))
+            if verbose or not quiet:
+                print("Skipping file with zero samlingrate: %s" % (file))
             return counter
     return (counter + 1)
 
 
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
-                    verbose=False, ignore_links=False):
+                    verbose=False, quiet=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
-        print("Ignoring symlink: %s" % (path))
+        if verbose or not quiet:
+            print("Ignoring symlink: %s" % (path))
         return counter
     if os.path.isfile(path):
         counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
-                                     format, verbose)
+                                     format, verbose, quiet=quiet)
     elif os.path.isdir(path):
         for file in (os.path.join(path, file) for file in os.listdir(path)):
             counter = recursive_parse(data_dict, samp_int_dict, file, counter,
-                                      format, verbose, ignore_links)
+                                      format, verbose, quiet, ignore_links)
     else:
-        print("Problem with filename/dirname: %s" % (path))
+        if verbose or not quiet:
+            print("Problem with filename/dirname: %s" % (path))
     return counter
 
 
@@ -151,6 +159,9 @@ def main(argv=None):
                              ' '.join(__doc__.split('\n')[-4:]))
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Optional. Verbose output.')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Optional. Be quiet. Overwritten by --verbose '
+                             'flag.')
     parser.add_argument('-n', '--non-recursive',
                         action='store_false', dest='recursive',
                         help='Optional. Do not descend into directories.')
@@ -234,8 +245,8 @@ def main(argv=None):
     if args.output is not None:
         import matplotlib
         matplotlib.use("agg")
-    global date2num
     from matplotlib.dates import date2num, num2date
+    from matplotlib.ticker import FuncFormatter
     from matplotlib.patches import Rectangle
     from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
@@ -276,9 +287,11 @@ def main(argv=None):
         load_npz(args.load, data, samp_int)
     for path in args.paths:
         counter = parse_func(data, samp_int, path, counter, args.format,
-                             args.verbose, args.ignore_links)
+                             verbose=args.verbose, quiet=args.quiet,
+                             ignore_links=args.ignore_links)
     if not data:
-        print("No waveform data found.")
+        if args.verbose or not args.quiet:
+            print("No waveform data found.")
         return
     if args.write:
         write_npz(args.write, data, samp_int)
@@ -293,7 +306,8 @@ def main(argv=None):
         ids = [x for x in ids if x in args.id]
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
-    print('\n')
+    if args.verbose or not args.quiet:
+        print('\n')
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         data[_id].sort()
@@ -317,9 +331,8 @@ def main(argv=None):
         startend_compressed = compressStartend(startend, 1000)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
-        ax.xaxis_date()
         if not args.no_x:
-            ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
+            ax.plot(startend[:, 0], offset, 'x', linewidth=2)
         ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
                   startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
         # find the gaps
@@ -343,19 +356,35 @@ def main(argv=None):
                     start_, end_ = num2date((start_, end_))
                     start_ = UTCDateTime(start_.isoformat())
                     end_ = UTCDateTime(end_.isoformat())
-                    print("%s %s %s %.3f" % (_id, start_, end_, end_ - start_))
+                    if args.verbose or not args.quiet:
+                        print("%s %s %s %.3f" % (_id, start_, end_,
+                                                 end_ - start_))
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
-    # set x-axis limits according to given start/end time
-    if args.start_time:
-        ax.set_xlim(left=args.start_time, auto=None)
-    if args.end_time:
-        ax.set_xlim(right=args.end_time, auto=None)
     fig.autofmt_xdate()  # rotate date
+    ax.xaxis_date()
+    # set custom formatters to always show date in first tick
+    formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
+    if getMatplotlibVersion() >= [1, 0, 0]:
+        formatter.scaled[1 / 24.] = \
+            FuncFormatter(decimal_seconds_format_date_first_tick)
+        formatter.scaled.pop(1/(24.*60.))
+    ax.xaxis.set_major_formatter(formatter)
     plt.subplots_adjust(left=0.2)
+    # set x-axis limits according to given start/end time
+    if args.start_time and args.end_time:
+        ax.set_xlim(left=args.start_time, right=args.end_time)
+    elif args.start_time:
+        ax.set_xlim(left=args.start_time, auto=None)
+    elif args.end_time:
+        ax.set_xlim(right=args.end_time, auto=None)
+    else:
+        left, right = ax.xaxis.get_data_interval()
+        x_axis_range = right - left
+        ax.set_xlim(left - 0.05 * x_axis_range, right + 0.05 * x_axis_range)
     if args.output is None:
         plt.show()
     else:
@@ -363,20 +392,33 @@ def main(argv=None):
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
+
         # tight_layout() only available from matplotlib >= 1.1
         try:
             plt.tight_layout()
+        except:
+            pass
+
+        if not args.start_time or not args.end_time:
             days = ax.get_xlim()
             days = days[1] - days[0]
-            width = max(6, days / 30.)
-            width = min(width, height * 4)
-            fig.set_figwidth(width)
-            plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+        else:
+            days = args.end_time - args.start_time
+
+        width = max(6, days / 30.)
+        width = min(width, height * 4)
+        fig.set_figwidth(width)
+        plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+
+        # tight_layout() only available from matplotlib >= 1.1
+        try:
             plt.tight_layout()
         except:
             pass
+
         fig.savefig(args.output)
-    sys.stdout.write('\n')
+    if args.verbose and not args.quiet:
+        sys.stdout.write('\n')
 
 
 if __name__ == '__main__':

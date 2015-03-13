@@ -3,9 +3,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util import Enum, ComplexWithUncertainties, \
-    FloatWithUncertainties
 import unittest
+
+from obspy.core.util import (ComplexWithUncertainties, Enum,
+                             FloatWithUncertainties)
 
 
 class UtilTypesTestCase(unittest.TestCase):

@@ -7,103 +7,76 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import polarization, util
-from scipy import signal
-import numpy as np
-import os
 import unittest
+from os.path import dirname, join
+
+import numpy as np
+from scipy import signal
+
+import obspy
+from obspy.signal import polarization, util
 
 
-# only tests for windowed data are implemented currently
+def _create_test_data():
+    """
+    Test data used for some polarization tests.
+    :return:
+    """
+    x = np.arange(0, 2048 / 20.0, 1.0 / 20.0)
+    x *= 2. * np.pi
+    y = np.cos(x)
+    trZ = obspy.Trace(data=y)
+    trZ.stats.sampling_rate = 20.
+    trZ.stats.starttime = obspy.UTCDateTime('2014-03-01T00:00')
+    trZ.stats.station = 'POLT'
+    trZ.stats.channel = 'HHZ'
+    trZ.stats.network = 'XX'
+
+    trN = trZ.copy()
+    trN.data *= 2.
+    trN.stats.channel = 'HHN'
+    trE = trZ.copy()
+    trE.stats.channel = 'HHE'
+
+    sz = obspy.Stream()
+    sz.append(trZ)
+    sz.append(trN)
+    sz.append(trE)
+    sz.sort(reverse=True)
+
+    return sz
+
 
 class PolarizationTestCase(unittest.TestCase):
     """
     Test cases for polarization analysis
     """
     def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-        file = os.path.join(self.path, '3cssan.hy.1.MBGA_Z')
-        f = open(file)
-        self.res = np.loadtxt(f)
-        f.close()
-        file = os.path.join(self.path, 'MBGA_Z.ASC')
-        f = open(file)
-        data_z = np.loadtxt(f)
-        f.close()
-        file = os.path.join(self.path, 'MBGA_E.ASC')
-        f = open(file)
-        data_e = np.loadtxt(f)
-        f.close()
-        file = os.path.join(self.path, 'MBGA_N.ASC')
-        f = open(file)
-        data_n = np.loadtxt(f)
-        f.close()
-        # self.path = os.path.dirname(__file__)
-        # self.res = N.loadtxt("3cssan.hy.1.MBGA_Z")
-        # data = N.loadtxt("MBGA_Z.ASC")
-        self.n = 256
-        self.fs = 75
-        self.smoothie = 3
-        self.fk = [2, 1, 0, -1, -2]
-        self.inc = int(0.05 * self.fs)
-        self.norm = pow(np.max(data_z), 2)
-        # [0] Time (k*inc)
-        # [1] A_norm
-        # [2] dA_norm
-        # [3] dAsum
-        # [4] dA2sum
-        # [5] ct
-        # [6] dct
-        # [7] omega
-        # [8] domega
-        # [9] sigma
-        # [10] dsigma
-        # [11] logcep
-        # [12] logcep
-        # [13] logcep
-        # [14] dperiod
-        # [15] ddperiod
-        # [16] bwith
-        # [17] dbwith
-        # [18] cfreq
-        # [19] dcfreq
-        # [20] hob1
-        # [21] hob2
-        # [22] hob3
-        # [23] hob4
-        # [24] hob5
-        # [25] hob6
-        # [26] hob7
-        # [27] hob8
-        # [28] phi12
-        # [29] dphi12
-        # [30] phi13
-        # [31] dphi13
-        # [32] phi23
-        # [33] dphi23
-        # [34] lv_h1
-        # [35] lv_h2
-        # [36] lv_h3
-        # [37] dlv_h1
-        # [38] dlv_h2
-        # [39] dlv_h3
-        # [40] rect
-        # [41] drect
-        # [42] plan
-        # [43] dplan
+        path = join(dirname(__file__), 'data')
+        # setting up sliding window data
+        data_z = np.loadtxt(join(path, 'MBGA_Z.ASC'))
+        data_e = np.loadtxt(join(path, 'MBGA_E.ASC'))
+        data_n = np.loadtxt(join(path, 'MBGA_N.ASC'))
+        n = 256
+        fs = 75
+        inc = int(0.05 * fs)
         self.data_win_z, self.nwin, self.no_win = \
-            util.enframe(data_z, signal.hamming(self.n), self.inc)
+            util.enframe(data_z, signal.hamming(n), inc)
         self.data_win_e, self.nwin, self.no_win = \
-            util.enframe(data_e, signal.hamming(self.n), self.inc)
+            util.enframe(data_e, signal.hamming(n), inc)
         self.data_win_n, self.nwin, self.no_win = \
-            util.enframe(data_n, signal.hamming(self.n), self.inc)
+            util.enframe(data_n, signal.hamming(n), inc)
+        # global test input
+        self.fk = [2, 1, 0, -1, -2]
+        self.norm = pow(np.max(data_z), 2)
+        self.res = np.loadtxt(join(path, '3cssan.hy.1.MBGA_Z'))
 
     def tearDown(self):
         pass
 
     def test_polarization(self):
         """
+        windowed data
         """
         pol = polarization.eigval(self.data_win_e, self.data_win_n,
                                   self.data_win_z, self.fk, self.norm)
@@ -137,6 +110,64 @@ class PolarizationTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((pol[7] - self.res[:, 43]) ** 2) /
                       np.sum(self.res[:, 43] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
+
+    def test_polarization1D(self):
+        """
+        1 dimenstional input --- regression test case for bug #919
+        """
+        pol = polarization.eigval(self.data_win_e[100, :],
+                                  self.data_win_n[100, :],
+                                  self.data_win_z[100, :],
+                                  self.fk, self.norm)
+        pol_5_ref = [2.81387533e-04, 3.18409580e-04, 6.74030846e-04,
+                     5.55067015e-01, 4.32938188e-01]
+        self.assertTrue(np.allclose(np.concatenate(pol[:5]), pol_5_ref))
+
+    def test_polarization_pm(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarization_analysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e, method="pm",
+            var_noise=0.0)
+
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["azimuth_error"], 0.000000)
+        self.assertAlmostEqual(out["incidence_error"], 0.000000)
+
+    def test_polarization_flinn(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarization_analysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            method="flinn", var_noise=0.0)
+
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
+        self.assertAlmostEqual(out["planarity"], 1.000000)
+
+    def test_polarization_vidale(self):
+        st = _create_test_data()
+        t = st[0].stats.starttime
+        e = st[0].stats.endtime
+
+        out = polarization.polarization_analysis(
+            st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
+            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            method="vidale", var_noise=0.0)
+
+        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
+        self.assertAlmostEqual(out["planarity"], 1.000000)
+        self.assertAlmostEqual(out["ellipticity"], 3.8195545129768958e-06)
 
 
 def suite():

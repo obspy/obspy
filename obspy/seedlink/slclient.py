@@ -20,12 +20,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.slpacket import SLPacket
 import logging
 import sys
 import traceback
+
+from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
+from obspy.seedlink.seedlinkexception import SeedLinkException
+from obspy.seedlink.slpacket import SLPacket
 
 
 USAGE = """
@@ -113,7 +114,6 @@ class SLClient(object):
         logging.basicConfig(level=numeric_level)
         logger.setLevel(numeric_level)
 
-        self.slconn = None
         self.verbose = 0
         self.ppackets = False
         self.streamfile = None
@@ -216,10 +216,20 @@ class SLClient(object):
             if self.end_time is not None:
                 self.slconn.setEndTime(self.end_time)
 
-    def run(self):
+    def run(self, packet_handler=None):
         """
         Start this SLClient.
+
+        :type packet_handler: func
+        :param packet_handler: Custom packet handler funtion to override
+            `self.packetHandler` for this seedlink request. The function will
+            be repeatedly called with two arguments: the current packet counter
+            (`int`) and the currently served seedlink packet
+            (:class:`~obspy.seedlink.SLPacket`). The function should return
+            `True` to abort the request or `False` to continue the request.
         """
+        if packet_handler is None:
+            packet_handler = self.packetHandler
         if self.infolevel is not None:
             self.slconn.requestInfo(self.infolevel)
         # Loop with the connection manager
@@ -230,7 +240,7 @@ class SLClient(object):
                 break
             try:
                 # do something with packet
-                terminate = self.packetHandler(count, slpack)
+                terminate = packet_handler(count, slpack)
                 if terminate:
                     break
             except SeedLinkException as sle:

@@ -4,15 +4,14 @@ python:
   - 2.7
   - 3.3
   - 3.4
+sudo: false
 before_install:
   - lsb_release -a # get info on the operating system
-  - sudo apt-get update
-  - sudo apt-get install -qq gfortran
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy==1.8.2 scipy==0.14.0 lxml sqlalchemy mock nose
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master numpy==1.8.2 scipy==0.14.0 lxml sqlalchemy mock nose pyproj
   - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
   - pip install --use-mirrors geographiclib
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib==1.3.1
@@ -28,6 +27,29 @@ install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
   - git status
+  - git branch -vv
+  - git remote -vv
+  # try to set correct remote tracking branch (to get branch info in version number of reports at tests.obspy.org)
+  - |
+      if [ "$TRAVIS_PULL_REQUEST" != "false" ]
+        # we're building a pull request, so we need to find out the fork it's coming from through github API
+        then GITHUB_LABEL=`python -c "from urllib import urlopen; import json; print(json.loads(urlopen(\"https://api.github.com/repos/$TRAVIS_REPO_SLUG/pulls/$TRAVIS_PULL_REQUEST\").read()).get('head').get('label'))"`
+             export GITHUB_FORK=${GITHUB_LABEL%:*}
+             export GITHUB_REMOTE=${GITHUB_FORK}/obspy
+             export GITHUB_BRANCH=${GITHUB_LABEL#*:}
+        # we're building a branch on the main repo
+        else export GITHUB_REMOTE=$TRAVIS_REPO_SLUG
+             export GITHUB_BRANCH=$TRAVIS_BRANCH
+             export GITHUB_FORK=${TRAVIS_REPO_SLUG%/*}; fi \
+      && echo "$GITHUB_REMOTE $GITHUB_FORK $GITHUB_BRANCH" \
+      && if [ "$GITHUB_FORK" != "obspy" ]
+          then git remote add $GITHUB_FORK git://github.com/$GITHUB_REMOTE; fi \
+      && git fetch $GITHUB_FORK +refs/heads/$GITHUB_BRANCH \
+      && git checkout -b tested_branch \
+      && git branch --set-upstream-to=$GITHUB_FORK/$GITHUB_BRANCH \
+      || echo
+  - git branch -vv
+  - git remote -vv
   - pip install --no-deps --use-mirrors .
   - git status
 script:

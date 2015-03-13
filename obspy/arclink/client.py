@@ -13,17 +13,20 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy import read, UTCDateTime
-from obspy.core.util import AttribDict, complexifyString
-from obspy.core.util.decorator import deprecated_keywords
-
-from fnmatch import fnmatch
 import io
-from lxml import objectify, etree
-from telnetlib import Telnet
 import os
 import time
 import warnings
+from fnmatch import fnmatch
+from telnetlib import Telnet
+
+from lxml import etree, objectify
+import numpy as np
+
+from obspy import UTCDateTime, read
+from obspy.core.util import AttribDict, complexifyString
+from obspy.core.util.decorator import deprecated_keywords
+
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
 MAX_REQUESTS = 50
@@ -84,8 +87,9 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
-    :var status_delay: Delay in seconds between each status request (default is
-        ``0.5`` seconds).
+    :type status_delay: float, optional
+    :param status_delay: Delay in seconds between each status request (default
+        is ``0.5`` seconds).
 
     .. rubric:: Notes
 
@@ -103,13 +107,13 @@ class Client(object):
     * IPGP:  eida.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
-    #: Delay in seconds between each status request
+    # : Delay in seconds between each status request
     status_delay = 0.5
 
     def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
-                 command_delay=0):
+                 command_delay=0, status_delay=0.5):
         """
         Initializes an ArcLink client.
 
@@ -123,6 +127,8 @@ class Client(object):
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
+        self.status_delay = status_delay
+
         self.init_host = host
         self.init_port = port
         self.timeout = timeout
@@ -453,7 +459,7 @@ class Client(object):
             inv = self.getInventory(network=network, station=station,
                                     location=location, channel=channel,
                                     starttime=starttime, endtime=endtime,
-                                    instruments=True, route=False)
+                                    instruments=True, route=route)
             netsta = '.'.join([network, station])
             coordinates = AttribDict()
             for key in ['latitude', 'longitude', 'elevation']:
@@ -833,6 +839,13 @@ class Client(object):
         paz = AttribDict()
         # instrument name
         paz['name'] = xml_doc.get('name', '')
+
+        # Response type: A=Laplace(rad/s), B=Analog(Hz), C, D
+        try:
+            paz['response_type'] = xml_doc.get('type')
+        except:
+            paz['response_type'] = None
+
         # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
@@ -893,7 +906,7 @@ class Client(object):
         return paz
 
     def getPAZ(self, network, station, location, channel, starttime=None,
-               endtime=None, time=None, route=False):
+               endtime=None, time=None, route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -1305,6 +1318,21 @@ class Client(object):
                             continue
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
+
+                        # convert from Hz (Analog) to rad/s (Laplace)
+                        if paz['response_type'] == "B":
+
+                            def x2pi(x):
+                                return x * 2 * np.pi
+
+                            paz['poles'] = list(map(x2pi, paz['poles']))
+                            paz['zeros'] = list(map(x2pi, paz['zeros']))
+                            paz['normalization_factor'] = \
+                                paz['normalization_factor'] * (2 * np.pi) ** \
+                                (len(paz['poles']) - len(paz['zeros']))
+                            paz['gain'] = paz['normalization_factor']
+                            paz['response_type'] = "A"
+
                         # sensitivity
                         paz['sensitivity'] = temp['sensitivity']
                         paz['sensitivity_frequency'] = \
@@ -1324,7 +1352,7 @@ class Client(object):
 
         return data
 
-    def getNetworks(self, starttime, endtime):
+    def getNetworks(self, starttime, endtime, route=True):
         """
         Returns a dictionary of available networks within the given time span.
 
@@ -1337,11 +1365,13 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :return: Dictionary of network data.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``False``).
         """
         return self.getInventory(network='*', starttime=starttime,
-                                 endtime=endtime, route=False)
+                                 endtime=endtime, route=route)
 
-    def getStations(self, starttime, endtime, network):
+    def getStations(self, starttime, endtime, network, route=True):
         """
         Returns a dictionary of available stations in the given network(s).
 
@@ -1356,12 +1386,15 @@ class Client(object):
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
         :return: Dictionary of station data.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+
         """
         data = self.getInventory(network=network, starttime=starttime,
-                                 endtime=endtime)
+                                 endtime=endtime, route=route)
         stations = [value for key, value in data.items()
-                    if key.startswith(network + '.')
-                    and "code" in value]
+                    if key.startswith(network + '.') and
+                    "code" in value]
         return stations
 
 

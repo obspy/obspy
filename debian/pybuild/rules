@@ -6,7 +6,7 @@ export DH_ALWAYS_EXCLUDE=CVS:.git:.gitignore:__pycache__:src
 export PYBUILD_SYSTEM=distutils
 
 %:
-	dh $@ --buildsystem=pybuild --with=python2,python3
+	dh $@ --buildsystem=pybuild --with=python2,python3 --with quilt
 
 binary:
 	dh binary
@@ -68,3 +68,6 @@ override_dh_installdeb:
 	find $(CURDIR)/debian/ -name README.txt -exec rm -f {} \;
 	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
 	dh_installdeb
+
+override_dh_auto_test:
+	echo

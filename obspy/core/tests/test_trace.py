@@ -3,21 +3,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import math
+import os
+import unittest
 from copy import deepcopy
-from numpy.ma import is_masked
-from obspy import UTCDateTime, Trace, read, Stream, __version__
+
+import numpy as np
+import numpy.ma as ma
+
+from obspy import Stream, Trace, UTCDateTime, __version__, read
 from obspy.core import Stats
 from obspy.core.compatibility import mock
-from obspy.core.util.base import getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
 from obspy.xseed import Parser
-import math
-import numpy as np
-import unittest
-import warnings
-import os
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class TraceTestCase(unittest.TestCase):
@@ -381,8 +378,8 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(trace), 3000)
         self.assertEqual(trace[0], 0)
         self.assertEqual(trace[999], 999)
-        self.assertTrue(is_masked(trace[1000]))
-        self.assertTrue(is_masked(trace[1999]))
+        self.assertTrue(ma.is_masked(trace[1000]))
+        self.assertTrue(ma.is_masked(trace[1999]))
         self.assertEqual(trace[2000], 999)
         self.assertEqual(trace[2999], 0)
         # verify
@@ -1203,7 +1200,7 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.differentiate(type='gradient')
+        tr.differentiate(method='gradient')
         np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
 
     def test_integrate(self):
@@ -1213,8 +1210,12 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(101) * 0.01
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.integrate(type='cumtrapz')
-        np.testing.assert_almost_equal(tr.data[-1], 0.1)
+        tr.integrate()
+        # Assert time and length of resulting array.
+        self.assertEqual(tr.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr.stats.npts, 101)
+        np.testing.assert_array_almost_equal(
+            tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
     def test_issue317(self):
         """
@@ -1376,7 +1377,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
@@ -1384,7 +1384,6 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
-    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
@@ -1506,6 +1505,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_3.stats.sampling_rate, 10.0)
         self.assertEqual(tr_3.stats.starttime, tr.stats.starttime)
 
+        tr_4 = tr.copy()
+        tr_4.data = np.require(tr_4.data,
+                               dtype=tr_4.data.dtype.newbyteorder('>'))
+        tr_4 = tr_4.resample(sampling_rate=10.0)
+        self.assertEqual(tr_4.stats.endtime, tr.stats.endtime - 9.0 / 100.0)
+        self.assertEqual(tr_4.stats.sampling_rate, 10.0)
+        self.assertEqual(tr_4.stats.starttime, tr.stats.starttime)
+
     def test_method_chaining(self):
         """
         Tests that method chaining works for all methods on the Trace object
@@ -1560,43 +1567,6 @@ class TraceTestCase(unittest.TestCase):
         tr.differentiate()
         tr.integrate()
         tr.taper()
-
-    def test_taper_backwards_compatibility(self):
-        """
-        Test that old style .taper() calls get emulated correctly.
-        """
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('ignore', DeprecationWarning)
-            tr = Trace(np.ones(10))
-
-            tr1 = tr.copy().taper()
-            tr2 = tr.copy().taper("cosine", p=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper("hann")
-            tr2 = tr.copy().taper(max_percentage=None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(None, type="hann")
-            self.assertEqual(tr1, tr2)
-            tr2 = tr.copy().taper(type="hann", max_percentage=None)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=0.2)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-            self.assertEqual(tr1, tr2)
-
-            tr1 = tr.copy().taper(type="cosine", p=1.0)
-            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
-            # processing info is different for this case
-            tr1.stats.pop("processing")
-            tr2.stats.pop("processing")
-            self.assertEqual(tr1, tr2)
-
-            self.assertRaises(NotImplementedError, tr.copy().taper,
-                              type="hann", p=0.3)
-
-            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
-            self.assertTrue(np.all(tr1.data[6:] < 1))
 
     def test_issue_695(self):
         x = np.zeros(12)

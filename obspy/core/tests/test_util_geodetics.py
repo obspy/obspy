@@ -3,12 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.decorator import skipIf
-from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \
-    calcVincentyInverse, gps2DistAzimuth, degrees2kilometers
 import math
 import unittest
 import warnings
+
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.geodetics import (calcVincentyInverse, degrees2kilometers,
+                                       gps2DistAzimuth, kilometer2degrees,
+                                       locations2degrees)
 
 # checking for geographiclib
 try:

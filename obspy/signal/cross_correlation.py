@@ -21,13 +21,15 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import warnings
-import numpy as np
 import ctypes as C
+import warnings
+
+import numpy as np
 import scipy
-from obspy import Trace, Stream
+
+from obspy import Stream, Trace
 from obspy.signal.headers import clibsignal
-from obspy.signal import cosTaper
+from obspy.signal.invsim import cosTaper
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -67,10 +69,9 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        possibilities to do cross correlations e.g. in frequency domain.
 
     .. seealso::
-        `ObsPy-users mailing list
+       `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
-       and
-       `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
+       and `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
 
     .. rubric:: Example
 
@@ -158,7 +159,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     ndat = len(streams[0].select(component=components[0])[0])
     if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
-            raise ValueError("All traces have to be the same length.")
+        raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
     corp = np.zeros(2 * shift_len + 1, dtype=np.float64, order='C')
 
@@ -233,7 +234,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         filter="bandpass", filter_options={'freqmin': 1, 'freqmax': 20}
 
     The appropriate parameter sets can and should be determined/verified
-    visually using the option `show=True` on a representative set of picks.
+    visually using the option `plot=True` on a representative set of picks.
 
     To get the corrected differential pick time calculate: ``((pick2 +
     pick2_corr) - pick1)``. To get a corrected differential travel time using
@@ -257,10 +258,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :param t_after: Time to end cross correlation window after pick times in
             seconds.
     :type cc_maxlag: float
-    :param cc_maxlag: Maximum lag time tested during cross correlation in
-            seconds.
+    :param cc_maxlag: Maximum lag/shift time tested during cross correlation in
+        seconds.
     :type filter: str
-    :param filter: None for no filtering or name of filter type
+    :param filter: `None` for no filtering or name of filter type
             as passed on to :meth:`~obspy.core.Trace.trace.filter` if filter
             should be used. To avoid artifacts in filtering provide
             sufficiently long time series for `trace1` and `trace2`.
@@ -268,9 +269,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
     :param filter_options: Filter options that get passed on to
             :meth:`~obspy.core.Trace.trace.filter` if filtering is used.
     :type plot: bool
-    :param plot: Determines if pick is refined automatically (default, ""),
-            if an informative matplotlib plot is shown ("plot"), or if an
-            interactively changeable PyQt Window is opened ("interactive").
+    :param plot: If `True`, a plot window illustrating the alignment of the two
+        traces at best cross correlation will be shown. This can and should be
+        used to verify the used parameters before running automatedly on large
+        data sets.
     :type filename: str
     :param filename: If plot option is selected, specifying a filename here
             (e.g. 'myplot.pdf' or 'myplot.png') will output the plot to a file

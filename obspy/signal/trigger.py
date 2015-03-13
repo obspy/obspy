@@ -29,13 +29,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
+import warnings
 from collections import deque
+
 import numpy as np
+
 from obspy import UTCDateTime
-from obspy.signal.headers import clibsignal, head_stalta_t
 from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.headers import clibsignal, head_stalta_t
 
 
 def recSTALTA(a, nsta, nlta):
@@ -221,7 +223,7 @@ def classicSTALTAPy(a, nsta, nlta):
     sta = np.cumsum(a ** 2)
 
     # Convert to float
-    sta = sta.astype(np.float, copy=False)
+    sta = np.require(sta, dtype=np.float)
 
     # Copy for LTA
     lta = sta.copy()
@@ -626,8 +628,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             continue
         if trigger_type is not None:
             tr.trigger(trigger_type, **options)
-        kwargs['max_len'] = int(max_trigger_length * tr.stats.sampling_rate
-                                + 0.5)
+        kwargs['max_len'] = int(
+            max_trigger_length * tr.stats.sampling_rate + 0.5)
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
             try:

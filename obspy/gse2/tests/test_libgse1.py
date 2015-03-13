@@ -7,10 +7,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.gse2 import libgse1
-from obspy.gse2.libgse2 import ChksumError
 import os
 import unittest
+
+from obspy.gse2 import libgse1
+from obspy.gse2.libgse2 import ChksumError
 
 
 class LibGSE1TestCase(unittest.TestCase):

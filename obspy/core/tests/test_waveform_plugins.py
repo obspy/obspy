@@ -3,19 +3,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, read
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-
 import io
-from pkg_resources import load_entry_point
-import numpy as np
 import os
 import threading
 import time
 import unittest
 import warnings
 from copy import deepcopy
+
+from pkg_resources import load_entry_point
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -54,6 +55,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
+                    if format == 'SAC' and byteorder == '=':
+                        # SAC file format enforces '<' or '>'
+                        # byteorder on writing
+                        continue
                     # new trace object in native byte order
                     dt = np.dtype(np.int_).newbyteorder(native_byteorder)
                     if format in ('MSEED', 'GSE2'):
@@ -112,7 +117,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             os.remove(outfile[:-4] + '.QBN')
                             os.remove(outfile[:-4] + '.QHD')
                     # check byte order
-                    self.assertEqual(st[0].data.dtype.byteorder, '=')
+                    if format == 'SAC':
+                        # SAC format preserves byteorder on writing
+                        self.assertTrue(st[0].data.dtype.byteorder
+                                        in ('=', byteorder))
+                    else:
+                        self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
@@ -136,6 +146,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
+        KNOWN_FALSE = [
+            os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
+                         '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+        ]
         formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Collect all false positives.
@@ -164,6 +178,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
+                    if any([n in file for n in KNOWN_FALSE]):
+                        continue
                     if isFormat(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.

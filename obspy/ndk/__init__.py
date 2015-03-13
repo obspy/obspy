@@ -65,14 +65,15 @@ The :func:`~obspy.core.event.readEvents` method is used to read NDK files to
 One of the main purposes of this module is the conversion to QuakeML which
 can easily be achieved with ObsPy.
 
->>> cat.write("C200604092050A.xml", format="quakeml") # doctest: +SKIP
+>>> cat.write("C200604092050A.xml", format="quakeml")  # doctest: +SKIP
 
 Instead of passing a filename it is also possible to specify a URL (in this
 case to the solutions from February 2011).
 
 >>> cat = obspy.readEvents("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
-...                        "catalog/NEW_MONTHLY/2011/feb11.ndk")
->>> print(cat)
+...                        "catalog/NEW_MONTHLY/2011/"
+...                        "feb11.ndk")  # doctest: +SKIP
+>>> print(cat)  # doctest: +SKIP
 135 Event(s) in Catalog:
 2011-02-01T03:32:08.600000Z | +22.520, +144.790 | 5.02 Mwc
 2011-02-01T08:16:31.700000Z | +24.190, +121.730 | 5.33 Mwc
@@ -108,6 +109,7 @@ To see all events call 'print(CatalogObject.__str__(print_all=True))'
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+
 
 if __name__ == '__main__':
     import doctest

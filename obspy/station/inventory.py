@@ -13,18 +13,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from pkg_resources import load_entry_point
-import obspy
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
-from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
-from obspy.station.network import Network
-import textwrap
-import warnings
 import copy
 import fnmatch
+import textwrap
+import warnings
+
+from pkg_resources import load_entry_point
 import numpy as np
+
+import obspy
+from obspy.core.util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
+from obspy.core.util.decorator import map_example_filename
+from obspy.station.network import Network
+from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 
 
 def _createExampleInventory():
@@ -90,19 +91,14 @@ class Inventory(ComparingObject):
 
     def __add__(self, other):
         new = copy.deepcopy(self)
-        if isinstance(other, Inventory):
-            new.networks.extend(other.networks)
-        elif isinstance(other, Network):
-            new.networks.append(other)
-        else:
-            msg = ("Only Inventory and Network objects can be added to "
-                   "an Inventory.")
-            raise TypeError(msg)
+        new += other
         return new
 
     def __iadd__(self, other):
         if isinstance(other, Inventory):
             self.networks.extend(other.networks)
+            # This is a straight inventory merge.
+            self.__copy_inventory_metadata(other)
         elif isinstance(other, Network):
             self.networks.append(other)
         else:
@@ -113,6 +109,46 @@ class Inventory(ComparingObject):
 
     def __getitem__(self, index):
         return self.networks[index]
+
+    def __copy_inventory_metadata(self, other):
+        """
+        Will be called after two inventory objects have been merged. It
+        attempts to assure that inventory meta information is somewhat
+        correct after the merging.
+
+        The networks in other will have been moved to self.
+        """
+        # The creation time is naturally adjusted to the current time.
+        self.created = obspy.UTCDateTime()
+
+        # Merge the source.
+        srcs = [self.source, other.source]
+        srcs = [_i for _i in srcs if _i]
+        all_srcs = []
+        for src in srcs:
+            all_srcs.extend(src.split(","))
+        if all_srcs:
+            src = sorted(list(set(all_srcs)))
+            self.source = ",".join(src)
+        else:
+            self.source = None
+
+        # Do the same with the sender.
+        sndrs = [self.sender, other.sender]
+        sndrs = [_i for _i in sndrs if _i]
+        all_sndrs = []
+        for sndr in sndrs:
+            all_sndrs.extend(sndr.split(","))
+        if all_sndrs:
+            sndr = sorted(list(set(all_sndrs)))
+            self.sender = ",".join(sndr)
+        else:
+            self.sender = None
+
+        # The module and URI strings will be changed to ObsPy as it did the
+        # modification.
+        self.module = SOFTWARE_MODULE
+        self.module_uri = SOFTWARE_URI
 
     def get_contents(self):
         """
@@ -168,6 +204,9 @@ class Inventory(ComparingObject):
             ", ".join(contents["channels"]), initial_indent="\t\t\t",
             subsequent_indent="\t\t\t", expand_tabs=False))
         return ret_str
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def write(self, path_or_file_object, format, **kwargs):
         """
@@ -366,7 +405,7 @@ class Inventory(ComparingObject):
         inv.networks = networks
         return inv
 
-    def plot(self, projection='cyl', resolution='l',
+    def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', color_per_network=False,
              colormap="jet", legend="upper left", time=None, show=True,
@@ -378,11 +417,11 @@ class Inventory(ComparingObject):
         :type projection: str, optional
         :param projection: The map projection. Currently supported are:
 
-            * ``"cyl"`` (Will plot the whole world.)
+            * ``"global"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
             * ``"local"`` (Will plot around local events)
 
-            Defaults to ``"cyl"``
+            Defaults to ``"global"``
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
             based directly to the basemap module. Possible values are:
@@ -438,7 +477,7 @@ class Inventory(ComparingObject):
 
         .. rubric:: Example
 
-        Cylindrical projection for global overview:
+        Mollweide projection for global overview:
 
         >>> from obspy import read_inventory
         >>> inv = read_inventory()
@@ -461,7 +500,7 @@ class Inventory(ComparingObject):
             inv = read_inventory()
             inv.plot(projection="ortho", label=False, color_per_network=True)
 
-        Local (azimuthal equidistant) projection, with custom colors:
+        Local (Albers equal area) projection, with custom colors:
 
         >>> colors = {'GR': 'blue', 'BW': 'green'}
         >>> inv.plot(projection="local",

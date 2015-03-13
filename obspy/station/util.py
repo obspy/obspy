@@ -13,12 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import re
+
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    FloatWithUncertaintiesFixedUnit
-import re
-import copy
+from obspy.core.util.obspy_types import (FloatWithUncertaintiesAndUnit,
+                                         FloatWithUncertaintiesFixedUnit)
 
 
 class BaseNode(ComparingObject):
@@ -198,6 +199,9 @@ class DataAvailability(ComparingObject):
     def __str__(self):
         return "Data Availability from %s to %s." % (str(self.start),
                                                      str(self.end))
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class Equipment(ComparingObject):
@@ -565,6 +569,9 @@ class Site(ComparingObject):
             town=self.town, county=self.county, region=self.region,
             country=self.country)
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class Latitude(FloatWithUncertaintiesFixedUnit):

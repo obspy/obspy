@@ -13,17 +13,22 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import warnings
 import ctypes as C
-import numpy as np
-from math import pi
-from copy import deepcopy
+import warnings
 from collections import defaultdict
+from copy import deepcopy
+from math import pi
 
-from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
-from obspy.station.util import Frequency, Angle
+import numpy as np
+
+from obspy.core.util.base import ComparingObject, getMatplotlibVersion
+from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+                                         FloatWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
+from obspy.station.util import Angle, Frequency
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ResponseStage(ComparingObject):
@@ -137,19 +142,19 @@ class ResponseStage(ComparingObject):
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
+            gain=self.stage_gain,
+            gain_freq=self.stage_gain_frequency,
             name_desc="\t%s %s\n" % (
                 self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
-            resource_id="\tResource Id: %s" % self.resource_id
-            if self.resource_id else "",
+            resource_id=("\tResource Id: %s" % self.resource_id
+                         if self.resource_id else ""),
             input_units=self.input_units if self.input_units else "UNKNOWN",
-            input_desc=" (%s)" % self.input_units_description
-            if self.input_units_description else "",
+            input_desc=(" (%s)" % self.input_units_description
+                        if self.input_units_description else ""),
             output_units=self.output_units if self.output_units else "UNKNOWN",
-            output_desc=" (%s)" % self.output_units_description
-            if self.output_units_description else "",
-            gain=self.stage_gain,
-            gain_freq=self.stage_gain_frequency,
+            output_desc=(" (%s)" % self.output_units_description
+                         if self.output_units_description else ""),
             decimation=(
                 "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
                 "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
@@ -159,6 +164,9 @@ class ResponseStage(ComparingObject):
                     self.decimation_correction)
                 if self.decimation_input_sample_rate is not None else ""))
         return ret.strip()
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
 
 class PolesZerosResponseStage(ResponseStage):
@@ -240,6 +248,9 @@ class PolesZerosResponseStage(ResponseStage):
             zeros=", ".join(map(str, self.zeros)),
             )
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def zeros(self):
@@ -361,6 +372,9 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 transfer_fct_type=self.cf_transfer_function_type,
                 num_count=len(self.numerator), den_count=len(self.denominator))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     @property
     def numerator(self):
@@ -1132,6 +1146,9 @@ class Response(ComparingObject):
                  for i in self.response_stages]))
         return ret
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
     def plot(self, min_freq, output="VEL", start_stage=None,
              end_stage=None, label=None, axes=None, sampling_rate=None,
              unwrap_phase=False, show=True, outfile=None):
@@ -1199,8 +1216,8 @@ class Response(ComparingObject):
         # detect sampling rate from response stages
         if sampling_rate is None:
             for stage in self.response_stages[::-1]:
-                if (stage.decimation_input_sample_rate is not None
-                        and stage.decimation_factor is not None):
+                if (stage.decimation_input_sample_rate is not None and
+                        stage.decimation_factor is not None):
                     sampling_rate = (stage.decimation_input_sample_rate /
                                      stage.decimation_factor)
                     break
@@ -1234,7 +1251,11 @@ class Response(ComparingObject):
         lw = 1.5
         lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
         color = lines[0].get_color()
-        if self.instrument_sensitivity:
+        # Cannot be plotted with matplotlib < 1.0.0
+        if MATPLOTLIB_VERSION < [1, 0, 0]:
+            warnings.warn("Cannot plot the instrument sensitivity. Your "
+                          "matplotlib version is too old. Please update.")
+        if self.instrument_sensitivity and MATPLOTLIB_VERSION >= [1, 0, 0]:
             trans_above = blended_transform_factory(ax1.transData,
                                                     ax1.transAxes)
             trans_right = blended_transform_factory(ax1.transAxes,

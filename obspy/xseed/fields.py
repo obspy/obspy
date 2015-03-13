@@ -18,8 +18,8 @@ import warnings
 from lxml.etree import Element, SubElement
 
 from obspy import UTCDateTime
-from obspy.xseed.utils import toTag, DateTime2String, setXPath, \
-    SEEDParserException, getXPath
+from obspy.xseed.utils import (DateTime2String, SEEDParserException, getXPath,
+                               setXPath, toTag)
 
 
 class SEEDTypeException(Exception):
@@ -55,6 +55,9 @@ class Field(object):
     def __str__(self):
         if self.id:
             return "F%02d" % self.id
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def convert(self, value):
         return value

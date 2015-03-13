@@ -16,15 +16,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
-from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
-    DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
-
-from collections import defaultdict
 import io
-from lxml import etree
 import warnings
+from collections import defaultdict
+
+from lxml import etree
+
+from obspy import UTCDateTime
+from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_TYPES,
+                               WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
 class WADLParser(object):
@@ -37,16 +37,14 @@ class WADLParser(object):
         # Get the url.
         url = self._xpath(doc, "/application/resources")[0].get("base")
         if "dataselect" in url:
-            self._default_parameters = DEFAULT_DATASELECT_PARAMETERS
             self._wadl_type = "dataselect"
         elif "station" in url:
-            self._default_parameters = DEFAULT_STATION_PARAMETERS
             self._wadl_type = "station"
         elif "event" in url:
-            self._default_parameters = DEFAULT_EVENT_PARAMETERS
             self._wadl_type = "event"
         else:
             raise NotImplementedError
+        self._default_parameters = DEFAULT_PARAMETERS[self._wadl_type]
 
         # Map short names to long names.
         self._short_to_long_mapping = {}

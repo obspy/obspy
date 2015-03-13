@@ -8,6 +8,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from argparse import ArgumentParser
+
 from obspy import __version__
 from obspy.core.util import FlinnEngdahl
 

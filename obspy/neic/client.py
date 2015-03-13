@@ -12,11 +12,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from time import sleep
-from obspy import UTCDateTime, read, Stream
-from obspy.core.util import NamedTemporaryFile
 import socket
 import traceback
+from time import sleep
+
+from obspy import Stream, UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
 from obspy.neic.util import ascdate, asctime
 
 

@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2013.273
+ * modified: 2014.248
  ***************************************************************************/
 
 #include <stdio.h>
@@ -1167,7 +1167,7 @@ mst_convertsamples ( MSTrace *mst, char type, flag truncate )
 	    }
 	  
 	  /* Reallocate buffer for reduced size needed */
-	  if ( ! (mst->datasamples = realloc (mst->datasamples, (mst->numsamples * sizeof(int32_t)))) )
+	  if ( ! (mst->datasamples = realloc (mst->datasamples, (size_t) (mst->numsamples * sizeof(int32_t)))) )
 	    {
 	      ms_log (2, "mst_convertsamples: cannot re-allocate buffer for sample conversion\n");
 	      return -1;
@@ -1191,7 +1191,7 @@ mst_convertsamples ( MSTrace *mst, char type, flag truncate )
 	    fdata[idx] = (float) ddata[idx];
           
 	  /* Reallocate buffer for reduced size needed */
-	  if ( ! (mst->datasamples = realloc (mst->datasamples, (mst->numsamples * sizeof(float)))) )
+	  if ( ! (mst->datasamples = realloc (mst->datasamples, (size_t) (mst->numsamples * sizeof(float)))) )
 	    {
 	      ms_log (2, "mst_convertsamples: cannot re-allocate buffer after sample conversion\n");
 	      return -1;
@@ -1204,7 +1204,7 @@ mst_convertsamples ( MSTrace *mst, char type, flag truncate )
   /* Convert to 64-bit doubles */
   else if ( type == 'd' )
     {
-      if ( ! (ddata = (double *) malloc (mst->numsamples * sizeof(double))) )
+      if ( ! (ddata = (double *) malloc ((size_t) (mst->numsamples * sizeof(double)))) )
 	{
 	  ms_log (2, "mst_convertsamples: cannot allocate buffer for sample conversion to doubles\n");
 	  return -1;

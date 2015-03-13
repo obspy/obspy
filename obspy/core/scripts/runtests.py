@@ -86,26 +86,28 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
-from obspy.core.util.version import get_git_version
-from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
-from argparse import ArgumentParser
-import types
 import copy
 import doctest
 import glob
-import numpy as np
 import operator
 import os
+import platform
 import sys
 import time
+import types
 import unittest
 import warnings
-import platform
+from argparse import ArgumentParser
+
+import numpy as np
+
+from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
+from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
+from obspy.core.util.version import get_git_version
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'nose', 'future',
+                'suds', 'mpl_toolkits.basemap', 'mock', 'future',
                 "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """
@@ -179,9 +181,9 @@ def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
     with standard_library.hooks():
         import urllib.parse
         import http.client
-    from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
+    from xml.sax.saxutils import escape
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
     result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)

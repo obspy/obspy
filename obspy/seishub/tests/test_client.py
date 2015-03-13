@@ -7,13 +7,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future import standard_library
+
+import unittest
+
 with standard_library.hooks():
     import urllib.request
 
-from obspy.seishub import Client
-import unittest
-from obspy.core import UTCDateTime, AttribDict
+from obspy.core import AttribDict, UTCDateTime
 from obspy.core.util.decorator import skipIf
+from obspy.seishub import Client
 from obspy.xseed.utils import SEEDParserException
 
 

@@ -3,15 +3,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import logging
+import sys
+import traceback
+
+import numpy as np
+
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.realtime.rttrace import RtTrace
 from obspy.seedlink.seedlinkexception import SeedLinkException
 from obspy.seedlink.slclient import SLClient
 from obspy.seedlink.slpacket import SLPacket
-import numpy as np
-import sys
-import traceback
-import logging
 
 
 # default logger

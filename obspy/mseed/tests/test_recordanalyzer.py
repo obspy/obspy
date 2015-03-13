@@ -4,10 +4,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
-from obspy.core.util.misc import CatchOutput
 import os
 import unittest
+
+from obspy.core.util.misc import CatchOutput
+from obspy.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
 class RecordAnalyserTestCase(unittest.TestCase):
@@ -21,6 +22,7 @@ class RecordAnalyserTestCase(unittest.TestCase):
             obspy_recordanalyzer([self.test_file])
 
         expected = '''FILE: %s
+Record Number: 0
 Record Offset: 0 byte
 Header Endianness: Big Endian
 
@@ -53,13 +55,15 @@ CALCULATED VALUES
 	Corrected Starttime: 2003-05-29T02:13:22.043400Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected.encode('utf-8'),
+                         out.stdout)
 
     def test_second_record(self):
         with CatchOutput() as out:
             obspy_recordanalyzer(['-n', '1', self.test_file])
 
         expected = '''FILE: %s
+Record Number: 1
 Record Offset: 4096 byte
 Header Endianness: Big Endian
 
@@ -92,7 +96,8 @@ CALCULATED VALUES
 	Corrected Starttime: 2003-05-29T02:15:51.543400Z
 
 ''' % (self.test_file,)  # noqa
-        self.assertEqual(expected.encode('utf-8'), out.stdout)
+        self.assertEqual(expected.encode('utf-8'),
+                         out.stdout)
 
 
 def suite():

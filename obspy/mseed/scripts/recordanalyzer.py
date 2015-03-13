@@ -21,16 +21,18 @@ A command-line tool to analyze Mini-SEED records.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
+from future.utils import native_str
+
+import sys
+from argparse import ArgumentParser
+from copy import deepcopy
+from struct import unpack
+
 with standard_library.hooks():
     from collections import OrderedDict
 
-from copy import deepcopy
-from obspy import UTCDateTime
-from obspy import __version__
-from argparse import ArgumentParser
-from struct import unpack
+from obspy import UTCDateTime, __version__
 
 
 class RecordAnalyser(object):
@@ -61,8 +63,10 @@ class RecordAnalyser(object):
             self.file = file_object
         # Set the offset to the record.
         self.record_offset = 0
+        self.record_number = 0
         # Parse the header.
         self._parseHeader()
+        self.did_goto = False
 
     def __eq__(self, other):
         """
@@ -87,7 +91,30 @@ class RecordAnalyser(object):
         Jumps to the next record and parses the header.
         """
         self.record_offset += 2 ** self.blockettes[1000]['Data Record Length']
-        self._parseHeader()
+        self.record_number += 1
+        try:
+            self._parseHeader()
+        except IOError as e:
+            msg = "IOError while trying to read record number %i: %s"
+            raise StopIteration(msg % (self.record_number, str(e)))
+
+    def goto(self, record_number):
+        """
+        Jumps to the specified record and parses its header.
+
+        :type record_number: int
+        :param record_number: Record number to jump to (first record has record
+            number 0).
+        """
+        self.record_number = record_number
+        self.record_offset = (
+            record_number * 2 ** self.blockettes[1000]['Data Record Length'])
+        try:
+            self._parseHeader()
+        except IOError as e:
+            msg = "IOError while trying to read record number %i: %s"
+            raise StopIteration(msg % (self.record_number, str(e)))
+        self.did_goto = True
 
     def _parseHeader(self):
         """
@@ -114,8 +141,15 @@ class RecordAnalyser(object):
         current_pointer = self.file.tell()
         # Seek the year.
         self.file.seek(self.record_offset + 20, 0)
-        # Get the year.
-        year = unpack(native_str('>H'), self.file.read(2))[0]
+        # Get the year
+        year_raw = self.file.read(2)
+        try:
+            year = unpack(native_str('>H'), year_raw)[0]
+        except:
+            if len(year_raw) == 0:
+                msg = "Unexpected end of file."
+                raise IOError(msg)
+            raise
         if year >= 1900 and year <= 2050:
             self.endian = '>'
         else:
@@ -135,7 +169,13 @@ class RecordAnalyser(object):
         self.file.seek(self.record_offset, 0)
         fixed_header = self.file.read(48)
         encoding = native_str('%s20c2H3Bx4H4Bl2H' % self.endian)
-        header_item = unpack(encoding, fixed_header)
+        try:
+            header_item = unpack(encoding, fixed_header)
+        except:
+            if len(fixed_header) == 0:
+                msg = "Unexpected end of file."
+                raise IOError(msg)
+            raise
         # Write values to dictionary.
         self.fixed_header['Sequence number'] = \
             int(''.join(x.decode('ascii') for x in header_item[:6]))
@@ -184,7 +224,14 @@ class RecordAnalyser(object):
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
             encoding = native_str('%s2H' % self.endian)
-            blkt_type, next_blockette = unpack(encoding, self.file.read(4))
+            _tmp = self.file.read(4)
+            try:
+                blkt_type, next_blockette = unpack(encoding, _tmp)
+            except:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
             self.blockettes[blkt_type] = self._parseBlockette(blkt_type)
@@ -202,18 +249,39 @@ class RecordAnalyser(object):
         blkt_dict = OrderedDict()
         # Check the blockette number.
         if blkt_type == 100:
-            unpack_values = unpack(native_str('%sfxxxx' % self.endian),
-                                   self.file.read(8))
+            _tmp = self.file.read(8)
+            try:
+                unpack_values = unpack(native_str('%sfxxxx' % self.endian),
+                                       _tmp)
+            except:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
             blkt_dict['Sampling Rate'] = float(unpack_values[0])
         elif blkt_type == 1000:
-            unpack_values = unpack(native_str('%sBBBx' % self.endian),
-                                   self.file.read(4))
+            _tmp = self.file.read(4)
+            try:
+                unpack_values = unpack(native_str('%sBBBx' % self.endian),
+                                       _tmp)
+            except:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
             blkt_dict['Encoding Format'] = int(unpack_values[0])
             blkt_dict['Word Order'] = int(unpack_values[1])
             blkt_dict['Data Record Length'] = int(unpack_values[2])
         elif blkt_type == 1001:
-            unpack_values = unpack(native_str('%sBBxB' % self.endian),
-                                   self.file.read(4))
+            _tmp = self.file.read(4)
+            try:
+                unpack_values = unpack(native_str('%sBBxB' % self.endian),
+                                       _tmp)
+            except:
+                if len(_tmp) == 0:
+                    msg = "Unexpected end of file."
+                    raise IOError(msg)
+                raise
             blkt_dict['Timing quality'] = int(unpack_values[0])
             blkt_dict['mu_sec'] = int(unpack_values[1])
             blkt_dict['Frame count'] = int(unpack_values[2])
@@ -260,9 +328,16 @@ class RecordAnalyser(object):
             endian = 'Little Endian'
         else:
             endian = 'Big Endian'
-        ret_val = ('FILE: %s\nRecord Offset: %i byte\n' +
+        if self.did_goto:
+            goto_info = (" (records were skipped, number is wrong in case "
+                         "of differing record sizes)")
+        else:
+            goto_info = ""
+        ret_val = ('FILE: %s\nRecord Number: %i%s\n' +
+                   'Record Offset: %i byte\n' +
                    'Header Endianness: %s\n\n') % \
-                  (filename, self.record_offset, endian)
+                  (filename, self.record_number, goto_info, self.record_offset,
+                   endian)
         ret_val += 'FIXED SECTION OF DATA HEADER\n'
         for key in self.fixed_header.keys():
             ret_val += '\t%s: %s\n' % (key, self.fixed_header[key])
@@ -282,6 +357,9 @@ class RecordAnalyser(object):
         ret_val += '\tCorrected Starttime: %s\n' % self.corrected_starttime
         return ret_val
 
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 def main(argv=None):
     """
@@ -293,17 +371,43 @@ def main(argv=None):
                         version='%(prog)s ' + __version__)
     parser.add_argument('-n', default=0, type=int,
                         help='show info about N-th record (default: 0)')
+    parser.add_argument('-a', '--all', dest="all",
+                        default=False, action="store_true",
+                        help=('show info for *all* records '
+                              '(option "-n" has no effect in this case)'))
+    parser.add_argument('-f', '--fast', dest="fast",
+                        default=False, action="store_true",
+                        help=('Jump to specified record number. Warning: '
+                              'This assumes that all records have the same '
+                              'size as the first one.'))
     parser.add_argument('filename', help='file to analyze')
     args = parser.parse_args(argv)
 
     rec = RecordAnalyser(args.filename)
-    i = 0
-    try:
+    # read all records
+    if args.all:
+        while True:
+            print(rec)
+            try:
+                next(rec)
+            except StopIteration:
+                sys.exit(0)
+    # read single specified record
+    if args.fast:
+        try:
+            rec.goto(args.n)
+        except StopIteration as e:
+            print(str(e))
+            sys.exit(1)
+    else:
+        i = 0
         while i < args.n:
             i += 1
-            next(rec)
-    except:
-        pass
+            try:
+                next(rec)
+            except StopIteration as e:
+                print(str(e))
+                sys.exit(1)
     print(rec)
 
 

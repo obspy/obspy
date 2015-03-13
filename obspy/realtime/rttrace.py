@@ -12,13 +12,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import warnings
+
+import numpy as np
+
 from obspy import Trace
 from obspy.core import Stats
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
-import copy
-import numpy as np
-import warnings
 
 
 # dictionary to map given type-strings to processing functions keys must be all

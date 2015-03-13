@@ -13,13 +13,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import fnmatch
+import textwrap
+import warnings
+
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
-from obspy.station.util import Longitude, Latitude, Distance
-import textwrap
-import fnmatch
-import warnings
-import copy
+from obspy.station.util import Distance, Latitude, Longitude
 
 
 class Station(BaseNode):
@@ -140,6 +141,9 @@ class Station(BaseNode):
             ", ".join(contents["channels"]), initial_indent="\t\t",
             subsequent_indent="\t\t", expand_tabs=False))
         return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
 
     def __getitem__(self, index):
         return self.channels[index]

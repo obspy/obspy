@@ -1,6 +1,13 @@
-from obspy.core import read, UTCDateTime, AttribDict
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib.colorbar import ColorbarBase
+from matplotlib.colors import Normalize
+
+from obspy.core import AttribDict, UTCDateTime, read
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import array_processing
+
 
 # Load data
 st = read("http://examples.obspy.org/agfa.mseed")
@@ -70,17 +77,12 @@ kwargs = dict(
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres=-1e9, vel_thres=-1e9, timestamp='mlabday',
+    semb_thres=-1e9, vel_thres=-1e9,
     stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
 )
 out = array_processing(st, **kwargs)
 
 # Plot
-from matplotlib.colorbar import ColorbarBase
-from matplotlib.colors import Normalize
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import numpy as np
 
 cmap = cm.hot_r
 

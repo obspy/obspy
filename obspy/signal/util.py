@@ -14,12 +14,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native
 
-from scipy import signal, fix, fftpack
 import ctypes as C
 import math as M
+
 import numpy as np
-from obspy.signal.headers import clibsignal
+from scipy import fftpack, fix, signal
+
 from obspy.core.util.misc import factorize_int
+from obspy.signal.headers import clibsignal
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
