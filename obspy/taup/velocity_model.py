@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Package for storage and manipulation of seismic Earth models.
+Velocity model class.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
