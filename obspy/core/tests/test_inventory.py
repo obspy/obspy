@@ -21,7 +21,7 @@ import numpy as np
 from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.base import get_basemap_version
+from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
@@ -29,6 +29,7 @@ from obspy.core.inventory import (Channel, Inventory, Network, Response,
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
 BASEMAP_VERSION = get_basemap_version()
+CARTOPY_VERSION = get_cartopy_version()
 
 
 class InventoryTestCase(unittest.TestCase):
@@ -140,57 +141,6 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    def test_location_plot_global(self):
-        """
-        Tests the inventory location preview plot, default parameters.
-        """
-        inv = read_inventory()
-        reltol = 1.0
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3.0
-        with ImageComparison(self.image_dir, "inventory_location1.png",
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(outfile=ic.name)
-
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    def test_location_plot_ortho(self):
-        """
-        Tests the inventory location preview plot, ortho projection, some
-        non-default parameters.
-        """
-        inv = read_inventory()
-        with ImageComparison(self.image_dir, "inventory_location2.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(projection="ortho", resolution="c",
-                     continent_fill_color="0.3", marker="d",
-                     label=False, outfile=ic.name, colormap="hsv",
-                     color_per_network=True)
-
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
-    def test_location_plot_local(self):
-        """
-        Tests the inventory location preview plot, local projection, some more
-        non-default parameters.
-        """
-        inv = read_inventory()
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        reltol = 2.0
-        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
-        # tolerance must be much higher.
-        if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100.0
-        with ImageComparison(self.image_dir, "inventory_location3.png",
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            inv.plot(projection="local", resolution="i", size=20**2,
-                     color_per_network={"GR": "b", "BW": "green"},
-                     outfile=ic.name)
-
     def test_response_plot(self):
         """
         Tests the response plot.
@@ -263,8 +213,127 @@ class InventoryTestCase(unittest.TestCase):
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
 
+@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+class InventoryBasemapTestCase(unittest.TestCase):
+    """
+    Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Basemap.
+    """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
+
+    def test_location_plot_global(self):
+        """
+        Tests the inventory location preview plot, default parameters, using
+        Basemap.
+        """
+        inv = read_inventory()
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir, 'inventory_location-basemap1.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(outfile=ic.name)
+
+    def test_location_plot_ortho(self):
+        """
+        Tests the inventory location preview plot, ortho projection, some
+        non-default parameters, using Basemap.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir,
+                             'inventory_location-basemap2.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(method='basemap', projection='ortho', resolution='c',
+                     continent_fill_color='0.3', marker='d', label=False,
+                     colormap='hsv', color_per_network=True, outfile=ic.name)
+
+    def test_location_plot_local(self):
+        """
+        Tests the inventory location preview plot, local projection, some more
+        non-default parameters, using Basemap.
+        """
+        inv = read_inventory()
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        reltol = 2.0
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100.0
+        with ImageComparison(self.image_dir, 'inventory_location-basemap3.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(method='basemap', projection='local', resolution='i',
+                     size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
+                     outfile=ic.name)
+
+
+@unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
+                 'cartopy not installed')
+class InventoryCartopyTestCase(unittest.TestCase):
+    """
+    Tests the for :meth:`~obspy.station.inventory.Inventory.plot` with Cartopy.
+    """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
+
+    def test_location_plot_global(self):
+        """
+        Tests the inventory location preview plot, default parameters, using
+        Cartopy.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir,
+                             'inventory_location-cartopy1.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(method='cartopy', outfile=ic.name)
+
+    def test_location_plot_ortho(self):
+        """
+        Tests the inventory location preview plot, ortho projection, some
+        non-default parameters, using Cartopy.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir,
+                             'inventory_location-cartopy2.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(method='cartopy', projection='ortho', resolution='c',
+                     continent_fill_color='0.3', marker='d', label=False,
+                     colormap='hsv', color_per_network=True, outfile=ic.name)
+
+    def test_location_plot_local(self):
+        """
+        Tests the inventory location preview plot, local projection, some more
+        non-default parameters, using Cartopy.
+        """
+        inv = read_inventory()
+        with ImageComparison(self.image_dir,
+                             'inventory_location-cartopy3.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            inv.plot(method='cartopy', projection='local', resolution='i',
+                     size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
+                     outfile=ic.name)
+
+
 def suite():
-    return unittest.makeSuite(InventoryTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(InventoryTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(InventoryBasemapTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(InventoryCartopyTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':
