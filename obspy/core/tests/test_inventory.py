@@ -18,22 +18,13 @@ import unittest
 import warnings
 
 import numpy as np
+from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.util.base import get_basemap_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
-
-# checking for matplotlib/basemap
-try:
-    from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -149,7 +140,7 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters.
@@ -165,7 +156,7 @@ class InventoryTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_location_plot_ortho(self):
         """
         Tests the inventory location preview plot, ortho projection, some
@@ -179,7 +170,7 @@ class InventoryTestCase(unittest.TestCase):
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_location_plot_local(self):
         """
         Tests the inventory location preview plot, local projection, some more
