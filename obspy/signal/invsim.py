@@ -150,27 +150,65 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
 
 def c_sac_taper(freqs, flimit):
     """
-    Generate frequency domain taper similar to sac.
+    Generate a cosine flank frequency domain taper similar to the one SAC
+    applies before instrument response deconvolution. This acts as a bandpass
+    filter when applied to the data in frequency space.
 
     :param freqs: frequency vector to use
-    :param flimit: sequence containing the 4  frequency limits
+    :type freqs: :class:`numpy.ndarray`
+    :param flimit: sequence containing the 4 frequency limits
+    :type flimit: tuple of 4 floats
     :returns: taper
+    :rtype: :class:`numpy.ndarray`
+
+    The `flimit` parameter is a tuple of four frequency values `(f1, f2,
+    f3, f4)`, the following plots illustrates the concept:
+
+    .. plot::
+
+        import matplotlib.pylab as plt
+        import numpy as np
+        from obspy.signal.invsim import c_sac_taper
+
+        plt.figure(figsize=(10, 3))
+
+        freqs = np.logspace(-2.01, 0, 2000)
+
+        plt.vlines([0.015, 0.03, 0.2, 0.4], -0.1, 1.3, color="#89160F")
+        plt.semilogx(freqs, c_sac_taper(freqs, (0.015, 0.03, 0.2, 0.4)),
+                     lw=2, color="#4C72B0")
+
+        props = {
+            "bbox": dict(facecolor='white', edgecolor="0.5",
+                 boxstyle="square,pad=0.2"),
+            "va": "top", "ha": "center", "color": "#89160F",
+            "size": "large"}
+        plt.text(0.015, 1.25, "f1", **props)
+        plt.text(0.03, 1.25, "f2", **props)
+        plt.text(0.2, 1.25, "f3", **props)
+        plt.text(0.4, 1.25, "f4", **props)
+
+        plt.xlim(freqs[0], freqs[-1])
+        plt.ylim(-0.1, 1.3)
+        plt.ylabel("Taper Amplitude")
+        plt.xlabel("Frequency [Hz]")
+        plt.grid()
+        plt.tight_layout()
+        plt.show()
     """
-    twopi = 6.283185307179586
-    dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
-    taper = []
-    for freq in freqs:
-        if freq < fl3 and freq > fl2:
-            taper_v = 1.0
-        if freq >= fl3 and freq <= fl4:
-            taper_v = 0.5 * (1.0 + M.cos(dblepi * (freq - fl3) / (fl4 - fl3)))
-        if freq > fl4 or freq < fl1:
-            taper_v = 0.0
-        if freq >= fl1 and freq <= fl2:
-            taper_v = 0.5 * (1.0 - M.cos(dblepi * (freq - fl1) / (fl2 - fl1)))
-        taper.append(taper_v)
-    return np.array(taper)
+    taper = np.zeros_like(freqs)
+
+    a = (fl1 <= freqs) & (freqs <= fl2)
+    taper[a] = 0.5 * (1.0 - np.cos(np.pi * (freqs[a] - fl1) / (fl2 - fl1)))
+
+    b = (fl2 < freqs) & (freqs < fl3)
+    taper[b] = 1.0
+
+    c = (fl3 <= freqs) & (freqs <= fl4)
+    taper[c] = 0.5 * (1.0 + np.cos(np.pi * (freqs[c] - fl3) / (fl4 - fl3)))
+
+    return taper
 
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
@@ -267,8 +305,8 @@ def cornFreq2Paz(fc, damp=0.707):
     :param damping: Corner frequency
     :return: Dictionary containing poles, zeros and gain
     """
-    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
-    poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
+    poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
+             -(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
