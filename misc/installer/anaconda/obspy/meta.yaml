@@ -1,13 +1,9 @@
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
-
 package:
   name: obspy
-  version: !!str 0.10.0
+  version: "0.10.0rc1"
 
 source:
-  fn: master.zip
+  fn: obspy-master.zip
   url: https://github.com/obspy/obspy/archive/master.zip
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
@@ -15,33 +11,39 @@ source:
   # "[Errno 2] No such file or directory: '/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf'")]
   #path: ../../../..
 
+build:
+  number: 0
+  script: python setup.py install
+
 requirements:
   build:
     - python
-    - numpy
     - setuptools
-    - scipy
-    - lxml
-    - matplotlib
+    - numpy
+    - mock  # [py2k]
+    - argparse # [py26]
     - future
+    - matplotlib
+    - lxml
     - sqlalchemy
+    - scipy
   run:
     - python
-    - numpy
-    - setuptools
-    - scipy
-    - lxml
-    - matplotlib
     - future
+    - numpy
+    - scipy
+    - matplotlib
+    - lxml
     - sqlalchemy
+    - argparse # [py26]
+    - flake8
 
 test:
   imports:
     - obspy
-  requires:
-      - flake8
+    - obspy.mseed
 
 about:
-  home: http://www.obspy.org
-  license: GNU Library or Lesser General Public License (LGPL)
-
+  home: http://obspy.org
+  license: LGPLv3
+  summary: "ObsPy: A Python Toolbox for seismology/seismological observatories."
