@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib.text
 import numpy as np
 
+from obspy.core.util import getMatplotlibVersion
+
 from .tau_model import TauModel
 from .taup_create import TauP_Create
 from .taup_path import TauP_Path
@@ -18,6 +20,7 @@ from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
 
 
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
 cmap = plt.get_cmap('Paired', lut=12)
@@ -140,9 +143,15 @@ class Arrivals(list):
         if plot_type == "spherical":
             if not ax:
                 plt.figure(figsize=(10, 10))
-                ax = plt.subplot(111, polar=True)
-            ax.set_theta_zero_location('N')
-            ax.set_theta_direction(-1)
+                if MATPLOTLIB_VERSION < [1, 1]:
+                    from .matplotlib_compat import NorthPolarAxes
+                    from matplotlib.projections import register_projection
+                    register_projection(NorthPolarAxes)
+                    ax = plt.subplot(111, projection='northpolar')
+                else:
+                    ax = plt.subplot(111, polar=True)
+                    ax.set_theta_zero_location('N')
+                    ax.set_theta_direction(-1)
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
@@ -192,8 +201,11 @@ class Arrivals(list):
                                     name, clip_on=False)
                 ax.add_artist(t)
 
-            ax.set_rmax(radius)
-            ax.set_rmin(0.0)
+            if MATPLOTLIB_VERSION < [1, 1]:
+                ax.set_ylim(0.0, radius)
+            else:
+                ax.set_rmax(radius)
+                ax.set_rmin(0.0)
             if legend:
                 if isinstance(legend, bool):
                     if 0 <= distance <= 180.0:
