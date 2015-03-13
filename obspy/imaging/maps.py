@@ -332,7 +332,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                  resolution='l', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
-                 show=True, **kwargs):  # @UnusedVariable
+                 show=True, proj_kwargs=None, **kwargs):  # @UnusedVariable
     """
     Creates a Cartopy plot with a data point scatter plot.
 
@@ -355,6 +355,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         * ``"global"`` (Will plot the whole world.)
         * ``"ortho"`` (Will center around the mean lat/long.)
         * ``"local"`` (Will plot around local events)
+        * Any other Cartopy projection
         Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
@@ -392,6 +393,9 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     :type show: bool
     :param show: Whether to show the figure after plotting or not. Can be used
         to do further customization of the plot before showing it.
+    :type proj_kwargs: dict
+    :param proj_kwargs: Keyword arguments to pass to the projection if it is a
+        Cartopy Projection type.
     """
     min_color = min(color)
     max_color = max(color)
@@ -464,6 +468,26 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
 
         proj = ccrs.AlbersEqualArea(central_latitude=lat_0,
                                     central_longitude=lon_0)
+
+    # User-supplied projection.
+    elif isinstance(projection, type):
+        proj_kwargs = proj_kwargs or {}
+
+        if 'central_longitude' in proj_kwargs:
+            if proj_kwargs['central_longitude'] == 'auto':
+                proj_kwargs['central_longitude'] = np.mean(lons)
+        if 'central_latitude' in proj_kwargs:
+            if proj_kwargs['central_latitude'] == 'auto':
+                proj_kwargs['central_latitude'] = np.mean(lats)
+        if 'pole_longitude' in proj_kwargs:
+            if proj_kwargs['pole_longitude'] == 'auto':
+                proj_kwargs['pole_longitude'] = np.mean(lons)
+        if 'pole_latitude' in proj_kwargs:
+            if proj_kwargs['pole_latitude'] == 'auto':
+                proj_kwargs['pole_latitude'] = np.mean(lats)
+
+        proj = projection(**proj_kwargs)
+
     else:
         msg = "Projection '%s' not supported." % projection
         raise ValueError(msg)
