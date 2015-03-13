@@ -637,7 +637,7 @@ class SlownessModel(object):
             otherwise.
         :rtype: :class:`~numpy.ndarray` (dtype = :class:`bool`)
         """
-        ret = np.zeros(shape=depth.shape, dtype=np.bool_)
+        ret = False
         for elem in self.fluidLayerDepths:
             ret |= (elem.topDepth <= depth) & (depth < elem.botDepth)
         return ret

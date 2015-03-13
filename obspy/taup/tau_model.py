@@ -6,16 +6,11 @@ Internal TauModel class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
 import base64
 import json
 import os
-# use cPickle on Python2
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from copy import deepcopy
 from itertools import count
 from math import pi
@@ -27,7 +22,6 @@ from obspy.core.compatibility import frombuffer
 from .helper_classes import SlownessModelError, TauModelError
 from .slowness_model import SlownessModel
 from .tau_branch import TauBranch
-from .utils import _get_model_filename
 from .velocity_model import VelocityModel
 
 
@@ -195,44 +189,6 @@ class TauModel(object):
         self.cmbDepth = self.tauBranches[0, self.cmbBranch].topDepth
         self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
         self.validate()
-
-    @staticmethod
-    def fromfile(model_name):
-        """
-        Load a pickled model. It first tries to load a TauPy internal model
-        with the given name. Otherwise it is treated as a filename.
-        """
-        # Get the model filename in a unified manner.
-        filename = _get_model_filename(model_name)
-        # If that file does not exist, just treat it as a filename.
-        if not os.path.exists(filename):
-            filename = model_name
-
-        def map_path(mod_name, kls_name):
-            if mod_name.startswith('taup'):
-                mod = __import__('obspy.%s' % (mod_name, ),
-                                 fromlist=[mod_name])
-                return getattr(mod, kls_name)
-            else:
-                fromlist = native_str(mod_name.split('.')[-1])
-                mod = __import__(mod_name, fromlist=[fromlist])
-                return getattr(mod, kls_name)
-
-        with open(filename, 'rb') as f:
-            if PY2:
-                unpickler = pickle.Unpickler(f)
-                unpickler.find_global = map_path
-            else:
-                class RenamingUnpickler(pickle.Unpickler):
-                    def find_class(self, module, name):
-                        return map_path(module, name)
-                unpickler = RenamingUnpickler(f)
-
-            return unpickler.load()
-
-    def save(self, outfile):
-        with open(outfile, 'w+b') as f:
-            pickle.dump(self, f, protocol=-1)
 
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"
@@ -448,6 +404,15 @@ class TauModel(object):
             data = fh.read()
         return _loads(data)
 
+    @staticmethod
+    def from_file(model_name):
+        if os.path.exists(model_name):
+            filename = model_name
+        else:
+            filename = os.path.join(os.path.dirname(__file__), "data",
+                                    "models", model_name.lower() + ".json")
+        return TauModel.deserialize(filename)
+
 
 class TauEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -456,6 +421,7 @@ class TauEncoder(json.JSONEncoder):
         converted into a dict holding dtype, shape and the data base64 encoded
         """
         if isinstance(obj, np.ndarray):
+            obj = np.require(obj, requirements=['C_CONTIGUOUS'])
             # handle array of TauBranch objects
             if obj.flatten()[0].__class__ == TauBranch:
                 __ndarray_list__ = [_dumps(x) for x in obj.flatten()]
