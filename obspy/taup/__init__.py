@@ -36,7 +36,7 @@ and model. Per default it returns arrivals for a number of phases.
 
 >>> arrivals = model.get_travel_times(source_depth_in_km=55,
 ...                                   distance_in_degree=67)
->>> print(arrivals)
+>>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 28 arrivals
     P phase arrival at 647.036 seconds
     pP phase arrival at 662.230 seconds
@@ -75,7 +75,7 @@ adhere to the naming scheme which is detailed later.
 >>> arrivals = model.get_travel_times(source_depth_in_km=100,
 ...                                   distance_in_degree=45,
 ...                                   phase_list=["P", "PSPSPS"])
->>> print(arrivals)
+>>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 3 arrivals
     P phase arrival at 485.204 seconds
     PSPSPS phase arrival at 4983.023 seconds
@@ -123,7 +123,7 @@ If ray paths have been calculated, they can be plotted using the
 :meth:`~obspy.taup.tau.Arrivals.plot` method:
 
 >>> arrivals = model.get_ray_paths(source_depth_in_km=500,
-                                   distance_in_degree=130)
+...                                distance_in_degree=130)
 >>> arrivals.plot()  # doctest: +SKIP
 
 .. plot::
