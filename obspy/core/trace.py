@@ -1834,7 +1834,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             further details.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
-            from 0. to 0.5). Default is 0.05 (5%).
+            from 0. to 0.5).
         :type max_length: None, float
         :param max_length: Length of taper at one end in seconds.
         :type side: str
