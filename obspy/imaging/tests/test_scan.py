@@ -13,8 +13,11 @@ from os.path import abspath, dirname, join, pardir
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.core.util.testing import ImageComparison
+from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.imaging.scripts.scan import main as obspy_scan
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ScanTestCase(unittest.TestCase):
@@ -81,6 +84,10 @@ class ScanTestCase(unittest.TestCase):
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
 
+        reltol = 1
+        if MATPLOTLIB_VERSION >= [1, 4, 0]:
+            reltol = 10
+
         files = []
         with NamedTemporaryFile() as f1:
             with NamedTemporaryFile() as f2:
@@ -91,8 +98,8 @@ class ScanTestCase(unittest.TestCase):
                         fp.flush()
                         fp.seek(0)
                         files.append(fp.name)
-                    with ImageComparison(self.path, 'scan_mult_sampl.png')\
-                            as ic:
+                    with ImageComparison(self.path, 'scan_mult_sampl.png',
+                                         reltol=reltol) as ic:
                         obspy_scan(files + ['--output', ic.name, '--quiet'])
 
 
