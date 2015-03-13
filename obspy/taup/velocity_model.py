@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Package for storage and manipulation of seismic earth models.
+Velocity model class.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -28,6 +28,8 @@ class VelocityModel(object):
                  minRadius=0.0, maxRadius=6371.0, isSpherical=True,
                  layers=None):
         """
+        Create an object to store a seismic Earth model.
+
         :type modelName: str
         :param modelName: name of the velocity model.
         :type radiusOfEarth: float
@@ -79,7 +81,9 @@ class VelocityModel(object):
     # @property  ?
     def getDisconDepths(self):
         """
-        Returns the depths of discontinuities within the velocity model.
+        Return the depths of discontinuities within the velocity model.
+
+        :rtype: :class:`~numpy.ndarray`
         """
         above = self.layers[:-1]
         below = self.layers[1:]
@@ -94,15 +98,28 @@ class VelocityModel(object):
         return discontinuities
 
     def getNumLayers(self):
-        """ Returns the number of layers in this velocity model. """
+        """
+        Return the number of layers in this velocity model.
+
+        :rtype: int
+        """
         return len(self.layers)
 
     def layerNumberAbove(self, depth):
         """
-        Finds the layer containing the given depth. Note this returns the upper
-        layer if the depth happens to be at a layer boundary.
+        Find the layer containing the given depth(s).
 
-        :returns: the layer number
+        Note this returns the upper layer if the depth happens to be at a layer
+        boundary.
+
+        .. seealso:: :meth:`layerNumberBelow`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+
+        :returns: The layer number for the specified depth.
+        :rtype: :class:`int` or :class:`~numpy.ndarray` (dtype = :class:`int`,
+            shape equivalent to ``depth``)
         """
         depth = np.atleast_1d(depth)
         layer = np.logical_and(
@@ -116,10 +133,19 @@ class VelocityModel(object):
 
     def layerNumberBelow(self, depth):
         """
-        Finds the layer containing the given depth. Note this returns the lower
-        layer if the depth happens to be at a layer boundary.
+        Find the layer containing the given depth(s).
 
-        :returns: the layer number
+        Note this returns the lower layer if the depth happens to be at a layer
+        boundary.
+
+        .. seealso:: :meth:`layerNumberAbove`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+
+        :returns: The layer number for the specified depth.
+        :rtype: :class:`int` or :class:`~numpy.ndarray` (dtype = :class:`int`,
+            shape equivalent to ``depth``)
         """
         depth = np.atleast_1d(depth)
         layer = np.logical_and(
@@ -131,38 +157,100 @@ class VelocityModel(object):
         else:
             raise LookupError("No such layer.")
 
-    def evaluateAbove(self, depth, materialProperty):
+    def evaluateAbove(self, depth, prop):
+        """
+        Return the value of the given material property at the given depth(s).
 
-        """Returns the value of the given material property, usually P or S
-        velocity, at the given depth. Note this returns the value at the bottom
-        of the upper layer if the depth happens to be at a layer boundary.
-        :returns: the value of the given material property
+        Note this returns the value at the bottom of the upper layer if the
+        depth happens to be at a layer boundary.
+
+        .. seealso:: :meth:`evaluateBelow`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+        :param prop: The material property to evaluate. One of:
+
+            * ``p``
+                Compressional (P) velocity (km/s)
+            * ``s``
+                Shear (S) velocity (km/s)
+            * ``r`` or ``d``
+                Density (in g/cm^3)
+        :type prop: str
+
+        :returns: The value of the given material property
+        :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
+            :class:`float`, shape equivalent to ``depth``)
         """
         layer = self.layers[self.layerNumberAbove(depth)]
-        return evaluateVelocityAt(layer, depth, materialProperty)
+        return evaluateVelocityAt(layer, depth, prop)
 
-    def evaluateBelow(self, depth, materialProperty):
-        """Returns the value of the given material property, usually P or S
-        velocity, at the given depth. Note this returns the value at the top
-        of the lower layer if the depth happens to be at a layer boundary.
+    def evaluateBelow(self, depth, prop):
+        """
+        Return the value of the given material property at the given depth(s).
+
+        Note this returns the value at the top of the lower layer if the depth
+        happens to be at a layer boundary.
+
+        .. seealso:: :meth:`evaluateBelow`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+        :param prop: The material property to evaluate. One of:
+
+            * ``p``
+                Compressional (P) velocity (km/s)
+            * ``s``
+                Shear (S) velocity (km/s)
+            * ``r`` or ``d``
+                Density (in g/cm^3)
+        :type prop: str
+
         :returns: the value of the given material property
+        :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
+            :class:`float`, shape equivalent to ``depth``)
         """
         layer = self.layers[self.layerNumberBelow(depth)]
-        return evaluateVelocityAt(layer, depth, materialProperty)
+        return evaluateVelocityAt(layer, depth, prop)
 
-    def depthAtTop(self, layerNumber):
-        """ returns the depth at the top of the given layer. """
-        layer = self.layers[layerNumber]
+    def depthAtTop(self, layer):
+        """
+        Return the depth at the top of the given layer.
+
+        .. seealso:: :meth:`depthAtBottom`
+
+        :param layer: The layer number
+        :type layer: :class:`int` or :class:`~numpy.ndarray`
+
+        :returns: The depth of the top, in km.
+        :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
+            :class:`float`, shape equivalent to ``layer``)
+        """
+        layer = self.layers[layer]
         return layer['topDepth']
 
-    def depthAtBottom(self, layerNumber):
-        """ returns the depth at the bottom of the given layer. """
-        layer = self.layers[layerNumber]
+    def depthAtBottom(self, layer):
+        """
+        Return the depth at the bottom of the given layer.
+
+        .. seealso:: :meth:`depthAtTop`
+
+        :param layer: The layer number
+        :type layer: :class:`int` or :class:`~numpy.ndarray`
+
+        :returns: The depth of the bottom, in km.
+        :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
+            :class:`float`, shape equivalent to ``layer``)
+        """
+        layer = self.layers[layer]
         return layer['botDepth']
 
     def validate(self):
         """
-        Performs internal consistency checks on the velocity model.
+        Perform internal consistency checks on the velocity model.
+
+        :returns: True if the model is consistent.
+        :raises ValueError: If the model is inconsistent.
         """
         # Is radiusOfEarth positive?
         if self.radiusOfEarth <= 0.0:
@@ -295,52 +383,57 @@ class VelocityModel(object):
     @classmethod
     def readVelocityFile(cls, filename):
         """
-        Reads in a velocity file by given file name (must be a
-        string). The type of file is determined from the file name
-        (changed from the java!). Calls readTVelFile.
-        Raises exception if the type of file cannot be determined.
-        .nd files are not currently supported!
+        Read in a velocity file.
+
+        The type of file is determined from the file name (changed from the
+        Java!).
+
+        :param filename: The name of the file to read.
+        :type filename: str
+
+        :raises NotImplementedError: If the file extension is ``.nd``.
+        :raises ValueError: If the file extension is not ``.tvel``.
         """
-        # filename formatting
         if filename.endswith(".nd"):
-            fileType = ".nd"
+            raise NotImplementedError(".nd files are not currently supported. "
+                                      "Sorry.")
         elif filename.endswith(".tvel"):
-            fileType = ".tvel"
+            vMod = cls.readTVelFile(filename)
         else:
             raise ValueError("File type could not be determined, please "
                              "rename your file to end with .tvel or .nd")
-        fileType = fileType[1:]
-
-        # the actual reading of the velocity file
-        if fileType.lower() == "nd":
-            raise NotImplementedError(".nd files are not curently supported. "
-                                      "Sorry.")
-        elif fileType.lower() == "tvel":
-            vMod = cls.readTVelFile(filename)
-        else:
-            raise ValueError("File type invalid")
 
         vMod.fixDisconDepths()
         return vMod
 
     @classmethod
     def readTVelFile(cls, filename):
-        """ This method reads in a velocity model from a "tvel" ASCII
-        text file. The name of the model file for model "modelname"
-        should be "modelname.tvel".  The format of the file is:
+        """
+        Read in a velocity model from a "tvel" ASCII text file.
+
+        The name of the model file for model "modelname" should be
+        "modelname.tvel".  The format of the file is::
 
             comment line - generally info about the P velocity model
             comment line - generally info about the S velocity model
             depth pVel sVel Density
             depth pVel sVel Density
 
-        The velocities are assumed to be linear between sample
-        points. Because this type of model file doesn't give complete
-        information we make the following assumptions:
-        modelname - from the filename, with ".tvel" dropped if present
-        radiusOfEarth - the largest depth in the model
-        meanDensity - 5517.0 G - 6.67e-11
-        Comments using # are also allowed.
+        The velocities are assumed to be linear between sample points. Because
+        this type of model file doesn't give complete information we make the
+        following assumptions:
+
+        * ``modelname`` - from the filename, with ".tvel" dropped if present
+        * ``radiusOfEarth`` - the largest depth in the model
+        * ``meanDensity`` - 5517.0
+        * ``G`` - 6.67e-11
+
+        Comments using ``#`` are also allowed.
+
+        :param filename: The name of the file to read.
+        :type filename: str
+
+        :raises ValueError: If model file is in error.
         """
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
@@ -393,13 +486,15 @@ class VelocityModel(object):
 
     def fixDisconDepths(self):
         """
-        Resets depths of major discontinuities to match those existing in the
-        input velocity model. The initial values are set such that if there
-        is no discontinuity within the top 100 km then the moho is set to 0.0.
-        Similarly, if there are no discontinuities at all then the cmb is
-        set to the radius of the earth. Similarly for the iocb, except it
-        must be a fluid to solid boundary and deeper than 100km to avoid
-        problems with shallower fluid layers, eg oceans.
+        Reset depths of major discontinuities.
+
+        The depths are set to match those existing in the input velocity model.
+        The initial values are set such that if there is no discontinuity
+        within the top 100 km then the Moho is set to 0.0. Similarly, if there
+        are no discontinuities at all then the CMB is set to the radius of the
+        Earth. Similarly for the IOCB, except it must be a fluid to solid
+        boundary and deeper than 100 km to avoid problems with shallower fluid
+        layers, e.g., oceans.
         """
         MOHO_MIN = 65.0
         CMB_MIN = self.radiusOfEarth

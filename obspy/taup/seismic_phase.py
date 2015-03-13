@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Objects and functions dealing with seismic phases.
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -10,8 +13,7 @@ import re
 
 import numpy as np
 
-from .arrival import Arrival
-from .helper_classes import TauModelError, TimeDist
+from .helper_classes import Arrival, TauModelError, TimeDist
 
 from .c_wrappers import clibtau
 
@@ -139,7 +141,7 @@ class SeismicPhase(object):
 
     def parse_name(self, tMod):
         """
-        Constructs a branch sequence from the given phase name and tau model.
+        Construct a branch sequence from the given phase name and tau model.
         """
         currLeg = self.legs[0]
         nextLeg = currLeg
@@ -483,10 +485,11 @@ class SeismicPhase(object):
 
     def phase_conversion(self, tMod, fromBranch, endAction, isPtoS):
         """
-        Changes maxRayParam and minRayParam whenever there is a phase
-        conversion. For instance, SKP needs to change the maxRayParam
-        because there are SKS ray parameters that cannot propagate from the
-        cmb into the mantle as a p wave.
+        Change maxRayParam and minRayParam where there is a phase conversion.
+
+        For instance, SKP needs to change the maxRayParam because there are SKS
+        ray parameters that cannot propagate from the CMB into the mantle as a
+        P wave.
         """
         if endAction == self.TURN:
             # Can't phase convert for just a turn point
@@ -517,10 +520,12 @@ class SeismicPhase(object):
 
     def add_to_branch(self, tMod, startBranch, endBranch, isPWave, endAction):
         """
-        Adds the branch numbers from startBranch to endBranch, inclusive,
-        to branchSeq, in order. Also, currBranch is set correctly based on
-        the value of endAction. endAction can be one of TRANSUP, TRANSDOWN,
-        REFLECTTOP, REFLECTBOT, or TURN.
+        Add branch numbers to branchSeq.
+
+        Branches from startBranch to endBranch, inclusive, are added in order.
+        Also, currBranch is set correctly based on the value of endAction.
+        endAction can be one of TRANSUP, TRANSDOWN, REFLECTTOP, REFLECTBOT, or
+        TURN.
         """
         self.endAction = endAction
         if endAction == self.TURN:
@@ -760,7 +765,7 @@ class SeismicPhase(object):
 
     def calc_time(self, degrees):
         """
-        Calculates arrival times for this phase, sorted by time.
+        Calculate arrival times for this phase, sorted by time.
         """
         # 10 should be enough. This is only for one phase.
         r_dist = np.empty(10, dtype=np.float64)
@@ -787,6 +792,8 @@ class SeismicPhase(object):
 
     def calc_pierce(self, degrees):
         """
+        Calculate pierce points for this phase.
+
         First calculates arrivals, then the "pierce points" corresponding to
         the stored arrivals. The pierce points are stored within each arrival
         object.
@@ -798,9 +805,10 @@ class SeismicPhase(object):
 
     def calc_pierce_from_arrival(self, currArrival):
         """
-        Calculates the pierce points for a particular arrival. The returned
-        arrival is the same as the input argument but now has the pierce
-        points filled in.
+        Calculate the pierce points for a particular arrival.
+
+        The returned arrival is the same as the input argument but now has the
+        pierce points filled in.
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, ie it is between rayNum and rayNum+1,
@@ -850,15 +858,17 @@ class SeismicPhase(object):
             else:
                 if (isPWave or self.tMod.sMod.depthInFluid((
                         tauBranch.topDepth + tauBranch.botDepth) / 2)):
-                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
-                                                         tauBranch.topDepth,
-                                                         tauBranch.botDepth,
-                                                         True)
+                    turnDepth = self.tMod.sMod.findDepth_from_depths(
+                        distRayParam,
+                        tauBranch.topDepth,
+                        tauBranch.botDepth,
+                        True)
                 else:
-                    turnDepth = self.tMod.sMod.findDepth(distRayParam,
-                                                         tauBranch.topDepth,
-                                                         tauBranch.botDepth,
-                                                         isPWave)
+                    turnDepth = self.tMod.sMod.findDepth_from_depths(
+                        distRayParam,
+                        tauBranch.topDepth,
+                        tauBranch.botDepth,
+                        isPWave)
 
             if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
                 # Head waves and diffracted waves are a special case.
@@ -887,9 +897,9 @@ class SeismicPhase(object):
                 index += 1
 
         if any(x in self.name for x in ["Pdiff", "Pn", "Sdiff", "Sn"]):
-            pierce, index = self.handle_head_or_diffracted_wave(currArrival,
-                                                                pierce,
-                                                                index)
+            pierce, index = self.handle_special_waves(currArrival,
+                                                      pierce,
+                                                      index)
         elif "kmps" in self.name:
             pierce[index] = (distRayParam, currArrival.time,
                              currArrival.purist_dist, 0)
@@ -901,8 +911,9 @@ class SeismicPhase(object):
 
     def calc_path(self, degrees):
         """
-        Calculates the paths this phase takes through the Earth model, only
-        calls calcPathFromArrival.
+        Calculate the paths this phase takes through the Earth model.
+
+        Only calls :meth:`calc_path_from_arrival`.
         """
         arrivals = self.calc_time(degrees)
         for arrival in arrivals:
@@ -911,7 +922,7 @@ class SeismicPhase(object):
 
     def calc_path_from_arrival(self, currArrival):
         """
-        Calculates the paths this phase takes through the Earth model.
+        Calculate the paths this phase takes through the Earth model.
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
@@ -973,12 +984,13 @@ class SeismicPhase(object):
 
         return currArrival
 
-    def handle_head_or_diffracted_wave(self, currArrival, pierce, index):
+    def handle_special_waves(self, currArrival, pierce, index):
         """
-        Here we worry about the special case for head and diffracted
-        waves. It is assumed that a phase can be a diffracted wave or a
-        head wave, but not both. Nor can it be a head wave or diffracted
-        wave for both P and S.
+        Handle head or diffracted waves.
+
+        It is assumed that a phase can be a diffracted wave or a head wave, but
+        not both. Nor can it be a head wave or diffracted wave for both P and
+        S.
         """
         for ps in ["Pn", "Sn", "Pdiff", "Sdiff"]:
             if ps in self.name:
@@ -1055,7 +1067,7 @@ class SeismicPhase(object):
 
 def closest_branch_to_depth(tMod, depthString):
     """
-    Finds the closest discontinuity to the given depth that can hae
+    Find the closest discontinuity to the given depth that can have
     reflections and phase transformations.
     """
     if depthString == "m":
@@ -1103,12 +1115,14 @@ tokenizer = re.Scanner([
 
 def leg_puller(name):
     """
-    Tokenizes a phase name into legs, ie PcS becomes 'P'+'c'+'S' while p^410P
-    would become 'p'+'^410'+'P'. Once a phase name has been broken into
-    tokens we can begin to construct the sequence of branches to which it
-    corresponds. Only minor error checking is done at this point, for
-    instance PIP generates an exception but ^410 doesn't. It also appends
-    "END" as the last leg.
+    Tokenize a phase name into legs.
+
+    For example, ``PcS`` becomes ``'P' + 'c' + 'S'`` while ``p^410P`` would
+    become ``'p' + '^410' + 'P'``. Once a phase name has been broken into
+    tokens, we can begin to construct the sequence of branches to which it
+    corresponds. Only minor error checking is done at this point, for instance
+    ``PIP`` generates an exception but ``^410`` doesn't. It also appends
+    ``"END"`` as the last leg.
     """
     results, remainder = tokenizer.scan(name)
     if remainder:

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Slowness model class.
+"""
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
@@ -18,10 +21,16 @@ from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
                              evaluateVelocityAtTop)
 
 
+def _fixCriticalDepths(criticalDepths, layerNum, isPWave):
+    name = 'pLayerNum' if isPWave else 'sLayerNum'
+
+    mask = criticalDepths[name] > layerNum
+    criticalDepths[name][mask] += 1
+
+
 class SlownessModel(object):
     """
-    This class provides storage and methods for generating slowness-depth
-    pairs.
+    Storage and methods for generating slowness-depth pairs.
     """
     DEBUG = False
     DEFAULT_SLOWNESS_TOLERANCE = 1e-16
@@ -104,6 +113,8 @@ class SlownessModel(object):
 
     def createSample(self):
         """
+        Create slowness-depth layers from a velocity model.
+
         This method takes a velocity model and creates a vector containing
         slowness-depth layers that, hopefully, adequately sample both slowness
         and depth so that the travel time as a function of distance can be
@@ -149,14 +160,15 @@ class SlownessModel(object):
             print("createSample seems to be done successfully.")
 
     def findCriticalPoints(self):
-        """ Finds all critical points within a velocity model.
+        """
+        Find all critical points within a velocity model.
 
-         Critical points are first order discontinuities in
-        velocity/slowness, local extrema in slowness. A high slowness
-        zone is a low velocity zone, but it is possible to have a
-        slight low velocity zone within a spherical earth that is not
-        a high slowness zone and thus does not exhibit any of the
-        pathological behavior of a low velocity zone.  """
+        Critical points are first order discontinuities in velocity/slowness,
+        local extrema in slowness. A high slowness zone is a low velocity zone,
+        but it is possible to have a slightly low velocity zone within a
+        spherical Earth that is not a high slowness zone and thus does not
+        exhibit any of the pathological behavior of a low velocity zone.
+        """
         highSlownessZoneP = DepthRange()
         highSlownessZoneS = DepthRange()
         fluidZone = DepthRange()
@@ -338,7 +350,7 @@ class SlownessModel(object):
                     print("layer contains the bottom of a P " +
                           "high slowness zone. minPSoFar=" + str(minPSoFar),
                           currPLayer)
-                highSlownessZoneP.botDepth = self.findDepth(
+                highSlownessZoneP.botDepth = self.findDepth_from_layers(
                     minPSoFar, layerNum, layerNum, self.PWAVE)
                 self.highSlownessLayerDepthsP.append(highSlownessZoneP)
                 inHighSlownessZoneP = False
@@ -353,7 +365,7 @@ class SlownessModel(object):
                 # in fluid layers we want to check PWAVE structure
                 # when looking for S wave critical points
                 porS = (self.PWAVE if currSLayer == currPLayer else self.SWAVE)
-                highSlownessZoneS.botDepth = self.findDepth(
+                highSlownessZoneS.botDepth = self.findDepth_from_layers(
                     minSSoFar, layerNum, layerNum, porS)
                 self.highSlownessLayerDepthsS.append(highSlownessZoneS)
                 inHighSlownessZoneS = False
@@ -404,14 +416,16 @@ class SlownessModel(object):
 
     def getNumLayers(self, isPWave):
         """
-        This is meant to return the number of pLayers and sLayers.
-        I have not yet been able to find out how these are known in
-        the java code.
+        Number of slowness layers.
+
+        This is meant to return the number of P or S layers.
+
+        :param isPWave: Return P layer count (``True``) or S layer count
+            (``False``).
+        :type isPWave: bool
+        :returns: Number of slowness layers.
+        :rtype: int
         """
-        # Where
-        # self.PLayers = pLayers
-        # and the pLayers have been provided in the constructor, but I
-        # don't understand from where!
         if isPWave:
             return len(self.PLayers)
         else:
@@ -419,51 +433,73 @@ class SlownessModel(object):
 
     def findDepth_from_depths(self, ray_param, topDepth, botDepth, isPWave):
         """
-        Finds a depth corresponding to a slowness between two given depths
-        in the Velocity Model by calling findDepth with layer numbers.
+        Find depth corresponding to a slowness between two given depths.
+
+        The given depths are converted to layer numbers before calling
+        :meth:`findDepth_from_layers`.
+
+        :param ray_param: Slowness (aka ray parameter) to find, in s/km.
+        :type ray_param: float
+        :param topDepth: Top depth to search, in km.
+        :type topDepth: float
+        :param botDepth: Bottom depth to search, in km.
+        :type botDepth: float
+        :param isPWave: ``True`` if P wave or ``False`` for S wave.
+        :type isPWave: bool
+
+        :returns: Depth (in km) corresponding to the desired slowness.
+        :rtype: float
+
+        :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
+            because there are no layers to search, or if there is an increase
+            in slowness, i.e., a negative velocity gradient, that just balances
+            the decrease in slowness due to the spherical Earth, or if the ray
+            parameter ``p`` is not contained within the specified layer range.
         """
-        topLayerNum = self.vMod.layerNumberBelow(topDepth)
-        if self.vMod.layers[topLayerNum].botDepth == topDepth:
+        topLayerNum = self.vMod.layerNumberBelow(topDepth)[0]
+        if self.vMod.layers[topLayerNum]['botDepth'] == topDepth:
             topLayerNum += 1
-        botLayerNum = self.vMod.layerNumberAbove(botDepth)
-        return self.findDepth(ray_param, topLayerNum, botLayerNum, isPWave)
+        botLayerNum = self.vMod.layerNumberAbove(botDepth)[0]
+        return self.findDepth_from_layers(ray_param, topLayerNum, botLayerNum,
+                                          isPWave)
 
-    def findDepth(self, p, topCriticalLayer, botCriticalLayer, isPWave):
+    def findDepth_from_layers(self, p, topCriticalLayer, botCriticalLayer,
+                              isPWave):
         """
-        Finds a depth corresponding to a slowness p (here defined as (
-        6731-depth) / velocity, and sometimes called ray parameter)  between
-        two given velocity layers, including the top and the bottom. We also
-        check to see if the slowness is less than the bottom slowness of
-        these layers but greater than the top slowness of the next deeper
-        layer. This corresponds to a total reflection. In this case a check
-        needs to be made to see if this is an S wave reflecting off of a
-        fluid layer, use P velocity below in this case. We assume that
-        slowness is monotonic within these layers and therefore there is
-        only one depth with the given slowness. This means we return the
-        first depth that we find.
+        Find depth corresponding to a slowness p between two velocity layers.
 
-        SlownessModelError occurs if topCriticalLayer > botCriticalLayer
-        because there are no layers to search, or if there is an increase
-        in slowness, ie a negative velocity gradient, that just balances
-        the decrease in slowness due to the spherical earth, or if the ray
-        parameter p is not contained within the specified layer range.
+        Here, slowness is defined as ``(6731-depth) / velocity``, and sometimes
+        called ray parameter. Both the top and the bottom velocity layers are
+        included. We also check to see if the slowness is less than the bottom
+        slowness of these layers but greater than the top slowness of the next
+        deeper layer. This corresponds to a total reflection. In this case a
+        check needs to be made to see if this is an S wave reflecting off of a
+        fluid layer, use P velocity below in this case. We assume that slowness
+        is monotonic within these layers and therefore there is only one depth
+        with the given slowness. This means we return the first depth that we
+        find.
+
+        :param p: Slowness (aka ray parameter) to find, in s/km.
+        :type p: float
+        :param topCriticalLayer: Top layer number to search.
+        :type topCriticalLayer: int
+        :param botCriticalLayer: Bottom layer number to search.
+        :type botCriticalLayer: int
+        :param isPWave: ``True`` if P wave or ``False`` for S wave.
+        :type isPWave: bool
+
+        :returns: Depth (in km) corresponding to the desired slowness.
+        :rtype: float
+
+        :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
+            because there are no layers to search, or if there is an increase
+            in slowness, i.e., a negative velocity gradient, that just balances
+            the decrease in slowness due to the spherical Earth, or if the ray
+            parameter ``p`` is not contained within the specified layer range.
         """
         # topP = 1.1e300  # dummy numbers
         # botP = 1.1e300
         waveType = 'P' if isPWave else 'S'
-
-        # top/botCriticalLayer are meant to be layer numbers. Some methods call
-        # this one with the relevant depths instead, which will be a float. So
-        # can check if that's the case and convert to layer numbers (Java
-        # version uses method overloading).
-        if not isinstance(topCriticalLayer,
-                          int) or not isinstance(botCriticalLayer, int):
-            topDepth = topCriticalLayer
-            botDepth = botCriticalLayer
-            topCriticalLayer = self.vMod.layerNumberBelow(topDepth)[0]
-            if self.vMod.layers[topCriticalLayer]['botDepth'] == topDepth:
-                topCriticalLayer += 1
-            botCriticalLayer = self.vMod.layerNumberAbove(botDepth)[0]
 
         if topCriticalLayer > botCriticalLayer:
             raise SlownessModelError(
@@ -531,6 +567,19 @@ class SlownessModel(object):
             " botCriticalLayer=" + str(botCriticalLayer))
 
     def toSlowness(self, velocity, depth):
+        """
+        Convert velocity at some depth to slowness.
+
+        :param velocity: The velocity to convert, in km/s.
+        :type velocity: float
+        :param depth: The depth (in km) at which to perform the calculation.
+            Must be less than the radius of the Earth defined in this model, or
+            the result is undefined.
+        :type depth: float
+
+        :returns: The slowness, in s/km.
+        :rtype: float
+        """
         if velocity == 0:
             raise SlownessModelError(
                 "toSlowness: velocity can't be zero, at depth" +
@@ -539,6 +588,26 @@ class SlownessModel(object):
         return (self.radiusOfEarth - depth) / velocity
 
     def interpolate(self, p, topVelocity, topDepth, slope):
+        """
+        Interpolate slowness to depth within a layer.
+
+        We interpolate assuming that velocity is linear within
+        this interval.
+
+        All parameters must be of the same shape.
+
+        :param p: The slowness to interpolate, in s/km.
+        :type p: :class:`float` or :class:`~numpy.ndarray`
+        :param topVelocity: The velocity (in km/s) at the top of the layer.
+        :type topVelocity: :class:`float` or :class:`~numpy.ndarray`
+        :param topDepth: The depth (in km) for the top of the layer.
+        :type topDepth: :class:`float` or :class:`~numpy.ndarray`
+        :param slope: The slope (in (km/s)/km)  for velocity versus depth.
+        :type slope: :class:`float` or :class:`~numpy.ndarray`
+
+        :returns: The depth (in km) of the slowness below the layer boundary.
+        :rtype: :class:`float` or :class:`~numpy.ndarray`
+        """
         denominator = p * slope + 1
         if np.any(denominator == 0):
             raise SlownessModelError(
@@ -552,23 +621,30 @@ class SlownessModel(object):
 
     def depthInFluid(self, depth):
         """
-        Determines if the given depth is contained within a fluid zone. The
-        fluid zone includes its upper boundary but not its lower boundary.
-        The top and bottom of the fluid zone are not returned as a
-        DepthRange, just like in the java code, despite its claims to the
-        contrary.
+        Determine if the given depth is contained within a fluid zone.
+
+        The fluid zone includes its upper boundary but not its lower boundary.
+        The top and bottom of the fluid zone are not returned as a DepthRange,
+        just like in the Java code, despite its claims to the contrary.
+
+        :param depth: The depth to check, in km.
+        :type depth: :class:`~numpy.ndarray`, dtype = :class:`float`
+
+        :returns: ``True`` if the depth is within a fluid zone, ``False``
+            otherwise.
+        :rtype: :class:`~numpy.ndarray` (dtype = :class:`bool`)
         """
         ret = np.zeros(shape=depth.shape, dtype=np.bool_)
         for elem in self.fluidLayerDepths:
             ret |= (elem.topDepth <= depth) & (depth < elem.botDepth)
         return ret
 
-    # noinspection PyCallByClass
     def coarseSample(self):
         """
-        Creates a coarse slowness sampling of the velocity model (vMod). The
-        resultant slowness layers will satisfy the maximum depth increments as
-        well as sampling each point specified within the VelocityModel. The
+        Create a coarse slowness sampling of the velocity model (vMod).
+
+        The resultant slowness layers will satisfy the maximum depth increments
+        as well as sampling each point specified within the VelocityModel. The
         P and S sampling will also be compatible.
         """
 
@@ -676,11 +752,26 @@ class SlownessModel(object):
 
     def layerNumberAbove(self, depth, isPWave):
         """
-        Finds the index of the slowness layer that contains the given depth.
+        Find the index of the slowness layer that contains the given depth.
+
         Note that if the depth is a layer boundary, it returns the shallower
         of the two or possibly more (since total reflections are zero
-        thickness layers)layers. Error occurs if no layer in the slowness
-        model contains the given depth.
+        thickness layers) layers.
+
+        .. seealso:: :meth:`layerNumberBelow`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+        :param isPWave: Whether to look at P (``True``) velocity or S
+            (``False``) velocity.
+        :type isPWave: bool
+
+        :returns: The slowness layer containing the requested depth.
+        :rtype: :class:`int` or :class:`~numpy.ndarray` (dtype = :class:`int`,
+            shape = ``depth.shape``)
+
+        :raises SlownessModelError: If no layer in the slowness model contains
+            the given depth.
         """
         if isPWave:
             layers = self.PLayers
@@ -705,11 +796,26 @@ class SlownessModel(object):
 
     def layerNumberBelow(self, depth, isPWave):
         """
-        Finds the index of the slowness layer that contains the given depth.
+        Find the index of the slowness layer that contains the given depth.
+
         Note that if the depth is a layer boundary, it returns the deeper of
         the two or possibly more (since total reflections are zero thickness
-        layers) layers. Error occurs if no layer in the slowness model
-        contains the given depth.
+        layers) layers.
+
+        .. seealso:: :meth:`layerNumberAbove`
+
+        :param depth: The depth to find, in km.
+        :type depth: :class:`float` or :class:`~numpy.ndarray`
+        :param isPWave: Whether to look at P (``True``) velocity or S
+            (``False``) velocity.
+        :type isPWave: bool
+
+        :returns: The slowness layer containing the requested depth.
+        :rtype: :class:`int` or :class:`~numpy.ndarray` (dtype = :class:`int`,
+            shape = ``depth.shape``)
+
+        :raises SlownessModelError: If no layer in the slowness model contains
+            the given depth.
         """
         if isPWave:
             layers = self.PLayers
@@ -733,23 +839,41 @@ class SlownessModel(object):
 
         return foundLayerNum
 
-    def getSlownessLayer(self, layerNum, isPWave):
+    def getSlownessLayer(self, layer, isPWave):
         """
-        Returns the SlownessLayer of the requested waveType. This is not
-        meant to be a clone!
+        Return the SlownessLayer of the requested wave type.
+
+        This is not meant to be a clone!
+
+        :param layer: The number of the layer(s) to return.
+        :type layer: :class:`int` or :class:`~numpy.ndarray` (dtype =
+            :class:`int`)
+        :param isPWave: Whether to return the P layer (``True``) or the S
+            layer (``False``).
+        :type isPWave: bool
+
+        :returns: The slowness layer(s).
+        :rtype: :class:`~numpy.ndarray` (dtype = :const:`SlownessLayer`,
+            shape = ``layerNum.shape``)
         """
         if isPWave:
-            return self.PLayers[layerNum]
+            return self.PLayers[layer]
         else:
-            return self.SLayers[layerNum]
+            return self.SLayers[layer]
 
     def addSlowness(self, p, isPWave):
         """
-        Adds the given ray parameter, p, to the slowness sampling for the given
-        waveType. It splits slowness layers as needed and keeps P and S
-        sampling consistent within fluid layers. Note, this makes use of the
-        velocity model, so all interpolation is linear in velocity, not in
-        slowness!
+        Add a ray parameter to the slowness sampling for the given wave type.
+
+        Slowness layers are split as needed and P and S sampling are kept
+        consistent within fluid layers. Note, this makes use of the velocity
+        model, so all interpolation is linear in velocity, not in slowness!
+
+        :param p: The slowness value to add, in s/km.
+        :type p: float
+        :param isPWave: Whether to add to the P wave (``True``) or the S wave
+            (``False``) sampling.
+        :type isPWave: bool
         """
         if isPWave:
             # NB Unlike Java (unfortunately) these are not modified in place!
@@ -821,7 +945,9 @@ class SlownessModel(object):
 
     def ray_paramIncCheck(self):
         """
-        Checks to make sure that no slowness layer spans more than maxDeltaP.
+        Check that no slowness layer's ray parameter interval is too large.
+
+        The limit is determined by ``self.maxDeltaP``.
         """
         for wave in [self.SWAVE, self.PWAVE]:
             # These might change with calls to addSlowness, so be sure we have
@@ -850,7 +976,9 @@ class SlownessModel(object):
 
     def depthIncCheck(self):
         """
-        Checks to make sure no slowness layer spans more than maxDepthInterval.
+        Check that no slowness layer is too thick.
+
+        The maximum is determined by ``self.maxDepthInterval``.
         """
         for wave in [self.SWAVE, self.PWAVE]:
             # These might change with calls to addSlowness, so be sure we have
@@ -892,9 +1020,11 @@ class SlownessModel(object):
 
     def distanceCheck(self):
         """
-        Checks to make sure no slowness layer spans more than maxRangeInterval
-        and that the (estimated) error due to linear interpolation is less
-        than maxInterpError.
+        Check that no slowness layer is too wide or undersampled.
+
+        The width must be less than ``self.maxRangeInterval`` and the
+        (estimated) error due to linear interpolation must be less than
+        ``self.maxInterpError``.
         """
         for currWaveType in [self.SWAVE, self.PWAVE]:
             isCurrOK = False
@@ -1019,18 +1149,31 @@ class SlownessModel(object):
 
     def depthInHighSlowness(self, depth, ray_param, isPWave):
         """
-        Determines if the given depth and corresponding slowness is contained
-        within a high slowness zone. Whether the high slowness zone includes
-        its upper boundary and its lower boundaries depends upon the ray
-        parameter. The slowness at the depth is needed because if depth
-        happens to correspond to a discontinuity that marks the bottom of
-        the high slowness zone but the ray is actually a total reflection
-        then it is not part of the high slowness zone. The ray parameter
-        that delimits the zone, ie it can turn at the top and the bottom,
-        is in the zone at the top, but out of the zone at the bottom. (?)
+        Determine if depth and slowness are within a high slowness zone.
+
+        Whether the high slowness zone includes its upper boundary and its
+        lower boundaries depends upon the ray parameter. The slowness at the
+        depth is needed because if depth happens to correspond to a
+        discontinuity that marks the bottom of the high slowness zone but the
+        ray is actually a total reflection then it is not part of the high
+        slowness zone. The ray parameter that delimits the zone, i.e., it can
+        turn at the top and the bottom, is in the zone at the top, but out of
+        the zone at the bottom. (?)
+
         NOTE: I changed this method a bit by throwing out some seemingly
-        useless copying of the values in tempRange, which I think are not
-        used anywhere else.
+        useless copying of the values in tempRange, which I think are not used
+        anywhere else.
+
+        :param depth: The depth to check, in km.
+        :type depth: float
+        :param ray_param: The slowness to check, in s/km.
+        :type ray_param: float
+        :param isPWave: Whether to check the P wave (``True``) or the S wave
+            (``False``).
+        :type isPWave: bool
+
+        :returns: ``True`` if within a high slowness zone, ``False`` otherwise.
+        :rtype: bool
         """
         if isPWave:
             highSlownessLayerDepths = self.highSlownessLayerDepthsP
@@ -1046,8 +1189,22 @@ class SlownessModel(object):
 
     def approxDistance(self, slownessTurnLayer, p, isPWave):
         """
+        Approximate distance for ray turning at the bottom of a layer.
+
         Generates approximate distance, in radians, for a ray from a surface
         source that turns at the bottom of the given slowness layer.
+
+        :param slownessTurnLayer: The number of the layer at which the ray
+            should turn.
+        :type slownessTurnLayer: int
+        :param p: The slowness to calculate, in s/km.
+        :type p: float
+        :param isPWave: Whether to use the P (``True``) or S (``False``) wave.
+        :type isPWave: bool
+
+        :returns: The time (in s) and distance (in rad) the ray travels.
+        :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
+            (``slownessTurnLayer``, ))
         """
         # First, if the slowness model contains less than slownessTurnLayer
         # elements we can't calculate a distance.
@@ -1070,16 +1227,41 @@ class SlownessModel(object):
         return td
 
     def layerTimeDist(self, sphericalRayParam, layerNum, isPWave, check=True):
-        # Calculates the time and distance increments accumulated by a ray of
-        # spherical ray parameter p when passing through layer layerNum.
-        # Note that this gives 1/2 of the true range and time increments
-        # since there will be both an upgoing and a downgoing path. Only
-        # does the calculation for the simple cases of the centre of the
-        # Earth, where the ray parameter is zero, or for constant velocity
-        # layers. Else, it calls SlownessLayer.bullenRadialSlowness. Error
-        # occurs if the ray with the given spherical ray parameter cannot
-        # propagate within this layer, or if the ray turns within this layer
-        # but not at the bottom.
+        """
+        Calculate time and distance for a ray passing through a layer.
+
+        Calculates the time and distance increments accumulated by a ray of
+        spherical ray parameter ``p`` when passing through layer ``layerNum``.
+        Note that this gives half of the true range and time increments since
+        there will be both an upgoing and a downgoing path. It also only does
+        the calculation for the simple cases of the centre of the Earth, where
+        the ray parameter is zero, or for constant velocity layers. Otherwise,
+        it calls :func:`~.bullenRadialSlowness`.
+
+        Either ``sphericalRayParam`` or ``layerNum`` must be 0-D, or they must
+        have the same shape.
+
+        :param sphericalRayParam: The spherical ray parameter of the ray(s), in
+            s/km.
+        :type sphericalRayParam: :class:`float` or :class:`~numpy.ndarray`
+        :param layerNum: The layer(s) in which the calculation should be done.
+        :type layerNum: :class:`float` or :class:`~numpy.ndarray`
+        :param isPWave: Whether to look at the P (``True``) or S (``False``)
+            wave.
+        :type isPWave: bool
+        :param check: Whether to perform checks of input consistency.
+        :type check: bool
+
+        :returns: The time (in s) and distance (in rad) increments for the
+            specified ray(s) and layer(s).
+        :rtype: :class:`~numpy.ndarray` (dtype = :const:`TimeDist`, shape =
+            ``sphericalRayParam.shape`` or ``layerNum.shape``)
+
+        :raises SlownessModelError: If the ray with the given spherical ray
+            parameter cannot propagate within this layer, or if the ray turns
+            within this layer but not at the bottom. These checks may be
+            bypassed by specifying ``check=False``.
+        """
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
 
         # First make sure that a ray with this ray param can propagate
@@ -1221,7 +1403,7 @@ class SlownessModel(object):
 
     def fixCriticalPoints(self):
         """
-        Resets the slowness layers that correspond to critical points.
+        Reset the slowness layers that correspond to critical points.
         """
         self.criticalDepths['pLayerNum'] = self.layerNumberBelow(
             self.criticalDepths['depth'],
@@ -1247,9 +1429,9 @@ class SlownessModel(object):
 
     def validate(self):
         """
-        Performs consistency check on the slowness model.
+        Perform consistency check on the slowness model.
 
-        In Java, there is a separate validate method  defined in the
+        In Java, there is a separate validate method defined in the
         SphericalSModel subclass and as such overrides the validate in
         SlownessModel, but it itself calls the super method (by
         super.validate()), i.e. the code above. Both are merged here (in
@@ -1328,10 +1510,19 @@ class SlownessModel(object):
 
     def getMinTurnRayParam(self, depth, isPWave):
         """
-        Returns the minimum ray parameter that turns, but is not reflected, at
-        or above the given depth. Normally this is the slowness sample
-        at the given depth, but if the depth is within a high slowness
-        zone, then it may be smaller.
+        Find minimum slowness, turning but not reflected, at or above a depth.
+
+        Normally this is the slowness sample at the given depth, but if the
+        depth is within a high slowness zone, then it may be smaller.
+
+        :param depth: The depth to search for, in km.
+        :type depth: float
+        :param isPWave: Whether to search the P (``True``) or S (``False``)
+            wave.
+        :type isPWave: bool
+
+        :returns: The minimum ray parameter, in s/km.
+        :rtype: float
         """
         minPSoFar = 1e300
         if self.depthInHighSlowness(depth, 1e300, isPWave):
@@ -1357,11 +1548,21 @@ class SlownessModel(object):
 
     def getMinRayParam(self, depth, isPWave):
         """
-        Returns the minimum ray parameter that turns or is reflected at or
-        above the given depth. Normally this is the slowness sample at the
-        given depth, but if the depth is within a high slowness zone,
-        then it may be smaller. Also, at first order discontinuities,
-        there may be many slowness samples at the same depth.
+        Find minimum slowness, turning or reflected, at or above a depth.
+
+        Normally this is the slowness sample at the given depth, but if the
+        depth is within a high slowness zone, then it may be smaller. Also, at
+        first order discontinuities, there may be many slowness samples at the
+        same depth.
+
+        :param depth: The depth to search for, in km.
+        :type depth: float
+        :param isPWave: Whether to search the P (``True``) or S (``False``)
+            wave.
+        :type isPWave: bool
+
+        :returns: The minimum ray parameter, in s/km.
+        :rtype: float
         """
         minPSoFar = self.getMinTurnRayParam(depth, isPWave)
         sLayerAbove = self.getSlownessLayer(
@@ -1375,13 +1576,27 @@ class SlownessModel(object):
 
     def splitLayer(self, depth, isPWave):
         """
-        Splits a slowness layer into two slowness layers. returns a
-        SplitLayerInfo object with neededSplit=true if a layer was actually
-        split, false otherwise, movedSample=true if a layer was very close, and
-        so moving the layers depth is better than making a very thin layer,
-        ray_param= the new ray parameter, if the layer was split. The
-        interpolation for splitting a layer is a Bullen p=Ar^B and so does not
-        directly use information from the VelocityModel.
+        Split a slowness layer into two slowness layers.
+
+        The interpolation for splitting a layer is a Bullen p=Ar^B and so does
+        not directly use information from the VelocityModel.
+
+        :param depth: The depth at which attempt a split, in km.
+        :type depth: float
+        :param isPWave: Whether to split based on P (``True``) or S (``False``)
+            wave.
+        :type isPWave: bool
+
+        :returns: Information about the split as (or if) it was performed, such
+            that:
+
+            * ``neededSplit=True`` if a layer was actually split;
+            * ``movedSample=True`` if a layer was very close, and so moving the
+              layer's depth is better than making a very thin layer;
+            * ``ray_param=...``, the new ray parameter (in s/km), if the layer
+              was split.
+
+        :rtype: :class:`~.SplitLayerInfo`
         """
         layerNum = self.layerNumberAbove(depth, isPWave)
         sLayer = self.getSlownessLayer(layerNum, isPWave)
@@ -1436,16 +1651,16 @@ class SlownessModel(object):
             outLayers = np.insert(outLayers, layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
             outCriticalDepths = self.criticalDepths
-            self.fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
+            _fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
             if isPWave:
                 outPLayers = outLayers
-                outSLayers = self.fixOtherLayers(self.SLayers, p, sLayer,
-                                                 topLayer, botLayer,
-                                                 outCriticalDepths, False)
+                outSLayers = self._fixOtherLayers(self.SLayers, p, sLayer,
+                                                  topLayer, botLayer,
+                                                  outCriticalDepths, False)
             else:
-                outPLayers = self.fixOtherLayers(self.PLayers, p, sLayer,
-                                                 topLayer, botLayer,
-                                                 outCriticalDepths, True)
+                outPLayers = self._fixOtherLayers(self.PLayers, p, sLayer,
+                                                  topLayer, botLayer,
+                                                  outCriticalDepths, True)
                 outSLayers = outLayers
             out = self
             out.criticalDepths = outCriticalDepths
@@ -1453,15 +1668,14 @@ class SlownessModel(object):
             out.SLayers = outSLayers
             return SplitLayerInfo(out, True, False, p)
 
-    @staticmethod
-    def fixCriticalDepths(criticalDepths, layerNum, isPWave):
-        name = 'pLayerNum' if isPWave else 'sLayerNum'
+    def _fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
+                        newBotLayer, criticalDepths, isPWave):
+        """
+        Fix other wave layers when a split is made.
 
-        mask = criticalDepths[name] > layerNum
-        criticalDepths[name][mask] += 1
-
-    def fixOtherLayers(self, otherLayers, p, changedLayer, newTopLayer,
-                       newBotLayer, criticalDepths, isPWave):
+        This performs the second split of the *other* wave type when a split is
+        made by :meth:`splitLayer`.
+        """
         out = otherLayers
         # Make sure to keep sampling consistent. If in a fluid, both wave
         # types will share a single slowness layer.
@@ -1485,8 +1699,7 @@ class SlownessModel(object):
                 out[otherLayerNum] = botLayer
                 out = np.insert(out, otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
-                self.fixCriticalDepths(criticalDepths, otherLayerNum,
-                                       not isPWave)
+                _fixCriticalDepths(criticalDepths, otherLayerNum, not isPWave)
                 # Skip next layer as it was just added: achieved by slicing
                 # the list iterator.
 
