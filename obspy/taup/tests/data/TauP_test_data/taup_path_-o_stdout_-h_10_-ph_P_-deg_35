@@ -1,5 +1,5 @@
 > P at   412.43 seconds at    35.00 degrees for a     10.0 km deep source in the iasp91 model with rayParam    8.612 s/deg.
-    0.00    6361.0
+>   0.00    6361.0  - Commented out due to bugs with NumPy 1.4
     0.00    6361.0
     0.02    6356.0
     0.05    6351.0
