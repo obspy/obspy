@@ -249,7 +249,7 @@ class ImageComparison(NamedTemporaryFile):
         baseline image
     :type reltol: float, optional
     :param reltol: Multiplier that is applied to the default tolerance
-        value (i.e. 10 means a 10 times easier to pass test tolerance).
+        value (i.e. 10 means a 10 times harder to pass test tolerance).
     :type adjust_tolerance: bool, optional
     :param adjust_tolerance: Adjust the tolerance based on the matplotlib
         version. Can optionally be turned off to simply compare two images.
