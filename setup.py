@@ -36,46 +36,17 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
-try:
-    import future  # @UnusedImport # NOQA
-except:
-    msg = ("No module named future. Please install future first, it is needed "
-           "before installing ObsPy.")
-    raise ImportError(msg)
-
-try:
-    import matplotlib  # @UnusedImport # NOQA
-except:
-    msg = ("No module named matplotlib. Please install matplotlib first, it "
-           "is needed before installing ObsPy.")
-    raise ImportError(msg)
-else:
-    matplotlib.use("AGG")
-
-import sys
-if sys.version_info[0] == 2:
-    try:
-        from mock import Mock, patch  # PY2
-    except:
-        msg = ("No module named mock. Please install mock first, it is needed "
-               "before installing ObsPy.")
-        raise ImportError(msg)
-else:
-    from unittest.mock import Mock, patch
-
-import ctypes
 import fnmatch
 import glob
 import inspect
 import os
+import sys
 import platform
-from distutils.dep_util import newer
 from distutils.util import change_root
 
 from numpy.distutils.core import DistutilsSetupError, setup
 from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
-from numpy.distutils.command.build_ext import build_ext
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
@@ -645,74 +616,6 @@ class Help2ManInstall(install):
         self.copy_tree(srcdir, mandir)
 
 
-class BuildExtAndTauPy(build_ext):
-    def build_taup_models(self):
-        """
-        Builds the obspy.taup models during install time. This is needed as the
-        models are pickled Python classes which are not compatible across
-        Python versions.
-        """
-        obspy_taup_path = os.path.join(SETUP_DIRECTORY, "obspy")
-        model_input = os.path.join(obspy_taup_path, "taup", "data")
-
-        model_path = os.path.join('obspy', 'taup', 'data', 'models')
-        for path, files in self.distribution.data_files:
-            if path == model_path:
-                dist_models = files
-                break
-        else:
-            dist_models = []
-            self.distribution.data_files.append((model_path, dist_models))
-
-        def _load_CDLL(name):
-            libname = _get_lib_name(name, add_extension_suffix=True)
-            basedir = os.curdir if self.inplace else self.build_lib
-            libpath = os.path.join(basedir, 'obspy', 'lib', libname)
-            return ctypes.CDLL(libpath)
-
-        orig_import = __import__
-        obspy_mock = Mock()
-        obspy_mock._load_CDLL = _load_CDLL
-
-        def import_mock(name, *args, **kwargs):
-            if name == 'obspy.core.util.libnames':
-                return obspy_mock
-            return orig_import(name, *args, **kwargs)
-
-        sys.path.insert(0, obspy_taup_path)
-        if sys.version_info[0] == 2:
-            module = '__builtin__'
-        else:
-            module = 'builtins'
-        with patch(module + '.__import__') as load:
-            load.side_effect = import_mock
-            from taup.taup_create import TauP_Create
-            from taup.utils import _get_model_filename
-
-        for model in glob.glob(os.path.join(model_input, "*.tvel")):
-            output_filename = _get_model_filename(model)
-            dist_models.append(os.path.relpath(output_filename,
-                                               SETUP_DIRECTORY))
-
-            if not newer(model, output_filename) and not self.force:
-                print("obspy.taup model '%s' already exists. To rebuild, "
-                      "please delete the existing version or build with "
-                      "--force." % (output_filename, ))
-                sys.stdout.flush()
-                continue
-            print("Building obspy.taup model for '%s' ..." % (model, ))
-            sys.stdout.flush()
-            if not self.dry_run:
-                mod_create = TauP_Create(input_filename=model,
-                                         output_filename=output_filename)
-                mod_create.loadVMod()
-                mod_create.run()
-
-    def run(self):
-        build_ext.run(self)
-        self.build_taup_models()
-
-
 def setupPackage():
     # setup package
     setup(
@@ -756,7 +659,6 @@ def setupPackage():
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
         cmdclass={
-            'build_ext': BuildExtAndTauPy,
             'build_man': Help2ManBuild,
             'install_man': Help2ManInstall
         },

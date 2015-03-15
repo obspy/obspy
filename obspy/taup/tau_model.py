@@ -6,23 +6,40 @@ Internal TauModel class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
+import base64
+import json
 import os
-# use cPickle on Python2
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from copy import deepcopy
 from itertools import count
 from math import pi
 
 import numpy as np
 
+from obspy.core.compatibility import frombuffer
+
 from .helper_classes import SlownessModelError, TauModelError
+from .slowness_model import SlownessModel
 from .tau_branch import TauBranch
-from .utils import _get_model_filename
+from .velocity_model import VelocityModel
+
+
+TAU_MODEL_KEYS = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch',
+                  'iocbDepth', 'mohoBranch', 'mohoDepth', 'noDisconDepths',
+                  'radiusOfEarth', 'ray_params', 'sMod', 'sourceBranch',
+                  'source_depth', 'spherical', 'tauBranches']
+TAU_BRANCH_KEYS = ['botDepth', 'DEBUG', 'dist', 'isPWave', 'maxRayParam',
+                   'minRayParam', 'minTurnRayParam', 'tau', 'time', 'topDepth']
+TAU_SLOWNESS_MODEL_KEYS = [
+    'allowInnerCoreS', 'criticalDepths', 'DEBUG', 'DEFAULT_SLOWNESS_TOLERANCE',
+    'maxDeltaP', 'maxDepthInterval', 'maxInterpError', 'maxRangeInterval',
+    'minDeltaP', 'PLayers', 'PWAVE', 'radiusOfEarth', 'SLayers',
+    'slowness_tolerance', 'SWAVE', 'vMod']
+TAU_VELOCITY_MODEL_KEYS = [
+    'cmbDepth', 'default_cmb', 'default_iocb', 'default_moho', 'iocbDepth',
+    'isSpherical', 'layers', 'maxRadius', 'minRadius', 'modelName',
+    'mohoDepth', 'radiusOfEarth']
 
 
 class TauModel(object):
@@ -172,44 +189,6 @@ class TauModel(object):
         self.cmbDepth = self.tauBranches[0, self.cmbBranch].topDepth
         self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
         self.validate()
-
-    @staticmethod
-    def fromfile(model_name):
-        """
-        Load a pickled model. It first tries to load a TauPy internal model
-        with the given name. Otherwise it is treated as a filename.
-        """
-        # Get the model filename in a unified manner.
-        filename = _get_model_filename(model_name)
-        # If that file does not exist, just treat it as a filename.
-        if not os.path.exists(filename):
-            filename = model_name
-
-        def map_path(mod_name, kls_name):
-            if mod_name.startswith('taup'):
-                mod = __import__('obspy.%s' % (mod_name, ),
-                                 fromlist=[mod_name])
-                return getattr(mod, kls_name)
-            else:
-                fromlist = native_str(mod_name.split('.')[-1])
-                mod = __import__(mod_name, fromlist=[fromlist])
-                return getattr(mod, kls_name)
-
-        with open(filename, 'rb') as f:
-            if PY2:
-                unpickler = pickle.Unpickler(f)
-                unpickler.find_global = map_path
-            else:
-                class RenamingUnpickler(pickle.Unpickler):
-                    def find_class(self, module, name):
-                        return map_path(module, name)
-                unpickler = RenamingUnpickler(f)
-
-            return unpickler.load()
-
-    def save(self, outfile):
-        with open(outfile, 'w+b') as f:
-            pickle.dump(self, f, protocol=-1)
 
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"
@@ -413,3 +392,139 @@ class TauModel(object):
         branchDepths += [self.getTauBranch(
             i - 1, True).botDepth for i in range(1, len(self.tauBranches[0]))]
         return branchDepths
+
+    def serialize(self, filename):
+        data = _dumps(self)
+        with open(filename, "w") as fh:
+            fh.write(data.decode())
+
+    @staticmethod
+    def deserialize(filename):
+        with open(filename, "r") as fh:
+            data = fh.read()
+        return _loads(data)
+
+    @staticmethod
+    def from_file(model_name):
+        if os.path.exists(model_name):
+            filename = model_name
+        else:
+            filename = os.path.join(os.path.dirname(__file__), "data",
+                                    "models", model_name.lower() + ".json")
+        return TauModel.deserialize(filename)
+
+
+class TauEncoder(json.JSONEncoder):
+    def default(self, obj):
+        """
+        if input object is a ndarray, TauBranch or TauModel it will be
+        converted into a dict holding dtype, shape and the data base64 encoded
+        """
+        if isinstance(obj, np.ndarray):
+            obj = np.require(obj, requirements=['C_CONTIGUOUS'])
+            # handle array of TauBranch objects
+            if obj.flatten()[0].__class__ == TauBranch:
+                __ndarray_list__ = [_dumps(x) for x in obj.flatten()]
+                data_b64 = [base64.b64encode(x) for x in __ndarray_list__]
+                return dict(__ndarray_list__=data_b64,
+                            dtype="TauBranch",
+                            shape=obj.shape)
+            # handle other arrays (e.g. int, float)
+            else:
+                data_b64 = base64.b64encode(obj.data)
+                return dict(__ndarray__=data_b64,
+                            dtype=str(obj.dtype),
+                            shape=obj.shape)
+        elif isinstance(obj, TauBranch):
+            data = dict([(key, getattr(obj, key)) for key in TAU_BRANCH_KEYS])
+            data['dtype'] = "TauBranch"
+            return data
+        elif isinstance(obj, TauModel):
+            data = dict([(key, getattr(obj, key)) for key in TAU_MODEL_KEYS])
+            data['dtype'] = "TauModel"
+            return data
+        elif isinstance(obj, SlownessModel):
+            data = dict([(key, getattr(obj, key))
+                         for key in TAU_SLOWNESS_MODEL_KEYS])
+            data['dtype'] = "SlownessModel"
+            return data
+        elif isinstance(obj, VelocityModel):
+            data = dict([(key, getattr(obj, key))
+                         for key in TAU_VELOCITY_MODEL_KEYS])
+            data['dtype'] = "VelocityModel"
+            return data
+        return json.JSONEncoder(self, obj)
+
+
+def _json_obj_hook(dct):
+    """
+    Decodes previously encoded numpy ndarrays and TauBranch and TauModel.
+
+    :type dct: dict
+    :param dct: json encoded ndarray, TauBranch or TauModel
+    :return: deserialized object
+    """
+    if isinstance(dct, dict) and '__ndarray__' in dct:
+        data = base64.b64decode(dct['__ndarray__'])
+        try:
+            return frombuffer(data, dct['dtype']).reshape(dct['shape'])
+        # if we run into an exception we have a structured array, likely
+        except ValueError:
+            dtype = np.array(dct['dtype'].split("'")[1::2])
+            dtype = dtype.reshape((-1, 2)).tolist()
+            dtype = [tuple([native_str(x), native_str(y)]) for x, y in dtype]
+            return frombuffer(data, dtype=dtype).reshape(dct['shape'])
+    elif isinstance(dct, dict) and '__ndarray_list__' in dct:
+        data = [_loads(base64.b64decode(x)) for x in dct['__ndarray_list__']]
+        return np.array(data, dtype=TauBranch).reshape(dct['shape'])
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "TauBranch":
+        return _deserialize_TauBranch(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "TauModel":
+        return _deserialize_TauModel(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "SlownessModel":
+        return _deserialize_SlownessModel(dct)
+    elif isinstance(dct, dict) and dct.get("dtype", "") == "VelocityModel":
+        return _deserialize_VelocityModel(dct)
+    return dct
+
+
+def _deserialize_TauBranch(dct):
+    tb = TauBranch()
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(tb, k, v)
+    return tb
+
+
+def _deserialize_TauModel(dct):
+    tm = TauModel(sMod=None, skip_calc=True)
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(tm, k, v)
+    return tm
+
+
+def _deserialize_SlownessModel(dct):
+    sm = SlownessModel(vMod=None, skip_model_creation=True)
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(sm, k, v)
+    return sm
+
+
+def _deserialize_VelocityModel(dct):
+    vm = VelocityModel()
+    dct.pop("dtype")
+    for k, v in dct.iteritems():
+        setattr(vm, k, v)
+    return vm
+
+
+def _dumps(*args, **kwargs):
+    kwargs.setdefault('cls', TauEncoder)
+    return json.dumps(*args, **kwargs)
+
+
+def _loads(*args, **kwargs):
+    kwargs.setdefault('object_hook', _json_obj_hook)
+    return json.loads(*args, **kwargs)
