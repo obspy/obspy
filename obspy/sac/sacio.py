@@ -845,7 +845,7 @@ class SacIO(object):
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
-        >>> wiht open('test2.sac', 'wb') as fh:
+        >>> with open('test2.sac', 'wb') as fh:
         ...     tr.WriteSacBinary(fh) # doctest: +SKIP
         >>> import os
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
