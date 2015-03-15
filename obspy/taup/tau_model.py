@@ -453,14 +453,12 @@ class TauModel(object):
         arrays = dict([(key, getattr(self, key)) for key in keys])
         # b) handle .tauBranches
         i, j = self.tauBranches.shape
-        # the following only works if all branches have the same length in
-        # their array-type attributes, e.g. branch.tau has same length for all
-        # branches. this seems to be the case at least for the default models
-        # we ship..
-        branches = np.vstack([np.hstack([self.tauBranches[i_][j_]._to_array()
-                                         for j_ in range(j)])
-                              for i_ in range(i)])
-        arrays['tauBranches'] = branches
+        for j_ in range(j):
+            for i_ in range(i):
+                # just store the shape of self.tauBranches in the key names for
+                # later reconstruction of array in deserialization.
+                key = 'tauBranches_%i/%i_%i/%i' % (j_, j, i_, i)
+                arrays[key] = self.tauBranches[i_][j_]._to_array()
         # c) handle simple contents of .sMod
         dtypes = [(native_str('DEBUG'), np.bool_),
                   (native_str('DEFAULT_SLOWNESS_TOLERANCE'), np.float_),
@@ -527,18 +525,29 @@ class TauModel(object):
                 'sMod.highSlownessLayerDepthsS', 'vMod.layers']
             # a) handle simple contents
             for key in npz.keys():
-                if key in complex_contents:
+                # we have multiple, dynamic key names for individual tau
+                # branches now, skip them all
+                if key in complex_contents or key.startswith('tauBranches'):
                     continue
                 arr = npz[key]
                 if arr.ndim == 0:
                     arr = arr[()]
                 setattr(model, key, arr)
             # b) handle .tauBranches
-            i, j = npz['tauBranches'].shape
-            branches = \
-                np.array([[TauBranch._from_array(npz['tauBranches'][i_][j_])
-                           for j_ in range(j)]
-                          for i_ in range(i)])
+            tau_branch_keys = [key for key in npz.keys()
+                               if key.startswith('tauBranches_')]
+            j, i = tau_branch_keys[0].split("_")[1:]
+            i = int(i.split("/")[1])
+            j = int(j.split("/")[1])
+            branches = np.empty(shape=(i, j), dtype=np.object_)
+            for key in tau_branch_keys:
+                j_, i_ = key.split("_")[1:]
+                i_ = int(i_.split("/")[0])
+                j_ = int(j_.split("/")[0])
+                branches[i_][j_] = TauBranch._from_array(npz[key])
+            # no idea how numpy lays out empty arrays of object type,
+            # make a copy just in case..
+            branches = np.copy(branches)
             setattr(model, "tauBranches", branches)
             # c) handle simple contents of .sMod
             slowness_model = SlownessModel(vMod=None, skip_model_creation=True)
