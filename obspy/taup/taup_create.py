@@ -143,12 +143,11 @@ def build_taup_models():
     """
     Builds the obspy.taup models.
     """
-    model_input = os.path.join(os.path.dirname(__file__), "data")
-    model_path = os.path.join(model_input, 'models')
+    model_dir = os.path.join(os.path.dirname(__file__), "data")
 
-    for model in glob.glob(os.path.join(model_input, "*.tvel")):
+    for model in glob.glob(os.path.join(model_dir, "*.tvel")):
         model_name = os.path.splitext(os.path.basename(model))[0]
-        output_filename = os.path.join(model_path, model_name + ".npz")
+        output_filename = os.path.join(model_dir, model_name + ".npz")
 
         print("Building obspy.taup model for '%s' ..." % (model, ))
         sys.stdout.flush()

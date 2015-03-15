@@ -569,5 +569,5 @@ class TauModel(object):
             filename = model_name
         else:
             filename = os.path.join(os.path.dirname(__file__), "data",
-                                    "models", model_name.lower() + ".npz")
+                                    model_name.lower() + ".npz")
         return TauModel.deserialize(filename)
