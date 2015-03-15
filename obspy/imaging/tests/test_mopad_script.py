@@ -44,11 +44,17 @@ class MopadTestCase(unittest.TestCase):
         expected = '''
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
-
 '''
+        expected = expected.encode('utf-8')
 
-        self.assertEqual(expected.encode("utf-8"),
-                         out.stdout)
+        result = out.stdout[:-1]
+        if result.startswith(b'b'):
+            # Total mojibake when the system is configured strangely. Mostly
+            # only occurs when building packages, so that LANG=C, and Python
+            # picks ASCII for output encoding.
+            expected = str(expected).encode('ascii')
+
+        self.assertEqual(expected, result)
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -145,11 +151,17 @@ Moment Tensor: Mnn =  0.091,  Mee = -0.089, Mdd = -0.002,
 
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
-
 '''
+        expected = expected.encode('utf-8')
 
-        self.assertEqual(expected.encode("utf-8"),
-                         out.stdout)
+        result = out.stdout[:-1]
+        if result.startswith(b'b'):
+            # Total mojibake when the system is configured strangely. Mostly
+            # only occurs when building packages, so that LANG=C, and Python
+            # picks ASCII for output encoding.
+            expected = str(expected).encode('ascii')
+
+        self.assertEqual(expected, result)
 
     #
     # obspy-mopad gmt
