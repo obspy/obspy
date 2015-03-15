@@ -19,13 +19,18 @@ rays with model discontinuities.
 Basic Usage
 -----------
 
-Start by initializing a :class:`~obspy.taup.tau.TauPyModel` class.
+Let's start by initializing a :class:`~obspy.taup.tau.TauPyModel` instance.
+Models can be initialized by specifying the name of a model provided by ObsPy.
+Names of available builtin models (in ``obspy/taup/data`` folder) are provided
+by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
 
 Model initialization is a fairly expensive operation so make sure to do it only
-if necessary.
+if necessary. Custom built models can be initialized by specifying an absolute
+path to a model in ObsPy's ``.npz`` model format instead of just a model name.
+See below for how to build a ``.npz`` model file.
 
 Travel Times
 ^^^^^^^^^^^^
@@ -324,22 +329,30 @@ depth to an interface involved in an interaction.
 11. As a convenience, a ``ttimes`` phase name compatibility mode is available.
     So ``ttp`` gives you the phase list corresponding to ``P`` in ``ttimes``.
     Similarly there are ``tts``, ``ttp+``, ``tts+``, ``ttbasic`` and ``ttall``.
+
+Building custom models
+----------------------
+
+Custom models can be built from ``.tvel`` files using the
+:func:`~obspy.taup.taup_create.build_taup_model` function.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import inspect
 import os
 
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
 from .taup import getTravelTimes, travelTimePlot  # NOQA
 
+# Internal imports.
+from .taup_create import get_builtin_models as _get_builtin_models
 
-# Most generic way to get the data directory.
-__DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
-    inspect.currentframe()))), "data")
+
+BUILTIN_TAUP_MODELS = [
+    os.path.splitext(os.path.basename(path))[0]
+    for path in _get_builtin_models()]
 
 
 if __name__ == '__main__':
