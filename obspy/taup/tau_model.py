@@ -529,7 +529,10 @@ class TauModel(object):
             for key in npz.keys():
                 if key in complex_contents:
                     continue
-                setattr(model, key, npz[key])
+                arr = npz[key]
+                if arr.ndim == 0:
+                    arr = arr[()]
+                setattr(model, key, arr)
             # b) handle .tauBranches
             i, j = npz['tauBranches'].shape
             branches = \
@@ -541,7 +544,11 @@ class TauModel(object):
             slowness_model = SlownessModel(vMod=None, skip_model_creation=True)
             setattr(model, "sMod", slowness_model)
             for key in npz['sMod'].dtype.names:
-                setattr(slowness_model, key, npz['sMod'][key])
+                # restore scalar types from 0d array
+                arr = npz['sMod'][key]
+                if arr.ndim == 0:
+                    arr = arr.flatten()[0]
+                setattr(slowness_model, key, arr)
             # d) handle complex contents of .sMod
             for key in ['PLayers', 'SLayers', 'criticalDepths']:
                 setattr(slowness_model, key, npz['sMod.' + key])
@@ -557,7 +564,11 @@ class TauModel(object):
             velocity_model = VelocityModel()
             setattr(slowness_model, "vMod", velocity_model)
             for key in npz['vMod'].dtype.names:
-                setattr(velocity_model, key, npz['vMod'][key])
+                # restore scalar types from 0d array
+                arr = npz['vMod'][key]
+                if arr.ndim == 0:
+                    arr = arr.flatten()[0]
+                setattr(velocity_model, key, arr)
             setattr(velocity_model, 'layers', npz['vMod.layers'])
             setattr(velocity_model, 'modelName',
                     native_str(velocity_model.modelName))

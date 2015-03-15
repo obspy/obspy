@@ -9,7 +9,6 @@ from future.builtins import *  # NOQA
 
 import inspect
 import os
-import sys
 
 
 ROOT = os.path.dirname(os.path.abspath(inspect.getfile(

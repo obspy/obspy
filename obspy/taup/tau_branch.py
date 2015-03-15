@@ -448,5 +448,9 @@ class TauBranch(object):
         """
         branch = TauBranch()
         for key in arr.dtype.names:
-            setattr(branch, key, arr[key])
+            # restore scalar types from 0d array
+            arr_ = arr[key]
+            if arr_.ndim == 0:
+                arr_ = arr_[()]
+            setattr(branch, key, arr_)
         return branch
