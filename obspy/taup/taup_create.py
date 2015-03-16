@@ -23,8 +23,9 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
 
 class TauP_Create(object):
     """
-    TauP_Create - Re-implementation of the seismic travel time
-    calculation method described in "The Computation of Seismic Travel
+    The seismic travel time calculation method of Buland and Chapman.
+
+    The calculation method is described in "The Computation of Seismic Travel
     Times" by Buland and Chapman, BSSA vol. 73, No. 5, October 1983,
     pp 1271-1302. This creates the SlownessModel and tau branches and
     saves them for later use.
@@ -44,24 +45,14 @@ class TauP_Create(object):
         self.allow_inner_core_s = allow_inner_core_s
 
     def loadVMod(self):
-        """ Tries to load a velocity model via readVelocityFile from the
-        directory specified on command line, or from ./data/.
+        """
+        Try to load a velocity model.
         """
         # Read the velocity model file.
         filename = self.input_filename
         if self.debug:
             print("filename =", filename)
         self.vMod = VelocityModel.readVelocityFile(filename)
-        if self.vMod is None:
-            # try and load internally
-            # self.vMod = TauModelLoader.loadVelocityModel(self.model_filename)
-            # Frankly, I don't think it's a good idea to somehow load the
-            # model from a non-obvious path. Better to just raise the
-            # exception and force user to be clear about what VelocityModel
-            # to read from where. Maybe this could be done sensibly,
-            # as in if a model is specified but no path, some standard models
-            # can be used?
-            pass
         if self.vMod is None:
             raise IOError("Velocity model file not found: " + filename)
         # If model was read:
@@ -74,8 +65,12 @@ class TauP_Create(object):
         return self.vMod
 
     def createTauModel(self, vMod):
-        """ Takes a velocity model and makes a slowness model out of it,
-        then passes that to TauModel. """
+        """
+        Create :class:`~.TauModel` from velocity model.
+
+        First, a slowness model is created from the velocity model, and then it
+        is passed to :class:`~.TauModel`.
+        """
         if vMod is None:
             raise ValueError("vMod is None.")
         if vMod.isSpherical is False:
@@ -116,10 +111,11 @@ class TauP_Create(object):
         return TauModel(self.sMod)
 
     def run(self):
-        """ Creates a tau model from a velocity model. Called by
-        TauP_Create.main after loadVMod; calls createTauModel and
-        writes the result to a .taup file in ./data/taup_models/ (if not
-        specified differently).
+        """
+        Create a tau model from a velocity model.
+
+        Called by :func:`build_taup_model` after :meth:`loadVMod`; calls
+        :meth:`createTauModel` and writes the result to a ``.npy`` file.
         """
         try:
             self.tMod = self.createTauModel(self.vMod)
@@ -145,27 +141,31 @@ class TauP_Create(object):
 
 def get_builtin_models():
     """
-    Get a list of names of builtin models in obspy/taup/data folder that can be
-    loaded by only specifying the model name (filename without '.npz'
-    extension).
+    Get a list of builtin models that can be loaded by model name only.
+
+    These models reside in the ``<package-root>/obspy/taup/data`` directory.
+    The ``.npz`` extension is not required for loading these models.
     """
     return glob.glob(os.path.join(__DATA_DIR, "*.npz"))
 
 
 def get_builtin_tvel_files():
     """
-    Get a list of paths to builtin '.tvel' files in obspy/taup/data folder that
-    can be used to build models from.
+    Get a list of paths to builtin '.tvel' files that can be used for models.
+
+    These files reside in the ``<package-root>/obspy/taup/data`` directory.
     """
     return glob.glob(os.path.join(__DATA_DIR, "*.tvel"))
 
 
 def build_taup_model(tvel_filename, output_folder=None):
     """
-    Builds a :class:`~obspy.taup.tau_model.TauModel` from the specified "tvel"
-    file and saves it in ObsPy's own format, which can be loaded using
+    Build an ObsPy model file from a "tvel" file.
+
+    The "tvel" file is loaded into a :class:`~obspy.taup.tau_model.TauModel`
+    instance and is then saved in ObsPy's own format, which can be loaded using
     :meth:`~obspy.taup.tau_model.TauModel.from_file`. The output file will have
-    the same name as the input with '.npz' as file extension.
+    the same name as the input with ``'.npz'`` as file extension.
 
     :type tvel_filename: str
     :param tvel_filename: Absolute path of input tvel file.
@@ -189,8 +189,9 @@ def build_taup_model(tvel_filename, output_folder=None):
 
 def build_all_taup_models():
     """
-    Builds all :class:`~obspy.taup.tau_model.TauModel`s in `obspy/taup/data`
-    directory.
+    Build all :class:`~obspy.taup.tau_model.TauModel` models in data directory.
+
+    The data directory is defined to be ``<package-root>/obspy/taup/data``.
     """
     for model in get_builtin_tvel_files():
         build_taup_model(tvel_filename=model)
