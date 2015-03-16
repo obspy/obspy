@@ -516,7 +516,9 @@ class TauModel(object):
         """
         Deserialize model from numpy npz binary file.
         """
-        with np.load(filename) as npz:
+        # XXX: Make this a with statement when old NumPy support is dropped.
+        npz = np.load(filename)
+        try:
             model = TauModel(sMod=None, skip_calc=True)
             complex_contents = [
                 'tauBranches', 'sMod', 'vMod',
@@ -581,6 +583,11 @@ class TauModel(object):
             setattr(velocity_model, 'layers', npz['vMod.layers'])
             setattr(velocity_model, 'modelName',
                     native_str(velocity_model.modelName))
+        finally:
+            if hasattr(npz, 'close'):
+                npz.close()
+            else:
+                del npz
         return model
 
     @staticmethod
