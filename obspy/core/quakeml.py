@@ -826,7 +826,7 @@ class Unpickler(object):
         obj.filter_id = self._xpath2obj('filterID', mt_el)
         obj.source_time_function = self._source_time_function(mt_el)
         obj.data_used = self._data_used(mt_el)
-        obj.method_id = self._xpath2obj('MethodID', mt_el)
+        obj.method_id = self._xpath2obj('methodID', mt_el)
         obj.category = self._xpath2obj('category', mt_el)
         obj.inversion_type = self._xpath2obj('inversionType', mt_el)
         obj.creation_info = self._creation_info(mt_el)
