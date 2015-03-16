@@ -100,7 +100,7 @@ INSTALL_REQUIRES = [
     'future>=0.12.4',
     'numpy>=1.4.0',
     'scipy>=0.7.2',
-    'matplotlib',
+    'matplotlib>=1.1.0',
     'lxml',
     'sqlalchemy<=0.9.9']
 EXTRAS_REQUIRE = {
