@@ -95,7 +95,7 @@ def format_hour_minute_second(x, pos=None):
 class ObsPyAutoDateFormatter(AutoDateFormatter):
     """
     Derived class to allow for more customized formatting with older matplotlib
-    versions (see matplotlib/matplotlib#2507).
+    versions (older than 1.4.0, see matplotlib/matplotlib#2507).
     """
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
