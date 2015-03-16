@@ -1,4 +1,5 @@
 Charles J. Ammon
+Emanuel Antunes
 Ólafur St. Arnarsson
 Markus Bank
 Robert Barsch
@@ -33,6 +34,7 @@ John Leeman
 Philippe Lesage
 Anthony Lomax
 Alessia Maggi
+Henri Martin
 Tobias Megies
 Alberto Michelini
 Bernhard Morgenstern
@@ -48,6 +50,7 @@ Chris Scheingraber
 Christian Sippl
 Arthur Snoke
 Stefan Stange
+Benjamin Sullivan
 Chad Trabant
 Tommaso Fabbri
 Leonardo Uieda
