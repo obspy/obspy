@@ -196,7 +196,7 @@ class TauModel(object):
         The branch containing the source depth is split into 2 branches,
         and up going branch and a downgoing branch. Additionally,
         the slowness at the source depth must be sampled exactly as it is an
-        extremal point for each of these branches. Cf. Buland and Chapman p
+        extremal point for each of these branches. Cf. [Buland1983]_, page
         1290.
         """
         if self.source_depth != 0:

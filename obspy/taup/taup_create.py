@@ -23,12 +23,10 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
 
 class TauP_Create(object):
     """
-    The seismic travel time calculation method of Buland and Chapman.
+    The seismic travel time calculation method of [Buland1983]_.
 
-    The calculation method is described in "The Computation of Seismic Travel
-    Times" by Buland and Chapman, BSSA vol. 73, No. 5, October 1983,
-    pp 1271-1302. This creates the SlownessModel and tau branches and
-    saves them for later use.
+    The calculation method is described in [Buland1983]_. This creates the
+    SlownessModel and tau branches and saves them for later use.
     """
     def __init__(self, input_filename, output_filename, verbose=False,
                  min_delta_p=0.1, max_delta_p=11.0, max_depth_interval=115.0,
