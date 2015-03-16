@@ -51,6 +51,7 @@ Package: python-obspy-dbg
 Architecture: any
 Section: debug
 Priority: extra
+Depends: python-obspy (= ${binary:Version})
 Description: ObsPy: A Python Toolbox for seismology
  ObsPy is an open-source project dedicated to provide a Python framework for
  processing seismological data. It provides parsers for common file formats,
