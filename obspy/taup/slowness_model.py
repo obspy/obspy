@@ -60,7 +60,8 @@ class SlownessModel(object):
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115,
                  maxRangeInterval=2.5 * math.pi / 180, maxInterpError=0.05,
                  allowInnerCoreS=True,
-                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE):
+                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE,
+                 skip_model_creation=False):
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -70,6 +71,8 @@ class SlownessModel(object):
         self.maxInterpError = maxInterpError
         self.allowInnerCoreS = allowInnerCoreS
         self.slowness_tolerance = slowness_tolerance
+        if skip_model_creation:
+            return
         self.createSample()
 
     def __str__(self):
@@ -1313,7 +1316,7 @@ class SlownessModel(object):
         # Check to see if this layer contains the centre of the Earth. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
         # range and time increments using a constant velocity layer (sphere).
-        # See eqns. 43 and 44 of Buland and Chapman, although we implement them
+        # See eqns. 43 and 44 of [Buland1983]_, although we implement them
         # slightly differently. Note that the distance and time increments are
         # for just downgoing or just upgoing, i.e. from the top of the layer
         # to the centre of the earth or vice versa but not both. This is in

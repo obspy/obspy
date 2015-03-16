@@ -32,4 +32,3 @@ obspy/station/tests/images/testrun/
 obspy/imaging/tests/images/testrun/
 obspy/taup/tests/images/testrun/
 misc/docker_tests/temp/
-obspy/taup/data/models

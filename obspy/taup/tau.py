@@ -303,6 +303,7 @@ class TauPyModel(object):
             filename in the case of custom models.
 
         Usage:
+
         >>> from obspy.taup import tau
         >>> i91 = tau.TauPyModel()
         >>> print(i91.get_travel_times(10, 20)[0].name)
@@ -313,7 +314,7 @@ class TauPyModel(object):
         2
         """
         self.verbose = verbose
-        self.model = TauModel.fromfile(model)
+        self.model = TauModel.from_file(model)
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
                          phase_list=("ttall",)):
