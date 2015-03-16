@@ -390,12 +390,7 @@ def main(argv=None):
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         if not args.start_time or not args.end_time:
             days = ax.get_xlim()
@@ -407,12 +402,7 @@ def main(argv=None):
         width = min(width, height * 4)
         fig.set_figwidth(width)
         plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         fig.savefig(args.output)
     if args.verbose and not args.quiet:
