@@ -6,23 +6,19 @@ Internal TauModel class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from future.utils import native_str
 
 import os
-# use cPickle on Python2
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from copy import deepcopy
 from itertools import count
 from math import pi
 
 import numpy as np
 
-from .helper_classes import SlownessModelError, TauModelError
+from .helper_classes import DepthRange, SlownessModelError, TauModelError
+from .slowness_model import SlownessModel
 from .tau_branch import TauBranch
-from .utils import _get_model_filename
+from .velocity_model import VelocityModel
 
 
 class TauModel(object):
@@ -173,44 +169,6 @@ class TauModel(object):
         self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
         self.validate()
 
-    @staticmethod
-    def fromfile(model_name):
-        """
-        Load a pickled model. It first tries to load a TauPy internal model
-        with the given name. Otherwise it is treated as a filename.
-        """
-        # Get the model filename in a unified manner.
-        filename = _get_model_filename(model_name)
-        # If that file does not exist, just treat it as a filename.
-        if not os.path.exists(filename):
-            filename = model_name
-
-        def map_path(mod_name, kls_name):
-            if mod_name.startswith('taup'):
-                mod = __import__('obspy.%s' % (mod_name, ),
-                                 fromlist=[mod_name])
-                return getattr(mod, kls_name)
-            else:
-                fromlist = native_str(mod_name.split('.')[-1])
-                mod = __import__(mod_name, fromlist=[fromlist])
-                return getattr(mod, kls_name)
-
-        with open(filename, 'rb') as f:
-            if PY2:
-                unpickler = pickle.Unpickler(f)
-                unpickler.find_global = map_path
-            else:
-                class RenamingUnpickler(pickle.Unpickler):
-                    def find_class(self, module, name):
-                        return map_path(module, name)
-                unpickler = RenamingUnpickler(f)
-
-            return unpickler.load()
-
-    def save(self, outfile):
-        with open(outfile, 'w+b') as f:
-            pickle.dump(self, f, protocol=-1)
-
     def __str__(self):
         desc = "Delta tau for each slowness sample and layer.\n"
         for j, ray_param in enumerate(self.ray_params):
@@ -238,7 +196,7 @@ class TauModel(object):
         The branch containing the source depth is split into 2 branches,
         and up going branch and a downgoing branch. Additionally,
         the slowness at the source depth must be sampled exactly as it is an
-        extremal point for each of these branches. Cf. Buland and Chapman p
+        extremal point for each of these branches. Cf. [Buland1983]_, page
         1290.
         """
         if self.source_depth != 0:
@@ -413,3 +371,230 @@ class TauModel(object):
         branchDepths += [self.getTauBranch(
             i - 1, True).botDepth for i in range(1, len(self.tauBranches[0]))]
         return branchDepths
+
+    def serialize(self, filename):
+        """
+        Serialize model to numpy npz binary file.
+
+        Summary of contents that have to be handled during serialization::
+
+            TauModel
+            ========
+            cmbBranch <type 'int'>
+            cmbDepth <type 'float'>
+            debug <type 'bool'>
+            iocbBranch <type 'int'>
+            iocbDepth <type 'float'>
+            mohoBranch <type 'int'>
+            mohoDepth <type 'float'>
+            noDisconDepths <type 'list'> (of float!?)
+            radiusOfEarth <type 'float'>
+            ray_params <type 'numpy.ndarray'> (1D, float)
+            sMod <class 'obspy.taup.slowness_model.SlownessModel'>
+            sourceBranch <type 'int'>
+            source_depth <type 'float'>
+            spherical <type 'bool'>
+            tauBranches <type 'numpy.ndarray'> (2D, type TauBranch)
+
+            TauBranch
+            =========
+            DEBUG <type 'bool'>
+            botDepth <type 'float'>
+            dist <type 'numpy.ndarray'>
+            isPWave <type 'bool'>
+            maxRayParam <type 'float'>
+            minRayParam <type 'float'>
+            minTurnRayParam <type 'float'>
+            tau <type 'numpy.ndarray'>
+            time <type 'numpy.ndarray'>
+            topDepth <type 'float'>
+
+            SlownessModel
+            =============
+            DEBUG <type 'bool'>
+            DEFAULT_SLOWNESS_TOLERANCE <type 'float'>
+            PLayers <type 'numpy.ndarray'>
+            PWAVE <type 'bool'>
+            SLayers <type 'numpy.ndarray'>
+            SWAVE <type 'bool'>
+            allowInnerCoreS <type 'bool'>
+            criticalDepths <type 'numpy.ndarray'>
+            fluidLayerDepths <type 'list'> (of DepthRange)
+            highSlownessLayerDepthsP <type 'list'> (of DepthRange)
+            highSlownessLayerDepthsS <type 'list'> (of DepthRange)
+            maxDeltaP <type 'float'>
+            maxDepthInterval <type 'float'>
+            maxInterpError <type 'float'>
+            maxRangeInterval <type 'float'>
+            minDeltaP <type 'float'>
+            radiusOfEarth <type 'float'>
+            slowness_tolerance <type 'float'>
+            vMod <class 'obspy.taup.velocity_model.VelocityModel'>
+
+            VelocityModel
+            =============
+            cmbDepth <type 'float'>
+            default_cmb <type 'float'>
+            default_iocb <type 'float'>
+            default_moho <type 'int'>
+            iocbDepth <type 'float'>
+            isSpherical <type 'bool'>
+            layers <type 'numpy.ndarray'>
+            maxRadius <type 'float'>
+            minRadius <type 'int'>
+            modelName <type 'unicode'>
+            mohoDepth <type 'float'>
+            radiusOfEarth <type 'float'>
+        """
+        # a) handle simple contents
+        keys = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch', 'iocbDepth',
+                'mohoBranch', 'mohoDepth', 'noDisconDepths', 'radiusOfEarth',
+                'ray_params', 'sourceBranch', 'source_depth', 'spherical']
+        arrays = dict([(key, getattr(self, key)) for key in keys])
+        # b) handle .tauBranches
+        i, j = self.tauBranches.shape
+        for j_ in range(j):
+            for i_ in range(i):
+                # just store the shape of self.tauBranches in the key names for
+                # later reconstruction of array in deserialization.
+                key = 'tauBranches_%i/%i_%i/%i' % (j_, j, i_, i)
+                arrays[key] = self.tauBranches[i_][j_]._to_array()
+        # c) handle simple contents of .sMod
+        dtypes = [(native_str('DEBUG'), np.bool_),
+                  (native_str('DEFAULT_SLOWNESS_TOLERANCE'), np.float_),
+                  (native_str('PWAVE'), np.bool_),
+                  (native_str('SWAVE'), np.bool_),
+                  (native_str('allowInnerCoreS'), np.bool_),
+                  (native_str('maxDeltaP'), np.float_),
+                  (native_str('maxDepthInterval'), np.float_),
+                  (native_str('maxInterpError'), np.float_),
+                  (native_str('maxRangeInterval'), np.float_),
+                  (native_str('minDeltaP'), np.float_),
+                  (native_str('radiusOfEarth'), np.float_),
+                  (native_str('slowness_tolerance'), np.float_)]
+        slowness_model = np.empty(shape=(), dtype=dtypes)
+        for dtype in dtypes:
+            key = dtype[0]
+            slowness_model[key] = getattr(self.sMod, key)
+        arrays['sMod'] = slowness_model
+        # d) handle complex contents of .sMod
+        arrays['sMod.PLayers'] = self.sMod.PLayers
+        arrays['sMod.SLayers'] = self.sMod.SLayers
+        arrays['sMod.criticalDepths'] = self.sMod.criticalDepths
+        for key in ['fluidLayerDepths', 'highSlownessLayerDepthsP',
+                    'highSlownessLayerDepthsS']:
+            data = getattr(self.sMod, key)
+            if len(data) == 0:
+                arr_ = np.array([])
+            else:
+                arr_ = np.vstack([data_._to_array() for data_ in data])
+            arrays['sMod.' + key] = arr_
+        # e) handle .sMod.vMod
+        dtypes = [(native_str('cmbDepth'), np.float_),
+                  (native_str('default_cmb'), np.float_),
+                  (native_str('default_iocb'), np.float_),
+                  (native_str('default_moho'), np.int_),
+                  (native_str('iocbDepth'), np.float_),
+                  (native_str('isSpherical'), np.bool_),
+                  (native_str('maxRadius'), np.float_),
+                  (native_str('minRadius'), np.int_),
+                  (native_str('modelName'), np.str_,
+                   len(self.sMod.vMod.modelName)),
+                  (native_str('mohoDepth'), np.float_),
+                  (native_str('radiusOfEarth'), np.float_)]
+        velocity_model = np.empty(shape=(), dtype=dtypes)
+        for dtype in dtypes:
+            key = dtype[0]
+            velocity_model[key] = getattr(self.sMod.vMod, key)
+        arrays['vMod'] = velocity_model
+        arrays['vMod.layers'] = self.sMod.vMod.layers
+        # finally save the collection of (structured) arrays to binary file
+        np.savez_compressed(filename, **arrays)
+
+    @staticmethod
+    def deserialize(filename):
+        """
+        Deserialize model from numpy npz binary file.
+        """
+        # XXX: Make this a with statement when old NumPy support is dropped.
+        npz = np.load(filename)
+        try:
+            model = TauModel(sMod=None, skip_calc=True)
+            complex_contents = [
+                'tauBranches', 'sMod', 'vMod',
+                'sMod.PLayers', 'sMod.SLayers', 'sMod.criticalDepths',
+                'sMod.fluidLayerDepths', 'sMod.highSlownessLayerDepthsP',
+                'sMod.highSlownessLayerDepthsS', 'vMod.layers']
+            # a) handle simple contents
+            for key in npz.keys():
+                # we have multiple, dynamic key names for individual tau
+                # branches now, skip them all
+                if key in complex_contents or key.startswith('tauBranches'):
+                    continue
+                arr = npz[key]
+                if arr.ndim == 0:
+                    arr = arr[()]
+                setattr(model, key, arr)
+            # b) handle .tauBranches
+            tau_branch_keys = [key for key in npz.keys()
+                               if key.startswith('tauBranches_')]
+            j, i = tau_branch_keys[0].split("_")[1:]
+            i = int(i.split("/")[1])
+            j = int(j.split("/")[1])
+            branches = np.empty(shape=(i, j), dtype=np.object_)
+            for key in tau_branch_keys:
+                j_, i_ = key.split("_")[1:]
+                i_ = int(i_.split("/")[0])
+                j_ = int(j_.split("/")[0])
+                branches[i_][j_] = TauBranch._from_array(npz[key])
+            # no idea how numpy lays out empty arrays of object type,
+            # make a copy just in case..
+            branches = np.copy(branches)
+            setattr(model, "tauBranches", branches)
+            # c) handle simple contents of .sMod
+            slowness_model = SlownessModel(vMod=None, skip_model_creation=True)
+            setattr(model, "sMod", slowness_model)
+            for key in npz['sMod'].dtype.names:
+                # restore scalar types from 0d array
+                arr = npz['sMod'][key]
+                if arr.ndim == 0:
+                    arr = arr.flatten()[0]
+                setattr(slowness_model, key, arr)
+            # d) handle complex contents of .sMod
+            for key in ['PLayers', 'SLayers', 'criticalDepths']:
+                setattr(slowness_model, key, npz['sMod.' + key])
+            for key in ['fluidLayerDepths', 'highSlownessLayerDepthsP',
+                        'highSlownessLayerDepthsS']:
+                arr_ = npz['sMod.' + key]
+                if len(arr_) == 0:
+                    data = []
+                else:
+                    data = [DepthRange._from_array(x) for x in arr_]
+                setattr(slowness_model, key, data)
+            # e) handle .sMod.vMod
+            velocity_model = VelocityModel()
+            setattr(slowness_model, "vMod", velocity_model)
+            for key in npz['vMod'].dtype.names:
+                # restore scalar types from 0d array
+                arr = npz['vMod'][key]
+                if arr.ndim == 0:
+                    arr = arr.flatten()[0]
+                setattr(velocity_model, key, arr)
+            setattr(velocity_model, 'layers', npz['vMod.layers'])
+            setattr(velocity_model, 'modelName',
+                    native_str(velocity_model.modelName))
+        finally:
+            if hasattr(npz, 'close'):
+                npz.close()
+            else:
+                del npz
+        return model
+
+    @staticmethod
+    def from_file(model_name):
+        if os.path.exists(model_name):
+            filename = model_name
+        else:
+            filename = os.path.join(os.path.dirname(__file__), "data",
+                                    model_name.lower() + ".npz")
+        return TauModel.deserialize(filename)

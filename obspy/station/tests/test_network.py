@@ -141,7 +141,13 @@ class NetworkTestCase(unittest.TestCase):
         Tests the network location preview plot, default parameters.
         """
         net = read_inventory()[0]
-        with ImageComparison(self.image_dir, "network_location1.png") as ic:
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir, "network_location1.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             net.plot(outfile=ic.name)
 

@@ -1,2 +1,1 @@
-copy_built_libs_to_source_tree_during_build.diff
 remove_basemap_warning.diff

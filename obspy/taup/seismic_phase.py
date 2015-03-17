@@ -773,7 +773,7 @@ class SeismicPhase(object):
 
         # This saves around 17% runtime when calculating arrival times which
         # is probably the major use case.
-        count = clibtau.seismic_phase_calc_time_inner_loop(
+        phase_count = clibtau.seismic_phase_calc_time_inner_loop(
             float(degrees),
             self.maxDistance,
             self.dist,
@@ -784,7 +784,7 @@ class SeismicPhase(object):
         )
 
         arrivals = []
-        for _i in range(count):
+        for _i in range(phase_count):
             arrivals.append(self.linear_interp_arrival(
                 degrees, r_dist[_i], r_ray_num[_i], self.name, self.puristName,
                 self.source_depth))

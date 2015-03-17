@@ -4087,10 +4087,11 @@ def main(argv=None):
         # if total decomposition:
         if kwargs_dict['decomp_out_complete']:
             if kwargs_dict['decomp_out_fancy']:
+                decomp = MT.get_full_decomposition()
                 try:
-                    print(MT.get_full_decomposition())
+                    print(decomp)
                 except:
-                    print(MT.get_full_decomposition().encode("utf-8"))
+                    print(decomp.encode('utf-8'))
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -5193,7 +5194,7 @@ The 'source mechanism' as a comma-separated list of length:
         try:
             print(aa)
         except:
-            print(aa.encode("utf-8"))
+            print(aa.encode('utf-8'))
 
 
 if __name__ == '__main__':

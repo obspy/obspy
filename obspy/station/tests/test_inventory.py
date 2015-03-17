@@ -155,7 +155,13 @@ class InventoryTestCase(unittest.TestCase):
         Tests the inventory location preview plot, default parameters.
         """
         inv = read_inventory()
-        with ImageComparison(self.image_dir, "inventory_location1.png") as ic:
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir, "inventory_location1.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 

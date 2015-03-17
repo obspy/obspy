@@ -26,6 +26,11 @@ Citations
        | **ObsPy: A Python Toolbox for Seismology**,
        | *Seismological Research Letters*, 81 (3), 530-533.
        | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
+   * - .. [Buland1983]
+     - | Buland, R. and Chapman, C.H. (1983),
+       | **The computation of seismic travel times**,
+       | *Bulletin of the Seismological Society of America*, 73 (5), 1271-1302.
+       | http://www.bssaonline.org/content/73/5/1271.short
    * - .. [ChassandeMottin2002]
      - | Chassande-Mottin, E. (2002),
        | **Testing the normality of the gravitational wave data with a low cost recursive estimate of the kurtosis**,

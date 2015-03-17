@@ -430,7 +430,11 @@ class CatalogTestCase(unittest.TestCase):
         Tests the catalog preview plot, default parameters.
         """
         cat = readEvents()
-        with ImageComparison(self.image_dir, "catalog1.png") as ic:
+        reltol = 1
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3
+        with ImageComparison(self.image_dir, "catalog1.png",
+                             reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 

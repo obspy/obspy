@@ -341,9 +341,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
     def log_error_or_warning(msg):
-        if msg.startswith(b"ERROR: "):
+        msg = msg.decode()
+        if msg.startswith("ERROR: "):
             raise InternalMSEEDReadingError(msg[7:].strip())
-        if msg.startswith(b"INFO: "):
+        if msg.startswith("INFO: "):
             msg = msg[6:].strip()
             # Append the offset of the full SEED header if necessary. That way
             # the C code does not have to deal with it.
