@@ -1524,7 +1524,7 @@ def setup_query_dict(service, locs, kwargs):
             if value is not None:
                 kwargs[PARAMETER_ALIASES[key]] = value
 
-    for param in DEFAULT_PARAMETERS[service]:
+    for param in DEFAULT_PARAMETERS[service] + OPTIONAL_PARAMETERS[service]:
         param = PARAMETER_ALIASES.get(param, param)
         value = locs[param]
         if value is not None:
