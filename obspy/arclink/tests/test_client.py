@@ -268,6 +268,7 @@ class ClientTestCase(unittest.TestCase):
                           (-131.04 + 467.29j)],
                 'gain': 60077000.0,
                 'zeros': [0j, 0j],
+                'response_type': 'A',
                 'sensor_model': 'STS-2'}),
             'mseed': AttribDict({
                 'record_length': 512,
@@ -311,6 +312,7 @@ class ClientTestCase(unittest.TestCase):
                 'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
                           (-251.33 + 0j), (-131.04 - 467.29j),
                           (-131.04 + 467.29j)],
+                'response_type': 'A',
                 'sensor_model': 'STS-2/N'}),
             'mseed': AttribDict({
                 'record_length': 512,
