@@ -68,6 +68,7 @@
  - obspy.kinemetrics
    * New submodule for reading the Kinemetrics EVT waveform format
  - obspy.mseed:
+   * Support for reading and writing all encodings supported by libmseed.
    * proper error reporting while reading
    * `details=True` when reading will now write to
      `Trace.stats.mseed.blkt1001.timing_quality` instead of
@@ -116,6 +117,8 @@
      requests of finite time windows (i.e. non-continuous programs)
    * Fix memory leak in `SLClient` (MiniSEED record leak in packet parser,
      see #918)
+ - obspy.seisan:
+   * bugfix the actual data were misaligned by one
  - obspy.seishub:
    * use specified timeout in all requests to server (see #786)
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
@@ -557,8 +560,6 @@
    * bugfix for SAC files containing null terminated strings
  - obspy.seg2:
    * bugfix in parsing starttime from seg2 header
- - obspy.seisan:
-   * bugfix the actual data were misaligned by one
  - obspy.signal:
    * adding toolbox to calculate Time-Frequency Misfits
    * fixed bug in calculation of time derivatives
