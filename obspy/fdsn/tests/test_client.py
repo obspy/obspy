@@ -460,18 +460,9 @@ class ClientTestCase(unittest.TestCase):
             got = sys.stdout.getvalue()
             sys.stdout = sys.__stdout__
             tmp.close()
-            expected = (
-                "Parameter description for the 'event' service (v1.1.0) of "
-                "'http://service.iris.edu':\n"
-                "The service offers the following non-standard parameters:\n"
-                "    originid (str)\n"
-                "        Retrieve an event based on the unique origin ID "
-                "numbers assigned by\n"
-                "        the IRIS DMC\n"
-                "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
-                "Available contributors: NEIC PDE-W, ANF, University of "
-                "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
-                "NEIC PDE-M, NEIC COMCAT, GCMT\n")
+            filename = "event_helpstring.txt"
+            with open(os.path.join(self.datapath, filename)) as fh:
+                expected = fh.read()
             # allow for changes in version number..
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
@@ -486,10 +477,10 @@ class ClientTestCase(unittest.TestCase):
             got = sys.stdout.getvalue()
             sys.stdout = sys.__stdout__
             tmp.close()
-            expected = (
-                "Parameter description for the 'station' service (v1.1.4) "
-                "of 'http://service.iris.edu':\n"
-                "No derivations from standard detected")
+
+            filename = "station_helpstring.txt"
+            with open(os.path.join(self.datapath, filename)) as fh:
+                expected = fh.read()
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
                              failmsg(normalize_version_number(got),
@@ -503,10 +494,10 @@ class ClientTestCase(unittest.TestCase):
             got = sys.stdout.getvalue()
             sys.stdout = sys.__stdout__
             tmp.close()
-            expected = (
-                "Parameter description for the 'dataselect' service (v1.0.0) "
-                "of 'http://service.iris.edu':\n"
-                "No derivations from standard detected\n")
+
+            filename = "dataselect_helpstring.txt"
+            with open(os.path.join(self.datapath, filename)) as fh:
+                expected = fh.read()
             self.assertEqual(normalize_version_number(got),
                              normalize_version_number(expected),
                              failmsg(normalize_version_number(got),

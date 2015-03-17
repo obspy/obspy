@@ -1,0 +1,5 @@
+Parameter description for the 'dataselect' service (v1.1.1) of 'http://service.iris.edu':
+The service offers the following optional standard parameters:
+    quality (str), Default value: B, Choices: D, R, Q, M, B
+    minimumlength (float)
+    longestonly (bool)
