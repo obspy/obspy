@@ -1,0 +1,21 @@
+Description: Rename console scripts on Py3
+ Renames consoles scripts that get installed in /usr/bin when building packages
+ for Python 3 (e.g. obspy3-runtests) in order to avoid name collisions with
+ their Python 2 counterparts (e.g. obspy-runtests).
+Author: megies@geophysik.uni-muenchen.de
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/setup.py
++++ b/setup.py
+@@ -377,6 +377,11 @@ ENTRY_POINTS = {
+         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
+     ],
+ }
++# PY3: rename entry points for executable scripts to "obspy3-..."
++if sys.version_info[0] == 3:
++    ENTRY_POINTS['console_scripts'] = [
++        string.replace("obspy", "obspy3", 1)
++        for string in ENTRY_POINTS['console_scripts']]
+ 
+ 
+ def find_packages():
