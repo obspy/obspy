@@ -256,7 +256,7 @@ class NetworkCartopyTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir,
                              'network_location-cartopy3.png') as ic:
             rcParams['savefig.dpi'] = 72
-            net.plot(method='cartopy', projection='local', resolution='i',
+            net.plot(method='cartopy', projection='local', resolution='50m',
                      size=13**2, outfile=ic.name)
 
 

@@ -323,7 +323,7 @@ class InventoryCartopyTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir,
                              'inventory_location-cartopy3.png') as ic:
             rcParams['savefig.dpi'] = 72
-            inv.plot(method='cartopy', projection='local', resolution='i',
+            inv.plot(method='cartopy', projection='local', resolution='50m',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
 

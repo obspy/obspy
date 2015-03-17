@@ -74,6 +74,11 @@ _CARTOPY_RESOLUTIONS = {
     '10m': '10m',
 }
 
+if HAS_CARTOPY:
+    _CARTOPY_FEATURES = {
+        '110m': (cfeature.BORDERS, cfeature.LAND, cfeature.OCEAN),
+    }
+
 
 def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                  resolution='l', continent_fill_color='0.8',
@@ -539,12 +544,31 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     else:
         map_ax.set_global()
 
+    # Pick features at specified resolution.
+    resolution = _CARTOPY_RESOLUTIONS[resolution]
+    try:
+        borders, land, ocean = _CARTOPY_FEATURES[resolution]
+    except KeyError:
+        borders = cfeature.NaturalEarthFeature(cfeature.BORDERS.category,
+                                               cfeature.BORDERS.name,
+                                               resolution,
+                                               edgecolor='none',
+                                               facecolor='none')
+        land = cfeature.NaturalEarthFeature(cfeature.LAND.category,
+                                            cfeature.LAND.name, resolution,
+                                            edgecolor='face', facecolor='none')
+        ocean = cfeature.NaturalEarthFeature(cfeature.OCEAN.category,
+                                             cfeature.OCEAN.name, resolution,
+                                             edgecolor='face',
+                                             facecolor='none')
+        _CARTOPY_FEATURES[resolution] = (borders, land, ocean)
+
     # Draw coast lines, country boundaries, fill continents.
     map_ax.set_axis_bgcolor(water_fill_color)
-    map_ax.add_feature(cfeature.OCEAN, facecolor=water_fill_color)
-    map_ax.add_feature(cfeature.LAND, facecolor=continent_fill_color)
-    map_ax.add_feature(cfeature.BORDERS, edgecolor='0.75')
-    map_ax.coastlines(resolution=_CARTOPY_RESOLUTIONS[resolution], color='0.4')
+    map_ax.add_feature(ocean, facecolor=water_fill_color)
+    map_ax.add_feature(land, facecolor=continent_fill_color)
+    map_ax.add_feature(borders, edgecolor='0.75')
+    map_ax.coastlines(resolution=resolution, color='0.4')
 
     # Draw grid lines - TODO: draw_labels=True doesn't work yet.
     if projection == 'local':
