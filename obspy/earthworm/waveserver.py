@@ -34,10 +34,10 @@ RETURNFLAG_KEY = {
 }
 
 DATATYPE_KEY = {
-    't4': '>f4', 't8': '>f8',
-    's4': '>i4', 's2': '>i2',
-    'f4': '<f4', 'f8': '<f8',
-    'i4': '<i4', 'i2': '<i2'
+    b't4': '>f4', b't8': '>f8',
+    b's4': '>i4', b's2': '>i2',
+    b'f4': '<f4', b'f8': '<f8',
+    b'i4': '<i4', b'i2': '<i2'
 }
 
 
@@ -80,9 +80,9 @@ class tracebuf2:
         """
         packStr = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
-        if dtype[0] in 'ts':
+        if dtype[0:1] in b'ts':
             endian = b'>'
-        elif dtype[0] in 'if':
+        elif dtype[0:1] in b'if':
             endian = b'<'
         else:
             raise ValueError
