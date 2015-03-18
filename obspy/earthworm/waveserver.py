@@ -11,6 +11,7 @@ Low-level Earthworm Wave Server tools.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
 
 import socket
 import struct
@@ -46,7 +47,7 @@ def getNumpyType(tpstr):
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
-    tp = np.dtype(dtypestr)
+    tp = np.dtype(native_str(dtypestr))
     return tp
 
 
