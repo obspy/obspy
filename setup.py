@@ -102,7 +102,7 @@ INSTALL_REQUIRES = [
     'scipy>=0.7.2',
     'matplotlib',
     'lxml',
-    'sqlalchemy']
+    'sqlalchemy<=0.9.9']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],
