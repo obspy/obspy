@@ -49,7 +49,7 @@ OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
 VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
 
 
-def call_git_describe(abbrev=4):
+def call_git_describe(abbrev=10):
     try:
         p = Popen(['git', 'rev-parse', '--show-toplevel'],
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
@@ -139,7 +139,7 @@ def write_release_version(version):
         fh.write(("%s\n" % version).encode('ascii', 'strict'))
 
 
-def get_git_version(abbrev=4):
+def get_git_version(abbrev=10):
     # Read in the version that's currently in RELEASE-VERSION.
     release_version = read_release_version()
 
