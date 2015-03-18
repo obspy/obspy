@@ -2,7 +2,7 @@
  - Highlights:
    * Python3 support
    * anaconda support
-   * New formats: AH, CNV, Datamark, NDK, NLLOC, PDAS, ZMAP
+   * New formats: AH, CNV, Kinemetrics EVT, NDK, NLLOC, PDAS, ZMAP
    * ObsPy licensed under LGPL v3.0 now as a whole.
  - General:
    * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
