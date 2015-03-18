@@ -182,7 +182,7 @@ def getSockBytes(sock, nbytes, timeout=None):
         print('socket timeout in getSockBytes()')
         return None
     if chunks:
-        response = ''.join(chunks)
+        response = b''.join(chunks)
         return response
     else:
         return None
