@@ -1,1 +1,2 @@
 remove_basemap_warning.diff
+rename_console_scripts_on_py3

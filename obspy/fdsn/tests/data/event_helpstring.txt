@@ -1,0 +1,42 @@
+Parameter description for the 'event' service (v1.1.0) of 'http://service.iris.edu':
+The service offers the following optional standard parameters:
+    latitude (float)
+        Specify the central latitude point for a radial search
+    longitude (float)
+        Specify the central longitude point for a radial search
+    minradius (float)
+        Specify minimum distance from the geographic point defined by latitude
+        and longitude
+    maxradius (float), Default value: 180.0
+        Specify maximum distance from the geographic point defined by latitude
+        and longitude
+    magnitudetype (str)
+        type of Magnitude used to test minimum and maximum limits (case
+        insensitive)
+    includeallorigins (bool)
+        Retrieve all origins or only the primary origin associated with each
+        event in a catalog
+    includeallmagnitudes (bool)
+        Retrieve all magnitudes for the event, or only the primary magnitude
+        from within the catalog
+    includearrivals (bool)
+        Specify if phase arrivals should be included
+    eventid (str)
+        Retrieve an event based on the unique ID numbers assigned by the IRIS
+        DMC
+    limit (int)
+        Limit the results to the specified number of events
+    offset (int), Default value: 1
+        Return results starting at the event count specified
+    catalog (str), Default value: NEIC+PDE
+        Specify the catalog from which origins and magnitudes will be retrieved
+    contributor (str)
+        Limit to events contributed by a specified contributor
+    updatedafter (UTCDateTime)
+        Limit to events updated after the specified time
+The service offers the following non-standard parameters:
+    originid (str)
+        Retrieve an event based on the unique origin ID numbers assigned by the
+        IRIS DMC
+Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT
+Available contributors: NEIC PDE-W, ANF, University of Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, NEIC PDE-M, NEIC COMCAT, GCMT
