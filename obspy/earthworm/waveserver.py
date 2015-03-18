@@ -134,10 +134,10 @@ def sendSockReq(server, port, reqStr, timeout=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if reqStr[-1] == '\n':
+    if reqStr[-1:] == b'\n':
         s.send(reqStr)
     else:
-        s.send(reqStr + '\n')
+        s.send(reqStr + b'\n')
     return s
 
 
