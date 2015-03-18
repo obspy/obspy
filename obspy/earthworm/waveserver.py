@@ -244,7 +244,8 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
-    sock = sendSockReq(server, port, reqstr, timeout=timeout)
+    sock = sendSockReq(server, port, reqstr.encode('ascii', 'strict'),
+                       timeout=timeout)
     r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
