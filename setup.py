@@ -446,7 +446,7 @@ def configuration(parent_package="", top_path=None):
     config = Configuration("", parent_package, top_path)
 
     # GSE2
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src", "GSE_UTI")
+    path = os.path.join("obspy", "gse2", "src", "GSE_UTI")
     files = [os.path.join(path, "gse_functions.c")]
     # compiler specific options
     kwargs = {}
@@ -457,7 +457,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # LIBMSEED
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
+    path = os.path.join("obspy", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
     if not EXTERNAL_LIBS:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
@@ -480,7 +480,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SEGY
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
+    path = os.path.join("obspy", "segy", "src")
     files = [os.path.join(path, "ibm2ieee.c")]
     # compiler specific options
     kwargs = {}
@@ -491,7 +491,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SIGNAL
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    path = os.path.join("obspy", "signal", "src")
     files = glob.glob(os.path.join(path, "*.c"))
     # compiler specific options
     kwargs = {}
@@ -502,7 +502,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # EVALRESP
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    path = os.path.join("obspy", "signal", "src")
     if EXTERNAL_LIBS:
         files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
     else:
@@ -520,7 +520,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # TAU
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
+    path = os.path.join("obspy", "taup", "src")
     files = [os.path.join(path, "inner_tau_loops.c")]
     # compiler specific options
     kwargs = {}
