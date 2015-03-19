@@ -87,7 +87,7 @@ class Client(object):
             server. In general, '?' as single character wildcard seems to work
             well in location code and channel code fields for most servers.
             Usage of '*' for multiple characters in location and channel code
-            field is not supported by ObsPy. No wildcards are supported in
+            field is not supported. No wildcards are supported in
             network and station code fields by ObsPy.
 
         :type network: str
