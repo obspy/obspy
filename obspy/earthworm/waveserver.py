@@ -11,6 +11,7 @@ Low-level Earthworm Wave Server tools.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import native_str
 
 import socket
 import struct
@@ -33,10 +34,10 @@ RETURNFLAG_KEY = {
 }
 
 DATATYPE_KEY = {
-    't4': '>f4', 't8': '>f8',
-    's4': '>i4', 's2': '>i2',
-    'f4': '<f4', 'f8': '<f8',
-    'i4': '<i4', 'i2': '<i2'
+    b't4': '>f4', b't8': '>f8',
+    b's4': '>i4', b's2': '>i2',
+    b'f4': '<f4', b'f8': '<f8',
+    b'i4': '<i4', b'i2': '<i2'
 }
 
 
@@ -46,7 +47,7 @@ def getNumpyType(tpstr):
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
-    tp = np.dtype(dtypestr)
+    tp = np.dtype(native_str(dtypestr))
     return tp
 
 
@@ -79,9 +80,9 @@ class tracebuf2:
         """
         packStr = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
-        if dtype[0] in 'ts':
+        if dtype[0:1] in b'ts':
             endian = b'>'
-        elif dtype[0] in 'if':
+        elif dtype[0:1] in b'if':
             endian = b'<'
         else:
             raise ValueError
@@ -134,10 +135,10 @@ def sendSockReq(server, port, reqStr, timeout=None):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if reqStr[-1] == '\n':
+    if reqStr[-1:] == b'\n':
         s.send(reqStr)
     else:
-        s.send(reqStr + '\n')
+        s.send(reqStr + b'\n')
     return s
 
 
@@ -181,7 +182,7 @@ def getSockBytes(sock, nbytes, timeout=None):
         print('socket timeout in getSockBytes()')
         return None
     if chunks:
-        response = ''.join(chunks)
+        response = b''.join(chunks)
         return response
     else:
         return None
@@ -243,7 +244,8 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
-    sock = sendSockReq(server, port, reqstr, timeout=timeout)
+    sock = sendSockReq(server, port, reqstr.encode('ascii', 'strict'),
+                       timeout=timeout)
     r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
