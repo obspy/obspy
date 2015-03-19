@@ -6,7 +6,7 @@
 [![Coverage Status](https://img.shields.io/coveralls/obspy/obspy.svg)](https://coveralls.io/r/obspy/obspy?branch=master)
 [![PyPI Version](https://pypip.in/v/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
 [![Downloads](https://pypip.in/d/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.10648.svg)](http://dx.doi.org/10.5281/zenodo.10648)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.16200.svg)](http://dx.doi.org/10.5281/zenodo.16200)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
