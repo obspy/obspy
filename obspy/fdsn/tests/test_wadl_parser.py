@@ -290,6 +290,9 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Some WADL file miss required attributes. In this case a warning will be
         raised.
+
+        Update: FDSN-WS 1.1 has optional arguments which are no longer
+        required!
         """
         # This dataselect WADL misses the quality, minimumlength, and
         # longestonly parameters.
@@ -301,12 +304,8 @@ class WADLParserTestCase(unittest.TestCase):
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
-            # Assert that the warning raised is correct.
-            self.assertEqual(len(w), 1)
-            msg = str(w[0].message)
-            self.assertTrue("quality" in msg)
-            self.assertTrue("minimumlength" in msg)
-            self.assertTrue("longestonly" in msg)
+            # No warning should be raised due to update to FDSN-WS 1.1.
+            self.assertEqual(len(w), 0)
 
         # Assert that some other parameters are still existent.
         params = parser.parameters
@@ -321,6 +320,9 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Some WADL file miss required attributes. In this case a warning will be
         raised.
+
+        Update: FDSN-WS 1.1 has optional arguments which are no longer
+        required!
         """
         # This event WADL misses the includeallorigins and the updatedafter
         # parameters.
@@ -332,11 +334,8 @@ class WADLParserTestCase(unittest.TestCase):
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
-            # Assert that the warning raised is correct.
-            self.assertEqual(len(w), 1)
-            msg = str(w[0].message)
-            self.assertTrue("includeallorigins" in msg)
-            self.assertTrue("updatedafter" in msg)
+            # No warning should be raised due to update to FDSN-WS 1.1.
+            self.assertEqual(len(w), 0)
 
         # Assert that some other parameters are still existent.
         params = parser.parameters
