@@ -32,3 +32,5 @@ obspy/station/tests/images/testrun/
 obspy/imaging/tests/images/testrun/
 obspy/taup/tests/images/testrun/
 misc/docker_tests/temp/
+# Temporary dir for the anaconda builds.
+misc/installer/anaconda/conda_builds

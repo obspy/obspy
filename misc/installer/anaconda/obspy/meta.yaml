@@ -1,70 +1,56 @@
+# See
+# http://docs.continuum.io/conda/build.html for
+# more information about meta.yaml
+
 package:
   name: obspy
-  version: !!str 0.10.0
+  version: "0.10.0rc1"
 
 source:
-  fn: taupy.zip
-  url: https://github.com/obspy/obspy/archive/taupy.zip
-#  patches:
-   # List any patch files here
-   # - fix.patch
+  fn: obspy-master.zip
+  url: https://github.com/obspy/obspy/archive/master.zip
+  # alternatively we can use a local path, however this fails with
+  # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
+  # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
+  # "[Errno 2] No such file or directory: '/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf'")]
+  #path: ../../../..
 
-# build:
-  #preserve_egg_dir: True
-  #entry_points:
-    # Put any entry points (scripts to be generated automatically) here. The
-    # syntax is module:function.  For example
-    #
-    # - obspy = obspy:main
-    #
-    # Would create an entry point called obspy that calls obspy.main()
-
-
-  # If this is a new build for the same version, increment the build
-  # number. If you do not include this key, it defaults to 0.
-  # number: 1
+build:
+  number: 0
+  script: python setup.py install
 
 requirements:
   build:
     - python
-    - numpy
     - setuptools
-    - scipy
-    - lxml
-    - matplotlib
     - future
+    - numpy
+    - mock  # [py2k]
+    - scipy
+    - matplotlib
+    - lxml
     - sqlalchemy
+    - argparse # [py26]
+    - flake8
   run:
     - python
-    - numpy
     - setuptools
-    - scipy
-    - lxml
-    - matplotlib
     - future
+    - numpy
+    - mock  # [py2k]
+    - scipy
+    - matplotlib
+    - lxml
     - sqlalchemy
+    - argparse # [py26]
+    - flake8
 
 test:
-  # Python imports
   imports:
     - obspy
-
-  #commands:
-    # You can put test commands to be run here.  Use this to test that the
-    # entry points work.
-
-
-  # You can also put a file called run_test.py in the recipe that will be run
-  # at test time.
-
-  # requires:
-    # Put any additional test requirements here.  For example
-    # - nose
+    - obspy.mseed
 
 about:
-  home: http://www.obspy.org
-  license: GNU Library or Lesser General Public License (LGPL)
-
-# See
-# http://docs.continuum.io/conda/build.html for
-# more information about meta.yaml
+  home: http://obspy.org
+  license: LGPLv3
+  summary: "ObsPy: A Python Toolbox for seismology/seismological observatories."
