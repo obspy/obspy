@@ -45,7 +45,7 @@ Afterwards check (on of the last lines in the output) where the packages are sto
 
 ```bash
 $ cd /path/to/packages
-$ binstar upload -u obspy obspy*
+$ binstar upload -u obspy --channel docker obspy*
 ```
 
 ## For Windows
