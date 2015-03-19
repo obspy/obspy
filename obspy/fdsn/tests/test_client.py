@@ -410,7 +410,8 @@ class ClientTestCase(unittest.TestCase):
             got = client.get_waveforms(*query)
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
-            self.assertEqual(got, expected, failmsg(got, expected))
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_waveforms(*query, filename=tf.name)
@@ -418,8 +419,8 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_, 'rb') as fh:
                     expected = fh.read()
-            self.assertEqual(got, expected,
-                             filename + '\n' + failmsg(got, expected))
+            self.assertEqual(got, expected, "Dataselect failed for query %s" %
+                             repr(query))
 
     def test_authentication(self):
         """
