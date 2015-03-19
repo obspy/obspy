@@ -87,8 +87,7 @@ class WADLParserTestCase(unittest.TestCase):
         Tests the parsing of an event wadl.
         """
         parser, w = self._parse_wadl_file("event.wadl")
-        self.assertEqual(len(w), 1)
-        self.assertTrue("cannot deal with the following required" in str(w[0]))
+        self.assertEqual(len(w), 0)
 
         params = parser.parameters
 
@@ -365,8 +364,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'originid', 'starttime', 'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue("required parameters: magnitudetype" in str(w[0]))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
         params = parser.parameters
@@ -425,8 +423,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'starttime', 'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue("required parameters: magnitudetype" in str(w[0]))
+        self.assertEqual(len(w), 0)
 
     def test_parsing_current_wadls_resif(self):
         """
@@ -442,8 +439,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'minradius', 'network', 'startafter', 'startbefore',
                     'starttime', 'station', 'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue("matchtimeseries" in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_resif_dataselect.wadl")
         params = parser.parameters
@@ -469,9 +465,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlongitude', 'minmagnitude', 'minradius', 'offset',
                     'orderby', 'starttime']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue(": includeallorigins, updatedafter\n"
-                        in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
         params = parser.parameters
@@ -483,9 +477,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'startafter', 'startbefore', 'starttime', 'station',
                     'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue("includerestricted" in str(w[0].message))
-        self.assertTrue("matchtimeseries" in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_dataselect.wadl")
         params = parser.parameters
@@ -493,9 +485,7 @@ class WADLParserTestCase(unittest.TestCase):
         expected = ['channel', 'endtime', 'location', 'network', 'starttime',
                     'station']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue(": quality, minimumlength, longestonly\n"
-                        in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
     def test_parsing_current_wadls_ethz(self):
         """
@@ -512,9 +502,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'minlatitude', 'minlongitude', 'minmagnitude', 'minradius',
                     'offset', 'orderby', 'output', 'starttime', 'updatedafter']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue(": includeallmagnitudes, catalog\n"
-                        in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_ethz_station.wadl")
         params = parser.parameters
@@ -526,10 +514,7 @@ class WADLParserTestCase(unittest.TestCase):
                     'output', 'startafter', 'startbefore', 'starttime',
                     'station']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue("includeavailability" in str(w[0].message))
-        self.assertTrue("updatedafter" in str(w[0].message))
-        self.assertTrue("matchtimeseries" in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
         parser, w = self._parse_wadl_file("2014-01-07_ethz_dataselect.wadl")
         params = parser.parameters
@@ -537,8 +522,7 @@ class WADLParserTestCase(unittest.TestCase):
         expected = ['channel', 'endtime', 'location', 'network', 'quality',
                     'starttime', 'station']
         self.assertEqual(sorted(params.keys()), expected)
-        self.assertEqual(len(w), 1)
-        self.assertTrue(": minimumlength, longestonly\n" in str(w[0].message))
+        self.assertEqual(len(w), 0)
 
 
 def suite():
