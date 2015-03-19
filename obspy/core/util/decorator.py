@@ -135,8 +135,7 @@ def skip_on_network_error(func):
                 raise unittest.SkipTest(str(e))
         # general except to be able to generally reraise
         except Exception as e:
-            pass
-        raise
+            raise
     return new_func
 
 
