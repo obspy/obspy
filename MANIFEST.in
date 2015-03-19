@@ -11,6 +11,7 @@ include obspy/RELEASE-VERSION
 
 # Include source files, XML schemas files and some documentation files.
 global-include *.c *.h *.f *.pyf *.inc *.xsd *.rng LICENSE.txt README.txt
+include CHANGELOG.txt CONTRIBUTING.md CONTRIBUTORS.txt README.md
 
 # Exclude the misc directory
 prune misc
