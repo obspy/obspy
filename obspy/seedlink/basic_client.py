@@ -65,17 +65,38 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client('rtserver.ipgp.fr')
         >>> t = UTCDateTime() - 3600
-        >>> client.get_waveform("G", "FDF", "00", "BHZ", t, t + 5)  # NOQA # doctest: +ELLIPSIS
-        <obspy.core.stream.Stream object at 0x...>
+        >>> st = client.get_waveform("G", "FDF", "00", "BHZ", t, t + 5)
+        >>> print(st)  # doctest: +ELLIPSIS
+        1 Trace(s) in Stream:
+        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
+
+        Most servers support '?' single-character wildcard in location and
+        channel code fields:
+
+        >>> st = client.get_waveform("G", "FDF", "??", "B??", t, t + 5)
+        >>> st = st.sort(reverse=True)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
+        G.FDF.00.BHN | 20... | 20.0 Hz, ... samples
+        G.FDF.00.BHE | 20... | 20.0 Hz, ... samples
+
+        .. note::
+
+            Support of wildcards strongly depends on the queried seedlink
+            server. In general, '?' as single character wildcard seems to work
+            well in location code and channel code fields for most servers.
+            Usage of '*' for multiple characters in location and channel code
+            field is strongly discouraged, it has been shown to fail.
 
         :type network: str
         :param network: Network code. No wildcards supported.
         :type station: str
         :param station: Station code. No wildcards supported.
         :type location: str
-        :param location: Location code. No wildcards supported.
+        :param location: Location code. See note on wildcards above.
         :type channel: str
-        :param channel: Channel code. No wildcards supported.
+        :param channel: Channel code. See note on wildcards above.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start time of requested time window.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
