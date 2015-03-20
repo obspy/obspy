@@ -111,9 +111,9 @@ def read_StationXML(path_or_file_object):
     for network in root.findall(_ns("Network")):
         networks.append(_read_network(network, _ns))
 
-    inv = obspy.station.Inventory(networks=networks, source=source,
-                                  sender=sender, created=created,
-                                  module=module, module_uri=module_uri)
+    inv = obspy.core.inventory.Inventory(networks=networks, source=source,
+                                         sender=sender, created=created,
+                                         module=module, module_uri=module_uri)
     return inv
 
 
@@ -142,7 +142,7 @@ def _read_base_node(element, object_to_write_to, _ns):
 
 
 def _read_network(net_element, _ns):
-    network = obspy.station.Network(net_element.get("code"))
+    network = obspy.core.inventory.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
     network.total_number_of_stations = \
         _tag2obj(net_element, _ns("TotalNumberStations"), int)
@@ -162,9 +162,10 @@ def _read_station(sta_element, _ns):
                                datum=True)
     elevation = _read_floattype(sta_element, _ns("Elevation"), Distance,
                                 unit=True)
-    station = obspy.station.Station(code=sta_element.get("code"),
-                                    latitude=latitude, longitude=longitude,
-                                    elevation=elevation)
+    station = obspy.core.inventory.Station(code=sta_element.get("code"),
+                                           latitude=latitude,
+                                           longitude=longitude,
+                                           elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
     station.vault = _tag2obj(sta_element, _ns("Vault"), str)
@@ -252,7 +253,7 @@ def _read_channel(cha_element, _ns):
     depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
-    channel = obspy.station.Channel(
+    channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
@@ -315,7 +316,7 @@ def _read_channel(cha_element, _ns):
 
 
 def _read_response(resp_element, _ns):
-    response = obspy.station.response.Response()
+    response = obspy.core.inventory.response.Response()
     response.resource_id = resp_element.attrib.get('resourceId')
     if response.resource_id is not None:
         response.resource_id = str(response.resource_id)
@@ -388,7 +389,7 @@ def _read_response_stage(stage_elem, _ns):
         # Nothing more to parse for gain only blockettes, create minimal
         # ResponseStage and return
         if stage_gain is not None and stage_gain_frequency is not None:
-            return obspy.station.ResponseStage(
+            return obspy.core.inventory.ResponseStage(
                 stage_sequence_number=stage_sequence_number,
                 stage_gain=stage_gain,
                 stage_gain_frequency=stage_gain_frequency,
@@ -467,7 +468,7 @@ def _read_response_stage(stage_elem, _ns):
 
         zeros = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Zero"))]
         poles = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Pole"))]
-        return obspy.station.PolesZerosResponseStage(
+        return obspy.core.inventory.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
             normalization_factor=normalization_factor, zeros=zeros,
@@ -483,7 +484,7 @@ def _read_response_stage(stage_elem, _ns):
         denominator = \
             _read_floattype_list(elem, _ns("Denominator"),
                                  FloatWithUncertaintiesAndUnit, unit=True)
-        return obspy.station.CoefficientsTypeResponseStage(
+        return obspy.core.inventory.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
@@ -495,9 +496,10 @@ def _read_response_stage(stage_elem, _ns):
             amp = _read_floattype(item, _ns("Amplitude"),
                                   FloatWithUncertaintiesAndUnit, unit=True)
             phase = _read_floattype(item, _ns("Phase"), Angle)
-            rlist_elems.append(obspy.station.response.ResponseListElement(
-                frequency=freq, amplitude=amp, phase=phase))
-        return obspy.station.ResponseListResponseStage(
+            rlist_elems.append(
+                obspy.core.inventory.response.ResponseListElement(
+                    frequency=freq, amplitude=amp, phase=phase))
+        return obspy.core.inventory.ResponseListResponseStage(
             response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
@@ -506,8 +508,8 @@ def _read_response_stage(stage_elem, _ns):
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
                                       additional_mapping={'i': "number"})
-        return obspy.station.FIRResponseStage(coefficients=coeffs,
-                                              symmetry=symmetry, **kwargs)
+        return obspy.core.inventory.FIRResponseStage(
+            coefficients=coeffs, symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
@@ -520,7 +522,7 @@ def _read_response_stage(stage_elem, _ns):
         coeffs = _read_floattype_list(elem, _ns("Coefficient"),
                                       CoefficientWithUncertainties,
                                       additional_mapping={"number": "number"})
-        return obspy.station.PolynomialResponseStage(
+        return obspy.core.inventory.PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
             approximation_upper_bound=appr_high, maximum_error=max_err,
@@ -532,7 +534,7 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
     frequency = _tag2obj(sensitivity_element, _ns("Frequency"), float)
     input_units_ = sensitivity_element.find(_ns("InputUnits"))
     output_units_ = sensitivity_element.find(_ns("OutputUnits"))
-    sensitivity = obspy.station.response.InstrumentSensitivity(
+    sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
         value=value, frequency=frequency,
         input_units=_tag2obj(input_units_, _ns("Name"), str),
         output_units=_tag2obj(output_units_, _ns("Name"), str))
@@ -571,7 +573,7 @@ def _read_instrument_polynomial(element, _ns):
     coeffs = _read_floattype_list(element, _ns("Coefficient"),
                                   CoefficientWithUncertainties,
                                   additional_mapping={"number": "number"})
-    return obspy.station.response.InstrumentPolynomial(
+    return obspy.core.inventory.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,
         frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
         approximation_upper_bound=appr_high, maximum_error=max_err,
@@ -585,7 +587,8 @@ def _read_instrument_polynomial(element, _ns):
 def _read_external_reference(ref_element, _ns):
     uri = _tag2obj(ref_element, _ns("URI"), str)
     description = _tag2obj(ref_element, _ns("Description"), str)
-    return obspy.station.ExternalReference(uri=uri, description=description)
+    return obspy.core.inventory.ExternalReference(uri=uri,
+                                                  description=description)
 
 
 def _read_operator(operator_element, _ns):
@@ -594,15 +597,15 @@ def _read_operator(operator_element, _ns):
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
-    return obspy.station.Operator(agencies=agencies, contacts=contacts,
-                                  website=website)
+    return obspy.core.inventory.Operator(agencies=agencies, contacts=contacts,
+                                         website=website)
 
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
     start = obspy.UTCDateTime(extent.get("start"))
     end = obspy.UTCDateTime(extent.get("end"))
-    return obspy.station.util.DataAvailability(start=start, end=end)
+    return obspy.core.inventory.util.DataAvailability(start=start, end=end)
 
 
 def _read_equipment(equip_element, _ns):
@@ -620,7 +623,7 @@ def _read_equipment(equip_element, _ns):
     calibration_dates = \
         [obspy.core.UTCDateTime(_i.text)
          for _i in equip_element.findall(_ns("CalibrationDate"))]
-    return obspy.station.Equipment(
+    return obspy.core.inventory.Equipment(
         resource_id=resource_id, type=type, description=description,
         manufacturer=manufacturer, vendor=vendor, model=model,
         serial_number=serial_number, installation_date=installation_date,
@@ -634,8 +637,9 @@ def _read_site(site_element, _ns):
     county = _tag2obj(site_element, _ns("County"), str)
     region = _tag2obj(site_element, _ns("Region"), str)
     country = _tag2obj(site_element, _ns("Country"), str)
-    return obspy.station.Site(name=name, description=description, town=town,
-                              county=county, region=region, country=country)
+    return obspy.core.inventory.Site(name=name, description=description,
+                                     town=town, county=county, region=region,
+                                     country=country)
 
 
 def _read_comment(comment_element, _ns):
@@ -648,7 +652,7 @@ def _read_comment(comment_element, _ns):
     id = _attr2obj(comment_element, "id", int)
     for author in comment_element.findall(_ns("Author")):
         authors.append(_read_person(author, _ns))
-    return obspy.station.Comment(
+    return obspy.core.inventory.Comment(
         value=value, begin_effective_time=begin_effective_time,
         end_effective_time=end_effective_time, authors=authors, id=id)
 
@@ -660,8 +664,8 @@ def _read_person(person_element, _ns):
     phones = []
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
-    return obspy.station.Person(names=names, agencies=agencies, emails=emails,
-                                phones=phones)
+    return obspy.core.inventory.Person(names=names, agencies=agencies,
+                                       emails=emails, phones=phones)
 
 
 def _read_phone(phone_element, _ns):
@@ -669,7 +673,7 @@ def _read_phone(phone_element, _ns):
     area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
     phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
     description = phone_element.get("description")
-    return obspy.station.PhoneNumber(
+    return obspy.core.inventory.PhoneNumber(
         country_code=country_code, area_code=area_code,
         phone_number=phone_number, description=description)
 
@@ -678,7 +682,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     """
     Writes an inventory object to a buffer.
 
-    :type inventory: :class:`~obspy.station.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
     :type validate: bool

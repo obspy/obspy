@@ -2241,7 +2241,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         """
-        from obspy.station import Inventory, Network, read_inventory
+        from obspy.core.inventory import Inventory, Network, read_inventory
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]

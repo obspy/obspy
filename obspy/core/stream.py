@@ -313,7 +313,7 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
-    from obspy.station import read_inventory
+    from obspy import read_inventory
     st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
     return st
 
