@@ -10,8 +10,8 @@ import warnings
 
 from lxml.etree import Element
 
-from obspy.xseed import DEFAULT_XSEED_VERSION, utils
-from obspy.xseed.fields import Integer, Loop
+from .. import DEFAULT_XSEED_VERSION, utils
+from ..fields import Integer, Loop
 
 
 class BlocketteLengthException(Exception):

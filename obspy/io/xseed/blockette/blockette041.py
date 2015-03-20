@@ -7,10 +7,9 @@ from future.utils import native_str
 import io
 import os
 
-from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import (FixedString, Float, Integer, Loop,
-                                VariableString)
-from obspy.xseed.utils import LookupCode, formatRESP
+from .blockette import Blockette
+from ..fields import FixedString, Float, Integer, Loop, VariableString
+from ..utils import LookupCode, formatRESP
 
 
 class Blockette041(Blockette):

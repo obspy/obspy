@@ -18,8 +18,8 @@ import warnings
 from lxml.etree import Element, SubElement
 
 from obspy import UTCDateTime
-from obspy.xseed.utils import (DateTime2String, SEEDParserException, getXPath,
-                               setXPath, toTag)
+from .utils import (DateTime2String, SEEDParserException, getXPath, setXPath,
+                    toTag)
 
 
 class SEEDTypeException(Exception):

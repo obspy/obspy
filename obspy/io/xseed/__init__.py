@@ -77,7 +77,7 @@ from future.builtins import *  # NOQA
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
 
-from obspy.xseed.parser import Parser
+from .parser import Parser
 
 
 if __name__ == '__main__':

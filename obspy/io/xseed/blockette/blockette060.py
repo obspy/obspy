@@ -9,9 +9,9 @@ import sys
 
 from lxml.etree import Element, SubElement
 
-from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, Loop
-from obspy.xseed.utils import getXPath, setXPath
+from .blockette import Blockette
+from ..fields import Integer, Loop
+from ..utils import getXPath, setXPath
 
 
 class Blockette060(Blockette):

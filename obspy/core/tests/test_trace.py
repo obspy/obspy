@@ -14,7 +14,7 @@ import numpy.ma as ma
 from obspy import Stream, Trace, UTCDateTime, __version__, read
 from obspy.core import Stats
 from obspy.core.compatibility import mock
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 class TraceTestCase(unittest.TestCase):

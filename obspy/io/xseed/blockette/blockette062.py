@@ -5,9 +5,9 @@ from future.builtins import *  # NOQA
 
 import sys
 
-from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import FixedString, Float, Integer, Loop
-from obspy.xseed.utils import Blockette34Lookup, formatRESP
+from .blockette import Blockette
+from ..fields import FixedString, Float, Integer, Loop
+from ..utils import Blockette34Lookup, formatRESP
 
 
 class Blockette062(Blockette):

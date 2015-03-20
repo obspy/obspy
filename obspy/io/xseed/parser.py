@@ -32,8 +32,8 @@ import numpy as np
 from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
-from obspy.xseed import DEFAULT_XSEED_VERSION, blockette
-from obspy.xseed.utils import IGNORE_ATTR, SEEDParserException, toTag
+from . import DEFAULT_XSEED_VERSION, blockette
+from .utils import IGNORE_ATTR, SEEDParserException, toTag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
