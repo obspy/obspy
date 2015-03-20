@@ -18,8 +18,8 @@ import numpy as np
 
 from obspy import Stream, Trace
 from obspy.core.compatibility import frombuffer
-from obspy.kinemetrics.evt_base import (EvtBadDataError, EvtBadHeaderError,
-                                        EvtEOFError, EvtVirtual)
+from .evt_base import (EvtBadDataError, EvtBadHeaderError, EvtEOFError,
+                       EvtVirtual)
 
 WARNING_HEADER = "Only tested with files from ROB networks :" + \
     " - New Etna and old Etna" + \

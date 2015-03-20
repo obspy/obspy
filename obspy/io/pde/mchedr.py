@@ -33,7 +33,7 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               StationMagnitude, Tensor, WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.geodetics import FlinnEngdahl
+from obspy.geodetics import FlinnEngdahl
 
 
 # ResourceIdentifier prefix used throughout this code

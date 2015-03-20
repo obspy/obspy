@@ -23,7 +23,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.seg2.header import MONTHS
+from .header import MONTHS
 
 
 WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \

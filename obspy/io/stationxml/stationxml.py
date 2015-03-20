@@ -24,14 +24,14 @@ from lxml import etree
 import obspy
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
-from obspy.station.response import (CoefficientsTypeResponseStage,
-                                    CoefficientWithUncertainties,
-                                    FilterCoefficient, FIRResponseStage,
-                                    PolesZerosResponseStage,
-                                    PolynomialResponseStage,
-                                    ResponseListResponseStage, ResponseStage)
-from obspy.station.util import (Angle, Azimuth, ClockDrift, Dip, Distance,
-                                Frequency, Latitude, Longitude, SampleRate)
+from obspy.core.inventory import (CoefficientsTypeResponseStage,
+                                  CoefficientWithUncertainties,
+                                  FilterCoefficient, FIRResponseStage,
+                                  PolesZerosResponseStage,
+                                  PolynomialResponseStage,
+                                  ResponseListResponseStage, ResponseStage)
+from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
+                                  Frequency, Latitude, Longitude, SampleRate)
 
 
 # Define some constants for writing StationXML files.

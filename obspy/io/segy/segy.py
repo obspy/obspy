@@ -20,13 +20,13 @@ from struct import pack, unpack
 
 import numpy as np
 
-from obspy.segy.header import (BINARY_FILE_HEADER_FORMAT,
-                               DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
-                               DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
-                               DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
-                               TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
-from obspy.segy.unpack import OnTheFlyDataUnpacker
-from obspy.segy.util import unpack_header_value
+from .header import (BINARY_FILE_HEADER_FORMAT,
+                     DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
+                     DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
+                     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, ENDIAN,
+                     TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
+from .unpack import OnTheFlyDataUnpacker
+from .util import unpack_header_value
 
 
 class SEGYError(Exception):

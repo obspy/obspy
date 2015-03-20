@@ -12,7 +12,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import obspy.kinemetrics.evt as evt
+from . import evt
 from .evt_base import EvtBaseError
 
 

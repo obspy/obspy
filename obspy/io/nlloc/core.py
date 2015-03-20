@@ -20,7 +20,7 @@ from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
                               WaveformStreamID)
-from obspy.core.util.geodetics import kilometer2degrees
+from obspy.geodetics import kilometer2degrees
 
 
 ONSETS = {"i": "impulsive", "e": "emergent"}

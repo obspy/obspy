@@ -13,11 +13,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.geodetics.base import (calcVincentyInverse,
-                                            degrees2kilometers,
-                                            gps2DistAzimuth, kilometer2degrees,
-                                            locations2degrees)
-from obspy.core.util.geodetics.flinnengdahl import FlinnEngdahl
+from .base import (calcVincentyInverse, degrees2kilometers, gps2DistAzimuth,
+                   kilometer2degrees, locations2degrees)
+from .flinnengdahl import FlinnEngdahl
 
 
 if __name__ == '__main__':

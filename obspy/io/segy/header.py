@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
-from obspy.segy import pack, unpack
+from . import pack, unpack
 
 
 # The format of the 400 byte long binary file header.

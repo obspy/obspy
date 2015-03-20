@@ -32,7 +32,8 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime
 from obspy.core.compatibility import frombuffer
-from obspy.core.util import AttribDict, gps2DistAzimuth
+from obspy.core.util import AttribDict
+from obspy.geodetics import gps2DistAzimuth
 
 
 # we put here everything but the time, they are going to stats.starttime

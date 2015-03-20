@@ -199,20 +199,21 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-# Don't change order! obspy.station.util must be first.
-from obspy.station.util import (BaseNode, Comment, Equipment,
-                                ExternalReference, Operator, Person,
-                                PhoneNumber, Site)
-from obspy.station.channel import Channel
-from obspy.station.inventory import Inventory, read_inventory
-from obspy.station.network import Network
-from obspy.station.response import (CoefficientsTypeResponseStage,
-                                    FIRResponseStage, InstrumentPolynomial,
-                                    InstrumentSensitivity,
-                                    PolesZerosResponseStage,
-                                    PolynomialResponseStage, Response,
-                                    ResponseListResponseStage, ResponseStage)
-from obspy.station.station import Station
+# Don't change order! .util must be first.
+from .util import (Angle, Azimuth, BaseNode, ClockDrift, Comment, Dip,
+                   Distance, Equipment, ExternalReference, Frequency, Latitude,
+                   Longitude, Operator, Person, PhoneNumber, SampleRate, Site)
+
+from .channel import Channel
+from .inventory import Inventory, read_inventory
+from .network import Network
+from .response import (CoefficientsTypeResponseStage,
+                       CoefficientWithUncertainties, FilterCoefficient,
+                       FIRResponseStage, InstrumentPolynomial,
+                       InstrumentSensitivity, PolesZerosResponseStage,
+                       PolynomialResponseStage, Response,
+                       ResponseListResponseStage, ResponseStage)
+from .station import Station
 
 
 if __name__ == '__main__':

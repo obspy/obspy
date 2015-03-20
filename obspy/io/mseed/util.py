@@ -20,12 +20,10 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from obspy.mseed.headers import (ENCODINGS, ENDIAN,
-                                 FIXED_HEADER_ACTIVITY_FLAGS,
-                                 FIXED_HEADER_DATA_QUAL_FLAGS,
-                                 FIXED_HEADER_IO_CLOCK_FLAGS, FRAME,
-                                 HPTMODULUS, SAMPLESIZES,
-                                 UNSUPPORTED_ENCODINGS, clibmseed)
+from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
+                      FIXED_HEADER_DATA_QUAL_FLAGS,
+                      FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
+                      SAMPLESIZES, UNSUPPORTED_ENCODINGS, clibmseed)
 
 
 def getStartAndEndTime(file_or_file_object):

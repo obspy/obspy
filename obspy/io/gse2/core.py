@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.gse2 import libgse1, libgse2
+from . import libgse1, libgse2
 
 
 def isGSE2(filename):

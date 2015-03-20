@@ -22,10 +22,15 @@ from pkg_resources import load_entry_point
 import numpy as np
 
 import obspy
-from obspy.core.util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
-from obspy.core.util.decorator import map_example_filename
-from obspy.station.network import Network
-from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
+from ..util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
+from ..util.decorator import map_example_filename
+from .network import Network
+
+
+# Make sure this is consistent with obspy.station.stationxml! Importing it
+# from there results in hard to resolve cyclic imports.
+SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
+SOFTWARE_URI = "http://www.obspy.org"
 
 
 def _createExampleInventory():

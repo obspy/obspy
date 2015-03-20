@@ -23,7 +23,7 @@ import warnings
 
 import numpy as np
 
-from obspy.segy.util import clibsegy
+from .util import clibsegy
 
 
 # Get the system byte order.

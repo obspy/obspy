@@ -20,15 +20,13 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.segy.header import (BINARY_FILE_HEADER_FORMAT,
-                               DATA_SAMPLE_FORMAT_CODE_DTYPE, ENDIAN,
-                               TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
-from obspy.segy.segy import readSEGY as readSEGYrev1
-from obspy.segy.segy import readSU as readSUFile
-from obspy.segy.segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile,
-                             SEGYTrace, SEGYTraceHeader, SUFile,
-                             autodetectEndianAndSanityCheckSU)
-from obspy.segy.util import unpack_header_value
+from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
+                     ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
+from .segy import readSEGY as readSEGYrev1
+from .segy import readSU as readSUFile
+from .segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile, SEGYTrace,
+                   SEGYTraceHeader, SUFile, autodetectEndianAndSanityCheckSU)
+from .util import unpack_header_value
 
 
 # Valid data format codes as specified in the SEGY rev1 manual.

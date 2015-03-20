@@ -25,7 +25,7 @@ import doctest
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
+from .libgse2 import uncompress_CM6, verifyChecksum
 
 
 def read(fh, verify_chksum=True):

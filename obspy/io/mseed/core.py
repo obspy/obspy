@@ -16,12 +16,11 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from obspy.mseed import util
-from obspy.mseed.headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS,
-                                 SAMPLETYPE, SEED_CONTROL_HEADERS,
-                                 UNSUPPORTED_ENCODINGS, VALID_CONTROL_HEADERS,
-                                 VALID_RECORD_LENGTHS, Selections, SelectTime,
-                                 blkt_100_s, blkt_1001_s, clibmseed)
+from . import util
+from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
+                      SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
+                      VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
+                      SelectTime, blkt_100_s, blkt_1001_s, clibmseed)
 
 
 class InternalMSEEDReadingError(Exception):

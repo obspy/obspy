@@ -31,9 +31,6 @@ from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
                                   getMatplotlibVersion, getScriptDirName)
 from obspy.core.util.decorator import (deprecated, deprecated_keywords, skip,
                                        skipIf, uncompressFile)
-from obspy.core.util.geodetics import (FlinnEngdahl, calcVincentyInverse,
-                                       degrees2kilometers, gps2DistAzimuth,
-                                       kilometer2degrees, locations2degrees)
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexifyString,
                                   guessDelta, loadtxt, scoreatpercentile,
                                   toIntOrZero)

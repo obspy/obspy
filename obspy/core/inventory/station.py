@@ -19,8 +19,7 @@ import textwrap
 import warnings
 
 from obspy import UTCDateTime
-from obspy.station import BaseNode, Equipment, Operator
-from obspy.station.util import Distance, Latitude, Longitude
+from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
 
 
 class Station(BaseNode):

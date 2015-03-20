@@ -31,7 +31,7 @@ from obspy.core.event import (Axis, Catalog, Comment, CreationInfo, DataUsed,
                               Magnitude, MomentTensor, NodalPlane, NodalPlanes,
                               Origin, PrincipalAxes, SourceTimeFunction,
                               Tensor)
-from obspy.core.util.geodetics import FlinnEngdahl
+from obspy.geodetics import FlinnEngdahl
 
 
 class ObsPyNDKException(Exception):

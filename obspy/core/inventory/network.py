@@ -18,8 +18,8 @@ import fnmatch
 import textwrap
 import warnings
 
-from obspy.station.station import Station
-from obspy.station.util import BaseNode
+from .station import Station
+from .util import BaseNode
 
 
 class Network(BaseNode):

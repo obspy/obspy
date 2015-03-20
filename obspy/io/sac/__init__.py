@@ -69,8 +69,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.sac.sacio import (SacError, SacIO, SacIOError, attach_paz,
-                             attach_resp)
+from .sacio import (SacError, SacIO, SacIOError, attach_paz, attach_resp)
 
 
 if __name__ == '__main__':

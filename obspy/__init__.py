@@ -39,7 +39,7 @@ __version__ = _getVersionString(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents, Catalog
-from obspy.station import read_inventory  # NOQA
+from obspy.core.inventory import read_inventory  # NOQA
 
 # insert supported read/write format plugin lists dynamically in docstrings
 from obspy.core.util.base import make_format_plugin_table

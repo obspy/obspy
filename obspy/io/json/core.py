@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 import json
 
-from obspy.core.json import Default
+from .default import Default
 
 
 def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):

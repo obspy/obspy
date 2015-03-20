@@ -21,11 +21,11 @@ from math import pi
 
 import numpy as np
 
-from obspy.core.util.base import ComparingObject, getMatplotlibVersion
-from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
-                                         FloatWithUncertainties,
-                                         FloatWithUncertaintiesAndUnit)
-from obspy.station.util import Angle, Frequency
+from ..util.base import ComparingObject, getMatplotlibVersion
+from ..util.obspy_types import (CustomComplex, CustomFloat,
+                                FloatWithUncertainties,
+                                FloatWithUncertaintiesAndUnit)
+from .util import Angle, Frequency
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
