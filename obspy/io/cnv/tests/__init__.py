@@ -9,7 +9,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.cnv"
+MODULE_NAME = "obspy.io.cnv"
 
 
 def suite():

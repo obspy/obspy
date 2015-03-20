@@ -8,7 +8,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.gse2"
+MODULE_NAME = "obspy.io.gse2"
 
 
 def suite():

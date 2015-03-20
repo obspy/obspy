@@ -8,7 +8,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.neic"
+MODULE_NAME = "obspy.clients.neic"
 
 
 def suite():

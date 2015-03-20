@@ -8,7 +8,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.fdsn"
+MODULE_NAME = "obspy.clients.fdsn"
 
 
 def suite():
