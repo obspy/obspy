@@ -19,7 +19,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
-from obspy.sac import attach_paz
+from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import cosTaper, estimateMagnitude, evalresp, seisSim
 

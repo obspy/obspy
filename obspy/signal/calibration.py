@@ -24,7 +24,7 @@ import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
-from obspy.gse2.paz import readPaz
+from obspy.io.gse2.paz import readPaz
 from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
 
