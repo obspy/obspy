@@ -49,6 +49,7 @@ fi
 echo "#### Working on $GITTARGET"
 cd $GITDIR
 git clean -fxd
+git fetch --all
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
 then
