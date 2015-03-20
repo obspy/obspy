@@ -25,11 +25,11 @@ def write_SACPZ(inventory, file_or_file_object):
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.station.inventory.Inventory.write` method of an
-        ObsPy :class:`~obspy.station.inventory.Inventory` object, call this
-        instead.
+        the :meth:`~obspy.core.inventory.inventory.Inventory.write` method
+        of an ObsPy :class:`~obspy.core.inventory.inventory.Inventory` object,
+        call this instead.
 
-    :type inventory: :class:`~obspy.station.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
     """

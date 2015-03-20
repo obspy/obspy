@@ -29,7 +29,7 @@ MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 class StationTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.station.Station` class.
+    Tests the for :class:`~obspy.core.inventory.station.Station` class.
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')

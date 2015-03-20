@@ -42,7 +42,7 @@ MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 class NetworkTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.network.Network` class.
+    Tests the for :class:`~obspy.core.inventory.network.Network` class.
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')

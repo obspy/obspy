@@ -30,7 +30,7 @@ MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 class ChannelTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.channel.Channel` class.
+    Tests the for :class:`~obspy.core.inventory.channel.Channel` class.
     """
     def setUp(self):
         # Most generic way to get the actual data directory.

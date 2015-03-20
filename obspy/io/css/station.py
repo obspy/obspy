@@ -27,15 +27,15 @@ def writeCSS(inventory, basename):
     """
     Writes an inventory object to a CSS database.
 
-    The :class:`~obspy.station.inventory.Inventory`,
-    :class:`~obspy.station.network.Network`,
-    :class:`~obspy.station.station.Station`, and
-    :class:`~obspy.station.channel.Channel` objects are included in the
-    resulting database. Any :class:`~obspy.station.util.Comment` objects are
-    only saved for the network. Any :class:`~obspy.station.response.Response`
-    objects are not saved. For fields that are saved, most of the important
-    information is used, but any extra metadata that cannot be represented in
-    CSS will be lost.
+    The :class:`~obspy.core.inventory.inventory.Inventory`,
+    :class:`~obspy.core.inventory.network.Network`,
+    :class:`~obspy.core.inventory.station.Station`, and
+    :class:`~obspy.core.inventory.channel.Channel` objects are included in the
+    resulting database. Any :class:`~obspy.core.inventory.util.Comment`
+    objects are only saved for the network. Any
+    :class:`~obspy.core.inventory.response.Response` objects are not saved.
+    For fields that are saved, most of the important information is used,
+    but any extra metadata that cannot be represented in CSS will be lost.
 
     .. note::
         Because CSS stores data in multiple files, you cannot write to a
@@ -44,11 +44,11 @@ def writeCSS(inventory, basename):
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.station.inventory.Inventory.write` method of an
-        ObsPy :class:`~obspy.station.inventory.Inventory` object, call this
-        instead.
+        the :meth:`~obspy.core.inventory.inventory.Inventory.write` method
+        of an ObsPy :class:`~obspy.core.inventory.inventory.Inventory`
+        object, call this instead.
 
-    :type inventory: :class:`~obspy.station.inventory.Inventory`
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :type basename: str
     :param basename: The base name of the files to be written. This export

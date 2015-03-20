@@ -26,7 +26,7 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.signal.invsim import evalresp
-from obspy.station.response import _pitick2latex
+from obspy.core.inventory.response import _pitick2latex
 from obspy.xseed import Parser
 
 
@@ -35,7 +35,7 @@ MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 class ResponseTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.response.Response` class.
+    Tests the for :class:`~obspy.core.inventory.response.Response` class.
     """
     def setUp(self):
         # Most generic way to get the actual data directory.

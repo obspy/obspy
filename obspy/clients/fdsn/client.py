@@ -339,8 +339,8 @@ class Client(object):
             inventory.plot()
 
 
-        The result is an :class:`~obspy.station.inventory.Inventory` object
-        which models a StationXML file.
+        The result is an :class:`~obspy.core.inventory.inventory.Inventory`
+        object which models a StationXML file.
 
         The ``level`` argument determines the amount of returned information.
         ``level="station"`` is useful for availability queries whereas
@@ -457,7 +457,7 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
-        :rtype: :class:`~obspy.station.inventory.Inventory`
+        :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: Inventory with requested station information.
 
         Any additional keyword arguments will be passed to the webservice as

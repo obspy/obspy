@@ -93,7 +93,7 @@ USP     http://sismo.iag.usp.br
 
 (3) :meth:`~obspy.fdsn.client.Client.get_stations()`: Retrieves station data
     from the server. Results are returned as an
-    :class:`~obspy.station.inventory.Inventory` object.
+    :class:`~obspy.core.inventory.inventory.Inventory` object.
 
     >>> inventory = client.get_stations(network="IU", station="A*",
     ...                                 starttime=starttime,

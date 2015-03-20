@@ -27,7 +27,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
-from obspy.station import Response
+from obspy.core.inventory import Response
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())

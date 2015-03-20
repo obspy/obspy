@@ -2234,10 +2234,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
               Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
               Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
-        :type inventories: :class:`~obspy.station.inventory.Inventory` or
-            :class:`~obspy.station.network.Network` or a list containing
-            objects of these types or a string with a filename of a StationXML
-            file.
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         """
@@ -2269,12 +2269,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Deconvolve instrument response.
 
-        Uses the :class:`obspy.station.response.Response` object attached as
-        :class:`Trace`.stats.response to deconvolve the instrument response
-        from the trace's time series data. Raises an exception if the response
-        is not present. Use e.g. :meth:`Trace.attach_response` to attach
-        response to trace providing :class:`obspy.station.inventory.Inventory`
-        data.
+        Uses the :class:`obspy.core.inventory.response.Response` object
+        attached as :class:`Trace`.stats.response to deconvolve the
+        instrument response from the trace's time series data. Raises an
+        exception if the response is not present. Use e.g.
+        :meth:`Trace.attach_response` to attach response to trace providing
+        :class:`obspy.core.inventory.inventory.Inventory` data.
+
         Note that there are two ways to prevent overamplification
         while convolving the inverted instrument spectrum: One possibility is
         to specify a water level which represents a clipping of the inverse
@@ -2288,8 +2289,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. note::
 
             Any additional kwargs will be passed on to
-            :meth:`obspy.station.response.Response.get_evalresp_response`, see
-            documentation of that method for further customization (e.g.
+            :meth:`obspy.core.inventory.response.Response.get_evalresp_response
+            `, see documentation of that method for further customization (e.g.
             start/stop stage).
 
         .. note::
@@ -2365,7 +2366,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "(as Trace.stats.response).")
             raise KeyError(msg)
         if not isinstance(self.stats.response, Response):
-            msg = ("Response must be of type obspy.station.response.Response "
+            msg = ("Response must be of type "
+                   "obspy.core.inventory.response.Response "
                    "(but is of type %s).") % type(self.stats.response)
             raise TypeError(msg)
 

@@ -43,7 +43,7 @@ BASEMAP_VERSION = getBasemapVersion()
 
 class InventoryTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.inventory.Inventory` class.
+    Tests the for :class:`~obspy.core.inventory.inventory.Inventory` class.
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
