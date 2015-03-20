@@ -175,7 +175,7 @@ def getExampleFile(filename):
     .. rubric:: Example
 
     >>> getExampleFile('slist.ascii')  # doctest: +SKIP
-    /custom/path/to/obspy/core/tests/data/slist.ascii
+    /custom/path/to/obspy/io/ascii/tests/data/slist.ascii
 
     >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
@@ -210,7 +210,7 @@ def _getEntryPoints(group, subgroup=None):
     .. rubric:: Example
 
     >>> _getEntryPoints('obspy.plugin.waveform')  # doctest: +ELLIPSIS
-    {...'SLIST': EntryPoint.parse('SLIST = obspy.core.ascii')...}
+    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.ascii')...}
     """
     features = {}
     for ep in iter_entry_points(group):
@@ -440,16 +440,16 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     in docstrings.
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
-    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
-    ========= ================== ========================================
-        Format    Required Module    _`Linked Function Call`
-        ========= ================== ========================================
-        CNV       :mod:`obspy.cnv`   :func:`obspy.cnv.core.write_CNV`
-        JSON      :mod:`obspy.core`  :func:`obspy.core.json.core.writeJSON`
-        NLLOC_OBS :mod:`obspy.nlloc` :func:`obspy.nlloc.core.write_nlloc_obs`
-        QUAKEML   :mod:`obspy.core`  :func:`obspy.io.quakeml.quakeml.writeQuakeML`
-        ZMAP      :mod:`obspy.zmap`  :func:`obspy.zmap.core.writeZmap`
-        ========= ================== ========================================
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    ========= ===============... ========================================...
+    Format    Required Module    _`Linked Function Call`
+    ========= ===============... ========================================...
+    CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core.write_CNV`
+    JSON      :mod:`...io.json`  :func:`obspy.io.json.core.writeJSON`
+    NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
+    QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.quakeml.writeQuakeML`
+    ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core.writeZmap`
+    ========= ===============... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
@@ -472,7 +472,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
                                  WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.items():
-        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
+        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
         func = load_entry_point(ep.dist.key,
                                 "obspy.plugin.%s.%s" % (group, name), method)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.__name__))

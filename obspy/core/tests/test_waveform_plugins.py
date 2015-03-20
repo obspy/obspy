@@ -303,8 +303,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests reading gzip compressed waveforms.
         """
         path = os.path.dirname(__file__)
-        st1 = read(os.path.join(path, 'data', 'tspair.ascii.gz'))
-        st2 = read(os.path.join(path, 'data', 'tspair.ascii'))
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'tspair.ascii.gz'))
+        st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
         self.assertTrue(st1 == st2)
 
     def test_readBzip2File(self):
@@ -312,8 +314,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests reading bzip2 compressed waveforms.
         """
         path = os.path.dirname(__file__)
-        st1 = read(os.path.join(path, 'data', 'slist.ascii.bz2'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'slist.ascii.bz2'))
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertTrue(st1 == st2)
 
     def test_readTarArchive(self):
@@ -321,21 +325,23 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests reading tar compressed waveforms.
         """
         path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
         # tar
-        st1 = read(os.path.join(path, 'data', 'test.tar'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        st1 = read(os.path.join(path, "data", "test.tar"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertTrue(st1 == st2)
         # tar.gz
-        st1 = read(os.path.join(path, 'data', 'test.tar.gz'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        st1 = read(os.path.join(path, "data", "test.tar.gz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertTrue(st1 == st2)
         # tar.bz2
-        st1 = read(os.path.join(path, 'data', 'test.tar.bz2'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        st1 = read(os.path.join(path, "data", "test.tar.bz2"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertTrue(st1 == st2)
         # tgz
-        st1 = read(os.path.join(path, 'data', 'test.tgz'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        st1 = read(os.path.join(path, "data", "test.tgz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertTrue(st1 == st2)
 
     def test_readZipArchive(self):
@@ -343,8 +349,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests reading zip compressed waveforms.
         """
         path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
         st1 = read(os.path.join(path, 'data', 'test.zip'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertTrue(st1 == st2)
 
     def test_raiseOnUnknownFormat(self):
