@@ -300,7 +300,8 @@ class ParserTestCase(unittest.TestCase):
         # Loop over all files and versions.
         for version in ['1.0', '1.1']:
             # Path to XML schema file.
-            xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
+            xsd_path = os.path.join(self.path, os.pardir, os.pardir, 'data',
+                                    'xml-seed-%s.xsd' % version)
             # Prepare validator.
             f = open(xsd_path, 'rb')
             xmlschema_doc = etree.parse(f)
