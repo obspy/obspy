@@ -36,8 +36,8 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
-                             locations2degrees)
+from obspy.core.util import createEmptyDataChunk
+from obspy.geodetics import FlinnEngdahl, locations2degrees
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)

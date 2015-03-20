@@ -93,6 +93,7 @@ def _load_CDLL(name):
     try:
         cdll = ctypes.CDLL(libpath)
     except Exception as e:
+        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
         msg = 'Could not load shared library "%s".\n\n %s' % (libname, str(e))
         raise ImportError(msg)
     return cdll

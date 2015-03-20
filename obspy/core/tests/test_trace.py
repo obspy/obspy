@@ -1602,7 +1602,7 @@ class TraceTestCase(unittest.TestCase):
     def test_remove_polynomial_response(self):
         """
         """
-        from obspy.station import read_inventory
+        from obspy import read_inventory
         path = os.path.dirname(__file__)
 
         # blockette 62, stage 0

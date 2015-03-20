@@ -492,7 +492,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SIGNAL
-    path = os.path.join("obspy", "io", "signal", "src")
+    path = os.path.join("obspy", "signal", "src")
     files = glob.glob(os.path.join(path, "*.c"))
     # compiler specific options
     kwargs = {}

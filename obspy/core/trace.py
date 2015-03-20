@@ -1265,7 +1265,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             seedresp.setdefault("date", self.stats.starttime)
             # if a Parser object is provided, get corresponding RESP
             # information
-            from obspy.xseed import Parser
+            from obspy.io.xseed import Parser
             if isinstance(seedresp['filename'], Parser):
                 seedresp = deepcopy(seedresp)
                 kwargs['seedresp'] = seedresp
@@ -2357,7 +2357,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type taper_fraction: float
         :param taper_fraction: Taper fraction of cosine taper to use.
         """
-        from obspy.station import Response, PolynomialResponseStage
+        from obspy.core.inventory import Response, PolynomialResponseStage
         from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
 
         if "response" not in self.stats:
