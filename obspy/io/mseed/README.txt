@@ -1,5 +1,5 @@
-package obspy.mseed
-===================
+package obspy.io.mseed
+======================
 
 Copyright
 ---------

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.sac - SAC read and write support for ObsPy
-================================================
+obspy.io.sac - SAC read and write support for ObsPy
+===================================================
 This module provides read and write support for ASCII and binary SAC-files as
 defined by IRIS (http://www.iris.edu/files/sac-manual/).
 

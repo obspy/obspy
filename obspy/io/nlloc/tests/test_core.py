@@ -35,7 +35,7 @@ def _mock_coordinate_converter(x, y, z):
 
 class NLLOCTestCase(unittest.TestCase):
     """
-    Test suite for obspy.nlloc
+    Test suite for obspy.io.nlloc
     """
     def setUp(self):
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(

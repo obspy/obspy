@@ -1,5 +1,5 @@
-package obspy.zmap
-==================
+package obspy.io.zmap
+=====================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 ZMAP file support for ObsPy
 
-The obspy.zmap module provides read and write support for the files used in
+The obspy.io.zmap module provides read and write support for the files used in
 the Matlab® earthquake statistics package ZMAP (see Wiemer 2001).
 
 ObsPy is an open-source project dedicated to provide a Python framework for

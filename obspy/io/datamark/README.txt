@@ -1,5 +1,5 @@
-package obspy.datamark
-==================
+package obspy.io.datamark
+=========================
 
 Copyright
 ---------

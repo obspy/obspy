@@ -1,4 +1,4 @@
-package obspy.pde
+package obspy.io.pde
 ====================
 
 Copyright

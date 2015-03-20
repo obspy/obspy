@@ -265,9 +265,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
     def test_readQualityInformationWarns(self):
         """
         Reading the quality information while reading the data files is no more
-        supported in newer obspy.mseed versions. Check that a warning is
+        supported in newer obspy.io.mseed versions. Check that a warning is
         raised.
-        Similar functionality is included in obspy.mseed.util.
+        Similar functionality is included in obspy.io.mseed.util.
         """
         timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
         with warnings.catch_warnings(record=True):

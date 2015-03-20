@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-obspy.seisan - SEISAN read support for ObsPy
+obspy.io.seisan - SEISAN read support for ObsPy
 ============================================
 
-The obspy.seisan package contains methods in order to read seismogram files in
-the SEISAN format.
+The obspy.io.seisan package contains methods in order to read seismogram
+files in the SEISAN format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

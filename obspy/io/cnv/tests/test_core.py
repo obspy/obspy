@@ -15,7 +15,7 @@ from obspy.core.util import NamedTemporaryFile
 
 class CNVTestCase(unittest.TestCase):
     """
-    Test suite for obspy.cnv
+    Test suite for obspy.io.cnv
     """
     def setUp(self):
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(

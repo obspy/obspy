@@ -29,7 +29,7 @@ from obspy.io.mseed.util import set_flags_in_fixed_headers
 
 class MSEEDUtilTestCase(unittest.TestCase):
     """
-    Tests suite for util module of obspy.mseed.
+    Tests suite for util module of obspy.io.mseed.
     """
     def setUp(self):
         # Directory where the test files are located
@@ -302,7 +302,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
     def test_checkFlagValue(self):
         """
-        Test case for obspy.mseed.util._checkFlagValue
+        Test case for obspy.io.mseed.util._checkFlagValue
         """
 
         # Valid value for a boolean flag
@@ -491,7 +491,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
     def test_searchFlagInBlockette(self):
         """
-        Test case for obspy.mseed.util._searchFlagInBlockette
+        Test case for obspy.io.mseed.util._searchFlagInBlockette
         """
         # Write dummy file
         npts = 2000
@@ -550,7 +550,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
     def test_convertFlagsToRawByte(self):
         """
-        Test case for obspy.mseed.util._convertFlagsToRawByte
+        Test case for obspy.io.mseed.util._convertFlagsToRawByte
         """
 
         recstart = UTCDateTime("2009-12-25T06:00:00.0")
@@ -619,7 +619,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
     def test_set_flags_in_fixed_header(self):
         """
-        Test case for obspy.mseed.util.set_flags_in_fixed_headers
+        Test case for obspy.io.mseed.util.set_flags_in_fixed_headers
         """
 
         # Write mseed file with several traces

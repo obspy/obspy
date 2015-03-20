@@ -1,5 +1,5 @@
-package obspy.nlloc
-===================
+package obspy.io.nlloc
+======================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 NonLinLoc file format support for ObsPy
 
-The obspy.nlloc module provides read/write support for some NonLinLoc file
+The obspy.io.nlloc module provides read/write support for some NonLinLoc file
 formats.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

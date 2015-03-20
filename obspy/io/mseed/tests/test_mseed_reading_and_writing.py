@@ -58,7 +58,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readGappyFile(self):
         """
-        Compares waveform data read by obspy.mseed with an ASCII dump.
+        Compares waveform data read by obspy.io.mseed with an ASCII dump.
 
         Checks the first 9 datasamples of each entry in trace_list of
         gaps.mseed. The values are assumed to be correct. The first values
@@ -106,7 +106,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readAndWriteTraces(self):
         """
-        Writes, reads and compares files created via obspy.mseed.
+        Writes, reads and compares files created via obspy.io.mseed.
 
         This uses all possible encodings, record lengths and the byte order
         options. A re-encoded SEED file should still have the same values
@@ -263,7 +263,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readFileViaMSEED(self):
         """
-        Read file test via L{obspy.mseed.mseed.readMSEED}.
+        Read file test via L{obspy.io.mseed.mseed.readMSEED}.
         """
         testfile = os.path.join(self.path, 'data', 'test.mseed')
         data = [2787, 2776, 2774, 2780, 2783]
@@ -281,7 +281,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialTimewindowFromFile(self):
         """
-        Uses obspy.mseed.mseed.readMSEED to read only read a certain time
+        Uses obspy.io.mseed.mseed.readMSEED to read only read a certain time
         window of a file.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
@@ -295,7 +295,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialWithOnlyStarttimeSet(self):
         """
-        Uses obspy.mseed.mseed.readMSEED to read only the data starting with
+        Uses obspy.io.mseed.mseed.readMSEED to read only the data starting with
         a certain time.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
@@ -308,8 +308,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialWithOnlyEndtimeSet(self):
         """
-        Uses obspy.mseed.mseed.readMSEED to read only the data ending before a
-        certain time.
+        Uses obspy.io.mseed.mseed.readMSEED to read only the data ending
+        before a certain time.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
         endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
@@ -321,7 +321,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialFrameWithEmptyTimeRange(self):
         """
-        Uses obspy.mseed.mseed.readMSEED to read a partial file with a
+        Uses obspy.io.mseed.mseed.readMSEED to read a partial file with a
         timewindow outside of the actual data. Should return an empty Stream
         object.
         """
@@ -333,7 +333,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialWithSourceName(self):
         """
-        Uses obspy.mseed.mseed.readMSEED to read only part of a file that
+        Uses obspy.io.mseed.mseed.readMSEED to read only part of a file that
         matches certain sourcename patterns.
         """
         testfile = os.path.join(self.path, 'data', 'two_channels.mseed')
@@ -357,7 +357,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_writeIntegers(self):
         """
-        Write integer array via L{obspy.mseed.mseed.writeMSEED}.
+        Write integer array via L{obspy.io.mseed.mseed.writeMSEED}.
         """
         npts = 1000
         # data array of integers - float won't work!

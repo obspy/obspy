@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.zmap - ZMAP read/write support.
-=====================================
+obspy.io.zmap - ZMAP read/write support.
+========================================
 
 This module provides read and write support for the ZMAP format.
 
@@ -30,9 +30,9 @@ mechanisms including format autodetection.
 Reading ZMAP
 ------------
 
-Reading ZMAP is lenient, i.e. ``obspy.zmap`` will try to import a file even if
-it doesn't strictly conform to 10 or 13 column ZMAP. Namely the following
-deviations from standard ZMAP format are acceptable:
+Reading ZMAP is lenient, i.e. ``obspy.io.zmap`` will try to import a file
+even if it doesn't strictly conform to 10 or 13 column ZMAP. Namely the
+following deviations from standard ZMAP format are acceptable:
 
 * Less or more than 10 or 13 columns. Extra columns are ignored. Missing
   values are set to ``None``.

@@ -1,5 +1,5 @@
-package obspy.css
-=================
+package obspy.io.css
+====================
 
 Copyright
 ---------

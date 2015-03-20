@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.nlloc - NonLinLoc file format support for ObsPy
-=====================================================
+obspy.io.nlloc - NonLinLoc file format support for ObsPy
+========================================================
 
 This module provides read/write support for some NonLinLoc file
 formats.
@@ -40,7 +40,7 @@ Then, we can load the NonLinLoc Hypocenter-Phase file into an ObsPy
 :class:`~obspy.core.event.Catalog` object using
 :func:`~obspy.core.event.readEvents`, supplying our coordinate mapping function
 as `coordinate_converter` kwarg, which will be passed down to the low-level
-routine :func:`~obspy.nlloc.core.read_nlloc_hyp`.
+routine :func:`~obspy.io.nlloc.core.read_nlloc_hyp`.
 
 >>> from obspy import readEvents
 >>> cat = readEvents("/path/to/nlloc.hyp",

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-obspy.seg2 - SEG-2 read support for ObsPy
-=========================================
+obspy.io.seg2 - SEG-2 read support for ObsPy
+============================================
 
-The obspy.seg2 package contains methods in order to read files in the SEG-2
+The obspy.io.seg2 package contains methods in order to read files in the SEG-2
 format.
 
 :copyright:

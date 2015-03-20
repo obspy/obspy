@@ -1,5 +1,5 @@
-package obspy.sac
-=================
+package obspy.io.sac
+====================
 
 Copyright
 ---------

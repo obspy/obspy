@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.segy Seismic Unix test suite.
+The obspy.io.segy Seismic Unix test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

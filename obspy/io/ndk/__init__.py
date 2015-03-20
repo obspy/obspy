@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.ndk - NDK file support for ObsPy
-======================================
+obspy.io.ndk - NDK file support for ObsPy
+=========================================
 
 This module provides read support for the NDK files distributed by the
 Global Centroid-Moment-Tensor (CMT) catalog.

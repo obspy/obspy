@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.css.core test suite.
+The obspy.io.css.core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -78,7 +78,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readViaModule(self):
         """
-        Read files via obspy.css.core.readCSS function.
+        Read files via obspy.io.css.core.readCSS function.
         """
         # 1
         st = readCSS(self.filename)

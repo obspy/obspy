@@ -319,7 +319,7 @@ def verifyChecksum(fh, data, version=2):
         if abs(chksum_data) == abs(chksum_file):
             msg = "Checksum differs only in absolute value. If this file " + \
                 "was written with ObsPy GSE2, this is due to a bug in " + \
-                "the obspy.gse2.write routine (resolved with [3431]), " + \
+                "the obspy.io.gse2.write routine (resolved with [3431]), " + \
                 "and thus this message can be safely ignored."
             warnings.warn(msg, UserWarning)
             return

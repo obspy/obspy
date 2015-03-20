@@ -1,5 +1,5 @@
-package obspy.wav
-=================
+package obspy.io.wav
+====================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 WAV(audio) read and write support for ObsPy.
 
-The obspy.wav package contains methods in order to read and write seismogram
+The obspy.io.wav package contains methods in order to read and write seismogram
 files in the WAV(audio) format. The data are squeezed to audible frequencies.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

@@ -38,7 +38,7 @@ def readPaz(paz_file):
 
     Do not use this function in connection with the ObsPy instrument
     simulation, the A0_normalization_factor might be set wrongly. Use
-    :func:`~obspy.gse2.libgse2.attach_paz` instead.
+    :func:`~obspy.io.gse2.libgse2.attach_paz` instead.
 
     >>> import io
     >>> f = io.StringIO(

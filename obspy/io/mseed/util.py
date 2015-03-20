@@ -617,14 +617,14 @@ def set_flags_in_fixed_headers(filename, flags):
             flag groups raise a ``ValueError``.
         * ``flag_name``
             The name of the flag. Possible values are matched with
-            ``obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
+            ``obspy.io.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
             ``FIXED_HEADER_IO_CLOCK_FLAGS`` or ``FIXED_HEADER_DATA_QUAL_FLAGS``
             depending on the flag_group. Invalid flags raise a ``ValueError``.
         * ``flag_value``
             The value you want for this flag. Expected value is a bool (always
             ``True``/``False``) or a dict to store the moments and durations
             when this flag is ``True``. Expected syntax for this dict is
-            accurately described in ``obspy.mseed.util._checkFlagValue``.
+            accurately described in ``obspy.io.mseed.util._checkFlagValue``.
 
     :raises IOError: if the file is not a MiniSEED file
     :raises ValueError: if one of the flag group, flag name or flag value is
@@ -1129,7 +1129,7 @@ def _convertFlagsToRawByte(expected_flags, user_flags, recstart, recend):
 
     expected_signals describes all the possible bit names for the user flags
     and their place in the result byte. Expected: dict { exponent: bit_name }.
-    The fixed header flags are available in obspy.mseed.headers as
+    The fixed header flags are available in obspy.io.mseed.headers as
     FIXED_HEADER_ACTIVITY_FLAGS, FIXED_HEADER_DATA_QUAL_FLAGS and
     FIXED_HEADER_IO_CLOCK_FLAGS.
 

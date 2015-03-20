@@ -1,5 +1,5 @@
-package obspy.y
-===============
+package obspy.io.y
+==================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 Nanometrics Y read support for ObsPy.
 
-The obspy.y package contains methods in order to read seismogram
+The obspy.io.y package contains methods in order to read seismogram
 files in the Nanometrics Y file format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

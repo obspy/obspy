@@ -339,7 +339,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             msg = """
             The dtype of the data and the chosen data_encoding do not match.
             You need to manually convert the dtype if you want to use that
-            data_encoding. Please refer to the obspy.segy manual for more
+            data_encoding. Please refer to the obspy.io.segy manual for more
             details.
             """.strip()
             raise SEGYCoreWritingError(msg)
@@ -587,7 +587,8 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
         if trace.data.dtype != np.float32:
             msg = """
             The dtype of the data is not float32.  You need to manually convert
-            the dtype. Please refer to the obspy.segy manual for more details.
+            the dtype. Please refer to the obspy.io.segy manual for more
+            details.
             """.strip()
             raise SEGYCoreWritingError(msg)
         # Check the sample interval.

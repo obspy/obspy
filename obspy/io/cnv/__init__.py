@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.cnv - CNV file format support for ObsPy
-=============================================
+obspy.io.cnv - CNV file format support for ObsPy
+================================================
 
 This module provides write support for CNV event summary file
 format as used by VELEST program.

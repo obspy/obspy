@@ -1,4 +1,4 @@
-package obspy.sh
+package obspy.io.sh
 ================
 
 Copyright
@@ -14,7 +14,7 @@ Overview
 --------
 Q and ASC (Seismic Handler) read and write support for ObsPy.
 
-The obspy.sh package contains methods in order to read and write seismogram
+The obspy.io.sh package contains methods in order to read and write seismogram
 files in the Q and ASC format used by the Seismic Handler software package
 (http://www.seismic-handler.org).
 

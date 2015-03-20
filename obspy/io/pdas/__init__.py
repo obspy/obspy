@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-obspy.pdas - PDAS file read support for ObsPy
-=============================================
+obspy.io.pdas - PDAS file read support for ObsPy
+================================================
 
-The obspy.pdas package contains methods in order to read files in the PDAS file
-format.
+The obspy.io.pdas package contains methods in order to read files in the PDAS
+file format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

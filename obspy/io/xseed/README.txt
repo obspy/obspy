@@ -1,5 +1,5 @@
-package obspy.xseed
-===================
+package obspy.io.xseed
+======================
 
 Copyright
 ---------
@@ -14,7 +14,7 @@ Overview
 --------
 Dataless SEED, RESP and XML-SEED read and write support for ObsPy.
 
-The obspy.xseed package contains methods in order to read, write and convert
+The obspy.io.xseed package contains methods in order to read, write and convert
 seismological meta data files in the Dataless SEED, RESP and XML-SEED format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

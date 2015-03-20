@@ -1,5 +1,5 @@
-package obspy.seisan
-====================
+package obspy.io.seisan
+=======================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 SEISAN read support for ObsPy.
 
-The obspy.seisan package contains methods in order to read seismogram
+The obspy.io.seisan package contains methods in order to read seismogram
 files in the SEISAN format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.kinemetrics.core test suite.
+The obspy.io.kinemetrics.core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -173,7 +173,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_via_module(self):
         """
-        Read files via obspy.kinemetrics.core.read_evt function.
+        Read files via obspy.io.kinemetrics.core.read_evt function.
         """
         filename = os.path.join(self.path, 'BI008_MEMA-04823.evt')
         # 1
@@ -219,7 +219,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read_via_module_and_bytesio(self):
         """
-        Read files via obspy.kinemetrics.core.read_evt function from BytesIO
+        Read files via obspy.io.kinemetrics.core.read_evt function from BytesIO
         objects.
         """
         # 1

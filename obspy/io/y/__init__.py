@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-obspy.y - Nanometrics Y file read support for ObsPy
-===================================================
+obspy.io.y - Nanometrics Y file read support for ObsPy
+======================================================
 
-The obspy.y package contains methods in order to read files in the Nanometrics
-Y file format.
+The obspy.io.y package contains methods in order to read files in the
+Nanometrics Y file format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

@@ -290,7 +290,7 @@ def writeZmap(catalog, filename, with_uncertainties=False,
     :param filename: Filename to write or open file-like object.
     :type with_uncertainties: bool
     :param with_uncertainties: appends non-standard columns for horizontal,
-        magnitude and depth uncertainty (see :mod:`~obspy.zmap.core`).
+        magnitude and depth uncertainty (see :mod:`~obspy.io.zmap.core`).
     """
     Pickler(with_uncertainties).dump(catalog, filename)
 
@@ -324,9 +324,9 @@ def isZmap(filename):
     """
     Checks whether a file is ZMAP format.
 
-    Unlike :func:`~obspy.zmap.core.readZmap` *isZmap* is strict, i.e. it will
-    not detect a ZMAP file unless it consists of exactly 10 or 13 numerical
-    columns.
+    Unlike :func:`~obspy.io.zmap.core.readZmap` *isZmap* is strict, i.e. it
+    will not detect a ZMAP file unless it consists of exactly 10 or 13
+    numerical columns.
 
     :type filename: str or file
     :param filename: ZMAP string, name of the file to be checked or open

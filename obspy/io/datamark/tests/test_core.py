@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.datamark.core test suite.
+The obspy.io.datamark.core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -45,7 +45,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readViaModule(self):
         """
-        Read files via obspy.datamark.core.readDATAMARK function.
+        Read files via obspy.io.datamark.core.readDATAMARK function.
         """
         filename = os.path.join(self.path, '10030302.00')
         # 1

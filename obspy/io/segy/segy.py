@@ -767,9 +767,9 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
         a filename.
     :type endian: str
     :param endian: String that determines the endianness of the file. Either
-        '>' for big endian or '<' for little endian. If it is None, obspy.segy
-        will try to autodetect the endianness. The endianness is always valid
-        for the whole file.
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
@@ -804,9 +804,9 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
     :param file: Open file like object.
     :type endian: str
     :param endian: String that determines the endianness of the file. Either
-        '>' for big endian or '<' for little endian. If it is None, obspy.segy
-        will try to autodetect the endianness. The endianness is always valid
-        for the whole file.
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
     :param textual_header_encoding: The encoding of the textual header.
         Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
         be attempted.
@@ -954,9 +954,9 @@ def readSU(file, endian=None, unpack_headers=False, headonly=False):
         a filename.
     :type endian: str
     :param endian: String that determines the endianness of the file. Either
-        '>' for big endian or '<' for little endian. If it is None, obspy.segy
-        will try to autodetect the endianness. The endianness is always valid
-        for the whole file.
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
     :type unpack_header: bool
     :param unpack_header: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage
@@ -985,9 +985,9 @@ def _readSU(file, endian=None, unpack_headers=False, headonly=False):
     :param file: Open file like object.
     :type endian: str
     :param endian: String that determines the endianness of the file. Either
-        '>' for big endian or '<' for little endian. If it is None, obspy.segy
-        will try to autodetect the endianness. The endianness is always valid
-        for the whole file.
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
     :type unpack_header: bool
     :param unpack_header: Determines whether or not all headers will be
         unpacked during reading the file. Has a huge impact on the memory usage

@@ -22,7 +22,7 @@ _MAGNITUDE_FIELDS = ('mag', 'm_err')
 
 class ZMAPTestCase(unittest.TestCase):
     """
-    Test suite for obspy.zmap.core
+    Test suite for obspy.io.zmap.core
     """
     def setUp(self):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')

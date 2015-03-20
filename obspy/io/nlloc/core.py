@@ -56,7 +56,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
     .. note::
 
-        An example can be found on the :mod:`~obspy.nlloc` submodule front
+        An example can be found on the :mod:`~obspy.io.nlloc` submodule front
         page in the documentation pages.
 
     :param filename: File or file-like object in text mode.

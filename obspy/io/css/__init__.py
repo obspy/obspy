@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.css - CSS read support for ObsPy
-======================================
+obspy.io.css - CSS read support for ObsPy
+=========================================
 This module provides read support for CSS waveform data.
 
 :copyright:

@@ -1,5 +1,5 @@
-package obspy.ah
-================
+package obspy.io.ah
+===================
 
 Copyright
 ---------

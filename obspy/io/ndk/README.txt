@@ -1,5 +1,5 @@
-package obspy.ndk
-=================
+package obspy.io.ndk
+====================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 NDK file support for ObsPy
 
-The obspy.ndk module provides read support for the NDK files distributed by
+The obspy.io.ndk module provides read support for the NDK files distributed by
 the Global Centroid-Moment-Tensor (CMT) catalog.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

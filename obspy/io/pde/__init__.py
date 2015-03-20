@@ -1,6 +1,6 @@
 """
-obspy.pde - NEIC PDE Bulletin read support for ObsPy
-====================================================
+obspy.io.pde - NEIC PDE Bulletin read support for ObsPy
+=======================================================
 
 This module provides read support for NEIC Preliminary Determination of
 Epicenters (PDE) Bulletin.

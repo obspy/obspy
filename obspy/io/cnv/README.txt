@@ -1,5 +1,5 @@
-package obspy.cnv
-=================
+package obspy.io.cnv
+====================
 
 Copyright
 ---------
@@ -13,7 +13,7 @@ Overview
 --------
 CNV file format support for ObsPy
 
-The obspy.cnv module provides write support for CNV event summary file
+The obspy.io.cnv module provides write support for CNV event summary file
 format as used by VELEST program.
 
 ObsPy is an open-source project dedicated to provide a Python framework for

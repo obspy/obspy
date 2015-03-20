@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.kinemetrics - Evt format support for ObsPy
-================================================
+obspy.io.kinemetrics - Evt format support for ObsPy
+===================================================
 
 Evt read support for ObsPy.
 

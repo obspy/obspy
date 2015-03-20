@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Headers for obspy.seg2.
+Headers for obspy.io.seg2.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2011

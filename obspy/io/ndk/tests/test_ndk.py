@@ -17,7 +17,7 @@ from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
 
 class NDKTestCase(unittest.TestCase):
     """
-    Test suite for obspy.ndk
+    Test suite for obspy.io.ndk
     """
     def setUp(self):
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(

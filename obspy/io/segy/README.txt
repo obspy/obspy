@@ -1,5 +1,5 @@
-package obspy.segy
-==================
+package obspy.io.segy
+=====================
 
 Copyright
 ---------
@@ -13,8 +13,8 @@ Overview
 --------
 SEG Y and SU read and write support for ObsPy.
 
-The obspy.segy package contains methods in order to read and write seismogram
-files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
+The obspy.io.segy package contains methods in order to read and write
+seismogram files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

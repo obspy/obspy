@@ -1,5 +1,5 @@
-package obspy.gse2
-==================
+package obspy.io.gse2
+=====================
 
 Copyright
 ---------

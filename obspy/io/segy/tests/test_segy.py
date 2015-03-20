@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.segy test suite.
+The obspy.io.segy test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

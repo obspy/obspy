@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.segy core test suite.
+The obspy.io.segy core test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -191,7 +191,8 @@ class SEGYCoreTestCase(unittest.TestCase):
 
     def test_notMatchingDataEncodingAndDtypeRaises(self):
         """
-        obspy.segy does not automatically convert to the corresponding dtype.
+        obspy.io.segy does not automatically convert to the corresponding
+        dtype.
         """
         encodings = [1, 2, 3, 5]
         # The file uses IBM data encoding.
@@ -268,7 +269,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         works. It will actually just deactivate the autodetection in case it
         produced a wrong result. Using a wrong endianness while reading a file
         will still produce an error because the data format will most likely be
-        wrong and therefore obspy.segy cannot unpack the data.
+        wrong and therefore obspy.io.segy cannot unpack the data.
         """
         # File ld0042_file_00018.sgy_first_trace is in big endian.
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
@@ -287,8 +288,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         This tests checks whether or not all necessary information is read
         during reading with core. It actually just assumes the internal
         SEGYFile object, which is thoroughly tested in
-        obspy.segy.tests.test_segy, is correct and compared all values to it.
-        This seems to be the easiest way to test everything.
+        obspy.io.segy.tests.test_segy, is correct and compared all values to
+        it. This seems to be the easiest way to test everything.
         """
         for file, _ in self.files.items():
             file = os.path.join(self.path, file)
@@ -327,7 +328,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the writing of SEGY rev1 files using obspy.core. It just compares
         the output of writing using obspy.core with the output of writing the
         files using the internal SEGY object which is thoroughly tested in
-        obspy.segy.tests.test_segy.
+        obspy.io.segy.tests.test_segy.
         """
         for file, _ in self.files.items():
             file = os.path.join(self.path, file)

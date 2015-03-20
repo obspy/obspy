@@ -83,7 +83,7 @@ class ParserTestCase(unittest.TestCase):
 
     def test_string(self):
         """
-        Tests string representation of L{obspy.xseed.Parser} object.
+        Tests string representation of L{obspy.io.xseed.Parser} object.
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)

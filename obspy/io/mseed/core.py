@@ -213,8 +213,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # The quality flag is no more supported. Raise a warning.
     if 'quality' in kwargs:
         msg = 'The quality flag is no longer supported in this version of ' + \
-            'obspy.mseed. obspy.mseed.util has some functions with similar' + \
-            ' behavior.'
+            'obspy.io.mseed. obspy.io.mseed.util has some functions with ' \
+            'similar behavior.'
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
@@ -709,7 +709,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 msg = """
                     Wrong dtype for Stream[%i].data for encoding %s.
                     Please change the dtype of your data or use an appropriate
-                    encoding. See the obspy.mseed documentation for more
+                    encoding. See the obspy.io.mseed documentation for more
                     information.
                     """ % (_i, ident)
                 raise Exception(msg)

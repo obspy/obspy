@@ -54,7 +54,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readSingleChannelASCFile(self):
         """
-        Read ASC file test via obspy.sh.core.readASC.
+        Read ASC file test via obspy.io.sh.core.readASC.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
         # read
@@ -116,7 +116,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readAndWriteMultiChannelASCFile(self):
         """
-        Read and write ASC file via obspy.sh.core.readASC.
+        Read and write ASC file via obspy.io.sh.core.readASC.
         """
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
         # read original
@@ -159,7 +159,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readAndWriteMultiChannelQFile(self):
         """
-        Read and write Q file via obspy.sh.core.readQ.
+        Read and write Q file via obspy.io.sh.core.readQ.
         """
         # 1 - little endian (PC)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')

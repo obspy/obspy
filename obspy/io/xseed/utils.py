@@ -77,7 +77,7 @@ def compareSEED(seed1, seed2):
     if (len(seed2) % 4096) != 0:
         msg = "Length of second SEED string should be a multiple of 4096 bytes"
         raise Exception(msg)
-    # Loop over each record and remove empty ones. obspy.xseed doesn't write
+    # Loop over each record and remove empty ones. obspy.io.xseed doesn't write
     # empty records. Redundant code to ease coding...
     recnums = len(seed1) // 4096
     new_seed1 = b''

@@ -1,5 +1,5 @@
-package obspy.seg2
-==================
+package obspy.io.seg2
+=====================
 
 Copyright
 ---------
@@ -13,8 +13,8 @@ Overview
 --------
 SEG-2 read and write support for ObsPy.
 
-The obspy.seg2 package contains methods in order to read and write seismogram
-files in the SEG-2 file format.
+The obspy.io.seg2 package contains methods in order to read and write
+seismogram files in the SEG-2 file format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and
