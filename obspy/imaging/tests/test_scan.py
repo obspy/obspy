@@ -33,9 +33,9 @@ class ScanTestCase(unittest.TestCase):
                       'loc_RJOB20050831023349_first100_dos.z',
                       'loc_RNON20040609200559.z', 'loc_STAU20031119011659.z',
                       'sta2.gse2', 'twiceCHK2.gse2', 'y2000.gse']
-        all_files = [join(self.root, 'sac', 'tests', 'data', i)
+        all_files = [join(self.root, 'io', 'sac', 'tests', 'data', i)
                      for i in sac_files]
-        all_files.extend([join(self.root, 'gse2', 'tests', 'data', i)
+        all_files.extend([join(self.root, 'io', 'gse2', 'tests', 'data', i)
                           for i in gse2_files])
         self.all_files = all_files
 
