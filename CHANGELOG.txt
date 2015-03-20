@@ -1,3 +1,8 @@
+0.10.1:
+ - minor changes for correct distribution of official release
+   tar/zipball (see #993, #994)
+ - one minor encoding-related bugfix in mopad script (see #992)
+
 0.10.0: (doi: 10.5281/zenodo.16200)
  - Highlights:
    * Python3 support
@@ -42,8 +47,8 @@
      textwrap module which provides similar functionality.
    * new plugin for CNV event format (used by VELEST) for
      Catalog/Event.write() (see obspy.cnv and #905)
-   * better customizable control during merging traces with sub-sample shift of
-     sampling points (see #980)
+   * better customizable control during merging traces with sub-sample shift
+     of sampling points (see #980)
  - obspy.cnv:
    * new plugin to write CNV event files (used by VELEST) from
      Catalog/Event objects. (see #905)
