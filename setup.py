@@ -116,54 +116,55 @@ if sys.version_info[:2] == (2, 6):
 
 ENTRY_POINTS = {
     'console_scripts': [
-        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
-        'obspy-runtests = obspy.core.scripts.runtests:main',
-        'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
-        'obspy-print = obspy.core.scripts.print:main',
+        'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
+        'obspy-runtests = obspy.scripts.runtests:main',
+        'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
+        'obspy-print = obspy.scripts.print:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
         'obspy-mopad = obspy.imaging.scripts.mopad:main',
-        'obspy-mseed-recordanalyzer = obspy.mseed.scripts.recordanalyzer:main',
-        'obspy-dataless2xseed = obspy.xseed.scripts.dataless2xseed:main',
-        'obspy-xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
-        'obspy-dataless2resp = obspy.xseed.scripts.dataless2resp:main',
+        'obspy-mseed-recordanalyzer = '
+        'obspy.io.mseed.scripts.recordanalyzer:main',
+        'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
+        'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
+        'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
     ],
     'distutils.commands': [
         'build_man = Help2Man'
     ],
     'obspy.plugin.waveform': [
-        'TSPAIR = obspy.core.ascii',
-        'SLIST = obspy.core.ascii',
+        'TSPAIR = obspy.io.ascii.ascii',
+        'SLIST = obspy.io.ascii.ascii',
         'PICKLE = obspy.core.stream',
-        'CSS = obspy.css.core',
-        'DATAMARK = obspy.datamark.core',
-        'KINEMETRICS_EVT = obspy.kinemetrics.core',
-        'GSE1 = obspy.gse2.core',
-        'GSE2 = obspy.gse2.core',
-        'MSEED = obspy.mseed.core',
-        'PDAS = obspy.pdas.core',
-        'SAC = obspy.sac.core',
-        'SACXY = obspy.sac.core',
-        'Y = obspy.y.core',
-        'SEG2 = obspy.seg2.seg2',
-        'SEGY = obspy.segy.core',
-        'SU = obspy.segy.core',
-        'SEISAN = obspy.seisan.core',
-        'Q = obspy.sh.core',
-        'SH_ASC = obspy.sh.core',
-        'WAV = obspy.wav.core',
-        'AH = obspy.ah.core',
+        'CSS = obspy.io.css.core',
+        'DATAMARK = obspy.io.datamark.core',
+        'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
+        'GSE1 = obspy.io.gse2.core',
+        'GSE2 = obspy.io.gse2.core',
+        'MSEED = obspy.io.mseed.core',
+        'PDAS = obspy.io.pdas.core',
+        'SAC = obspy.io.sac.core',
+        'SACXY = obspy.io.sac.core',
+        'Y = obspy.io.y.core',
+        'SEG2 = obspy.io.seg2.seg2',
+        'SEGY = obspy.io.segy.core',
+        'SU = obspy.io.segy.core',
+        'SEISAN = obspy.io.seisan.core',
+        'Q = obspy.io.sh.core',
+        'SH_ASC = obspy.io.sh.core',
+        'WAV = obspy.io.wav.core',
+        'AH = obspy.io.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
-        'isFormat = obspy.core.ascii:isTSPAIR',
-        'readFormat = obspy.core.ascii:readTSPAIR',
-        'writeFormat = obspy.core.ascii:writeTSPAIR',
+        'isFormat = obspy.io.ascii.ascii:isTSPAIR',
+        'readFormat = obspy.io.ascii.ascii:readTSPAIR',
+        'writeFormat = obspy.io.ascii.ascii:writeTSPAIR',
     ],
     'obspy.plugin.waveform.SLIST': [
-        'isFormat = obspy.core.ascii:isSLIST',
-        'readFormat = obspy.core.ascii:readSLIST',
-        'writeFormat = obspy.core.ascii:writeSLIST',
+        'isFormat = obspy.io.ascii.ascii:isSLIST',
+        'readFormat = obspy.io.ascii.ascii:readSLIST',
+        'writeFormat = obspy.io.ascii.ascii:writeSLIST',
     ],
     'obspy.plugin.waveform.PICKLE': [
         'isFormat = obspy.core.stream:isPickle',
@@ -171,142 +172,142 @@ ENTRY_POINTS = {
         'writeFormat = obspy.core.stream:writePickle',
     ],
     'obspy.plugin.waveform.CSS': [
-        'isFormat = obspy.css.core:isCSS',
-        'readFormat = obspy.css.core:readCSS',
+        'isFormat = obspy.io.css.core:isCSS',
+        'readFormat = obspy.io.css.core:readCSS',
     ],
     'obspy.plugin.waveform.DATAMARK': [
-        'isFormat = obspy.datamark.core:isDATAMARK',
-        'readFormat = obspy.datamark.core:readDATAMARK',
+        'isFormat = obspy.io.datamark.core:isDATAMARK',
+        'readFormat = obspy.io.datamark.core:readDATAMARK',
     ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
-        'isFormat = obspy.kinemetrics.core:is_evt',
-        'readFormat = obspy.kinemetrics.core:read_evt',
+        'isFormat = obspy.io.kinemetrics.core:is_evt',
+        'readFormat = obspy.io.kinemetrics.core:read_evt',
     ],
     'obspy.plugin.waveform.GSE1': [
-        'isFormat = obspy.gse2.core:isGSE1',
-        'readFormat = obspy.gse2.core:readGSE1',
+        'isFormat = obspy.io.gse2.core:isGSE1',
+        'readFormat = obspy.io.gse2.core:readGSE1',
     ],
     'obspy.plugin.waveform.GSE2': [
-        'isFormat = obspy.gse2.core:isGSE2',
-        'readFormat = obspy.gse2.core:readGSE2',
-        'writeFormat = obspy.gse2.core:writeGSE2',
+        'isFormat = obspy.io.gse2.core:isGSE2',
+        'readFormat = obspy.io.gse2.core:readGSE2',
+        'writeFormat = obspy.io.gse2.core:writeGSE2',
     ],
     'obspy.plugin.waveform.MSEED': [
-        'isFormat = obspy.mseed.core:isMSEED',
-        'readFormat = obspy.mseed.core:readMSEED',
-        'writeFormat = obspy.mseed.core:writeMSEED',
+        'isFormat = obspy.io.mseed.core:isMSEED',
+        'readFormat = obspy.io.mseed.core:readMSEED',
+        'writeFormat = obspy.io.mseed.core:writeMSEED',
     ],
     'obspy.plugin.waveform.PDAS': [
-        'isFormat = obspy.pdas.core:isPDAS',
-        'readFormat = obspy.pdas.core:readPDAS',
+        'isFormat = obspy.io.pdas.core:isPDAS',
+        'readFormat = obspy.io.pdas.core:readPDAS',
     ],
     'obspy.plugin.waveform.SAC': [
-        'isFormat = obspy.sac.core:isSAC',
-        'readFormat = obspy.sac.core:readSAC',
-        'writeFormat = obspy.sac.core:writeSAC',
+        'isFormat = obspy.io.sac.core:isSAC',
+        'readFormat = obspy.io.sac.core:readSAC',
+        'writeFormat = obspy.io.sac.core:writeSAC',
     ],
     'obspy.plugin.waveform.SACXY': [
-        'isFormat = obspy.sac.core:isSACXY',
-        'readFormat = obspy.sac.core:readSACXY',
-        'writeFormat = obspy.sac.core:writeSACXY',
+        'isFormat = obspy.io.sac.core:isSACXY',
+        'readFormat = obspy.io.sac.core:readSACXY',
+        'writeFormat = obspy.io.sac.core:writeSACXY',
     ],
     'obspy.plugin.waveform.SEG2': [
-        'isFormat = obspy.seg2.seg2:isSEG2',
-        'readFormat = obspy.seg2.seg2:readSEG2',
+        'isFormat = obspy.io.seg2.seg2:isSEG2',
+        'readFormat = obspy.io.seg2.seg2:readSEG2',
     ],
     'obspy.plugin.waveform.SEGY': [
-        'isFormat = obspy.segy.core:isSEGY',
-        'readFormat = obspy.segy.core:readSEGY',
-        'writeFormat = obspy.segy.core:writeSEGY',
+        'isFormat = obspy.io.segy.core:isSEGY',
+        'readFormat = obspy.io.segy.core:readSEGY',
+        'writeFormat = obspy.io.segy.core:writeSEGY',
     ],
     'obspy.plugin.waveform.SU': [
-        'isFormat = obspy.segy.core:isSU',
-        'readFormat = obspy.segy.core:readSU',
-        'writeFormat = obspy.segy.core:writeSU',
+        'isFormat = obspy.io.segy.core:isSU',
+        'readFormat = obspy.io.segy.core:readSU',
+        'writeFormat = obspy.io.segy.core:writeSU',
     ],
     'obspy.plugin.waveform.SEISAN': [
-        'isFormat = obspy.seisan.core:isSEISAN',
-        'readFormat = obspy.seisan.core:readSEISAN',
+        'isFormat = obspy.io.seisan.core:isSEISAN',
+        'readFormat = obspy.io.seisan.core:readSEISAN',
     ],
     'obspy.plugin.waveform.Q': [
-        'isFormat = obspy.sh.core:isQ',
-        'readFormat = obspy.sh.core:readQ',
-        'writeFormat = obspy.sh.core:writeQ',
+        'isFormat = obspy.io.sh.core:isQ',
+        'readFormat = obspy.io.sh.core:readQ',
+        'writeFormat = obspy.io.sh.core:writeQ',
     ],
     'obspy.plugin.waveform.SH_ASC': [
-        'isFormat = obspy.sh.core:isASC',
-        'readFormat = obspy.sh.core:readASC',
-        'writeFormat = obspy.sh.core:writeASC',
+        'isFormat = obspy.io.sh.core:isASC',
+        'readFormat = obspy.io.sh.core:readASC',
+        'writeFormat = obspy.io.sh.core:writeASC',
     ],
     'obspy.plugin.waveform.WAV': [
-        'isFormat = obspy.wav.core:isWAV',
-        'readFormat = obspy.wav.core:readWAV',
-        'writeFormat = obspy.wav.core:writeWAV',
+        'isFormat = obspy.io.wav.core:isWAV',
+        'readFormat = obspy.io.wav.core:readWAV',
+        'writeFormat = obspy.io.wav.core:writeWAV',
     ],
     'obspy.plugin.waveform.Y': [
-        'isFormat = obspy.y.core:isY',
-        'readFormat = obspy.y.core:readY',
+        'isFormat = obspy.io.y.core:isY',
+        'readFormat = obspy.io.y.core:readY',
     ],
     'obspy.plugin.waveform.AH': [
-        'isFormat = obspy.ah.core:is_AH',
-        'readFormat = obspy.ah.core:read_AH',
+        'isFormat = obspy.io.ah.core:is_AH',
+        'readFormat = obspy.io.ah.core:read_AH',
     ],
     'obspy.plugin.event': [
-        'QUAKEML = obspy.core.quakeml',
-        'ZMAP = obspy.zmap.core',
-        'MCHEDR = obspy.pde.mchedr',
-        'JSON = obspy.core.json.core',
-        'NDK = obspy.ndk.core',
-        'NLLOC_HYP = obspy.nlloc.core',
-        'NLLOC_OBS = obspy.nlloc.core',
-        'CNV = obspy.cnv.core',
+        'QUAKEML = obspy.io.quakeml.quakeml',
+        'ZMAP = obspy.io.zmap.core',
+        'MCHEDR = obspy.io.pde.mchedr',
+        'JSON = obspy.io.json.core',
+        'NDK = obspy.io.ndk.core',
+        'NLLOC_HYP = obspy.io.nlloc.core',
+        'NLLOC_OBS = obspy.io.nlloc.core',
+        'CNV = obspy.io.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
-        'isFormat = obspy.core.quakeml:isQuakeML',
-        'readFormat = obspy.core.quakeml:readQuakeML',
-        'writeFormat = obspy.core.quakeml:writeQuakeML',
+        'isFormat = obspy.io.quakeml.quakeml:isQuakeML',
+        'readFormat = obspy.io.quakeml.quakeml:readQuakeML',
+        'writeFormat = obspy.io.quakeml.quakeml:writeQuakeML',
     ],
     'obspy.plugin.event.MCHEDR': [
-        'isFormat = obspy.pde.mchedr:isMchedr',
-        'readFormat = obspy.pde.mchedr:readMchedr',
+        'isFormat = obspy.io.pde.mchedr:isMchedr',
+        'readFormat = obspy.io.pde.mchedr:readMchedr',
     ],
     'obspy.plugin.event.JSON': [
-        'writeFormat = obspy.core.json.core:writeJSON',
+        'writeFormat = obspy.io.json.core:writeJSON',
     ],
     'obspy.plugin.event.ZMAP': [
-        'isFormat = obspy.zmap.core:isZmap',
-        'readFormat = obspy.zmap.core:readZmap',
-        'writeFormat = obspy.zmap.core:writeZmap',
+        'isFormat = obspy.io.zmap.core:isZmap',
+        'readFormat = obspy.io.zmap.core:readZmap',
+        'writeFormat = obspy.io.zmap.core:writeZmap',
     ],
     'obspy.plugin.event.CNV': [
-        'writeFormat = obspy.cnv.core:write_CNV',
+        'writeFormat = obspy.io.cnv.core:write_CNV',
     ],
     'obspy.plugin.event.NDK': [
-        'isFormat = obspy.ndk.core:is_ndk',
-        'readFormat = obspy.ndk.core:read_ndk',
+        'isFormat = obspy.io.ndk.core:is_ndk',
+        'readFormat = obspy.io.ndk.core:read_ndk',
         ],
     'obspy.plugin.event.NLLOC_HYP': [
-        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
-        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        'isFormat = obspy.io.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.io.nlloc.core:read_nlloc_hyp',
         ],
     'obspy.plugin.event.NLLOC_OBS': [
-        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
+        'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
         ],
     'obspy.plugin.inventory': [
-        'STATIONXML = obspy.station.stationxml',
-        'SACPZ = obspy.sac.sacpz',
-        'CSS = obspy.css.station',
+        'STATIONXML = obspy.io.stationxml.stationxml',
+        'SACPZ = obspy.io.sac.sacpz',
+        'CSS = obspy.io.css.station',
     ],
     'obspy.plugin.inventory.STATIONXML': [
-        'isFormat = obspy.station.stationxml:is_StationXML',
-        'readFormat = obspy.station.stationxml:read_StationXML',
-        'writeFormat = obspy.station.stationxml:write_StationXML',
+        'isFormat = obspy.io.stationxml.stationxml:is_StationXML',
+        'readFormat = obspy.io.stationxml.stationxml:read_StationXML',
+        'writeFormat = obspy.io.stationxml.stationxml:write_StationXML',
     ],
     'obspy.plugin.inventory.SACPZ': [
-        'writeFormat = obspy.sac.sacpz:write_SACPZ',
+        'writeFormat = obspy.io.sac.sacpz:write_SACPZ',
     ],
     'obspy.plugin.inventory.CSS': [
-        'writeFormat = obspy.css.station:writeCSS',
+        'writeFormat = obspy.io.css.station:writeCSS',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
@@ -446,7 +447,7 @@ def configuration(parent_package="", top_path=None):
     config = Configuration("", parent_package, top_path)
 
     # GSE2
-    path = os.path.join("obspy", "gse2", "src", "GSE_UTI")
+    path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
     files = [os.path.join(path, "gse_functions.c")]
     # compiler specific options
     kwargs = {}
@@ -457,7 +458,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # LIBMSEED
-    path = os.path.join("obspy", "mseed", "src")
+    path = os.path.join("obspy", "io", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
     if not EXTERNAL_LIBS:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
@@ -480,7 +481,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SEGY
-    path = os.path.join("obspy", "segy", "src")
+    path = os.path.join("obspy", "io", "segy", "src")
     files = [os.path.join(path, "ibm2ieee.c")]
     # compiler specific options
     kwargs = {}
@@ -491,7 +492,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SIGNAL
-    path = os.path.join("obspy", "signal", "src")
+    path = os.path.join("obspy", "io", "signal", "src")
     files = glob.glob(os.path.join(path, "*.c"))
     # compiler specific options
     kwargs = {}
