@@ -31,12 +31,16 @@ from obspy.core.util.misc import toIntOrZero
 
 
 # defining ObsPy modules currently used by runtests and the path function
-DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
-                   'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css', 'y', 'pde', 'station',
-                   'ndk', 'ah', 'zmap', 'nlloc', 'pdas', 'cnv', 'kinemetrics']
-NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink', 'neic', 'fdsn']
+DEFAULT_MODULES = ['core', 'io.gse2', 'io.mseed', 'io.sac', 'io.wav',
+                   'signal', 'imaging', 'io.xseed', 'io.seisan', 'io.sh',
+                   'io.segy', 'taup', 'io.seg2', 'db', 'realtime',
+                   'io.datamark', 'io.css', 'io.y', 'io.pde', 'io.stationxml',
+                   'io.ndk', 'io.ah', 'io.zmap', 'io.nlloc', 'io.pdas',
+                   'io.cnv', 'io.kinemetrics', 'io.quakeml', 'io.ascii',
+                   'io.json']
+NETWORK_MODULES = ['clients.arclink', 'clients.seishub', 'clients.iris',
+                   'clients.neries', 'clients.earthworm', 'clients.seedlink',
+                   'clients.neic', 'clients.fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
