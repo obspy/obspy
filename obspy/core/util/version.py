@@ -176,6 +176,9 @@ def _normalize_version(version):
     # we have a clean release version:
     if re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?$', version):
         return version
+    # we have a release candidate version:
+    elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?rc[0-9]+?$', version):
+        return version
     # we have an old-style version (i.e. a git describe string), prepare it for
     # the rest of clean up, i.e. put the '.dev+' as separator for the local
     # version number part
