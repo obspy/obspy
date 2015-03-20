@@ -9,7 +9,10 @@
 # Include all files in top-level and obspy-top-level directories (e.g. CHANGELOG, RELEASE-VERSION, ...)
 include *  # seem to catch only files, so ./misc and ./debian are not catched.. good!
 recursive-include obspy *  # includes all files in any subdirs, so it also catches *all* subdirs
-global-exclude *.pyc *.pdf
 
+# exclude rules
+global-exclude *.pyc
+global-exclude *.pdf  # manual pdfs amount to approx. 10MB, leave them out
+exclude .* appveyor.yml
 # Exclude the misc directory (not necessary it seems, seems directories in top-level gett left out on default)
 #prune misc
