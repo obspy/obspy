@@ -14,7 +14,7 @@ from lxml import etree
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
                               Tensor, WaveformStreamID, readEvents)
-from obspy.core.quakeml import Pickler, readQuakeML, writeQuakeML
+from obspy.io.quakeml.quakeml import Pickler, readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
@@ -31,7 +31,7 @@ if version >= 2.3:
 
 class QuakeMLTestCase(unittest.TestCase):
     """
-    Test suite for obspy.core.quakeml
+    Test suite for obspy.io.quakeml
     """
     def setUp(self):
         # directory where the test files are located

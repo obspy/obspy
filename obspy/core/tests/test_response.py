@@ -27,7 +27,7 @@ from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.signal.invsim import evalresp
 from obspy.core.inventory.response import _pitick2latex
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()

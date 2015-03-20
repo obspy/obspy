@@ -1249,7 +1249,7 @@ class Pickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.io.quakeml.quakeml import Pickler
         >>> from obspy.core.event import Magnitude
         >>> from lxml.etree import tostring
         >>> magnitude = Magnitude()
@@ -1288,7 +1288,7 @@ class Pickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.io.quakeml.quakeml import Pickler
         >>> from obspy.core.event import StationMagnitude
         >>> from lxml.etree import tostring
         >>> station_mag = StationMagnitude()
@@ -1324,7 +1324,7 @@ class Pickler(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.io.quakeml.quakeml import Pickler
         >>> from obspy.core.event import Origin
         >>> from lxml.etree import tostring
         >>> origin = Origin()
