@@ -178,7 +178,7 @@ class PolesZerosResponseStage(ResponseStage):
     the description of infinite impulse response (IIR) digital filters.
 
     Has all the arguments of the parent class
-    :class:`~obspy.station.response.ResponseStage` and the following:
+    :class:`~obspy.core.inventory.response.ResponseStage` and the following:
 
     :type pz_transfer_function_type: str
     :param pz_transfer_function_type: A string describing the type of transfer
@@ -314,7 +314,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
     corresponds to SEED blockette 54.
 
     Has all the arguments of the parent class
-    :class:`~obspy.station.response.ResponseStage` and the following:
+    :class:`~obspy.core.inventory.response.ResponseStage` and the following:
 
     :type cf_transfer_function_type: str
     :param cf_transfer_function_type: A string describing the type of transfer
@@ -438,10 +438,10 @@ class ResponseListResponseStage(ResponseStage):
     pairs. Effectively corresponds to SEED blockette 55.
 
     Has all the arguments of the parent class
-    :class:`~obspy.station.response.ResponseStage` and the following:
+    :class:`~obspy.core.inventory.response.ResponseStage` and the following:
 
     :type response_list_elements: list of
-        :class:`~obspy.station.response.ResponseListElement`
+        :class:`~obspy.core.inventory.response.ResponseListElement`
     :param response_list_elements: A list of single discrete frequency,
         amplitude and phase response values.
     """
@@ -528,7 +528,7 @@ class FIRResponseStage(ResponseStage):
         also commonly documented using the CoefficientsType element.
 
     Has all the arguments of the parent class
-    :class:`~obspy.station.response.ResponseStage` and the following:
+    :class:`~obspy.core.inventory.response.ResponseStage` and the following:
 
     :type symmetry: str
     :param symmetry: A string describing the symmetry. Can be one of:
@@ -604,7 +604,7 @@ class PolynomialResponseStage(ResponseStage):
         stage of acquisition or a complete system.
 
     Has all the arguments of the parent class
-    :class:`~obspy.station.response.ResponseStage` and the following:
+    :class:`~obspy.core.inventory.response.ResponseStage` and the following:
 
     :type approximation_type: str
     :param approximation_type: Approximation type. Currently restricted to
@@ -702,17 +702,17 @@ class Response(ComparingObject):
             same ID should contains the same information/be derived from the
             same base instruments.
         :type instrument_sensitivity:
-            :class:`~obspy.station.response.InstrumentSensitivity`
+            :class:`~obspy.core.inventory.response.InstrumentSensitivity`
         :param instrument_sensitivity: The total sensitivity for the given
             channel, representing the complete acquisition system expressed as
             a scalar.
         :type instrument_polynomial:
-            :class:`~obspy.station.response.InstrumentPolynomial`
+            :class:`~obspy.core.inventory.response.InstrumentPolynomial`
         :param instrument_polynomial: The total sensitivity for the given
             channel, representing the complete acquisition system expressed as
             a polynomial.
         :type response_stages: list of
-            :class:`~obspy.station.response.ResponseStage` objects
+            :class:`~obspy.core.inventory.response.ResponseStage` objects
         :param response_stages: A list of the response stages. Covers SEED
             blockettes 53 to 56.
         """

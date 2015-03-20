@@ -27,7 +27,7 @@ from ..util.decorator import map_example_filename
 from .network import Network
 
 
-# Make sure this is consistent with obspy.station.stationxml! Importing it
+# Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
@@ -66,7 +66,8 @@ class Inventory(ComparingObject):
     def __init__(self, networks, source, sender=None, created=None,
                  module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
         """
-        :type networks: list of :class:`~obspy.station.network.Network`
+        :type networks: list of
+            :class:`~obspy.core.inventory.network.Network`
         :param networks: A list of networks part of this inventory.
         :type source: str
         :param source: Network ID of the institution sending the message.
@@ -272,7 +273,7 @@ class Inventory(ComparingObject):
         :param seed_id: SEED ID string of channel to get response for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get response for.
-        :rtype: :class:`~obspy.station.response.Response`
+        :rtype: :class:`~obspy.core.inventory.response.Response`
         :returns: Response for time series specified by input arguments.
         """
         network, _, _, _ = seed_id.split(".")
@@ -328,9 +329,9 @@ class Inventory(ComparingObject):
                keep_empty=False):
         """
         Returns the :class:`Inventory` object with only the
-        :class:`~obspy.station.network.Network`\ s /
-        :class:`~obspy.station.station.Station`\ s /
-        :class:`~obspy.station.channel.Channel`\ s that match the given
+        :class:`~obspy.core.inventory.network.Network`\ s /
+        :class:`~obspy.core.inventory.station.Station`\ s /
+        :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -691,7 +692,7 @@ class Inventory(ComparingObject):
 
         # final adjustments to plot if we created the figure in here
         if not axes:
-            from obspy.station.response import _adjust_bode_plot_figure
+            from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, show=False)
 
         if outfile:

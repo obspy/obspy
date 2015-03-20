@@ -49,7 +49,7 @@ class Network(BaseNode):
             only information at the Network level.)
         :type description: str, optional
         :param description: A description of the resource
-        :type comments: list of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.core.inventory.util.Comment`
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
@@ -163,7 +163,7 @@ class Network(BaseNode):
         :param seed_id: SEED ID string of channel to get response for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time to get response for.
-        :rtype: :class:`~obspy.station.response.Response`
+        :rtype: :class:`~obspy.core.inventory.response.Response`
         :returns: Response for time series specified by input arguments.
         """
         network, station, location, channel = seed_id.split(".")
@@ -256,8 +256,8 @@ class Network(BaseNode):
                keep_empty=False):
         """
         Returns the :class:`Network` object with only the
-        :class:`~obspy.station.station.Station`\ s /
-        :class:`~obspy.station.channel.Channel`\ s that match the given
+        :class:`~obspy.core.inventory.station.Station`\ s /
+        :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -546,7 +546,7 @@ class Network(BaseNode):
 
         # final adjustments to plot if we created the figure in here
         if not axes:
-            from obspy.station.response import _adjust_bode_plot_figure
+            from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, show=False)
 
         if outfile:

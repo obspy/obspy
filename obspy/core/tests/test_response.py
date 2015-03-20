@@ -22,11 +22,10 @@ from math import pi
 import numpy as np
 from matplotlib import rcParams
 
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
 from obspy.signal.invsim import evalresp
-from obspy.station import read_inventory
 from obspy.station.response import _pitick2latex
 from obspy.xseed import Parser
 

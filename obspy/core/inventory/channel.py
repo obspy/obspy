@@ -41,9 +41,9 @@ class Channel(BaseNode):
         :param code: The SEED channel code for this channel
         :type location_code: str
         :param location_code: The SEED location code for this channel
-        :type latitude: :class:`~obspy.station.util.Latitude`
+        :type latitude: :class:`~obspy.core.inventory.util.Latitude`
         :param latitude: Latitude coordinate of this channel's sensor.
-        :type longitude: :class:`~obspy.station.util.Longitude`
+        :type longitude: :class:`~obspy.core.inventory.util.Longitude`
         :param longitude: Longitude coordinate of this channel's sensor.
         :type elevation: float
         :param elevation: Elevation of the sensor.
@@ -52,39 +52,39 @@ class Channel(BaseNode):
             location. For downhole instruments, the depth of the instrument
             under the surface ground level. For underground vaults, the
             distance from the instrument to the local ground level above.
-        :type azimuth: float, optional
+        :type azimuth: float
         :param azimuth: Azimuth of the sensor in degrees from North, clockwise.
-        :type dip: float, optional
+        :type dip: float
         :param dip: Dip of the instrument in degrees, down from horizontal.
-        :type types: list of str, optional
+        :type types: list of str
         :param types: The type of data this channel collects. Corresponds to
             channel flags in SEED blockette 52. The SEED volume producer could
             use the first letter of an Output value as the SEED channel flag.
             Possible values: TRIGGERED, CONTINUOUS, HEALTH, GEOPHYSICAL,
             WEATHER, FLAG, SYNTHESIZED, INPUT, EXPERIMENTAL, MAINTENANCE, BEAM
         :type external_references: list of
-            :class:`~obspy.station.util.ExternalReference`, optional
+            :class:`~obspy.core.inventory.util.ExternalReference`
         :param external_references: URI of any type of external report, such as
             data quality reports.
-        :type sample_rate: float, optional
+        :type sample_rate: float
         :param sample_rate: This is a group of elements that represent sample
             rate. If this group is included, then SampleRate, which is the
             sample rate in samples per second, is required. SampleRateRatio,
             which is expressed as a ratio of number of samples in a number of
             seconds, is optional. If both are included, SampleRate should be
             considered more definitive.
-        :type sample_rate_ratio_number_samples: int, optional
+        :type sample_rate_ratio_number_samples: int
         :param sample_rate_ratio_number_samples: The sample rate expressed as
             number of samples in a number of seconds. This is the number of
             samples.
-        :type sample_rate_ratio_number_seconds: int, optional
+        :type sample_rate_ratio_number_seconds: int
         :param sample_rate_ratio_number_seconds: The sample rate expressed as
             number of samples in a number of seconds. This is the number of
             seconds.
-        :type storage_format: str, optional
+        :type storage_format: str
         :param storage_format: The storage format of the recorded data (e.g.
             SEED)
-        :type clock_drift_in_seconds_per_sample: float, optional
+        :type clock_drift_in_seconds_per_sample: float
         :param clock_drift_in_seconds_per_sample: A tolerance value, measured
             in seconds per sample, used as a threshold for time error detection
             in data from the channel.
@@ -93,35 +93,34 @@ class Channel(BaseNode):
         :type calibration_units_description: str
         :param calibration_units_description: Description of units, e.g.
             "Velocity in meters per second", ...
-        :type sensor: :class:`~obspy.station.util.Equipment`
+        :type sensor: :class:`~obspy.core.inventory.util.Equipment`
         :param sensor: The sensor
-        :type pre_amplifier: :class:`~obspy.station.util.Equipment`
+        :type pre_amplifier: :class:`~obspy.core.inventory.util.Equipment`
         :param pre_amplifier: The pre-amplifier
-        :type data_logger: :class:`~obspy.station.util.Equipment`
+        :type data_logger: :class:`~obspy.core.inventory.util.Equipment`
         :param data_logger: The data-logger
-        :type equipment: :class:`~obspy.station.util.Equipment`
+        :type equipment: :class:`~obspy.core.inventory.util.Equipment`
         :param equipment: Other station equipment
-        :type response: :class:`~obspy.station.response.Response`, optional
+        :type response: :class:`~obspy.core.inventory.response.Response`
         :param response: The response of the channel
-        :type description: str, optional
+        :type description: str
         :param description: A description of the resource
-        :type comments: list of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.core.inventory.util.Comment`
         :param comments: An arbitrary number of comments to the resource
-        :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
+        :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param start_date: The start date of the resource
-        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param end_date: The end date of the resource
-        :type restricted_status: str, optional
+        :type restricted_status: str
         :param restricted_status: The restriction status
-        :type alternate_code: str, optional
+        :type alternate_code: str
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: str, optional
+        :type historical_code: str
         :param historical_code: A previously used code if different from the
             current code.
-        :type data_availability: :class:`~obspy.station.util.DataAvailability`,
-            optional
+        :type data_availability:
+            :class:`~obspy.core.inventor.util.DataAvailability`
         :param data_availability: Information about time series availability
             for the channel.
         """
@@ -318,10 +317,10 @@ class Channel(BaseNode):
             ``"ACC"``
                 acceleration, output unit is meters/second**2
 
-        :type start_stage: int, optional
+        :type start_stage: int
         :param start_stage: Sequence number of first stage that will be used
             (disregarding all earlier stages).
-        :type end_stage: int, optional
+        :type end_stage: int
         :param end_stage: Sequence number of last stage that will be used
             (disregarding all later stages).
         :type label: str

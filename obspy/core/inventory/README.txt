@@ -1,5 +1,5 @@
-package obspy.station
-=====================
+package obspy.core.inventory
+============================
 
 Copyright
 ---------
@@ -16,8 +16,8 @@ Overview
 --------
 StationXML read and write support for ObsPy.
 
-The obspy.station package contains methods in order to read and write inventory
-data in the StationXML format.
+The obspy.core.inventory package contains methods in order to read and write
+inventory data in the StationXML format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

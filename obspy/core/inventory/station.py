@@ -38,11 +38,11 @@ class Station(BaseNode):
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
-        :type channels: list of :class:`~obspy.station.channel.Channel`
+        :type channels: list of :class:`~obspy.core.inventory.channel.Channel`
         :param channels: All channels belonging to this station.
-        :type latitude: :class:`~obspy.station.util.Latitude`
+        :type latitude: :class:`~obspy.core.inventory.util.Latitude`
         :param latitude: The latitude of the station
-        :type longitude: :class:`~obspy.station.util.Longitude`
+        :type longitude: :class:`~obspy.core.inventory.util.Longitude`
         :param longitude: The longitude of the station
         :param elevation: The elevation of the station in meter.
         :param site: These fields describe the location of the station using
@@ -51,7 +51,7 @@ class Station(BaseNode):
             etc
         :param geology: Type of rock and/or geologic formation.
         :param equipments: Equipment used by all channels at a station.
-        :type operators: list of :class:`~obspy.station.util.Operator`
+        :type operators: list of :class:`~obspy.core.inventory.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
             Operator tag. Since the Contact element is a generic type that
@@ -65,31 +65,31 @@ class Station(BaseNode):
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
             to mean that the station is still active.
-        :type total_number_of_channels: int, optional
+        :type total_number_of_channels: int
         :param total_number_of_channels: Total number of channels recorded at
             this station.
-        :type selected_number_of_channels: int, optional
+        :type selected_number_of_channels: int
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
         :type external_references: list of
-            :class:`~obspy.station.util.ExternalReference`, optional
+            :class:`~obspy.core.inventory.util.ExternalReference`
         :param external_references: URI of any type of external report, such as
             IRIS data reports or dataless SEED volumes.
-        :type description: str, optional
+        :type description: str
         :param description: A description of the resource
-        :type comments: list of :class:`~obspy.station.util.Comment`, optional
+        :type comments: list of :class:`~obspy.core.inventory.util.Comment`
         :param comments: An arbitrary number of comments to the resource
         :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
             optional
         :param start_date: The start date of the resource
-        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param end_date: The end date of the resource
-        :type restricted_status: str, optional
+        :type restricted_status: str
         :param restricted_status: The restriction status
-        :type alternate_code: str, optional
+        :type alternate_code: str
         :param alternate_code: A code used for display or association,
             alternate to the SEED-compliant code.
-        :type historical_code: str, optional
+        :type historical_code: str
         :param historical_code: A previously used code if different from the
             current code.
         """
@@ -207,7 +207,8 @@ class Station(BaseNode):
         # elif isinstance(value, dict):
         #    self._equipment = Equipment(**value)
         # else:
-        #    msg = ("equipment needs to be be of type obspy.station.Equipment "
+        #    msg = ("equipment needs to be be of type
+        # obspy.core.inventory.Equipment "
         #        "or contain a dictionary with values suitable for "
         #        "initialization.")
         #    raise ValueError(msg)
@@ -283,7 +284,7 @@ class Station(BaseNode):
                endtime=None, sampling_rate=None):
         """
         Returns the :class:`Station` object with only the
-        :class:`~obspy.station.channel.Channel`\ s that match the given
+        :class:`~obspy.core.inventory.channel.Channel`\ s that match the given
         criteria (e.g. all channels with ``channel="EHZ"``).
 
         .. warning::
@@ -439,7 +440,7 @@ class Station(BaseNode):
 
         # final adjustments to plot if we created the figure in here
         if not axes:
-            from obspy.station.response import _adjust_bode_plot_figure
+            from obspy.core.inventory.response import _adjust_bode_plot_figure
             _adjust_bode_plot_figure(fig, show=False)
 
         if outfile:

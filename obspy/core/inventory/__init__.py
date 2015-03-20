@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.station - Classes for handling station metadata
-=====================================================
+obspy.core.inventory - Classes for handling station metadata
+============================================================
 This module provides a class hierarchy to consistently handle station metadata.
 This class hierarchy is closely modelled after the upcoming de-facto standard
 format `FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was
@@ -20,13 +20,13 @@ developed as a human readable XML replacement for Dataless SEED.
 Reading
 -------
 StationXML files can be read using the
-:func:`~obspy.station.inventory.read_inventory()` function that returns an
-:class:`~obspy.station.inventory.Inventory` object.
+:func:`~obspy.core.inventory.inventory.read_inventory()` function that
+returns an :class:`~obspy.core.inventory.inventory.Inventory` object.
 
 >>> from obspy import read_inventory
 >>> inv = read_inventory("/path/to/BW_RJOB.xml")
 >>> inv  # doctest: +ELLIPSIS
-<obspy.station.inventory.Inventory object at 0x...>
+<obspy.core.inventory.inventory.Inventory object at 0x...>
 >>> print(inv)  # doctest: +NORMALIZE_WHITESPACE
 Inventory created at 2013-12-07T18:00:42.878000Z
     Created by: fdsn-stationxml-converter/1.0.0
@@ -49,19 +49,19 @@ the autodetection to fail. Thus, manually specifying the format is a good idea:
 
 Class hierarchy
 ---------------
-The :class:`~obspy.station.inventory.Inventory` class has a hierarchical
+The :class:`~obspy.core.inventory.inventory.Inventory` class has a hierarchical
 structure, starting with a list of :class:`Networks
-<obspy.station.network.Network>`, each containing a list of :class:`Stations
-<obspy.station.station.Station>` which again each contain a list of
-:class:`Channels <obspy.station.channel.Channel>`. The :class:`Responses
-<obspy.station.response.Response>` are attached to the channels as an
-attribute.
+<obspy.core.inventory.network.Network>`, each containing a list of
+:class:`Stations <obspy.core.inventory.station.Station>` which again each
+contain a list of :class:`Channels <obspy.core.inventory.channel.Channel>`.
+The  :class:`Responses <obspy.core.inventory.response.Response>` are
+attached to the channels as an attribute.
 
 .. figure:: /_images/Inventory.png
 
 >>> net = inv[0]
 >>> net  # doctest: +ELLIPSIS
-<obspy.station.network.Network object at 0x...>
+<obspy.core.inventory.network.Network object at 0x...>
 >>> print(net)  # doctest: +NORMALIZE_WHITESPACE
 Network BW (BayernNetz)
     Station Count: None/None (Selected/Total)
@@ -113,8 +113,8 @@ For station metadata, preview plot routines for geographic location of stations
 as well as bode plots for channel instrument response information are
 available. The routines for station map plots are:
 
- * :meth:`Inventory.plot() <obspy.station.inventory.Inventory.plot>`
- * :meth:`Network.plot() <obspy.station.network.Network.plot>`
+ * :meth:`Inventory.plot() <obspy.core.inventory.inventory.Inventory.plot>`
+ * :meth:`Network.plot() <obspy.core.inventory.network.Network.plot>`
 
 For example:
 
@@ -133,12 +133,12 @@ For example:
 The routines for bode plots of channel instrument response are:
 
  * :meth:`Inventory.plot_response()
-   <obspy.station.inventory.Inventory.plot_response>`
+   <obspy.core.inventory.inventory.Inventory.plot_response>`
  * :meth:`Network.plot_response()
-   <obspy.station.network.Network.plot_response>`
- * :meth:`Station.plot() <obspy.station.station.Station.plot>`
- * :meth:`Channel.plot() <obspy.station.channel.Channel.plot>`
- * :meth:`Response.plot() <obspy.station.response.Response.plot>`
+   <obspy.core.inventory.network.Network.plot_response>`
+ * :meth:`Station.plot() <obspy.core.inventory.station.Station.plot>`
+ * :meth:`Channel.plot() <obspy.core.inventory.channel.Channel.plot>`
+ * :meth:`Response.plot() <obspy.core.inventory.response.Response.plot>`
 
 For example:
 
@@ -160,8 +160,8 @@ For more examples see the :ref:`Obspy Gallery <gallery>`.
 
 Dealing with the Response information
 -------------------------------------
-The :meth:`~obspy.station.response.Response.get_evalresp_response` method will
-call some functions within evalresp to generate the response.
+The :meth:`~obspy.core.inventory.response.Response.get_evalresp_response`
+method will call some functions within evalresp to generate the response.
 
 >>> response = cha.response
 >>> response, freqs = response.get_evalresp_response(0.1, 16384, output="VEL")
@@ -190,7 +190,7 @@ full list of options and a more detailed explanation.
 
 Writing
 -------
-:class:`~obspy.station.inventory.Inventory` objects can be exported to
+:class:`~obspy.core.inventory.inventory.Inventory` objects can be exported to
 StationXML files, e.g. after making modifications.
 
 >>> inv.write('my_inventory.xml', format='STATIONXML')  # doctest: +SKIP

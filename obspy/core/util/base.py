@@ -182,7 +182,7 @@ def getExampleFile(filename):
     ...
     OSError: Could not find file does.not.exists ...
     """
-    for module in ALL_MODULES + ["core.inventory"]:
+    for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s.tests" % module,
                              fromlist=[native_str("obspy")])

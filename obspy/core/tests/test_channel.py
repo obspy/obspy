@@ -22,7 +22,7 @@ import numpy as np
 from matplotlib import rcParams
 
 from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
-from obspy.station import read_inventory
+from obspy import read_inventory
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
