@@ -11,7 +11,7 @@ import unittest
 import warnings
 
 from obspy.core.json import Default, get_dump_kwargs, writeJSON
-from obspy.core.quakeml import readQuakeML
+from obspy.io.quakeml.quakeml import readQuakeML
 
 
 warnings.filterwarnings("ignore")
