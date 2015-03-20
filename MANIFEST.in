@@ -12,7 +12,7 @@ recursive-include obspy *  # includes all files in any subdirs, so it also catch
 
 # exclude rules
 global-exclude *.pyc
-global-exclude *.pdf  # manual pdfs amount to approx. 10MB, leave them out
 exclude .* appveyor.yml
+prune obspy/*/docs  # manual pdfs amount to approx. 10MB, leave them out
 # Exclude the misc directory (not necessary it seems, seems directories in top-level gett left out on default)
 #prune misc
