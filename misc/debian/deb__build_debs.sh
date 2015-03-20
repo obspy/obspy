@@ -86,11 +86,7 @@ import os
 UTIL_PATH = os.path.abspath(os.path.join('$GITDIR', 'obspy', 'core', 'util'))
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version
-version = get_git_version()
-if '+' in version:
-    version, local_version = version.split('+', 1)
-    local_version = '.'.join(local_version.split('.')[:2])
-    version = '+'.join([version, local_version])
+version = get_git_version(dirty=False, append_remote_tracking_brach=False)
 print(version)"`
 # our package is not really dirty, just minor changes for packaging applied
 VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}

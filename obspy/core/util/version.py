@@ -49,7 +49,8 @@ OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
 VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
 
 
-def call_git_describe(abbrev=10):
+def call_git_describe(abbrev=10, dirty=True,
+                      append_remote_tracking_branch=True):
     try:
         p = Popen(['git', 'rev-parse', '--show-toplevel'],
                   cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
@@ -62,10 +63,11 @@ def call_git_describe(abbrev=10):
     if os.path.normpath(path) != OBSPY_ROOT:
         return None
 
+    command = ['git', 'describe', '--abbrev=%d' % abbrev, '--always', '--tags']
+    if dirty:
+        command.append("--dirty")
     try:
-        p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
-                   '--always', '--tags'],
-                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
+        p = Popen(command, cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readline().decode().strip()
         p.stdout.close()
@@ -73,39 +75,40 @@ def call_git_describe(abbrev=10):
         return None
 
     remote_tracking_branch = None
-    try:
-        # find out local alias of remote and name of remote tracking branch
-        p = Popen(['git', 'branch', '-vv'],
-                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        remote_info = [line_.decode().rstrip()
-                       for line_ in p.stdout.readlines()]
-        p.stdout.close()
-        remote_info = [line_ for line_ in remote_info
-                       if line_.startswith('*')][0]
-        remote_info = re.sub(r".*? \[([^ :]*).*?\] .*", r"\1", remote_info)
-        remote, branch = remote_info.split("/")
-        # find out real name of remote
-        p = Popen(['git', 'remote', '-v'],
-                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        stdout = [line_.decode().strip() for line_ in p.stdout.readlines()]
-        p.stdout.close()
-        remote = [line_ for line_ in stdout
-                  if line_.startswith(remote)][0].split()[1]
-        if remote.startswith("git@github.com:"):
-            remote = re.sub(r"git@github.com:(.*?)/.*", r"\1", remote)
-        elif remote.startswith("https://github.com/"):
-            remote = re.sub(r"https://github.com/(.*?)/.*", r"\1", remote)
-        elif remote.startswith("git://github.com"):
-            remote = re.sub(r"git://github.com/(.*?)/.*", r"\1", remote)
-        else:
-            remote = None
-        if remote is not None:
-            remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
-                                            '%s-%s' % (remote, branch))
-    except (IndexError, OSError, ValueError):
-        pass
+    if append_remote_tracking_branch:
+        try:
+            # find out local alias of remote and name of remote tracking branch
+            p = Popen(['git', 'branch', '-vv'],
+                      cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
+            p.stderr.close()
+            remote_info = [line_.decode().rstrip()
+                           for line_ in p.stdout.readlines()]
+            p.stdout.close()
+            remote_info = [line_ for line_ in remote_info
+                           if line_.startswith('*')][0]
+            remote_info = re.sub(r".*? \[([^ :]*).*?\] .*", r"\1", remote_info)
+            remote, branch = remote_info.split("/")
+            # find out real name of remote
+            p = Popen(['git', 'remote', '-v'],
+                      cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
+            p.stderr.close()
+            stdout = [line_.decode().strip() for line_ in p.stdout.readlines()]
+            p.stdout.close()
+            remote = [line_ for line_ in stdout
+                      if line_.startswith(remote)][0].split()[1]
+            if remote.startswith("git@github.com:"):
+                remote = re.sub(r"git@github.com:(.*?)/.*", r"\1", remote)
+            elif remote.startswith("https://github.com/"):
+                remote = re.sub(r"https://github.com/(.*?)/.*", r"\1", remote)
+            elif remote.startswith("git://github.com"):
+                remote = re.sub(r"git://github.com/(.*?)/.*", r"\1", remote)
+            else:
+                remote = None
+            if remote is not None:
+                remote_tracking_branch = re.sub(r'[^A-Za-z0-9._-]', r'_',
+                                                '%s-%s' % (remote, branch))
+        except (IndexError, OSError, ValueError):
+            pass
 
     # (this line prevents official releases)
     # should work again now, see #482 and obspy/obspy@b437f31
@@ -139,12 +142,14 @@ def write_release_version(version):
         fh.write(("%s\n" % version).encode('ascii', 'strict'))
 
 
-def get_git_version(abbrev=10):
+def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
     # Read in the version that's currently in RELEASE-VERSION.
     release_version = read_release_version()
 
     # First try to get the current version using “git describe”.
-    version = call_git_describe(abbrev)
+    version = call_git_describe(
+        abbrev, dirty=dirty,
+        append_remote_tracking_branch=append_remote_tracking_branch)
 
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
