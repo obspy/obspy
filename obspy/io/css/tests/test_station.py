@@ -20,7 +20,7 @@ import shutil
 import tempfile
 import unittest
 
-import obspy.station
+import obspy
 
 
 class CSSStationTestCase(unittest.TestCase):
@@ -62,13 +62,13 @@ class CSSStationTestCase(unittest.TestCase):
 
         fname = 'default'
 
-        inv = obspy.station.read_inventory()
+        inv = obspy.core.inventory.read_inventory()
         inv[0].comments = [
-            obspy.station.Comment('Comment 1'),
-            obspy.station.Comment('Comment 2'),
+            obspy.core.inventory.Comment('Comment 1'),
+            obspy.core.inventory.Comment('Comment 2'),
         ]
         inv[1].comments = [
-            obspy.station.Comment('Comment\n3'),
+            obspy.core.inventory.Comment('Comment\n3'),
         ]
 
         self._run_test(inv, fname)

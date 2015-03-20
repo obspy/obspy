@@ -10,8 +10,8 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.gse2 import libgse1
-from obspy.gse2.libgse2 import ChksumError
+from obspy.io.gse2 import libgse1
+from obspy.io.gse2.libgse2 import ChksumError
 
 
 class LibGSE1TestCase(unittest.TestCase):

@@ -13,7 +13,7 @@ import numpy as np
 
 from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.seisan.core import _getVersion, isSEISAN, readSEISAN
+from obspy.io.seisan.core import _getVersion, isSEISAN, readSEISAN
 
 
 class CoreTestCase(unittest.TestCase):

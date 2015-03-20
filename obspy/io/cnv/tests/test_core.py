@@ -9,7 +9,7 @@ import os
 import unittest
 
 from obspy import readEvents
-from obspy.cnv.core import write_CNV
+from obspy.io.cnv.core import write_CNV
 from obspy.core.util import NamedTemporaryFile
 
 

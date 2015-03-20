@@ -15,7 +15,7 @@ import numpy as np
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.kinemetrics.core import is_evt, read_evt
+from obspy.io.kinemetrics.core import is_evt, read_evt
 
 
 class CoreTestCase(unittest.TestCase):

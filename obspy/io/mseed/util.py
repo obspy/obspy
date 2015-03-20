@@ -663,9 +663,8 @@ def set_flags_in_fixed_headers(filename, flags):
                       "DURATION" : [date1, date2, date3, date4]}}}}
 
     """
-
     # import has to be here to break import loop
-    from obspy.mseed.core import isMSEED
+    from .core import isMSEED
     # Basic check
     if not os.path.isfile(filename) or not isMSEED(filename):
         raise IOError("File %s is not a valid MiniSEED file" % filename)

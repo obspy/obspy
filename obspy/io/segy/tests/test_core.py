@@ -14,12 +14,12 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
-                             isSEGY, isSU, readSEGY, readSU, writeSEGY,
-                             writeSU)
-from obspy.segy.segy import readSEGY as readSEGYInternal
-from obspy.segy.segy import SEGYError
-from obspy.segy.tests.header import DTYPES, FILES
+from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
+                                isSEGY, isSU, readSEGY, readSU, writeSEGY,
+                                writeSU)
+from obspy.io.segy.segy import readSEGY as readSEGYInternal
+from obspy.io.segy.segy import SEGYError
+from obspy.io.segy.tests.header import DTYPES, FILES
 
 
 class SEGYCoreTestCase(unittest.TestCase):

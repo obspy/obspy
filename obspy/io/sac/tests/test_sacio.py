@@ -16,7 +16,7 @@ import numpy as np
 
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacError, SacIO, SacIOError, attach_paz, attach_resp
+from obspy.io.sac import SacError, SacIO, SacIOError, attach_paz, attach_resp
 
 
 class SacIOTestCase(unittest.TestCase):

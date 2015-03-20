@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.y.core import isY, readY
+from obspy.io.y.core import isY, readY
 
 
 class CoreTestCase(unittest.TestCase):

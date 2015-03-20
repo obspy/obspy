@@ -8,10 +8,10 @@ import unittest
 import warnings
 
 from obspy.core.event import ResourceIdentifier, readEvents
-from obspy.core.quakeml import readQuakeML, writeQuakeML
+from obspy.io.quakeml.quakeml import readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.pde.mchedr import readMchedr
+from obspy.io.pde.mchedr import readMchedr
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False

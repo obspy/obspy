@@ -10,7 +10,7 @@ from future.builtins import *  # NOQA
 import io
 import unittest
 
-from obspy.gse2 import paz
+from obspy.io.gse2 import paz
 
 
 class PAZTestCase(unittest.TestCase):

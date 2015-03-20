@@ -10,8 +10,7 @@ import ctypes as C
 import os
 
 from obspy import UTCDateTime
-from obspy.mseed.headers import (HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord,
-                                 clibmseed)
+from .headers import HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord, clibmseed
 
 
 def _getMSFileInfo(f, real_name):

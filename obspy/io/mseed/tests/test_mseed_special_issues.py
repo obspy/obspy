@@ -22,10 +22,10 @@ from obspy.core.compatibility import frombuffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
-from obspy.mseed import util
-from obspy.mseed.core import readMSEED, writeMSEED
-from obspy.mseed.headers import clibmseed
-from obspy.mseed.msstruct import _MSStruct
+from obspy.io.mseed import util
+from obspy.io.mseed.core import readMSEED, writeMSEED
+from obspy.io.mseed.headers import clibmseed
+from obspy.io.mseed.msstruct import _MSStruct
 
 
 # some Python version don't support negative timestamps

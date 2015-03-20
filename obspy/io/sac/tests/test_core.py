@@ -15,9 +15,9 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacError, SacIO, SacIOError
-from obspy.sac.core import (isSAC, isSACXY, readSAC, readSACXY, writeSAC,
-                            writeSACXY)
+from obspy.io.sac import SacError, SacIO, SacIOError
+from obspy.io.sac.core import (isSAC, isSACXY, readSAC, readSACXY, writeSAC,
+                               writeSACXY)
 
 
 class CoreTestCase(unittest.TestCase):

@@ -8,7 +8,7 @@ import os
 import unittest
 
 from obspy.core.util.misc import CatchOutput
-from obspy.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
+from obspy.io.mseed.scripts.recordanalyzer import main as obspy_recordanalyzer
 
 
 class RecordAnalyserTestCase(unittest.TestCase):

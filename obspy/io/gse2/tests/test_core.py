@@ -15,7 +15,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.gse2.libgse2 import ChksumError
+from obspy.io.gse2.libgse2 import ChksumError
 
 
 class CoreTestCase(unittest.TestCase):

@@ -7,7 +7,7 @@ import io
 import unittest
 
 from obspy import UTCDateTime
-from obspy.xseed.fields import Float, VariableString
+from obspy.io.xseed.fields import Float, VariableString
 
 
 class FieldsTestCase(unittest.TestCase):

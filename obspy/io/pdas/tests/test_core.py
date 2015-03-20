@@ -9,7 +9,7 @@ import unittest
 import numpy as np
 
 from obspy import Stream, UTCDateTime
-from obspy.pdas import isPDAS, readPDAS
+from obspy.io.pdas import isPDAS, readPDAS
 
 
 class PDASTestCase(unittest.TestCase):

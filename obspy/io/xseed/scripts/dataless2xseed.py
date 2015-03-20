@@ -14,7 +14,7 @@ from glob import glob
 
 from obspy import __version__
 from obspy.core.util.base import _DeprecatedArgumentAction
-from obspy.xseed.parser import Parser
+from obspy.io.xseed.parser import Parser
 
 
 def dataless2xseed(filename, options):

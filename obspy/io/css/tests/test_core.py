@@ -16,7 +16,7 @@ import numpy as np
 from obspy import read
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.css.core import isCSS, readCSS
+from obspy.io.css.core import isCSS, readCSS
 
 
 class CoreTestCase(unittest.TestCase):

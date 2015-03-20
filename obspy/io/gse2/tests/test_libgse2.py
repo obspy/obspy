@@ -16,9 +16,9 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.gse2 import libgse2
-from obspy.gse2.libgse2 import (ChksumError, GSEUtiError, compile_STA2,
-                                parse_STA2)
+from obspy.io.gse2 import libgse2
+from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_STA2,
+                                   parse_STA2)
 
 
 class LibGSE2TestCase(unittest.TestCase):

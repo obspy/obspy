@@ -16,7 +16,7 @@ import numpy as np
 from obspy import Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
-from obspy.wav.core import WIDTH2DTYPE
+from obspy.io.wav.core import WIDTH2DTYPE
 
 
 numpy_version = float(".".join(np.version.version.split('.')[:2]))

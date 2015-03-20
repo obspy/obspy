@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.segy import SEGYTraceReadingError, readSU
+from obspy.io.segy.segy import SEGYTraceReadingError, readSU
 
 
 class SUTestCase(unittest.TestCase):

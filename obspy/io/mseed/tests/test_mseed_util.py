@@ -19,12 +19,12 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core import Stream, Trace
 from obspy.core.util import NamedTemporaryFile
-from obspy.mseed import util
-from obspy.mseed.core import readMSEED
-from obspy.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
-                                 FIXED_HEADER_DATA_QUAL_FLAGS,
-                                 FIXED_HEADER_IO_CLOCK_FLAGS)
-from obspy.mseed.util import set_flags_in_fixed_headers
+from obspy.io.mseed import util
+from obspy.io.mseed.core import readMSEED
+from obspy.io.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
+                                    FIXED_HEADER_DATA_QUAL_FLAGS,
+                                    FIXED_HEADER_IO_CLOCK_FLAGS)
+from obspy.io.mseed.util import set_flags_in_fixed_headers
 
 
 class MSEEDUtilTestCase(unittest.TestCase):

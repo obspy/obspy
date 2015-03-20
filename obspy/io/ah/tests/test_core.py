@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 from obspy import UTCDateTime, read
-from obspy.ah.core import is_AH, read_AH
+from obspy.io.ah.core import is_AH, read_AH
 
 
 class CoreTestCase(unittest.TestCase):

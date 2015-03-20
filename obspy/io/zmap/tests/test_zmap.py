@@ -9,7 +9,7 @@ import unittest
 from obspy.core.event import readEvents
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.zmap import core as zmap
+from obspy.io.zmap import core as zmap
 
 
 _STD_ZMAP_FIELDS = ('lon', 'lat', 'year', 'month', 'day', 'mag', 'depth',

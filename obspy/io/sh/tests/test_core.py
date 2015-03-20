@@ -11,8 +11,8 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sh.core import (STANDARD_ASC_HEADERS, isASC, isQ, readASC, readQ,
-                           writeASC, writeQ)
+from obspy.io.sh.core import (STANDARD_ASC_HEADERS, isASC, isQ, readASC, readQ,
+                              writeASC, writeQ)
 
 
 class CoreTestCase(unittest.TestCase):

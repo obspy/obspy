@@ -10,11 +10,11 @@ import zipfile
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput, TemporaryWorkingDirectory
-from obspy.xseed.parser import Parser
-from obspy.xseed.scripts.dataless2resp import main as obspy_dataless2resp
-from obspy.xseed.scripts.dataless2xseed import main as obspy_dataless2xseed
-from obspy.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
-from obspy.xseed.utils import compareSEED
+from obspy.io.xseed.parser import Parser
+from obspy.io.xseed.scripts.dataless2resp import main as obspy_dataless2resp
+from obspy.io.xseed.scripts.dataless2xseed import main as obspy_dataless2xseed
+from obspy.io.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
+from obspy.io.xseed.utils import compareSEED
 
 
 class ScriptTestCase(unittest.TestCase):

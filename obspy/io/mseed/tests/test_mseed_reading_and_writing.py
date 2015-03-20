@@ -17,10 +17,10 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.mseed import util
-from obspy.mseed.core import isMSEED, readMSEED, writeMSEED
-from obspy.mseed.headers import ENCODINGS, clibmseed
-from obspy.mseed.msstruct import _MSStruct
+from obspy.io.mseed import util
+from obspy.io.mseed.core import isMSEED, readMSEED, writeMSEED
+from obspy.io.mseed.headers import ENCODINGS, clibmseed
+from obspy.io.mseed.msstruct import _MSStruct
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):

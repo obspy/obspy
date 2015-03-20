@@ -11,9 +11,9 @@ from glob import iglob
 
 from lxml import etree
 
-from obspy.xseed.blockette import Blockette050, Blockette054, Blockette060
-from obspy.xseed.blockette.blockette import BlocketteLengthException
-from obspy.xseed.fields import SEEDTypeException
+from obspy.io.xseed.blockette import Blockette050, Blockette054, Blockette060
+from obspy.io.xseed.blockette.blockette import BlocketteLengthException
+from obspy.io.xseed.fields import SEEDTypeException
 
 
 class BlocketteTestCase(unittest.TestCase):
@@ -129,7 +129,7 @@ class BlocketteTestCase(unittest.TestCase):
         for example in test_examples:
             # Create several blockette instances
             # One to read from SEED and one for each XSEED version.
-            blkt_module = 'obspy.xseed.blockette.blockette' + blkt_number
+            blkt_module = 'obspy.io.xseed.blockette.blockette' + blkt_number
             blkt_class_name = 'Blockette' + blkt_number
             blkt = sys.modules[blkt_module].__dict__[blkt_class_name]
 
@@ -179,7 +179,7 @@ class BlocketteTestCase(unittest.TestCase):
             blkt_number = blkt_file[-7:-4]
             # Check whether the blockette class can be loaded.
             try:
-                __import__('obspy.xseed.blockette.blockette' + blkt_number)
+                __import__('obspy.io.xseed.blockette.blockette' + blkt_number)
             except:
                 msg = 'Failed to import blockette', blkt_number
                 raise ImportError(msg)

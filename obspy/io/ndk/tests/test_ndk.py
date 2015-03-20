@@ -11,8 +11,8 @@ import unittest
 import warnings
 
 from obspy import UTCDateTime, readEvents
-from obspy.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
-                            read_ndk)
+from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
+                               read_ndk)
 
 
 class NDKTestCase(unittest.TestCase):

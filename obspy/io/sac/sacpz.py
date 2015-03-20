@@ -12,7 +12,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from obspy import UTCDateTime
-from obspy.station.response import paz_to_sacpz_string
+from obspy.core.inventory.response import paz_to_sacpz_string
 
 
 def write_SACPZ(inventory, file_or_file_object):

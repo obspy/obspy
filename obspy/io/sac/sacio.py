@@ -120,7 +120,7 @@ class SacIO(object):
 
     Functions are given below, attributes/header
     fields (described below) can be directly accessed (via the
-    :meth:`~obspy.sac.sacio.SacIO.__getattr__` method, see the link for
+    :meth:`~obspy.io.sac.sacio.SacIO.__getattr__` method, see the link for
     an example).
 
     .. rubric::Description of attributes/header fields (based on SacIris_).
@@ -384,7 +384,7 @@ class SacIO(object):
 
         :param item: header variable name (e.g. 'npts' or 'delta')
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.GetHvalue('npts') # doctest: +SKIP
         100
@@ -428,7 +428,7 @@ class SacIO(object):
         :param value: numeric or string value to be assigned to header
                       variable.
 
-        >>> from obspy.sac import SacIO
+        >>> from obspy.io.sac import SacIO
         >>> tr = SacIO()
         >>> print(tr.GetHvalue('kstnm').strip())
         -12345
@@ -497,7 +497,7 @@ class SacIO(object):
 
         :param fh: file or file-like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
         ...     tr.ReadSacHeader(fh) # doctest: +SKIP
@@ -554,7 +554,7 @@ class SacIO(object):
 
         :param fh: open file or file-like buffer
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
@@ -585,7 +585,7 @@ class SacIO(object):
 
         :param fh: file or file-like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> with open('test.sac') as fh:
         ...     tr.ReadSacFile(fh)  # doctest: +SKIP
@@ -655,7 +655,7 @@ class SacIO(object):
 
         :param f: File or file-like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
         >>> tr.GetHvalue('npts') # doctest: +SKIP
@@ -716,7 +716,7 @@ class SacIO(object):
 
         :param fh: open file or file like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
         >>> tr.GetHvalue('npts') # doctest: +SKIP
@@ -804,7 +804,7 @@ class SacIO(object):
 
         :param fh: open file or file-like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
@@ -843,7 +843,7 @@ class SacIO(object):
 
         :param fh: open file or file-like object.
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
@@ -891,7 +891,7 @@ class SacIO(object):
         :param: None
         :return: None
 
-        >>> from obspy.sac import SacIO  # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO  # doctest: +SKIP
         >>> t = SacIO('test.sac')  # doctest: +SKIP
         >>> t.ListStdValues()  # doctest: +SKIP +NORMALIZE_WHITESPACE
         <BLANKLINE>
@@ -970,7 +970,7 @@ class SacIO(object):
         :type hn: str
         :param hn: header variable name
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> t = SacIO() # doctest: +SKIP
         >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip() # doctest: +SKIP
         'Q'
@@ -998,7 +998,7 @@ class SacIO(object):
             assigned to hn)
         :return: None
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> t = SacIO() # doctest: +SKIP
         >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
         'STA'
@@ -1024,7 +1024,7 @@ class SacIO(object):
         :param f: filename (SAC binary)
         :rtype: boolean (True or False)
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> SacIO().IsValidSacFile('test.sac') # doctest: +SKIP
         True
         >>> SacIO().IsValidSacFile('testxy.sac') # doctest: +SKIP
@@ -1049,7 +1049,7 @@ class SacIO(object):
         :param file: file or file-like object.
         :rtype: boolean (True or False)
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> SacIO().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
         True
         >>> SacIO().IsValidXYSacFile('test.sac') # doctest: +SKIP
@@ -1166,7 +1166,7 @@ class SacIO(object):
         :param: None
         :return: None
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
+        >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> t = SacIO('test.sac') # doctest: +SKIP
         >>> t.swap_byte_order() # doctest: +SKIP
         """
@@ -1415,7 +1415,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     you have to determine yourself if the given response is for velocity
     or displacement and if the values are given in rad or Hz. This is
     still experimental code (see also documentation for
-    :func:`obspy.sac.sacio.attach_paz`).
+    :func:`obspy.io.sac.sacio.attach_paz`).
     Attaches to a trace a paz AttribDict containing poles, zeros, and gain.
 
     :param tr: An ObsPy :class:`~obspy.core.trace.Trace` object

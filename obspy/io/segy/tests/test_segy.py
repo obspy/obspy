@@ -13,11 +13,11 @@ import unittest
 import numpy as np
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
-                               DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
-from obspy.segy.segy import (SEGYBinaryFileHeader, SEGYFile, SEGYTraceHeader,
-                             readSEGY)
-from obspy.segy.tests.header import DTYPES, FILES
+from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
+                                  DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
+from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
+                                SEGYTraceHeader, readSEGY)
+from obspy.io.segy.tests.header import DTYPES, FILES
 
 
 class SEGYTestCase(unittest.TestCase):

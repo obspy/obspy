@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-obspy.xseed - Dataless SEED, RESP and XML-SEED read and write support for ObsPy
-===============================================================================
+obspy.io.xseed - Dataless SEED, RESP and XML-SEED read and write support
+========================================================================
 `XML-SEED` was introduced by Tsuboi, Tromp and Komatitsch (2004), it is a XML
 representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
-`Dataless SEED` to `RESP` files. The :mod:`~obspy.xseed` module is tested
+`Dataless SEED` to `RESP` files. The :mod:`~obspy.io.xseed` module is tested
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
 archive and against ArcLink response requests.
 
@@ -18,7 +18,7 @@ archive and against ArcLink response requests.
 Allocate a Parser object and read/write
 ---------------------------------------
 
->>> from obspy.xseed import Parser
+>>> from obspy.io.xseed import Parser
 >>> sp = Parser("/path/to/dataless.seed.BW_FURT")
 >>> sp.writeXSEED("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
 
@@ -44,8 +44,8 @@ to the `XML-SEED` representation, e.g.::
 
 
 A response file can be written in a similar manner, just replace
-:meth:`~obspy.xseed.parser.Parser.writeXSEED` by
-:meth:`~obspy.xseed.parser.Parser.writeRESP`:
+:meth:`~obspy.io.xseed.parser.Parser.writeXSEED` by
+:meth:`~obspy.io.xseed.parser.Parser.writeRESP`:
 
 >>> sp.writeRESP(folder="BW_FURT", zipped=False) #doctest: +SKIP
 
@@ -54,7 +54,7 @@ The Parser Object
 -----------------
 
 `SEED` files as well as its derived format `XML-SEED` will be
-parsed in a :class:`~obspy.xseed.parser.Parser` structure.
+parsed in a :class:`~obspy.io.xseed.parser.Parser` structure.
 
 `SEED` volumes have four different volume types:
 

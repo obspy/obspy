@@ -12,7 +12,7 @@ import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.datamark.core import readDATAMARK
+from obspy.io.datamark.core import readDATAMARK
 
 
 class CoreTestCase(unittest.TestCase):
