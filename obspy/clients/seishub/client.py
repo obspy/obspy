@@ -31,7 +31,7 @@ from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, readEvents
 from obspy.core.util import guessDelta
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]

@@ -16,7 +16,7 @@ from obspy.core.compatibility import mock
 from obspy.core.stream import isPickle, readPickle, writePickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getSciPyVersion
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 SCIPY_VERSION = getSciPyVersion()

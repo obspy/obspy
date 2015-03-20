@@ -16,7 +16,7 @@ with standard_library.hooks():
 from obspy.core import AttribDict, UTCDateTime
 from obspy.core.util.decorator import skipIf
 from obspy.seishub import Client
-from obspy.xseed.utils import SEEDParserException
+from obspy.io.xseed.utils import SEEDParserException
 
 
 TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
