@@ -8,9 +8,9 @@ import unittest
 import warnings
 
 from obspy.core.util.decorator import skipIf
-from obspy.core.util.geodetics import (calcVincentyInverse, degrees2kilometers,
-                                       gps2DistAzimuth, kilometer2degrees,
-                                       locations2degrees)
+from obspy.geodetics import (calcVincentyInverse, degrees2kilometers,
+                             gps2DistAzimuth, kilometer2degrees,
+                             locations2degrees)
 
 # checking for geographiclib
 try:

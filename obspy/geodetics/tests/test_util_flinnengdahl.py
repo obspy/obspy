@@ -7,8 +7,8 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.core.scripts.flinnengdahl import main as obspy_flinnengdahl
-from obspy.core.util import FlinnEngdahl
+from obspy.scripts.flinnengdahl import main as obspy_flinnengdahl
+from obspy.geodetics import FlinnEngdahl
 from obspy.core.util.misc import CatchOutput
 
 

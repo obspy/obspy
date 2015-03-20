@@ -247,7 +247,7 @@ def kilometer2degrees(kilometer, radius=6371):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import kilometer2degrees
+    >>> from obspy.geodetics import kilometer2degrees
     >>> kilometer2degrees(300)
     2.6979648177561915
     """
@@ -268,7 +268,7 @@ def degrees2kilometers(degrees, radius=6371):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import degrees2kilometers
+    >>> from obspy.geodetics import degrees2kilometers
     >>> degrees2kilometers(1)
     111.19492664455873
     """
@@ -297,7 +297,7 @@ def locations2degrees(lat1, long1, lat2, long2):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import locations2degrees
+    >>> from obspy.geodetics import locations2degrees
     >>> locations2degrees(5, 5, 10, 10)
     7.0397014191753815
     """
