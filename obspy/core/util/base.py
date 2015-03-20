@@ -37,7 +37,7 @@ DEFAULT_MODULES = ['core', 'io.gse2', 'io.mseed', 'io.sac', 'io.wav',
                    'io.datamark', 'io.css', 'io.y', 'io.pde', 'io.stationxml',
                    'io.ndk', 'io.ah', 'io.zmap', 'io.nlloc', 'io.pdas',
                    'io.cnv', 'io.kinemetrics', 'io.quakeml', 'io.ascii',
-                   'io.json']
+                   'io.json', 'geodetics']
 NETWORK_MODULES = ['clients.arclink', 'clients.seishub', 'clients.iris',
                    'clients.neries', 'clients.earthworm', 'clients.seedlink',
                    'clients.neic', 'clients.fdsn']
