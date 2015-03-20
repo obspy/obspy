@@ -24,7 +24,7 @@ class PlotTestCase(unittest.TestCase):
         # directory where the test files are located
         self.root = abspath(join(dirname(__file__), pardir, pardir))
         self.path = join(self.root, 'imaging', 'tests', 'images')
-        all_files = [join(self.root, 'core', 'tests', 'data', i)
+        all_files = [join(self.root, 'io', 'ascii', 'tests', 'data', i)
                      for i in ['slist.ascii', 'slist_2_traces.ascii']]
         self.all_files = all_files
 

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.11</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?network=IU&amp;level=response&amp;station=ANTO&amp;location=30&amp;starttime=2010-07-23T00%3A00%3A00.000000&amp;channel=LDO</ModuleURI>
+ <Created>2014-02-16T15:49:04</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+  <TotalNumberStations>258</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="ANTO" startDate="2010-07-23T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" alternateNetworkCodes="_GSN,.UNRESTRICTED,_FDSN-ALL,_FDSN,_GSN-BROADBAND,_CARIBE-EWS,_REALTIME">
+   <Latitude>39.868</Latitude>
+   <Longitude>32.7934</Longitude>
+   <Elevation>1090.0</Elevation>
+   <Site>
+    <Name>Ankara, Turkey</Name>
+   </Site>
+   <CreationDate>1992-09-25T00:00:00</CreationDate>
+   <TotalNumberChannels>60</TotalNumberChannels>
+   <SelectedNumberChannels>1</SelectedNumberChannels>
+   <Channel locationCode="30" startDate="2010-07-23T00:00:00" restrictedStatus="open" endDate="2012-11-14T21:27:58" code="LDO">
+    <Latitude>39.868</Latitude>
+    <Longitude>32.7934</Longitude>
+    <Elevation>1090.0</Elevation>
+    <Depth>0.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>WEATHER</Type>
+    <SampleRate>1.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>CI/PAS pressure sensor</Type>
+    </Sensor>
+    <Response>
+     <InstrumentPolynomial>
+      <ApproximationType>MACLAURIN</ApproximationType>
+      <FrequencyLowerBound>0.0</FrequencyLowerBound>
+      <FrequencyUpperBound>0.5</FrequencyUpperBound>
+      <ApproximationLowerBound>80000</ApproximationLowerBound>
+      <ApproximationUpperBound>110000</ApproximationUpperBound>
+      <MaximumError>0</MaximumError>
+      <Coefficient number="1">80000</Coefficient>
+      <Coefficient number="2">.014305</Coefficient>
+     </InstrumentPolynomial>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

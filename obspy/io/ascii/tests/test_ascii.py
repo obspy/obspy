@@ -9,8 +9,8 @@ import unittest
 import numpy as np
 
 from obspy import Trace, UTCDateTime, read
-from obspy.core.ascii import (isSLIST, isTSPAIR, readSLIST, readTSPAIR,
-                              writeSLIST, writeTSPAIR)
+from obspy.io.ascii.ascii import (isSLIST, isTSPAIR, readSLIST, readTSPAIR,
+                                  writeSLIST, writeTSPAIR)
 from obspy.core.util import NamedTemporaryFile
 
 

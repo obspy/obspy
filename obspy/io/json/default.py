@@ -12,7 +12,7 @@ Example
 -------
 >>> import json
 >>> from obspy import readEvents
->>> from obspy.core.json import Default
+>>> from obspy.io.json.default import Default
 >>> c = readEvents()
 >>> d = Default(omit_nulls=False)
 >>> s = json.dumps(c, default=d)
