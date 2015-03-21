@@ -150,7 +150,7 @@ def getSockCharLine(sock, timeout=10.):
     chunks = []
     indat = b'^'
     try:
-        while indat[-1] != b'\n':
+        while indat[-1:] != b'\n':
             # see http://obspy.org/ticket/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
