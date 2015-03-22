@@ -2537,7 +2537,11 @@ __Event = _eventTypeClassFactory(
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
-                      ("creation_info", CreationInfo)],
+                      ("creation_info", CreationInfo),
+                      ("preferred_origin_id", ResourceIdentifier),
+                      ("preferred_magnitude_id", ResourceIdentifier),
+                      ("preferred_focal_mechanism_id", ResourceIdentifier),
+                      ],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'focal_mechanisms', 'origins', 'magnitudes',
                     'station_magnitudes'])
@@ -2637,6 +2641,14 @@ class Event(__Event):
     :type station_magnitudes: list of
         :class:`~obspy.core.event.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
+    :type preferred_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param preferred_origin_id: Resource identifier of preferred Origin.
+    :type preferred_magnitude_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param preferred_magnitude_id: Resource identifier of preferred Magnitude.
+    :type preferred_focal_mechanism_id:
+        :class:`~obspy.core.event.ResourceIdentifier`
+    :param preferred_focal_mechanism_id: Resource identifier of preferred
+        Focal Mechanism.
 
     .. note::
 
@@ -2685,31 +2697,19 @@ class Event(__Event):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_origin_id).\
-                getReferredObject()
-        except AttributeError:
-            return None
+        return self.preferred_origin_id.getReferredObject()
 
     def preferred_magnitude(self):
         """
         Returns the preferred magnitude
         """
-        try:
-            return ResourceIdentifier(self.preferred_magnitude_id).\
-                getReferredObject()
-        except AttributeError:
-            return None
+        return self.preferred_magnitude_id.getReferredObject()
 
     def preferred_focal_mechanism(self):
         """
         Returns the preferred focal mechanism
         """
-        try:
-            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-                getReferredObject()
-        except AttributeError:
-            return None
+        return self.preferred_focal_mechanism_id.getReferredObject()
 
     def write(self, filename, format, **kwargs):
         """
