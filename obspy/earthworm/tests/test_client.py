@@ -116,8 +116,34 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('UW.TUCA.--.BHZ' in seeds)
 
 
+class ClientUSGSTestCase(unittest.TestCase):
+    """
+    Minimal test suite using an alternative wave server located at
+    pubavo1.wr.usgs.gov:16022
+    """
+    def setUp(self):
+        # Monkey patch: set lower default precision of all UTCDateTime objects
+        UTCDateTime.DEFAULT_PRECISION = 4
+        self.client = Client("pubavo1.wr.usgs.gov", 16022, timeout=30.0)
+
+    def tearDown(self):
+        # restore default precision of all UTCDateTime objects
+        UTCDateTime.DEFAULT_PRECISION = 6
+
+    @skip_on_network_error
+    def test_availabilityAndGetWaveform(self):
+        response = self.client.availability("AV", "ACH", channel="EHE")
+        self.assertGreaterEqual(len(response), 1)
+        t = UTCDateTime()
+        st = self.client.getWaveform('AV', 'ACH', '--', 'EHE', t - 120, t - 60)
+        self.assertGreaterEqual(len(st), 1)
+
+
 def suite():
-    return unittest.makeSuite(ClientTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(ClientUSGSTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(ClientTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':
