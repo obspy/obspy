@@ -31,16 +31,16 @@ from obspy.core.util.misc import toIntOrZero
 
 
 # defining ObsPy modules currently used by runtests and the path function
-DEFAULT_MODULES = ['core', 'io.gse2', 'io.mseed', 'io.sac', 'io.wav',
-                   'signal', 'imaging', 'io.xseed', 'io.seisan', 'io.sh',
-                   'io.segy', 'taup', 'io.seg2', 'db', 'realtime',
-                   'io.datamark', 'io.css', 'io.y', 'io.pde', 'io.stationxml',
-                   'io.ndk', 'io.ah', 'io.zmap', 'io.nlloc', 'io.pdas',
-                   'io.cnv', 'io.kinemetrics', 'io.quakeml', 'io.ascii',
-                   'io.json', 'geodetics']
-NETWORK_MODULES = ['clients.arclink', 'clients.seishub', 'clients.iris',
-                   'clients.neries', 'clients.earthworm', 'clients.seedlink',
-                   'clients.neic', 'clients.fdsn']
+DEFAULT_MODULES = ['core', 'db', 'geodetics', 'imaging',
+                   'io.ah', 'io.ascii', 'io.cnv', 'io.css', 'io.datamark',
+                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.mseed',
+                   'io.ndk', 'io.nlloc', 'io.pdas', 'io.pde', 'io.quakeml',
+                   'io.sac', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
+                   'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
+                   'realtime', 'signal', 'taup']
+NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
+                   'clients.iris', 'clients.neic', 'clients.neries',
+                   'clients.seedlink', 'clients.seishub']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
