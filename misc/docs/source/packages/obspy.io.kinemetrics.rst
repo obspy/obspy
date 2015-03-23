@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.kinemetrics
-.. automodule:: obspy.kinemetrics
+.. currentmodule:: obspy.io.kinemetrics
+.. automodule:: obspy.io.kinemetrics
 
     .. comment to end block
 

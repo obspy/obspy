@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.seisan
-.. automodule:: obspy.seisan
+.. currentmodule:: obspy.io.seisan
+.. automodule:: obspy.io.seisan
 
     .. comment to end block
 

@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.neic
-.. automodule:: obspy.neic
+.. currentmodule:: obspy.clients.neic
+.. automodule:: obspy.clients.neic
 
     .. comment to end block
 

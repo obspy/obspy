@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.station
-.. automodule:: obspy.station
+.. currentmodule:: obspy.core.inventory
+.. automodule:: obspy.core.inventory
 
     .. comment to end block
 
@@ -25,6 +25,5 @@
        channel
        response
        util
-       stationxml
 
     .. comment to end block

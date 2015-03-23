@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.wav
-.. automodule:: obspy.wav
+.. currentmodule:: obspy.io.wav
+.. automodule:: obspy.io.wav
 
     .. comment to end block
 

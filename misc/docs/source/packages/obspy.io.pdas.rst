@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.pdas
-.. automodule:: obspy.pdas
+.. currentmodule:: obspy.io.pdas
+.. automodule:: obspy.io.pdas
 
     .. comment to end block
 

@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.ndk
-.. automodule:: obspy.ndk
+.. currentmodule:: obspy.io.ndk
+.. automodule:: obspy.io.ndk
 
     .. comment to end block
 

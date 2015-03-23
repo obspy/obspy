@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.xseed
-.. automodule:: obspy.xseed
+.. currentmodule:: obspy.io.xseed
+.. automodule:: obspy.io.xseed
 
     .. comment to end block
 

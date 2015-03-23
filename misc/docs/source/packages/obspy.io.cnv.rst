@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.cnv
-.. automodule:: obspy.cnv
+.. currentmodule:: obspy.io.cnv
+.. automodule:: obspy.io.cnv
 
     .. comment to end block
 

@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.fdsn
-.. automodule:: obspy.fdsn
+.. currentmodule:: obspy.clients.fdsn
+.. automodule:: obspy.clients.fdsn
 
     .. comment to end block
 

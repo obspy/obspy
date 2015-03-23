@@ -1,8 +1,8 @@
-obspy.core.quakeml
-==================
+obspy.io.quakeml
+================
 
-.. currentmodule:: obspy.core.quakeml
-.. automodule:: obspy.core.quakeml
+.. currentmodule:: obspy.io.quakeml
+.. automodule:: obspy.io.quakeml
 
    .. comment to end block
 
@@ -12,10 +12,10 @@ obspy.core.quakeml
       :toctree: autogen
       :nosignatures:
 
-      isQuakeML
-      readQuakeML
-      readSeisHubEventXML
-      writeQuakeML
+      ~core.isQuakeML
+      ~core.readQuakeML
+      ~core.readSeisHubEventXML
+      ~core.writeQuakeML
 
    .. rubric:: Classes
 
@@ -23,5 +23,5 @@ obspy.core.quakeml
       :toctree: autogen
       :nosignatures:
 
-      Pickler
-      Unpickler
+      ~core.Pickler
+      ~core.Unpickler

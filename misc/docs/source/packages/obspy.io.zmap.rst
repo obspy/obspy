@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.zmap
-.. automodule:: obspy.zmap
+.. currentmodule:: obspy.io.zmap
+.. automodule:: obspy.io.zmap
 
     .. comment to end block
 

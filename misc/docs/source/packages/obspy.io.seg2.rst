@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.seg2
-.. automodule:: obspy.seg2
+.. currentmodule:: obspy.io.seg2
+.. automodule:: obspy.io.seg2
 
     .. comment to end block
 

@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.core.json
-.. automodule:: obspy.core.json
+.. currentmodule:: obspy.io.json
+.. automodule:: obspy.io.json
 
     .. comment to end block
 

@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.datamark
-.. automodule:: obspy.datamark
+.. currentmodule:: obspy.io.datamark
+.. automodule:: obspy.io.datamark
 
     .. comment to end block
 

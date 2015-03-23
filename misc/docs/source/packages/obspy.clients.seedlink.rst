@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.seedlink
-.. automodule:: obspy.seedlink
+.. currentmodule:: obspy.clients.seedlink
+.. automodule:: obspy.clients.seedlink
 
     .. comment to end block
 

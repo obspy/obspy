@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.core.util.geodetics
-.. automodule:: obspy.core.util.geodetics
+.. currentmodule:: obspy.geodetics
+.. automodule:: obspy.geodetics
 
     .. comment to end block
 

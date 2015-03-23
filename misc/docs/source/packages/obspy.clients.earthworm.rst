@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.earthworm
-.. automodule:: obspy.earthworm
+.. currentmodule:: obspy.clients.earthworm
+.. automodule:: obspy.clients.earthworm
 
     .. comment to end block
 

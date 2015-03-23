@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.iris
-.. automodule:: obspy.iris
+.. currentmodule:: obspy.clients.iris
+.. automodule:: obspy.clients.iris
 
     .. comment to end block
 

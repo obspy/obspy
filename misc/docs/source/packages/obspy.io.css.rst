@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.css
-.. automodule:: obspy.css
+.. currentmodule:: obspy.io.css
+.. automodule:: obspy.io.css
 
     .. comment to end block
 

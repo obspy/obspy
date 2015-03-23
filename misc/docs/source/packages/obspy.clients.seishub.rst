@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.seishub
-.. automodule:: obspy.seishub
+.. currentmodule:: obspy.clients.seishub
+.. automodule:: obspy.clients.seishub
 
     .. comment to end block
 

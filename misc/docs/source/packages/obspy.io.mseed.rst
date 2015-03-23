@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.mseed
-.. automodule:: obspy.mseed
+.. currentmodule:: obspy.io.mseed
+.. automodule:: obspy.io.mseed
 
     .. comment to end block
 

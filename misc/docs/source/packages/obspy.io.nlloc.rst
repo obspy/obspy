@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.nlloc
-.. automodule:: obspy.nlloc
+.. currentmodule:: obspy.io.nlloc
+.. automodule:: obspy.io.nlloc
 
     .. comment to end block
 

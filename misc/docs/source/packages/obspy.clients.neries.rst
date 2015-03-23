@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.neries
-.. automodule:: obspy.neries
+.. currentmodule:: obspy.clients.neries
+.. automodule:: obspy.clients.neries
 
     .. comment to end block
 

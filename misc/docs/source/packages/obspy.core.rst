@@ -28,22 +28,8 @@
        stream
        utcdatetime
        event
-       ascii
-       quakeml
+       inventory
        util
        preview
-       json
-
-    .. comment to end block
-
-    Scripts
-    -------
-    .. autosummary::
-      :template: script.rst
-      :toctree: autogen
-      :nosignatures:
-
-        scripts.runtests
-        scripts.reftekrescue
 
     .. comment to end block

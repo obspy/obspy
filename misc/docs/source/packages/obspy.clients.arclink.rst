@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.arclink
-.. automodule:: obspy.arclink
+.. currentmodule:: obspy.clients.arclink
+.. automodule:: obspy.clients.arclink
 
     .. comment to end block
 
