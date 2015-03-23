@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 obspy.io.segy - SEG Y and SU read and write support for ObsPy
-==========================================================
+=============================================================
 
 The obspy.io.segy package contains methods in order to read and write files
 in the
@@ -146,7 +146,7 @@ meaning are documented here: :func:`~obspy.io.segy.core.writeSEGY`
 
 
 Writing :class:`~obspy.io.segy.segy.SEGYFile` objects
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :class:`~obspy.io.segy.segy.SEGYFile` objects are written using its
 :func:`~obspy.io.segy.segy.SEGYFile.write` method. Optional kwargs are able to

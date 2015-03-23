@@ -35,7 +35,8 @@ DEPR_WARN = ("This service was shut down on the server side in December "
              "2013, please use %s instead. Further information: "
              "http://www.iris.edu/ds/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
-DEPR_WARNS = dict([(new, DEPR_WARN % "obspy.fdsn.client.Client.%s" % new)
+DEPR_WARNS = dict([(new,
+                    DEPR_WARN % "obspy.clients.fdsn.client.Client.%s" % new)
                    for new in ["get_waveform", "get_events", "get_stations",
                                "get_waveform_bulk"]])
 DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
@@ -182,7 +183,7 @@ class Client(object):
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -196,7 +197,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -210,7 +211,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -223,7 +224,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -407,7 +408,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         # create temporary file for writing data
         with NamedTemporaryFile() as tf:
             tf.write(data)
-            # read stream using obspy.mseed
+            # read stream using obspy.io.mseed
             tf.seek(0)
             try:
                 stream = read(tf.name, 'MSEED')
@@ -515,7 +516,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -529,7 +530,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -543,7 +544,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/
@@ -562,7 +563,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
@@ -1133,7 +1134,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side in December
-        2013, please use :mod:`obspy.fdsn` instead.
+        2013, please use :mod:`obspy.clients.fdsn` instead.
 
         Further information:
         http://www.iris.edu/ds/nodes/dmc/news/2013/03/\

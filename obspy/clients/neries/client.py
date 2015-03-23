@@ -35,7 +35,7 @@ from obspy.core.util import NamedTemporaryFile, guessDelta
 
 
 DEPR_WARN = ("This service was shut down on the server side, please use the "
-             "obspy.fdsn Client instead (with `base_url='NERIES'`).")
+             "obspy.clients.fdsn Client instead (with `base_url='NERIES'`).")
 
 SEISMOLINK_WSDL = "http://www.orfeus-eu.org/wsdl/seismolink/seismolink.wsdl"
 TAUP_WSDL = "http://www.orfeus-eu.org/wsdl/taup/taup.wsdl"
@@ -205,7 +205,7 @@ class Client(object):
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side, please use the
-        obspy.fdsn Client instead (with `base_url='NERIES'`).
+        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
         """
         raise Exception(DEPR_WARN)
 
@@ -214,7 +214,7 @@ class Client(object):
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side, please use the
-        obspy.fdsn Client instead (with `base_url='NERIES'`).
+        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
         """
         raise Exception(DEPR_WARN)
 
@@ -223,7 +223,7 @@ class Client(object):
         SHUT DOWN ON SERVER SIDE!
 
         This service was shut down on the server side, please use the
-        obspy.fdsn Client instead (with `base_url='NERIES'`).
+        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
         """
         raise Exception(DEPR_WARN)
 
@@ -460,7 +460,7 @@ class Client(object):
         with NamedTemporaryFile() as tf:
             self.saveWaveform(tf._fileobj, network, station, location, channel,
                               starttime, endtime, format=format)
-            # read stream using obspy.mseed
+            # read stream using obspy.io.mseed
             tf.seek(0)
             try:
                 stream = read(tf.name, 'MSEED')
@@ -478,7 +478,7 @@ class Client(object):
         This method ensures the storage of the unmodified waveform data
         delivered by the NERIES Web service, e.g. preserving the record based
         quality flags of MiniSEED files which would be neglected reading it
-        with :mod:`obspy.mseed`.
+        with :mod:`obspy.io.mseed`.
 
         :type filename: str
         :param filename: Name of the output file.

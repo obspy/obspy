@@ -588,7 +588,8 @@ def check_flake8():
 # be executed) or a message explaining why tests can not be executed (all
 # tests of corresponding module will be skipped).
 MODULE_TEST_SKIP_CHECKS = {
-    'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
+    'seishub':
+        'obspy.clients.seishub.tests.test_client._check_server_availability',
     }
 
 

@@ -108,13 +108,13 @@ class Client(object):
     Follow the links in "Linked Class" for more information. They register
     via the name listed in "Entry Point".
 
-    ===================  ====================================================
+    ===================  ============================================================
     Entry Point          Linked Class
-    ===================  ====================================================
+    ===================  ============================================================
     ``Client.waveform``  :class:`~obspy.clients.seishub.client._WaveformMapperClient`
     ``Client.station``   :class:`~obspy.clients.seishub.client._StationMapperClient`
     ``Client.event``     :class:`~obspy.clients.seishub.client._EventMapperClient`
-    ===================  ====================================================
+    ===================  ============================================================
 
     .. rubric:: Example
 
@@ -127,7 +127,7 @@ class Client(object):
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
-    """
+    """  # noqa
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10, debug=False,
                  retries=3):

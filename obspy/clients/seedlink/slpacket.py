@@ -112,7 +112,7 @@ class SLPacket(object):
         return seqnum
 
     def getMSRecord(self):
-        # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
+        # following from obspy.io.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(None)
         pyobj = frombuffer(self.msrecord, dtype=np.uint8)
         errcode = \
@@ -152,7 +152,7 @@ class SLPacket(object):
             self.freeMSRecord(msr, msrecord_py)
 
         # XXX Workaround: the fields in the returned struct of type
-        # obspy.mseed.header.MSRecord_s have byte values in Python 3, while
+        # obspy.io.mseed.header.MSRecord_s have byte values in Python 3, while
         # the rest of the code still expects them to be string (see #770)
         # -> convert
         convert = ('network', 'station', 'location', 'channel',

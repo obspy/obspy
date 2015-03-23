@@ -500,7 +500,7 @@ class Client(object):
         This method ensures the storage of the unmodified waveform data
         delivered by the ArcLink server, e.g. preserving the record based
         quality flags of MiniSEED files which would be neglected reading it
-        with :mod:`obspy.mseed`.
+        with :mod:`obspy.io.mseed`.
 
         :type filename: str
         :param filename: Name of the output file.

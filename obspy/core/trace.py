@@ -38,7 +38,7 @@ class Stats(AttribDict):
     accessed or modified either in the dictionary style or directly via a
     corresponding attribute. There are various default attributes which are
     required by every waveform import and export modules within ObsPy such as
-    :mod:`obspy.mseed`.
+    :mod:`obspy.io.mseed`.
 
     :type header: dict or :class:`~obspy.core.trace.Stats`, optional
     :param header: Dictionary containing meta information of a single
@@ -2289,8 +2289,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. note::
 
             Any additional kwargs will be passed on to
-            :meth:`obspy.core.inventory.response.Response.get_evalresp_response
-            `, see documentation of that method for further customization (e.g.
+            :meth:`obspy.core.inventory.response.Response.get_evalresp_response`,
+            see documentation of that method for further customization (e.g.
             start/stop stage).
 
         .. note::

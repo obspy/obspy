@@ -11,10 +11,10 @@ initiative by observatories and research institutes in and around Europe.
 .. warning::
     The `obspy.clients.neries` module is deprecated and will be removed with
     the next major release. To access EMSC event data please use the
-    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    :class:`obspy.clients.fdsn client <obspy.clients.fdsn.client.Client>`
     (use `Client(base_url='NERIES', ...)`), for access to
     ORFEUS waveform data please use the
-    :class:`obspy.fdsn client <obspy.fdsn.client.Client>`
+    :class:`obspy.clients.fdsn client <obspy.clients.fdsn.client.Client>`
     (use `Client(base_url='ORFEUS', ...)`) and for travel times please use
     :mod:`obspy.taup`.
 
@@ -28,15 +28,15 @@ Basic Usage
 -----------
 (1) :meth:`~obspy.clients.neries.client.Client.getEvents()`:
     This service was shut down on the server side, please use the
-    obspy.fdsn Client instead (with `base_url='NERIES'`).
+    obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
 
 (2) :meth:`~obspy.clients.neries.client.Client.getLatestEvents()`:
     This service was shut down on the server side, please use the
-    obspy.fdsn Client instead (with `base_url='NERIES'`).
+    obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
 
 (3) :meth:`~obspy.clients.neries.client.Client.getEventDetail()`:
     This service was shut down on the server side, please use the
-    obspy.fdsn Client instead (with `base_url='NERIES'`).
+    obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
 
 (4) :meth:`~obspy.clients.neries.client.Client.getWaveform()`: Wraps a NERIES
     Web service build on top of the ArcLink protocol. Here we give a small
@@ -84,10 +84,10 @@ from .client import Client  # NOQA
 
 msg = ("The obspy.clients.neries module is deprecated and will be removed with "
        "the next major release. To access EMSC event data please use the "
-       "obspy.fdsn client (use `Client(base_url='NERIES')`), for access to "
-       "ORFEUS waveform data please use the obspy.fdsn client "
-       "(use `Client(base_url='ORFEUS')`) and for travel times please use "
-       "obspy.taup.")
+       "obspy.clients.fdsn client (use `Client(base_url='NERIES')`), for "
+       "access to ORFEUS waveform data please use the obspy.clients.fdsn "
+       "client (use `Client(base_url='ORFEUS')`) and for travel times please "
+       "use obspy.taup.")
 warnings.warn(msg, DeprecationWarning)
 
 try:

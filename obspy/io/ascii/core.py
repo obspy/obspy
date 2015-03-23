@@ -4,7 +4,7 @@ Simple ASCII time series formats
 
 * ``SLIST``, a ASCII time series format represented with a header line
   followed by a sample lists (see also
-  :func:`SLIST format description<obspy.ascii.core.writeSLIST>`)::
+  :func:`SLIST format description<obspy.io.ascii.core.writeSLIST>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
 00, SLIST, INTEGER,
@@ -12,8 +12,8 @@ Simple ASCII time series formats
     279 250 278 278 268 258
     ...
 
-* ``TSPAIR``, a ASCII format where data is written in time-sample pairs
-  (see also :func:`TSPAIR format description<obspy.ascii.core.writeTSPAIR>`)::
+* ``TSPAIR``, a ASCII format where data is written in time-sample pairs (see
+  also :func:`TSPAIR format description<obspy.io.ascii.core.writeTSPAIR>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
 00, TSPAIR, INTEGER,

@@ -1005,8 +1005,8 @@ class Stream(object):
             case each event will be annotated with its corresponding
             Flinn-Engdahl region and the magnitude.
             Events can also be automatically downloaded with the help of
-            obspy.neries. Just pass a dictionary with a "min_magnitude" key,
-            e.g. ::
+            obspy.clients.fdsn. Just pass a dictionary with a "min_magnitude"
+            key, e.g. ::
 
                 events={"min_magnitude": 5.5}
 

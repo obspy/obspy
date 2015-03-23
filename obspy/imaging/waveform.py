@@ -472,10 +472,10 @@ class WaveformPlotting(object):
             self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
-        # Potentially download some events with the help of obspy.fdsn.
+        # Potentially download some events with the help of obspy.clients.fdsn.
         if "min_magnitude" in events:
             try:
-                from obspy.fdsn import Client
+                from obspy.clients.fdsn import Client
                 c = Client("NERIES")
                 events = c.get_events(starttime=self.starttime,
                                       endtime=self.endtime,

@@ -301,12 +301,12 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the getGaps method of the Stream objects.
 
-        It is compared directly to the obspy.mseed method getGapsList which is
-        assumed to be correct.
+        It is compared directly to the obspy.io.mseed method getGapsList which
+        is assumed to be correct.
         """
         stream = self.mseed_stream
         gap_list = stream.getGaps()
-        # Gaps list created with obspy.mseed
+        # Gaps list created with obspy.io.mseed
         mseed_gap_list = [
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),

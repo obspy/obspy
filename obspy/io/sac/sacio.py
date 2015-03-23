@@ -1247,7 +1247,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     Attach tr.stats.paz AttribDict to trace from SAC paz_file
 
     This is experimental code, taken from
-    obspy.gse2.libgse2.attach_paz and adapted to the SAC-pole-zero
+    obspy.io.gse2.libgse2.attach_paz and adapted to the SAC-pole-zero
     conventions. Especially the conversion from velocity to
     displacement and vice versa is still under construction. It works
     but I cannot guarantee that the values are correct. For more
@@ -1400,7 +1400,7 @@ seisuk_instrument_resp_removal.pdf
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
-    # taken from obspy.gse2.paz:145
+    # taken from obspy.io.gse2.paz:145
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
         tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant
@@ -1522,7 +1522,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
-    # taken from obspy.gse2.paz:145
+    # taken from obspy.io.gse2.paz:145
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
         tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant

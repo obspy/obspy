@@ -45,17 +45,18 @@ the names of all available test cases.
     >>> import obspy.core
     >>> obspy.core.runTests(verbosity=2)  # DOCTEST: +SKIP
 
-(4) Run tests of module :mod:`obspy.mseed`::
+(4) Run tests of module :mod:`obspy.io.mseed`::
 
-        $ obspy-runtests obspy.mseed.tests.suite
+        $ obspy-runtests obspy.io.mseed.tests.suite
 
     or as shortcut::
 
-        $ obspy-runtests mseed
+        $ obspy-runtests io.mseed
 
-(5) Run tests of multiple modules, e.g. :mod:`obspy.wav` and :mod:`obspy.sac`::
+(5) Run tests of multiple modules, e.g. :mod:`obspy.io.wav` and
+    :mod:`obspy.io.sac`::
 
-        $ obspy-runtests wav sac
+        $ obspy-runtests io.wav io.sac
 
 (6) Run a specific test case::
 
@@ -76,10 +77,10 @@ the names of all available test cases.
         $ obspy-runtests --help
 
 Of course you may combine most of the options here, e.g. in order to test
-all modules except the module obspy.sh and obspy.seishub, have a verbose output
-and report everything, you would run::
+all modules except the module obspy.io.sh and obspy.clients.seishub, have a
+verbose output and report everything, you would run::
 
-        $ obspy-runtests -r -v -x seishub -x sh --all
+        $ obspy-runtests -r -v -x clients.seishub -x io.sh --all
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
