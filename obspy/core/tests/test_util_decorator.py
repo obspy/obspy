@@ -15,7 +15,7 @@ class TestCase(unittest.TestCase):
         Tests the @map_example_filename decorator
         """
         dummy = "abc"
-        example_file = "slist.ascii"
+        example_file = "example.npz"
         path = "/path/to/" + example_file
         path_mapped = getExampleFile(example_file)
 
