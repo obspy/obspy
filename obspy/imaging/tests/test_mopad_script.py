@@ -5,10 +5,12 @@ The obspy-mopad script test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY3
 from future import standard_library
 
 import io
 import os
+import sys
 import unittest
 from itertools import product
 with standard_library.hooks():
@@ -45,14 +47,17 @@ class MopadTestCase(unittest.TestCase):
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
-        expected = expected.encode('utf-8')
 
         result = out.stdout[:-1]
-        if result.startswith(b'b'):
-            # Total mojibake when the system is configured strangely. Mostly
-            # only occurs when building packages, so that LANG=C, and Python
-            # picks ASCII for output encoding.
-            expected = str(expected).encode('ascii')
+        try:
+            expected = expected.encode(sys.stdout.encoding)
+        except:
+            expected = expected.encode('utf-8')
+            if PY3:
+                # This may look like Py3k does extra stuff, but it's actually
+                # saner!
+                expected = repr(expected)
+                expected = expected.encode('ascii')
 
         self.assertEqual(expected, result)
 
@@ -152,14 +157,17 @@ Moment Tensor: Mnn =  0.091,  Mee = -0.089, Mdd = -0.002,
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
-        expected = expected.encode('utf-8')
 
         result = out.stdout[:-1]
-        if result.startswith(b'b'):
-            # Total mojibake when the system is configured strangely. Mostly
-            # only occurs when building packages, so that LANG=C, and Python
-            # picks ASCII for output encoding.
-            expected = str(expected).encode('ascii')
+        try:
+            expected = expected.encode(sys.stdout.encoding)
+        except:
+            expected = expected.encode('utf-8')
+            if PY3:
+                # This may look like Py3k does extra stuff, but it's actually
+                # saner!
+                expected = repr(expected)
+                expected = expected.encode('ascii')
 
         self.assertEqual(expected, result)
 

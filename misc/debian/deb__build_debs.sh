@@ -49,6 +49,7 @@ fi
 echo "#### Working on $GITTARGET"
 cd $GITDIR
 git clean -fxd
+git fetch --all
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
 then
@@ -85,9 +86,9 @@ import os
 UTIL_PATH = os.path.abspath(os.path.join('$GITDIR', 'obspy', 'core', 'util'))
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version
-print get_git_version()"`
+version = get_git_version(dirty=False, append_remote_tracking_brach=False)
+print(version)"`
 # our package is not really dirty, just minor changes for packaging applied
-VERSION=${VERSION//-dirty/}
 VERSION_COMPLETE=${VERSION}-${DEBVERSION}~${CODENAME}
 # the commented code shows how to update the changelog
 # information, however we do not do it as it hard to

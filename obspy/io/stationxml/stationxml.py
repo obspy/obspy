@@ -65,7 +65,7 @@ def validate_StationXML(path_or_object):
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "docs",
+    schema_location = os.path.join(schema_location, "data",
                                    "fdsn-station-1.0.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))

@@ -82,7 +82,7 @@ class StationXMLTestCase(unittest.TestCase):
             "fdsn-station+availability-1.0.xsd", "fdsn-station-1.0.xsd"]
         not_stationxmls = [
             os.path.join(self.data_dir, os.path.pardir,
-                         os.path.pardir, "docs", _i) for _i in not_stationxmls]
+                         os.path.pardir, "data", _i) for _i in not_stationxmls]
         for stat in not_stationxmls:
             self.assertFalse(obspy.io.stationxml.stationxml.is_StationXML(
                 stat))

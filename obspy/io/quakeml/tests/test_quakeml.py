@@ -603,7 +603,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         xsd_enum_definitions = {}
         xsd_file = os.path.join(
-            self.path, "..", "..", "docs", "QuakeML-BED-1.2.xsd")
+            self.path, os.pardir, os.pardir, "data", "QuakeML-BED-1.2.xsd")
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
