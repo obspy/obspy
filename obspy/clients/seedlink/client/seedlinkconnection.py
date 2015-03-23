@@ -22,14 +22,14 @@ import socket
 import time
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.seedlink.client.slnetstation import SLNetStation
-from obspy.seedlink.client.slstate import SLState
-from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.slpacket import SLPacket
+from .slnetstation import SLNetStation
+from .slstate import SLState
+from ..seedlinkexception import SeedLinkException
+from ..slpacket import SLPacket
 
 
 # default logger
-logger = logging.getLogger('obspy.seedlink')
+logger = logging.getLogger('obspy.clients.seedlink')
 
 # set to True for debugging to stdout
 if False:
@@ -105,7 +105,7 @@ class SeedLinkConnection(object):
     :var socket: The network socket.
     :type socket: :class:`socket.socket`
     :var state: Persistent state information.
-    :type state: :class:`~obspy.seedlink.client.SLState`
+    :type state: :class:`~obspy.clients.seedlink.client.SLState`
     :var infoStrBuf: String to store INFO packet contents.
     :type infoStrBuf: str
     """
@@ -236,7 +236,7 @@ class SeedLinkConnection(object):
             self.sladdr = len(sladdr[prefix:])
         self.sladdr = sladdr
         # set logger format
-        name = " obspy.seedlink [%s]" % (sladdr)
+        name = " obspy.clients.seedlink [%s]" % (sladdr)
         logger.name = name
 
     def setLastpkttime(self, lastpkttime):

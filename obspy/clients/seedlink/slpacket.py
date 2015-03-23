@@ -22,10 +22,10 @@ import numpy as np
 from obspy.core.compatibility import frombuffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.mseed.headers import clibmseed
-from obspy.mseed.util import _convertMSRToDict, _ctypesArray2NumpyArray, \
-    _convertMSTimeToDatetime
-from obspy.seedlink.seedlinkexception import SeedLinkException
+from obspy.io.mseed.headers import clibmseed
+from obspy.io.mseed.util import (_convertMSRToDict, _ctypesArray2NumpyArray,
+                                 _convertMSTimeToDatetime)
+from .seedlinkexception import SeedLinkException
 
 
 class SLPacket(object):

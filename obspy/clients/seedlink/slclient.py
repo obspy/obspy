@@ -24,9 +24,9 @@ import logging
 import sys
 import traceback
 
-from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.slpacket import SLPacket
+from .client.seedlinkconnection import SeedLinkConnection
+from .seedlinkexception import SeedLinkException
+from .slpacket import SLPacket
 
 
 USAGE = """
@@ -62,7 +62,7 @@ USAGE = """
 
 
 # default logger
-logger = logging.getLogger('obspy.seedlink')
+logger = logging.getLogger('obspy.clients.seedlink')
 
 
 class SLClient(object):
@@ -225,8 +225,9 @@ class SLClient(object):
             `self.packetHandler` for this seedlink request. The function will
             be repeatedly called with two arguments: the current packet counter
             (`int`) and the currently served seedlink packet
-            (:class:`~obspy.seedlink.SLPacket`). The function should return
-            `True` to abort the request or `False` to continue the request.
+            (:class:`~obspy.clients.seedlink.SLPacket`). The function should
+            return `True` to abort the request or `False` to continue the
+            request.
         """
         if packet_handler is None:
             packet_handler = self.packetHandler
@@ -264,7 +265,7 @@ class SLClient(object):
 
         :type count: int
         :param count:  Packet counter.
-        :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
+        :type slpack: :class:`~obspy.clients.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
 
         :rtype: bool

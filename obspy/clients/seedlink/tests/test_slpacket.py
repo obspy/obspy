@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.seedlink.slpacket test suite.
+The obspy.clients.seedlink.slpacket test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 import os.path
 import unittest
 
-from obspy.seedlink.slpacket import SLPacket
+from obspy.clients.seedlink.slpacket import SLPacket
 
 
 class SLPacketTestCase(unittest.TestCase):

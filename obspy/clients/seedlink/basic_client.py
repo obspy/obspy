@@ -15,8 +15,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 
 from obspy import Stream
-from obspy.seedlink.slclient import SLClient, SLPacket
-from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
+from .slclient import SLClient, SLPacket
+from .client.seedlinkconnection import SeedLinkConnection
 
 
 class Client(object):
@@ -25,8 +25,8 @@ class Client(object):
 
     This client is intended for requests of specific, finite time windows.
     To work with continuous realtime data streams please see
-    :class:`~obspy.seedlink.slclient.SLClient` and
-    :class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient`.
+    :class:`~obspy.clients.seedlink.slclient.SLClient` and
+    :class:`~obspy.clients.seedlink.easyseedlink.EasySeedLinkClient`.
 
     :type server: str
     :param server: Server name or IP address to connect to (e.g.

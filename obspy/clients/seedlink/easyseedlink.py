@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-A simplified interface to the obspy.seedlink module.
+A simplified interface to the obspy.clients.seedlink module.
 
-The :class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient` class contained in
-this module provides a more pythonic interface to the :mod:`obspy.seedlink`
-module with a focus on ease of use, while minimizing unnecessary exposure of
-the protocol specifics.
+The :class:`~.EasySeedLinkClient` class contained in this module provides a
+more pythonic interface to the :mod:`obspy.clients.seedlink` module with a
+focus on ease of use, while minimizing unnecessary exposure of the protocol
+specifics.
 
-A client object can easily be created using the
-:func:`~obspy.seedlink.easyseedlink.create_client` function, e.g. by providing
-a function to handle incoming data and a server URL:
+A client object can easily be created using the :func:`~.create_client`
+function, e.g. by providing a function to handle incoming data and a server
+URL:
 
 .. code-block:: python
 
-    from obspy.seedlink.easyseedlink import create_client
+    from obspy.clients.seedlink.easyseedlink import create_client
 
     # A function to handle incoming data
     def handle_data(trace):
@@ -26,19 +26,17 @@ a function to handle incoming data and a server URL:
     client.select_stream('BW', 'MANZ', 'EHZ')
     client.run()
 
-For advanced applications, subclassing the
-:class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient` class allows for more
-flexibility. See the
-:class:`~obspy.seedlink.easyseedlink.EasySeedLinkClient` documentation
-for an example.
+For advanced applications, subclassing the :class:`~.EasySeedLinkClient` class
+allows for more flexibility. See the :class:`~.EasySeedLinkClient`
+documentation for an example.
 
 .. note::
 
     For finer grained control of the SeedLink connection (e.g. custom
     processing of individual SeedLink packets), using
-    :class:`~obspy.seedlink.client.seedlinkconnection.SeedLinkConnection` or
-    :class:`~obspy.seedlink.slclient.SLClient` directly might be the preferred
-    option.
+    :class:`~obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection`
+    or :class:`~obspy.clients.seedlink.slclient.SLClient` directly might be the
+    preferred option.
 
 .. rubric:: Limitations
 
@@ -46,9 +44,9 @@ As of now, single station mode is not supported. Neither are in-stream ``INFO``
 requests.
 
 The client is using the
-:class:`~obspy.seedlink.client.seedlinkconnection.SeedLinkConnection` class and
-hence inherits all of its limitations. For example, erroneous packets are only
-logged, but otherwise ignored, with no possibility of handling them
+:class:`~obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection`
+class and hence inherits all of its limitations. For example, erroneous packets
+are only logged, but otherwise ignored, with no possibility of handling them
 explicitly. Keepalive handling is completely encapsulated inside the
 connection object and cannot be easily influenced. Also, a ``HELLO`` is always
 sent to the server when connecting in order to determine the SeedLink protocol
@@ -62,9 +60,9 @@ import urlparse
 
 import lxml
 
-from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspy.seedlink.client.slstate import SLState
-from obspy.seedlink.slpacket import SLPacket
+from .client.seedlinkconnection import SeedLinkConnection
+from .client.slstate import SLState
+from .slpacket import SLPacket
 
 
 class EasySeedLinkClientException(Exception):
@@ -81,8 +79,8 @@ class EasySeedLinkClient(object):
 
     This class is meant to be used as a base class, with a subclass
     implementing one or more of the callbacks (most usefully the
-    :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.on_data` callback).
-    See the :ref:`ObsPy Tutorial <seedlink-tutorial>` for a detailed example.
+    :meth:`~.EasySeedLinkClient.on_data` callback). See the :ref:`ObsPy
+    Tutorial <seedlink-tutorial>` for a detailed example.
 
     .. rubric:: Example
 
@@ -109,9 +107,9 @@ class EasySeedLinkClient(object):
     .. rubric:: Implementation
 
     The EasySeedLinkClient uses the
-    :class:`~obspy.seedlink.client.seedlinkconnection.SeedLinkConnection`
+    :class:`~obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection`
     object. (It is not based on
-    :class:`~obspy.seedlink.slclient.SLClient`.)
+    :class:`~obspy.clients.seedlink.slclient.SLClient`.)
 
     :type server_url: str
     :param server_url: The SeedLink server URL
@@ -123,12 +121,10 @@ class EasySeedLinkClient(object):
 
         The SeedLink connection only fails on connection errors if the
         connection was started explicitly, either when ``autoconnect`` is
-        ``True`` or by calling
-        :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.connect`
-        explicitly. Otherwise the client might get stuck in an infinite
-        reconnect loop if there are connection problems (e.g. connect, timeout,
-        reconnect, timeout, ...). This might be intended behavior in some
-        situations.
+        ``True`` or by calling :meth:`~.EasySeedLinkClient.connect` explicitly.
+        Otherwise the client might get stuck in an infinite reconnect loop if
+        there are connection problems (e.g. connect, timeout, reconnect,
+        timeout, ...). This might be intended behavior in some situations.
     """
 
     def __init__(self, server_url, autoconnect=True):
@@ -185,9 +181,7 @@ class EasySeedLinkClient(object):
         ``CONNNECTIONS``, ``ALL``.
 
         As a convenience, the server's ``CAPABILITIES`` can be accessed through
-        the client's
-        :attr:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.capabilities`
-        attribute.
+        the client's :attr:`~.EasySeedLinkClient.capabilities` attribute.
 
         .. note::
 
@@ -270,7 +264,7 @@ class EasySeedLinkClient(object):
         A shortcut for checking for ``INFO`` capabilities.
 
         Calling this is equivalent to calling
-        :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.has_capability`
+        :meth:`~.EasySeedLinkClient.has_capability`
         with ``'info:' + capability``.
 
         .. rubric:: Example
@@ -351,9 +345,8 @@ class EasySeedLinkClient(object):
         Select a stream for data transfer.
 
         This method can be called once or multiple times as needed. A
-        subsequent call to the
-        :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.run` method
-        starts the streaming process.
+        subsequent call to the :meth:`~.EasySeedLinkClient.run` method starts
+        the streaming process.
 
         .. note::
             Selecting a stream always puts the SeedLink connection in
@@ -383,8 +376,7 @@ class EasySeedLinkClient(object):
         Start streaming data from the SeedLink server.
 
         Streams need to be selected using
-        :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.select_stream`
-        before this is called.
+        :meth:`~.EasySeedLinkClient.select_stream` before this is called.
 
         This method enters an infinite loop, calling the client's callbacks
         when events occur.
@@ -432,10 +424,9 @@ class EasySeedLinkClient(object):
         .. note::
 
             Closing  the connection is not threadsafe yet. Client code must
-            ensure that
-            :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.run` and
+            ensure that :meth:`~.EasySeedLinkClient.run` and
             :meth:`SeedLinkConnection.terminate()
-            <obspy.seedlink.client.seedlinkconnection.SeedLinkConnection.terminate>`
+            <obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection.terminate>`
             are not being called after the connection has been closed.
 
             See the corresponding `GitHub issue
@@ -451,9 +442,9 @@ class EasySeedLinkClient(object):
         A termination event can either be triggered by the SeedLink server
         explicitly terminating the connection (by sending an ``END`` packet in
         streaming mode) or by the
-        :meth:`~obspy.seedlink.client.seedlinkconnection.SeedLinkConnection.terminate`
+        :meth:`~obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection.terminate`
         method of the
-        :class:`~obspy.seedlink.client.seedlinkconnection.SeedLinkConnection`
+        :class:`~obspy.clients.seedlink.client.seedlinkconnection.SeedLinkConnection`
         object being called.
         """
         pass
@@ -490,7 +481,7 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
 
     .. code-block:: python
 
-        >>> from obspy.seedlink.easyseedlink import create_client
+        >>> from obspy.clients.seedlink.easyseedlink import create_client
 
         >>> def handle_data(trace):
         ...     print('Received new data:')
@@ -518,12 +509,12 @@ def create_client(server_url, on_data=None, on_seedlink_error=None,
     :type on_seedlink_error: function or callable
     :param on_seedlink_error: A function or callable that is called when a
                               SeedLink ERROR response is received (see the
-                              :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.on_seedlink_error`
+                              :meth:`~.EasySeedLinkClient.on_seedlink_error`
                               method for details); default is ``None``
     :type on_terminate: function or callable
     :param on_terminate: A function or callable that is called when the
                          connection is terminated (see the
-                         :meth:`~obspy.seedlink.easyseedlink.EasySeedLinkClient.on_terminate`
+                         :meth:`~.EasySeedLinkClient.on_terminate`
                          method for details); default is ``None``
     """
     client = EasySeedLinkClient(server_url, autoconnect=False)

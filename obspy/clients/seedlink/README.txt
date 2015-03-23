@@ -1,5 +1,5 @@
-package obspy.seedlink
-======================
+package obspy.clients.seedlink
+==============================
 
 Copyright
 ---------
@@ -8,9 +8,9 @@ GNU Lesser General Public License, Version 3 (LGPLv3)
 Copyright (c) 2011-2013 by:
     * Anthony Lomax
 
-The obspy.seedlink development has been supported by the NERA project ["Network
-of European Research Infrastructures for Earthquake Risk Assessment and
-Mitigation" under the European Community's Seventh Framework Programme
+The obspy.clients.seedlink development has been supported by the NERA project
+["Network of European Research Infrastructures for Earthquake Risk Assessment
+and Mitigation" under the European Community's Seventh Framework Programme
 (FP7/2007-2013) grant agreement n° 262330] and implemented within the
 activities of the JRA2/WP12 "Tools for real-time seismology, acquisition and
 mining".

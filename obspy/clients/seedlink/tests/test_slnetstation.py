@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.seedlink.client.slnetstation test suite.
+The obspy.clients.seedlink.client.slnetstation test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.seedlink.client.slnetstation import SLNetStation
+from obspy.clients.seedlink.client.slnetstation import SLNetStation
 
 
 class SLNetStationTestCase(unittest.TestCase):

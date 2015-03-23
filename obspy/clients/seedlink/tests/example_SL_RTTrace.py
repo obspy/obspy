@@ -11,13 +11,13 @@ import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.realtime.rttrace import RtTrace
-from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.slclient import SLClient
-from obspy.seedlink.slpacket import SLPacket
+from obspy.clients.seedlink.seedlinkexception import SeedLinkException
+from obspy.clients.seedlink.slclient import SLClient
+from obspy.clients.seedlink.slpacket import SLPacket
 
 
 # default logger
-logger = logging.getLogger('obspy.seedlink')
+logger = logging.getLogger('obspy.clients.seedlink')
 
 
 class MySLClient(SLClient):
@@ -39,7 +39,7 @@ class MySLClient(SLClient):
 
         :type count: int
         :param count:  Packet counter.
-        :type slpack: :class:`~obspy.seedlink.slpacket.SLPacket`
+        :type slpack: :class:`~obspy.clients.seedlink.slpacket.SLPacket`
         :param slpack: packet to process.
 
         :rtype: bool

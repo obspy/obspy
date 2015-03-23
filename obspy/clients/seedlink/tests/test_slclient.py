@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.seedlink.slclient test suite.
+The obspy.clients.seedlink.slclient test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -10,7 +10,7 @@ import unittest
 
 from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
-from obspy.seedlink.slclient import SLClient
+from obspy.clients.seedlink.slclient import SLClient
 
 
 class SLClientTestCase(unittest.TestCase):
