@@ -33,11 +33,10 @@ from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory
-from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
-                               OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
-                               URL_MAPPINGS, WADL_PARAMETERS_NOT_TO_BE_PARSED,
-                               FDSNException)
-from obspy.fdsn.wadl_parser import WADLParser
+from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
+                     OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException)
+from .wadl_parser import WADLParser
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
@@ -47,7 +46,8 @@ class Client(object):
     """
     FDSN Web service request client.
 
-    For details see the :meth:`~obspy.fdsn.client.Client.__init__()` method.
+    For details see the :meth:`~obspy.clients.fdsn.client.Client.__init__()`
+    method.
     """
     # Dictionary caching any discovered service. Therefore repeatedly
     # initializing a client with the same base URL is cheap.
@@ -329,7 +329,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.fdsn import Client
+            from obspy.clients.fdsn import Client
             client = Client()
             starttime = UTCDateTime("2001-01-01")
             endtime = UTCDateTime("2001-01-02")
@@ -370,7 +370,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.fdsn import Client
+            from obspy.clients.fdsn import Client
             client = Client()
             starttime = UTCDateTime("2001-01-01")
             endtime = UTCDateTime("2001-01-02")
@@ -524,7 +524,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.fdsn import Client
+            from obspy.clients.fdsn import Client
             client = Client("IRIS")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             st = client.get_waveforms("TA", "E42A", "*", "BH?", t+300, t+400,
@@ -706,7 +706,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.fdsn import Client
+            from obspy.clients.fdsn import Client
             client = Client("IRIS")
             t = UTCDateTime("2012-12-14T10:36:01.6Z")
             t1 = t + 300
@@ -832,7 +832,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.fdsn import Client
+            from obspy.clients.fdsn import Client
 
             client = Client("IRIS")
             t1 = UTCDateTime("2010-02-27T06:30:00.000")

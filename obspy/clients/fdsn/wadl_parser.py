@@ -23,8 +23,8 @@ from collections import defaultdict
 from lxml import etree
 
 from obspy import UTCDateTime
-from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_TYPES,
-                               WADL_PARAMETERS_NOT_TO_BE_PARSED)
+from .header import (DEFAULT_PARAMETERS, DEFAULT_TYPES,
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED)
 
 
 class WADLParser(object):

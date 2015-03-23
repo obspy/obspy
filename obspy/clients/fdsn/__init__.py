@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-obspy.fdsn - FDSN Web service client for ObsPy
-==============================================
-The obspy.fdsn package contains a client to access web servers that implement
-the FDSN web service definitions (http://www.fdsn.org/webservices/).
+obspy.clients.fdsn - FDSN Web service client for ObsPy
+======================================================
+The obspy.clients.fdsn package contains a client to access web servers that
+implement the FDSN web service definitions (http://www.fdsn.org/webservices/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -16,17 +16,17 @@ Basic Usage
 
 The first step is always to initialize a client object.
 
->>> from obspy.fdsn import Client
+>>> from obspy.clients.fdsn import Client
 >>> client = Client("IRIS")
 
 A client object can be initialized either with the base URL of any FDSN web
 service or with a shortcut name which will be mapped to a FDSN URL. All the
 example make use of the FDSN web service at IRIS. For a list of other
 available web service providers, see the
-:meth:`~obspy.fdsn.client.Client.__init__()` method. The currently available
-providers are:
+:meth:`~obspy.clients.fdsn.client.Client.__init__()` method. The currently
+available providers are:
 
->>> from obspy.fdsn.header import URL_MAPPINGS
+>>> from obspy.clients.fdsn.header import URL_MAPPINGS
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
 BGR     http://eida.bgr.de
@@ -42,14 +42,14 @@ SCEC    http://www.data.scec.org
 USGS    http://comcat.cr.usgs.gov
 USP     http://sismo.iag.usp.br
 
-(1) :meth:`~obspy.fdsn.client.Client.get_waveforms()`: The following example
-    illustrates how to request and plot 60 minutes of the ``"LHZ"`` channel of
-    station Albuquerque, New Mexico (``"ANMO"``) of the Global Seismograph
-    Network (``"IU"``) for an seismic event around 2010-02-27 06:45 (UTC).
-    Results are returned as a :class:`~obspy.core.stream.Stream` object.
-    See the :meth:`~obspy.fdsn.client.Client.get_waveforms_bulk()` method for
-    information on how to send multiple requests simultaneously to avoid
-    unnecessary network overhead.
+(1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following
+    example illustrates how to request and plot 60 minutes of the ``"LHZ"``
+    channel of station Albuquerque, New Mexico (``"ANMO"``) of the Global
+    Seismograph Network (``"IU"``) for an seismic event around 2010-02-27 06:45
+    (UTC). Results are returned as a :class:`~obspy.core.stream.Stream` object.
+    See the :meth:`~obspy.clients.fdsn.client.Client.get_waveforms_bulk()`
+    method for information on how to send multiple requests simultaneously to
+    avoid unnecessary network overhead.
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
@@ -59,15 +59,15 @@ USP     http://sismo.iag.usp.br
     .. plot::
 
         from obspy import UTCDateTime
-        from obspy.fdsn import Client
+        from obspy.clients.fdsn import Client
         client = Client()
         t = UTCDateTime("2010-02-27T06:45:00.000")
         st = client.get_waveforms("IU", "ANMO", "00", "LHZ", t, t + 60 * 60)
         st.plot()
 
-(2) :meth:`~obspy.fdsn.client.Client.get_events()`: Retrieves event data from
-    the server. Results are returned as a :class:`~obspy.core.event.Catalog`
-    object.
+(2) :meth:`~obspy.clients.fdsn.client.Client.get_events()`: Retrieves event
+    data from the server. Results are returned as a
+    :class:`~obspy.core.event.Catalog` object.
 
     >>> starttime = UTCDateTime("2002-01-01")
     >>> endtime = UTCDateTime("2002-01-02")
@@ -83,7 +83,7 @@ USP     http://sismo.iag.usp.br
     .. plot::
 
         from obspy import UTCDateTime
-        from obspy.fdsn import Client
+        from obspy.clients.fdsn import Client
         client = Client()
         starttime = UTCDateTime("2002-01-01")
         endtime = UTCDateTime("2002-01-02")
@@ -91,8 +91,8 @@ USP     http://sismo.iag.usp.br
                                 minmagnitude=6, catalog="ISC")
         cat.plot()
 
-(3) :meth:`~obspy.fdsn.client.Client.get_stations()`: Retrieves station data
-    from the server. Results are returned as an
+(3) :meth:`~obspy.clients.fdsn.client.Client.get_stations()`: Retrieves station
+    data from the server. Results are returned as an
     :class:`~obspy.core.inventory.inventory.Inventory` object.
 
     >>> inventory = client.get_stations(network="IU", station="A*",
@@ -116,7 +116,7 @@ USP     http://sismo.iag.usp.br
     .. plot::
 
         from obspy import UTCDateTime
-        from obspy.fdsn import Client
+        from obspy.clients.fdsn import Client
         client = Client()
         starttime = UTCDateTime("2002-01-01")
         endtime = UTCDateTime("2002-01-02")

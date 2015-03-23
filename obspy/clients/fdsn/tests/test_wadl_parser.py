@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.fdsn.wadl_parser test suite.
+The obspy.clients.fdsn.wadl_parser test suite.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -18,12 +18,12 @@ import unittest
 import warnings
 
 from obspy import UTCDateTime
-from obspy.fdsn.wadl_parser import WADLParser
+from obspy.clients.fdsn.wadl_parser import WADLParser
 
 
 class WADLParserTestCase(unittest.TestCase):
     """
-    Test cases for obspy.fdsn.wadl_parser.WADL_Parser.
+    Test cases for obspy.clients.fdsn.wadl_parser.WADL_Parser.
     """
     def setUp(self):
         # directory where the test files are located

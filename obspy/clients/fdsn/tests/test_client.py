@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.fdsn.client test suite.
+The obspy.clients.fdsn.client test suite.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -24,9 +24,9 @@ from difflib import Differ
 from obspy import UTCDateTime, read, read_inventory, readEvents
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.fdsn import Client
-from obspy.fdsn.client import build_url, parse_simple_xml
-from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.client import build_url, parse_simple_xml
+from obspy.clients.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 from obspy.core.inventory import Response
 
 
@@ -71,7 +71,7 @@ def normalize_version_number(string):
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.fdsn.client.Client.
+    Test cases for obspy.clients.fdsn.client.Client.
     """
     def __init__(self, *args, **kwargs):
         """
@@ -660,7 +660,7 @@ class ClientTestCase(unittest.TestCase):
         for tr in st:
             self.assertTrue(isinstance(tr.stats.get("response"), Response))
 
-    @mock.patch("obspy.fdsn.client.download_url")
+    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_default_requested_urls(self, download_url_mock):
         """
         Five request should be sent upon initializing a client. Test these.
@@ -686,7 +686,7 @@ class ClientTestCase(unittest.TestCase):
 
         self.assertEqual(expected_urls, got_urls)
 
-    @mock.patch("obspy.fdsn.client.download_url")
+    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_setting_service_major_version(self, download_url_mock):
         """
         Test the setting of custom major versions.
@@ -752,7 +752,7 @@ class ClientTestCase(unittest.TestCase):
                            download_url_mock.call_args_list])
         self.assertEqual(expected_urls, got_urls)
 
-    @mock.patch("obspy.fdsn.client.download_url")
+    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_setting_service_provider_mappings(self, download_url_mock):
         """
         Tests the setting of per service endpoints
@@ -819,7 +819,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(sorted(client.services.keys()),
                          ['dataselect', 'station'])
 
-    @mock.patch("obspy.fdsn.client.download_url")
+    @mock.patch("obspy.clients.fdsn.client.download_url")
     def test_download_urls_for_custom_mapping(self, download_url_mock):
         """
         Tests the downloading of data with custom mappings.
