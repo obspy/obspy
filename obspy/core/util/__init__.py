@@ -22,8 +22,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
-
 # import order matters - NamedTemporaryFile must be one of the first!
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
@@ -35,14 +33,8 @@ from obspy.core.util.decorator import (deprecated, deprecated_keywords, skip,
                                        skipIf, uncompressFile)
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexifyString,
                                   guessDelta, loadtxt, scoreatpercentile,
-                                  toIntOrZero, DynamicImportRerouteModule)
+                                  toIntOrZero)
 from obspy.core.util.obspy_types import (ComplexWithUncertainties, Enum,
                                          FloatWithUncertainties)
 from obspy.core.util.testing import add_doctests, add_unittests
 from obspy.core.util.version import get_git_version as _getVersionString
-
-
-sys.modules[__name__] = DynamicImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(), import_map={
-        "geodetics": "obspy.geodetics"
-    })
