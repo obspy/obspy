@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.seishub.client test suite.
+The obspy.clients.seishub.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -15,7 +15,7 @@ with standard_library.hooks():
 
 from obspy.core import AttribDict, UTCDateTime
 from obspy.core.util.decorator import skipIf
-from obspy.seishub import Client
+from obspy.clients.seishub import Client
 from obspy.io.xseed.utils import SEEDParserException
 
 

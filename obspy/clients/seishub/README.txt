@@ -1,5 +1,5 @@
-package obspy.seishub
-=====================
+package obspy.clients.seishub
+=============================
 
 Copyright
 ---------
@@ -13,8 +13,8 @@ Overview
 --------
 SeisHub database client for ObsPy.
 
-The obspy.seishub package contains a client for the seismological database
-SeisHub (http://www.seishub.org).
+The obspy.clients.seishub package contains a client for the seismological
+database SeisHub (http://www.seishub.org).
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

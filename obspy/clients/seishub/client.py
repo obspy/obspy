@@ -111,14 +111,14 @@ class Client(object):
     ===================  ====================================================
     Entry Point          Linked Class
     ===================  ====================================================
-    ``Client.waveform``  :class:`~obspy.seishub.client._WaveformMapperClient`
-    ``Client.station``   :class:`~obspy.seishub.client._StationMapperClient`
-    ``Client.event``     :class:`~obspy.seishub.client._EventMapperClient`
+    ``Client.waveform``  :class:`~obspy.clients.seishub.client._WaveformMapperClient`
+    ``Client.station``   :class:`~obspy.clients.seishub.client._StationMapperClient`
+    ``Client.event``     :class:`~obspy.clients.seishub.client._EventMapperClient`
     ===================  ====================================================
 
     .. rubric:: Example
 
-    >>> from obspy.seishub import Client
+    >>> from obspy.clients.seishub import Client
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client(timeout=2)
@@ -357,7 +357,7 @@ class _WaveformMapperClient(object):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.seishub.Client.waveform` attribute.
+        object via the :attr:`obspy.clients.seishub.Client.waveform` attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/waveform.py
@@ -631,7 +631,7 @@ class _StationMapperClient(_BaseRESTClient):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.seishub.Client.station` attribute.
+        object via the :attr:`obspy.clients.seishub.Client.station` attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/waveform.py
@@ -789,7 +789,7 @@ class _EventMapperClient(_BaseRESTClient):
 
     .. warning::
         This function should NOT be initialized directly, instead access the
-        object via the :attr:`obspy.seishub.Client.event` attribute.
+        object via the :attr:`obspy.clients.seishub.Client.event` attribute.
 
     .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
 master/seishub/plugins/seismology/event.py
@@ -869,7 +869,7 @@ master/seishub/plugins/seismology/event.py
         """
         Posts an event.getList() and returns the results as a KML file. For
         optional arguments, see documentation of
-        :meth:`~obspy.seishub.client._EventMapperClient.getList()`
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.getList()`
 
         :type nolabels: bool
         :param nolabels: Hide labels of events in KML. Can be useful with large
@@ -977,8 +977,8 @@ master/seishub/plugins/seismology/event.py
         """
         Posts an event.getList() and writes the results as a KML file. For
         optional arguments, see help for
-        :meth:`~obspy.seishub.client._EventMapperClient.getList()` and
-        :meth:`~obspy.seishub.client._EventMapperClient.getKML()`
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.getList()` and
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.getKML()`
 
         :type filename: str
         :param filename: Filename (complete path) to save KML to.

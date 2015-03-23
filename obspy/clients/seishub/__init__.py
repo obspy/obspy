@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-obspy.seishub - SeisHub database client for ObsPy
-=================================================
-The obspy.seishub package contains a client for the seismological database
-SeisHub (http://www.seishub.org).
+obspy.clients.seishub - SeisHub database client for ObsPy
+=========================================================
+The obspy.clients.seishub package contains a client for the seismological
+database SeisHub (http://www.seishub.org).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -14,7 +14,7 @@ SeisHub (http://www.seishub.org).
 Basic Example
 -------------
 
->>> from obspy.seishub import Client
+>>> from obspy.clients.seishub import Client
 >>> from obspy import UTCDateTime
 
 >>> client = Client(timeout=20)
@@ -55,7 +55,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.seishub.client import Client
+from .client import Client
 
 
 if __name__ == '__main__':
