@@ -293,9 +293,9 @@ def _createExampleStream(headonly=False):
            'sensitivity': 2516778400.0,
            'zeros': [0j, 0j]}}
     """
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
     if not headonly:
-        path = os.path.dirname(__file__)
-        path = os.path.join(path, "tests", "data", "example.npz")
+        path = os.path.join(data_dir, "example.npz")
         data = np.load(path)
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
@@ -314,7 +314,8 @@ def _createExampleStream(headonly=False):
         else:
             st.append(Trace(header=header))
     from obspy.station import read_inventory
-    st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
+    inv = read_inventory(os.path.join(data_dir, "BW_RJOB.xml"))
+    st.attach_response(inv)
     return st
 
 

@@ -129,7 +129,8 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(is_nlloc_hyp(filename), True)
         # test some negatives
         for filenames in ["nlloc.qml", "nlloc.obs", "gaps.mseed",
-                          "BW_RJOB.xml", "QFILE-TEST-ASC.ASC", "LMOW.BHE.SAC"]:
+                          "IU.ANMO.00.BHZ", "QFILE-TEST-ASC.ASC",
+                          "LMOW.BHE.SAC"]:
             filename = getExampleFile("nlloc.qml")
             self.assertEqual(is_nlloc_hyp(filename), False)
 

@@ -250,18 +250,17 @@ class Inventory(ComparingObject):
         Find response for a given channel at given time.
 
         >>> from obspy import read_inventory, UTCDateTime
-        >>> inventory = read_inventory("/path/to/BW_RJOB.xml")
-        >>> datetime = UTCDateTime("2009-08-24T00:20:00")
-        >>> response = inventory.get_response("BW.RJOB..EHZ", datetime)
+        >>> inventory = read_inventory("/path/to/IU_ANMO_BH.xml")
+        >>> datetime = UTCDateTime("2012-08-24T00:00:00")
+        >>> response = inventory.get_response("IU.ANMO.00.BHZ", datetime)
         >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
+          From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+          Overall Sensitivity: 3.27508e+09 defined at 0.020 Hz
+          3 stages:
+            Stage 1: PolesZerosResponseStage from M/S to V, gain: 1952.1
+            Stage 2: CoefficientsTypeResponseStage from V to COUNTS, gain: ...
+            Stage 3: CoefficientsTypeResponseStage from COUNTS to COUNTS, ...
 
         :type seed_id: str
         :param seed_id: SEED ID string of channel to get response for.
