@@ -12,6 +12,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
+import importlib
 import inspect
 import itertools
 import math
@@ -20,6 +22,7 @@ import platform
 import shutil
 import sys
 import tempfile
+from types import ModuleType
 import warnings
 from contextlib import contextmanager
 from subprocess import PIPE, Popen
@@ -494,3 +497,35 @@ def factorize_int(x):
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
+
+
+# Make a custom deprecation warning as deprecation warnings or hidden by
+# default since Python 2.7 and 3.2 and we really want users to notice these.
+class ObsPyDeprecationWarning(UserWarning):
+    pass
+
+
+class DynamicImportRerouteModule(ModuleType):
+    """
+    Class assisting in dynamically rerouting imports.
+    """
+    def __init__(self, name, doc, locs, import_map):
+        super(DynamicImportRerouteModule, self).__init__(name=name)
+
+        # Keep the metadata of the module.
+        self.__dict__.update(locs)
+
+        self.import_map = import_map
+
+    def __getattr__(self, name):
+        try:
+            real_module_name = self.import_map[name]
+        except:
+            raise AttributeError
+
+        warnings.warn("Module '%s' is deprecated and will stop working with "
+                      "the next ObsPy version. Please import module "
+                      "'%s'instead." % (self.__name__ + "." + name,
+                                        self.import_map[name]),
+                      ObsPyDeprecationWarning)
+        return importlib.import_module(real_module_name)
