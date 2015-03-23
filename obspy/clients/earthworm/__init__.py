@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.earthworm - Earthworm Wave Server client for ObsPy.
-=========================================================
+obspy.clients.earthworm - Earthworm Wave Server client for ObsPy.
+=================================================================
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
@@ -11,12 +11,12 @@ obspy.earthworm - Earthworm Wave Server client for ObsPy.
 
 Basic Usage
 -----------
-(1) :meth:`~obspy.earthworm.client.Client.getWaveform()`: The following example
-    illustrates how to request and plot 30 seconds of all three broadband
-    channels (``"BH*"``) of station ``"TUCA"`` of the `Pacific Northwest
-    Seismic Network <http://pnsn.org/>`_ (``"UW"``).
+(1) :meth:`~obspy.clients.earthworm.client.Client.getWaveform()`: The following
+    example illustrates how to request and plot 30 seconds of all three
+    broadband channels (``"BH*"``) of station ``"TUCA"`` of the `Pacific
+    Northwest Seismic Network <http://pnsn.org/>`_ (``"UW"``).
 
-    >>> from obspy.earthworm import Client
+    >>> from obspy.clients.earthworm import Client
     >>> client = Client("pele.ess.washington.edu", 16017)
     >>> response = client.availability("UW", "TUCA", channel="BHZ")
     >>> print response  # doctest: +SKIP
@@ -32,7 +32,7 @@ Basic Usage
 
     .. plot::
 
-        from obspy.earthworm import Client
+        from obspy.clients.earthworm import Client
         from obspy import UTCDateTime
         client = Client("pele.ess.washington.edu", 16017, timeout=5)
         response = client.availability("UW", "TUCA", channel="BHZ")

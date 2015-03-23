@@ -17,7 +17,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from fnmatch import fnmatch
 
 from obspy import Stream, UTCDateTime
-from obspy.earthworm.waveserver import getMenu, readWaveServerV
+from .waveserver import getMenu, readWaveServerV
 
 
 class Client(object):
@@ -39,7 +39,7 @@ class Client(object):
         """
         Initializes a Earthworm Wave Server client.
 
-        See :class:`obspy.earthworm.client.Client` for all parameters.
+        See :class:`obspy.clients.earthworm.client.Client` for all parameters.
         """
         self.host = host
         self.port = port
@@ -76,7 +76,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.earthworm import Client
+        >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
@@ -86,7 +86,7 @@ class Client(object):
 
         .. plot::
 
-            from obspy.earthworm import Client
+            from obspy.clients.earthworm import Client
             from obspy import UTCDateTime
             client = Client("pele.ess.washington.edu", 16017, timeout=5)
             dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
@@ -154,7 +154,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.earthworm import Client
+        >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
@@ -190,7 +190,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.earthworm import Client
+        >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
         >>> response = client.availability(network="UW", station="TUCA",
         ...         channel="BH*")

@@ -1,5 +1,5 @@
-package obspy.earthworm
-=======================
+package obspy.clients.earthworm
+===============================
 
 Copyright
 ---------

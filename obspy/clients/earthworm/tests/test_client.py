@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.earthworm.client test suite.
+The obspy.clients.earthworm.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -12,12 +12,12 @@ from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skip_on_network_error
-from obspy.earthworm import Client
+from obspy.clients.earthworm import Client
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.earthworm.client.Client.
+    Test cases for obspy.clients.earthworm.client.Client.
     """
     def setUp(self):
         # Monkey patch: set lower default precision of all UTCDateTime objects
