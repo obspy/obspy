@@ -18,7 +18,7 @@ from time import sleep
 
 from obspy import Stream, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.neic.util import ascdate, asctime
+from .util import ascdate, asctime
 
 
 class Client(object):
@@ -38,7 +38,7 @@ class Client(object):
 
     .. rubric:: Example
 
-    >>> from obspy.neic import Client
+    >>> from obspy.clients.neic import Client
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
     >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
@@ -103,7 +103,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.neic import Client
+        >>> from obspy.clients.neic import Client
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
         >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)
@@ -153,7 +153,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.neic import Client
+        >>> from obspy.clients.neic import Client
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now

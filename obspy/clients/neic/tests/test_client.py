@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.neic.client test suite.
+The obspy.clients.neic.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -9,12 +9,12 @@ from future.builtins import *  # NOQA
 import unittest
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.neic import Client
+from obspy.clients.neic import Client
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.neic.client.Client.
+    Test cases for obspy.clients.neic.client.Client.
     """
     def test_getWaveform(self):
         """

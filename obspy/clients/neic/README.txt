@@ -1,5 +1,5 @@
-package obspy.neic
-==================
+package obspy.clients.neic
+==========================
 
 Copyright
 ---------
@@ -13,9 +13,9 @@ Overview
 --------
 NEIC CWB Query service client for ObsPy.
 
-The obspy.neic package contains a client for the QueryServer software run at
-the National Earthquake Information Center (NEIC) in Golden, CO USA. This
-service is run publicly at cwbpub.cr.usgs.gov on port 2061.  This server
+The obspy.clients.neic package contains a client for the QueryServer software
+run at the National Earthquake Information Center (NEIC) in Golden, CO USA.
+This service is run publicly at cwbpub.cr.usgs.gov on port 2061.  This server
 returns data based on a query command string as a series of binary MiniSEED
 blocks.  The data are not necessarily in order and may have gaps, overlaps and
 possibly duplicate blocks.  The client (this software) has to deal with these
