@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.neries.client test suite.
+The obspy.clients.neries.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -10,12 +10,12 @@ import unittest
 
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.neries import Client
+from obspy.clients.neries import Client
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.neries.client.Client.
+    Test cases for obspy.clients.neries.client.Client.
     """
     def test_getTravelTimes(self):
         """

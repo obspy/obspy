@@ -1,5 +1,5 @@
-package obspy.neries
-==================
+package obspy.clients.neries
+============================
 
 Copyright
 ---------
@@ -15,7 +15,7 @@ Overview
 --------
 NERIES Web service client for ObsPy.
 
-The obspy.neries package contains a client for the Seismic Data Portal
+The obspy.clients.neries package contains a client for the Seismic Data Portal
 (http://www.seismicportal.eu) which was developed under the European
 Commission-funded NERIES project. The Portal provides a single point of access
 to diverse, distributed European earthquake data provided in a unique joint

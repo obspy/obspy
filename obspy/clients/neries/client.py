@@ -121,9 +121,9 @@ class Client(object):
             service. This entry in form of a email address is required for
             using the following methods:
 
-            * :meth:`~obspy.neries.client.Client.saveWaveform`
-            * :meth:`~obspy.neries.client.Client.getWaveform`
-            * :meth:`~obspy.neries.client.Client.getInventory`
+            * :meth:`~obspy.clients.neries.client.Client.saveWaveform`
+            * :meth:`~obspy.clients.neries.client.Client.getWaveform`
+            * :meth:`~obspy.clients.neries.client.Client.getInventory`
 
             Defaults to ``''``.
         :type password: str, optional
@@ -338,7 +338,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.neries import Client
+        >>> from obspy.clients.neries import Client
         >>> from obspy import UTCDateTime
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2011-01-01T00:00:00")
@@ -447,7 +447,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.neries import Client
+        >>> from obspy.clients.neries import Client
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
         >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+30)
@@ -505,7 +505,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.neries import Client
+        >>> from obspy.clients.neries import Client
         >>> c = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
         >>> st = c.saveWaveform("outfile.fseed", "NL", "WIT", "", "BH*",
