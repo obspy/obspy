@@ -12,7 +12,7 @@ import warnings
 
 from obspy.io.json.default import Default
 from obspy.io.json.core import get_dump_kwargs, writeJSON
-from obspy.io.quakeml.quakeml import readQuakeML
+from obspy.io.quakeml.core import readQuakeML
 
 
 warnings.filterwarnings("ignore")

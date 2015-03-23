@@ -134,8 +134,8 @@ ENTRY_POINTS = {
         'build_man = Help2Man'
     ],
     'obspy.plugin.waveform': [
-        'TSPAIR = obspy.io.ascii.ascii',
-        'SLIST = obspy.io.ascii.ascii',
+        'TSPAIR = obspy.io.ascii.core',
+        'SLIST = obspy.io.ascii.core',
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
         'DATAMARK = obspy.io.datamark.core',
@@ -157,14 +157,14 @@ ENTRY_POINTS = {
         'AH = obspy.io.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
-        'isFormat = obspy.io.ascii.ascii:isTSPAIR',
-        'readFormat = obspy.io.ascii.ascii:readTSPAIR',
-        'writeFormat = obspy.io.ascii.ascii:writeTSPAIR',
+        'isFormat = obspy.io.ascii.core:isTSPAIR',
+        'readFormat = obspy.io.ascii.core:readTSPAIR',
+        'writeFormat = obspy.io.ascii.core:writeTSPAIR',
     ],
     'obspy.plugin.waveform.SLIST': [
-        'isFormat = obspy.io.ascii.ascii:isSLIST',
-        'readFormat = obspy.io.ascii.ascii:readSLIST',
-        'writeFormat = obspy.io.ascii.ascii:writeSLIST',
+        'isFormat = obspy.io.ascii.core:isSLIST',
+        'readFormat = obspy.io.ascii.core:readSLIST',
+        'writeFormat = obspy.io.ascii.core:writeSLIST',
     ],
     'obspy.plugin.waveform.PICKLE': [
         'isFormat = obspy.core.stream:isPickle',
@@ -253,7 +253,7 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.ah.core:read_AH',
     ],
     'obspy.plugin.event': [
-        'QUAKEML = obspy.io.quakeml.quakeml',
+        'QUAKEML = obspy.io.quakeml.core',
         'ZMAP = obspy.io.zmap.core',
         'MCHEDR = obspy.io.pde.mchedr',
         'JSON = obspy.io.json.core',
@@ -263,9 +263,9 @@ ENTRY_POINTS = {
         'CNV = obspy.io.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
-        'isFormat = obspy.io.quakeml.quakeml:isQuakeML',
-        'readFormat = obspy.io.quakeml.quakeml:readQuakeML',
-        'writeFormat = obspy.io.quakeml.quakeml:writeQuakeML',
+        'isFormat = obspy.io.quakeml.core:isQuakeML',
+        'readFormat = obspy.io.quakeml.core:readQuakeML',
+        'writeFormat = obspy.io.quakeml.core:writeQuakeML',
     ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:isMchedr',
@@ -294,14 +294,14 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
         ],
     'obspy.plugin.inventory': [
-        'STATIONXML = obspy.io.stationxml.stationxml',
+        'STATIONXML = obspy.io.stationxml.core',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
     ],
     'obspy.plugin.inventory.STATIONXML': [
-        'isFormat = obspy.io.stationxml.stationxml:is_StationXML',
-        'readFormat = obspy.io.stationxml.stationxml:read_StationXML',
-        'writeFormat = obspy.io.stationxml.stationxml:write_StationXML',
+        'isFormat = obspy.io.stationxml.core:is_StationXML',
+        'readFormat = obspy.io.stationxml.core:read_StationXML',
+        'writeFormat = obspy.io.stationxml.core:write_StationXML',
     ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:write_SACPZ',

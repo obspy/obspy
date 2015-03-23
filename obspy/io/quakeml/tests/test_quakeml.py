@@ -14,12 +14,12 @@ from lxml import etree
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
                               Tensor, WaveformStreamID, readEvents)
-from obspy.io.quakeml.quakeml import Pickler, readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import compare_xml_strings
+from obspy.io.quakeml.core import Pickler, readQuakeML, writeQuakeML
 
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support

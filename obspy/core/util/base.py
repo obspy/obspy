@@ -210,7 +210,7 @@ def _getEntryPoints(group, subgroup=None):
     .. rubric:: Example
 
     >>> _getEntryPoints('obspy.plugin.waveform')  # doctest: +ELLIPSIS
-    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.ascii')...}
+    {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.core')...}
     """
     features = {}
     for ep in iter_entry_points(group):
@@ -447,7 +447,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core.write_CNV`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core.writeJSON`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
-    QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.quakeml.writeQuakeML`
+    QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core.writeQuakeML`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core.writeZmap`
     ========= ===============... ========================================...
 
