@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.iris.client test suite.
+The obspy.clients.iris.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -13,12 +13,12 @@ import numpy as np
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.iris import Client
+from obspy.clients.iris import Client
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.iris.client.Client.
+    Test cases for obspy.clients.iris.client.Client.
     """
     def setUp(self):
         # directory where the test files are located

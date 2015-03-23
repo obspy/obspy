@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-obspy.iris - IRIS Web service client for ObsPy
-==============================================
-The obspy.iris package contains a client for the DMC Web services provided by
-IRIS (http://service.iris.edu/irisws/).
+obspy.clients.iris - IRIS Web service client for ObsPy
+======================================================
+The obspy.clients.iris package contains a client for the DMC Web services
+provided by IRIS (http://service.iris.edu/irisws/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -19,27 +19,27 @@ IRIS (http://service.iris.edu/irisws/):
 
 **Request Tools**
 
-* :meth:`~obspy.iris.client.Client.evalresp()` - evaluates instrument response
-  information stored at the IRIS DMC and outputs ASCII data or
+* :meth:`~obspy.clients.iris.client.Client.evalresp()` - evaluates instrument
+  response information stored at the IRIS DMC and outputs ASCII data or
   `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
-* :meth:`~obspy.iris.client.Client.resp()` - provides access to channel
+* :meth:`~obspy.clients.iris.client.Client.resp()` - provides access to channel
   response information in the SEED RESP format (as used by evalresp)
-* :meth:`~obspy.iris.client.Client.sacpz()` - provides access to instrument
-  response information (per-channel) as poles and zeros in the ASCII format
-  used by SAC and other programs
-* :meth:`~obspy.iris.client.Client.timeseries()` - fetches segments of seismic
-  data and returns data formatted in either MiniSEED, ASCII or SAC. It can
-  optionally filter the data.
+* :meth:`~obspy.clients.iris.client.Client.sacpz()` - provides access to
+  instrument response information (per-channel) as poles and zeros in the ASCII
+  format used by SAC and other programs
+* :meth:`~obspy.clients.iris.client.Client.timeseries()` - fetches segments of
+  seismic data and returns data formatted in either MiniSEED, ASCII or SAC. It
+  can optionally filter the data.
 
 **Calculation Tools**
 
-* :meth:`~obspy.iris.client.Client.traveltime()` - calculates travel-times for
-  seismic phases using a 1-D spherical earth model.
-* :meth:`~obspy.iris.client.Client.distaz()` - calculate the distance and
-  azimuth between two points on a sphere.
-* :meth:`~obspy.iris.client.Client.flinnengdahl()` - converts a latitude,
-  longitude pair into either a Flinn-Engdahl seismic region code or region
-  name.
+* :meth:`~obspy.clients.iris.client.Client.traveltime()` - calculates
+  travel-times for seismic phases using a 1-D spherical Earth model.
+* :meth:`~obspy.clients.iris.client.Client.distaz()` - calculate the distance
+  and azimuth between two points on a sphere.
+* :meth:`~obspy.clients.iris.client.Client.flinnengdahl()` - converts a
+  latitude, longitude pair into either a Flinn-Engdahl seismic region code or
+  region name.
 
 
 Please see the documentation for each method for further information and

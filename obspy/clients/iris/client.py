@@ -75,7 +75,7 @@ class Client(object):
 
     .. rubric:: Example
 
-    >>> from obspy.iris import Client
+    >>> from obspy.clients.iris import Client
     >>> client = Client()
     >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
     ...                        evtlon=1.4)
@@ -92,7 +92,7 @@ class Client(object):
         """
         Initializes the IRIS Web service client.
 
-        See :mod:`obspy.iris` for all parameters.
+        See :mod:`obspy.clients.iris` for all parameters.
         """
         self.base_url = base_url
         self.timeout = timeout
@@ -367,7 +367,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Example
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> from obspy import UTCDateTime
         >>> dt = UTCDateTime("2005-01-01T00:00:00")
         >>> client = Client()
@@ -460,7 +460,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Example
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> dt = UTCDateTime("2010-02-27T06:30:00.000")
@@ -604,7 +604,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Example
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> dt = UTCDateTime("2005-01-01")
@@ -706,7 +706,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Example
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> client = Client()
         >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
         ...                        evtlon=1.4)
@@ -757,7 +757,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Examples
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> client = Client()
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         683
@@ -880,7 +880,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         .. rubric:: Example
 
-        >>> from obspy.iris import Client
+        >>> from obspy.clients.iris import Client
         >>> client = Client()
         >>> result = client.traveltime(evloc=(-36.122,-72.898),
         ...     staloc=[(-33.45,-70.67),(47.61,-122.33),(35.69,139.69)],
@@ -1044,7 +1044,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         (1) Returning frequency, amplitude, phase of first point.
 
-            >>> from obspy.iris import Client
+            >>> from obspy.clients.iris import Client
             >>> client = Client()
             >>> dt = UTCDateTime("2005-01-01")
             >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
@@ -1054,7 +1054,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
 
         (2) Returning amplitude and phase plot.
 
-            >>> from obspy.iris import Client
+            >>> from obspy.clients.iris import Client
             >>> client = Client()
             >>> dt = UTCDateTime("2005-01-01")
             >>> client.evalresp("IU", "ANMO", "00", "BHZ", dt) # doctest: +SKIP
@@ -1062,7 +1062,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             .. plot::
 
                 from obspy import UTCDateTime
-                from obspy.iris import Client
+                from obspy.clients.iris import Client
                 client = Client()
                 dt = UTCDateTime("2005-01-01")
                 client.evalresp("IU", "ANMO", "00", "BHZ", dt)
