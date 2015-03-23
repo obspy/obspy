@@ -121,7 +121,9 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
         "obspy.seedlink": "obspy.io.seedlink",
         "obspy.seishub": "obspy.io.seishub",
         # geodetics
-        "obspy.core.util.geodetics": "obspy.geodetics"
+        "obspy.core.util.geodetics": "obspy.geodetics",
+        # obspy.station
+        "obspy.station": "obspy.core.inventory"
     }
 
     def find_module(self, fullname, path=None):
