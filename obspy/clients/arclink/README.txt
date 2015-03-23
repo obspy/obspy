@@ -1,5 +1,5 @@
-package obspy.arclink
-=====================
+package obspy.clients.arclink
+=============================
 
 Copyright
 ---------

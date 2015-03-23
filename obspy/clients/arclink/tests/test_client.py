@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.arclink.client test suite.
+The obspy.clients.arclink.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -14,15 +14,15 @@ import warnings
 import numpy as np
 
 from obspy import read
-from obspy.arclink import Client
-from obspy.arclink.client import ArcLinkException
+from obspy.clients.arclink import Client
+from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
 
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for obspy.arclink.client.Client.
+    Test cases for obspy.clients.arclink.client.Client.
     """
     def test_getWaveform(self):
         """

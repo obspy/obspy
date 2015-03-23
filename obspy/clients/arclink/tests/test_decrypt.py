@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.arclink.client test suite.
+The obspy.clients.arclink.client test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -11,8 +11,8 @@ import unittest
 
 import numpy as np
 
-from obspy.arclink import Client
-from obspy.arclink.client import DCID_KEY_FILE, ArcLinkException
+from obspy.clients.arclink import Client
+from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, skipIf
 
@@ -25,7 +25,7 @@ except ImportError:
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for L{obspy.arclink.client.Client}.
+    Test cases for L{obspy.clients.arclink.client.Client}.
     """
     @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKey(self):

@@ -117,7 +117,7 @@ class Client(object):
         """
         Initializes an ArcLink client.
 
-        See :class:`obspy.arclink.client.Client` for all parameters.
+        See :class:`obspy.clients.arclink.client.Client` for all parameters.
         """
         if user is None:
             warnings.warn(MSG_USER_REQUIRED, category=DeprecationWarning)
@@ -376,7 +376,7 @@ class Client(object):
             # check if given in known list of keys
             if dcid in self.dcid_keys:
                 # call decrypt routine
-                from obspy.arclink.decrypt import SSLWrapper
+                from obspy.clients.arclink.decrypt import SSLWrapper
                 decryptor = SSLWrapper(self.dcid_keys[dcid])
                 data = decryptor.update(data)
                 data += decryptor.final()
@@ -421,7 +421,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime("2009-08-20 04:03:12")
@@ -431,7 +431,7 @@ class Client(object):
         .. plot::
 
             from obspy import UTCDateTime
-            from obspy.arclink.client import Client
+            from obspy.clients.arclink.client import Client
             client = Client("webdc.eu", 18001, 'test@obspy.org')
             t = UTCDateTime("2009-08-20 04:03:12")
             st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
@@ -537,7 +537,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
@@ -774,7 +774,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
@@ -927,7 +927,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
@@ -1012,7 +1012,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
@@ -1092,7 +1092,7 @@ class Client(object):
 
         .. rubric:: Example
 
-        >>> from obspy.arclink import Client
+        >>> from obspy.clients.arclink import Client
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
         ...                           permanent=True, min_longitude=12,
