@@ -20,7 +20,6 @@ import platform
 import shutil
 import sys
 import tempfile
-from types import ModuleType
 import warnings
 from contextlib import contextmanager
 from subprocess import PIPE, Popen
