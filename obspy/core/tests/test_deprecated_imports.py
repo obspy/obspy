@@ -12,6 +12,7 @@ import importlib
 import unittest
 import warnings
 
+import obspy
 from obspy import ObsPyDeprecationWarning
 
 
@@ -68,6 +69,45 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         _test_rerouted_imps("obspy.core.quakeml", "obspy.io.quakeml")
         _test_rerouted_imps("obspy.core.stationxml", "obspy.io.stationxml")
         _test_rerouted_imps("obspy.core.json", "obspy.io.json")
+
+    def test_attribute_import(self):
+        """
+        Tests deprecated attribute imports, e.g.
+
+        >>> import obspy  # doctest: +SKIP
+        >>> obspy.station.Inventory  # doctest: +SKIP
+
+        should still work. This cannot be handled by fiddling with the
+        import meta paths as this is essentially equal to attribute access
+        on the modules.
+        """
+        # Old obspy.station. This has potentially been used a lot.
+        self.assertTrue(obspy.station.Inventory is
+                        obspy.core.inventory.Inventory)
+        self.assertTrue(obspy.station.Network is
+                        obspy.core.inventory.Network)
+        self.assertTrue(obspy.station.Station is
+                        obspy.core.inventory.Station)
+        self.assertTrue(obspy.station.Channel is
+                        obspy.core.inventory.Channel)
+        # Submodule imports.
+        self.assertTrue(obspy.station, obspy.core.inventory)
+        self.assertTrue(obspy.mseed, obspy.io.mseed)
+        self.assertTrue(obspy.xseed, obspy.io.xseed)
+        self.assertTrue(obspy.fdsn, obspy.clients.fdsn)
+        # obspy.geodetics used to be part of obspy.core.util.
+        self.assertTrue(obspy.core.util.geodetics is obspy.geodetics)
+        # Parser.
+        self.assertTrue(obspy.xseed.Parser is obspy.io.xseed.Parser)
+        # File formats previously part of obspy.core.
+        self.assertTrue(obspy.core.stationxml is
+                        obspy.io.stationxml.stationxml)
+        self.assertTrue(obspy.core.json is
+                        obspy.io.json.json)
+        self.assertTrue(obspy.core.ascii is
+                        obspy.io.ascii.ascii)
+        self.assertTrue(obspy.core.quakeml is
+                        obspy.io.quakeml.quakeml)
 
 
 def suite():
