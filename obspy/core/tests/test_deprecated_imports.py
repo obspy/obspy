@@ -82,32 +82,36 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         on the modules.
         """
         # Old obspy.station. This has potentially been used a lot.
-        self.assertTrue(obspy.station.Inventory is
-                        obspy.core.inventory.Inventory)
-        self.assertTrue(obspy.station.Network is
-                        obspy.core.inventory.Network)
-        self.assertTrue(obspy.station.Station is
-                        obspy.core.inventory.Station)
-        self.assertTrue(obspy.station.Channel is
-                        obspy.core.inventory.Channel)
-        # Submodule imports.
-        self.assertTrue(obspy.station, obspy.core.inventory)
-        self.assertTrue(obspy.mseed, obspy.io.mseed)
-        self.assertTrue(obspy.xseed, obspy.io.xseed)
-        self.assertTrue(obspy.fdsn, obspy.clients.fdsn)
-        # obspy.geodetics used to be part of obspy.core.util.
-        self.assertTrue(obspy.core.util.geodetics is obspy.geodetics)
-        # Parser.
-        self.assertTrue(obspy.xseed.Parser is obspy.io.xseed.Parser)
-        # File formats previously part of obspy.core.
-        self.assertTrue(obspy.core.stationxml is
-                        obspy.io.stationxml.stationxml)
-        self.assertTrue(obspy.core.json is
-                        obspy.io.json.json)
-        self.assertTrue(obspy.core.ascii is
-                        obspy.io.ascii.ascii)
-        self.assertTrue(obspy.core.quakeml is
-                        obspy.io.quakeml.quakeml)
+        with warnings.catch_warnings(record=True) as w:
+            self.assertTrue(obspy.station.Inventory is
+                            obspy.core.inventory.Inventory)
+            self.assertTrue(obspy.station.Network is
+                            obspy.core.inventory.Network)
+            self.assertTrue(obspy.station.Station is
+                            obspy.core.inventory.Station)
+            self.assertTrue(obspy.station.Channel is
+                            obspy.core.inventory.Channel)
+            # Submodule imports.
+            self.assertTrue(obspy.station, obspy.core.inventory)
+            self.assertTrue(obspy.mseed, obspy.io.mseed)
+            self.assertTrue(obspy.xseed, obspy.io.xseed)
+            self.assertTrue(obspy.fdsn, obspy.clients.fdsn)
+            # obspy.geodetics used to be part of obspy.core.util.
+            self.assertTrue(obspy.core.util.geodetics is obspy.geodetics)
+            # Parser.
+            self.assertTrue(obspy.xseed.Parser is obspy.io.xseed.Parser)
+            # File formats previously part of obspy.core.
+            self.assertTrue(obspy.core.stationxml is
+                            obspy.io.stationxml.core)
+            self.assertTrue(obspy.core.json is
+                            obspy.io.json.core)
+            self.assertTrue(obspy.core.ascii is
+                            obspy.io.ascii.core)
+            self.assertTrue(obspy.core.quakeml is
+                            obspy.io.quakeml.core)
+        self.assertTrue(len(w), 14)
+        for warn in w:
+            self.assertTrue(warn.category is ObsPyDeprecationWarning)
 
 
 def suite():
