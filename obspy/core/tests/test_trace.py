@@ -587,9 +587,9 @@ class TraceTestCase(unittest.TestCase):
         # trimmed. The original trace should have nothing.
         tr = Trace(data=np.arange(10, dtype=np.int32))
         tr2 = tr.slice(tr.stats.starttime)
-        self.assertTrue("processing" not in tr.stats)
-        self.assertTrue("processing" in tr2.stats)
-        self.assertTrue("trim" in tr2.stats.processing[0])
+        self.assertNotIn("processing", tr.stats)
+        self.assertIn("processing", tr2.stats)
+        self.assertIn("trim", tr2.stats.processing[0])
 
     def test_slice_noStarttimeOrEndtime(self):
         """
@@ -1296,7 +1296,7 @@ class TraceTestCase(unittest.TestCase):
         tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertTrue(tr.data[i] <= 1.)
-            self.assertTrue(tr.data[i] >= 0.)
+            self.assertGreaterEqual(tr.data[i], 0.)
 
     def test_taper_onesided(self):
         """
@@ -1541,22 +1541,22 @@ class TraceTestCase(unittest.TestCase):
             .normalize()
         self.assertTrue(temp_tr is tr)
         self.assertTrue(isinstance(tr, Trace))
-        self.assertTrue(tr.stats.npts > 0)
+        self.assertGreater(tr.stats.npts, 0)
 
         # Use the processing chain to check the results. The trim() methods
         # does not have an entry in the processing chain.
         pr = tr.stats.processing
-        self.assertTrue("trim" in pr[0])
+        self.assertIn("trim", pr[0])
         self.assertTrue("filter" in pr[1] and "lowpass" in pr[1])
-        self.assertTrue("simulate" in pr[2])
-        self.assertTrue("trigger" in pr[3])
-        self.assertTrue("decimate" in pr[4])
-        self.assertTrue("resample" in pr[5])
-        self.assertTrue("differentiate" in pr[6])
-        self.assertTrue("integrate" in pr[7])
-        self.assertTrue("detrend" in pr[8])
-        self.assertTrue("taper" in pr[9])
-        self.assertTrue("normalize" in pr[10])
+        self.assertIn("simulate", pr[2])
+        self.assertIn("trigger", pr[3])
+        self.assertIn("decimate", pr[4])
+        self.assertIn("resample", pr[5])
+        self.assertIn("differentiate", pr[6])
+        self.assertIn("integrate", pr[7])
+        self.assertIn("detrend", pr[8])
+        self.assertIn("taper", pr[9])
+        self.assertIn("normalize", pr[10])
 
     def test_skip_empty_trace(self):
         tr = read()[0]
@@ -1658,22 +1658,22 @@ class TraceTestCase(unittest.TestCase):
 
         pr = tr.stats.processing
 
-        self.assertTrue("trim" in pr[0])
+        self.assertIn("trim", pr[0])
         self.assertEqual(
             "ObsPy %s: trim(endtime=None::fill_value=None::"
             "nearest_sample=True::pad=False::starttime=%s)" % (
                 __version__, str(trimming_starttime)),
             pr[0])
-        self.assertTrue("filter" in pr[1])
-        self.assertTrue("simulate" in pr[2])
-        self.assertTrue("trigger" in pr[3])
-        self.assertTrue("decimate" in pr[4])
-        self.assertTrue("resample" in pr[5])
-        self.assertTrue("differentiate" in pr[6])
-        self.assertTrue("integrate" in pr[7])
-        self.assertTrue("detrend" in pr[8])
-        self.assertTrue("taper" in pr[9])
-        self.assertTrue("normalize" in pr[10])
+        self.assertIn("filter", pr[1])
+        self.assertIn("simulate", pr[2])
+        self.assertIn("trigger", pr[3])
+        self.assertIn("decimate", pr[4])
+        self.assertIn("resample", pr[5])
+        self.assertIn("differentiate", pr[6])
+        self.assertIn("integrate", pr[7])
+        self.assertIn("detrend", pr[8])
+        self.assertIn("taper", pr[9])
+        self.assertIn("normalize", pr[10])
 
     def test_no_processing_info_for_failed_operations(self):
         """

@@ -53,20 +53,20 @@ class ZMAPTestCase(unittest.TestCase):
         pickler = zmap.Pickler()
         # test full event (including origin/magnitude)
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string(self.test_data) in dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
         self.assertEqual(dump.count('\n'), 3)
         # no preferred origin
         oid = self.test_event.preferred_origin_id
         self.test_event.preferred_origin_id = None
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string({'mag': '4.400000'}) in dump)
+        self.assertIn(self._expected_string({'mag': '4.400000'}), dump)
         self.test_event.preferred_origin_id = oid
         # no preferred magnitude
         self.test_event.preferred_magnitude_id = None
         dump = pickler.dumps(self.catalog)
         test_data = self.test_data.copy()
         del test_data['mag']
-        self.assertTrue(self._expected_string(test_data) in dump)
+        self.assertIn(self._expected_string(test_data), dump)
 
     def test_plugin_interface(self):
         """
@@ -76,7 +76,7 @@ class ZMAPTestCase(unittest.TestCase):
             self.catalog.write(f, format='ZMAP')
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        self.assertTrue(self._expected_string(self.test_data) in file_content)
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_to_file(self):
         """
@@ -86,7 +86,7 @@ class ZMAPTestCase(unittest.TestCase):
             zmap.writeZmap(self.catalog, f)
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        self.assertTrue(self._expected_string(self.test_data) in file_content)
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_to_filename(self):
         """
@@ -96,7 +96,7 @@ class ZMAPTestCase(unittest.TestCase):
             zmap.writeZmap(self.catalog, f.name)
             f.seek(0)
             file_content = f.read().decode('utf-8')
-        self.assertTrue(self._expected_string(self.test_data) in file_content)
+        self.assertIn(self._expected_string(self.test_data), file_content)
 
     def test_dump_with_uncertainty(self):
         """
@@ -107,7 +107,7 @@ class ZMAPTestCase(unittest.TestCase):
                                'm_err': '0.000000'})
         pickler = zmap.Pickler(with_uncertainties=True)
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string(self.test_data) in dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_ou_hz_error(self):
         """
@@ -121,13 +121,13 @@ class ZMAPTestCase(unittest.TestCase):
         o.origin_uncertainty.preferred_description = 'horizontal uncertainty'
         o.origin_uncertainty.horizontal_uncertainty = 1.0
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string(self.test_data) in dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
         # with unsupported preferred_description
         self.test_data.update({'h_err': 'NaN', 'z_err': '0.000000',
                                'm_err': '0.000000'})
         o.origin_uncertainty.preferred_description = 'uncertainty ellipse'
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string(self.test_data) in dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_lat_lon_hz_error(self):
         """
@@ -141,7 +141,7 @@ class ZMAPTestCase(unittest.TestCase):
         o.latitude_errors.uncertainty = .001
         o.longitude_errors.uncertainty = .001
         dump = pickler.dumps(self.catalog)
-        self.assertTrue(self._expected_string(self.test_data) in dump)
+        self.assertIn(self._expected_string(self.test_data), dump)
 
     def test_is_zmap(self):
         """

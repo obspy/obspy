@@ -62,7 +62,7 @@ class RotateTestCase(unittest.TestCase):
         with gzip.open(os.path.join(self.path, 'rjob_20051006.gz')) as f:
             data_z = np.loadtxt(f)
         with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
-          data_n = np.loadtxt(f)
+            data_n = np.loadtxt(f)
         with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:
             data_e = np.loadtxt(f)
         # test different backazimuth/incidence combinations

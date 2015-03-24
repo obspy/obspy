@@ -44,12 +44,12 @@ class ClientTestCase(unittest.TestCase):
         # 2 - empty location code
         dt = UTCDateTime("2002-11-01")
         result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
-        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
-        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
+        self.assertIn(b"* STATION    (KSTNM): LON", result)
+        self.assertIn(b"* LOCATION   (KHOLE):   ", result)
         # 3 - empty location code via '--'
         result = client.sacpz('UW', 'LON', '--', 'BHZ', dt)
-        self.assertTrue(b"* STATION    (KSTNM): LON" in result)
-        self.assertTrue(b"* LOCATION   (KHOLE):   " in result)
+        self.assertIn(b"* STATION    (KSTNM): LON", result)
+        self.assertIn(b"* LOCATION   (KHOLE):   ", result)
 
     def test_distaz(self):
         """
@@ -221,19 +221,19 @@ class ClientTestCase(unittest.TestCase):
         t1 = UTCDateTime("2005-001T00:00:00")
         t2 = UTCDateTime("2008-001T00:00:00")
         result = client.resp("IU", "ANMO", "00", "BHZ", t1, t2)
-        self.assertTrue(b'B050F03     Station:     ANMO' in result)
+        self.assertIn(b'B050F03     Station:     ANMO', result)
         # 2 - empty location code
         result = client.resp("UW", "LON", "", "EHZ")
-        self.assertTrue(b'B050F03     Station:     LON' in result)
-        self.assertTrue(b'B052F03     Location:    ??' in result)
+        self.assertIn(b'B050F03     Station:     LON', result)
+        self.assertIn(b'B052F03     Location:    ??', result)
         # 3 - empty location code via '--'
         result = client.resp("UW", "LON", "--", "EHZ")
-        self.assertTrue(b'B050F03     Station:     LON' in result)
-        self.assertTrue(b'B052F03     Location:    ??' in result)
+        self.assertIn(b'B050F03     Station:     LON', result)
+        self.assertIn(b'B052F03     Location:    ??', result)
         # 4
         dt = UTCDateTime("2010-02-27T06:30:00.000")
         result = client.resp("IU", "ANMO", "*", "*", dt)
-        self.assertTrue(b'B050F03     Station:     ANMO' in result)
+        self.assertIn(b'B050F03     Station:     ANMO', result)
 
     def test_timeseries(self):
         """

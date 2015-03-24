@@ -232,8 +232,8 @@ class InventoryTestCase(unittest.TestCase):
 
         self.assertEqual(inv_1.source, inv_2.source)
         self.assertEqual(inv_1.sender, inv_2.sender)
-        self.assertTrue("ObsPy" in inv_1.module)
-        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertIn("ObsPy", inv_1.module)
+        self.assertIn("obspy.org", inv_1.module_uri)
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
         # Now a more advanced case.
@@ -250,8 +250,8 @@ class InventoryTestCase(unittest.TestCase):
 
         self.assertEqual(inv_1.source, "A,B")
         self.assertEqual(inv_1.sender, "Random,String")
-        self.assertTrue("ObsPy" in inv_1.module)
-        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertIn("ObsPy", inv_1.module)
+        self.assertIn("obspy.org", inv_1.module_uri)
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
         # One more. Containing a couple of Nones.
@@ -268,8 +268,8 @@ class InventoryTestCase(unittest.TestCase):
 
         self.assertEqual(inv_1.source, "A")
         self.assertEqual(inv_1.sender, "Random")
-        self.assertTrue("ObsPy" in inv_1.module)
-        self.assertTrue("obspy.org" in inv_1.module_uri)
+        self.assertIn("ObsPy", inv_1.module)
+        self.assertIn("obspy.org", inv_1.module_uri)
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
 

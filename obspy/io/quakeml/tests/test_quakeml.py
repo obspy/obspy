@@ -636,7 +636,7 @@ class QuakeMLTestCase(unittest.TestCase):
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.items():
-            self.assertTrue(enum_name in all_enums.keys())
+            self.assertIn(enum_name, all_enums.keys())
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -680,7 +680,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 1)
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
                  "| 2.0 MW"
-        self.assertTrue(ev_str in str(catalog.events[0]))
+        self.assertIn(ev_str, str(catalog.events[0]))
         # testing ids
         ev = catalog.events[0]
         self.assertEqual('smi:orig2', ev.preferred_origin_id)
@@ -912,7 +912,7 @@ class QuakeMLTestCase(unittest.TestCase):
                         b'xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"',
                         b'xmlns="http://quakeml.org/xmlns/bed/1.2"']
             for line in expected:
-                self.assertTrue(line in content)
+                self.assertIn(line, content)
             # check additional tags
             expected = [
                 b'<ns0:custom>True</ns0:custom>',
@@ -923,7 +923,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 b'some_attrib="some_value">false</ns1:public>'
             ]
             for line in expected:
-                self.assertTrue(line in content)
+                self.assertIn(line, content)
             # now, read again to test if it's parsed correctly..
             cat = readQuakeML(tmpfile)
         # when reading..

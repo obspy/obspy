@@ -388,7 +388,7 @@ class ParserTestCase(unittest.TestCase):
         #
         filename = os.path.join(self.path, 'nied.dataless.gz')
         with gzip.open(filename) as g:
-          f = io.BytesIO(g.read())
+            f = io.BytesIO(g.read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],

@@ -70,11 +70,11 @@ class NDKTestCase(unittest.TestCase):
 
         # Check the solution type.
         for event in cat[:3]:
-            self.assertTrue("Standard" in
-                            event.focal_mechanisms[0].comments[0].text)
+            self.assertIn("Standard",
+                          event.focal_mechanisms[0].comments[0].text)
         for event in cat[3:]:
-            self.assertTrue("Quick" in
-                            event.focal_mechanisms[0].comments[0].text)
+            self.assertIn("Quick",
+                          event.focal_mechanisms[0].comments[0].text)
 
     def test_is_ndk(self):
         """
@@ -86,7 +86,7 @@ class NDKTestCase(unittest.TestCase):
         for filename in os.listdir(self.path):
             if filename.endswith(".py"):
                 invalid_files.append(os.path.join(self.path, filename))
-        self.assertTrue(len(invalid_files) > 0)
+        self.assertGreater(len(invalid_files), 0)
 
         for filename in valid_files:
             self.assertTrue(is_ndk(filename))
@@ -220,12 +220,12 @@ class NDKTestCase(unittest.TestCase):
             cat = readEvents(filename)
 
         self.assertEqual(len(w), 6)
-        self.assertTrue("Invalid time in event 2" in str(w[0]))
-        self.assertTrue("Unknown data type" in str(w[1]))
-        self.assertTrue("Moment rate function" in str(w[2]))
-        self.assertTrue("Unknown source type" in str(w[3]))
-        self.assertTrue("Unknown type of depth" in str(w[4]))
-        self.assertTrue("Invalid CMT timestamp" in str(w[5]))
+        self.assertIn("Invalid time in event 2", str(w[0]))
+        self.assertIn("Unknown data type", str(w[1]))
+        self.assertIn("Moment rate function", str(w[2]))
+        self.assertIn("Unknown source type", str(w[3]))
+        self.assertIn("Unknown type of depth", str(w[4]))
+        self.assertIn("Invalid CMT timestamp", str(w[5]))
 
         # One event should still be available.
         self.assertEqual(len(cat), 1)
@@ -282,7 +282,7 @@ class NDKTestCase(unittest.TestCase):
         data.close()
 
         self.assertEqual(len(w), 1)
-        self.assertTrue("Not a multiple of 5 lines" in str(w[0]))
+        self.assertIn("Not a multiple of 5 lines", str(w[0]))
         # Only five events will have been read.
         self.assertEqual(len(cat), 5)
 
@@ -298,8 +298,8 @@ class NDKTestCase(unittest.TestCase):
 
         self.assertEqual(len(cat), 1)
         comments = cat[0].focal_mechanisms[0].comments
-        self.assertTrue("CMT Analysis Type: Unknown" in comments[0].text)
-        self.assertTrue("CMT Timestamp: O-000000000" in comments[1].text)
+        self.assertIn("CMT Analysis Type: Unknown", comments[0].text)
+        self.assertIn("CMT Timestamp: O-000000000", comments[1].text)
 
     def test_raise_exception_if_no_events_in_file(self):
         """

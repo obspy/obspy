@@ -27,7 +27,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         report, message = check_flake8()
         file_count = report.counters["files"]
         error_count = report.get_count()
-        self.assertTrue(file_count > 10)
+        self.assertGreater(file_count, 10)
         self.assertEqual(error_count, 0, message)
 
 

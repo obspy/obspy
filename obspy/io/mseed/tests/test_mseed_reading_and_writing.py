@@ -291,7 +291,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         stream = readMSEED(testfile, starttime=starttime + 6,
                            endtime=endtime - 6)
         self.assertTrue(starttime < stream[0].stats.starttime)
-        self.assertTrue(endtime > stream[0].stats.endtime)
+        self.assertGreater(endtime, stream[0].stats.endtime)
 
     def test_readPartialWithOnlyStarttimeSet(self):
         """
@@ -317,7 +317,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         stream = readMSEED(testfile, endtime=endtime - 6)
         self.assertEqual(starttime, stream[0].stats.starttime)
-        self.assertTrue(endtime > stream[0].stats.endtime)
+        self.assertGreater(endtime, stream[0].stats.endtime)
 
     def test_readPartialFrameWithEmptyTimeRange(self):
         """
@@ -1058,8 +1058,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             st = read(filename, reclen=512)
 
         self.assertEqual(len(w), 1)
-        self.assertTrue("Last reclen exceeds buflen, skipping" in
-                        str(w[-1].message))
+        self.assertIn("Last reclen exceeds buflen, skipping",
+                      str(w[-1].message))
         self.assertEqual(st[0].stats.station, 'BGLD')
 
     def test_verbosity(self):
@@ -1070,9 +1070,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with CatchOutput() as out:
             st = read(filename, verbose=2)
 
-        self.assertTrue(b"calling msr_parse with" in out.stdout)
-        self.assertTrue(b"buflen=512, reclen=-1, dataflag=0, verbose=2" in
-                        out.stdout)
+        self.assertIn(b"calling msr_parse with", out.stdout)
+        self.assertIn(b"buflen=512, reclen=-1, dataflag=0, verbose=2",
+                      out.stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
     def test_writing_with_some_encoding_fails(self):

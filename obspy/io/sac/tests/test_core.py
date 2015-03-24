@@ -732,7 +732,7 @@ class CoreTestCase(unittest.TestCase):
 
         # Will fail if the stream contains more than one trace.
         st = read()
-        self.assertTrue(len(st) > 1)
+        self.assertGreater(len(st), 1)
         with io.BytesIO() as fh:
             self.assertRaises(ValueError, st.write, fh, format="sac")
 

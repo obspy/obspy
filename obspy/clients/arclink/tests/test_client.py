@@ -93,7 +93,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 1)
         # getRouting with 0.1 delay
         results = client.getRouting('GR', 'FUR', start, end)
-        self.assertTrue('GR...' in results)
+        self.assertIn('GR...', results)
 
     def test_getRouting(self):
         """
@@ -175,25 +175,25 @@ class ClientTestCase(unittest.TestCase):
         dt = UTCDateTime(2010, 1, 1)
         # 1 - GE network
         result = client.getInventory('GE', 'APE', starttime=dt, endtime=dt + 1)
-        self.assertTrue('GE' in result)
-        self.assertTrue('GE.APE' in result)
+        self.assertIn('GE', result)
+        self.assertIn('GE.APE', result)
         # 2 - GE network
         result = client.getInventory('GE', 'APE', '', 'BHE', starttime=dt,
                                      endtime=dt + 1, instruments=True)
-        self.assertTrue('GE' in result)
-        self.assertTrue('GE.APE' in result)
-        self.assertTrue('GE.APE..BHE' in result)  # only for instruments=True
+        self.assertIn('GE', result)
+        self.assertIn('GE.APE', result)
+        self.assertIn('GE.APE..BHE', result)  # only for instruments=True
         # 3 - BW network
         result = client.getInventory('BW', 'RJOB', starttime=dt,
                                      endtime=dt + 1)
-        self.assertTrue('BW' in result)
-        self.assertTrue('BW.RJOB' in result)
+        self.assertIn('BW', result)
+        self.assertIn('BW.RJOB', result)
         # 4 - BW network
         result = client.getInventory('BW', 'MANZ', '', 'EHE', starttime=dt,
                                      endtime=dt + 1, instruments=True)
-        self.assertTrue('BW' in result)
-        self.assertTrue('BW.MANZ' in result)
-        self.assertTrue('BW.MANZ..EHE' in result)
+        self.assertIn('BW', result)
+        self.assertIn('BW.MANZ', result)
+        self.assertIn('BW.MANZ..EHE', result)
         # 5 - unknown network 00 via webdc.eu:18002
         self.assertRaises(ArcLinkException, client.getInventory, '00', '',
                           starttime=dt, endtime=dt + 1)
@@ -201,20 +201,20 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime("1970-01-01 00:00:00")
         end = UTCDateTime("2020-10-19 00:00:00")
         result = client.getInventory('BW', 'MANZ', '', 'EHE', start, end)
-        self.assertTrue('BW' in result)
-        self.assertTrue('BW.MANZ' in result)
-        self.assertTrue('BW.MANZ..EHE' in result)
+        self.assertIn('BW', result)
+        self.assertIn('BW.MANZ', result)
+        self.assertIn('BW.MANZ..EHE', result)
         self.assertEqual(len(result['BW.MANZ..EHE']), 2)
-        self.assertTrue('gain' in result['BW.MANZ..EHE'][0])
-        self.assertTrue('paz' not in result['BW.MANZ..EHE'][0])
+        self.assertIn('gain', result['BW.MANZ..EHE'][0])
+        self.assertNotIn('paz', result['BW.MANZ..EHE'][0])
         # 7 - history of instruments
         # GE.SNAA sometimes needs a while therefore we use command_delay=0.1
         client = Client(user='test@obspy.org', command_delay=0.1)
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
                                      instruments=True)
-        self.assertTrue('GE' in result)
-        self.assertTrue('GE.SNAA' in result)
-        self.assertTrue('GE.SNAA..BHZ' in result)
+        self.assertIn('GE', result)
+        self.assertIn('GE.SNAA', result)
+        self.assertIn('GE.SNAA..BHZ', result)
         self.assertEqual(len(result['GE.SNAA..BHZ']), 4)
         # sort channel results
         channel = result['GE.SNAA..BHZ']
@@ -373,7 +373,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         result = client.getNetworks(start, end)
-        self.assertTrue('BW' in result.keys())
+        self.assertIn('BW', result.keys())
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
@@ -632,14 +632,14 @@ class ClientTestCase(unittest.TestCase):
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 metadata=False)
         self.assertEqual(len(st), 3)
-        self.assertTrue('paz' not in st[0].stats)
-        self.assertTrue('coordinates' not in st[0].stats)
+        self.assertNotIn('paz', st[0].stats)
+        self.assertNotIn('coordinates', st[0].stats)
         # 2
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 metadata=True)
         self.assertEqual(len(st), 3)
-        self.assertTrue('paz' in st[0].stats)
-        self.assertTrue('coordinates' in st[0].stats)
+        self.assertIn('paz', st[0].stats)
+        self.assertIn('coordinates', st[0].stats)
 
     def test_issue372(self):
         """
@@ -650,11 +650,11 @@ class ClientTestCase(unittest.TestCase):
         st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
                                 metadata=True)
         for tr in st:
-            self.assertTrue('paz' in tr.stats)
-            self.assertTrue('coordinates' in tr.stats)
-            self.assertTrue('poles' in tr.stats.paz)
-            self.assertTrue('zeros' in tr.stats.paz)
-            self.assertTrue('latitude' in tr.stats.coordinates)
+            self.assertIn('paz', tr.stats)
+            self.assertIn('coordinates', tr.stats)
+            self.assertIn('poles', tr.stats.paz)
+            self.assertIn('zeros', tr.stats.paz)
+            self.assertIn('latitude', tr.stats.coordinates)
 
     def test_getInventoryInstrumentChange(self):
         """

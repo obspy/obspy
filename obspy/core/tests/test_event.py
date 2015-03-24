@@ -219,7 +219,7 @@ class CatalogTestCase(unittest.TestCase):
         Testing the __str__ method of the Catalog object.
         """
         catalog = readEvents()
-        self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
+        self.assertIn(catalog.__str__().startswith("3 Event(s), Catalog:"))
         self.assertTrue(catalog.__str__().endswith("37.736 | 3.0 ML | manual"))
 
     def test_readEvents(self):

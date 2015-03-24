@@ -316,7 +316,7 @@ class ASCIITestCase(unittest.TestCase):
             with open(tmpfile, 'rt') as f:
                 lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
-            self.assertTrue('TSPAIR' in lines[0])
+            self.assertIn('TSPAIR', lines[0])
             self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185\n')
             # test issue #321 (problems in time stamping)
             self.assertEqual(lines[-1], '2008-01-15T00:00:15.750000  772\n')
@@ -419,7 +419,7 @@ class ASCIITestCase(unittest.TestCase):
             with open(tmpfile, 'rt') as f:
                 lines = f.readlines()
             self.assertTrue(lines[0].startswith('TIMESERIES'))
-            self.assertTrue('SLIST' in lines[0])
+            self.assertIn('SLIST', lines[0])
             self.assertEqual(lines[1].strip(), '185\t181\t185\t189\t194\t205')
             # read again
             stream = readSLIST(tmpfile)

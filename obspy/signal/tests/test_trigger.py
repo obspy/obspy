@@ -69,8 +69,9 @@ class TriggerTestCase(unittest.TestCase):
         """
         Test pkBaer against implementation for UNESCO short course
         """
-        file = os.path.join(self.path, 'manz_waldk.a01.gz')
-        data = np.loadtxt(gzip.open(file), dtype=np.float32)
+        filename = os.path.join(self.path, 'manz_waldk.a01.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f, dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
         nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
@@ -158,19 +159,19 @@ class TriggerTestCase(unittest.TestCase):
         for item in res:
             self.assertTrue(isinstance(item, dict))
             for key, _type in zip(expected_keys, expected_types):
-                self.assertTrue(key in item)
+                self.assertIn(key, item)
                 self.assertTrue(isinstance(item[key], _type))
-        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+        self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
         self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[0]['coincidence_sum'] == 4)
-        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:26:59"))
+        self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
         self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
         self.assertTrue(res[1]['coincidence_sum'] == 3)
-        self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+        self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
@@ -184,12 +185,14 @@ class TriggerTestCase(unittest.TestCase):
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
                                     trace_ids=trace_ids, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
-            self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+            self.assertGreater(re[0]['time'],
+                               UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
             self.assertTrue(4.2 < re[0]['duration'] < 4.8)
             self.assertTrue(re[0]['stations'] == ['UH3', 'UH1', 'UH4'])
             self.assertTrue(re[0]['coincidence_sum'] == 3)
-            self.assertTrue(re[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+            self.assertGreater(re[1]['time'],
+                               UTCDateTime("2010-05-27T16:27:27"))
             self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
             self.assertTrue(4.2 < re[1]['duration'] < 4.4)
             self.assertTrue(re[1]['stations'] == ['UH3', 'UH1', 'UH4'])
@@ -201,17 +204,17 @@ class TriggerTestCase(unittest.TestCase):
         res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.0,
                                  trace_ids=trace_ids, sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
-        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+        self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
         self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[0]['coincidence_sum'] == 1.4)
-        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:26:59"))
+        self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
         self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
         self.assertTrue(res[1]['coincidence_sum'] == 1.15)
-        self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+        self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
@@ -226,12 +229,14 @@ class TriggerTestCase(unittest.TestCase):
                                     trace_ids=trace_ids,
                                     max_trigger_length=0.13, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
-            self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+            self.assertGreater(re[0]['time'],
+                               UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
             self.assertTrue(0.2 < re[0]['duration'] < 0.3)
             self.assertTrue(re[0]['stations'] == ['UH2', 'UH1'])
             self.assertTrue(re[0]['coincidence_sum'] == 1.2)
-            self.assertTrue(re[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+            self.assertGreater(re[1]['time'],
+                               UTCDateTime("2010-05-27T16:27:27"))
             self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
             self.assertTrue(0.18 < re[1]['duration'] < 0.2)
             self.assertTrue(re[1]['stations'] == ['UH2', 'UH1'])
@@ -242,7 +247,7 @@ class TriggerTestCase(unittest.TestCase):
                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
                                  sta=0.3, lta=5)
         self.assertTrue(len(res) == 5)
-        self.assertTrue(res[3]['time'] > UTCDateTime("2010-05-27T16:27:01"))
+        self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
         self.assertTrue(res[3]['stations'] == ['UH3', 'UH1'])
@@ -262,7 +267,7 @@ class TriggerTestCase(unittest.TestCase):
                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
                                  sta=0.3, lta=5)
         self.assertTrue(len(res) == 5)
-        self.assertTrue(res[3]['time'] > UTCDateTime("2010-05-27T16:27:01"))
+        self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
         self.assertTrue(res[3]['stations'] == ['UH3', 'UH1'])
@@ -285,7 +290,7 @@ class TriggerTestCase(unittest.TestCase):
                                  trace_ids=trace_ids, details=True,
                                  sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
-        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+        self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
         self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', ''])
@@ -294,7 +299,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[0]['trace_ids'][2] == st2[0].id)
         self.assertTrue(res[0]['trace_ids'][3] == st2[3].id)
         self.assertTrue(res[0]['coincidence_sum'] == 1.4)
-        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:26:59"))
+        self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
         self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
@@ -302,7 +307,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[1]['trace_ids'][1] == st2[2].id)
         self.assertTrue(res[1]['trace_ids'][2] == st2[0].id)
         self.assertTrue(res[1]['coincidence_sum'] == 1.15)
-        self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+        self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', ''])
@@ -316,7 +321,7 @@ class TriggerTestCase(unittest.TestCase):
         expected_types = [float, float, list, list]
         for item in res:
             for key, _type in zip(expected_keys, expected_types):
-                self.assertTrue(key in item)
+                self.assertIn(key, item)
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
