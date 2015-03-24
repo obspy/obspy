@@ -9,7 +9,8 @@ from obspy.imaging.beachball import Beach
 
 # read in topo data (on a regular lat/lon grid)
 # (SRTM data from: http://srtm.csi.cgiar.org/)
-srtm = np.loadtxt(gzip.open("srtm_1240-1300E_4740-4750N.asc.gz"), skiprows=8)
+with gzip.open("srtm_1240-1300E_4740-4750N.asc.gz") as fp:
+    srtm = np.loadtxt(fp, skiprows=8)
 
 # origin of data grid as stated in SRTM data file header
 # create arrays with all lon/lat values from min to max and

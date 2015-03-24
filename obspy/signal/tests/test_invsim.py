@@ -78,11 +78,9 @@ class InvSimTestCase(unittest.TestCase):
         of Pitsa - LE3D seismometer.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        # no with due to py 2.6
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -101,9 +99,8 @@ class InvSimTestCase(unittest.TestCase):
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             # no with due to py 2.6
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            with gzip.open(file) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -116,9 +113,8 @@ class InvSimTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(file) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -136,9 +132,8 @@ class InvSimTestCase(unittest.TestCase):
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             # no with due to py 2.6
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            with gzip.open(file) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -219,18 +214,16 @@ class InvSimTestCase(unittest.TestCase):
                  'station': 'KARC', 'location': 'S1',
                  'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
                  'calib': 1.00868e+09, 'channel': 'BHZ'}
-        f = gzip.open(sacf)
-        tr = Trace(np.loadtxt(f), stats)
-        f.close()
+        with gzip.open(sacf) as f:
+            tr = Trace(np.loadtxt(f), stats)
 
         attach_paz(tr, pzf, tovel=False)
         tr.data = seisSim(tr.data, tr.stats.sampling_rate,
                           paz_remove=tr.stats.paz, remove_sensitivity=False,
                           pre_filt=(fl1, fl2, fl3, fl4))
 
-        f = gzip.open(testsacf)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(testsacf) as f:
+            data = np.loadtxt(f)
 
         # import matplotlib.pyplot as plt
         # plt.plot(tr.data)
@@ -349,10 +342,8 @@ class InvSimTestCase(unittest.TestCase):
         resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
         with NamedTemporaryFile() as fh:
             tmpfile = fh.name
-            # no with due to py 2.6
-            f = gzip.open(resp)
-            fh.write(f.read())
-            f.close()
+            with gzip.open(resp) as f:
+                fh.write(f.read())
             samprate = 120.0
             nfft = 56328
             args = [1.0 / samprate, nfft, tmpfile,
@@ -424,13 +415,13 @@ class InvSimTestCase(unittest.TestCase):
         # the response.
         rel_diff = np.abs(response_2 - response_1).ptp() / \
             max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
-        self.assertTrue(rel_diff > 1E-3)
+        self.assertGreater(rel_diff, 1E-3)
 
         # The RESP file only contains two channels.
         kwargs["channel"] = "BHZ"
         with CatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
-        self.assertTrue(b"no response found for" in out.stderr.lower())
+        self.assertIn(b"no response found for", out.stderr.lower())
 
     def test_evalresp_spline(self):
         """
