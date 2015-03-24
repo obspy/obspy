@@ -10,7 +10,7 @@ import os
 import unittest
 import warnings
 
-from obspy import UTCDateTime, readEvents
+from obspy import UTCDateTime, read_events
 from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
                                read_ndk)
 
@@ -34,7 +34,7 @@ class NDKTestCase(unittest.TestCase):
         cat = read_ndk(filename)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -95,13 +95,13 @@ class NDKTestCase(unittest.TestCase):
 
     def test_reading_using_obspy_plugin(self):
         """
-        Checks that reading with the readEvents() function works correctly.
+        Checks that reading with the read_events() function works correctly.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        cat = readEvents(filename)
+        cat = read_events(filename)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -113,11 +113,11 @@ class NDKTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             file_object = io.StringIO(fh.read())
 
-        cat = readEvents(file_object)
+        cat = read_events(file_object)
         file_object.close()
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -129,11 +129,11 @@ class NDKTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             file_object = io.BytesIO(fh.read())
 
-        cat = readEvents(file_object)
+        cat = read_events(file_object)
         file_object.close()
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -143,10 +143,10 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rt") as fh:
-            cat = readEvents(fh)
+            cat = read_events(fh)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -156,10 +156,10 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
         with open(filename, "rb") as fh:
-            cat = readEvents(fh)
+            cat = read_events(fh)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         self.assertEqual(cat, ref_cat)
 
@@ -169,21 +169,21 @@ class NDKTestCase(unittest.TestCase):
         due to resource identifier already in use.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        cat_1 = readEvents(filename)
+        cat_1 = read_events(filename)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat_2 = readEvents(filename)
+            cat_2 = read_events(filename)
 
         self.assertEqual(len(w), 0)
         self.assertEqual(cat_1, cat_2)
 
         filename = os.path.join(self.datapath, "multiple_events.ndk")
-        cat_1 = readEvents(filename)
+        cat_1 = read_events(filename)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat_2 = readEvents(filename)
+            cat_2 = read_events(filename)
 
         self.assertEqual(len(w), 0)
         self.assertEqual(cat_1, cat_2)
@@ -217,7 +217,7 @@ class NDKTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat = readEvents(filename)
+            cat = read_events(filename)
 
         self.assertEqual(len(w), 6)
         self.assertIn("Invalid time in event 2", str(w[0]))
@@ -237,7 +237,7 @@ class NDKTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         with io.open(filename, "rt") as fh:
             data = fh.read()
@@ -254,7 +254,7 @@ class NDKTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
-        ref_cat = readEvents(reference)
+        ref_cat = read_events(reference)
 
         with io.open(filename, "rb") as fh:
             data = fh.read()
@@ -277,7 +277,7 @@ class NDKTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat = readEvents(data)
+            cat = read_events(data)
 
         data.close()
 
@@ -294,7 +294,7 @@ class NDKTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.datapath, "faulty_cmt_timestamp.ndk")
 
-        cat = readEvents(filename)
+        cat = read_events(filename)
 
         self.assertEqual(len(cat), 1)
         comments = cat[0].focal_mechanisms[0].comments
@@ -315,7 +315,7 @@ class NDKTestCase(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.assertRaises(ObsPyNDKException, readEvents, data)
+            self.assertRaises(ObsPyNDKException, read_events, data)
 
     def test_parse_date_time_function(self):
         """

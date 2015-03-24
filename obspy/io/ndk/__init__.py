@@ -53,11 +53,11 @@ Basic Usage
     region name in the NDK file will be replaced with its full Flinn-Engdahl
     region name using ObsPy's built-in region parser.
 
-The :func:`~obspy.core.event.readEvents` method is used to read NDK files to
+The :func:`~obspy.core.event.read_events` method is used to read NDK files to
 :class:`~obspy.core.event.Catalog` objects.
 
 >>> import obspy
->>> cat = obspy.readEvents("/path/to/C200604092050A.ndk")
+>>> cat = obspy.read_events("/path/to/C200604092050A.ndk")
 >>> print(cat)
 1 Event(s) in Catalog:
 2006-04-09T20:50:51.300000Z | -20.460,  -70.730 | 5.73 Mwc
@@ -70,7 +70,7 @@ can easily be achieved with ObsPy.
 Instead of passing a filename it is also possible to specify a URL (in this
 case to the solutions from February 2011).
 
->>> cat = obspy.readEvents("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
+>>> cat = obspy.read_events("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
 ...                        "catalog/NEW_MONTHLY/2011/"
 ...                        "feb11.ndk")  # doctest: +SKIP
 >>> print(cat)  # doctest: +SKIP
@@ -86,13 +86,13 @@ To see all events call 'print(CatalogObject.__str__(print_all=True))'
 .. plot::
 
     import obspy
-    cat = obspy.readEvents("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
+    cat = obspy.read_events("http://www.ldeo.columbia.edu/~gcmt/projects/CMT/"
                            "catalog/NEW_MONTHLY/2011/feb11.ndk")
     cat.plot()
 
 It can also deal with large amounts of data, though it might take a while.
 
->>> cat = obspy.readEvents("/path/to/jan76_dec10.ndk")  # doctest: +SKIP
+>>> cat = obspy.read_events("/path/to/jan76_dec10.ndk")  # doctest: +SKIP
 >>> print(cat)  # doctest: +SKIP
 33872 Event(s) in Catalog:
 1976-01-01T01:29:53.400000Z | -29.250, -176.960 | 7.25 Mwc

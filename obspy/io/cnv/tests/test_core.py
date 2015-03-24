@@ -8,7 +8,7 @@ import inspect
 import os
 import unittest
 
-from obspy import readEvents
+from obspy import read_events
 from obspy.io.cnv.core import write_CNV
 from obspy.core.util import NamedTemporaryFile
 
@@ -28,7 +28,7 @@ class CNVTestCase(unittest.TestCase):
         """
         # load QuakeML file to generate CNV file from it
         filename = os.path.join(self.datapath, "obspyck_20141020150701.xml")
-        cat = readEvents(filename, format="QUAKEML")
+        cat = read_events(filename, format="QUAKEML")
 
         # read expected OBS file output
         filename = os.path.join(self.datapath, "obspyck_20141020150701.cnv")

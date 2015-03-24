@@ -47,7 +47,7 @@ master:
    * Renamed 'type' argument to 'method' in the Trace.differentiate() method.
    * Renamed 'type' argument to 'method' in the Trace.integrate() method.
      Additionally, several broken alternate methods have been removed.
-   * new plugins for NonLinLoc formats for readEvents() and
+   * new plugins for NonLinLoc formats for read_events() and
      Catalog/Event.write() (see obspy.nlloc and #900)
    * The wrap_long_string utility function is deprecated. Users may use the
      textwrap module which provides similar functionality.
@@ -412,7 +412,7 @@ master:
    Use "import obspy; print obspy.__version__"
  - discontinuing Python 2.5 support
  - most important classes/functions can be imported like "from obspy import
-   ...", currently: read, Trace, Stream, UTCDateTime and readEvents
+   ...", currently: read, Trace, Stream, UTCDateTime and read_events
  - obspy.arclink:
    * refactored attributes in getPAZ to stick better with the SEED standard
  - obspy.core:

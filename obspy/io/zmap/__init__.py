@@ -18,8 +18,8 @@ Usage Example
 The ZMAP reader and writer hooks into the standard ObsPy event handling
 mechanisms including format autodetection.
 
->>> from obspy.core.event import readEvents
->>> cat = readEvents('/path/to/zmap_events.txt')
+>>> from obspy.core.event import read_events
+>>> cat = read_events('/path/to/zmap_events.txt')
 >>> print(cat)
 2 Event(s) in Catalog:
 2012-04-04T14:21:42.299999Z | +41.818,  +79.689 | 4.4 None
@@ -42,7 +42,7 @@ following deviations from standard ZMAP format are acceptable:
   If the year column is an integer number, date and time are computed from all
   date/time related fields.
 
-Note that ZMAP format autodetection in :func:`~obspy.core.event.readEvents`
+Note that ZMAP format autodetection in :func:`~obspy.core.event.read_events`
 only works with strictly 10 or 13 column files. To read non-standard ZMAP
 files, the ``format='ZMAP'`` keyword argument must be provided.
 

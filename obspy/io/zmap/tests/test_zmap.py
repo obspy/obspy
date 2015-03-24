@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.core.event import readEvents
+from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.zmap import core as zmap
@@ -27,7 +27,7 @@ class ZMAPTestCase(unittest.TestCase):
     def setUp(self):
         data_dir = os.path.join(os.path.dirname(__file__), 'data')
         path_to_catalog = os.path.join(data_dir, 'neries_events.xml')
-        self.catalog = readEvents(path_to_catalog)
+        self.catalog = read_events(path_to_catalog)
         self.zmap_fields = _STD_ZMAP_FIELDS
         # Extract our favorite test event from the catalog
         test_event_id = 'quakeml:eu.emsc/event/20120404_0000041'
@@ -223,7 +223,7 @@ class ZMAPTestCase(unittest.TestCase):
             f.seek(0)
             catalog = zmap.readZmap(f)
             self._assert_zmap_equal(catalog, test_events)
-            catalog = readEvents(f.name)
+            catalog = read_events(f.name)
             self._assert_zmap_equal(catalog, test_events)
         # direct ZMAP string
         catalog = zmap.readZmap(zmap_str)

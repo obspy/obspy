@@ -13,7 +13,7 @@ from lxml import etree
 
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
-                              Tensor, WaveformStreamID, readEvents)
+                              Tensor, WaveformStreamID, read_events)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
@@ -575,18 +575,18 @@ class QuakeMLTestCase(unittest.TestCase):
 
     def test_readEvents(self):
         """
-        Tests reading a QuakeML document via readEvents.
+        Tests reading a QuakeML document via read_events.
         """
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = readEvents(self.neries_filename)
+            catalog = read_events(self.neries_filename)
             self.assertTrue(len(catalog), 3)
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readEvents(tmpfile)
+                catalog2 = read_events(tmpfile)
         self.assertTrue(len(catalog2), 3)
 
     @skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
@@ -657,12 +657,12 @@ class QuakeMLTestCase(unittest.TestCase):
 
     def test_read_string(self):
         """
-        Test reading a QuakeML string/unicode object via readEvents.
+        Test reading a QuakeML string/unicode object via read_events.
         """
         with open(self.neries_filename, 'rb') as fp:
             data = fp.read()
 
-        catalog = readEvents(data)
+        catalog = read_events(data)
         self.assertEqual(len(catalog), 3)
 
     def test_preferred_tags(self):
@@ -676,7 +676,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(ev.preferred_focal_mechanism(), None)
         # testing existing event
         filename = os.path.join(self.path, 'preferred.xml')
-        catalog = readEvents(filename)
+        catalog = read_events(filename)
         self.assertEqual(len(catalog), 1)
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
                  "| 2.0 MW"
@@ -766,10 +766,10 @@ class QuakeMLTestCase(unittest.TestCase):
     def test_read_equivalence(self):
         """
         See #662.
-        Tests if readQuakeML() and readEvents() return the same results.
+        Tests if readQuakeML() and read_events() return the same results.
         """
         warnings.simplefilter("ignore", UserWarning)
-        cat1 = readEvents(self.neries_filename)
+        cat1 = read_events(self.neries_filename)
         cat2 = readQuakeML(self.neries_filename)
         warnings.filters.pop(0)
         self.assertEqual(cat1, cat2)

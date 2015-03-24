@@ -7,7 +7,7 @@ import os
 import unittest
 import warnings
 
-from obspy.core.event import ResourceIdentifier, readEvents
+from obspy.core.event import ResourceIdentifier, read_events
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.pde.mchedr import readMchedr
@@ -320,13 +320,13 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
 
     def test_readEvents(self):
         """
-        Tests reading an mchedr document via readEvents.
+        Tests reading an mchedr document via read_events.
         """
         filename = os.path.join(self.path, 'mchedr.dat')
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
         with warnings.catch_warnings(record=True):
-            catalog = readEvents(filename)
+            catalog = read_events(filename)
             self.assertTrue(len(catalog), 1)
 
 

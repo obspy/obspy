@@ -301,7 +301,8 @@ def readZmap(filename, **kwargs):
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str or file
     :param filename: ZMAP string, name of ZMAP file to be read or open

@@ -1759,7 +1759,8 @@ def readQuakeML(filename):
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str
     :param filename: QuakeML file to be read.
@@ -1768,8 +1769,8 @@ def readQuakeML(filename):
 
     .. rubric:: Example
 
-    >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/iris_events.xml')
+    >>> from obspy.core.event import read_events
+    >>> cat = read_events('/path/to/iris_events.xml')
     >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW

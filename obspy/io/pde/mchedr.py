@@ -1068,7 +1068,8 @@ def readMchedr(filename):
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str
     :param filename: mchedr file to be read.
@@ -1077,8 +1078,8 @@ def readMchedr(filename):
 
     .. rubric:: Example
 
-    >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/mchedr.dat')
+    >>> from obspy.core.event import read_events
+    >>> cat = read_events('/path/to/mchedr.dat')
     >>> print(cat)
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb

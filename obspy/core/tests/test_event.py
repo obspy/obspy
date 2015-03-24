@@ -11,7 +11,7 @@ import warnings
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              readEvents)
+                              read_events)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import getBasemapVersion
 from obspy.core.util.decorator import skipIf
@@ -37,7 +37,7 @@ class EventTestCase(unittest.TestCase):
         """
         Testing the __str__ method of the Event object.
         """
-        event = readEvents()[1]
+        event = read_events()[1]
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                          " | 4.3 ML | manual", s)
@@ -101,7 +101,7 @@ class EventTestCase(unittest.TestCase):
         Tests that copying an event does not raise a duplicate resource id
         warning.
         """
-        ev = readEvents()[0]
+        ev = read_events()[0]
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -209,30 +209,30 @@ class CatalogTestCase(unittest.TestCase):
 
     def test_readEventsWithoutParameters(self):
         """
-        Calling readEvents w/o any parameter will create an example catalog.
+        Calling read_events w/o any parameter will create an example catalog.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(len(catalog), 3)
 
     def test_str(self):
         """
         Testing the __str__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
         self.assertTrue(catalog.__str__().endswith("37.736 | 3.0 ML | manual"))
 
     def test_readEvents(self):
         """
-        Tests the readEvents function using entry points.
+        Tests the read_events function using entry points.
         """
         # iris
-        catalog = readEvents(self.iris_xml)
+        catalog = read_events(self.iris_xml)
         self.assertEqual(len(catalog), 2)
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
         # neries
-        catalog = readEvents(self.neries_xml)
+        catalog = read_events(self.neries_xml)
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
@@ -317,7 +317,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 0)
         self.assertEqual(catalog.count(), 0)
         # catalog with events
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog.count(), 3)
 
@@ -325,7 +325,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Tests the __getitem__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(catalog[0], catalog.events[0])
         self.assertEqual(catalog[-1], catalog.events[-1])
         self.assertEqual(catalog[2], catalog.events[2])
@@ -337,7 +337,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Tests the __getslice__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(catalog[0:], catalog[0:])
         self.assertEqual(catalog[:2], catalog[:2])
         self.assertEqual(catalog[:], catalog[:])
@@ -366,7 +366,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Testing the copy method of the Catalog object.
         """
-        cat = readEvents()
+        cat = read_events()
         cat2 = cat.copy()
         self.assertTrue(cat == cat2)
         self.assertTrue(cat2 == cat)
@@ -388,7 +388,7 @@ class CatalogTestCase(unittest.TestCase):
             for a in attr.split('.'):
                 obj = getattr(obj, a)
             return obj
-        cat = readEvents()
+        cat = read_events()
         self.assertTrue(all(event.magnitudes[0].mag < 4.
                             for event in cat.filter('magnitude < 4.')))
         attrs = ('magnitude', 'latitude', 'longitude', 'depth', 'time',
@@ -421,7 +421,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         See #662
         """
-        cat = readEvents(self.neries_xml)
+        cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
     @skipIf(not BASEMAP_VERSION, 'basemap not installed')
@@ -429,7 +429,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Tests the catalog preview plot, default parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         reltol = 1
         if BASEMAP_VERSION < [1, 0, 7]:
             reltol = 3
@@ -444,7 +444,7 @@ class CatalogTestCase(unittest.TestCase):
         Tests the catalog preview plot, ortho projection, some non-default
         parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         with ImageComparison(self.image_dir, "catalog2.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="ortho",
@@ -457,7 +457,7 @@ class CatalogTestCase(unittest.TestCase):
         Tests the catalog preview plot, local projection, some more non-default
         parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         reltol = 1.5
         # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
         # tolerance must be much higher.

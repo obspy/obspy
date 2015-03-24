@@ -29,7 +29,7 @@ with standard_library.hooks():
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 
-from obspy import Catalog, UTCDateTime, readEvents
+from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guessDelta
 from obspy.io.xseed import Parser
 
@@ -862,7 +862,7 @@ master/seishub/plugins/seismology/event.py
                           for item in self.getList(**kwargs)]
         cat = Catalog()
         for resource_name in resource_names:
-            cat.extend(readEvents(self.getResource(resource_name)))
+            cat.extend(read_events(self.getResource(resource_name)))
         return cat
 
     def getKML(self, nolabels=False, **kwargs):

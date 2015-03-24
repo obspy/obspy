@@ -166,8 +166,8 @@ Gallery
     :target: packages/autogen/obspy.core.event.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
-    from obspy import readEvents
-    cat = readEvents()
+    from obspy import read_events
+    cat = read_events()
     cat.plot()
 
 .. gallery-plot::

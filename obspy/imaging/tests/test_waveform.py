@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.event import readEvents
+from obspy.core.event import read_events
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
 from obspy.core.util.testing import ImageComparison
@@ -378,7 +378,7 @@ class WaveformTestCase(unittest.TestCase):
         Plots day plot, with a catalog of events.
         '''
         start = UTCDateTime(2012, 4, 4, 14, 0, 0)
-        cat = readEvents()
+        cat = read_events()
         st = self._createStream(start, start + 3600, 100)
         # create and compare image
         image_name = 'waveform_dayplot_catalog.png'

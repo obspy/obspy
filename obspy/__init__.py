@@ -45,7 +45,7 @@ from obspy.core.util.deprecation_helpers import (
 __version__ = _getVersionString(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
-from obspy.core.event import readEvents, Catalog
+from obspy.core.event import read_events, Catalog
 from obspy.core.inventory import read_inventory  # NOQA
 
 
@@ -53,8 +53,8 @@ from obspy.core.inventory import read_inventory  # NOQA
 from obspy.core.util.base import make_format_plugin_table
 read.__doc__ = \
     read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
-readEvents.__doc__ = \
-    readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
+read_events.__doc__ = \
+    read_events.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
 
 
 if PY2:
@@ -73,7 +73,7 @@ else:
                                                          numspaces=8)
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
-           "readEvents", "Catalog", "read_inventory"]
+           "read_events", "Catalog", "read_inventory"]
 __all__ = [native_str(i) for i in __all__]
 
 

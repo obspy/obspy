@@ -21,7 +21,7 @@ import unittest
 import warnings
 from difflib import Differ
 
-from obspy import UTCDateTime, read, read_inventory, readEvents
+from obspy import UTCDateTime, read, read_inventory, read_events
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
@@ -316,7 +316,7 @@ class ClientTestCase(unittest.TestCase):
             file_ = os.path.join(self.datapath, filename)
             # query["filename"] = file_
             got = client.get_events(**query)
-            expected = readEvents(file_)
+            expected = read_events(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:

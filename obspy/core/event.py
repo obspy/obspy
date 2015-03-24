@@ -64,11 +64,11 @@ ATTRIBUTE_HAS_ERRORS = True
 
 
 @map_example_filename("pathname_or_url")
-def readEvents(pathname_or_url=None, format=None, **kwargs):
+def read_events(pathname_or_url=None, format=None, **kwargs):
     """
     Read event files into an ObsPy Catalog object.
 
-    The :func:`~obspy.core.event.readEvents` function opens either one or
+    The :func:`~obspy.core.event.read_events` function opens either one or
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
@@ -85,7 +85,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     .. rubric:: _`Supported Formats`
 
     Additional ObsPy modules extend the functionality of the
-    :func:`~obspy.core.event.readEvents` function. The following table
+    :func:`~obspy.core.event.read_events` function. The following table
     summarizes all known file formats currently supported by ObsPy.
 
     Please refer to the `Linked Function Call`_ of each module for any extra
@@ -93,7 +93,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
 
     %s
 
-    Next to the :func:`~obspy.core.event.readEvents` function the
+    Next to the :func:`~obspy.core.event.read_events` function the
     :meth:`~obspy.core.event.Catalog.write` method of the returned
     :class:`~obspy.core.event.Catalog` object can be used to export the data to
     the file system.
@@ -161,7 +161,7 @@ def _createExampleCatalog():
     """
     Create an example catalog.
     """
-    return readEvents('/path/to/neries_events.xml')
+    return read_events('/path/to/neries_events.xml')
 
 
 class QuantityError(AttribDict):
@@ -2725,8 +2725,8 @@ class Event(__Event):
 
         .. rubric:: Example
 
-        >>> from obspy import readEvents
-        >>> event = readEvents()[0]  # doctest: +SKIP
+        >>> from obspy import read_events
+        >>> event = read_events()[0]  # doctest: +SKIP
         >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
         """
         Catalog(events=[self]).write(filename, format, **kwargs)
@@ -2817,8 +2817,8 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.event import readEvents
-        >>> cat = readEvents()
+        >>> from obspy.core.event import read_events
+        >>> cat = read_events()
         >>> cat2 = cat.copy()
         >>> cat is cat2
         False
@@ -2945,8 +2945,8 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.event import readEvents
-        >>> cat = readEvents()
+        >>> from obspy.core.event import read_events
+        >>> cat = read_events()
         >>> len(cat)
         3
         >>> cat.clear()
@@ -2981,8 +2981,8 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.event import readEvents
-        >>> cat = readEvents()
+        >>> from obspy.core.event import read_events
+        >>> cat = read_events()
         >>> print(cat)
         3 Event(s) in Catalog:
         2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
@@ -3094,8 +3094,8 @@ class Catalog(object):
 
         1. Create a Catalog and copy it
 
-            >>> from obspy.core.event import readEvents
-            >>> cat = readEvents()
+            >>> from obspy.core.event import read_events
+            >>> cat = read_events()
             >>> cat2 = cat.copy()
 
            The two objects are not the same:
@@ -3151,8 +3151,8 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core.event import readEvents
-        >>> catalog = readEvents() # doctest: +SKIP
+        >>> from obspy.core.event import read_events
+        >>> catalog = read_events() # doctest: +SKIP
         >>> catalog.write("example.xml", format="QUAKEML") # doctest: +SKIP
 
         Writing single events into files with meaningful filenames can be done
@@ -3262,13 +3262,13 @@ class Catalog(object):
 
         Mollweide projection for global overview:
 
-        >>> cat = readEvents()
+        >>> cat = read_events()
         >>> cat.plot()  # doctest:+SKIP
 
         .. plot::
 
-            from obspy import readEvents
-            cat = readEvents()
+            from obspy import read_events
+            cat = read_events()
             cat.plot()
 
         Orthographic projection:
@@ -3277,8 +3277,8 @@ class Catalog(object):
 
         .. plot::
 
-            from obspy import readEvents
-            cat = readEvents()
+            from obspy import read_events
+            cat = read_events()
             cat.plot(projection="ortho")
 
         Local (Albers equal area) projection:
@@ -3287,8 +3287,8 @@ class Catalog(object):
 
         .. plot::
 
-            from obspy import readEvents
-            cat = readEvents()
+            from obspy import read_events
+            cat = read_events()
             cat.plot(projection="local")
         """
         from obspy.imaging.maps import plot_basemap
