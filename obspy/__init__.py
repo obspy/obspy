@@ -123,7 +123,12 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
         # geodetics
         "obspy.core.util.geodetics": "obspy.geodetics",
         # obspy.station
-        "obspy.station": "obspy.core.inventory"
+        "obspy.station": "obspy.core.inventory",
+        # Misc modules originally in core.
+        "obspy.core.ascii": "obspy.io.ascii",
+        "obspy.core.quakeml": "obspy.io.quakeml",
+        "obspy.core.stationxml": "obspy.io.stationml",
+        "obspy.core.json": "obspy.io.json"
     }
 
     def find_module(self, fullname, path=None):
@@ -172,13 +177,16 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
         Finds and loads it. But if there's a . in the name, handles it
         properly.
 
-        From the python-future module as it already did the painful steps to
-        make it work on Python 2 and Python 3.
+        Originally the python-future module as it already did the painful
+        steps to make it work on Python 2 and Python 3. Some things had to
+        be modified to work for the tested corner cases.
         """
         bits = name.split('.')
         while len(bits) > 1:
             # Treat the first bit as a package
             packagename = bits.pop(0)
+            if packagename in sys.modules:
+                return sys.modules[packagename]
             package = self._find_and_load_module(packagename, path)
             try:
                 path = package.__path__
