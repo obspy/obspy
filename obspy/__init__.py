@@ -33,8 +33,6 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import imp
-import importlib
-from types import ModuleType
 import warnings
 import sys
 

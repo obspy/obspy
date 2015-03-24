@@ -105,8 +105,6 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
                             obspy.io.stationxml.core)
             self.assertTrue(obspy.core.json is
                             obspy.io.json.core)
-            self.assertTrue(obspy.core.ascii is
-                            obspy.io.ascii.core)
             self.assertTrue(obspy.core.quakeml is
                             obspy.io.quakeml.core)
         self.assertTrue(len(w), 14)
