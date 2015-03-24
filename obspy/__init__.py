@@ -40,8 +40,9 @@ import sys
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
-from obspy.core.util import (_getVersionString, ObsPyDeprecationWarning,
-                             DynamicAttributeImportRerouteModule)
+from obspy.core.util import _getVersionString
+from obspy.core.util.deprecation_helpers import (
+    ObsPyDeprecationWarning, DynamicAttributeImportRerouteModule)
 __version__ = _getVersionString(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
