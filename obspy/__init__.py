@@ -33,6 +33,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import imp
+import importlib
 import warnings
 import sys
 
@@ -151,7 +152,7 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
             if new_name in sys.modules:
                 module = sys.modules[new_name]
             else:
-                module = self._find_and_load_module(new_name)
+                module = importlib.import_module(new_name)
 
             # Warn here as at this point the module has already been imported.
             warnings.warn("Module '%s' is deprecated and will stop working "
@@ -163,35 +164,10 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
         # should keep this condition as it might obsfuscate non-working
         # imports.
         else:
-            module = self._find_and_load_module(name)
+            module = importlib.import_module(name)
 
         sys.modules[name] = module
         return module
-
-    def _find_and_load_module(self, name, path=None):
-        """
-        Finds and loads it. But if there's a . in the name, handles it
-        properly.
-
-        Originally the python-future module as it already did the painful
-        steps to make it work on Python 2 and Python 3. Some things had to
-        be modified to work for the tested corner cases.
-        """
-        bits = name.split('.')
-        while len(bits) > 1:
-            # Treat the first bit as a package
-            packagename = bits.pop(0)
-            if packagename in sys.modules:
-                return sys.modules[packagename]
-            package = self._find_and_load_module(packagename, path)
-            try:
-                path = package.__path__
-            except AttributeError:
-                if name in sys.modules:
-                    return sys.modules[name]
-        name = bits[0]
-        module_info = imp.find_module(name, path)
-        return imp.load_module(name, *module_info)
 
 
 # Install meta path handler.
