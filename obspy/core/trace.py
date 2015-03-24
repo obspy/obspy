@@ -38,7 +38,7 @@ class Stats(AttribDict):
     accessed or modified either in the dictionary style or directly via a
     corresponding attribute. There are various default attributes which are
     required by every waveform import and export modules within ObsPy such as
-    :mod:`obspy.mseed`.
+    :mod:`obspy.io.mseed`.
 
     :type header: dict or :class:`~obspy.core.trace.Stats`, optional
     :param header: Dictionary containing meta information of a single
@@ -1265,7 +1265,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             seedresp.setdefault("date", self.stats.starttime)
             # if a Parser object is provided, get corresponding RESP
             # information
-            from obspy.xseed import Parser
+            from obspy.io.xseed import Parser
             if isinstance(seedresp['filename'], Parser):
                 seedresp = deepcopy(seedresp)
                 kwargs['seedresp'] = seedresp
@@ -2234,14 +2234,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
               Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
               Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
-        :type inventories: :class:`~obspy.station.inventory.Inventory` or
-            :class:`~obspy.station.network.Network` or a list containing
-            objects of these types or a string with a filename of a StationXML
-            file.
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         """
-        from obspy.station import Inventory, Network, read_inventory
+        from obspy.core.inventory import Inventory, Network, read_inventory
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]
@@ -2269,12 +2269,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Deconvolve instrument response.
 
-        Uses the :class:`obspy.station.response.Response` object attached as
-        :class:`Trace`.stats.response to deconvolve the instrument response
-        from the trace's time series data. Raises an exception if the response
-        is not present. Use e.g. :meth:`Trace.attach_response` to attach
-        response to trace providing :class:`obspy.station.inventory.Inventory`
-        data.
+        Uses the :class:`obspy.core.inventory.response.Response` object
+        attached as :class:`Trace`.stats.response to deconvolve the
+        instrument response from the trace's time series data. Raises an
+        exception if the response is not present. Use e.g.
+        :meth:`Trace.attach_response` to attach response to trace providing
+        :class:`obspy.core.inventory.inventory.Inventory` data.
+
         Note that there are two ways to prevent overamplification
         while convolving the inverted instrument spectrum: One possibility is
         to specify a water level which represents a clipping of the inverse
@@ -2288,8 +2289,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. note::
 
             Any additional kwargs will be passed on to
-            :meth:`obspy.station.response.Response.get_evalresp_response`, see
-            documentation of that method for further customization (e.g.
+            :meth:`obspy.core.inventory.response.Response.get_evalresp_response`,
+            see documentation of that method for further customization (e.g.
             start/stop stage).
 
         .. note::
@@ -2357,7 +2358,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type taper_fraction: float
         :param taper_fraction: Taper fraction of cosine taper to use.
         """
-        from obspy.station import Response, PolynomialResponseStage
+        from obspy.core.inventory import Response, PolynomialResponseStage
         from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
 
         if "response" not in self.stats:
@@ -2365,7 +2366,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "(as Trace.stats.response).")
             raise KeyError(msg)
         if not isinstance(self.stats.response, Response):
-            msg = ("Response must be of type obspy.station.response.Response "
+            msg = ("Response must be of type "
+                   "obspy.core.inventory.response.Response "
                    "(but is of type %s).") % type(self.stats.response)
             raise TypeError(msg)
 

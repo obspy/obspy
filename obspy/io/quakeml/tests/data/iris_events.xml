@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
+  xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:www.iris.edu/ws/event/query">
+    <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
+      <type>earthquake</type>
+      <description xmlns:iris="http://www.iris.edu/ws/event" iris:FEcode="228">
+        <type>Flinn-Engdahl region</type>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+      </description>
+      <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=7680412</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=13949593</preferredMagnitudeID>
+      <origin xmlns:iris="http://www.iris.edu/ws/event"
+        publicID="smi:www.iris.edu/ws/event/query?originId=7680412"
+        iris:contributor="NEIC PDE-W" iris:catalog="NEIC PDE">
+        <time>
+          <value>2011-03-11T05:46:24.1200</value>
+        </time>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <depth>
+          <value>29.0</value>
+        </depth>
+      </origin>
+      <magnitude
+        publicID="smi:www.iris.edu/ws/event/query?magnitudeId=13949593">
+        <type>MW</type>
+        <mag>
+          <value>9.1</value>
+        </mag>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:www.iris.edu/ws/event/query?eventId=2318174">
+      <type>earthquake</type>
+      <description xmlns:iris="http://www.iris.edu/ws/event" iris:FEcode="253">
+        <type>Flinn-Engdahl region</type>
+        <text>SULU SEA</text>
+      </description>
+      <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=3881858</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=9764891</preferredMagnitudeID>
+      <origin xmlns:iris="http://www.iris.edu/ws/event"
+        publicID="smi:www.iris.edu/ws/event/query?originId=3881858"
+        iris:contributorOriginId="8182061" iris:contributorEventId="9514154"
+        iris:contributor="ISC" iris:catalog="ISC">
+        <time>
+          <value>2006-09-10T04:26:33.6100</value>
+        </time>
+        <creationInfo>
+          <author>MAN</author>
+        </creationInfo>
+        <latitude>
+          <value>9.614</value>
+        </latitude>
+        <longitude>
+          <value>121.961</value>
+        </longitude>
+        <depth>
+          <value>9.0</value>
+        </depth>
+      </origin>
+      <magnitude publicID="smi:www.iris.edu/ws/event/query?magnitudeId=9764891">
+        <type>MS</type>
+        <mag>
+          <value>9.8</value>
+        </mag>
+        <creationInfo>
+          <author>MAN</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

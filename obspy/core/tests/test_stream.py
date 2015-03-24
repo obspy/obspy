@@ -16,7 +16,7 @@ from obspy.core.compatibility import mock
 from obspy.core.stream import isPickle, readPickle, writePickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getSciPyVersion
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 SCIPY_VERSION = getSciPyVersion()
@@ -301,12 +301,12 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the getGaps method of the Stream objects.
 
-        It is compared directly to the obspy.mseed method getGapsList which is
-        assumed to be correct.
+        It is compared directly to the obspy.io.mseed method getGapsList which
+        is assumed to be correct.
         """
         stream = self.mseed_stream
         gap_list = stream.getGaps()
-        # Gaps list created with obspy.mseed
+        # Gaps list created with obspy.io.mseed
         mseed_gap_list = [
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
@@ -1714,7 +1714,9 @@ class StreamTestCase(unittest.TestCase):
 
         # 4 - file patterns
         path = os.path.dirname(__file__)
-        filename = os.path.join(path, 'data', 'slist.*')
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii", "tests",
+                                  "data")
+        filename = os.path.join(ascii_path, 'slist.*')
         st = read(filename)
         self.assertEqual(len(st), 2)
         # exception if no file matches file pattern

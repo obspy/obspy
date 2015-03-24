@@ -14,7 +14,7 @@ import numpy.ma as ma
 from obspy import Stream, Trace, UTCDateTime, __version__, read
 from obspy.core import Stats
 from obspy.core.compatibility import mock
-from obspy.xseed import Parser
+from obspy.io.xseed import Parser
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1602,7 +1602,7 @@ class TraceTestCase(unittest.TestCase):
     def test_remove_polynomial_response(self):
         """
         """
-        from obspy.station import read_inventory
+        from obspy import read_inventory
         path = os.path.dirname(__file__)
 
         # blockette 62, stage 0

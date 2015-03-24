@@ -107,7 +107,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
-from obspy.core.scripts.runtests import runTests
+from obspy.scripts.runtests import runTests
 
 
 if __name__ == '__main__':

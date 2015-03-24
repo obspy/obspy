@@ -313,7 +313,7 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
-    from obspy.station import read_inventory
+    from obspy import read_inventory
     st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
     return st
 
@@ -1005,8 +1005,8 @@ class Stream(object):
             case each event will be annotated with its corresponding
             Flinn-Engdahl region and the magnitude.
             Events can also be automatically downloaded with the help of
-            obspy.neries. Just pass a dictionary with a "min_magnitude" key,
-            e.g. ::
+            obspy.clients.fdsn. Just pass a dictionary with a "min_magnitude"
+            key, e.g. ::
 
                 events={"min_magnitude": 5.5}
 
@@ -2871,9 +2871,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
               Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
               Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
-        :type inventories: :class:`~obspy.station.inventory.Inventory` or
-            :class:`~obspy.station.network.Network` or a list containing
-            objects of these types.
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         :rtype: list of :class:`~obspy.core.trace.Trace`

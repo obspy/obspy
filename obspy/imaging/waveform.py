@@ -36,8 +36,8 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
-                             locations2degrees)
+from obspy.core.util import createEmptyDataChunk
+from obspy.geodetics import FlinnEngdahl, locations2degrees
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
@@ -472,10 +472,10 @@ class WaveformPlotting(object):
             self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
-        # Potentially download some events with the help of obspy.fdsn.
+        # Potentially download some events with the help of obspy.clients.fdsn.
         if "min_magnitude" in events:
             try:
-                from obspy.fdsn import Client
+                from obspy.clients.fdsn import Client
                 c = Client("NERIES")
                 events = c.get_events(starttime=self.starttime,
                                       endtime=self.endtime,

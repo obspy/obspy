@@ -53,7 +53,7 @@ class RtTrace(Trace):
 
     RtTrace has been built to handle real time processing of periodically
     append data packets, such as adding and processing data requested from an
-    SeedLink server. See :mod:`obspy.seedlink` for further information.
+    SeedLink server. See :mod:`obspy.clients.seedlink` for further information.
 
     For the sake of simplicity we will just split data of an existing example
     file into multiple chucks (Trace objects) of about equal size (step 1 + 2)

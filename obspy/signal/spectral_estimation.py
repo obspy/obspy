@@ -261,7 +261,7 @@ class PPSD():
     .. note::
 
         It is safer (but a bit slower) to provide a
-        :class:`~obspy.xseed.parser.Parser` instance with information from
+        :class:`~obspy.io.xseed.parser.Parser` instance with information from
         e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
@@ -276,7 +276,7 @@ class PPSD():
         The necessary instrument response information can be provided in two
         ways:
 
-        * Providing an `obspy.xseed` :class:`~obspy.xseed.parser.Parser`,
+        * Providing an `obspy.io.xseed` :class:`~obspy.io.xseed.parser.Parser`,
           e.g. containing metadata from a Dataless SEED file. This is the safer
           way but it might a bit slower because for every processed time
           segment the response information is extracted from the parser.
@@ -298,7 +298,7 @@ class PPSD():
         :type paz: dict, optional
         :param paz: Response information of instrument. If not specified the
                 information is supposed to be present as stats.paz.
-        :type parser: :class:`obspy.xseed.parser.Parser`, optional
+        :type parser: :class:`obspy.io.xseed.parser.Parser`, optional
         :param parser: Parser instance with response information (e.g. read
                 from a Dataless SEED volume)
         :type skip_on_gaps: bool, optional

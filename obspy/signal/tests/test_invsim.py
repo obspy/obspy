@@ -19,7 +19,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
-from obspy.sac import attach_paz
+from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
 from obspy.signal.invsim import cosTaper, estimateMagnitude, evalresp, seisSim
 
@@ -170,7 +170,7 @@ class InvSimTestCase(unittest.TestCase):
     # XXX: Test for really big signal is missing, where the water level is
     # actually acting
     # def test_seisSimVsPitsa2(self):
-    #    from obspy.mseed import test as tests_
+    #    from obspy.io.mseed import tests as tests_
     #    path = os.path.dirname(__file__)
     #    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
     #    g = Trace()
