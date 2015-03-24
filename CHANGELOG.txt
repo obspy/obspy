@@ -1,5 +1,8 @@
 master:
- - Removed support for Python 2.6.
+ - General:
+   * Removed support for Python 2.6.
+   * Reorganized the submodule structure. We provide a deprecation path so the
+     old imports will continue to work for one ObsPy version.
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release
