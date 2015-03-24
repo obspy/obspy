@@ -69,7 +69,7 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         _test_rerouted_imps("obspy.core.ascii", "obspy.io.ascii")
         _test_rerouted_imps("obspy.core.quakeml", "obspy.io.quakeml")
         _test_rerouted_imps("obspy.core.stationxml", "obspy.io.stationxml")
-        _test_rerouted_imps("obspy.core.json", "obspy.io.json")
+        _test_rerouted_imps("obspy.core.json", "obspy.io.json"),
 
     def test_attribute_import(self):
         """
@@ -109,7 +109,11 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
                             obspy.io.json.core)
             self.assertTrue(obspy.core.quakeml is
                             obspy.io.quakeml.core)
-        self.assertTrue(len(w), 14)
+            # readEvents() function.
+            self.assertTrue(obspy.readEvents is
+                            obspy.read_events)
+
+        self.assertTrue(len(w), 15)
         for warn in w:
             self.assertTrue(warn.category is ObsPyDeprecationWarning)
 

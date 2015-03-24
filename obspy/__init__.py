@@ -120,6 +120,10 @@ _import_map = {
     "obspy.core.json": "obspy.io.json"
 }
 
+_function_map = {
+    "readEvents": "obspy.read_events"
+}
+
 
 class ObsPyRestructureMetaPathFinderAndLoader(object):
     """
@@ -178,7 +182,8 @@ sys.meta_path.append(ObsPyRestructureMetaPathFinderAndLoader())
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
     import_map={key.split(".")[1]: value for key, value in
-                _import_map.items() if len(key.split(".")) == 2})
+                _import_map.items() if len(key.split(".")) == 2},
+    function_map=_function_map)
 
 
 if __name__ == '__main__':

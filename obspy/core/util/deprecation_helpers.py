@@ -36,13 +36,25 @@ class DynamicAttributeImportRerouteModule(ModuleType):
 
     work. Remove this once 0.11 has been released!
     """
-    def __init__(self, name, doc, locs, import_map):
+    def __init__(self, name, doc, locs, import_map, function_map=None):
         super(DynamicAttributeImportRerouteModule, self).__init__(name=name)
         self.import_map = import_map
+        self.function_map = function_map
         # Keep the metadata of the module.
         self.__dict__.update(locs)
 
     def __getattr__(self, name):
+        # Functions, and not modules.
+        if self.function_map and name in self.function_map:
+            new_name = self.function_map[name].split(".")
+            module = importlib.import_module(".".join(new_name[:-1]))
+            warnings.warn("Function '%s' is deprecated and will stop working "
+                          "with the next ObsPy version. Please use '%s' "
+                          "instead." % (self.__name__ + "." + name,
+                                        self.function_map[name]),
+                          ObsPyDeprecationWarning)
+            return getattr(module, new_name[-1])
+
         try:
             real_module_name = self.import_map[name]
         except:
