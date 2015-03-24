@@ -59,7 +59,7 @@ class Client(object):
         service (default is an empty string).
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default
-        is ``10`` seconds). This works only for Python >= 2.6.x.
+        is ``10`` seconds).
     :type debug: bool, optional
     :param debug: Enables verbose output (default is ``False``).
     :type user_agent: str, optional

@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import functools
+import inspect
 import math
 import warnings
 from copy import copy, deepcopy
@@ -211,7 +212,7 @@ def _add_processing_info(func):
     """
     @functools.wraps(func)
     def new_func(*args, **kwargs):
-        callargs = compatibility.getcallargs(func, *args, **kwargs)
+        callargs = inspect.getcallargs(func, *args, **kwargs)
         callargs.pop("self")
         kwargs_ = callargs.pop("kwargs", {})
         from obspy import __version__

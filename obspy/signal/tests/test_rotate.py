@@ -30,7 +30,6 @@ class RotateTestCase(unittest.TestCase):
         Test horizontal component rotation against PITSA.
         """
         # load test files
-        # no with due to py 2.6
         with gzip.open(os.path.join(self.path, 'rjob_20051006_n.gz')) as f:
             data_n = np.loadtxt(f)
         with gzip.open(os.path.join(self.path, 'rjob_20051006_e.gz')) as f:

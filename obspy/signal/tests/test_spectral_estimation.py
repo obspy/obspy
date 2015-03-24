@@ -34,7 +34,6 @@ def _get_sample_data():
     file_data = os.path.join(
         PATH, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
     # parameters for the test
-    # no with due to py 2.6
     with gzip.open(file_data) as f:
         data = np.loadtxt(f)
     stats = {'_format': 'MSEED',

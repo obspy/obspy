@@ -97,9 +97,8 @@ class InvSimTestCase(unittest.TestCase):
                               paz_simulate=paz, water_level=600.0,
                               zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
-            # no with due to py 2.6
-            with gzip.open(file) as f:
+            filename = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
+            with gzip.open(filename) as f:
                 data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /

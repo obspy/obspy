@@ -31,8 +31,8 @@ class Client(object):
     :type port: int, optional
     :param port: The port of the QueryServer (default is ``2061``)
     :type timeout: int, optional
-    :param timeout: Wait this much time before timeout is raised (python > 2.6,
-        default is ``30``)
+    :param timeout: Wait this much time before timeout is raised
+        (default is ``30``)
     :type debug: bool, optional
     :param debug: if ``True``, print debug information (default is ``False``)
 

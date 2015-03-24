@@ -19,11 +19,8 @@ class ClientTestCase(unittest.TestCase):
     """
     Test suite for obspy.db.client.
     """
-    # unfortunately no py2.6 syntax
-    # @classmethod
-    # def setUpClass(cls):
-    def __init__(self, *args, **kwargs):
-        super(ClientTestCase, self).__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
         # Create a in memory database only once for test suite
         url = 'sqlite:///:memory:'
         self.client = Client(url)

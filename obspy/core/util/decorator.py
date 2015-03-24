@@ -191,7 +191,6 @@ def uncompressFile(func):
             # gzip module
             try:
                 import gzip
-                # no with due to py 2.6
                 with gzip.open(filename, 'rb') as fp:
                     obj_list.append(fp.read())
             except:
