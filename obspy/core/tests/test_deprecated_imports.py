@@ -26,6 +26,7 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         """
         def _test_rerouted_imps(old_imp, new_imp):
             with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
                 mod_1 = importlib.import_module(old_imp)
                 mod_2 = importlib.import_module(new_imp)
             self.assertTrue(mod_1 is mod_2)
@@ -83,6 +84,7 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         """
         # Old obspy.station. This has potentially been used a lot.
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             self.assertTrue(obspy.station.Inventory is
                             obspy.core.inventory.Inventory)
             self.assertTrue(obspy.station.Network is
