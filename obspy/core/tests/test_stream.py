@@ -1983,7 +1983,7 @@ class StreamTestCase(unittest.TestCase):
         st[2].stats.channel = "A"
         temp_st = st.sort(keys=["channel"]).reverse()
         self.assertTrue(temp_st is st)
-        self.assertIn([tr.stats.channel for tr in st], ["C", "B", "A"])
+        self.assertEqual([tr.stats.channel for tr in st], ["C", "B", "A"])
 
         # The others are pretty hard to properly test and probably not worth
         # the effort. A simple demonstrating that they can be chained should be

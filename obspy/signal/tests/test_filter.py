@@ -105,7 +105,7 @@ class FilterTestCase(unittest.TestCase):
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
         filename = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
-        with gzip.open(file) as f:
+        with gzip.open(filename) as f:
             data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
@@ -209,7 +209,7 @@ class FilterTestCase(unittest.TestCase):
         """
         # load test file
         filename = os.path.join(self.path, 'rjob_20051006.gz')
-        with gzip.open(file) as f:
+        with gzip.open(filename) as f:
             data = np.loadtxt(f)
         # filter trace
         datcorr = envelope(data)
@@ -235,7 +235,7 @@ class FilterTestCase(unittest.TestCase):
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
         # be smaller than -96dB above lowpass frequency
-        self.assertGreater(h_db[freq, 50].max() < -96)
+        self.assertGreater(-96, h_db[freq > 50].max())
         # be 0 (1dB ripple) before filter ramp
         self.assertGreater(h_db[freq < 25].min(), -1)
 
