@@ -360,11 +360,7 @@ def _skip_test(test_case, msg):
     :type msg: str
     :param msg: Reason for unconditionally skipping the test.
     """
-    # python 2.6 does not provide `skipTest`
-    try:
-        test_case.skipTest(msg)
-    except AttributeError:
-        raise Exception(msg)
+    test_case.skipTest(msg)
 
 
 def _recursive_skip(test_suite, msg):

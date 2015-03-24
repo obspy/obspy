@@ -110,9 +110,6 @@ EXTRAS_REQUIRE = {
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
-# Add argparse for Python 2.6. stdlib package for Python >= 2.7
-if sys.version_info[:2] == (2, 6):
-    INSTALL_REQUIRES.append('argparse')
 
 ENTRY_POINTS = {
     'console_scripts': [
