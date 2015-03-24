@@ -36,10 +36,8 @@ class CoreTestCase(unittest.TestCase):
         header['calper'] = 1.0
         header['_format'] = 'CSS'
         filename = os.path.join(self.path, '201101311155.10.ascii.gz')
-        # no with due to py 2.6
-        fp = gzip.open(filename, 'rb')
-        data = np.loadtxt(fp, dtype=np.int_)
-        fp.close()
+        with gzip.open(filename, 'rb') as fp:
+            data = np.loadtxt(fp, dtype=np.int_)
         # traces in the test files are sorted ZEN
         st = Stream()
         for x, cha in zip(data.reshape((3, 4800)), ('HHZ', 'HHE', 'HHN')):

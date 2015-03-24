@@ -80,9 +80,8 @@ class SEG2TestCase(unittest.TestCase):
         # read SEG2 data (in counts, int32)
         st = read(basename + ".seg2.gz")
         # read reference ASCII data (in micrometer/s)
-        f = gzip.open(basename + ".DAT.gz", 'rb')
-        results = np.loadtxt(f).T
-        f.close()
+        with gzip.open(basename + ".DAT.gz", 'rb') as f:
+            results = np.loadtxt(f).T
         # test all three components
         for tr, result in zip(st, results):
             # convert raw data to micrometer/s (descaling goes to mm/s)

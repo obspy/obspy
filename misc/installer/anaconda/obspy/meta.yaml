@@ -30,7 +30,6 @@ requirements:
     - matplotlib
     - lxml
     - sqlalchemy
-    - argparse # [py26]
     - flake8
   run:
     - python
@@ -42,7 +41,6 @@ requirements:
     - matplotlib
     - lxml
     - sqlalchemy
-    - argparse # [py26]
     - flake8
 
 test:

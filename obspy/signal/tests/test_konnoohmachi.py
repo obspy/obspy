@@ -56,7 +56,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
                          dtype=np.float64), 5).dtype, np.float64)
         # Check if normalizing works.
         window = konnoOhmachiSmoothingWindow(self.frequencies, 20)
-        self.assertTrue(window.sum() > 1.0)
+        self.assertGreater(window.sum(), 1.0)
         window = konnoOhmachiSmoothingWindow(self.frequencies, 20,
                                              normalize=True)
         self.assertAlmostEqual(window.sum(), 1.0, 5)
@@ -87,7 +87,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             # Should not be normalized. Test only for larger frequencies
             # because smaller ones have a smaller window.
             if freq >= 10.0:
-                self.assertTrue(matrix[_i].sum() > 1.0)
+                self.assertGreater(matrix[_i].sum(), 1.0)
         # Input should be output dtype.
         frequencies = np.array(
             [0.0, 1.0, 2.0, 10.0, 25.0, 50.0, 100.0],

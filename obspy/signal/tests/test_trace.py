@@ -88,10 +88,10 @@ class TraceTestCase(unittest.TestCase):
                     traces_bkp[i].data,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                self.assertTrue('processing' in tr.stats)
+                self.assertIn('processing', tr.stats)
                 self.assertEqual(len(tr.stats.processing), 1)
-                self.assertTrue("filter" in tr.stats.processing[0])
-                self.assertTrue(filt_type in tr.stats.processing[0])
+                self.assertIn("filter", tr.stats.processing[0])
+                self.assertIn(filt_type, tr.stats.processing[0])
                 for key, value in filt_ops.items():
                     self.assertTrue("'%s': %s" % (key, value)
                                     in tr.stats.processing[0])
@@ -101,11 +101,11 @@ class TraceTestCase(unittest.TestCase):
                     data_filt,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                self.assertTrue('processing' in tr.stats)
+                self.assertIn('processing', tr.stats)
                 self.assertEqual(len(tr.stats.processing), 2)
                 for proc_info in tr.stats.processing:
-                    self.assertTrue("filter" in proc_info)
-                    self.assertTrue(filt_type in proc_info)
+                    self.assertIn("filter", proc_info)
+                    self.assertIn(filt_type, proc_info)
                     for key, value in filt_ops.items():
                         self.assertTrue("'%s': %s" % (key, value)
                                         in proc_info)
@@ -147,15 +147,15 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.sampling_rate, 0.25)
-        self.assertTrue("decimate" in tr.stats.processing[0])
-        self.assertTrue("factor=4" in tr.stats.processing[0])
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=4", tr.stats.processing[0])
         tr = tr_bkp.copy()
         tr.decimate(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
         self.assertEqual(tr.stats.npts, 2)
         self.assertEqual(tr.stats.sampling_rate, 0.1)
-        self.assertTrue("decimate" in tr.stats.processing[0])
-        self.assertTrue("factor=10" in tr.stats.processing[0])
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=10", tr.stats.processing[0])
         # some tests with automatic prefiltering
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()

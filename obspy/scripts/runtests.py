@@ -90,6 +90,7 @@ from future.utils import native_str
 import copy
 import doctest
 import glob
+import importlib
 import operator
 import os
 import platform
@@ -360,11 +361,7 @@ def _skip_test(test_case, msg):
     :type msg: str
     :param msg: Reason for unconditionally skipping the test.
     """
-    # python 2.6 does not provide `skipTest`
-    try:
-        test_case.skipTest(msg)
-    except AttributeError:
-        raise Exception(msg)
+    test_case.skipTest(msg)
 
 
 def _recursive_skip(test_suite, msg):
@@ -415,12 +412,7 @@ class _TextTestRunner:
             if id in MODULE_TEST_SKIP_CHECKS:
                 # acquire function specified by string
                 mod, func = MODULE_TEST_SKIP_CHECKS[id].rsplit(".", 1)
-                try:
-                    import importlib
-                    mod = importlib.import_module(mod)
-                # Py 2.6 workaround
-                except:
-                    mod = __import__(mod, fromlist=["obspy"])
+                mod = importlib.import_module(mod)
                 func = getattr(mod, func)
                 msg = func()
             # we encountered an error message, so skip all tests with given

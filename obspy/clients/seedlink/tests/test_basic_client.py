@@ -21,7 +21,7 @@ class ClientTestCase(unittest.TestCase):
         for request in [["G", "FDF", "00", "LHN", t, t + 20],
                         ["G", "CLF", "00", "BHZ", t, t + 10]]:
             st = self.client.get_waveform(*request)
-            self.assertTrue(len(st) > 0)
+            self.assertGreater(len(st), 0)
             for tr in st:
                 self.assertEqual(tr.id, ".".join(request[:4]))
             self.assertTrue(any([len(tr) > 0 for tr in st]))

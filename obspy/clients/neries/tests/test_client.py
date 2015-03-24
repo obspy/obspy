@@ -87,7 +87,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      format='XML')
         self.assertTrue(result.startswith(b'<?xml'))
-        self.assertTrue(b'code="GE"' in result)
+        self.assertIn(b'code="GE"', result)
         # 2 - SUDS object w/o instruments
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      instruments=False)
@@ -98,8 +98,8 @@ class ClientTestCase(unittest.TestCase):
                                      instruments=True)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
-        self.assertTrue('sensor' in result.ArclinkInventory.inventory)
-        self.assertTrue('responsePAZ' in result.ArclinkInventory.inventory)
+        self.assertIn('sensor', result.ArclinkInventory.inventory)
+        self.assertIn('responsePAZ', result.ArclinkInventory.inventory)
         # 4 - SUDS object with spatial filters
         client = Client(user='test@obspy.org')
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,

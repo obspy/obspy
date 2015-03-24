@@ -78,11 +78,11 @@ class RtTraceTestCase(unittest.TestCase):
         # check tr.stats.processing
         self.assertEqual(len(tr.stats.processing), 5)
         self.assertTrue(tr.stats.processing[0].startswith("realtime_process"))
-        self.assertTrue('absolute' in tr.stats.processing[0])
+        self.assertIn('absolute', tr.stats.processing[0])
         for i in range(1, 5):
-            self.assertTrue('integrate' in tr.stats.processing[i])
+            self.assertIn('integrate', tr.stats.processing[i])
         # check kwargs
-        self.assertTrue("maeh" in tr.stats.processing[1])
+        self.assertIn("maeh", tr.stats.processing[1])
 
     def test_appendSanityChecks(self):
         """

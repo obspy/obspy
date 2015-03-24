@@ -35,8 +35,8 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.other2.__class__, AttribDict)
         self.assertEqual(len(stats.other2), 1)
         self.assertEqual(stats.other3, 'test3')
-        self.assertTrue('test' in stats)
-        self.assertTrue('test' in stats.__dict__)
+        self.assertIn('test', stats)
+        self.assertIn('test', stats.__dict__)
 
     def test_deepcopy(self):
         """
@@ -69,13 +69,13 @@ class StatsTestCase(unittest.TestCase):
         Tests update method of Stats object.
         """
         x = Stats({'a': 5})
-        self.assertTrue('a' in dir(x))
+        self.assertIn('a', dir(x))
         x.update({'b': 5})
-        self.assertTrue('b' in dir(x))
+        self.assertIn('b', dir(x))
         y = {'a': 5}
         y.update({'b': 5})
         x = Stats(y)
-        self.assertTrue('b' in dir(x))
+        self.assertIn('b', dir(x))
 
     def test_simpleStats(self):
         """
@@ -175,7 +175,7 @@ class StatsTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.station, 'BBB')
             self.assertEqual(tr.stats['station'], 'BBB')
             self.assertEqual(tr.stats.get('station'), 'BBB')
-            self.assertTrue('BBB' in tr.stats.values())
+            self.assertIn('BBB', tr.stats.values())
 
     def test_pickleStats(self):
         """

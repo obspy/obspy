@@ -38,7 +38,7 @@ class CoreTestCase(unittest.TestCase):
             if filename.endswith(".py"):
                 invalid_files.append(
                     os.path.abspath(os.path.join(py_dir, filename)))
-        self.assertTrue(len(invalid_files) > 0)
+        self.assertGreater(len(invalid_files), 0)
 
         for filename in valid_files:
             self.assertTrue(is_evt(filename))

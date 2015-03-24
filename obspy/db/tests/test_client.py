@@ -19,16 +19,13 @@ class ClientTestCase(unittest.TestCase):
     """
     Test suite for obspy.db.client.
     """
-    # unfortunately no py2.6 syntax
-    # @classmethod
-    # def setUpClass(cls):
-    def __init__(self, *args, **kwargs):
-        super(ClientTestCase, self).__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
         # Create a in memory database only once for test suite
         url = 'sqlite:///:memory:'
-        self.client = Client(url)
+        cls.client = Client(url)
         # add paths
-        session = self.client.session()
+        session = cls.client.session()
         path1 = WaveformPath({'path': '/path/to/1'})
         path2 = WaveformPath({'path': '/path/to/2'})
         session.add_all([path1, path2])
@@ -78,12 +75,12 @@ class ClientTestCase(unittest.TestCase):
         data[2000000] = 14
         data[2000001] = -14
         tr = Trace(data=data, header=header)
-        self.preview = createPreview(tr, 30).data
+        cls.preview = createPreview(tr, 30).data
         header = dict(tr.stats)
         header['starttime'] = tr.stats.starttime.datetime
         header['endtime'] = tr.stats.endtime.datetime
         channel3 = WaveformChannel(header)
-        channel3.preview = self.preview.dumps()
+        channel3.preview = cls.preview.dumps()
         file1.channels.append(channel1)
         file2.channels.append(channel2)
         file3.channels.append(channel3)
@@ -97,8 +94,8 @@ class ClientTestCase(unittest.TestCase):
         """
         data = self.client.getNetworkIDs()
         self.assertEqual(len(data), 2)
-        self.assertTrue('BW' in data)
-        self.assertTrue('GE' in data)
+        self.assertIn('BW', data)
+        self.assertIn('GE', data)
 
     def test_getStationIds(self):
         """
@@ -107,12 +104,12 @@ class ClientTestCase(unittest.TestCase):
         # 1 - all
         data = self.client.getStationIds()
         self.assertEqual(len(data), 2)
-        self.assertTrue('MANZ' in data)
-        self.assertTrue('FUR' in data)
+        self.assertIn('MANZ', data)
+        self.assertIn('FUR', data)
         # 2 - BW network
         data = self.client.getStationIds(network='BW')
         self.assertEqual(len(data), 1)
-        self.assertTrue('MANZ' in data)
+        self.assertIn('MANZ', data)
         # 3 - not existing network
         data = self.client.getStationIds(network='XX')
         self.assertEqual(len(data), 0)
@@ -123,26 +120,26 @@ class ClientTestCase(unittest.TestCase):
         """
         data = self.client.getLocationIds()
         self.assertEqual(len(data), 2)
-        self.assertTrue('' in data)
-        self.assertTrue('00' in data)
+        self.assertIn('', data)
+        self.assertIn('00', data)
         # 2 - BW network
         data = self.client.getLocationIds(network='BW')
         self.assertEqual(len(data), 1)
-        self.assertTrue('' in data)
+        self.assertIn('', data)
         # 3 - not existing network
         data = self.client.getLocationIds(network='XX')
         self.assertEqual(len(data), 0)
         # 4 - MANZ station
         data = self.client.getLocationIds(station='MANZ')
         self.assertEqual(len(data), 1)
-        self.assertTrue('' in data)
+        self.assertIn('', data)
         # 5 - not existing station
         data = self.client.getLocationIds(station='XXXXX')
         self.assertEqual(len(data), 0)
         # 4 - GE network, FUR station
         data = self.client.getLocationIds(network='GE', station='FUR')
         self.assertEqual(len(data), 1)
-        self.assertTrue('00' in data)
+        self.assertIn('00', data)
 
     def test_getChannelIds(self):
         """
@@ -150,8 +147,8 @@ class ClientTestCase(unittest.TestCase):
         """
         data = self.client.getChannelIds()
         self.assertEqual(len(data), 2)
-        self.assertTrue('EHZ' in data)
-        self.assertTrue('BHZ' in data)
+        self.assertIn('EHZ', data)
+        self.assertIn('BHZ', data)
 
     def test_getEndtimes(self):
         """

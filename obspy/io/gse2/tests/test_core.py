@@ -179,9 +179,9 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         # read
         tr = read(gse2file)[0]
-        self.assertTrue('station' in dir(tr.stats))
-        self.assertTrue('npts' in dir(tr.stats))
-        self.assertTrue('sampling_rate' in dir(tr.stats))
+        self.assertIn('station', dir(tr.stats))
+        self.assertIn('npts', dir(tr.stats))
+        self.assertIn('sampling_rate', dir(tr.stats))
         self.assertEqual(tr.stats['station'], 'RJOB')
         self.assertEqual(tr.stats.npts, 12000)
         self.assertEqual(tr.stats['sampling_rate'], 200)

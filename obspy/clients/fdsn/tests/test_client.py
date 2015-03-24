@@ -73,13 +73,8 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.fdsn.client.Client.
     """
-    def __init__(self, *args, **kwargs):
-        """
-        setupClass() would be better suited for the task at hand but is not
-        supported by Python 2.6.
-        """
-        super(ClientTestCase, self).__init__(*args, **kwargs)
-
+    @classmethod
+    def setUpClass(cls):
         # directory where the test files are located
         self.path = os.path.dirname(__file__)
         self.datapath = os.path.join(self.path, "data")

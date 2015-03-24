@@ -113,7 +113,7 @@ class ClientTestCase(unittest.TestCase):
     def test_availability(self):
         data = self.client.availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
-        self.assertTrue('UW.TUCA.--.BHZ' in seeds)
+        self.assertIn('UW.TUCA.--.BHZ', seeds)
 
 
 def suite():

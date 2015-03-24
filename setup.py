@@ -110,9 +110,6 @@ EXTRAS_REQUIRE = {
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
-# Add argparse for Python 2.6. stdlib package for Python >= 2.7
-if sys.version_info[:2] == (2, 6):
-    INSTALL_REQUIRES.append('argparse')
 
 ENTRY_POINTS = {
     'console_scripts': [
@@ -634,7 +631,6 @@ def setupPackage():
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.3',
