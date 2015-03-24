@@ -200,3 +200,8 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
 
 # Install meta path handler.
 sys.meta_path.append(ObsPyRestructureMetaPathFinderAndLoader())
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
