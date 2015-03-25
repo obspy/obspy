@@ -20,6 +20,7 @@ import math as M
 import numpy as np
 from scipy import fftpack, fix, signal
 
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
 
@@ -78,6 +79,11 @@ def util_lon_lat(orig_lon, orig_lat, x, y):
 
     clibsignal.utl_lonlat(orig_lon, orig_lat, x, y, C.byref(lon), C.byref(lat))
     return lon.value, lat.value
+
+
+@deprecated("'nextpow2' has been renamed to 'next_pow_2'. Use that instead.")
+def nextpow2(i):
+    return next_pow_2(i)
 
 
 def next_pow_2(i):

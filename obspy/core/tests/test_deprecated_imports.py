@@ -121,7 +121,28 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
             obspy.core.preview.mergePreviews
             obspy.core.preview.resamplePreview
 
-        self.assertTrue(len(w), 15)
+            self.assertTrue(obspy.core.util.geodetics.calcVincentyInverse,
+                            obspy.geodetics.base.calc_vincenty_inverse)
+
+            from obspy.signal import util  # NOQA
+            # Attempt to import due to different deprecation mechanism.
+            obspy.signal.util.nextpow2
+
+            # geodetic functions used to be imported into obspy.core.utils
+            self.assertTrue(obspy.core.util.FlinnEngdahl is
+                            obspy.geodetics.FlinnEngdahl)
+            self.assertTrue(obspy.core.util.calcVincentyInverse is
+                            obspy.geodetics.calc_vincenty_inverse)
+            self.assertTrue(obspy.core.util.degrees2kilometers is
+                            obspy.geodetics.degrees2kilometers)
+            self.assertTrue(obspy.core.util.gps2DistAzimuth is
+                            obspy.geodetics.gps2dist_azimuth)
+            self.assertTrue(obspy.core.util.kilometer2degrees is
+                            obspy.geodetics.kilometer2degrees)
+            self.assertTrue(obspy.core.util.locations2degrees is
+                            obspy.geodetics.locations2degrees)
+
+        self.assertTrue(len(w), 16)
         for warn in w:
             self.assertTrue(warn.category is ObsPyDeprecationWarning)
 
