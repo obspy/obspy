@@ -105,8 +105,14 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
-                           window=welch_taper, noverlap=NOVERLAP)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
+                               window=welch_taper, noverlap=NOVERLAP)
+            self.assertEqual(len(w), 1)
+            self.assertTrue('This wrapper is no longer necessary.' in
+                            str(w[0].message))
+
         psd_pitsa = np.load(file_psd_pitsa)
 
         # mlab's psd routine returns Nyquist frequency as last entry, PITSA

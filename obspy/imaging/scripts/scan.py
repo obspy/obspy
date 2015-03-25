@@ -40,8 +40,7 @@ from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction, \
-    getMatplotlibVersion
+from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
@@ -368,10 +367,9 @@ def main(argv=None):
     ax.xaxis_date()
     # set custom formatters to always show date in first tick
     formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
-    if getMatplotlibVersion() >= [1, 0, 0]:
-        formatter.scaled[1 / 24.] = \
-            FuncFormatter(decimal_seconds_format_date_first_tick)
-        formatter.scaled.pop(1/(24.*60.))
+    formatter.scaled[1 / 24.] = \
+        FuncFormatter(decimal_seconds_format_date_first_tick)
+    formatter.scaled.pop(1/(24.*60.))
     ax.xaxis.set_major_formatter(formatter)
     plt.subplots_adjust(left=0.2)
     # set x-axis limits according to given start/end time
@@ -392,12 +390,7 @@ def main(argv=None):
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         if not args.start_time or not args.end_time:
             days = ax.get_xlim()
@@ -409,12 +402,7 @@ def main(argv=None):
         width = min(width, height * 4)
         fig.set_figwidth(width)
         plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         fig.savefig(args.output)
     if args.verbose and not args.quiet:

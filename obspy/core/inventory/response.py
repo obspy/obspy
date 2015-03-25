@@ -21,14 +21,11 @@ from math import pi
 
 import numpy as np
 
-from ..util.base import ComparingObject, getMatplotlibVersion
+from ..util.base import ComparingObject
 from ..util.obspy_types import (CustomComplex, CustomFloat,
                                 FloatWithUncertainties,
                                 FloatWithUncertaintiesAndUnit)
 from .util import Angle, Frequency
-
-
-MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class ResponseStage(ComparingObject):
@@ -1251,11 +1248,7 @@ class Response(ComparingObject):
         lw = 1.5
         lines = ax1.loglog(freq, abs(cpx_response), lw=lw, **label_kwarg)
         color = lines[0].get_color()
-        # Cannot be plotted with matplotlib < 1.0.0
-        if MATPLOTLIB_VERSION < [1, 0, 0]:
-            warnings.warn("Cannot plot the instrument sensitivity. Your "
-                          "matplotlib version is too old. Please update.")
-        if self.instrument_sensitivity and MATPLOTLIB_VERSION >= [1, 0, 0]:
+        if self.instrument_sensitivity:
             trans_above = blended_transform_factory(ax1.transData,
                                                     ax1.transAxes)
             trans_right = blended_transform_factory(ax1.transAxes,
