@@ -28,7 +28,7 @@ class SEEDParserException(Exception):
     pass
 
 
-def toTag(name):
+def to_tag(name):
     """
     Creates a XML tag from a given string.
     """
@@ -38,7 +38,7 @@ def toTag(name):
     return temp
 
 
-def toString(tag):
+def to_string(tag):
     """
     Creates a pretty string from any given XML tag.
     """
@@ -47,7 +47,7 @@ def toString(tag):
     return temp
 
 
-def DateTime2String(dt, compact=False):
+def datetime_2_string(dt, compact=False):
     """
     Generates a valid SEED time string from a UTCDateTime object.
     """
@@ -64,7 +64,7 @@ def DateTime2String(dt, compact=False):
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
-def compareSEED(seed1, seed2):
+def compare_SEED(seed1, seed2):
     """
     Compares two SEED files.
 
@@ -131,8 +131,8 @@ def compareSEED(seed1, seed2):
             continue
 
 
-def LookupCode(blockettes, blkt_number, field_name, lookup_code,
-               lookup_code_number):
+def lookup_code(blockettes, blkt_number, field_name, lookup_code,
+                lookup_code_number):
     """
     Loops over a list of blockettes until it finds the blockette with the
     right number and lookup code.
@@ -147,7 +147,7 @@ def LookupCode(blockettes, blkt_number, field_name, lookup_code,
     return None
 
 
-def formatRESP(number, digits=4):
+def format_RESP(number, digits=4):
     """
     Formats a number according to the RESP format.
     """
@@ -155,14 +155,14 @@ def formatRESP(number, digits=4):
     return format_string % (number)
 
 
-def Blockette34Lookup(abbr, lookup):
+def blockette_34_lookup(abbr, lookup):
     """
     Gets certain values from blockette 34. Needed for RESP output.
     """
     try:
-        l1 = LookupCode(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
-        l2 = LookupCode(abbr, 34, 'unit_description', 'unit_lookup_code',
-                        lookup)
+        l1 = lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
+        l2 = lookup_code(abbr, 34, 'unit_description', 'unit_lookup_code',
+                         lookup)
         return l1 + ' - ' + l2
     except:
         msg = '\nWarning: Abbreviation reference not found.'
@@ -170,7 +170,7 @@ def Blockette34Lookup(abbr, lookup):
         return 'No Abbreviation Referenced'
 
 
-def setXPath(blockette, identifier):
+def set_xpath(blockette, identifier):
     """
     Returns an X-Path String to a blockette with the correct identifier.
     """
@@ -206,14 +206,14 @@ def setXPath(blockette, identifier):
     raise NotImplementedError(msg)
 
 
-def getXPath(xpath):
+def get_xpath(xpath):
     """
     Returns lookup key of XPath expression on abbreviation dictionary.
     """
     return int(xpath.split('"')[-2])
 
 
-def uniqueList(seq):
+def unique_list(seq):
     # Not order preserving
     keys = {}
     for e in seq:

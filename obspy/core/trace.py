@@ -1274,7 +1274,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 resp_key = ".".join(("RESP", self.stats.network,
                                      self.stats.station, self.stats.location,
                                      self.stats.channel))
-                for key, stringio in seedresp['filename'].getRESP():
+                for key, stringio in seedresp['filename'].get_RESP():
                     if key == resp_key:
                         stringio.seek(0, 0)
                         seedresp['filename'] = stringio

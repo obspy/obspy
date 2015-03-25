@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop
-from ..utils import Blockette34Lookup, formatRESP
+from ..utils import blockette_34_lookup, format_RESP
 
 
 class Blockette055(Blockette):
@@ -38,13 +38,13 @@ class Blockette055(Blockette):
     ]
 
     # Changes the name of the blockette because of an error in XSEED 1.0
-    def getXML(self, *args, **kwargs):
-        xml = Blockette.getXML(self, *args, **kwargs)
+    def get_XML(self, *args, **kwargs):
+        xml = Blockette.get_XML(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             xml.tag = 'reponse_list'
         return xml
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -59,9 +59,9 @@ class Blockette055(Blockette):
             'B055F03     Stage sequence number:                 %s\n' \
             % self.stage_sequence_number + \
             'B055F04     Response in units lookup:              %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_input_units) + \
+            % blockette_34_lookup(abbreviations, self.stage_input_units) + \
             'B055F05     Response out units lookup:             %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_output_units) + \
+            % blockette_34_lookup(abbreviations, self.stage_output_units) + \
             'B055F06     Number of responses:                   %s\n' \
             % self.number_of_responses_listed
         if self.number_of_responses_listed:
@@ -72,17 +72,17 @@ class Blockette055(Blockette):
             if self.number_of_responses_listed > 1:
                 for _i in range(self.number_of_responses_listed):
                     string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
-                        (formatRESP(self.frequency[_i], 6),
-                         formatRESP(self.amplitude[_i], 6),
-                         formatRESP(self.amplitude_error[_i], 6),
-                         formatRESP(self.phase_angle[_i], 6),
-                         formatRESP(self.phase_error[_i], 6))
+                        (format_RESP(self.frequency[_i], 6),
+                         format_RESP(self.amplitude[_i], 6),
+                         format_RESP(self.amplitude_error[_i], 6),
+                         format_RESP(self.phase_angle[_i], 6),
+                         format_RESP(self.phase_error[_i], 6))
             else:
                 string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
-                    (formatRESP(self.frequency, 6),
-                     formatRESP(self.amplitude, 6),
-                     formatRESP(self.amplitude_error, 6),
-                     formatRESP(self.phase_angle, 6),
-                     formatRESP(self.phase_error, 6))
+                    (format_RESP(self.frequency, 6),
+                     format_RESP(self.amplitude, 6),
+                     format_RESP(self.amplitude_error, 6),
+                     format_RESP(self.phase_angle, 6),
+                     format_RESP(self.phase_error, 6))
         string += '#\t\t\n'
         return string

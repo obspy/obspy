@@ -31,7 +31,7 @@ class BlocketteTestCase(unittest.TestCase):
         # create a blockette 054 which is way to long
         b054 = b"0540240A0400300300000020" + (b"+1.58748E-03" * 40)
         blockette = Blockette054(strict=True)
-        self.assertRaises(BlocketteLengthException, blockette.parseSEED, b054)
+        self.assertRaises(BlocketteLengthException, blockette.parse_SEED, b054)
 
     def parseFile(self, blkt_file):
         """
@@ -138,7 +138,7 @@ class BlocketteTestCase(unittest.TestCase):
             versions['SEED'] = {}
             versions['SEED']['blkt'] = blkt()
             versions['SEED']['data'] = example['SEED']
-            versions['SEED']['blkt'].parseSEED(example['SEED'])
+            versions['SEED']['blkt'].parse_SEED(example['SEED'])
 
             # prepare XSEED
             for key, data in example.items():
@@ -149,20 +149,20 @@ class BlocketteTestCase(unittest.TestCase):
                 versions[key] = {}
                 versions[key]['version'] = key[6:]
                 versions[key]['blkt'] = blkt(xseed_version=key[6:])
-                versions[key]['blkt'].parseXML(etree.fromstring(data))
+                versions[key]['blkt'].parse_XML(etree.fromstring(data))
                 versions[key]['data'] = data
             # loop over all combinations
             errmsg = 'Blockette %s - Getting %s from %s\n%s\n!=\n%s'
             for key1, blkt1 in versions.items():
                 # conversion to SEED
-                seed = blkt1['blkt'].getSEED()
+                seed = blkt1['blkt'].get_SEED()
                 self.assertEqual(seed, versions['SEED']['data'],
                                  errmsg % (blkt_number, 'SEED', key1,
                                            seed, versions['SEED']['data']))
                 for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
-                    xseed = etree.tostring(blkt1['blkt'].getXML(
+                    xseed = etree.tostring(blkt1['blkt'].get_XML(
                         xseed_version=blkt2['version'])).decode()
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,
@@ -212,28 +212,28 @@ class BlocketteTestCase(unittest.TestCase):
         # reading should work but without issues
         blockette = Blockette050()
         # utf-8 only needed for PY2
-        blockette.parseSEED(b050_orig.encode('utf-8'))
+        blockette.parse_SEED(b050_orig.encode('utf-8'))
         # utf-8 only needed for PY2
         self.assertEqual(len(blockette.site_name.encode('utf-8')), 72)
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
-            self.assertRaises(UserWarning, blockette.getSEED)
+            self.assertRaises(UserWarning, blockette.get_SEED)
             # Now ignore the warnings and test the default values.
             warnings.simplefilter('ignore', UserWarning)
             # writing should cut to 60 chars
-            out = blockette.getSEED()
+            out = blockette.get_SEED()
             # utf-8 only needed for PY2
             self.assertEqual(out.decode('utf-8'), b050_cut)
             # reading it again should have cut length
             blockette = Blockette050()
-            blockette.parseSEED(out)
+            blockette.parse_SEED(out)
             # utf-8 only needed for PY2
             self.assertEqual(len(blockette.site_name.encode('utf-8')), 60)
         # writing with strict=True will raise
         blockette = Blockette050(strict=True)
         # utf-8 only needed for PY2
-        blockette.parseSEED(b050_orig.encode('utf-8'))
-        self.assertRaises(SEEDTypeException, blockette.getSEED)
+        blockette.parse_SEED(b050_orig.encode('utf-8'))
+        self.assertRaises(SEEDTypeException, blockette.get_SEED)
 
 
 def suite():

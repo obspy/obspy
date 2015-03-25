@@ -77,7 +77,7 @@ class ResponseTestCase(unittest.TestCase):
             if p.blockettes[52][0].end_date > t_:
                 p.blockettes[52][0].end_date = None
 
-            resp_filename = p.getRESP()[0][-1]
+            resp_filename = p.get_RESP()[0][-1]
 
             inv = read_inventory(xml_filename)
 

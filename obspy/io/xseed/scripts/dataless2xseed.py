@@ -59,8 +59,8 @@ def dataless2xseed(filename, options):
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.writeXSEED(output, version=str(options.version),
-                              split_stations=options.split_stations)
+            parser.write_XSEED(output, version=str(options.version),
+                               split_stations=options.split_stations)
         except Exception as e:
             if options.debug:
                 raise

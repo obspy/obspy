@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import LookupCode, formatRESP
+from ..utils import lookup_code, format_RESP
 
 
 RESP = """\
@@ -72,7 +72,7 @@ class Blockette053(Blockette):
         ])
     ]
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -84,18 +84,18 @@ class Blockette053(Blockette):
         out = RESP % (station, channel,
                       field_three_dict[self.transfer_function_types],
                       self.stage_sequence_number,
-                      LookupCode(abbreviations, 34, 'unit_name',
-                                 'unit_lookup_code',
-                                 self.stage_signal_input_units),
-                      LookupCode(abbreviations, 34, 'unit_description',
-                                 'unit_lookup_code',
-                                 self.stage_signal_input_units),
-                      LookupCode(abbreviations, 34, 'unit_name',
-                                 'unit_lookup_code',
-                                 self.stage_signal_output_units),
-                      LookupCode(abbreviations, 34, 'unit_description',
-                                 'unit_lookup_code',
-                                 self.stage_signal_output_units),
+                      lookup_code(abbreviations, 34, 'unit_name',
+                                  'unit_lookup_code',
+                                  self.stage_signal_input_units),
+                      lookup_code(abbreviations, 34, 'unit_description',
+                                  'unit_lookup_code',
+                                  self.stage_signal_input_units),
+                      lookup_code(abbreviations, 34, 'unit_name',
+                                  'unit_lookup_code',
+                                  self.stage_signal_output_units),
+                      lookup_code(abbreviations, 34, 'unit_description',
+                                  'unit_lookup_code',
+                                  self.stage_signal_output_units),
                       self.A0_normalization_factor,
                       self.normalization_frequency,
                       self.number_of_complex_zeros,
@@ -106,17 +106,17 @@ class Blockette053(Blockette):
                 for _i in range(self.number_of_complex_zeros):
                     out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.real_zero[_i], 6),
-                        formatRESP(self.imaginary_zero[_i], 6),
-                        formatRESP(self.real_zero_error[_i], 6),
-                        formatRESP(self.imaginary_zero_error[_i], 6))
+                        format_RESP(self.real_zero[_i], 6),
+                        format_RESP(self.imaginary_zero[_i], 6),
+                        format_RESP(self.real_zero_error[_i], 6),
+                        format_RESP(self.imaginary_zero_error[_i], 6))
             else:
                 out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    formatRESP(self.real_zero, 6),
-                    formatRESP(self.imaginary_zero, 6),
-                    formatRESP(self.real_zero_error, 6),
-                    formatRESP(self.imaginary_zero_error, 6))
+                    format_RESP(self.real_zero, 6),
+                    format_RESP(self.imaginary_zero, 6),
+                    format_RESP(self.real_zero_error, 6),
+                    format_RESP(self.imaginary_zero_error, 6))
         out += '#\t\tComplex poles:\n'
         out += '#\t\t  i  real          imag          real_error    '
         out += 'imag_error\n'
@@ -126,16 +126,16 @@ class Blockette053(Blockette):
                 for _i in range(self.number_of_complex_poles):
                     out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.real_pole[_i], 6),
-                        formatRESP(self.imaginary_pole[_i], 6),
-                        formatRESP(self.real_pole_error[_i], 6),
-                        formatRESP(self.imaginary_pole_error[_i], 6))
+                        format_RESP(self.real_pole[_i], 6),
+                        format_RESP(self.imaginary_pole[_i], 6),
+                        format_RESP(self.real_pole_error[_i], 6),
+                        format_RESP(self.imaginary_pole_error[_i], 6))
             else:
                 out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    formatRESP(self.real_pole, 6),
-                    formatRESP(self.imaginary_pole, 6),
-                    formatRESP(self.real_pole_error, 6),
-                    formatRESP(self.imaginary_pole_error, 6))
+                    format_RESP(self.real_pole, 6),
+                    format_RESP(self.imaginary_pole, 6),
+                    format_RESP(self.real_pole_error, 6),
+                    format_RESP(self.imaginary_pole_error, 6))
         out += '#\t\t\n'
         return out.encode()

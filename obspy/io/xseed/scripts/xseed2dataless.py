@@ -59,7 +59,7 @@ def xseed2dataless(filename, options):
             sys.stdout.write(msg)
         try:
             parser = Parser(file, debug=options.debug)
-            parser.writeSEED(output)
+            parser.write_SEED(output)
         except Exception as e:
             if options.debug:
                 raise

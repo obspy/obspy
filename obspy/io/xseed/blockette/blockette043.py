@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
-from ..utils import Blockette34Lookup, formatRESP
+from ..utils import blockette_34_lookup, format_RESP
 
 
 class Blockette043(Blockette):
@@ -44,13 +44,13 @@ class Blockette043(Blockette):
     ]
 
 # Changes the name of the blockette because of an error in XSEED 1.0
-    def getXML(self, *args, **kwargs):
-        xml = Blockette.getXML(self, *args, **kwargs)
+    def get_XML(self, *args, **kwargs):
+        xml = Blockette.get_XML(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             xml.tag = 'response_poles_and_zeros'
         return xml
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -72,11 +72,11 @@ class Blockette043(Blockette):
             'B043F05     Response type:                         %s\n' \
             % field_five_dict[self.response_type] + \
             'B043F06     Response in units lookup:              %s\n' \
-            % Blockette34Lookup(abbreviations,
-                                self.stage_signal_input_units) + \
+            % blockette_34_lookup(abbreviations,
+                                  self.stage_signal_input_units) + \
             'B043F07     Response out units lookup:             %s\n' \
-            % Blockette34Lookup(abbreviations,
-                                self.stage_signal_output_units) + \
+            % blockette_34_lookup(abbreviations,
+                                  self.stage_signal_output_units) + \
             'B043F08     A0 normalization factor:               %G\n'\
             % self.A0_normalization_factor + \
             'B043F09     Normalization frequency:               %G\n'\
@@ -93,17 +93,17 @@ class Blockette043(Blockette):
                 for _i in range(self.number_of_complex_zeros):
                     string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.real_zero[_i], 6),
-                        formatRESP(self.imaginary_zero[_i], 6),
-                        formatRESP(self.real_zero_error[_i], 6),
-                        formatRESP(self.imaginary_zero_error[_i], 6))
+                        format_RESP(self.real_zero[_i], 6),
+                        format_RESP(self.imaginary_zero[_i], 6),
+                        format_RESP(self.real_zero_error[_i], 6),
+                        format_RESP(self.imaginary_zero_error[_i], 6))
             else:
                 string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    formatRESP(self.real_zero, 6),
-                    formatRESP(self.imaginary_zero, 6),
-                    formatRESP(self.real_zero_error, 6),
-                    formatRESP(self.imaginary_zero_error, 6))
+                    format_RESP(self.real_zero, 6),
+                    format_RESP(self.imaginary_zero, 6),
+                    format_RESP(self.real_zero_error, 6),
+                    format_RESP(self.imaginary_zero_error, 6))
         string += '#\t\tComplex poles:\n' + \
             '#\t\t  i  real          imag          real_error    imag_error\n'
         if self.number_of_complex_poles > 0:
@@ -112,16 +112,16 @@ class Blockette043(Blockette):
                 for _i in range(self.number_of_complex_poles):
                     string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.real_pole[_i], 6),
-                        formatRESP(self.imaginary_pole[_i], 6),
-                        formatRESP(self.real_pole_error[_i], 6),
-                        formatRESP(self.imaginary_pole_error[_i], 6))
+                        format_RESP(self.real_pole[_i], 6),
+                        format_RESP(self.imaginary_pole[_i], 6),
+                        format_RESP(self.real_pole_error[_i], 6),
+                        format_RESP(self.imaginary_pole_error[_i], 6))
             else:
                 string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    formatRESP(self.real_pole, 6),
-                    formatRESP(self.imaginary_pole, 6),
-                    formatRESP(self.real_pole_error, 6),
-                    formatRESP(self.imaginary_pole_error, 6))
+                    format_RESP(self.real_pole, 6),
+                    format_RESP(self.imaginary_pole, 6),
+                    format_RESP(self.real_pole_error, 6),
+                    format_RESP(self.imaginary_pole_error, 6))
         string += '#\t\t\n'
         return string
