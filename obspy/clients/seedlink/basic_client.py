@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 
 from obspy import Stream
+from obspy.core.util.decorator import deprecated
 from .slclient import SLClient, SLPacket
 from .client.seedlinkconnection import SeedLinkConnection
 
@@ -57,15 +58,20 @@ class Client(object):
         self._slclient.slconn.setSLAddress(self._server_url)
         self._slclient.slconn.netto = self.timeout
 
-    def get_waveform(self, network, station, location, channel, starttime,
-                     endtime):
+    @deprecated("'get_waveform' has been renamed to 'get_waveforms'. Use "
+                "that instead.")
+    def get_waveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime):
         """
         Request waveform data from the seedlink server.
 
         >>> from obspy import UTCDateTime
         >>> client = Client('rtserver.ipgp.fr')
         >>> t = UTCDateTime() - 3600
-        >>> st = client.get_waveform("G", "FDF", "00", "BHZ", t, t + 5)
+        >>> st = client.get_waveforms("G", "FDF", "00", "BHZ", t, t + 5)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         G.FDF.00.BHZ | 20... | 20.0 Hz, ... samples
@@ -73,7 +79,7 @@ class Client(object):
         Most servers support '?' single-character wildcard in location and
         channel code fields:
 
-        >>> st = client.get_waveform("G", "FDF", "??", "B??", t, t + 5)
+        >>> st = client.get_waveforms("G", "FDF", "??", "B??", t, t + 5)
         >>> st = st.sort(reverse=True)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -138,7 +144,7 @@ class Client(object):
             return False
 
         # get basic packet info
-        type_ = slpack.getType()
+        type_ = slpack.get_type()
         if self.debug:
             print(type_)
 
@@ -153,7 +159,7 @@ class Client(object):
             return False
 
         # process packet data
-        trace = slpack.getTrace()
+        trace = slpack.get_trace()
         if trace is None:
             if self.debug:
                 print("Blockette contains no trace")

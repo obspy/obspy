@@ -33,7 +33,7 @@ class SLPacketTestCase(unittest.TestCase):
         # Check the INFO CAPABILITIES response from GEOFON
         packet = self._read_data_file('info_packet_geofon.slink')
         packet = SLPacket(packet, 0)
-        payload = packet.getStringPayload()
+        payload = packet.get_string_payload()
 
         xml = b'<?xml version="1.0"?>'
         self.assertTrue(payload.startswith(xml))
@@ -42,7 +42,7 @@ class SLPacketTestCase(unittest.TestCase):
         # Check the INFO CAPABILITIES response from IRIS Ringserver
         packet = self._read_data_file('info_packet_iris.slink')
         packet = SLPacket(packet, 0)
-        payload = packet.getStringPayload()
+        payload = packet.get_string_payload()
 
         xml = b'<?xml version="1.0" encoding="utf-8"?>'
         self.assertTrue(payload.startswith(xml))

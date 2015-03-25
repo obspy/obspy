@@ -31,7 +31,7 @@ class MySLClient(SLClient):
         self.rt_trace = rt_trace
         super(self.__class__, self).__init__(*args, **kwargs)
 
-    def packetHandler(self, count, slpack):
+    def packet_handler(self, count, slpack):
         """
         Processes each packet received from the SeedLinkConnection.
 
@@ -52,8 +52,8 @@ class MySLClient(SLClient):
             return False
 
         # get basic packet info
-        seqnum = slpack.getSequenceNumber()
-        type = slpack.getType()
+        seqnum = slpack.get_sequence_number()
+        type = slpack.get_type()
 
         # process INFO packets here
         if (type == SLPacket.TYPE_SLINF):
@@ -77,7 +77,7 @@ class MySLClient(SLClient):
         print(str(seqnum) + ": blockette type: " + str(type))
 
         # process packet data
-        trace = slpack.getTrace()
+        trace = slpack.get_trace()
         if trace is not None:
             print(self.__class__.__name__ +
                   ": blockette contains a trace: ", end=' ')

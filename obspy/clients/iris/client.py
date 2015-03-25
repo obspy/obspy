@@ -31,14 +31,6 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
-DEPR_WARN = ("This service was shut down on the server side in December "
-             "2013, please use %s instead. Further information: "
-             "http://www.iris.edu/ds/nodes/dmc/news/2013/03/"
-             "new-fdsn-web-services-and-retirement-of-deprecated-services/")
-DEPR_WARNS = dict([(new,
-                    DEPR_WARN % "obspy.clients.fdsn.client.Client.%s" % new)
-                   for new in ["get_waveform", "get_events", "get_stations",
-                               "get_waveform_bulk"]])
 DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
                             "evalresp": 1, "traveltime": 1, "flinnengdahl": 2,
                             "distaz": 1}
