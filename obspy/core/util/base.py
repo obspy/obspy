@@ -134,8 +134,8 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
     >>> create_empty_data_chunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
-    >>> create_empty_data_chunk(3, 'f') \
-    ... # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
+    >>> create_empty_data_chunk(
+    ...     3, 'f')  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
                  mask = ...,
                  ...)
@@ -272,8 +272,8 @@ def _get_function_from_entry_point(group, type):
 
     .. rubric:: Example
 
-    >>> _get_function_from_entry_point('detrend', 'simple') \
-    ... # doctest: +ELLIPSIS
+    >>> _get_function_from_entry_point(
+    ...     'detrend', 'simple')  # doctest: +ELLIPSIS
     <function simple at 0x...>
 
     >>> _get_function_from_entry_point('detrend', 'XXX')  # doctest: +ELLIPSIS

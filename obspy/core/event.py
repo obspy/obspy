@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 obspy.core.event - Classes for handling event metadata
 ======================================================
@@ -953,7 +954,7 @@ class TimeWindow(__TimeWindow):
     :param end: Absolute value of duration of time interval after reference
         point in time window. The value may be zero, but not negative.  Unit: s
     :type reference: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param reference: Reference point in time (“central” point).
+    :param reference: Reference point in time ("central" point).
 
     .. note::
 
@@ -985,7 +986,7 @@ class CompositeTime(__CompositeTime):
     have to refer to UTC.
 
     :type year: int
-    :param year: Year or range of years of the event’s focal time.
+    :param year: Year or range of years of the event's focal time.
     :type year_errors: :class:`~obspy.core.util.attribdict.AttribDict`
     :param year_errors: AttribDict containing error quantities.
     :type month: int
