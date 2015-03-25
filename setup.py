@@ -260,9 +260,9 @@ ENTRY_POINTS = {
         'CNV = obspy.io.cnv.core',
     ],
     'obspy.plugin.event.QUAKEML': [
-        'is_format = obspy.io.quakeml.core:_is_quakeML',
-        'read_format = obspy.io.quakeml.core:_read_quakeML',
-        'write_format = obspy.io.quakeml.core:_write_quakeML',
+        'is_format = obspy.io.quakeml.core:_is_quakeml',
+        'read_format = obspy.io.quakeml.core:_read_quakeml',
+        'write_format = obspy.io.quakeml.core:_write_quakeml',
     ],
     'obspy.plugin.event.MCHEDR': [
         'is_format = obspy.io.pde.mchedr:_is_mchedr',
@@ -280,8 +280,8 @@ ENTRY_POINTS = {
         'write_format = obspy.io.cnv.core:_write_cnv',
     ],
     'obspy.plugin.event.NDK': [
-        'is_format = obspy.io.ndk.core:__is_ndk',
-        'read_format = obspy.io.ndk.core:__read_ndk',
+        'is_format = obspy.io.ndk.core:_is_ndk',
+        'read_format = obspy.io.ndk.core:_read_ndk',
         ],
     'obspy.plugin.event.NLLOC_HYP': [
         'is_format = obspy.io.nlloc.core:is_nlloc_hyp',

@@ -686,7 +686,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
-            rid = ResourceIdentifier(resource_id="blablup")
+            rid = ResourceIdentifier(id="blablup")
         self.assertEqual(rid.id, "blablup")
         self.assertEqual(len(w), 1)
         w = w[0]

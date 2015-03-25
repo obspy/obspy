@@ -467,7 +467,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     if method not in ("read", "write"):
         raise ValueError("no valid type: %s" % method)
 
-    method += "Format"
+    method = "%s_format" % method
     eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
                                     WAVEFORM_PREFERRED_ORDER)
     mod_list = []

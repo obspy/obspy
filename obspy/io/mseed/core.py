@@ -364,7 +364,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     except:
         verbose = 0
 
-    lil = clibmseed._read_mseedBuffer(
+    lil = clibmseed.readMSEEDBuffer(
         bfrNp, buflen, selections, C.c_int8(unpack_data),
         reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
         allocData, diag_print, log_print)
