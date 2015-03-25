@@ -95,7 +95,7 @@ class Blockette058(Blockette):
                     % (formatRESP(self.sensitivity_for_calibration[_i], 6),
                        formatRESP(
                            self.frequency_of_calibration_sensitivity[_i], 6),
-                        self.time_of_above_calibration[_i].formatSEED())
+                        self.time_of_above_calibration[_i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
@@ -103,6 +103,6 @@ class Blockette058(Blockette):
                 'B058F07-08    0 %13s %13s %s\n' \
                 % (formatRESP(self.sensitivity_for_calibration, 6),
                    formatRESP(self.frequency_of_calibration_sensitivity, 6),
-                   self.time_of_above_calibration.formatSEED())
+                   self.time_of_above_calibration.format_seed())
         string += '#\t\t\n'
         return string.encode()

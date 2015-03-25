@@ -612,7 +612,7 @@ class Client(object):
         # request type
         rtype = 'REQUEST ROUTING '
         if modified_after:
-            rtype += 'modified_after=%s ' % modified_after.formatArcLink()
+            rtype += 'modified_after=%s ' % modified_after.format_arclink()
         # request data
         rdata = [starttime, endtime, network, station]
         # fetch plain XML document
@@ -1103,7 +1103,7 @@ class Client(object):
         if instruments:
             rtype += 'instruments=true '
         if modified_after:
-            rtype += 'modified_after=%s ' % modified_after.formatArcLink()
+            rtype += 'modified_after=%s ' % modified_after.format_arclink()
         # request data
         rdata = [starttime, endtime, network, station, channel, location, '.']
         if restricted is True:

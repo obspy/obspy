@@ -133,8 +133,8 @@ def main():
         #
         # set a time window from 2 min in the past to 5 sec in the future
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).formatSeedLink()
-        slClient.end_time = (dt + 5.0).formatSeedLink()
+        slClient.begin_time = (dt - 120.0).format_seedlink()
+        slClient.end_time = (dt + 5.0).format_seedlink()
         print("SeedLink date-time range:", slClient.begin_time, " -> ",
               end=' ')
         print(slClient.end_time)

@@ -31,8 +31,8 @@ class SLClientTestCase(unittest.TestCase):
         slClient.multiselect = ("GE_STU:BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).formatSeedLink()
-        slClient.end_time = (dt - 60.0).formatSeedLink()
+        slClient.begin_time = (dt - 120.0).format_seedlink()
+        slClient.end_time = (dt - 60.0).format_seedlink()
         slClient.verbose = 2
         slClient.initialize()
         slClient.run()
@@ -44,8 +44,8 @@ class SLClientTestCase(unittest.TestCase):
         slClient.multiselect = ("G_FDF:00BHZ, G_SSB:00BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).formatSeedLink()
-        slClient.end_time = (dt - 60.0).formatSeedLink()
+        slClient.begin_time = (dt - 120.0).format_seedlink()
+        slClient.end_time = (dt - 60.0).format_seedlink()
         slClient.verbose = 2
         slClient.initialize()
         slClient.run()

@@ -799,9 +799,9 @@ class Parser(object):
         if not channel_info['End date']:
             channel_info['End date'] = 'No Ending Time'
         else:
-            channel_info['End date'] = channel_info['End date'].formatSEED()
+            channel_info['End date'] = channel_info['End date'].format_seed()
         # Convert starttime.
-        channel_info['Start date'] = channel_info['Start date'].formatSEED()
+        channel_info['Start date'] = channel_info['Start date'].format_seed()
         # Write Blockette 52 stuff.
         resp.write((
             'B052F03     Location:    %s\n' % channel_info['Location'] +

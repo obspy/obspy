@@ -388,8 +388,8 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         # convert UTCDateTime to string for query
-        kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
-        kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+        kwargs['starttime'] = UTCDateTime(starttime).format_IRIS_web_service()
+        kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
         # output
         if filename:
             kwargs['output'] = output
@@ -487,17 +487,17 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).formatIRISWebService()
+                    UTCDateTime(starttime).format_IRIS_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
-                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+                kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif 'time' in kwargs:
             try:
                 kwargs['time'] = \
-                    UTCDateTime(kwargs['time']).formatIRISWebService()
+                    UTCDateTime(kwargs['time']).format_IRIS_web_service()
             except:
                 pass
         # build up query
@@ -662,16 +662,16 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).formatIRISWebService()
+                    UTCDateTime(starttime).format_IRIS_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
-                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+                kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif starttime:
             try:
-                kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
+                kwargs['time'] = UTCDateTime(starttime).format_IRIS_web_service()
             except:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)
@@ -1076,7 +1076,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         try:
-            kwargs['time'] = UTCDateTime(time).formatIRISWebService()
+            kwargs['time'] = UTCDateTime(time).format_IRIS_web_service()
         except:
             kwargs['time'] = time
         kwargs['minfreq'] = float(minfreq)

@@ -700,7 +700,7 @@ class SeedLinkConnection(object):
                     statefile_file.write(
                         curstream.net + " " +
                         curstream.station + " " + str(curstream.seqnum) +
-                        " " + curstream.btime.formatSeedLink() + "\n")
+                        " " + curstream.btime.format_seedlink() + "\n")
         except IOError as e:
             msg = "%s: writing state file: %s" % (e, self.statefile)
             logger.critical(msg)

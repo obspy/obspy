@@ -112,8 +112,8 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
             # readEvents() function.
             self.assertTrue(obspy.readEvents is
                             obspy.read_events)
-            # core.preview functions. For some reason obspy.core.preview
-            # has to be imported before.
+            # core.preview functions. obspy.core.preview has to be imported
+            # once before as it is not imported during the initialization.
             from obspy.core import preview  # NOQA
             self.assertTrue(obspy.core.preview.createPreview is
                             obspy.core.preview.create_preview)

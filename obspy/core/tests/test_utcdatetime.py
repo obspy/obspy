@@ -427,11 +427,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 456789)
         # as function
-        self.assertEqual(dt._getDate(), datetime.date(1970, 1, 1))
-        self.assertEqual(dt._getTime(), datetime.time(12, 23, 34, 456789))
-        self.assertEqual(dt._getDateTime(),
+        self.assertEqual(dt._get_date(), datetime.date(1970, 1, 1))
+        self.assertEqual(dt._get_time(), datetime.time(12, 23, 34, 456789))
+        self.assertEqual(dt._get_datetime(),
                          datetime.datetime(1970, 1, 1, 12, 23, 34, 456789))
-        self.assertAlmostEqual(dt._getTimeStamp(), 44614.456789)
+        self.assertAlmostEqual(dt._get_timestamp(), 44614.456789)
         # as property
         self.assertEqual(dt.date, datetime.date(1970, 1, 1))
         self.assertEqual(dt.time, datetime.time(12, 23, 34, 456789))
@@ -509,31 +509,31 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
     def test_formatSEED(self):
         """
-        Tests formatSEED method
+        Tests format_seed method
         """
         # 1
         dt = UTCDateTime("2010-01-01")
-        self.assertEqual(dt.formatSEED(compact=True), "2010,001")
+        self.assertEqual(dt.format_seed(compact=True), "2010,001")
         # 2
         dt = UTCDateTime("2010-01-01T00:00:00.000000")
-        self.assertEqual(dt.formatSEED(compact=True), "2010,001")
+        self.assertEqual(dt.format_seed(compact=True), "2010,001")
         # 3
         dt = UTCDateTime("2010-01-01T12:00:00")
-        self.assertEqual(dt.formatSEED(compact=True), "2010,001,12")
+        self.assertEqual(dt.format_seed(compact=True), "2010,001,12")
         # 4
         dt = UTCDateTime("2010-01-01T12:34:00")
-        self.assertEqual(dt.formatSEED(compact=True), "2010,001,12:34")
+        self.assertEqual(dt.format_seed(compact=True), "2010,001,12:34")
         # 5
         dt = UTCDateTime("2010-01-01T12:34:56")
-        self.assertEqual(dt.formatSEED(compact=True), "2010,001,12:34:56")
+        self.assertEqual(dt.format_seed(compact=True), "2010,001,12:34:56")
         # 6
         dt = UTCDateTime("2010-01-01T12:34:56.123456")
-        self.assertEqual(dt.formatSEED(compact=True),
+        self.assertEqual(dt.format_seed(compact=True),
                          "2010,001,12:34:56.1234")
         # 7 - explicit disabling compact flag still results into compact date
         # if no time information is given
         dt = UTCDateTime("2010-01-01")
-        self.assertEqual(dt.formatSEED(compact=False), "2010,001")
+        self.assertEqual(dt.format_seed(compact=False), "2010,001")
 
     def test_eq(self):
         """
@@ -750,7 +750,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         self.assertEqual(dt.weekday, 2)
-        self.assertEqual(dt._getWeekday(), 2)
+        self.assertEqual(dt._get_weekday(), 2)
 
     def test_defaultPrecision(self):
         """

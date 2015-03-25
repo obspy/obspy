@@ -52,14 +52,14 @@ def DateTime2String(dt, compact=False):
     Generates a valid SEED time string from a UTCDateTime object.
     """
     if isinstance(dt, UTCDateTime):
-        return dt.formatSEED(compact)
+        return dt.format_seed(compact)
     elif isinstance(dt, (str, native_str)):
         dt = dt.strip()
     if not dt:
         return ""
     try:
         dt = UTCDateTime(dt)
-        return dt.formatSEED(compact)
+        return dt.format_seed(compact)
     except:
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
