@@ -14,15 +14,18 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from copy import copy
+import sys
 
 import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
-def createPreview(trace, delta=60):
+def create_preview(trace, delta=60):
     """
     Creates a preview trace.
 
@@ -85,7 +88,7 @@ def createPreview(trace, delta=60):
     return tr
 
 
-def mergePreviews(stream):
+def merge_previews(stream):
     """
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
@@ -157,7 +160,7 @@ def mergePreviews(stream):
     return new_stream
 
 
-def resamplePreview(trace, samples, method='accurate'):
+def resample_preview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
@@ -228,3 +231,14 @@ def resamplePreview(trace, samples, method='accurate'):
         return npts - int(samples * step)
     else:
         raise NotImplementedError('Unknown method')
+
+
+# Remove once 0.11 has been released!
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={}, function_map={
+        "createPreview": "obspy.core.preview.create_preview",
+        "mergePreviews": "obspy.core.preview.merge_previews",
+        "resamplePreview": "obspy.core.preview.resample_preview",
+
+    })

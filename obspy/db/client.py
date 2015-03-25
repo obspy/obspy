@@ -18,7 +18,7 @@ import os
 from sqlalchemy import and_, create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
-from obspy.core.preview import mergePreviews
+from obspy.core.preview import merge_previews
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
@@ -280,6 +280,6 @@ class Client(object):
             preview = result.getPreview()
             st.append(preview)
         # merge and trim
-        st = mergePreviews(st)
+        st = merge_previews(st)
         st.trim(starttime, endtime, pad=pad)
         return st

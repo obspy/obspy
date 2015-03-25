@@ -8,7 +8,7 @@ import unittest
 
 import numpy as np
 
-from obspy.core.preview import createPreview
+from obspy.core.preview import create_preview
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.db.client import Client
@@ -75,7 +75,7 @@ class ClientTestCase(unittest.TestCase):
         data[2000000] = 14
         data[2000001] = -14
         tr = Trace(data=data, header=header)
-        cls.preview = createPreview(tr, 30).data
+        cls.preview = create_preview(tr, 30).data
         header = dict(tr.stats)
         header['starttime'] = tr.stats.starttime.datetime
         header['endtime'] = tr.stats.endtime.datetime

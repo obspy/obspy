@@ -19,7 +19,7 @@ import sys
 import time
 
 from obspy import read
-from obspy.core.preview import createPreview
+from obspy.core.preview import create_preview
 from obspy.core.util.base import _get_entry_points
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
@@ -521,7 +521,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 if '.LOG.L.' not in file or trace.stats.channel != 'LOG':
                     # create previews only for non-log files (see issue #400)
                     try:
-                        trace = createPreview(trace, 30)
+                        trace = create_preview(trace, 30)
                         result['preview'] = trace.data.dumps()
                     except ValueError:
                         pass

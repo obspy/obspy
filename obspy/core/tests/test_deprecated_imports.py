@@ -112,6 +112,15 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
             # readEvents() function.
             self.assertTrue(obspy.readEvents is
                             obspy.read_events)
+            # core.preview functions. For some reason obspy.core.preview
+            # has to be imported before.
+            from obspy.core import preview  # NOQA
+            self.assertTrue(obspy.core.preview.createPreview is
+                            obspy.core.preview.create_preview)
+            self.assertTrue(obspy.core.preview.mergePreviews is
+                            obspy.core.preview.merge_previews)
+            self.assertTrue(obspy.core.preview.resamplePreview is
+                            obspy.core.preview.resample_preview)
 
         self.assertTrue(len(w), 15)
         for warn in w:
