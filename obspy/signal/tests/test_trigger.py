@@ -15,9 +15,9 @@ from ctypes import ArgumentError
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read
-from obspy.signal import (arPick, classicSTALTA, classicSTALTAPy,
-                          coincidenceTrigger, pkBaer, recSTALTA, recSTALTAPy,
-                          triggerOnset)
+from obspy.signal.trigger import (
+    ar_pick, classic_STALTA, classic_STALTA_py, coincidence_trigger, pk_baer,
+    recursive_STALTA, recursive_STALTA_py, trigger_onset)
 from obspy.signal.util import clibsignal
 
 
@@ -34,10 +34,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTAC(self):
         """
-        Test case for ctypes version of recSTALTA
+        Test case for ctypes version of recursive_STALTA
         """
         nsta, nlta = 5, 10
-        c1 = recSTALTA(self.data, nsta, nlta)
+        c1 = recursive_STALTA(self.data, nsta, nlta)
         self.assertAlmostEqual(c1[99], 0.80810165)
         self.assertAlmostEqual(c1[100], 0.75939449)
         self.assertAlmostEqual(c1[101], 0.91763978)
@@ -45,10 +45,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTAPy(self):
         """
-        Test case for python version of recSTALTA
+        Test case for python version of recursive_STALTA
         """
         nsta, nlta = 5, 10
-        c2 = recSTALTAPy(self.data, nsta, nlta)
+        c2 = recursive_STALTA_py(self.data, nsta, nlta)
         self.assertAlmostEqual(c2[99], 0.80810165)
         self.assertAlmostEqual(c2[100], 0.75939449)
         self.assertAlmostEqual(c2[101], 0.91763978)
@@ -56,7 +56,7 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTARaise(self):
         """
-        Type checking recSTALTA
+        Type checking recursive_STALTA
         """
         ndat = 1
         charfct = np.empty(ndat, dtype=np.float64)
@@ -67,21 +67,21 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_pkBaer(self):
         """
-        Test pkBaer against implementation for UNESCO short course
+        Test pk_baer against implementation for UNESCO short course
         """
         filename = os.path.join(self.path, 'manz_waldk.a01.gz')
         with gzip.open(filename) as f:
             data = np.loadtxt(f, dtype=np.float32)
         df, ntdownmax, ntupevent, thr1, thr2, npreset_len, np_dur = \
             (200.0, 20, 60, 7.0, 12.0, 100, 100)
-        nptime, pfm = pkBaer(data, df, ntdownmax, ntupevent,
-                             thr1, thr2, npreset_len, np_dur)
+        nptime, pfm = pk_baer(data, df, ntdownmax, ntupevent,
+                              thr1, thr2, npreset_len, np_dur)
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
 
     def test_arPick(self):
         """
-        Test arPick against implementation for UNESCO short course
+        Test ar_pick against implementation for UNESCO short course
         """
         data = []
         for channel in ['z', 'n', 'e']:
@@ -91,8 +91,8 @@ class TriggerTestCase(unittest.TestCase):
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
             200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
-        ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
-                              lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
+        ptime, stime = ar_pick(data[0], data[1], data[2], samp_rate, f1, f2,
+                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
         # self.assertAlmostEqual(stime, 31.2800006866)
@@ -108,11 +108,11 @@ class TriggerTestCase(unittest.TestCase):
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 2.1,
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 0.4,
                               np.sin(np.arange(0, 5 * np.pi, 0.1)) + 1))
-        picks = triggerOnset(cft, 1.5, 1.0, max_len=50)
+        picks = trigger_onset(cft, 1.5, 1.0, max_len=50)
         np.testing.assert_array_equal(picks, on_of)
         # check that max_len_delete drops the picks
-        picks_del = triggerOnset(cft, 1.5, 1.0, max_len=50,
-                                 max_len_delete=True)
+        picks_del = trigger_onset(cft, 1.5, 1.0, max_len=50,
+                                  max_len_delete=True)
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests
@@ -149,8 +149,8 @@ class TriggerTestCase(unittest.TestCase):
         # 1. no weighting, no stations specified, good settings
         # => 3 events, no false triggers
         # for the first test we make some additional tests regarding types
-        res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3, sta=0.5,
-                                 lta=10)
+        res = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 3, sta=0.5,
+                                  lta=10)
         self.assertTrue(isinstance(res, list))
         self.assertTrue(len(res) == 3)
         expected_keys = ['time', 'coincidence_sum', 'duration', 'stations',
@@ -182,8 +182,8 @@ class TriggerTestCase(unittest.TestCase):
         # ignore UserWarnings
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
-            re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
-                                    trace_ids=trace_ids, sta=0.5, lta=10)
+            re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 3,
+                                     trace_ids=trace_ids, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertGreater(re[0]['time'],
                                UTCDateTime("2010-05-27T16:24:31"))
@@ -201,8 +201,8 @@ class TriggerTestCase(unittest.TestCase):
         # => 3 events, no false triggers
         trace_ids = {'BW.UH1..SHZ': 0.4, 'BW.UH2..SHZ': 0.35,
                      'BW.UH3..SHZ': 0.4, 'BW.UH4..EHZ': 0.25}
-        res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.0,
-                                 trace_ids=trace_ids, sta=0.5, lta=10)
+        res = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 1.0,
+                                  trace_ids=trace_ids, sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
         self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -225,9 +225,9 @@ class TriggerTestCase(unittest.TestCase):
         # ignore UserWarnings
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
-            re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
-                                    trace_ids=trace_ids,
-                                    max_trigger_length=0.13, sta=0.5, lta=10)
+            re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 1.2,
+                                     trace_ids=trace_ids,
+                                     max_trigger_length=0.13, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertGreater(re[0]['time'],
                                UTCDateTime("2010-05-27T16:24:31"))
@@ -243,9 +243,9 @@ class TriggerTestCase(unittest.TestCase):
             self.assertTrue(re[1]['coincidence_sum'] == 1.2)
         # 5. station selection, extremely sensitive settings
         # => 4 events, 1 false triggers
-        res = coincidenceTrigger("recstalta", 2.5, 1, st.copy(), 2,
-                                 trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
-                                 sta=0.3, lta=5)
+        res = coincidence_trigger("recstalta", 2.5, 1, st.copy(), 2,
+                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
+                                  sta=0.3, lta=5)
         self.assertTrue(len(res) == 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
@@ -263,9 +263,9 @@ class TriggerTestCase(unittest.TestCase):
         tr1b = tr1.slice(starttime=t1 + 0.6 * td, endtime=t1 + 0.94 * td)
         st2.insert(1, tr1a)
         st2.insert(3, tr1b)
-        res = coincidenceTrigger("recstalta", 2.5, 1, st2, 2,
-                                 trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
-                                 sta=0.3, lta=5)
+        res = coincidence_trigger("recstalta", 2.5, 1, st2, 2,
+                                  trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
+                                  sta=0.3, lta=5)
         self.assertTrue(len(res) == 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
@@ -286,9 +286,9 @@ class TriggerTestCase(unittest.TestCase):
         st2[3].stats.station = ""
         trace_ids = {'XX.UH1..SHZ': 0.4, '.UH2.99.': 0.35,
                      'BW.UH3..EHN': 0.4, '...': 0.25}
-        res = coincidenceTrigger("recstalta", 3.5, 1, st2, 1.0,
-                                 trace_ids=trace_ids, details=True,
-                                 sta=0.5, lta=10)
+        res = coincidence_trigger("recstalta", 3.5, 1, st2, 1.0,
+                                  trace_ids=trace_ids, details=True,
+                                  sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
         self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -375,7 +375,7 @@ class TriggerTestCase(unittest.TestCase):
             # differently in obspy-runtests.
             # (e.g. depending on options "-v" and "-q")
             warnings.resetwarnings()
-            trig = coincidenceTrigger(
+            trig = coincidence_trigger(
                 "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
                 trace_ids=trace_ids, event_templates=templ,
                 similarity_threshold=similarity_thresholds)
@@ -421,11 +421,11 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_classicSTALTAPyC(self):
         """
-        Test case for ctypes version of recSTALTA
+        Test case for ctypes version of recursive_STALTA
         """
         nsta, nlta = 5, 10
-        c1 = classicSTALTA(self.data, nsta, nlta)
-        c2 = classicSTALTAPy(self.data, nsta, nlta)
+        c1 = classic_STALTA(self.data, nsta, nlta)
+        c2 = classic_STALTA_py(self.data, nsta, nlta)
         self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         self.assertTrue(np.allclose(ref, c2[99:103]))

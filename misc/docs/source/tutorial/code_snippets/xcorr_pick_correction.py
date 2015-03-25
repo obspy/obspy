@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from obspy.core import UTCDateTime, read
-from obspy.signal.cross_correlation import xcorrPickCorrection
+from obspy.signal.cross_correlation import xcorr_pick_correction
 
 
 # read example data of two small earthquakes
@@ -18,12 +18,12 @@ t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
 # estimate the time correction for pick 2 without any preprocessing and open
 # a plot window to visually validate the results
-dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True)
+dt, coeff = xcorr_pick_correction(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True)
 print("No preprocessing:")
 print("  Time correction for pick 2: %.6f" % dt)
 print("  Correlation coefficient: %.2f" % coeff)
 # estimate the time correction with bandpass prefiltering
-dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True,
+dt, coeff = xcorr_pick_correction(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True,
                                 filter="bandpass",
                                 filter_options={'freqmin': 1, 'freqmax': 10})
 print("Bandpass prefiltering:")

@@ -14,8 +14,8 @@ import unittest
 import numpy as np
 import scipy.signal as sg
 
-from obspy.signal import bandpass, highpass, lowpass
-from obspy.signal.filter import envelope, lowpassCheby2
+from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
+                                 lowpass_cheby_2)
 
 
 class FilterTestCase(unittest.TestCase):
@@ -227,8 +227,8 @@ class FilterTestCase(unittest.TestCase):
         Check magnitudes of basic lowpass cheby2
         """
         df = 200  # Hz
-        b, a = lowpassCheby2(data=None, freq=50,
-                             df=df, maxorder=12, ba=True)
+        b, a = lowpass_cheby_2(data=None, freq=50,
+                               df=df, maxorder=12, ba=True)
         nyquist = 100
         # calculate frequency response
         w, h = sg.freqz(b, a, nyquist)

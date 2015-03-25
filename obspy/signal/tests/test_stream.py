@@ -9,7 +9,7 @@ from copy import deepcopy
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.signal import bandpass, bandstop, highpass, lowpass
+from obspy.signal.filter import bandpass, bandstop, highpass, lowpass
 
 
 class StreamTestCase(unittest.TestCase):

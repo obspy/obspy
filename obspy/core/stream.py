@@ -286,7 +286,8 @@ def _createExampleStream(headonly=False):
     Data arrays are stored in NumPy's NPZ format. The header information are
     fixed values.
 
-    PAZ of the used instrument, needed to demonstrate seisSim() etc.:
+    PAZ of the used instrument, needed to demonstrate simulate_seismometer()
+    etc.:
     paz = {'gain': 60077000.0,
            'poles': [-0.037004+0.037016j, -0.037004-0.037016j, -251.33+0j,
                      -131.04-467.29j, -131.04+467.29j],
@@ -1863,7 +1864,7 @@ class Stream(object):
 
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
-        :func:`~obspy.signal.invsim.seisSim`.
+        :func:`~obspy.signal.invsim.simulate_seismometer`.
 
         The keywords `paz_remove` and `paz_simulate` are expected to be
         dictionaries containing information on poles, zeros and gain (and
@@ -1878,7 +1879,8 @@ class Stream(object):
             Instead of the builtin deconvolution based on Poles and Zeros
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
-            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            :func:`~obspy.signal.invsim.simulate_seismometer` and the
+            `ObsPy Tutorial
             <http://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
@@ -1894,7 +1896,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. rubric:: Example
 
         >>> from obspy import read
-        >>> from obspy.signal import cornFreq2Paz
+        >>> from obspy.signal.invsim import corn_freq_2_paz
         >>> st = read()
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
@@ -1902,7 +1904,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ...             'zeros': [0j, 0j],
         ...             'gain': 60077000.0,
         ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
         ... # doctest: +ELLIPSIS
         <...Stream object at 0x...>
@@ -1911,7 +1913,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read
-            from obspy.signal import cornFreq2Paz
+            from obspy.signal import corn_freq_2_paz
             st = read()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
@@ -1919,7 +1921,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         'zeros': [0j, 0j],
                         'gain': 60077000.0,
                         'sensitivity': 2516778400.0}
-            paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
             paz_1hz['sensitivity'] = 1.0
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
@@ -1965,8 +1967,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'highpass'``
             Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
 
-        ``'lowpassCheby2'``
-            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+        ``'lowpass_cheby_2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
         ``'lowpassFIR'`` (experimental)
             FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
@@ -2021,24 +2023,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classicSTALTA`).
+            :func:`obspy.signal.trigger.classic_STALTA`).
 
         ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+            Recursive STA/LTA
+            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recSTALTAPy`).
+            :func:`obspy.signal.trigger.recursive_STALTA_py`).
 
         ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+            Delayed STA/LTA.
+            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
 
         ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
-            :func:`obspy.signal.trigger.carlSTATrig`).
+            Computes the carl_STA_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_STA_trig`).
 
         ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
 
         .. rubric:: Example
 

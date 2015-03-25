@@ -54,12 +54,12 @@ class HoctavbandsTestCase(unittest.TestCase):
         # [8] domega
         # [9] sigma
         # [10] dsigma
-        # [11] logcep
-        # [12] logcep
-        # [13] logcep
+        # [11] log_cepstrum
+        # [12] log_cepstrum
+        # [13] log_cepstrum
         # [14] dperiod
         # [15] ddperiod
-        # [16] bwith
+        # [16] bandwidth
         # [17] dbwith
         # [18] cfreq
         # [19] dcfreq

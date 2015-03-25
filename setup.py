@@ -326,9 +326,9 @@ ENTRY_POINTS = {
         'bandstop = obspy.signal.filter:bandstop',
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
-        'lowpassCheby2 = obspy.signal.filter:lowpassCheby2',
-        'lowpassFIR = obspy.signal.filter:lowpassFIR',
-        'remezFIR = obspy.signal.filter:remezFIR',
+        'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
+        'lowpassFIR = obspy.signal.filter:lowpass_FIR',
+        'remezFIR = obspy.signal.filter:remez_FIR',
     ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
@@ -342,7 +342,7 @@ ENTRY_POINTS = {
         'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
     ],
     'obspy.plugin.taper': [
-        'cosine = obspy.signal.invsim:cosTaper',
+        'cosine = obspy.signal.invsim:cosine_taper',
         'barthann = scipy.signal:barthann',
         'bartlett = scipy.signal:bartlett',
         'blackman = scipy.signal:blackman',
@@ -362,13 +362,13 @@ ENTRY_POINTS = {
         'triang = scipy.signal:triang',
     ],
     'obspy.plugin.trigger': [
-        'recstalta = obspy.signal.trigger:recSTALTA',
-        'carlstatrig = obspy.signal.trigger:carlSTATrig',
-        'classicstalta = obspy.signal.trigger:classicSTALTA',
-        'delayedstalta = obspy.signal.trigger:delayedSTALTA',
-        'zdetect = obspy.signal.trigger:zDetect',
-        'recstaltapy = obspy.signal.trigger:recSTALTAPy',
-        'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
+        'recstalta = obspy.signal.trigger:recursive_STALTA',
+        'carlstatrig = obspy.signal.trigger:carl_STA_trig',
+        'classicstalta = obspy.signal.trigger:classic_STALTA',
+        'delayedstalta = obspy.signal.trigger:delayed_STALTA',
+        'zdetect = obspy.signal.trigger:z_detect',
+        'recstaltapy = obspy.signal.trigger:recursive_STALTA_py',
+        'classicstaltapy = obspy.signal.trigger:classic_STALTA_py',
     ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',

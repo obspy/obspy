@@ -13,7 +13,7 @@ Various routines related to triggering/picking
 
 Module implementing the Recursive STA/LTA. Two versions, a fast ctypes one and
 a bit slower python one. Furthermore, the classic and delayed STA/LTA, the
-carlSTATrig and the zDetect are implemented.
+carl_STA_trig and the z_detect are implemented.
 Also includes picking routines, routines for evaluation and visualization of
 characteristic functions and a coincidence triggering routine.
 
@@ -40,7 +40,7 @@ from obspy.signal.cross_correlation import templatesMaxSimilarity
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 
-def recSTALTA(a, nsta, nlta):
+def recursive_STALTA(a, nsta, nlta):
     """
     Recursive STA/LTA.
 
@@ -67,14 +67,14 @@ def recSTALTA(a, nsta, nlta):
     return charfct
 
 
-def recSTALTAPy(a, nsta, nlta):
+def recursive_STALTA_py(a, nsta, nlta):
     """
     Recursive STA/LTA written in Python.
 
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.recSTALTA` in this module!
+        called :func:`~obspy.signal.trigger.recursive_STALTA` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -111,9 +111,9 @@ def recSTALTAPy(a, nsta, nlta):
     return np.array(charfct)
 
 
-def carlSTATrig(a, nsta, nlta, ratio, quiet):
+def carl_STA_trig(a, nsta, nlta, ratio, quiet):
     """
-    Computes the carlSTATrig characteristic function.
+    Computes the carlSTAtrig characteristic function.
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
@@ -124,9 +124,9 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     :type nlta: int
     :param nlta: Length of long time average window in samples
     :type ration: float
-    :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
+    :param ratio: as ratio gets smaller, carl_STA_trig gets more sensitive
     :type quiet: float
-    :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
+    :param quiet: as quiet gets smaller, carl_STA_trig gets more sensitive
     :rtype: NumPy :class:`~numpy.ndarray`
     :return: Characteristic function of CarlStaTrig
     """
@@ -166,7 +166,7 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
-def classicSTALTA(a, nsta, nlta):
+def classic_STALTA(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -198,7 +198,7 @@ def classicSTALTA(a, nsta, nlta):
     return charfct
 
 
-def classicSTALTAPy(a, nsta, nlta):
+def classic_STALTA_py(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -207,7 +207,7 @@ def classicSTALTAPy(a, nsta, nlta):
     .. note::
 
         There exists a faster version of this trigger wrapped in C
-        called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
+        called :func:`~obspy.signal.trigger.classic_STALTA` in this module!
 
     :type a: NumPy :class:`~numpy.ndarray`
     :param a: Seismic Trace
@@ -245,7 +245,7 @@ def classicSTALTAPy(a, nsta, nlta):
     return sta / lta
 
 
-def delayedSTALTA(a, nsta, nlta):
+def delayed_STALTA(a, nsta, nlta):
     """
     Delayed STA/LTA.
 
@@ -275,7 +275,7 @@ def delayedSTALTA(a, nsta, nlta):
     return sta / lta
 
 
-def zDetect(a, nsta):
+def z_detect(a, nsta):
     """
     Z-detector.
 
@@ -297,7 +297,7 @@ def zDetect(a, nsta):
     return Z
 
 
-def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
+def trigger_onset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     """
     Calculate trigger on and off times.
 
@@ -372,8 +372,8 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     return np.array(pick, dtype=np.int64)
 
 
-def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
-           p_dur):
+def pk_baer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
+            p_dur):
     """
     Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
@@ -412,8 +412,8 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     return pptime.value + 1, pfm.value.decode('utf-8')
 
 
-def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
-           l_p, l_s, s_pick=True):
+def ar_pick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
+            l_p, l_s, s_pick=True):
     """
     Return corresponding picks of the AR picker
 
@@ -455,7 +455,7 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     return ptime.value, stime.value
 
 
-def plotTrigger(trace, cft, thr_on, thr_off, show=True):
+def plot_trigger(trace, cft, thr_on, thr_off, show=True):
     """
     Plot characteristic function of trigger along with waveform data and
     trigger On/Off from given thresholds.
@@ -482,7 +482,7 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
     ax1.plot(t, trace.data, 'k')
     ax2 = fig.add_subplot(212, sharex=ax1)
     ax2.plot(t, cft, 'k')
-    onOff = np.array(triggerOnset(cft, thr_on, thr_off))
+    onOff = np.array(trigger_onset(cft, thr_on, thr_off))
     i, j = ax1.get_ylim()
     try:
         ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
@@ -500,12 +500,12 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
         plt.show()
 
 
-def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
-                       thr_coincidence_sum, trace_ids=None,
-                       max_trigger_length=1e6, delete_long_trigger=False,
-                       trigger_off_extension=0, details=False,
-                       event_templates={}, similarity_threshold=0.7,
-                       **options):
+def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
+                        thr_coincidence_sum, trace_ids=None,
+                        max_trigger_length=1e6, delete_long_trigger=False,
+                        trigger_off_extension=0, details=False,
+                        event_templates={}, similarity_threshold=0.7,
+                        **options):
     """
     Perform a network coincidence trigger.
 
@@ -618,7 +618,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     # the single station triggering
     triggers = []
-    # prepare kwargs for triggerOnset
+    # prepare kwargs for trigger_onset
     kwargs = {'max_len_delete': delete_long_trigger}
     for tr in st:
         if tr.id not in trace_ids:
@@ -630,7 +630,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
             tr.trigger(trigger_type, **options)
         kwargs['max_len'] = int(
             max_trigger_length * tr.stats.sampling_rate + 0.5)
-        tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
+        tmp_triggers = trigger_onset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
             try:
                 cft_peak = tr.data[on:off].max()

@@ -29,8 +29,8 @@ from scipy.integrate import cumtrapz
 
 from obspy.core import Stream
 from obspy.signal.headers import clibsignal
-from obspy.signal.invsim import cosTaper
-from obspy.signal.util import nextpow2, utlGeoKm
+from obspy.signal.invsim import cosine_taper
+from obspy.signal.util import next_pow_2, util_geo_km
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -653,8 +653,8 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         center_lat = geometry[:, 1].mean()
         center_h = geometry[:, 2].mean()
         for i in np.arange(nstat):
-            x, y = utlGeoKm(center_lon, center_lat, geometry[i, 0],
-                            geometry[i, 1])
+            x, y = util_geo_km(center_lon, center_lat, geometry[i, 0],
+                               geometry[i, 1])
             geometry[i, 0] = x
             geometry[i, 1] = y
             geometry[i, 2] -= center_h
@@ -936,7 +936,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nstep = int(nsamp * win_frac)
 
     # generate plan for rfftr
-    nfft = nextpow2(nsamp)
+    nfft = next_pow_2(nsamp)
     deltaf = fs / float(nfft)
     nlow = int(frqlow / float(deltaf) + 0.5)
     nhigh = int(frqhigh / float(deltaf) + 0.5)
@@ -950,7 +950,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     R = np.empty((nf, nstat, nstat), dtype=np.complex128)
     ft = np.empty((nstat, nf), dtype=np.complex128)
     newstart = stime
-    tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
+    # 0.22 matches 0.2 of historical C bbfk.c
+    tap = cosine_taper(nsamp, p=0.22)
     offset = 0
     relpow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
     abspow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)

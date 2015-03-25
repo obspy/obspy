@@ -315,7 +315,7 @@ def lowpassFIR(data, freq, df, winlen=2048):
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
 
 
-def integerDecimation(data, decimation_factor):
+def integer_decimation(data, decimation_factor):
     """
     Downsampling by applying a simple integer decimation.
 
@@ -338,8 +338,8 @@ def integerDecimation(data, decimation_factor):
     return data
 
 
-def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
-                  freq_passband=False):
+def lowpass_cheby_2(data, freq, df, maxorder=12, ba=False,
+                    freq_passband=False):
     """
     Cheby2-Lowpass Filter
 

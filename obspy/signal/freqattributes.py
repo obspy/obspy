@@ -25,10 +25,10 @@ import numpy as np
 from scipy import fftpack, signal, sparse
 
 from obspy.signal import util
-from obspy.signal.invsim import cornFreq2Paz, seisSim
+from obspy.signal.invsim import corn_freq_2_paz, simulate_seismometer
 
 
-def mper(data, win, Nfft, n1=0, n2=0):
+def spectrum(data, win, Nfft, n1=0, n2=0):
     """
     Spectrum of a signal.
 
@@ -86,13 +86,13 @@ def welch(data, win, Nfft, L=0, over=0):
     nsect = 1 + int(np.floor((len(data) - L) / (n0)))
     Px = 0
     for _i in range(nsect):
-        Px = Px + mper(data, win, Nfft, n1, n2) / nsect
+        Px = Px + spectrum(data, win, Nfft, n1, n2) / nsect
         n1 = n1 + n0
         n2 = n2 + n0
     return Px
 
 
-def cfrequency(data, fs, smoothie, fk):
+def central_frequency(data, fs, smoothie, fk):
     """
     Central frequency of a signal.
 
@@ -117,7 +117,7 @@ def cfrequency(data, fs, smoothie, fk):
         cfreq = np.zeros(data.shape[0])
         i = 0
         for row in data:
-            cfreq[i] = cfrequency_unwindowed(row, fs)
+            cfreq[i] = central_frequency_unwindowed(row, fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         # cfreq_add = \
@@ -135,11 +135,11 @@ def cfrequency(data, fs, smoothie, fk):
         return cfreq, dcfreq
     # for unwindowed data
     else:
-        cfreq = cfrequency_unwindowed(data, fs)
+        cfreq = central_frequency_unwindowed(data, fs)
         return cfreq
 
 
-def cfrequency_unwindowed(data, fs):
+def central_frequency_unwindowed(data, fs):
     """
     Central frequency of a signal.
 
@@ -155,7 +155,7 @@ def cfrequency_unwindowed(data, fs):
     :param fs: Sampling frequency in Hz.
     :return: **cfreq** - Central frequency in Hz
     """
-    nfft = util.nextpow2(len(data))
+    nfft = util.next_pow_2(len(data))
     freq = np.linspace(0, fs, nfft + 1)
     freqaxis = freq[0:nfft // 2]
     Px_wm = welch(data, np.hamming(len(data)), nfft)
@@ -164,7 +164,7 @@ def cfrequency_unwindowed(data, fs):
     return cfreq
 
 
-def bwith(data, fs, smoothie, fk):
+def bandwidth(data, fs, smoothie, fk):
     """
     Bandwidth of a signal.
 
@@ -181,13 +181,13 @@ def bwith(data, fs, smoothie, fk):
     :param smoothie: Factor for smoothing the result.
     :param fk: Coefficients for calculating time derivatives
         (calculated via central difference).
-    :return: **bwith[, dbwithd]** - Bandwidth, Time derivative of predominant
-        period (windowed only).
+    :return: **bandwidth[, dbwithd]** - Bandwidth, Time derivative of
+        predominant period (windowed only).
     """
     new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
     data = np.require(data, dtype=new_dtype)
 
-    nfft = util.nextpow2(data.shape[1])
+    nfft = util.next_pow_2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
     bwith = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
@@ -200,8 +200,8 @@ def bwith(data, fs, smoothie, fk):
             bwith[i] = freqaxis[mdist_ind]
             i = i + 1
         # bwith_add = \
-        #        np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
-        #        [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
+        # np.append(np.append([bandwidth[0]] * (np.size(fk) // 2), bandwidth),
+        #        [bandwidth[np.size(bandwidth) - 1]] * (np.size(fk) // 2))
         # faster alternative
         bwith_add = np.hstack(
             ([bwith[0]] * (np.size(fk) // 2), bwith,
@@ -221,7 +221,7 @@ def bwith(data, fs, smoothie, fk):
         return bwith
 
 
-def domperiod(data, fs, smoothie, fk):
+def dominant_period(data, fs, smoothie, fk):
     """
     Predominant period of a signal.
 
@@ -244,7 +244,7 @@ def domperiod(data, fs, smoothie, fk):
     data = np.require(data, dtype=new_dtype)
 
     nfft = 1024
-    # nfft = util.nextpow2(data.shape[1])
+    # nfft = util.next_pow_2(data.shape[1])
     freqaxis = np.linspace(0, fs, nfft + 1)
     dperiod = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
@@ -277,7 +277,7 @@ def domperiod(data, fs, smoothie, fk):
         return dperiod
 
 
-def logbankm(p, n, fs, w):
+def log_spaced_filterbank_matrix(p, n, fs, w):
     """
     Matrix for a log-spaced filterbank.
 
@@ -328,7 +328,7 @@ def logbankm(p, n, fs, w):
     return xx, mn - 1, mx - 1
 
 
-def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
+def log_cepstrum(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     """
     Cepstrum of a signal.
 
@@ -350,10 +350,10 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     data = np.require(data, dtype=new_dtype)
 
     dataT = np.transpose(data)
-    nfft = util.nextpow2(dataT.shape[0])
+    nfft = util.next_pow_2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)
     f = fc[1:len(fc) // 2 + 1, :]
-    m, a, b = logbankm(p, nfft, fs, w)
+    m, a, b = log_spaced_filterbank_matrix(p, nfft, fs, w)
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))
     pth = np.max(pw) * 1E-20
     ath = np.sqrt(pth)
@@ -371,7 +371,7 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     return z
 
 
-def pgm(data, delta, freq, damp=0.1):
+def peak_ground_motion(data, delta, freq, damp=0.1):
     """
     Peak ground motion parameters
 
@@ -420,11 +420,12 @@ def pgm(data, delta, freq, damp=0.1):
     D = damp
     omega = (2 * 3.14159 * T) ** 2
 
-    paz_sa = cornFreq2Paz(T, damp=D)
+    paz_sa = corn_freq_2_paz(T, damp=D)
     paz_sa['sensitivity'] = omega
     paz_sa['zeros'] = []
-    data = seisSim(data, samp_rate, paz_remove=None, paz_simulate=paz_sa,
-                   taper=True, simulate_sensitivity=True, taper_fraction=0.05)
+    data = simulate_seismometer(data, samp_rate, paz_remove=None,
+                                paz_simulate=paz_sa, taper=True,
+                                simulate_sensitivity=True, taper_fraction=0.05)
 
     if abs(max(data)) >= abs(min(data)):
         pga = abs(max(data))

@@ -42,7 +42,7 @@ def envelope(data):
     :return: **A_cpx, A_abs** - Analytic signal of input data, Envelope of
         input data.
     """
-    nfft = util.nextpow2(data.shape[-1])
+    nfft = util.next_pow_2(data.shape[-1])
     A_cpx = np.zeros((data.shape), dtype=np.complex64)
     A_abs = np.zeros((data.shape), dtype=np.float64)
     if len(data.shape) > 1:
@@ -57,7 +57,7 @@ def envelope(data):
     return A_cpx, A_abs
 
 
-def normEnvelope(data, fs, smoothie, fk):
+def normalized_envelope(data, fs, smoothie, fk):
     """
     Normalized envelope of a signal.
 
@@ -190,7 +190,7 @@ def centroid(data, fk):
         return centroid
 
 
-def instFreq(data, fs, fk):
+def instantaneous_frequency(data, fs, fk):
     """
     Instantaneous frequency of a signal.
 
@@ -261,7 +261,7 @@ def instFreq(data, fs, fk):
         return omega
 
 
-def instBwith(data, fs, fk):
+def instantaneous_bandwidth(data, fs, fk):
     """
     Instantaneous bandwidth of a signal.
 

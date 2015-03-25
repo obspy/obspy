@@ -11,33 +11,33 @@
 
        ~array_analysis.array_processing
        ~array_analysis.array_rotation_strain
-       ~trigger.arPick
+       ~trigger.ar_pick
        ~filter.bandpass
        ~filter.bandstop
-       ~trigger.carlSTATrig
-       ~trigger.classicSTALTA
-       ~trigger.coincidenceTrigger
-       ~invsim.cornFreq2Paz
-       ~invsim.cosTaper
-       ~trigger.delayedSTALTA
+       ~trigger.carl_STA_trig
+       ~trigger.classic_STALTA
+       ~trigger.coincidence_trigger
+       ~invsim.corn_freq_2_paz
+       ~invsim.cosine_taper
+       ~trigger.delayed_STALTA
        ~filter.envelope
        ~interpolation.interpolate_1d
        ~interpolation.weighted_average_slopes
-       ~invsim.estimateMagnitude
+       ~invsim.estimate_magnitude
        ~invsim.evalresp
        ~filter.highpass
        ~filter.lowpass
-       ~invsim.pazToFreqResp
-       ~trigger.pkBaer
+       ~invsim.paz_to_freq_resp
+       ~trigger.pk_baer
        ~spectral_estimation.PPSD
        ~spectral_estimation.psd
        ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
-       ~invsim.seisSim
-       ~util.utlGeoKm
-       ~util.utlLonLat
+       ~invsim.simulate_seismometer
+       ~util.util_geo_km
+       ~util.util_lon_lat
        ~cross_correlation.xcorr
-       ~trigger.zDetect
+       ~trigger.z_detect
 
     .. comment to end block
 

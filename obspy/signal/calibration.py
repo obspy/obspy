@@ -25,12 +25,13 @@ import numpy as np
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.io.gse2.paz import read_paz
-from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
-from obspy.signal.util import nextpow2
+from obspy.signal.invsim import paz_to_freq_resp
+from obspy.signal.konnoohmachismoothing import konno_ohmachi_smoothing
+from obspy.signal.util import next_pow_2
 
 
-def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
-                save_data=True):
+def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
+                    smooth=0, save_data=True):
     """
     Method for relative calibration of sensors using a sensor with known
     transfer function
@@ -55,7 +56,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         Defaults to True
     :returns: frequency, amplitude and phase spectrum
 
-    implemented after relcalstack.c by M.Ohrnberger and J.Wassermann.
+    implemented after rel_calib_stack.c by M.Ohrnberger and J.Wassermann.
     """
     # transform given trace objects to streams
     if isinstance(st1, Trace):
@@ -79,10 +80,10 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
 
     # get window length, nfft and frequency step
     ndat = int(window_len * sampfreq)
-    nfft = nextpow2(ndat)
+    nfft = next_pow_2(ndat)
 
     # read calib file and calculate response function
-    gg, _freq = _calcresp(calib_file, nfft, sampfreq)
+    gg, _freq = _calc_resp(calib_file, nfft, sampfreq)
 
     # calculate number of windows and overlap
     nwin = int(np.floor((ndat1 - nfft) / (nfft / 2)) + 1)
@@ -108,8 +109,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra[0] = res.real
         spectra[1] = res.imag
         new_spectra = \
-            konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth, count=1,
-                                  max_memory_usage=1024, normalize=True)
+            konno_ohmachi_smoothing(spectra, freq, bandwidth=smooth, count=1,
+                                    max_memory_usage=1024, normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
@@ -136,7 +137,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     return freq, amp, phase
 
 
-def _calcresp(calfile, nfft, sampfreq):
+def _calc_resp(calfile, nfft, sampfreq):
     """
     Calculate transfer function of known system.
 
@@ -147,16 +148,16 @@ def _calcresp(calfile, nfft, sampfreq):
     """
     # calculate transfer function
     poles, zeros, scale_fac = read_paz(calfile)
-    h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
-                         nfft, freq=True)
+    h, f = paz_to_freq_resp(poles, zeros, scale_fac, 1.0 / sampfreq,
+                            nfft, freq=True)
     return h, f
 
 
 # A modified copy of the Matplotlib 0.99.1.1 method spectral_helper found in
 # .../matlab/mlab.py.
 # Some function were changed to avoid additional dependencies. Included here as
-# it is essential for the above relcalstack function and only present in recent
-# matplotlib versions.
+# it is essential for the above rel_calib_stack function and only present in
+#  recent matplotlib versions.
 
 # This is a helper function that implements the commonality between the
 # psd, csd, and spectrogram.  It is *NOT* meant to be used outside of mlab
