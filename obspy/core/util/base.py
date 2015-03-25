@@ -163,12 +163,12 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
 
 def get_example_file(filename):
     """
-    Function to find the absolute path of a test data file
+    Function to find the absolute path of a data file
 
     The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
     installed ObsPy modules and checks whether the file is in any of
-    the "tests/data" subdirectories.
+    the "tests/data/" or "data/" subdirectories.
 
     :param filename: A test file name to which the path should be returned.
     :return: Full path to file.
@@ -185,15 +185,18 @@ def get_example_file(filename):
     """
     for module in ALL_MODULES:
         try:
-            mod = __import__("obspy.%s.tests" % module,
+            mod = __import__("obspy.%s" % module,
                              fromlist=[native_str("obspy")])
         except ImportError:
             continue
-        file = os.path.join(mod.__path__[0], "data", filename)
-        if os.path.isfile(file):
-            return file
-    msg = "Could not find file %s in tests/data directory " % filename + \
-          "of ObsPy modules"
+        file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
+        if os.path.isfile(file_):
+            return file_
+        file_ = os.path.join(mod.__path__[0], "data", filename)
+        if os.path.isfile(file_):
+            return file_
+    msg = ("Could not find file %s in tests/data or data "
+           "directory of ObsPy modules") % filename
     raise OSError(msg)
 
 

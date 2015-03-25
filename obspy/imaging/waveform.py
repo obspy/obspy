@@ -38,7 +38,6 @@ import scipy.signal as signal
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, locations2degrees
-from obspy.core.util.base import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
 
@@ -791,12 +790,9 @@ class WaveformPlotting(object):
             locator = MaxNLocator(5)
         else:
             ax.xaxis_date()
-            if get_matplotlib_version() < [1, 0, 0]:
-                locator = AutoDateLocator()
-            else:
-                locator = AutoDateLocator(minticks=3, maxticks=6)
-                locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
-                locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+            locator = AutoDateLocator(minticks=3, maxticks=6)
+            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
             ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
         ax.xaxis.set_major_locator(locator)
         plt.setp(ax.get_xticklabels(), fontsize='small',

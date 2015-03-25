@@ -57,7 +57,7 @@ override_dh_install:
 	dh_install -p python-obspy "debian/tmp/usr/bin/obspy-*"
 	## lib
 	dh_install -p python3-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python3*/*-packages/*"
-	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2*/*-packages/*"
+	dh_install -p python-obspy -X"tests/data" -X"tests/images" "debian/tmp/usr/lib/python2.7/*-packages/*"
 	# Continue with regular dh_install
 	dh_install
 

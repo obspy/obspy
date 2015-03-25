@@ -81,16 +81,11 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
     by dividing with sampling rate.
 
-    This wrapper is intended to intercept changes in
-    :func:`matplotlib.mlab.psd` default behavior which changes with
-    matplotlib version 0.98.4:
+    .. deprecated::
 
-    * http://matplotlib.org/users/whats_new.html#psd-amplitude-scaling
-    * http://matplotlib.org/_static/CHANGELOG
-      (entries on 2009-05-18 and 2008-11-11)
-    * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
-?view=revision&revision=6518
-    * http://matplotlib.org/api/api_changes.html#changes-for-0-98-x
+        This wrapper is no longer necessary. Please use the
+        :func:`matplotlib.mlab.psd` function directly, specifying
+        `sides="onesided"` and `scale_by_freq=True`.
 
     .. note::
         For details on all arguments see :func:`matplotlib.mlab.psd`.
@@ -104,31 +99,25 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    # check matplotlib version
-    if MATPLOTLIB_VERSION >= [0, 98, 4]:
-        new_matplotlib = True
-    else:
-        new_matplotlib = False
-    # build up kwargs that do not change with version 0.98.4
+    msg = ('This wrapper is no longer necessary. Please use the '
+           'matplotlib.mlab.psd function directly, specifying '
+           '`sides="onesided"` and `scale_by_freq=True`.')
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
+    # build up kwargs
     kwargs = {}
     kwargs['NFFT'] = NFFT
     kwargs['Fs'] = Fs
     kwargs['detrend'] = detrend
     kwargs['window'] = window
     kwargs['noverlap'] = noverlap
-    # add additional kwargs to control behavior for matplotlib versions higher
-    # than 0.98.4. These settings make sure that the scaling is already done
-    # during the following psd call for newer matplotlib versions.
-    if new_matplotlib:
-        kwargs['pad_to'] = None
-        kwargs['sides'] = 'onesided'
-        kwargs['scale_by_freq'] = True
+    # These settings make sure that the scaling is already done during the
+    # following psd call for matplotlib versions newer than 0.98.4.
+    kwargs['pad_to'] = None
+    kwargs['sides'] = 'onesided'
+    kwargs['scale_by_freq'] = True
     # do the actual call to mlab.psd
     Pxx, freqs = mlab.psd(x, **kwargs)
-    # do scaling manually for old matplotlib versions
-    if not new_matplotlib:
-        Pxx = Pxx / Fs
-        Pxx[1:-1] = Pxx[1:-1] * 2.0
     return Pxx, freqs
 
 
@@ -617,11 +606,10 @@ class PPSD():
         else:
             tr.data = np.gradient(tr.data, self.delta)
 
-        # use our own wrapper for mlab.psd to have consistent results on all
-        # matplotlib versions
-        spec, _freq = psd(tr.data, self.nfft, self.sampling_rate,
-                          detrend=mlab.detrend_linear, window=fft_taper,
-                          noverlap=self.nlap)
+        spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
+                               detrend=mlab.detrend_linear, window=fft_taper,
+                               noverlap=self.nlap, sides='onesided',
+                               scale_by_freq=True)
 
         # leave out first entry (offset)
         spec = spec[1:]

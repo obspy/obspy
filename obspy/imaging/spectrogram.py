@@ -27,11 +27,6 @@ import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
 
-from obspy.core.util import get_matplotlib_version
-
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
-
 
 def _nearestPow2(x):
     """
@@ -87,7 +82,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         sqrt is taken.
     :type mult: float
     :param mult: Pad zeros to length mult * wlen. This will make the
-        spectrogram smoother. Available for matplotlib > 0.99.0.
+        spectrogram smoother.
     :type cmap: :class:`matplotlib.colors.Colormap`
     :param cmap: Specify a custom colormap instance
     :type zorder: float
@@ -131,12 +126,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    if MATPLOTLIB_VERSION >= [0, 99, 0]:
-        specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
-                                             pad_to=mult, noverlap=nlap)
-    else:
-        specgram, freq, time = mlab.specgram(data, Fs=samp_rate,
-                                             NFFT=nfft, noverlap=nlap)
+    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
+                                         pad_to=mult, noverlap=nlap)
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])
@@ -175,21 +166,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         # center bin
         time -= halfbin_time
         freq -= halfbin_freq
-        # pcolormesh issue was fixed in matplotlib r5716 (2008-07-07)
-        # between tags 0.98.2 and 0.98.3
-        # see:
-        #  - http://matplotlib.svn.sourceforge.net/viewvc/...
-        #    matplotlib?revision=5716&view=revision
-        #  - http://matplotlib.org/_static/CHANGELOG
-        if MATPLOTLIB_VERSION >= [0, 98, 3]:
-            # Log scaling for frequency values (y-axis)
-            ax.set_yscale('log')
-            # Plot times
-            ax.pcolormesh(time, freq, specgram, norm=norm, **kwargs)
-        else:
-            X, Y = np.meshgrid(time, freq)
-            ax.pcolor(X, Y, specgram, cmap=cmap, zorder=zorder, norm=norm)
-            ax.semilogy()
+        # Log scaling for frequency values (y-axis)
+        ax.set_yscale('log')
+        # Plot times
+        ax.pcolormesh(time, freq, specgram, norm=norm, **kwargs)
     else:
         # this method is much much faster!
         specgram = np.flipud(specgram)

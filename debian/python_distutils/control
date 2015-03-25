@@ -2,9 +2,9 @@ Source: python-obspy
 Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
-X-Python-Version: >= 2.6
-Build-Depends: debhelper (>= 5), python (>= 2.6),
- python (>= 2.7) | python-argparse, python-all-dev,
+X-Python-Version: >= 2.7
+Build-Depends: debhelper (>= 5),
+ python (>= 2.7), python-dev (>= 2.7),
  python-support (>= 0.7.1), python-numpy, python-setuptools (>=0.6.21), gcc,
  gfortran, help2man, quilt
 Standards-Version: 3.9.3
@@ -16,10 +16,10 @@ Package: python-obspy
 Architecture: any
 Section: python
 Priority: extra
-Depends: python (>= 2.6), python (>= 2.7) | python-argparse,
+Depends: python (>= 2.7),
  ${python:Depends}, python-future (>= 0.12.4),
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
- python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy (<= 0.9.9),
+ python-matplotlib (>= 1.1.0), python-scipy, python-sqlalchemy (<= 0.9.9),
  python-suds (>= 0.4), ${shlibs:Depends}, python-tornado
 Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
@@ -36,8 +36,9 @@ Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
  python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
  python-obspy-wav, python-obspy-xseed
 Recommends: python-obspy-dbg (= ${binary:Version}),
- python-geographiclib, python-nose, python-flake8, python-imaging, python-mock
-Suggests: python-mpltoolkits.basemap, python-mlpy, python-pyproj, ipython
+ python-geographiclib, python-nose, python-flake8, python-imaging, python-mock,
+ python-mpltoolkits.basemap
+Suggests: python-mlpy, python-pyproj, ipython
 Description: ObsPy: A Python Toolbox for seismology seismological observatories
  ObsPy is an open-source project dedicated to provide a Python framework for
  processing seismological data. It provides parsers for common file formats,

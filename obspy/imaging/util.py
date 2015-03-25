@@ -95,7 +95,7 @@ def format_hour_minute_second(x, pos=None):
 class ObsPyAutoDateFormatter(AutoDateFormatter):
     """
     Derived class to allow for more customized formatting with older matplotlib
-    versions (see matplotlib/matplotlib#2507).
+    versions (older than 1.4.0, see matplotlib/matplotlib#2507).
     """
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
@@ -104,18 +104,14 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
-        # Ooooold matplotlib does not have the new .scaled workings, can be
-        # removed after release of 0.10.0.
-        if get_matplotlib_version() < [1, 0, 0]:
-            return
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
             FuncFormatter(format_hour_minute_second)
         self.scaled[_seconds_to_days(10)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(1))
-        # for some reason matplotlib is not using the following
-        # intermediate decimal levels (probably some precision issue..) and
-        # falls back to the lowest level immediately.
+        # for some reason matplotlib is not using the following intermediate
+        # decimal levels (probably some precision issue..) and falls back to
+        # the lowest level immediately.
         self.scaled[_seconds_to_days(2e-1)] = \
             FuncFormatter(decimal_seconds_format_x_decimals(2))
         self.scaled[_seconds_to_days(2e-2)] = \
@@ -126,10 +122,6 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             FuncFormatter(decimal_seconds_format_x_decimals(5))
 
     def __call__(self, x, pos=None):
-        # Ooooold matplotlib does not have the new .scaled workings, can be
-        # removed after release of 0.10.0.
-        if get_matplotlib_version() < [1, 0, 0]:
-            return AutoDateFormatter.__call__(self, x, pos=pos)
         # Always show full precision date string on info pane (pos=None)
         # because for some zoom levels the ticks might be ambiguous (e.g. hours
         # displayed, wrapped around days).

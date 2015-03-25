@@ -22,20 +22,12 @@ from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
 from matplotlib.colors import Normalize
 from matplotlib.dates import AutoDateFormatter, AutoDateLocator, date2num
+import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import get_basemap_version, get_matplotlib_version
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
-
-if MATPLOTLIB_VERSION < [1, 0, 0]:
-    path_effect_kwargs = {}
-else:
-    import matplotlib.patheffects as PathEffects
-    path_effect_kwargs = dict(
-        path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
+from obspy.core.util.base import get_basemap_version
 
 BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
@@ -267,10 +259,15 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                 if xpt > 1e25:
                     continue
                 map_ax.text(xpt, ypt, name, weight="heavy",
-                            color="k", zorder=100, **path_effect_kwargs)
+                            color="k", zorder=100,
+                            path_effects=[
+                                PathEffects.withStroke(linewidth=3,
+                                                       foreground="white")])
         elif len(lons) == 1:
             map_ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                        **path_effect_kwargs)
+                        path_effects=[
+                            PathEffects.withStroke(linewidth=3,
+                                                   foreground="white")])
 
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
