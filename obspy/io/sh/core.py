@@ -67,7 +67,7 @@ SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
 INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.items()])
 
 
-def isASC(filename):
+def _is_asc(filename):
     """
     Checks whether a file is a Seismic Handler ASCII file or not.
 
@@ -78,7 +78,7 @@ def isASC(filename):
 
     .. rubric:: Example
 
-    >>> isASC("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
+    >>> _is_asc("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
     True
     """
     # first six chars should contain 'DELTA:'
@@ -92,7 +92,7 @@ def isASC(filename):
     return True
 
 
-def readASC(filename, headonly=False, skip=0, delta=None, length=None,
+def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
             **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
@@ -224,7 +224,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     return stream
 
 
-def writeASC(stream, filename, included_headers=None, npl=4,
+def _write_asc(stream, filename, included_headers=None, npl=4,
              custom_format="%-.6e", append=False,
              **kwargs):  # @UnusedVariable
     """
@@ -297,7 +297,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         fh.write(sio.read().encode('ascii', 'strict'))
 
 
-def isQ(filename):
+def _is_q(filename):
     """
     Checks whether a file is a Seismic Handler Q file or not.
 
@@ -308,7 +308,7 @@ def isQ(filename):
 
     .. rubric:: Example
 
-    >>> isQ("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
+    >>> _is_q("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
     True
     """
     # file must start with magic number 43981
@@ -322,7 +322,7 @@ def isQ(filename):
     return True
 
 
-def readQ(filename, headonly=False, data_directory=None, byteorder='=',
+def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
           **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler Q file and returns an ObsPy Stream object.
@@ -477,7 +477,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
+def _write_q(stream, filename, data_directory=None, byteorder='=', append=False,
            **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler Q file from given ObsPy Stream object.
@@ -513,7 +513,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     # if the header file exists its assumed that the data is also there
     if os.path.exists(filename_header) and append:
         try:
-            trcs = readQ(filename_header, headonly=True)
+            trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
             count_offset = len(trcs)
         except:

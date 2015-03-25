@@ -16,7 +16,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.io.segy.header import (DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                                   DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS)
 from obspy.io.segy.segy import (SEGYBinaryFileHeader, SEGYFile,
-                                SEGYTraceHeader, readSEGY)
+                                SEGYTraceHeader, _read_segy)
 from obspy.io.segy.tests.header import DTYPES, FILES
 
 
@@ -347,7 +347,7 @@ class SEGYTestCase(unittest.TestCase):
             # Read the file.
             with open(file, 'rb') as f:
                 org_data = f.read()
-            segy_file = readSEGY(file, headonly=headonly)
+            segy_file = _read_segy(file, headonly=headonly)
             with NamedTemporaryFile() as tf:
                 out_file = tf.name
                 segy_file.write(out_file)
@@ -388,7 +388,7 @@ class SEGYTestCase(unittest.TestCase):
         SeisView 2 by the DMNG.
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
-        segy = readSEGY(file)
+        segy = _read_segy(file)
         header = segy.binary_file_header
         # Compare the values.
         self.assertEqual(header.job_identification_number, 0)
@@ -433,7 +433,7 @@ class SEGYTestCase(unittest.TestCase):
         SeisView 2 by the DMNG.
         """
         file = os.path.join(self.path, '1.sgy_first_trace')
-        segy = readSEGY(file)
+        segy = _read_segy(file)
         header = segy.traces[0].header
         # Compare the values.
         self.assertEqual(header.trace_sequence_number_within_line, 0)
@@ -549,31 +549,31 @@ class SEGYTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'example.y_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(io.BytesIO(data))
+        st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(io.BytesIO(data))
+        st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(io.BytesIO(data))
+        st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(io.BytesIO(data))
+        st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
         with open(file, 'rb') as f:
             data = f.read()
-        st = readSEGY(io.BytesIO(data))
+        st = _read_segy(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 
 

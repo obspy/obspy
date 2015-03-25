@@ -27,7 +27,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
 
 
-def is_AH(filename):
+def _is_ah(filename):
     """
     Checks whether a file is AH waveform data or not.
 
@@ -41,7 +41,7 @@ def is_AH(filename):
     return False
 
 
-def read_AH(filename, **kwargs):  # @UnusedVariable
+def _read_ah(filename, **kwargs):  # @UnusedVariable
     """
     Reads an AH waveform file and returns a Stream object.
 
@@ -56,9 +56,9 @@ def read_AH(filename, **kwargs):  # @UnusedVariable
     """
     version = _get_AH_version(filename)
     if version == '2.0':
-        return read_AH2(filename)
+        return _read_ah2(filename)
     else:
-        return read_AH1(filename)
+        return _read_ah1(filename)
 
 
 def _get_AH_version(filename):
@@ -115,7 +115,7 @@ def _unpack_string(data):
     return data.unpack_string().split(b'\x00', 1)[0].strip().decode("utf-8")
 
 
-def read_AH1(filename):
+def _read_ah1(filename):
     """
     Reads an AH v1 waveform file and returns a Stream object.
 
@@ -228,7 +228,7 @@ def read_AH1(filename):
         return st
 
 
-def read_AH2(filename):
+def _read_ah2(filename):
     """
     Reads an AH v2 waveform file and returns a Stream object.
 

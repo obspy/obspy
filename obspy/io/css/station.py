@@ -23,7 +23,7 @@ def _yearday(date):
         return -1
 
 
-def writeCSS(inventory, basename):
+def _write_css(inventory, basename):
     """
     Writes an inventory object to a CSS database.
 

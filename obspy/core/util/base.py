@@ -251,15 +251,15 @@ ENTRY_POINTS = {
     'integrate': _get_entry_points('obspy.plugin.integrate'),
     'differentiate': _get_entry_points('obspy.plugin.differentiate'),
     'waveform': _get_ordered_entry_points(
-        'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
+        'obspy.plugin.waveform', 'read_format', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _get_ordered_entry_points(
-        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
-    'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
+        'obspy.plugin.waveform', 'write_format', WAVEFORM_PREFERRED_ORDER),
+    'event': _get_entry_points('obspy.plugin.event', 'read_format'),
+    'event_write': _get_entry_points('obspy.plugin.event', 'write_format'),
     'taper': _get_entry_points('obspy.plugin.taper'),
-    'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
+    'inventory': _get_entry_points('obspy.plugin.inventory', 'read_format'),
     'inventory_write': _get_entry_points(
-        'obspy.plugin.inventory', 'writeFormat'),
+        'obspy.plugin.inventory', 'write_format'),
 }
 
 
@@ -374,7 +374,7 @@ def get_scipy_version():
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
-    Reads a single file from a plug-in's readFormat function.
+    Reads a single file from a plug-in's read_format function.
     """
     EPS = ENTRY_POINTS[plugin_type]
     # get format entry point
@@ -382,20 +382,20 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     if not format:
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
-            # search isFormat for given entry point
-            isFormat = load_entry_point(
+            # search is_format for given entry point
+            is_format = load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
-                'isFormat')
+                'is_format')
             # If it is a file-like object, store the position and restore it
-            # later to avoid that the isFormat() functions move the file
+            # later to avoid that the is_format() functions move the file
             # pointer.
             if hasattr(filename, "tell") and hasattr(filename, "seek"):
                 position = filename.tell()
             else:
                 position = None
             # check format
-            is_format = isFormat(filename)
+            is_format = is_format(filename)
             if position is not None:
                 filename.seek(0, 0)
             if is_format:
@@ -412,15 +412,15 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
     try:
-        # search readFormat for given entry point
-        readFormat = load_entry_point(
+        # search read_format for given entry point
+        read_format = load_entry_point(
             format_ep.dist.key,
-            'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
+            'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'read_format')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
         raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
     # read
-    list_obj = readFormat(filename, **kwargs)
+    list_obj = read_format(filename, **kwargs)
     return list_obj, format_ep.name
 
 
@@ -444,11 +444,11 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     ========= ===============... ========================================...
     Format    Required Module    _`Linked Function Call`
     ========= ===============... ========================================...
-    CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core.write_CNV`
-    JSON      :mod:`...io.json`  :func:`obspy.io.json.core.writeJSON`
+    CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
+    JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
-    QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core.writeQuakeML`
-    ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core.writeZmap`
+    QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
     ========= ===============... ========================================...
 
     :type group: str

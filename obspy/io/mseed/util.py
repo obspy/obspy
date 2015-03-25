@@ -664,9 +664,9 @@ def set_flags_in_fixed_headers(filename, flags):
 
     """
     # import has to be here to break import loop
-    from .core import isMSEED
+    from .core import _is_mseed
     # Basic check
-    if not os.path.isfile(filename) or not isMSEED(filename):
+    if not os.path.isfile(filename) or not _is_mseed(filename):
         raise IOError("File %s is not a valid MiniSEED file" % filename)
     filesize = os.path.getsize(filename)
 

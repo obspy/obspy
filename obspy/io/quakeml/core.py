@@ -81,7 +81,7 @@ def _xml_doc_from_anything(source):
     return xml_doc
 
 
-def isQuakeML(filename):
+def _is_quakeml(filename):
     """
     Checks whether a file is QuakeML format.
 
@@ -92,7 +92,7 @@ def isQuakeML(filename):
 
     .. rubric:: Example
 
-    >>> isQuakeML('/path/to/quakeml.xml')  # doctest: +SKIP
+    >>> _is_quakeml('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
     if hasattr(filename, "tell") and hasattr(filename, "seek") and \
@@ -1753,7 +1753,7 @@ class Pickler(object):
                               encoding="utf-8", xml_declaration=True)
 
 
-def readQuakeML(filename):
+def _read_quakeml(filename):
     """
     Reads a QuakeML file and returns an ObsPy Catalog object.
 
@@ -1779,7 +1779,7 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, validate=False, nsmap=None,
+def _write_quakeml(catalog, filename, validate=False, nsmap=None,
                  **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
@@ -1825,7 +1825,7 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
         fh.close()
 
 
-def readSeisHubEventXML(filename):
+def _read_seishub_event_xml(filename):
     """
     Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
@@ -1837,7 +1837,7 @@ def readSeisHubEventXML(filename):
     lines.append(b'  </eventParameters>\n')
     lines.append(b'</quakeml>\n')
     temp = io.BytesIO(b''.join(lines))
-    return readQuakeML(temp)
+    return _read_quakeml(temp)
 
 
 def _validate(xml_file, verbose=False):

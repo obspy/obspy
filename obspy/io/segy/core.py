@@ -22,8 +22,8 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
-from .segy import readSEGY as readSEGYrev1
-from .segy import readSU as readSUFile
+from .segy import _read_segy as _read_segyrev1
+from .segy import _read_su as _read_suFile
 from .segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile, SEGYTrace,
                    SEGYTraceHeader, SUFile, autodetectEndianAndSanityCheckSU)
 from .util import unpack_header_value
@@ -51,7 +51,7 @@ class SEGYSampleIntervalError(SEGYError):
     pass
 
 
-def isSEGY(filename):
+def _is_segy(filename):
     """
     Checks whether or not the given file is a SEG Y file.
 
@@ -117,7 +117,7 @@ def isSEGY(filename):
     return True
 
 
-def readSEGY(filename, headonly=False, byteorder=None,
+def _read_segy(filename, headonly=False, byteorder=None,
              textual_header_encoding=None, unpack_trace_headers=False,
              **kwargs):  # @UnusedVariable
     """
@@ -161,7 +161,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
     Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - ... 2001 samples
     """
     # Read file to the internal segy representation.
-    segy_object = readSEGYrev1(filename, endian=byteorder,
+    segy_object = _read_segyrev1(filename, endian=byteorder,
                                textual_header_encoding=textual_header_encoding,
                                unpack_headers=unpack_trace_headers)
     # Create the stream object.
@@ -244,7 +244,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
     return stream
 
 
-def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
+def _write_segy(stream, filename, data_encoding=None, byteorder=None,
               textual_header_encoding=None, **kwargs):  # @UnusedVariable
     """
     Writes a SEG Y file from given ObsPy Stream object.
@@ -430,7 +430,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     segy_file.write(filename, data_encoding=data_encoding, endian=byteorder)
 
 
-def isSU(filename):
+def _is_su(filename):
     """
     Checks whether or not the given file is a Seismic Unix (SU) file.
 
@@ -451,7 +451,7 @@ def isSU(filename):
         return True
 
 
-def readSU(filename, headonly=False, byteorder=None,
+def _read_su(filename, headonly=False, byteorder=None,
            unpack_trace_headers=False, **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Unix (SU) file and returns an ObsPy Stream object.
@@ -490,7 +490,7 @@ def readSU(filename, headonly=False, byteorder=None,
     ... | 2005-12-19T15:07:54.000000Z - ... | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
-    su_object = readSUFile(filename, endian=byteorder,
+    su_object = _read_suFile(filename, endian=byteorder,
                            unpack_headers=unpack_trace_headers)
 
     # Create the stream object.
@@ -558,7 +558,7 @@ def readSU(filename, headonly=False, byteorder=None,
     return stream
 
 
-def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
+def _write_su(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Unix (SU) file from given ObsPy Stream object.
 

@@ -6,7 +6,7 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy.io.y.core import isY, readY
+from obspy.io.y.core import _is_y, _read_y
 
 
 class CoreTestCase(unittest.TestCase):
@@ -17,21 +17,21 @@ class CoreTestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_isYFile(self):
+    def test_is_yFile(self):
         """
         Testing Y file format.
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
-        self.assertEqual(isY(testfile), True)
-        self.assertEqual(isY("/path/to/slist.ascii"), False)
-        self.assertEqual(isY("/path/to/tspair.ascii"), False)
+        self.assertEqual(_is_y(testfile), True)
+        self.assertEqual(_is_y("/path/to/slist.ascii"), False)
+        self.assertEqual(_is_y("/path/to/tspair.ascii"), False)
 
-    def test_readYFile(self):
+    def test_read_yFile(self):
         """
         Testing reading Y file format.
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
-        st = readY(testfile)
+        st = _read_y(testfile)
         self.assertEqual(len(st), 1)
         tr = st[0]
         self.assertEqual(len(tr), 18000)

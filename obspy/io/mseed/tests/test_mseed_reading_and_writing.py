@@ -18,7 +18,7 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
 from obspy.io.mseed import util
-from obspy.io.mseed.core import isMSEED, readMSEED, writeMSEED
+from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -76,7 +76,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     [-396, -399, -387, -384, -393, -380, -365, -394, -426],
                     [-389, -428, -409, -389, -388, -405, -390, -368, -368]]
         i = 0
-        stream = readMSEED(mseed_file)
+        stream = _read_mseed(mseed_file)
         for trace in stream:
             self.assertEqual('BGLD', trace.stats.station)
             self.assertEqual('EHE', trace.stats.channel)
@@ -97,7 +97,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         npts = [412, 412, 11947, 41604, 1]
         for i, _f in enumerate(mseed_filenames):
             filename = os.path.join(self.path, 'data', _f)
-            stream = readMSEED(filename)
+            stream = _read_mseed(filename)
             self.assertEqual(samprate[i], stream[0].stats.sampling_rate)
             self.assertEqual(station[i], stream[0].stats.station)
             self.assertEqual(npts[i], stream[0].stats.npts)
@@ -114,7 +114,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Note: Test currently only tests the first trace
         """
         mseed_file = os.path.join(self.path, 'data', 'test.mseed')
-        stream = readMSEED(mseed_file)
+        stream = _read_mseed(mseed_file)
         # Define test ranges
         record_length_values = [2 ** i for i in range(8, 21)]
         encoding_values = {"ASCII": "|S1", "INT16": "int16", "INT32": "int32",
@@ -131,9 +131,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                    dtype=native_str(encoding_values[encoding]))
                     with NamedTemporaryFile() as tf:
                         temp_file = tf.name
-                        writeMSEED(this_stream, temp_file, encoding=encoding,
+                        _write_mseed(this_stream, temp_file, encoding=encoding,
                                    byteorder=byteorder, reclen=reclen)
-                        new_stream = readMSEED(temp_file)
+                        new_stream = _read_mseed(temp_file)
                     # Assert the new stream still has the chosen attributes.
                     # This should mean that writing as well as reading them
                     # works.
@@ -201,23 +201,23 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'gaps.mseed')
         # Read file and test if all traces are being read.
-        stream = readMSEED(filename)
+        stream = _read_mseed(filename)
         self.assertEqual(len(stream), 4)
         # Write File to temporary file.
         with NamedTemporaryFile() as tf:
             outfile = tf.name
-            writeMSEED(copy.deepcopy(stream), outfile)
+            _write_mseed(copy.deepcopy(stream), outfile)
             # Read the same file again and compare it to the original file.
-            new_stream = readMSEED(outfile)
+            new_stream = _read_mseed(outfile)
         self.assertEqual(len(stream), len(new_stream))
         # Compare new_trace_list with trace_list
         for tr1, tr2 in zip(stream, new_stream):
             self.assertEqual(tr1.stats, tr2.stats)
             np.testing.assert_array_equal(tr1.data, tr2.data)
 
-    def test_isMSEED(self):
+    def test_is_mseed(self):
         """
-        This tests the isMSEED method by just validating that each file in the
+        This tests the _is_mseed method by just validating that each file in the
         data directory is a Mini-SEED file and each file in the working
         directory is not a Mini-SEED file.
 
@@ -234,12 +234,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over Mini-SEED files
         for _i in mseed_filenames:
             filename = os.path.join(self.path, 'data', _i)
-            is_mseed = isMSEED(filename)
+            is_mseed = _is_mseed(filename)
             self.assertTrue(is_mseed)
         # Loop over non Mini-SEED files
         for _i in non_mseed_filenames:
             filename = os.path.join(self.path, _i)
-            is_mseed = isMSEED(filename)
+            is_mseed = _is_mseed(filename)
             self.assertFalse(is_mseed)
 
     def test_readSingleRecordToMSR(self):
@@ -263,12 +263,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readFileViaMSEED(self):
         """
-        Read file test via L{obspy.io.mseed.mseed.readMSEED}.
+        Read file test via L{obspy.io.mseed.mseed._read_mseed}.
         """
         testfile = os.path.join(self.path, 'data', 'test.mseed')
         data = [2787, 2776, 2774, 2780, 2783]
         # Read the file directly to a Stream object.
-        stream = readMSEED(testfile)
+        stream = _read_mseed(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
@@ -281,83 +281,83 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_readPartialTimewindowFromFile(self):
         """
-        Uses obspy.io.mseed.mseed.readMSEED to read only read a certain time
+        Uses obspy.io.mseed.mseed._read_mseed to read only read a certain time
         window of a file.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
         endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
         testfile = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        stream = readMSEED(testfile, starttime=starttime + 6,
+        stream = _read_mseed(testfile, starttime=starttime + 6,
                            endtime=endtime - 6)
         self.assertTrue(starttime < stream[0].stats.starttime)
         self.assertGreater(endtime, stream[0].stats.endtime)
 
     def test_readPartialWithOnlyStarttimeSet(self):
         """
-        Uses obspy.io.mseed.mseed.readMSEED to read only the data starting with
+        Uses obspy.io.mseed.mseed._read_mseed to read only the data starting with
         a certain time.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
         endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
         testfile = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        stream = readMSEED(testfile, starttime=starttime + 6)
+        stream = _read_mseed(testfile, starttime=starttime + 6)
         self.assertTrue(starttime < stream[0].stats.starttime)
         self.assertEqual(endtime, stream[0].stats.endtime)
 
     def test_readPartialWithOnlyEndtimeSet(self):
         """
-        Uses obspy.io.mseed.mseed.readMSEED to read only the data ending
+        Uses obspy.io.mseed.mseed._read_mseed to read only the data ending
         before a certain time.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
         endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
         testfile = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        stream = readMSEED(testfile, endtime=endtime - 6)
+        stream = _read_mseed(testfile, endtime=endtime - 6)
         self.assertEqual(starttime, stream[0].stats.starttime)
         self.assertGreater(endtime, stream[0].stats.endtime)
 
     def test_readPartialFrameWithEmptyTimeRange(self):
         """
-        Uses obspy.io.mseed.mseed.readMSEED to read a partial file with a
+        Uses obspy.io.mseed.mseed._read_mseed to read a partial file with a
         timewindow outside of the actual data. Should return an empty Stream
         object.
         """
         starttime = UTCDateTime('2003-05-29T02:13:22.043400Z')
         testfile = os.path.join(self.path, 'data', 'test.mseed')
-        stream = readMSEED(testfile, starttime=starttime - 1E6,
+        stream = _read_mseed(testfile, starttime=starttime - 1E6,
                            endtime=starttime - 1E6 + 1)
         self.assertEqual(len(stream), 0)
 
     def test_readPartialWithSourceName(self):
         """
-        Uses obspy.io.mseed.mseed.readMSEED to read only part of a file that
+        Uses obspy.io.mseed.mseed._read_mseed to read only part of a file that
         matches certain sourcename patterns.
         """
         testfile = os.path.join(self.path, 'data', 'two_channels.mseed')
-        st1 = readMSEED(testfile)
+        st1 = _read_mseed(testfile)
         self.assertEqual(st1[0].stats.channel, 'EHE')
         self.assertEqual(st1[1].stats.channel, 'EHZ')
-        st2 = readMSEED(testfile, sourcename='*')
+        st2 = _read_mseed(testfile, sourcename='*')
         self.assertEqual(st2[0].stats.channel, 'EHE')
         self.assertEqual(st2[1].stats.channel, 'EHZ')
-        st3 = readMSEED(testfile, sourcename='*.EH*')
+        st3 = _read_mseed(testfile, sourcename='*.EH*')
         self.assertEqual(st3[0].stats.channel, 'EHE')
         self.assertEqual(st3[1].stats.channel, 'EHZ')
-        st4 = readMSEED(testfile, sourcename='*E')
+        st4 = _read_mseed(testfile, sourcename='*E')
         self.assertEqual(st4[0].stats.channel, 'EHE')
         self.assertEqual(len(st4), 1)
-        st5 = readMSEED(testfile, sourcename='*.EHZ')
+        st5 = _read_mseed(testfile, sourcename='*.EHZ')
         self.assertEqual(st5[0].stats.channel, 'EHZ')
         self.assertEqual(len(st5), 1)
-        st6 = readMSEED(testfile, sourcename='*.BLA')
+        st6 = _read_mseed(testfile, sourcename='*.BLA')
         self.assertEqual(len(st6), 0)
 
     def test_writeIntegers(self):
         """
-        Write integer array via L{obspy.io.mseed.mseed.writeMSEED}.
+        Write integer array via L{obspy.io.mseed.mseed._write_mseed}.
         """
         npts = 1000
         # data array of integers - float won't work!
@@ -367,9 +367,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # write
-            writeMSEED(st, tempfile, format="MSEED")
+            _write_mseed(st, tempfile, format="MSEED")
             # read again
-            stream = readMSEED(tempfile)
+            stream = _read_mseed(tempfile)
         stream.verify()
         np.testing.assert_array_equal(stream[0].data, data)
 
@@ -532,7 +532,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Reads a full SEED volume.
         """
         files = os.path.join(self.path, 'data', 'fullseed.mseed')
-        st = readMSEED(files)
+        st = _read_mseed(files)
         self.assertEqual(len(st), 3)
         self.assertEqual(len(st[0]), 602)
         self.assertEqual(len(st[1]), 623)
@@ -892,34 +892,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_isInvalidMSEED(self):
         """
-        Tests isMSEED functionality.
+        Tests _is_mseed functionality.
         """
         # invalid blockette length in first blockette
         file = os.path.join(self.path, 'data', 'not.mseed')
-        self.assertFalse(isMSEED(file))
+        self.assertFalse(_is_mseed(file))
         # just "000001V"
         file = os.path.join(self.path, 'data', 'not2.mseed')
-        self.assertFalse(isMSEED(file))
+        self.assertFalse(_is_mseed(file))
         # just "000001V011"
         file = os.path.join(self.path, 'data', 'not3.mseed')
-        self.assertFalse(isMSEED(file))
+        self.assertFalse(_is_mseed(file))
         # found blockette 010 but invalid record length
         file = os.path.join(self.path, 'data', 'not4.mseed')
-        self.assertFalse(isMSEED(file))
+        self.assertFalse(_is_mseed(file))
 
     def test_isValidMSEED(self):
         """
-        Tests isMSEED functionality.
+        Tests _is_mseed functionality.
         """
         # fullseed starting with blockette 010
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
-        self.assertTrue(isMSEED(file))
+        self.assertTrue(_is_mseed(file))
         # fullseed starting with blockette 008
         file = os.path.join(self.path, 'data', 'blockette008.mseed')
-        self.assertTrue(isMSEED(file))
+        self.assertTrue(_is_mseed(file))
         # fullseed not starting with blockette 010 or 008
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
-        self.assertTrue(isMSEED(file))
+        self.assertTrue(_is_mseed(file))
 
     def test_bizarreFiles(self):
         """

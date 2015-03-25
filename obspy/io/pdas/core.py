@@ -17,7 +17,7 @@ import numpy as np
 from obspy.core import Stream, Trace, UTCDateTime
 
 
-def isPDAS(filename):
+def _is_pdas(filename):
     """
     Checks whether a file is a PDAS file or not.
 
@@ -41,7 +41,7 @@ def isPDAS(filename):
         return False
 
 
-def readPDAS(filename, **kwargs):
+def _read_pdas(filename, **kwargs):
     """
     Reads a PDAS file and returns an ObsPy Stream object.
 

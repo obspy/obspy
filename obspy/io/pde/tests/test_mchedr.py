@@ -10,8 +10,8 @@ import warnings
 from obspy.core.event import ResourceIdentifier, read_events
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.pde.mchedr import readMchedr
-from obspy.io.quakeml.core import readQuakeML, writeQuakeML
+from obspy.io.pde.mchedr import _read_mchedr
+from obspy.io.quakeml.core import _read_quakeml, _write_quakeml
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
 IS_RECENT_LXML = False
@@ -37,7 +37,7 @@ class mchedrTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'mchedr.dat')
         # read the mchedr file once for all
         if self.__class__.catalog is None:
-            self.__class__.catalog = readMchedr(filename)
+            self.__class__.catalog = _read_mchedr(filename)
 
     def test_catalog(self):
         self.assertEqual(len(self.catalog), 1)
@@ -304,18 +304,18 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertAlmostEqual(mt.tensor.m_tp, -4.2e+18)
         self.assertEqual(mt.clvd, None)
 
-    def test_writeQuakeML(self):
+    def test_write_quakeml(self):
         """
         Tests writing a QuakeML document.
         """
         with NamedTemporaryFile() as tf:
-            writeQuakeML(self.catalog, tf, validate=IS_RECENT_LXML)
+            _write_quakeml(self.catalog, tf, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             tf.seek(0)
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readQuakeML(tf)
+                catalog2 = _read_quakeml(tf)
         self.assertTrue(len(catalog2), 1)
 
     def test_readEvents(self):

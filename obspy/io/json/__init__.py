@@ -18,4 +18,4 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .default import Default
-from .core import get_dump_kwargs, writeJSON
+from .core import get_dump_kwargs, _write_json

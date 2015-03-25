@@ -1406,15 +1406,15 @@ class Stream(object):
         try:
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
-            # search writeFormat method for given entry point
-            writeFormat = load_entry_point(
+            # search write_format method for given entry point
+            write_format = load_entry_point(
                 format_ep.dist.key,
-                'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
+                'obspy.plugin.waveform.%s' % (format_ep.name), 'write_format')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format,
                                    ', '.join(ENTRY_POINTS['waveform_write'])))
-        writeFormat(self, filename, **kwargs)
+        write_format(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
@@ -2936,7 +2936,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
 
-def isPickle(filename):  # @UnusedVariable
+def _is_pickle(filename):  # @UnusedVariable
     """
     Check whether a file is a pickled ObsPy Stream file.
 
@@ -2947,7 +2947,7 @@ def isPickle(filename):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
+    >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
     if isinstance(filename, (str, native_str)):
@@ -2964,7 +2964,7 @@ def isPickle(filename):  # @UnusedVariable
     return isinstance(st, Stream)
 
 
-def readPickle(filename, **kwargs):  # @UnusedVariable
+def _read_pickle(filename, **kwargs):  # @UnusedVariable
     """
     Read and return Stream from pickled ObsPy Stream file.
 
@@ -2984,7 +2984,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
         return pickle.load(filename)
 
 
-def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
+def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     """
     Write a Python pickle of current stream.
 

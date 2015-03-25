@@ -20,7 +20,7 @@ from obspy import UTCDateTime
 from obspy.core import Stream, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.mseed import util
-from obspy.io.mseed.core import readMSEED
+from obspy.io.mseed.core import _read_mseed
 from obspy.io.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
                                     FIXED_HEADER_DATA_QUAL_FLAGS,
                                     FIXED_HEADER_IO_CLOCK_FLAGS)
@@ -148,7 +148,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             # Get the start- and end time.
             (start, end) = util.getStartAndEndTime(filename)
             # Parse the whole file.
-            stream = readMSEED(filename)
+            stream = _read_mseed(filename)
             self.assertEqual(start, stream[0].stats.starttime)
             self.assertEqual(end, stream[0].stats.endtime)
 
@@ -197,7 +197,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             data_string = fp.read()[64:]
         data = util._unpackSteim1(data_string, 412, swapflag=self.swap,
                                   verbose=0)
-        data_record = readMSEED(steim1_file)[0].data
+        data_record = _read_mseed(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
     def test_unpackSteim2(self):
@@ -211,7 +211,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             data_string = fp.read()[128:]
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
                                   verbose=0)
-        data_record = readMSEED(steim2_file)[0].data
+        data_record = _read_mseed(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
     def test_time_shifting(self):
@@ -226,20 +226,20 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "BW.BGLD.__.EHE.D.2008.001.first_10_records")
             # Shift by one second.
             util.shiftTimeOfFile(filename, output_filename, 10000)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 1
             self.assertEqual(st_before, st_after)
             # Shift by 22 seconds in the other direction.
             util.shiftTimeOfFile(filename, output_filename, -220000)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 22
             self.assertEqual(st_before, st_after)
             # Shift by 11.33 seconds.
             util.shiftTimeOfFile(filename, output_filename, 113300)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 11.33
             self.assertEqual(st_before, st_after)
 
@@ -250,14 +250,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "one_record_time_corr_applied_but_time_corr_is_zero.mseed")
             # Positive shift.
             util.shiftTimeOfFile(filename, output_filename, 22000)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 2.2
             self.assertEqual(st_before, st_after)
             # Negative shift.
             util.shiftTimeOfFile(filename, output_filename, -333000)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 33.3
             self.assertEqual(st_before, st_after)
 
@@ -284,8 +284,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 util.shiftTimeOfFile(input_file=filename,
                                      output_file=output_filename,
                                      timeshift=123400)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime += 12.34
             self.assertEqual(st_before, st_after)
 
@@ -295,8 +295,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 util.shiftTimeOfFile(input_file=filename,
                                      output_file=output_filename,
                                      timeshift=-22222)
-            st_before = readMSEED(filename)
-            st_after = readMSEED(output_filename)
+            st_before = _read_mseed(filename)
+            st_after = _read_mseed(output_filename)
             st_before[0].stats.starttime -= 2.2222
             self.assertEqual(st_before, st_after)
 

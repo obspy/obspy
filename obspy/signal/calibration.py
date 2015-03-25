@@ -224,9 +224,9 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         if same_data:
             fy = fx
         else:
-            thisY = y[ind[i]:ind[i] + NFFT]
-            thisY = windowVals * thisY
-            fy = np.fft.fft(thisY, n=pad_to)
+            th_is_y = y[ind[i]:ind[i] + NFFT]
+            th_is_y = windowVals * th_is_y
+            fy = np.fft.fft(th_is_y, n=pad_to)
         Pxy[:, i] = np.conjugate(fx[:numFreqs]) * fy[:numFreqs]
 
     # Scale the spectrum by the norm of the window to compensate for

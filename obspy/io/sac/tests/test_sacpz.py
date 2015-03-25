@@ -27,7 +27,7 @@ class SACPZTestCase(unittest.TestCase):
         self.file1 = os.path.join(self.path, 'data', 'IU_ANMO_00_BHZ.sacpz')
         self.file2 = os.path.join(self.path, 'data', 'IU_ANMO_BH.sacpz')
 
-    def test_write_SACPZ_single_channel(self):
+    def test_write_sacpz_single_channel(self):
         """
         """
         inv = read_inventory("/path/to/IU_ANMO_00_BHZ.xml")
@@ -43,7 +43,7 @@ class SACPZTestCase(unittest.TestCase):
         expected = [l for l in expected.split("\n") if "CREATED" not in l]
         self.assertEqual(got, expected)
 
-    def test_write_SACPZ_multiple_channels(self):
+    def test_write_sacpz_multiple_channels(self):
         """
         """
         inv = read_inventory("/path/to/IU_ANMO_BH.xml")

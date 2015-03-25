@@ -14,7 +14,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime
 
 
-def isDATAMARK(filename, century="20"):  # @UnusedVariable
+def _is_datamark(filename, century="20"):  # @UnusedVariable
     """
     Checks whether a file is DATAMARK or not.
 
@@ -24,7 +24,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
     :return: ``True`` if a DATAMARK file.
     """
     # as long we don't have full format description we just try to read the
-    # file like readDATAMARK and check for errors
+    # file like _read_datamark and check for errors
     century = "20"  # hardcoded ;(
     try:
         with open(filename, "rb") as fpin:
@@ -52,7 +52,7 @@ def isDATAMARK(filename, century="20"):  # @UnusedVariable
     return True
 
 
-def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
+def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
     """
     Reads a DATAMARK file and returns a Stream object.
 

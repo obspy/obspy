@@ -16,8 +16,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.sac import SacError, SacIO, SacIOError
-from obspy.io.sac.core import (isSAC, isSACXY, readSAC, readSACXY, writeSAC,
-                               writeSACXY)
+from obspy.io.sac.core import (_is_sac, _is_sacXY, _read_sac, _read_sacXY, _write_sac,
+                               _write_sacXY)
 
 
 class CoreTestCase(unittest.TestCase):
@@ -344,7 +344,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.delta, 0.005)
         self.assertEqual(st[0].stats.sampling_rate, 200.0)
 
-    def test_writeSACXYWithMinimumStats(self):
+    def test_write_sacXYWithMinimumStats(self):
         """
         Write SACXY with minimal stats header, no inhereted from SAC file
         """
@@ -498,10 +498,10 @@ class CoreTestCase(unittest.TestCase):
             buf.seek(0, 0)
 
             # Attempt to read from it.
-            tr = readSAC(buf)[0]
+            tr = _read_sac(buf)[0]
 
         # Open file normally and make sure the results are identical.
-        tr2 = readSAC(self.file)[0]
+        tr2 = _read_sac(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 
@@ -511,10 +511,10 @@ class CoreTestCase(unittest.TestCase):
         """
         with open(self.file, "rb") as fh:
             # Attempt to read from it.
-            tr = readSAC(fh)[0]
+            tr = _read_sac(fh)[0]
 
         # Open file normally and make sure the results are identical.
-        tr2 = readSAC(self.file)[0]
+        tr2 = _read_sac(self.file)[0]
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr, tr2)
 
@@ -522,12 +522,12 @@ class CoreTestCase(unittest.TestCase):
         """
         Tests reading and writing to and from BytesIO.
         """
-        st = readSAC(self.file)
+        st = _read_sac(self.file)
         with io.BytesIO() as buf:
-            writeSAC(st, buf)
+            _write_sac(st, buf)
             buf.seek(0, 0)
             # Attempt to read from it.
-            st2 = readSAC(buf)
+            st2 = _read_sac(buf)
 
         tr = st[0]
         tr2 = st2[0]
@@ -538,12 +538,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr, tr2)
 
     def test_read_write_open_file(self):
-        st = readSAC(self.file)
+        st = _read_sac(self.file)
 
         with NamedTemporaryFile() as tf_out:
-            writeSAC(st, tf_out)
+            _write_sac(st, tf_out)
             tf_out.seek(0, 0)
-            st2 = readSAC(tf_out)
+            st2 = _read_sac(tf_out)
 
         tr = st[0]
         tr2 = st2[0]
@@ -611,12 +611,12 @@ class CoreTestCase(unittest.TestCase):
         so bytes should also do the trick.
         """
         # Original.
-        st = readSACXY(self.filexy)
+        st = _read_sacXY(self.filexy)
 
         with io.BytesIO() as fh:
-            writeSACXY(st, fh)
+            _write_sacXY(st, fh)
             fh.seek(0, 0)
-            st2 = readSACXY(fh)
+            st2 = _read_sacXY(fh)
 
         self.assertTrue(st == st2)
 
@@ -625,25 +625,25 @@ class CoreTestCase(unittest.TestCase):
         Reading/writing XY sac files to open files in binary mode.
         """
         # Original.
-        st = readSACXY(self.filexy)
+        st = _read_sacXY(self.filexy)
 
         with NamedTemporaryFile() as tf:
-            writeSACXY(st, tf)
+            _write_sacXY(st, tf)
             tf.seek(0, 0)
-            st2 = readSACXY(tf)
+            st2 = _read_sacXY(tf)
 
         self.assertTrue(st == st2)
 
     def test_is_sac_bytes_io(self):
         """
-        Tests the isSAC function for BytesIO objects.
+        Tests the _is_sac function for BytesIO objects.
         """
         with io.BytesIO() as buf:
             # Read file to BytesIO.
             with open(self.file, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(isSAC(buf))
+            self.assertTrue(_is_sac(buf))
 
         # Should naturally fail for an XY file.
         with io.BytesIO() as buf:
@@ -651,7 +651,7 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(isSAC(buf))
+            self.assertFalse(_is_sac(buf))
 
     def test_is_sac_string_io_raises(self):
         """
@@ -660,25 +660,25 @@ class CoreTestCase(unittest.TestCase):
         with io.StringIO() as buf:
             buf.write("abcdefghijklmnopqrstuvwxyz")
             buf.seek(0, 0)
-            self.assertRaises(ValueError, isSAC, buf)
+            self.assertRaises(ValueError, _is_sac, buf)
 
     def test_is_sac_open_file(self):
         """
-        Tests the isSAC function for open files.
+        Tests the _is_sac function for open files.
         """
         with open(self.file, "rb") as fh:
-            self.assertTrue(isSAC(fh))
+            self.assertTrue(_is_sac(fh))
 
     def test_is_sacxy_bytes_io(self):
         """
-        Tests the isSACXY function for BytesIO objects.
+        Tests the _is_sacXY function for BytesIO objects.
         """
         with io.BytesIO() as buf:
             # Read file to BytesIO.
             with open(self.filexy, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertTrue(isSACXY(buf))
+            self.assertTrue(_is_sacXY(buf))
 
         # Should naturally fail for a normal sac file.
         with io.BytesIO() as buf:
@@ -686,11 +686,11 @@ class CoreTestCase(unittest.TestCase):
             with open(self.file, "rb") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertFalse(isSACXY(buf))
+            self.assertFalse(_is_sacXY(buf))
 
     def test_is_sacxy_string_io_raises(self):
         """
-        Tests the isSACXY function for StringIO objects where it should
+        Tests the _is_sacXY function for StringIO objects where it should
         raise. I/O is binary only.
         """
         with io.StringIO() as buf:
@@ -698,24 +698,24 @@ class CoreTestCase(unittest.TestCase):
             with open(self.filexy, "rt") as fh:
                 buf.write(fh.read())
             buf.seek(0, 0)
-            self.assertRaises(ValueError, isSACXY, buf)
+            self.assertRaises(ValueError, _is_sacXY, buf)
 
     def test_is_sacxy_open_file_binary_mode(self):
         """
-        Tests the isSACXY function for open files in binary mode.
+        Tests the _is_sacXY function for open files in binary mode.
         """
         with open(self.filexy, "rb") as fh:
-            self.assertTrue(isSACXY(fh))
+            self.assertTrue(_is_sacXY(fh))
 
         with open(__file__, "rb") as fh:
-            self.assertFalse(isSACXY(fh))
+            self.assertFalse(_is_sacXY(fh))
 
     def test_is_sacxy_open_file_text_mode_fails(self):
         """
-        Tests that the isSACXY function for open files in text mode fails.
+        Tests that the _is_sacXY function for open files in text mode fails.
         """
         with open(self.filexy, "rt") as fh:
-            self.assertRaises(ValueError, isSACXY, fh)
+            self.assertRaises(ValueError, _is_sacXY, fh)
 
     def test_writing_to_file_like_objects_with_obspy(self):
         """

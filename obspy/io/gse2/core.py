@@ -12,7 +12,7 @@ from obspy import Stream, Trace
 from . import libgse1, libgse2
 
 
-def isGSE2(filename):
+def _is_gse2(filename):
     """
     Checks whether a file is GSE2 or not.
 
@@ -30,7 +30,7 @@ def isGSE2(filename):
     return True
 
 
-def readGSE2(filename, headonly=False, verify_chksum=True,
+def _read_gse2(filename, headonly=False, verify_chksum=True,
              **kwargs):  # @UnusedVariable
     """
     Reads a GSE2 file and returns a Stream object.
@@ -72,7 +72,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     return Stream(traces=traces)
 
 
-def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
+def _write_gse2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     """
     Write GSE2 file from a Stream object.
 
@@ -111,7 +111,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
             libgse2.write(trace.stats, trace.data, f, inplace)
 
 
-def isGSE1(filename):
+def _is_gse1(filename):
     """
     Checks whether a file is GSE1 or not.
 
@@ -131,7 +131,7 @@ def isGSE1(filename):
     return False
 
 
-def readGSE1(filename, headonly=False, verify_chksum=True,
+def _read_gse1(filename, headonly=False, verify_chksum=True,
              **kwargs):  # @UnusedVariable
     """
     Reads a GSE1 file and returns a Stream object.

@@ -31,7 +31,7 @@ class InternalMSEEDReadingWarning(UserWarning):
     pass
 
 
-def isMSEED(filename):
+def _is_mseed(filename):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
 
@@ -102,7 +102,7 @@ def isMSEED(filename):
         return False
 
 
-def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
+def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
               sourcename=None, reclen=None, details=False,
               header_byteorder=None, verbose=None, **kwargs):
     """
@@ -364,7 +364,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     except:
         verbose = 0
 
-    lil = clibmseed.readMSEEDBuffer(
+    lil = clibmseed._read_mseedBuffer(
         bfrNp, buflen, selections, C.c_int8(unpack_data),
         reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
         allocData, diag_print, log_print)
@@ -441,7 +441,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     return Stream(traces=traces)
 
 
-def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
+def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
                sequence_number=None, flush=True, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.

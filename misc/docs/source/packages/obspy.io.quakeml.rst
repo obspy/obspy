@@ -12,10 +12,10 @@ obspy.io.quakeml
       :toctree: autogen
       :nosignatures:
 
-      ~core.isQuakeML
-      ~core.readQuakeML
-      ~core.readSeisHubEventXML
-      ~core.writeQuakeML
+      ~core._is_quakeml
+      ~core._read_quakeml
+      ~core._read_seishub_event_xml
+      ~core._write_quakeml
 
    .. rubric:: Classes
 

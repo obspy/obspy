@@ -69,12 +69,12 @@ class StationXMLTestCase(unittest.TestCase):
 
     def test_is_stationxml(self):
         """
-        Tests the is_StationXML() function.
+        Tests the _is_stationxml() function.
         """
         # Check positives.
         stationxmls = [os.path.join(self.data_dir, "minimal_station.xml")]
         for stat in stationxmls:
-            self.assertTrue(obspy.io.stationxml.core.is_StationXML(stat))
+            self.assertTrue(obspy.io.stationxml.core._is_stationxml(stat))
 
         # Check some negatives.
         not_stationxmls = [
@@ -84,7 +84,7 @@ class StationXMLTestCase(unittest.TestCase):
             os.path.join(self.data_dir, os.path.pardir,
                          os.path.pardir, "data", _i) for _i in not_stationxmls]
         for stat in not_stationxmls:
-            self.assertFalse(obspy.io.stationxml.core.is_StationXML(
+            self.assertFalse(obspy.io.stationxml.core._is_stationxml(
                 stat))
 
     def test_read_and_write_minimal_file(self):

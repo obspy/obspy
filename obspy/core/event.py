@@ -3189,10 +3189,10 @@ class Catalog(object):
         try:
             # get format specific entry point
             format_ep = EVENT_ENTRY_POINTS_WRITE[format]
-            # search writeFormat method for given entry point
+            # search write_format method for given entry point
             write_format = load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
-                'writeFormat')
+                'write_format')
         except (IndexError, ImportError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))

@@ -21,7 +21,7 @@ from obspy.core import Stats
 from obspy.core.compatibility import from_buffer
 
 
-def isSEISAN(filename):
+def _is_seisan(filename):
     """
     Checks whether a file is SEISAN or not.
 
@@ -32,7 +32,7 @@ def isSEISAN(filename):
 
     .. rubric:: Example
 
-    >>> isSEISAN("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    >>> _is_seisan("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
     try:
@@ -114,7 +114,7 @@ def _getVersion(data):
     return None
 
 
-def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a SEISAN file and returns an ObsPy Stream object.
 

@@ -10,7 +10,7 @@
        :nosignatures:
 
        ~core.get_dump_kwargs
-       ~core.writeJSON
+       ~core._write_json
        ~default.Default
 
     .. comment to end block

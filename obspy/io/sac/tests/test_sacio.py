@@ -219,7 +219,7 @@ class SacIOTestCase(unittest.TestCase):
         self.assertEqual(t2.GetHvalue('az'), b[1])
         self.assertEqual(t2.GetHvalue('baz'), b[2])
 
-    def test_isSAC(self):
+    def test_is_sac(self):
         """
         Assertion is raised if file is not a SAC file
         """

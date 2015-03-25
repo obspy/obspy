@@ -15,7 +15,7 @@ from obspy import UTCDateTime
 from obspy.core.inventory.response import paz_to_sacpz_string
 
 
-def write_SACPZ(inventory, file_or_file_object):
+def _write_sacpz(inventory, file_or_file_object):
     """
     Writes an inventory object to a SACPZ file.
 

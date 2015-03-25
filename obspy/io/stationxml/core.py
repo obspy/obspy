@@ -40,7 +40,7 @@ SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = "1.0"
 
 
-def is_StationXML(path_or_file_object):
+def _is_stationxml(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid StationXML
     1.0 file. Returns True of False.
@@ -86,7 +86,7 @@ def validate_StationXML(path_or_object):
     return (True, ())
 
 
-def read_StationXML(path_or_file_object):
+def _read_stationxml(path_or_file_object):
     """
     Function reading a StationXML file.
 
@@ -678,7 +678,7 @@ def _read_phone(phone_element, _ns):
         phone_number=phone_number, description=description)
 
 
-def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
+def _write_stationxml(inventory, file_or_file_object, validate=False, **kwargs):
     """
     Writes an inventory object to a buffer.
 

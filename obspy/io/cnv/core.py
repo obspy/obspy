@@ -16,7 +16,7 @@ import warnings
 from bisect import bisect_right
 
 
-def write_CNV(catalog, filename, phase_mapping=None, ifx_list=None,
+def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
               weight_mapping=None, default_weight=0):
     """
     Write a :class:`~obspy.core.event.Catalog` object to CNV event summary

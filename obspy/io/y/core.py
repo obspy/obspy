@@ -56,7 +56,7 @@ def __parseTag(fh):
     return endian, tag_type, next_tag, next_same
 
 
-def isY(filename):
+def _is_y(filename):
     """
     Checks whether a file is a Nanometrics Y file or not.
 
@@ -67,7 +67,7 @@ def isY(filename):
 
     .. rubric:: Example
 
-    >>> isY("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
+    >>> _is_y("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
     True
     """
     try:
@@ -82,7 +82,7 @@ def isY(filename):
     return True
 
 
-def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a Nanometrics Y file and returns an ObsPy Stream object.
 

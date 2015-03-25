@@ -299,7 +299,7 @@ class SEG2(object):
                 setattr(attrib_dict.NOTE, key, value)
 
 
-def isSEG2(filename):
+def _is_seg2(filename):
     if not hasattr(filename, 'write'):
         file_pointer = open(filename, 'rb')
     else:
@@ -328,7 +328,7 @@ def isSEG2(filename):
     return True
 
 
-def readSEG2(filename, **kwargs):  # @UnusedVariable
+def _read_seg2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
     st = seg2.readFile(filename)
     warnings.warn(WARNING_HEADER)

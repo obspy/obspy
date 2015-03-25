@@ -38,7 +38,7 @@ WIDTH2DTYPE = {
 }
 
 
-def isWAV(filename):
+def _is_wav(filename):
     """
     Checks whether a file is a audio WAV file or not.
 
@@ -49,7 +49,7 @@ def isWAV(filename):
 
     .. rubric:: Example
 
-    >>> isWAV("/path/to/3cssan.near.8.1.RNON.wav")  #doctest: +SKIP
+    >>> _is_wav("/path/to/3cssan.near.8.1.RNON.wav")  #doctest: +SKIP
     True
     """
     try:
@@ -66,7 +66,7 @@ def isWAV(filename):
     return False
 
 
-def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a audio WAV file and returns an ObsPy Stream object.
 
@@ -108,7 +108,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     return Stream([Trace(header=header, data=data)])
 
 
-def writeWAV(stream, filename, framerate=7000, rescale=False, width=None,
+def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
              **kwargs):  # @UnusedVariable
     """
     Writes a audio WAV file from given ObsPy Stream object. The seismogram is

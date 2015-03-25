@@ -70,7 +70,7 @@ Several key word arguments are available which can be used for example to
 only read certain records from a file or force the header byteorder:
 ``starttime``, ``endtime``, ``headonly``, ``sourcename``, ``reclen``,
 ``details``, and ``header_byteorder``. They are passed to the
-:meth:`~obspy.io.mseed.core.readMSEED` method so refer to it for details to
+:meth:`~obspy.io.mseed.core._read_mseed` method so refer to it for details to
 each parameter.
 
 Writing
@@ -85,10 +85,10 @@ Write data back to disc or a file like object using the
 You can also specify several keyword arguments that change the resulting
 Mini-SEED file: ``reclen``, ``encoding``, ``byteorder``, ``flush``,  and
 ``verbose``.
-They are are passed to the :meth:`~obspy.io.mseed.core.writeMSEED` method so
+They are are passed to the :meth:`~obspy.io.mseed.core._write_mseed` method so
 refer to it for details to each parameter.
 
-Refer to the :meth:`~obspy.io.mseed.core.writeMSEED` method for details to
+Refer to the :meth:`~obspy.io.mseed.core._write_mseed` method for details to
 each parameter.
 
 So in order to write a STEIM1 encoded Mini-SEED file with a record length of

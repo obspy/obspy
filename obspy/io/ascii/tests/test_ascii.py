@@ -9,8 +9,8 @@ import unittest
 import numpy as np
 
 from obspy import Trace, UTCDateTime, read
-from obspy.io.ascii.core import (isSLIST, isTSPAIR, readSLIST, readTSPAIR,
-                                 writeSLIST, writeTSPAIR)
+from obspy.io.ascii.core import (_is_slist, _is_tspair, _read_slist, _read_tspair,
+                                 _write_slist, _write_tspair)
 from obspy.core.util import NamedTemporaryFile
 
 
@@ -21,27 +21,27 @@ class ASCIITestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_isSLISTFile(self):
+    def test_is_slistFile(self):
         """
         Testing SLIST file format.
         """
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
-        self.assertEqual(isSLIST(testfile), True)
+        self.assertEqual(_is_slist(testfile), True)
         testfile = os.path.join(self.path, 'data', 'slist_2_traces.ascii')
-        self.assertEqual(isSLIST(testfile), True)
+        self.assertEqual(_is_slist(testfile), True)
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
-        self.assertEqual(isSLIST(testfile), False)
+        self.assertEqual(_is_slist(testfile), False)
         # not existing file should fail
         testfile = os.path.join(self.path, 'data', 'xyz')
-        self.assertEqual(isSLIST(testfile), False)
+        self.assertEqual(_is_slist(testfile), False)
 
-    def test_readSLISTFileSingleTrace(self):
+    def test_read_slistFileSingleTrace(self):
         """
-        Read SLIST file test via obspy.core.ascii.readSLIST.
+        Read SLIST file test via obspy.core.ascii._read_slist.
         """
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
         # read
-        stream = readSLIST(testfile)
+        stream = _read_slist(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
@@ -59,13 +59,13 @@ class ASCIITestCase(unittest.TestCase):
         data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
 
-    def test_readSLISTFileMultipleTraces(self):
+    def test_read_slistFileMultipleTraces(self):
         """
-        Read SLIST file test via obspy.core.ascii.readSLIST.
+        Read SLIST file test via obspy.core.ascii._read_slist.
         """
         testfile = os.path.join(self.path, 'data', 'slist_2_traces.ascii')
         # read
-        stream = readSLIST(testfile)
+        stream = _read_slist(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
@@ -99,13 +99,13 @@ class ASCIITestCase(unittest.TestCase):
         data = [781, 785, 778, 772]
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
 
-    def test_readSLISTFileHeadOnly(self):
+    def test_read_slistFileHeadOnly(self):
         """
-        Read SLIST file test via obspy.core.ascii.readSLIST.
+        Read SLIST file test via obspy.core.ascii._read_slist.
         """
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
         # read
-        stream = readSLIST(testfile, headonly=True)
+        stream = _read_slist(testfile, headonly=True)
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.location, '')
@@ -117,13 +117,13 @@ class ASCIITestCase(unittest.TestCase):
         self.assertEqual(stream[0].stats.calib, 1.0e-00)
         self.assertEqual(len(stream[0].data), 0)
 
-    def test_readSLISTFileEncoding(self):
+    def test_read_slistFileEncoding(self):
         """
-        Read SLIST file test via obspy.core.ascii.readSLIST.
+        Read SLIST file test via obspy.core.ascii._read_slist.
         """
         # float32
         testfile = os.path.join(self.path, 'data', 'slist_float.ascii')
-        stream = readSLIST(testfile)
+        stream = _read_slist(testfile)
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.location, '')
@@ -138,29 +138,29 @@ class ASCIITestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(stream[0].data, data, decimal=2)
         # unknown encoding
         testfile = os.path.join(self.path, 'data', 'slist_unknown.ascii')
-        self.assertRaises(NotImplementedError, readSLIST, testfile)
+        self.assertRaises(NotImplementedError, _read_slist, testfile)
 
-    def test_isTSPAIRFile(self):
+    def test_is_tspairFile(self):
         """
         Testing TSPAIR file format.
         """
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
-        self.assertEqual(isTSPAIR(testfile), True)
+        self.assertEqual(_is_tspair(testfile), True)
         testfile = os.path.join(self.path, 'data', 'tspair_2_traces.ascii')
-        self.assertEqual(isTSPAIR(testfile), True)
+        self.assertEqual(_is_tspair(testfile), True)
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
-        self.assertEqual(isTSPAIR(testfile), False)
+        self.assertEqual(_is_tspair(testfile), False)
         # not existing file should fail
         testfile = os.path.join(self.path, 'data', 'xyz')
-        self.assertEqual(isTSPAIR(testfile), False)
+        self.assertEqual(_is_tspair(testfile), False)
 
-    def test_readTSPAIRFileSingleTrace(self):
+    def test_read_tspairFileSingleTrace(self):
         """
-        Read TSPAIR file test via obspy.core.ascii.readTSPAIR.
+        Read TSPAIR file test via obspy.core.ascii._read_tspair.
         """
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
         # read
-        stream = readTSPAIR(testfile)
+        stream = _read_tspair(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
@@ -179,13 +179,13 @@ class ASCIITestCase(unittest.TestCase):
         data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
 
-    def test_readTSPAIRFileMultipleTraces(self):
+    def test_read_tspairFileMultipleTraces(self):
         """
-        Read TSPAIR file test via obspy.core.ascii.readTSPAIR.
+        Read TSPAIR file test via obspy.core.ascii._read_tspair.
         """
         testfile = os.path.join(self.path, 'data', 'tspair_2_traces.ascii')
         # read
-        stream = readTSPAIR(testfile)
+        stream = _read_tspair(testfile)
         stream.verify()
         # sort traces to ensure comparable results
         stream.sort()
@@ -223,13 +223,13 @@ class ASCIITestCase(unittest.TestCase):
         data = [781, 785, 778, 772]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
 
-    def test_readTSPAIRHeadOnly(self):
+    def test_read_tspairHeadOnly(self):
         """
-        Read TSPAIR file test via obspy.core.ascii.readTSPAIR.
+        Read TSPAIR file test via obspy.core.ascii._read_tspair.
         """
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
         # read
-        stream = readTSPAIR(testfile, headonly=True)
+        stream = _read_tspair(testfile, headonly=True)
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
         self.assertEqual(stream[0].stats.location, '')
@@ -242,13 +242,13 @@ class ASCIITestCase(unittest.TestCase):
         self.assertEqual(stream[0].stats.mseed.dataquality, 'R')
         self.assertEqual(len(stream[0].data), 0)
 
-    def test_readTSPAIRFileEncoding(self):
+    def test_read_tspairFileEncoding(self):
         """
-        Read TSPAIR file test via obspy.core.ascii.readTSPAIR.
+        Read TSPAIR file test via obspy.core.ascii._read_tspair.
         """
         # float32
         testfile = os.path.join(self.path, 'data', 'tspair_float.ascii')
-        stream = readTSPAIR(testfile)
+        stream = _read_tspair(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'XX')
         self.assertEqual(stream[0].stats.station, 'TEST')
@@ -265,21 +265,21 @@ class ASCIITestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(stream[0].data, data, decimal=2)
         # unknown encoding
         testfile = os.path.join(self.path, 'data', 'tspair_unknown.ascii')
-        self.assertRaises(NotImplementedError, readTSPAIR, testfile)
+        self.assertRaises(NotImplementedError, _read_tspair, testfile)
 
-    def test_writeTSPAIR(self):
+    def test_write_tspair(self):
         """
-        Write TSPAIR file test via obspy.core.ascii.writeTSPAIR.
+        Write TSPAIR file test via obspy.core.ascii._write_tspair.
         """
         # float32
         testfile = os.path.join(self.path, 'data', 'tspair_float.ascii')
-        stream_orig = readTSPAIR(testfile)
+        stream_orig = _read_tspair(testfile)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
-            writeTSPAIR(stream_orig, tmpfile)
+            _write_tspair(stream_orig, tmpfile)
             # read again
-            stream = readTSPAIR(tmpfile)
+            stream = _read_tspair(tmpfile)
             stream.verify()
             self.assertEqual(stream[0].stats.network, 'XX')
             self.assertEqual(stream[0].stats.station, 'TEST')
@@ -302,16 +302,16 @@ class ASCIITestCase(unittest.TestCase):
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
-    def test_writeTSPAIRFileMultipleTraces(self):
+    def test_write_tspairFileMultipleTraces(self):
         """
-        Write TSPAIR file test via obspy.core.ascii.writeTSPAIR.
+        Write TSPAIR file test via obspy.core.ascii._write_tspair.
         """
         testfile = os.path.join(self.path, 'data', 'tspair_2_traces.ascii')
-        stream_orig = readTSPAIR(testfile)
+        stream_orig = _read_tspair(testfile)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
-            writeTSPAIR(stream_orig, tmpfile)
+            _write_tspair(stream_orig, tmpfile)
             # look at the raw data
             with open(tmpfile, 'rt') as f:
                 lines = f.readlines()
@@ -321,7 +321,7 @@ class ASCIITestCase(unittest.TestCase):
             # test issue #321 (problems in time stamping)
             self.assertEqual(lines[-1], '2008-01-15T00:00:15.750000  772\n')
             # read again
-            stream = readTSPAIR(tmpfile)
+            stream = _read_tspair(tmpfile)
         stream.verify()
         # sort traces to ensure comparable results
         stream.sort()
@@ -359,17 +359,17 @@ class ASCIITestCase(unittest.TestCase):
         data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
 
-    def test_writeSLIST(self):
+    def test_write_slist(self):
         """
-        Write SLIST file test via obspy.core.ascii.writeTSPAIR.
+        Write SLIST file test via obspy.core.ascii._write_tspair.
         """
         # float32
         testfile = os.path.join(self.path, 'data', 'slist_float.ascii')
-        stream_orig = readSLIST(testfile)
+        stream_orig = _read_slist(testfile)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
-            writeSLIST(stream_orig, tmpfile)
+            _write_slist(stream_orig, tmpfile)
             # look at the raw data
             with open(tmpfile, 'rt') as f:
                 lines = f.readlines()
@@ -382,7 +382,7 @@ class ASCIITestCase(unittest.TestCase):
                 '185.009995\t181.020004\t185.029999\t189.039993\t' +
                 '194.050003\t205.059998')
             # read again
-            stream = readSLIST(tmpfile)
+            stream = _read_slist(tmpfile)
             stream.verify()
             self.assertEqual(stream[0].stats.network, 'XX')
             self.assertEqual(stream[0].stats.station, 'TEST')
@@ -405,16 +405,16 @@ class ASCIITestCase(unittest.TestCase):
                 lines_new = f.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
 
-    def test_writeSLISTFileMultipleTraces(self):
+    def test_write_slistFileMultipleTraces(self):
         """
-        Write SLIST file test via obspy.core.ascii.writeTSPAIR.
+        Write SLIST file test via obspy.core.ascii._write_tspair.
         """
         testfile = os.path.join(self.path, 'data', 'slist_2_traces.ascii')
-        stream_orig = readSLIST(testfile)
+        stream_orig = _read_slist(testfile)
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write
-            writeSLIST(stream_orig, tmpfile)
+            _write_slist(stream_orig, tmpfile)
             # look at the raw data
             with open(tmpfile, 'rt') as f:
                 lines = f.readlines()
@@ -422,7 +422,7 @@ class ASCIITestCase(unittest.TestCase):
             self.assertIn('SLIST', lines[0])
             self.assertEqual(lines[1].strip(), '185\t181\t185\t189\t194\t205')
             # read again
-            stream = readSLIST(tmpfile)
+            stream = _read_slist(tmpfile)
         stream.verify()
         # sort traces to ensure comparable results
         stream.sort()

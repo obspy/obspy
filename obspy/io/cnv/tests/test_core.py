@@ -9,7 +9,7 @@ import os
 import unittest
 
 from obspy import read_events
-from obspy.io.cnv.core import write_CNV
+from obspy.io.cnv.core import _write_cnv
 from obspy.core.util import NamedTemporaryFile
 
 
@@ -45,7 +45,7 @@ class CNVTestCase(unittest.TestCase):
 
         # write manually
         with NamedTemporaryFile() as tf:
-            write_CNV(cat, tf)
+            _write_cnv(cat, tf)
             tf.seek(0)
             got = tf.read().decode()
 

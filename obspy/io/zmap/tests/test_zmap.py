@@ -83,7 +83,7 @@ class ZMAPTestCase(unittest.TestCase):
         Test output to pre-opened file
         """
         with NamedTemporaryFile() as f:
-            zmap.writeZmap(self.catalog, f)
+            zmap._write_zmap(self.catalog, f)
             f.seek(0)
             file_content = f.read().decode('utf-8')
         self.assertIn(self._expected_string(self.test_data), file_content)
@@ -93,7 +93,7 @@ class ZMAPTestCase(unittest.TestCase):
         Test output to file with a filename specified
         """
         with NamedTemporaryFile() as f:
-            zmap.writeZmap(self.catalog, f.name)
+            zmap._write_zmap(self.catalog, f.name)
             f.seek(0)
             file_content = f.read().decode('utf-8')
         self.assertIn(self._expected_string(self.test_data), file_content)
@@ -151,10 +151,10 @@ class ZMAPTestCase(unittest.TestCase):
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            self.assertTrue(zmap.isZmap(f.name))
+            self.assertTrue(zmap._is_zmap(f.name))
             # Pre-opened file
             f.seek(0)
-            self.assertTrue(zmap.isZmap(f))
+            self.assertTrue(zmap._is_zmap(f))
         # Extended ZMAP (13 columns)
         self.zmap_fields += _EXT_ZMAP_FIELDS
         self.test_data.update({'h_err': '0.138679', 'z_err': '0.000000',
@@ -162,27 +162,27 @@ class ZMAPTestCase(unittest.TestCase):
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            self.assertTrue(zmap.isZmap(f.name))
+            self.assertTrue(zmap._is_zmap(f.name))
         # ZMAP string
         test_string = self._serialize(test_events)
-        self.assertTrue(zmap.isZmap(test_string))
+        self.assertTrue(zmap._is_zmap(test_string))
         # Non-ZMAP string
         test_string = '0.000000\t' + test_string
-        self.assertFalse(zmap.isZmap(test_string + '\n'))
+        self.assertFalse(zmap._is_zmap(test_string + '\n'))
         # Non-ZMAP file (14 columns)
         self.zmap_fields += ('dummy',)
         self.test_data.update({'dummy': '0'})
         test_events = [self.test_data, dict(self.test_data, mag='5.1')]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            self.assertFalse(zmap.isZmap(f.name))
+            self.assertFalse(zmap._is_zmap(f.name))
         # Non-ZMAP file (non-numeric columns)
         self.zmap_fields = _STD_ZMAP_FIELDS + _EXT_ZMAP_FIELDS
         self.test_data.update({'mag': 'bad'})
         test_events = [self.test_data]
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
-            self.assertFalse(zmap.isZmap(f.name))
+            self.assertFalse(zmap._is_zmap(f.name))
 
     def test_deserialize(self):
         """
@@ -218,15 +218,15 @@ class ZMAPTestCase(unittest.TestCase):
         zmap_str = self._serialize((test_events))
         with NamedTemporaryFile() as f:
             f.write(zmap_str.encode('utf-8'))
-            catalog = zmap.readZmap(f.name)
+            catalog = zmap._read_zmap(f.name)
             self._assert_zmap_equal(catalog, test_events)
             f.seek(0)
-            catalog = zmap.readZmap(f)
+            catalog = zmap._read_zmap(f)
             self._assert_zmap_equal(catalog, test_events)
             catalog = read_events(f.name)
             self._assert_zmap_equal(catalog, test_events)
         # direct ZMAP string
-        catalog = zmap.readZmap(zmap_str)
+        catalog = zmap._read_zmap(zmap_str)
         self._assert_zmap_equal(catalog, test_events)
 
     def _assert_zmap_equal(self, catalog, dicts):

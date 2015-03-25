@@ -83,7 +83,7 @@ def _parse_date_time(date, time):
     return dt
 
 
-def is_ndk(filename):
+def _is_ndk(filename):
     """
     Checks that a file is actually an NDK file.
 
@@ -141,7 +141,7 @@ def is_ndk(filename):
     return False
 
 
-def read_ndk(filename, *args, **kwargs):  # @UnusedVariable
+def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
     """
     Reads an NDK file to a :class:`~obspy.core.event.Catalog` object.
 

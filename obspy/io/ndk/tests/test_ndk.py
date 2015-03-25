@@ -11,8 +11,8 @@ import unittest
 import warnings
 
 from obspy import UTCDateTime, read_events
-from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, is_ndk,
-                               read_ndk)
+from obspy.io.ndk.core import (ObsPyNDKException, _parse_date_time, _is_ndk,
+                               _read_ndk)
 
 
 class NDKTestCase(unittest.TestCase):
@@ -31,7 +31,7 @@ class NDKTestCase(unittest.TestCase):
         information in the NDK file.
         """
         filename = os.path.join(self.datapath, "C200604092050A.ndk")
-        cat = read_ndk(filename)
+        cat = _read_ndk(filename)
 
         reference = os.path.join(self.datapath, "C200604092050A.xml")
         ref_cat = read_events(reference)
@@ -44,7 +44,7 @@ class NDKTestCase(unittest.TestCase):
         edited to test a variety of settings.
         """
         filename = os.path.join(self.datapath, "multiple_events.ndk")
-        cat = read_ndk(filename)
+        cat = _read_ndk(filename)
 
         self.assertEqual(len(cat), 6)
 
@@ -78,7 +78,7 @@ class NDKTestCase(unittest.TestCase):
 
     def test_is_ndk(self):
         """
-        Test for the the is_ndk() function.
+        Test for the the _is_ndk() function.
         """
         valid_files = [os.path.join(self.datapath, "C200604092050A.ndk"),
                        os.path.join(self.datapath, "multiple_events.ndk")]
@@ -89,9 +89,9 @@ class NDKTestCase(unittest.TestCase):
         self.assertGreater(len(invalid_files), 0)
 
         for filename in valid_files:
-            self.assertTrue(is_ndk(filename))
+            self.assertTrue(_is_ndk(filename))
         for filename in invalid_files:
-            self.assertFalse(is_ndk(filename))
+            self.assertFalse(_is_ndk(filename))
 
     def test_reading_using_obspy_plugin(self):
         """
@@ -190,23 +190,23 @@ class NDKTestCase(unittest.TestCase):
 
     def test_is_ndk_for_file_with_invalid_date(self):
         """
-        Tests the is_ndk function for a file with invalid date.
+        Tests the _is_ndk function for a file with invalid date.
         """
-        self.assertFalse(is_ndk(os.path.join(self.datapath,
+        self.assertFalse(_is_ndk(os.path.join(self.datapath,
                                              "faulty_invalid_date.ndk")))
 
     def test_is_ndk_for_file_with_invalid_latitude(self):
         """
-        Tests the is_ndk function a file with an invalid latitude.
+        Tests the _is_ndk function a file with an invalid latitude.
         """
-        self.assertFalse(is_ndk(os.path.join(self.datapath,
+        self.assertFalse(_is_ndk(os.path.join(self.datapath,
                                              "faulty_invalid_latitude.ndk")))
 
     def test_is_ndk_for_file_with_infeasible_latitude(self):
         """
-        Tests the is_ndk function a file with an unfeasible latitude.
+        Tests the _is_ndk function a file with an unfeasible latitude.
         """
-        self.assertFalse(is_ndk(os.path.join(
+        self.assertFalse(_is_ndk(os.path.join(
             self.datapath, "faulty_infeasible_latitude.ndk")))
 
     def test_reading_file_with_multiple_errors(self):
@@ -242,8 +242,8 @@ class NDKTestCase(unittest.TestCase):
         with io.open(filename, "rt") as fh:
             data = fh.read()
 
-        self.assertTrue(is_ndk(data))
-        cat = read_ndk(data)
+        self.assertTrue(_is_ndk(data))
+        cat = _read_ndk(data)
 
         self.assertEqual(cat, ref_cat)
 
@@ -259,8 +259,8 @@ class NDKTestCase(unittest.TestCase):
         with io.open(filename, "rb") as fh:
             data = fh.read()
 
-        self.assertTrue(is_ndk(data))
-        cat = read_ndk(data)
+        self.assertTrue(_is_ndk(data))
+        cat = _read_ndk(data)
 
         self.assertEqual(cat, ref_cat)
 

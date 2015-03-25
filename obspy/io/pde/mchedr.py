@@ -41,7 +41,7 @@ res_id_prefix = 'quakeml:us.anss.org'
 
 
 @map_example_filename('filename')
-def isMchedr(filename):
+def _is_mchedr(filename):
     """
     Checks whether a file format is mchedr
     (machine-readable Earthquake Data Report).
@@ -53,7 +53,7 @@ def isMchedr(filename):
 
     .. rubric:: Example
 
-    >>> isMchedr('/path/to/mchedr.dat')  # doctest: +SKIP
+    >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
     if not isinstance(filename, (str, native_str)):
@@ -1061,7 +1061,7 @@ angles-between-two-n-dimensional-vectors-in-python
 
 
 @map_example_filename('filename')
-def readMchedr(filename):
+def _read_mchedr(filename):
     """
     Reads a NEIC PDE mchedr (machine-readable Earthquake Data Report) file
     and returns a ObsPy Catalog object.

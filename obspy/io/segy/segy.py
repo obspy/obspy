@@ -758,7 +758,7 @@ class SEGYTraceHeader(object):
             setattr(self, field[1], 0)
 
 
-def readSEGY(file, endian=None, textual_header_encoding=None,
+def _read_segy(file, endian=None, textual_header_encoding=None,
              unpack_headers=False, headonly=False):
     """
     Reads a SEG Y file and returns a SEGYFile object.
@@ -787,16 +787,16 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return _readSEGY(open_file, endian=endian,
+            return __read_segy(open_file, endian=endian,
                              textual_header_encoding=textual_header_encoding,
                              unpack_headers=unpack_headers, headonly=headonly)
     # Otherwise just read it.
-    return _readSEGY(file, endian=endian,
+    return __read_segy(file, endian=endian,
                      textual_header_encoding=textual_header_encoding,
                      unpack_headers=unpack_headers, headonly=headonly)
 
 
-def _readSEGY(file, endian=None, textual_header_encoding=None,
+def __read_segy(file, endian=None, textual_header_encoding=None,
               unpack_headers=False, headonly=False):
     """
     Reads on open file object and returns a SEGYFile object.
@@ -946,7 +946,7 @@ class SUFile(object):
             trace.write(file, data_encoding=5, endian=endian)
 
 
-def readSU(file, endian=None, unpack_headers=False, headonly=False):
+def _read_su(file, endian=None, unpack_headers=False, headonly=False):
     """
     Reads a Seismic Unix (SU) file and returns a SUFile object.
 
@@ -971,14 +971,14 @@ def readSU(file, endian=None, unpack_headers=False, headonly=False):
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return _readSU(open_file, endian=endian,
+            return __read_su(open_file, endian=endian,
                            unpack_headers=unpack_headers, headonly=headonly)
     # Otherwise just read it.
-    return _readSU(file, endian=endian, unpack_headers=unpack_headers,
+    return __read_su(file, endian=endian, unpack_headers=unpack_headers,
                    headonly=headonly)
 
 
-def _readSU(file, endian=None, unpack_headers=False, headonly=False):
+def __read_su(file, endian=None, unpack_headers=False, headonly=False):
     """
     Reads on open file object and returns a SUFile object.
 

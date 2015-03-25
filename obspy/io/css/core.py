@@ -38,7 +38,7 @@ DTYPE = {
 }
 
 
-def isCSS(filename):
+def _is_css(filename):
     """
     Checks whether a file is CSS waveform data (header) or not.
 
@@ -72,7 +72,7 @@ def isCSS(filename):
     return True
 
 
-def readCSS(filename, **kwargs):
+def _read_css(filename, **kwargs):
     """
     Reads a CSS waveform file and returns a Stream object.
 
