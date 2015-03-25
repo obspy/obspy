@@ -336,10 +336,10 @@ ENTRY_POINTS = {
         'obspy.signal.interpolation:weighted_average_slopes',
     ],
     'obspy.plugin.rotate': [
-        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
-        'rotate_RT_NE = obspy.signal:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signal:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
+        'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
+        'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
+        'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
     ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',

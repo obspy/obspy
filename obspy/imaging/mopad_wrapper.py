@@ -31,6 +31,7 @@ import numpy as np
 import matplotlib.collections as mpl_collections
 from matplotlib import patches, transforms
 
+from obspy.core.util.decorator import deprecated
 from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
@@ -52,7 +53,12 @@ KWARG_MAP = {
 }
 
 
-def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
+def Beach(*args, **kwargs):
+    return beach(*args, **kwargs)
+
+
+def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, mopad_basis='USE', axes=None):
     """
@@ -198,7 +204,13 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return collection
 
 
-def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
+            "instead.")
+def Beachball(*args, **kwargs):
+    return beachball(*args, **kwargs)
+
+
+def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
               zorder=100, mopad_basis='USE', outfile=None, format=None,
               fig=None):
