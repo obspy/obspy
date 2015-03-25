@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 obspy.core.event - Classes for handling event metadata
 ======================================================
@@ -54,8 +53,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import (AttribDict, NamedTemporaryFile, _read_from_plugin,
                              uncompress_file)
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import (deprecated, deprecated_keywords,
-                                       map_example_filename)
+from obspy.core.util.decorator import (deprecated, map_example_filename)
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -621,7 +619,6 @@ class ResourceIdentifier(object):
     # Use an additional dictionary to track all resource ids.
     __resource_id_tracker = collections.defaultdict(int)
 
-    @deprecated_keywords({'resource_id': 'id'})
     def __init__(self, id=None, prefix="smi:local",
                  referred_object=None):
         # Create a resource id if None is given and possibly use a prefix.
@@ -846,20 +843,14 @@ class ResourceIdentifier(object):
         raise Exception(msg)
 
     @property
-    @deprecated("Attribute 'resource_id' was renamed to 'id'. "
-                "Use that instead.")
     def resource_id(self):
         return self.id
 
     @resource_id.deleter
-    @deprecated("Attribute 'resource_id' was renamed to 'id'. "
-                "Use that instead.")
     def resource_id(self):
         del self.id
 
     @resource_id.setter
-    @deprecated("Attribute 'resource_id' was renamed to 'id'. "
-                "Use that instead.")
     def resource_id(self, value):
         self.id = value
 
@@ -3207,7 +3198,6 @@ class Catalog(object):
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
         write_format(self, filename, **kwargs)
 
-    @deprecated_keywords({'date_colormap': 'colormap'})
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9',
              water_fill_color='1.0',
