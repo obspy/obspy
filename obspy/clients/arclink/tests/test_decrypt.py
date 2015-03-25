@@ -91,7 +91,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
     @skip_if(os.path.isfile(DCID_KEY_FILE),
-            '$HOME/dcidpasswords.txt already exists')
+             '$HOME/dcidpasswords.txt already exists')
     @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDefaultDCIDKeyFile(self):
         """

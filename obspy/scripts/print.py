@@ -29,9 +29,8 @@ def main(argv=None):
                         help='Files to process.')
 
     # Deprecated arguments
-    action = _get_deprecated_argument_action('--nomerge',
-                                       '--no-merge',
-                                       real_action='store_false')
+    action = _get_deprecated_argument_action(
+        '--nomerge', '--no-merge', real_action='store_false')
     parser.add_argument('--nomerge', nargs=0, action=action, dest='merge',
                         help=SUPPRESS)
 

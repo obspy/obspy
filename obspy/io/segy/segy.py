@@ -759,7 +759,7 @@ class SEGYTraceHeader(object):
 
 
 def _read_segy(file, endian=None, textual_header_encoding=None,
-             unpack_headers=False, headonly=False):
+               unpack_headers=False, headonly=False):
     """
     Reads a SEG Y file and returns a SEGYFile object.
 
@@ -787,17 +787,18 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return __read_segy(open_file, endian=endian,
-                             textual_header_encoding=textual_header_encoding,
-                             unpack_headers=unpack_headers, headonly=headonly)
+            return __read_segy(
+                open_file, endian=endian,
+                textual_header_encoding=textual_header_encoding,
+                unpack_headers=unpack_headers, headonly=headonly)
     # Otherwise just read it.
     return __read_segy(file, endian=endian,
-                     textual_header_encoding=textual_header_encoding,
-                     unpack_headers=unpack_headers, headonly=headonly)
+                       textual_header_encoding=textual_header_encoding,
+                       unpack_headers=unpack_headers, headonly=headonly)
 
 
 def __read_segy(file, endian=None, textual_header_encoding=None,
-              unpack_headers=False, headonly=False):
+                unpack_headers=False, headonly=False):
     """
     Reads on open file object and returns a SEGYFile object.
 
@@ -972,10 +973,10 @@ def _read_su(file, endian=None, unpack_headers=False, headonly=False):
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
             return __read_su(open_file, endian=endian,
-                           unpack_headers=unpack_headers, headonly=headonly)
+                             unpack_headers=unpack_headers, headonly=headonly)
     # Otherwise just read it.
     return __read_su(file, endian=endian, unpack_headers=unpack_headers,
-                   headonly=headonly)
+                     headonly=headonly)
 
 
 def __read_su(file, endian=None, unpack_headers=False, headonly=False):

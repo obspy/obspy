@@ -193,14 +193,14 @@ class NDKTestCase(unittest.TestCase):
         Tests the _is_ndk function for a file with invalid date.
         """
         self.assertFalse(_is_ndk(os.path.join(self.datapath,
-                                             "faulty_invalid_date.ndk")))
+                                              "faulty_invalid_date.ndk")))
 
     def test_is_ndk_for_file_with_invalid_latitude(self):
         """
         Tests the _is_ndk function a file with an invalid latitude.
         """
         self.assertFalse(_is_ndk(os.path.join(self.datapath,
-                                             "faulty_invalid_latitude.ndk")))
+                                              "faulty_invalid_latitude.ndk")))
 
     def test_is_ndk_for_file_with_infeasible_latitude(self):
         """

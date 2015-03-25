@@ -678,7 +678,8 @@ def _read_phone(phone_element, _ns):
         phone_number=phone_number, description=description)
 
 
-def _write_stationxml(inventory, file_or_file_object, validate=False, **kwargs):
+def _write_stationxml(inventory, file_or_file_object, validate=False,
+                      **kwargs):
     """
     Writes an inventory object to a buffer.
 

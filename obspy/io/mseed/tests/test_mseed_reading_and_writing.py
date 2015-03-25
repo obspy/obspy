@@ -132,7 +132,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     with NamedTemporaryFile() as tf:
                         temp_file = tf.name
                         _write_mseed(this_stream, temp_file, encoding=encoding,
-                                   byteorder=byteorder, reclen=reclen)
+                                     byteorder=byteorder, reclen=reclen)
                         new_stream = _read_mseed(temp_file)
                     # Assert the new stream still has the chosen attributes.
                     # This should mean that writing as well as reading them
@@ -217,8 +217,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
 
     def test_is_mseed(self):
         """
-        This tests the _is_mseed method by just validating that each file in the
-        data directory is a Mini-SEED file and each file in the working
+        This tests the _is_mseed method by just validating that each file in
+        the data directory is a Mini-SEED file and each file in the working
         directory is not a Mini-SEED file.
 
         The filenames are hard coded so the test will not fail with future
@@ -289,14 +289,14 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         testfile = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         stream = _read_mseed(testfile, starttime=starttime + 6,
-                           endtime=endtime - 6)
+                             endtime=endtime - 6)
         self.assertTrue(starttime < stream[0].stats.starttime)
         self.assertGreater(endtime, stream[0].stats.endtime)
 
     def test_readPartialWithOnlyStarttimeSet(self):
         """
-        Uses obspy.io.mseed.mseed._read_mseed to read only the data starting with
-        a certain time.
+        Uses obspy.io.mseed.mseed._read_mseed to read only the data starting
+        with a certain time.
         """
         starttime = UTCDateTime('2007-12-31T23:59:59.915000Z')
         endtime = UTCDateTime('2008-01-01T00:00:20.510000Z')
@@ -328,7 +328,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         starttime = UTCDateTime('2003-05-29T02:13:22.043400Z')
         testfile = os.path.join(self.path, 'data', 'test.mseed')
         stream = _read_mseed(testfile, starttime=starttime - 1E6,
-                           endtime=starttime - 1E6 + 1)
+                             endtime=starttime - 1E6 + 1)
         self.assertEqual(len(stream), 0)
 
     def test_readPartialWithSourceName(self):

@@ -34,8 +34,8 @@ class UtilBaseTestCase(unittest.TestCase):
     @skip_if(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
-        Tests for the get_matplotlib_version() function as it continues to cause
-        problems.
+        Tests for the get_matplotlib_version() function as it continues to
+        cause problems.
         """
         original_version = matplotlib.__version__
 

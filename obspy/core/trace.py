@@ -713,7 +713,7 @@ class Trace(object):
                 data = [lt.data[:-delta], rt.data]
             elif method == 0:
                 overlap = create_empty_data_chunk(delta, lt.data.dtype,
-                                               fill_value)
+                                                  fill_value)
                 data = [lt.data[:-delta], overlap, rt.data[delta:]]
             elif method == 1 and interpolation_samples >= -1:
                 try:
@@ -943,7 +943,7 @@ class Trace(object):
         elif delta < 0 and pad:
             try:
                 gap = create_empty_data_chunk(abs(delta), self.data.dtype,
-                                           fill_value)
+                                              fill_value)
             except ValueError:
                 # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
@@ -1001,7 +1001,8 @@ class Trace(object):
             return self
         if delta > 0 and pad:
             try:
-                gap = create_empty_data_chunk(delta, self.data.dtype, fill_value)
+                gap = create_empty_data_chunk(delta, self.data.dtype,
+                                              fill_value)
             except ValueError:
                 # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
@@ -2169,7 +2170,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(method, int) or method in ["linear", "nearest", "zero",
                                                  "slinear", "quadratic",
                                                  "cubic"]:
-            func = _get_function_from_entry_point('interpolate', 'interpolate_1d')
+            func = _get_function_from_entry_point('interpolate',
+                                                  'interpolate_1d')
         else:
             func = _get_function_from_entry_point('interpolate', method)
         old_start = self.stats.starttime.timestamp

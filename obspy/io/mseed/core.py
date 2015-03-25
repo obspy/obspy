@@ -103,8 +103,8 @@ def _is_mseed(filename):
 
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, details=False,
-              header_byteorder=None, verbose=None, **kwargs):
+                sourcename=None, reclen=None, details=False,
+                header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -442,7 +442,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
 
 
 def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
-               sequence_number=None, flush=True, verbose=0, **_kwargs):
+                 sequence_number=None, flush=True, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 

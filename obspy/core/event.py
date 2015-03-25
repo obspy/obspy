@@ -560,7 +560,8 @@ class ResourceIdentifier(object):
     >>> assert(id(ref_c.get_referred_object()) == obj_id)
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
-    the convert_id_to_quakeml_uri() method. The resulting id will be of the form::
+    the convert_id_to_quakeml_uri() method. The resulting id will be of the
+    form::
 
         smi:authority_id/prefix/id
 

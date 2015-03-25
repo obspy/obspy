@@ -172,7 +172,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 fp.seek(56)
                 dtype = np.dtype(native_str('>f4'))
                 bin_data = from_buffer(fp.read(7 * dtype.itemsize),
-                                      dtype=dtype)
+                                       dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
             st2 = _read_mseed(tempfile)
@@ -180,7 +180,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.testing.assert_array_equal(data, st2[0].data)
 
     @skip_if(NO_NEGATIVE_TIMESTAMPS,
-            'times before 1970 are not supported on this operation system')
+             'times before 1970 are not supported on this operation system')
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.

@@ -1780,7 +1780,7 @@ def _read_quakeml(filename):
 
 
 def _write_quakeml(catalog, filename, validate=False, nsmap=None,
-                 **kwargs):  # @UnusedVariable
+                   **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
 

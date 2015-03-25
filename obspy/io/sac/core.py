@@ -162,7 +162,7 @@ def __is_sacXY(buf):
 
 
 def _read_sacXY(filename, headonly=False, debug_headers=False,
-              **kwargs):  # @UnusedVariable
+                **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -192,11 +192,11 @@ def _read_sacXY(filename, headonly=False, debug_headers=False,
     """
     if is_bytes_buffer(filename):
         return __read_sacXY(buf=filename, headonly=headonly,
-                          debug_headers=debug_headers, **kwargs)
+                            debug_headers=debug_headers, **kwargs)
     else:
         with open(filename, "rb") as fh:
             return __read_sacXY(buf=fh, headonly=headonly,
-                              debug_headers=debug_headers, **kwargs)
+                                debug_headers=debug_headers, **kwargs)
 
 
 def __read_sacXY(buf, headonly=False, debug_headers=False,
@@ -307,7 +307,7 @@ def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
 
 
 def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
-            **kwargs):  # @UnusedVariable
+              **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -341,11 +341,12 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
     # Only byte buffers for binary SAC.
     if is_bytes_buffer(filename):
         return __read_sac(buf=filename, headonly=headonly,
-                        debug_headers=debug_headers, fsize=fsize, **kwargs)
+                          debug_headers=debug_headers, fsize=fsize, **kwargs)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
             return __read_sac(buf=fh, headonly=headonly,
-                            debug_headers=debug_headers, fsize=fsize, **kwargs)
+                              debug_headers=debug_headers, fsize=fsize,
+                              **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 

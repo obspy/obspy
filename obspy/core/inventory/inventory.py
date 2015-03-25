@@ -54,7 +54,8 @@ def read_inventory(path_or_file_object=None, format=None):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleInventory()
-    return _read_from_plugin("inventory", path_or_file_object, format=format)[0]
+    return _read_from_plugin("inventory", path_or_file_object,
+                             format=format)[0]
 
 
 class Inventory(ComparingObject):

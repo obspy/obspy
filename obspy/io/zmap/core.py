@@ -271,7 +271,7 @@ class Unpickler(object):
 
 
 def _write_zmap(catalog, filename, with_uncertainties=False,
-              **kwargs):  # @UnusedVariable
+                **kwargs):  # @UnusedVariable
     """
     Writes a ZMAP file.
 

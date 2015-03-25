@@ -31,7 +31,7 @@ def _is_gse2(filename):
 
 
 def _read_gse2(filename, headonly=False, verify_chksum=True,
-             **kwargs):  # @UnusedVariable
+               **kwargs):  # @UnusedVariable
     """
     Reads a GSE2 file and returns a Stream object.
 
@@ -132,7 +132,7 @@ def _is_gse1(filename):
 
 
 def _read_gse1(filename, headonly=False, verify_chksum=True,
-             **kwargs):  # @UnusedVariable
+               **kwargs):  # @UnusedVariable
     """
     Reads a GSE1 file and returns a Stream object.
 

@@ -118,8 +118,8 @@ def _is_segy(filename):
 
 
 def _read_segy(filename, headonly=False, byteorder=None,
-             textual_header_encoding=None, unpack_trace_headers=False,
-             **kwargs):  # @UnusedVariable
+               textual_header_encoding=None, unpack_trace_headers=False,
+               **kwargs):  # @UnusedVariable
     """
     Reads a SEG Y file and returns an ObsPy Stream object.
 
@@ -161,9 +161,10 @@ def _read_segy(filename, headonly=False, byteorder=None,
     Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - ... 2001 samples
     """
     # Read file to the internal segy representation.
-    segy_object = _read_segyrev1(filename, endian=byteorder,
-                               textual_header_encoding=textual_header_encoding,
-                               unpack_headers=unpack_trace_headers)
+    segy_object = _read_segyrev1(
+        filename, endian=byteorder,
+        textual_header_encoding=textual_header_encoding,
+        unpack_headers=unpack_trace_headers)
     # Create the stream object.
     stream = Stream()
     # SEGY has several file headers that apply to all traces. They will be
@@ -245,7 +246,7 @@ def _read_segy(filename, headonly=False, byteorder=None,
 
 
 def _write_segy(stream, filename, data_encoding=None, byteorder=None,
-              textual_header_encoding=None, **kwargs):  # @UnusedVariable
+                textual_header_encoding=None, **kwargs):  # @UnusedVariable
     """
     Writes a SEG Y file from given ObsPy Stream object.
 
@@ -452,7 +453,7 @@ def _is_su(filename):
 
 
 def _read_su(filename, headonly=False, byteorder=None,
-           unpack_trace_headers=False, **kwargs):  # @UnusedVariable
+             unpack_trace_headers=False, **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Unix (SU) file and returns an ObsPy Stream object.
 
@@ -491,7 +492,7 @@ def _read_su(filename, headonly=False, byteorder=None,
     """
     # Read file to the internal segy representation.
     su_object = _read_suFile(filename, endian=byteorder,
-                           unpack_headers=unpack_trace_headers)
+                             unpack_headers=unpack_trace_headers)
 
     # Create the stream object.
     stream = Stream()

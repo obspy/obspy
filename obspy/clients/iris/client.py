@@ -491,7 +491,8 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             except:
                 kwargs['starttime'] = starttime
             try:
-                kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
+                kwargs['endtime'] = \
+                    UTCDateTime(endtime).format_IRIS_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif 'time' in kwargs:
@@ -666,12 +667,14 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             except:
                 kwargs['starttime'] = starttime
             try:
-                kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
+                kwargs['endtime'] = \
+                    UTCDateTime(endtime).format_IRIS_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif starttime:
             try:
-                kwargs['time'] = UTCDateTime(starttime).format_IRIS_web_service()
+                kwargs['time'] = \
+                    UTCDateTime(starttime).format_IRIS_web_service()
             except:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)

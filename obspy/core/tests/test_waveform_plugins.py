@@ -33,12 +33,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tmpfile = tf.name
             # create empty file
             open(tmpfile, 'wb').close()
-            formats_ep = _get_entry_points('obspy.plugin.waveform', 'read_format')
+            formats_ep = _get_entry_points('obspy.plugin.waveform',
+                                           'read_format')
             # using format keyword
             for ep in formats_ep.values():
-                is_format = load_entry_point(ep.dist.key,
-                                            'obspy.plugin.waveform.' + ep.name,
-                                            'is_format')
+                is_format = load_entry_point(
+                    ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
+                    'is_format')
                 self.assertFalse(False, is_format(tmpfile))
 
     def test_readAndWrite(self):
@@ -157,9 +158,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         # Big loop over every format.
         for format in formats:
             # search is_format for given entry point
-            is_format = load_entry_point(format.dist.key,
-                                        'obspy.plugin.waveform.' + format.name,
-                                        'is_format')
+            is_format = load_entry_point(
+                format.dist.key, 'obspy.plugin.waveform.' + format.name,
+                'is_format')
             # get all the test directories.
             paths = [os.path.join(f.dist.location, 'obspy',
                                   f.module_name.split('.')[1], 'tests', 'data')

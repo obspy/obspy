@@ -109,7 +109,7 @@ def _read_wav(filename, headonly=False, **kwargs):  # @UnusedVariable
 
 
 def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
-             **kwargs):  # @UnusedVariable
+               **kwargs):  # @UnusedVariable
     """
     Writes a audio WAV file from given ObsPy Stream object. The seismogram is
     squeezed to audible frequencies.

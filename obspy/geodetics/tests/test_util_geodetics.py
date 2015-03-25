@@ -110,8 +110,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
-    @skip_if(HAS_GEOGRAPHICLIB,
-            'Module geographiclib is installed, not using calcVincentyInverse')
+    @skip_if(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
+                                'not using calcVincentyInverse')
     def test_gps2DistAzimuthBUG150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is

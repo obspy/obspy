@@ -40,8 +40,9 @@ from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action, \
-    get_matplotlib_version
+from obspy.core.util.base import (ENTRY_POINTS,
+                                  _get_deprecated_argument_action,
+                                  get_matplotlib_version)
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
@@ -216,13 +217,13 @@ def main(argv=None):
     action = _get_deprecated_argument_action('--ids', '--id')
     parser.add_argument('--ids', action=action, help=SUPPRESS)
 
-    action = _get_deprecated_argument_action('--nox', '--no-x',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--nox', '--no-x', real_action='store_true')
     parser.add_argument('--nox', dest='no_x', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _get_deprecated_argument_action('--nogaps', '--no-gaps',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--nogaps', '--no-gaps', real_action='store_true')
     parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
                         action=action, help=SUPPRESS)
 

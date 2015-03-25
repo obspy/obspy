@@ -139,8 +139,9 @@ class NLLOCTestCase(unittest.TestCase):
         providing original picks.
         """
         picks = read_events(get_example_file("nlloc.qml"))[0].picks
-        arrivals = read_events(get_example_file("nlloc.hyp"), format="NLLOC_HYP",
-                               picks=picks)[0].origins[0].arrivals
+        arrivals = read_events(
+            get_example_file("nlloc.hyp"), format="NLLOC_HYP",
+            picks=picks)[0].origins[0].arrivals
         expected = [p.resource_id for p in picks]
         got = [a.pick_id for a in arrivals]
         self.assertEqual(expected, got)

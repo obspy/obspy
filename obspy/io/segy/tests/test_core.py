@@ -15,8 +15,8 @@ import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.io.segy.core import (SEGYCoreWritingError, SEGYSampleIntervalError,
-                                _is_segy, _is_su, _read_segy, _read_su, _write_segy,
-                                _write_su)
+                                _is_segy, _is_su, _read_segy, _read_su,
+                                _write_segy, _write_su)
 from obspy.io.segy.segy import _read_segy as _read_segyInternal
 from obspy.io.segy.segy import SEGYError
 from obspy.io.segy.tests.header import DTYPES, FILES

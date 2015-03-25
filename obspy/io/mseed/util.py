@@ -45,7 +45,8 @@ def getStartAndEndTime(file_or_file_object):
     .. rubric:: Example
 
     >>> from obspy.core.util import get_example_file
-    >>> filename = get_example_file("BW.BGLD.__.EHE.D.2008.001.first_10_records")
+    >>> filename = get_example_file(
+    ...     "BW.BGLD.__.EHE.D.2008.001.first_10_records")
     >>> getStartAndEndTime(filename)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
