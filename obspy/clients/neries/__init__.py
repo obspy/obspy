@@ -38,7 +38,7 @@ Basic Usage
     This service was shut down on the server side, please use the
     obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
 
-(4) :meth:`~obspy.clients.neries.client.Client.getWaveform()`: Wraps a NERIES
+(4) :meth:`~obspy.clients.neries.client.Client.get_waveforms()`: Wraps a NERIES
     Web service build on top of the ArcLink protocol. Here we give a small
     example how to fetch and display waveforms.
 
@@ -46,7 +46,7 @@ Basic Usage
     >>> from obspy import UTCDateTime
     >>> client = Client(user='test@obspy.org')
     >>> dt = UTCDateTime("2009-08-20 04:03:12")
-    >>> st = client.getWaveform("BW", "RJOB", "", "EH*", dt - 3, dt + 15)
+    >>> st = client.get_waveforms("BW", "RJOB", "", "EH*", dt - 3, dt + 15)
     >>> st.plot()  #doctest: +SKIP
 
     .. plot::
@@ -55,17 +55,17 @@ Basic Usage
         from obspy import UTCDateTime
         client = Client(user='test@obspy.org')
         dt = UTCDateTime("2009-08-20 04:03:12")
-        st = client.getWaveform("BW", "RJOB", "", "EH*", dt - 3, dt + 15)
+        st = client.get_waveforms("BW", "RJOB", "", "EH*", dt - 3, dt + 15)
         st.plot()
 
-(5) :meth:`~obspy.clients.neries.client.Client.getTravelTimes()`: Wraps a Taup
+(5) :meth:`~obspy.clients.neries.client.Client.get_travel_times()`: Wraps a Taup
     Web service, an utility to compute arrival times using a few default
     velocity models such as ``'iasp91'``, ``'ak135'`` or ``'qdt'``.
 
     >>> from obspy.clients.neries import Client
     >>> client = Client(user='test@obspy.org')
     >>> locations = [(48.0, 12.0), (48.1, 12.0)]
-    >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0,
+    >>> result = client.get_travel_times(latitude=20.0, longitude=20.0,
     ...                                depth=10.0, locations=locations,
     ...                                model='iasp91')
     >>> len(result)

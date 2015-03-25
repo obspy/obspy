@@ -23,13 +23,13 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # 1
-        result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'ak135')
+        result = client.get_travel_times(20, 20, 10, [(48, 12)], 'ak135')
         self.assertEqual(len(result), 1)
         self.assertAlmostEqual(result[0]['P'], 356988.24732429383)
         self.assertAlmostEqual(result[0]['S'], 645775.5623471631)
         # 2
-        result = client.getTravelTimes(0, 0, 10,
-                                       [(120, 0), (150, 0), (180, 0)])
+        result = client.get_travel_times(
+            0, 0, 10, [(120, 0), (150, 0), (180, 0)])
         self.assertEqual(len(result), 3)
         self.assertAlmostEqual(result[0]['P'], 605519.0321213702)
         self.assertAlmostEqual(result[0]['S'], 1097834.6352750373)
@@ -47,7 +47,8 @@ class ClientTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             mseedfile = tf.name
             # MiniSEED
-            client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            client.save_waveforms(mseedfile, 'BW', 'MANZ', '', 'EHZ', start,
+                                  end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
             with open(mseedfile, 'rb') as fp:
@@ -62,8 +63,8 @@ class ClientTestCase(unittest.TestCase):
         # Full SEED
         with NamedTemporaryFile() as tf:
             fseedfile = tf.name
-            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                                format='FSEED')
+            client.save_waveforms(fseedfile, 'BW', 'MANZ', '', 'EHZ', start,
+                                  end, format='FSEED')
             st = read(fseedfile)
             # Full SEED must start with Volume Index Control Headers (V)
             with open(fseedfile, 'rb') as fp:
@@ -84,34 +85,34 @@ class ClientTestCase(unittest.TestCase):
         dt1 = UTCDateTime("1974-01-01T00:00:00")
         dt2 = UTCDateTime("2011-01-01T00:00:00")
         # 1 - XML w/ instruments
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     format='XML')
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                      format='XML')
         self.assertTrue(result.startswith(b'<?xml'))
         self.assertIn(b'code="GE"', result)
         # 2 - SUDS object w/o instruments
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     instruments=False)
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                      instruments=False)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
         # 3 - SUDS object w/ instruments
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     instruments=True)
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                      instruments=True)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
         self.assertIn('sensor', result.ArclinkInventory.inventory)
         self.assertIn('responsePAZ', result.ArclinkInventory.inventory)
         # 4 - SUDS object with spatial filters
         client = Client(user='test@obspy.org')
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     min_latitude=-72.0, max_latitude=-71.0,
-                                     min_longitude=-3, max_longitude=-2)
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                      min_latitude=-72.0, max_latitude=-71.0,
+                                      min_longitude=-3, max_longitude=-2)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
         # 5 - SUDS object with spatial filters with incorrect coordinates
         client = Client(user='test@obspy.org')
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     min_latitude=-71.0, max_latitude=-72.0,
-                                     min_longitude=-2, max_longitude=-3)
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                      min_latitude=-71.0, max_latitude=-72.0,
+                                      min_longitude=-2, max_longitude=-3)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
 

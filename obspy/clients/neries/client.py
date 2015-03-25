@@ -32,6 +32,7 @@ from suds.xsd.sxbase import SchemaObject
 
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, guess_delta
+from obspy.core.util.decorator import deprecated
 
 
 DEPR_WARN = ("This service was shut down on the server side, please use the "
@@ -121,9 +122,9 @@ class Client(object):
             service. This entry in form of a email address is required for
             using the following methods:
 
-            * :meth:`~obspy.clients.neries.client.Client.saveWaveform`
-            * :meth:`~obspy.clients.neries.client.Client.getWaveform`
-            * :meth:`~obspy.clients.neries.client.Client.getInventory`
+            * :meth:`~obspy.clients.neries.client.Client.save_waveforms`
+            * :meth:`~obspy.clients.neries.client.Client.get_waveforms`
+            * :meth:`~obspy.clients.neries.client.Client.get_inventory`
 
             Defaults to ``''``.
         :type password: str, optional
@@ -194,8 +195,13 @@ class Client(object):
             events.append(event)
         return events
 
-    def getTravelTimes(self, latitude, longitude, depth, locations=[],
-                       model='iasp91'):
+    @deprecated("'getTravelTimes' has been renamed to 'get_travel_times'. Use "
+                "that instead.")
+    def getTravelTimes(self, *args, **kwargs):
+        return self.get_travel_times(*args, **kwargs)
+
+    def get_travel_times(self, latitude, longitude, depth, locations=[],
+                         model='iasp91'):
         """
         Returns travel times for specified station-event geometry using
         standard velocity models such as ``iasp91``, ``ak135`` or ``qdt``.
@@ -220,7 +226,7 @@ class Client(object):
 
         >>> client = Client()
         >>> locations = [(48.0, 12.0), (48.1, 12.0)]
-        >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0,
+        >>> result = client.get_travel_times(latitude=20.0, longitude=20.0,
         ...                                depth=10.0, locations=locations,
         ...                                model='iasp91')
         >>> len(result)
@@ -258,11 +264,16 @@ class Client(object):
             result.append(times)
         return result
 
-    def getInventory(self, network, station='*', location='*', channel='*',
-                     starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=True, min_latitude=-90, max_latitude=90,
-                     min_longitude=-180, max_longitude=180,
-                     modified_after=None, format='SUDS'):
+    @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
+                "that instead.")
+    def getInventory(self, *args, **kwargs):
+        return self.get_inventory(*args, **kwargs)
+
+    def get_inventory(self, network, station='*', location='*', channel='*',
+                      starttime=UTCDateTime(), endtime=UTCDateTime(),
+                      instruments=True, min_latitude=-90, max_latitude=90,
+                      min_longitude=-180, max_longitude=180,
+                      modified_after=None, format='SUDS'):
         """
         Returns information about the available networks and stations in that
         particular space/time region.
@@ -309,7 +320,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2011-01-01T00:00:00")
-        >>> result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt, dt+10,
+        >>> result = client.get_inventory('GE', 'SNAA', '', 'BHZ', dt, dt+10,
         ...                              instruments=True)
         >>> paz = result.ArclinkInventory.inventory.responsePAZ
         >>> print(paz.poles)  # doctest: +ELLIPSIS
@@ -372,8 +383,8 @@ class Client(object):
         client.options.plugins.append(
             _AttributePlugin({'Version': '1.0'}))
         # request data
-        response = client.service.getInventory(usertoken, stationid,
-                                               spatialbounds)
+        response = client.service.get_inventory(usertoken, stationid,
+                                                spatialbounds)
         if format == 'XML':
             # response is a full SOAP response
             from xml.etree.ElementTree import fromstring, tostring
@@ -387,8 +398,13 @@ class Client(object):
             # response is a SUDS object
             return response
 
-    def getWaveform(self, network, station, location, channel, starttime,
-                    endtime, format="MSEED"):
+    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
+                "that instead.")
+    def getWaveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime, format="MSEED"):
         """
         Retrieves waveform data from the NERIES Web service and returns a ObsPy
         Stream object.
@@ -417,7 +433,7 @@ class Client(object):
         >>> from obspy.clients.neries import Client
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
-        >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+30)
+        >>> st = client.get_waveforms("NL", "WIT", "", "BH*", dt, dt+30)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         NL.WIT..BHZ | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
@@ -425,8 +441,8 @@ class Client(object):
         NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         """
         with NamedTemporaryFile() as tf:
-            self.saveWaveform(tf._fileobj, network, station, location, channel,
-                              starttime, endtime, format=format)
+            self.save_waveforms(tf._fileobj, network, station, location,
+                                channel, starttime, endtime, format=format)
             # read stream using obspy.io.mseed
             tf.seek(0)
             try:
@@ -437,8 +453,13 @@ class Client(object):
         stream.trim(starttime, endtime)
         return stream
 
-    def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED"):
+    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
+                "that instead.")
+    def saveWaveform(self, *args, **kwargs):
+        return self.save_waveforms(*args, **kwargs)
+
+    def save_waveforms(self, filename, network, station, location, channel,
+                       starttime, endtime, format="MSEED"):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -475,7 +496,7 @@ class Client(object):
         >>> from obspy.clients.neries import Client
         >>> c = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
-        >>> st = c.saveWaveform("outfile.fseed", "NL", "WIT", "", "BH*",
+        >>> st = c.save_waveforms("outfile.fseed", "NL", "WIT", "", "BH*",
         ...                     dt, dt+30, format="FSEED")  #doctest: +SKIP
         """
         # enable logging if debug option is set
