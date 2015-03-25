@@ -31,13 +31,13 @@ class ClientTestCase(unittest.TestCase):
     @skip_on_network_error
     def test_getWaveform(self):
         """
-        Tests getWaveform method.
+        Tests get_waveforms method.
         """
         client = self.client
         start = UTCDateTime(2013, 1, 17)
         end = start + 30
         # example 1 -- 1 channel, cleanup
-        stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end)
+        stream = client.get_waveforms('UW', 'TUCA', '', 'BHZ', start, end)
         self.assertEqual(len(stream), 1)
         delta = stream[0].stats.delta
         trace = stream[0]
@@ -51,8 +51,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'BHZ')
         # example 2 -- 1 channel, no cleanup
-        stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
-                                    cleanup=False)
+        stream = client.get_waveforms('UW', 'TUCA', '', 'BHZ', start, end,
+                                      cleanup=False)
         self.assertTrue(len(stream) >= 2)
         summed_length = sum(len(tr) for tr in stream)
         self.assertTrue(summed_length == 1201)
@@ -66,7 +66,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.location, '')
             self.assertEqual(trace.stats.channel, 'BHZ')
         # example 3 -- component wildcarded with '?'
-        stream = client.getWaveform('UW', 'TUCA', '', 'BH?', start, end)
+        stream = client.get_waveforms('UW', 'TUCA', '', 'BH?', start, end)
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertTrue(len(trace) == 1201)
@@ -84,7 +84,7 @@ class ClientTestCase(unittest.TestCase):
     @skip_on_network_error
     def test_saveWaveform(self):
         """
-        Tests saveWaveform method.
+        Tests save_waveforms method.
         """
         # initialize client
         client = self.client
@@ -93,8 +93,8 @@ class ClientTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             testfile = tf.name
             # 1 channel, cleanup (using SLIST to avoid dependencies)
-            client.saveWaveform(testfile, 'UW', 'TUCA', '', 'BHZ', start, end,
-                                format="SLIST")
+            client.save_waveforms(testfile, 'UW', 'TUCA', '', 'BHZ', start,
+                                  end, format="SLIST")
             stream = read(testfile)
         self.assertEqual(len(stream), 1)
         delta = stream[0].stats.delta
@@ -111,7 +111,7 @@ class ClientTestCase(unittest.TestCase):
 
     @skip_on_network_error
     def test_availability(self):
-        data = self.client.availability()
+        data = self.client.get_availability()
         seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
         self.assertIn('UW.TUCA.--.BHZ', seeds)
 

@@ -17,7 +17,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from fnmatch import fnmatch
 
 from obspy import Stream, UTCDateTime
-from .waveserver import getMenu, readWaveServerV
+from obspy.core.util.decorator import deprecated
+from .waveserver import get_menu, read_wave_server_v
 
 
 class Client(object):
@@ -46,8 +47,13 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
 
-    def getWaveform(self, network, station, location, channel, starttime,
-                    endtime, cleanup=True):
+    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
+                "that instead.")
+    def getWaveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime, cleanup=True):
         """
         Retrieves waveform data from Earthworm Wave Server and returns an ObsPy
         Stream object.
@@ -79,9 +85,9 @@ class Client(object):
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+        >>> st = client.get_waveforms('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+        >>> st = client.get_waveforms('UW', 'TUCA', '', 'BH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -90,9 +96,9 @@ class Client(object):
             from obspy import UTCDateTime
             client = Client("pele.ess.washington.edu", 16017, timeout=5)
             dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-            st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+            st = client.get_waveforms('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
             st.plot()
-            st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+            st = client.get_waveforms('UW', 'TUCA', '', 'BH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -100,27 +106,32 @@ class Client(object):
             st = Stream()
             for comp in ("Z", "N", "E"):
                 channel_new = channel[:-1] + comp
-                st += self.getWaveform(network, station, location,
-                                       channel_new, starttime, endtime,
-                                       cleanup=cleanup)
+                st += self.get_waveforms(network, station, location,
+                                         channel_new, starttime, endtime,
+                                         cleanup=cleanup)
             return st
         if location == '':
             location = '--'
         scnl = (station, channel, network, location)
         # fetch waveform
-        tbl = readWaveServerV(self.host, self.port, scnl, starttime, endtime,
-                              timeout=self.timeout)
+        tbl = read_wave_server_v(self.host, self.port, scnl, starttime,
+                                 endtime, timeout=self.timeout)
         # create new stream
         st = Stream()
         for tb in tbl:
-            st.append(tb.getObspyTrace())
+            st.append(tb.get_obspy_trace())
         if cleanup:
             st._cleanup()
         st.trim(starttime, endtime)
         return st
 
-    def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED", cleanup=True):
+    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
+                "that instead.")
+    def saveWaveform(self, *args, **kwargs):
+        return self.save_waveforms(*args, **kwargs)
+
+    def save_waveforms(self, filename, network, station, location, channel,
+                       starttime, endtime, format="MSEED", cleanup=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -157,15 +168,21 @@ class Client(object):
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
-        ...                     t, t + 10, format='MSEED')  # doctest: +SKIP
+        >>> client.save_waveforms('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '',
+        ...                       'BHZ', t, t + 10, format='MSEED') \
+        ... # doctest: +SKIP
         """
-        st = self.getWaveform(network, station, location, channel, starttime,
-                              endtime, cleanup=cleanup)
+        st = self.get_waveforms(network, station, location, channel, starttime,
+                                endtime, cleanup=cleanup)
         st.write(filename, format=format)
 
-    def availability(self, network="*", station="*", location="*",
-                     channel="*"):
+    @deprecated("'availability' has been renamed to 'get_availability'. Use "
+                "that instead.")
+    def availability(self, *args, **kwargs):
+        return self.get_availability(*args, **kwargs)
+
+    def get_availability(self, network="*", station="*", location="*",
+                         channel="*"):
         """
         Gets a list of data available on the server.
 
@@ -192,8 +209,8 @@ class Client(object):
 
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
-        >>> response = client.availability(network="UW", station="TUCA",
-        ...         channel="BH*")
+        >>> response = client.get_get_availability(
+        ...     network="UW", station="TUCA", channel="BH*")
         >>> print(response)  # doctest: +SKIP
         [('UW',
           'TUCA',
@@ -218,7 +235,7 @@ class Client(object):
         pattern = ".".join((network, station, location, channel))
         # get overview of all available data, winston wave servers can not
         # restrict the query via network, station etc. so we do that manually
-        response = getMenu(self.host, self.port, timeout=self.timeout)
+        response = get_menu(self.host, self.port, timeout=self.timeout)
         # reorder items and convert time info to UTCDateTime
         response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
                      UTCDateTime(x[6])) for x in response]
