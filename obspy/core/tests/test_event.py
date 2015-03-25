@@ -121,10 +121,10 @@ class EventTestCase(unittest.TestCase):
         self.assertTrue(ev.resource_id == ev3.resource_id)
 
         # But all should point to the same object.
-        self.assertTrue(ev.resource_id.getReferredObject() is
-                        ev2.resource_id.getReferredObject())
-        self.assertTrue(ev.resource_id.getReferredObject() is
-                        ev3.resource_id.getReferredObject())
+        self.assertTrue(ev.resource_id.get_referred_object() is
+                        ev2.resource_id.get_referred_object())
+        self.assertTrue(ev.resource_id.get_referred_object() is
+                        ev3.resource_id.get_referred_object())
 
 
 class OriginTestCase(unittest.TestCase):
@@ -560,8 +560,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                                        referred_object=object_b)
         # Object b was the last to added, thus all resource identifiers will
         # now point to it.
-        self.assertEqual(object_b is res_a.getReferredObject(), True)
-        self.assertEqual(object_b is res_b.getReferredObject(), True)
+        self.assertEqual(object_b is res_a.get_referred_object(), True)
+        self.assertEqual(object_b is res_b.get_referred_object(), True)
 
     def test_objects_garbage_collection(self):
         """
@@ -607,15 +607,15 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         ref_b = ResourceIdentifier(res_id)
         ref_c = ResourceIdentifier(res_id)
         # All three will have no resource attached.
-        self.assertEqual(ref_a.getReferredObject(), None)
-        self.assertEqual(ref_b.getReferredObject(), None)
-        self.assertEqual(ref_c.getReferredObject(), None)
+        self.assertEqual(ref_a.get_referred_object(), None)
+        self.assertEqual(ref_b.get_referred_object(), None)
+        self.assertEqual(ref_c.get_referred_object(), None)
         # Setting the object for one will make it available to all other
         # instances.
-        ref_b.setReferredObject(obj)
-        self.assertEqual(id(ref_a.getReferredObject()), obj_id)
-        self.assertEqual(id(ref_b.getReferredObject()), obj_id)
-        self.assertEqual(id(ref_c.getReferredObject()), obj_id)
+        ref_b.set_referred_object(obj)
+        self.assertEqual(id(ref_a.get_referred_object()), obj_id)
+        self.assertEqual(id(ref_b.get_referred_object()), obj_id)
+        self.assertEqual(id(ref_c.get_referred_object()), obj_id)
 
     def test_resources_in_global_dict_get_garbage_collected(self):
         """
@@ -634,8 +634,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         del obj_a, obj_b
         self.assertEqual(len(list(rdict.keys())), 0)
         # references are still around but no longer have associates objects.
-        self.assertEqual(res1.getReferredObject(), None)
-        self.assertEqual(res2.getReferredObject(), None)
+        self.assertEqual(res1.get_referred_object(), None)
+        self.assertEqual(res2.get_referred_object(), None)
 
     def test_quakeml_regex(self):
         """
@@ -648,28 +648,28 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
             "STUVWXYZ0123456789-.*()_~'+?=,;&")
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.getQuakeMLURI())
+        self.assertEqual(res_id, res.get_quakeml_uri())
         # The id has to valid from start to end. Due to the spaces this cannot
         # automatically be converted to a correct one.
         res_id = ("something_before smi:local/something  something_after")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # A colon is an invalid character.
         res_id = ("smi:local/hello:yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # Space as well
         res_id = ("smi:local/hello yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # Dots are fine
         res_id = ("smi:local/hello....yea")
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.getQuakeMLURI())
+        self.assertEqual(res_id, res.get_quakeml_uri())
         # Hats not
         res_id = ("smi:local/hello^^yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
 
     def test_resource_id_valid_quakemluri(self):
         """
@@ -677,7 +677,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.id, rid.getQuakeMLURI())
+        self.assertEqual(rid.id, rid.get_quakeml_uri())
 
     def test_resource_id_init_deprecation(self):
         """

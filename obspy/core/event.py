@@ -100,7 +100,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     """
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
-        return _createExampleCatalog()
+        return _create_example_catalog()
     elif not isinstance(pathname_or_url, (str, native_str)):
         # not a string - we assume a file-like object
         try:
@@ -151,13 +151,13 @@ def _read(filename, format=None, **kwargs):
     Reads a single event file into a ObsPy Catalog object.
     """
     catalog, format = _read_from_plugin('event', filename, format=format,
-                                      **kwargs)
+                                        **kwargs)
     for event in catalog:
         event._format = format
     return catalog
 
 
-def _createExampleCatalog():
+def _create_example_catalog():
     """
     Create an example catalog.
     """
@@ -182,7 +182,8 @@ def _bool(value):
     return bool(value)
 
 
-def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
+def _event_type_class_factory(class_name, class_attributes=[],
+                              class_contains=[]):
     """
     Class factory to unify the creation of all the types needed for the event
     handling in ObsPy.
@@ -213,7 +214,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     to it so far. Giving the name of the created class is mandatory.
 
         >>> class_contains = ["comments"]
-        >>> TestEventClass = _eventTypeClassFactory("TestEventClass", \
+        >>> TestEventClass = _event_type_class_factory("TestEventClass", \
                 class_attributes=class_attributes, \
                 class_contains=class_contains)
         >>> assert(TestEventClass.__name__ == "TestEventClass")
@@ -239,7 +240,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     the ResourceIdentifier refers to will be the class instance.
 
         >>> assert(id(test_event) == \
-            id(test_event.resource_id.getReferredObject()))
+            id(test_event.resource_id.get_referred_object()))
 
     They can be set later and will be converted to the appropriate type if
     possible.
@@ -443,7 +444,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # If "name" is resource_id and value is not None, set the referred
             # object of the ResourceIdentifier to self.
             if name == "resource_id" and value is not None:
-                self.resource_id.setReferredObject(self)
+                self.resource_id.set_referred_object(self)
 
     class AbstractEventTypeWithResourceID(AbstractEventType):
         def __init__(self, force_resource_id=True, *args, **kwargs):
@@ -527,12 +528,12 @@ class ResourceIdentifier(object):
     >>> print(ref_count == sys.getrefcount(event))
     True
     >>> # It actually is the same object.
-    >>> print(event is res_id.getReferredObject())
+    >>> print(event is res_id.get_referred_object())
     True
     >>> # Deleting it, or letting the garbage collector handle the object will
     >>> # invalidate the reference.
     >>> del event
-    >>> print(res_id.getReferredObject())
+    >>> print(res_id.get_referred_object())
     None
 
     The most powerful ability (and reason why one would want to use a resource
@@ -550,33 +551,33 @@ class ResourceIdentifier(object):
     >>> ref_a = ResourceIdentifier(res_id)
     >>> # The object is refers to cannot be found yet. Because no instance that
     >>> # an attached object has been created so far.
-    >>> print(ref_a.getReferredObject())
+    >>> print(ref_a.get_referred_object())
     None
     >>> # This instance has an attached object.
     >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
     >>> ref_c = ResourceIdentifier(res_id)
     >>> # All ResourceIdentifiers will refer to the same object.
-    >>> assert(id(ref_a.getReferredObject()) == obj_id)
-    >>> assert(id(ref_b.getReferredObject()) == obj_id)
-    >>> assert(id(ref_c.getReferredObject()) == obj_id)
+    >>> assert(id(ref_a.get_referred_object()) == obj_id)
+    >>> assert(id(ref_b.get_referred_object()) == obj_id)
+    >>> assert(id(ref_c.get_referred_object()) == obj_id)
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
-    the convertIDToQuakeMLURI() method. The resulting id will be of the form::
+    the convert_id_to_quakeml_uri() method. The resulting id will be of the form::
 
         smi:authority_id/prefix/id
 
     >>> res_id = ResourceIdentifier(prefix='origin')
-    >>> res_id.convertIDToQuakeMLURI(authority_id="obspy.org")
+    >>> res_id.convert_id_to_quakeml_uri(authority_id="obspy.org")
     >>> res_id # doctest:+ELLIPSIS
     ResourceIdentifier(id="smi:obspy.org/origin/...")
     >>> res_id = ResourceIdentifier(id='foo')
-    >>> res_id.convertIDToQuakeMLURI()
+    >>> res_id.convert_id_to_quakeml_uri()
     >>> res_id
     ResourceIdentifier(id="smi:local/foo")
     >>> # A good way to create a QuakeML compatibly ResourceIdentifier from
     >>> # scratch is
     >>> res_id = ResourceIdentifier(prefix='pick')
-    >>> res_id.convertIDToQuakeMLURI(authority_id='obspy.org')
+    >>> res_id.convert_id_to_quakeml_uri(authority_id='obspy.org')
     >>> res_id  # doctest:+ELLIPSIS
     ResourceIdentifier(id="smi:obspy.org/pick/...")
     >>> # If the given ID is already a valid QuakeML
@@ -584,7 +585,7 @@ class ResourceIdentifier(object):
     >>> res_id = ResourceIdentifier('smi:test.org/subdir/id')
     >>> res_id
     ResourceIdentifier(id="smi:test.org/subdir/id")
-    >>> res_id.convertIDToQuakeMLURI()
+    >>> res_id.convert_id_to_quakeml_uri()
     >>> res_id
     ResourceIdentifier(id="smi:test.org/subdir/id")
 
@@ -634,7 +635,7 @@ class ResourceIdentifier(object):
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         if referred_object is not None:
-            self.setReferredObject(referred_object)
+            self.set_referred_object(referred_object)
 
         # Increment the counter for the current resource id.
         ResourceIdentifier.__resource_id_tracker[self.id] += 1
@@ -653,7 +654,12 @@ class ResourceIdentifier(object):
             except KeyError:
                 pass
 
+    @deprecated("Method 'getReferredObject' was renamed to "
+                "'get_referred_object'. Use that instead.")
     def getReferredObject(self):
+        return self.get_referred_object()
+
+    def get_referred_object(self):
         """
         Returns the object associated with the resource identifier.
 
@@ -667,7 +673,12 @@ class ResourceIdentifier(object):
         except KeyError:
             return None
 
+    @deprecated("Method 'setReferredObject' was renamed to "
+                "'set_referred_object'. Use that instead.")
     def setReferredObject(self, referred_object):
+        return self.set_referred_object(referred_object)
+
+    def set_referred_object(self, referred_object):
         """
         Sets the object the ResourceIdentifier refers to.
 
@@ -701,7 +712,12 @@ class ResourceIdentifier(object):
         ResourceIdentifier.__resource_id_weak_dict[self.id] = \
             referred_object
 
+    @deprecated("Method 'convertIDToQuakeMLURI' was renamed to "
+                "'convert_id_to_quakeml_uri'. Use that instead.")
     def convertIDToQuakeMLURI(self, authority_id="local"):
+        return self.convert_id_to_quakeml_uri(authority_id=authority_id)
+
+    def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
         Converts the current ID to a valid QuakeML URI.
 
@@ -716,15 +732,20 @@ class ResourceIdentifier(object):
         :param authority_id: The base url of the resulting string. Defaults to
             ``"local"``.
         """
-        self.id = self.getQuakeMLURI(authority_id=authority_id)
+        self.id = self.get_quakeml_uri(authority_id=authority_id)
 
+    @deprecated("Method 'getQuakeMLURI' was renamed to "
+                "'get_quakeml_uri'. Use that instead.")
     def getQuakeMLURI(self, authority_id="local"):
+        return self.get_quakeml_uri(authority_id=authority_id)
+
+    def get_quakeml_uri(self, authority_id="local"):
         """
         Returns the ID as a valid QuakeML URI if possible. Does not
         change the ID itself.
 
         >>> res_id = ResourceIdentifier("some_id")
-        >>> print(res_id.getQuakeMLURI())
+        >>> print(res_id.get_quakeml_uri())
         smi:local/some_id
         >>> # Did not change the actual resource id.
         >>> print(res_id.id)
@@ -879,7 +900,7 @@ class ResourceIdentifier(object):
         self._uuid = str(uuid4())
 
 
-__CreationInfo = _eventTypeClassFactory(
+__CreationInfo = _event_type_class_factory(
     "__CreationInfo",
     class_attributes=[("agency_id", str),
                       ("agency_uri", ResourceIdentifier),
@@ -920,7 +941,7 @@ class CreationInfo(__CreationInfo):
     """
 
 
-__TimeWindow = _eventTypeClassFactory(
+__TimeWindow = _event_type_class_factory(
     "__TimeWindow",
     class_attributes=[("begin", float),
                       ("end", float),
@@ -950,7 +971,7 @@ class TimeWindow(__TimeWindow):
     """
 
 
-__CompositeTime = _eventTypeClassFactory(
+__CompositeTime = _event_type_class_factory(
     "__CompositeTime",
     class_attributes=[("year", int, ATTRIBUTE_HAS_ERRORS),
                       ("month", int, ATTRIBUTE_HAS_ERRORS),
@@ -1011,7 +1032,7 @@ class CompositeTime(__CompositeTime):
     """
 
 
-__Comment = _eventTypeClassFactory(
+__Comment = _event_type_class_factory(
     "__Comment",
     class_attributes=[("text", str),
                       ("resource_id", ResourceIdentifier),
@@ -1054,7 +1075,7 @@ class Comment(__Comment):
     """
 
 
-__WaveformStreamID = _eventTypeClassFactory(
+__WaveformStreamID = _event_type_class_factory(
     "__WaveformStreamID",
     class_attributes=[("network_code", str),
                       ("station_code", str),
@@ -1149,7 +1170,7 @@ class WaveformStreamID(__WaveformStreamID):
             self.channel_code if self.channel_code else "")
 
 
-__Amplitude = _eventTypeClassFactory(
+__Amplitude = _event_type_class_factory(
     "__Amplitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("generic_amplitude", float, ATTRIBUTE_HAS_ERRORS),
@@ -1310,7 +1331,7 @@ class Amplitude(__Amplitude):
     """
 
 
-__Pick = _eventTypeClassFactory(
+__Pick = _event_type_class_factory(
     "__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
@@ -1416,7 +1437,7 @@ class Pick(__Pick):
     """
 
 
-__Arrival = _eventTypeClassFactory(
+__Arrival = _event_type_class_factory(
     "__Arrival",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("pick_id", ResourceIdentifier),
@@ -1513,7 +1534,7 @@ class Arrival(__Arrival):
     """
 
 
-__OriginQuality = _eventTypeClassFactory(
+__OriginQuality = _event_type_class_factory(
     "__OriginQuality",
     class_attributes=[("associated_phase_count", int),
                       ("used_phase_count", int),
@@ -1584,7 +1605,7 @@ class OriginQuality(__OriginQuality):
     """
 
 
-__ConfidenceEllipsoid = _eventTypeClassFactory(
+__ConfidenceEllipsoid = _event_type_class_factory(
     "__ConfidenceEllipsoid",
     class_attributes=[("semi_major_axis_length", float),
                       ("semi_minor_axis_length", float),
@@ -1624,7 +1645,7 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
     """
 
 
-__OriginUncertainty = _eventTypeClassFactory(
+__OriginUncertainty = _event_type_class_factory(
     "__OriginUncertainty",
     class_attributes=[("horizontal_uncertainty", float),
                       ("min_horizontal_uncertainty", float),
@@ -1680,7 +1701,7 @@ class OriginUncertainty(__OriginUncertainty):
     """
 
 
-__Origin = _eventTypeClassFactory(
+__Origin = _event_type_class_factory(
     "__Origin",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
@@ -1853,7 +1874,7 @@ class Origin(__Origin):
     """
 
 
-__StationMagnitudeContribution = _eventTypeClassFactory(
+__StationMagnitudeContribution = _event_type_class_factory(
     "__StationMagnitudeContribution",
     class_attributes=[("station_magnitude_id", ResourceIdentifier),
                       ("residual", float),
@@ -1886,7 +1907,7 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
     """
 
 
-__Magnitude = _eventTypeClassFactory(
+__Magnitude = _event_type_class_factory(
     "__Magnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("mag", float, ATTRIBUTE_HAS_ERRORS),
@@ -1985,7 +2006,7 @@ class Magnitude(__Magnitude):
     """
 
 
-__StationMagnitude = _eventTypeClassFactory(
+__StationMagnitude = _event_type_class_factory(
     "__StationMagnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("origin_id", ResourceIdentifier),
@@ -2041,7 +2062,7 @@ class StationMagnitude(__StationMagnitude):
     """
 
 
-__EventDescription = _eventTypeClassFactory(
+__EventDescription = _event_type_class_factory(
     "__EventDescription",
     class_attributes=[("text", str),
                       ("type", EventDescriptionType)])
@@ -2075,7 +2096,7 @@ class EventDescription(__EventDescription):
     """
 
 
-__Tensor = _eventTypeClassFactory(
+__Tensor = _event_type_class_factory(
     "__Tensor",
     class_attributes=[("m_rr", float, ATTRIBUTE_HAS_ERRORS),
                       ("m_tt", float, ATTRIBUTE_HAS_ERRORS),
@@ -2124,7 +2145,7 @@ class Tensor(__Tensor):
     """
 
 
-__DataUsed = _eventTypeClassFactory(
+__DataUsed = _event_type_class_factory(
     "__DataUsed",
     class_attributes=[("wave_type", DataUsedWaveType),
                       ("station_count", int),
@@ -2168,7 +2189,7 @@ class DataUsed(__DataUsed):
     """
 
 
-__SourceTimeFunction = _eventTypeClassFactory(
+__SourceTimeFunction = _event_type_class_factory(
     "__SourceTimeFunction",
     class_attributes=[("type", SourceTimeFunctionType),
                       ("duration", float),
@@ -2204,7 +2225,7 @@ class SourceTimeFunction(__SourceTimeFunction):
     """
 
 
-__NodalPlane = _eventTypeClassFactory(
+__NodalPlane = _event_type_class_factory(
     "__NodalPlane",
     class_attributes=[("strike", float, ATTRIBUTE_HAS_ERRORS),
                       ("dip", float, ATTRIBUTE_HAS_ERRORS),
@@ -2237,7 +2258,7 @@ class NodalPlane(__NodalPlane):
     """
 
 
-__Axis = _eventTypeClassFactory(
+__Axis = _event_type_class_factory(
     "__Axis",
     class_attributes=[("azimuth", float, ATTRIBUTE_HAS_ERRORS),
                       ("plunge", float, ATTRIBUTE_HAS_ERRORS),
@@ -2276,7 +2297,7 @@ class Axis(__Axis):
     """
 
 
-__NodalPlanes = _eventTypeClassFactory(
+__NodalPlanes = _event_type_class_factory(
     "__NodalPlanes",
     class_attributes=[("nodal_plane_1", NodalPlane),
                       ("nodal_plane_2", NodalPlane),
@@ -2307,7 +2328,7 @@ class NodalPlanes(__NodalPlanes):
     """
 
 
-__PrincipalAxes = _eventTypeClassFactory(
+__PrincipalAxes = _event_type_class_factory(
     "__PrincipalAxes",
     class_attributes=[("t_axis", Axis),
                       ("p_axis", Axis),
@@ -2334,7 +2355,7 @@ class PrincipalAxes(__PrincipalAxes):
     """
 
 
-__MomentTensor = _eventTypeClassFactory(
+__MomentTensor = _event_type_class_factory(
     "__MomentTensor",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("derived_origin_id", ResourceIdentifier),
@@ -2440,7 +2461,7 @@ class MomentTensor(__MomentTensor):
     """
 
 
-__FocalMechanism = _eventTypeClassFactory(
+__FocalMechanism = _event_type_class_factory(
     "__FocalMechanism",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("triggering_origin_id", ResourceIdentifier),
@@ -2532,7 +2553,7 @@ class FocalMechanism(__FocalMechanism):
     """
 
 
-__Event = _eventTypeClassFactory(
+__Event = _event_type_class_factory(
     "__Event",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
@@ -2687,7 +2708,7 @@ class Event(__Event):
         """
         try:
             return ResourceIdentifier(self.preferred_origin_id).\
-                getReferredObject()
+                get_referred_object()
         except AttributeError:
             return None
 
@@ -2697,7 +2718,7 @@ class Event(__Event):
         """
         try:
             return ResourceIdentifier(self.preferred_magnitude_id).\
-                getReferredObject()
+                get_referred_object()
         except AttributeError:
             return None
 
@@ -2707,7 +2728,7 @@ class Event(__Event):
         """
         try:
             return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-                getReferredObject()
+                get_referred_object()
         except AttributeError:
             return None
 
@@ -3178,13 +3199,13 @@ class Catalog(object):
             # get format specific entry point
             format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
-            writeFormat = load_entry_point(
+            write_format = load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
                 'writeFormat')
         except (IndexError, ImportError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
-        writeFormat(self, filename, **kwargs)
+        write_format(self, filename, **kwargs)
 
     @deprecated_keywords({'date_colormap': 'colormap'})
     def plot(self, projection='global', resolution='l',

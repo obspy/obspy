@@ -1065,13 +1065,13 @@ class Pickler(object):
 
     def _id(self, obj):
         try:
-            return obj.getQuakeMLURI()
+            return obj.get_quakeml_uri()
         except:
-            return ResourceIdentifier().getQuakeMLURI()
+            return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
-            value = value.getQuakeMLURI()
+            value = value.get_quakeml_uri()
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
