@@ -230,9 +230,9 @@ def __read_sacXY(buf, headonly=False, debug_headers=False,
     """
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacXYHeader(buf)
+        t.read_sac_xy_header(buf)
     else:
-        t.ReadSacXY(buf)
+        t.read_sac_xy(buf)
     # assign all header entries to a new dictionary compatible with ObsPy
     header = t.get_obspy_header()
 
@@ -303,7 +303,7 @@ def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
     :type buf: file-like object
     """
     t = SacIO(trace)
-    t.WriteSacXY(buf)
+    t.write_sac_xy(buf)
 
 
 def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
@@ -381,9 +381,9 @@ def __read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     # read SAC file
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacHeader(buf)
+        t.read_sac_header(buf)
     else:
-        t.ReadSacFile(buf, fsize)
+        t.read_sac_file(buf, fsize)
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = t.get_obspy_header()
 
@@ -473,4 +473,4 @@ def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
     if (byteorder == 1 and t.byteorder == 'little') or \
             (byteorder == 0 and t.byteorder == 'big'):
         t.swap_byte_order()
-    t.WriteSacBinary(buf)
+    t.write_sac_binary(buf)

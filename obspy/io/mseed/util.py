@@ -20,13 +20,20 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import score_at_percentile
+from obspy.core.util.decorator import deprecated
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
                       SAMPLESIZES, UNSUPPORTED_ENCODINGS, clibmseed)
 
 
-def getStartAndEndTime(file_or_file_object):
+@deprecated("'getStartAndEndTime' has been renamed to "
+            "'get_start_and_end_time'. Use that instead.")
+def getStartAndEndTime(*args, **kwargs):
+    return get_start_and_end_time(*args, **kwargs)
+
+
+def get_start_and_end_time(file_or_file_object):
     """
     Returns the start and end time of a Mini-SEED file or file-like object.
 
@@ -47,7 +54,7 @@ def getStartAndEndTime(file_or_file_object):
     >>> from obspy.core.util import get_example_file
     >>> filename = get_example_file(
     ...     "BW.BGLD.__.EHE.D.2008.001.first_10_records")
-    >>> getStartAndEndTime(filename)  # doctest: +NORMALIZE_WHITESPACE
+    >>> get_start_and_end_time(filename)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
@@ -55,7 +62,7 @@ def getStartAndEndTime(file_or_file_object):
     be changed.
 
     >>> f = open(filename, 'rb')
-    >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
+    >>> get_start_and_end_time(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
@@ -63,7 +70,7 @@ def getStartAndEndTime(file_or_file_object):
 
     >>> import io
     >>> file_object = io.BytesIO(f.read())
-    >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
+    >>> get_start_and_end_time(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
     >>> file_object.close()
@@ -72,30 +79,36 @@ def getStartAndEndTime(file_or_file_object):
     refer to the record it points to.
 
     >>> _ = f.seek(512)
-    >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
+    >>> get_start_and_end_time(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
     The same is valid for a file-like object.
 
     >>> file_object = io.BytesIO(f.read())
-    >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
+    >>> get_start_and_end_time(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
     >>> f.close()
     """
     # Get the starttime of the first record.
-    info = getRecordInformation(file_or_file_object)
+    info = get_record_information(file_or_file_object)
     starttime = info['starttime']
     # Get the end time of the last record.
-    info = getRecordInformation(
+    info = get_record_information(
         file_or_file_object,
         (info['number_of_records'] - 1) * info['record_length'])
     endtime = info['endtime']
     return starttime, endtime
 
 
-def getTimingAndDataQuality(file_or_file_object):
+@deprecated("'getTimingAndDataQuality' has been renamed to "
+            "'get_timing_and_data_quality'. Use that instead.")
+def getTimingAndDataQuality(*args, **kwargs):
+    return get_timing_and_data_quality(*args, **kwargs)
+
+
+def get_timing_and_data_quality(file_or_file_object):
     """
     Counts all data quality flags of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
@@ -146,7 +159,7 @@ def getTimingAndDataQuality(file_or_file_object):
 
     >>> from obspy.core.util import get_example_file
     >>> filename = get_example_file("qualityflags.mseed")
-    >>> tq = getTimingAndDataQuality(filename)
+    >>> tq = get_timing_and_data_quality(filename)
     >>> for k, v in tq.items():
     ...     print(k, v)
     data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
@@ -154,7 +167,7 @@ def getTimingAndDataQuality(file_or_file_object):
     Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> tq = getTimingAndDataQuality(f)
+    >>> tq = get_timing_and_data_quality(f)
     >>> for k, v in tq.items():
     ...     print(k, v)
     data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
@@ -162,7 +175,7 @@ def getTimingAndDataQuality(file_or_file_object):
     >>> import io
     >>> file_object = io.BytesIO(f.read())
     >>> f.close()
-    >>> tq = getTimingAndDataQuality(file_object)
+    >>> tq = get_timing_and_data_quality(file_object)
     >>> for k, v in tq.items():
     ...     print(k, v)
     data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
@@ -171,7 +184,7 @@ def getTimingAndDataQuality(file_or_file_object):
     record the omitted records will be skipped.
 
     >>> _ = file_object.seek(1024, 1)
-    >>> tq = getTimingAndDataQuality(file_object)
+    >>> tq = get_timing_and_data_quality(file_object)
     >>> for k, v in tq.items():
     ...     print(k, v)
     data_quality_flags [8, 8, 7, 6, 5, 4, 3, 2]
@@ -182,7 +195,7 @@ def getTimingAndDataQuality(file_or_file_object):
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
 
     >>> filename = get_example_file("timingquality.mseed")
-    >>> tq = getTimingAndDataQuality(filename)
+    >>> tq = get_timing_and_data_quality(filename)
     >>> for k, v in sorted(tq.items()):
     ...     print(k, v)
     data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
@@ -196,7 +209,7 @@ def getTimingAndDataQuality(file_or_file_object):
     Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> tq = getTimingAndDataQuality(f)
+    >>> tq = get_timing_and_data_quality(f)
     >>> for k, v in sorted(tq.items()):
     ...     print(k, v)
     data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
@@ -209,7 +222,7 @@ def getTimingAndDataQuality(file_or_file_object):
 
     >>> file_object = io.BytesIO(f.read())
     >>> f.close()
-    >>> tq = getTimingAndDataQuality(file_object)
+    >>> tq = get_timing_and_data_quality(file_object)
     >>> for k, v in sorted(tq.items()):
     ...     print(k, v)
     data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
@@ -222,7 +235,7 @@ def getTimingAndDataQuality(file_or_file_object):
     >>> file_object.close()
     """
     # Read the first record to get a starting point and.
-    info = getRecordInformation(file_or_file_object)
+    info = get_record_information(file_or_file_object)
     # Keep track of the extracted information.
     quality_count = [0, 0, 0, 0, 0, 0, 0, 0]
     timing_quality = []
@@ -231,7 +244,7 @@ def getTimingAndDataQuality(file_or_file_object):
     # Loop over each record. A valid record needs to have a record length of at
     # least 256 bytes.
     while offset <= (info['filesize'] - 256):
-        this_info = getRecordInformation(file_or_file_object, offset)
+        this_info = get_record_information(file_or_file_object, offset)
         # Add the timing quality.
         if 'timing_quality' in this_info:
             timing_quality.append(float(this_info['timing_quality']))
@@ -263,7 +276,13 @@ def getTimingAndDataQuality(file_or_file_object):
     return result
 
 
-def getRecordInformation(file_or_file_object, offset=0, endian=None):
+@deprecated("'getRecordInformation' has been renamed to "
+            "'get_record_information'. Use that instead.")
+def getRecordInformation(*args, **kwargs):
+    return get_record_information(*args, **kwargs)
+
+
+def get_record_information(file_or_file_object, offset=0, endian=None):
     """
     Returns record information about given files and file-like object.
 
@@ -275,7 +294,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
 
     >>> from obspy.core.util import get_example_file
     >>> filename = get_example_file("test.mseed")
-    >>> ri = getRecordInformation(filename)
+    >>> ri = get_record_information(filename)
     >>> for k, v in sorted(ri.items()):
     ...     print(k, v)
     activity_flags 0
@@ -294,14 +313,14 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
     """
     if isinstance(file_or_file_object, (str, native_str)):
         with open(file_or_file_object, 'rb') as f:
-            info = _getRecordInformation(f, offset=offset, endian=endian)
+            info = _get_record_information(f, offset=offset, endian=endian)
     else:
-        info = _getRecordInformation(file_or_file_object, offset=offset,
-                                     endian=endian)
+        info = _get_record_information(file_or_file_object, offset=offset,
+                                       endian=endian)
     return info
 
 
-def _getRecordInformation(file_object, offset=0, endian=None):
+def _get_record_information(file_object, offset=0, endian=None):
     """
     Searches the first Mini-SEED record stored in file_object at the current
     position and returns some information about it.
@@ -481,7 +500,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     return info
 
 
-def _ctypesArray2NumpyArray(buffer_, buffer_elements, sampletype):
+def _ctypes_array_2_numpy_array(buffer_, buffer_elements, sampletype):
     """
     Takes a Ctypes array and its length and type and returns it as a
     NumPy array.
@@ -499,7 +518,7 @@ def _ctypesArray2NumpyArray(buffer_, buffer_elements, sampletype):
     return numpy_array
 
 
-def _convertMSRToDict(m):
+def _convert_MSR_to_dict(m):
     """
     Internal method used for setting header attributes.
     """
@@ -513,7 +532,7 @@ def _convertMSRToDict(m):
     return h
 
 
-def _convertDatetimeToMSTime(dt):
+def _convert_datetime_to_MSTime(dt):
     """
     Takes a obspy.util.UTCDateTime object and returns an epoch time in ms.
 
@@ -523,7 +542,7 @@ def _convertDatetimeToMSTime(dt):
     return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
 
 
-def _convertMSTimeToDatetime(timestring):
+def _convert_MSTime_to_datetime(timestring):
     """
     Takes a Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
 
@@ -532,7 +551,7 @@ def _convertMSTimeToDatetime(timestring):
     return UTCDateTime(timestring / HPTMODULUS)
 
 
-def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
+def _unpack_steim_1(data_string, npts, swapflag=0, verbose=0):
     """
     Unpack steim1 compressed data given as string.
 
@@ -557,7 +576,7 @@ def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
     return datasamples
 
 
-def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
+def _unpack_steim_2(data_string, npts, swapflag=0, verbose=0):
     """
     Unpack steim2 compressed data given as string.
 
@@ -625,7 +644,7 @@ def set_flags_in_fixed_headers(filename, flags):
             The value you want for this flag. Expected value is a bool (always
             ``True``/``False``) or a dict to store the moments and durations
             when this flag is ``True``. Expected syntax for this dict is
-            accurately described in ``obspy.io.mseed.util._checkFlagValue``.
+            accurately described in ``obspy.io.mseed.util._check_flag_value``.
 
     :raises IOError: if the file is not a MiniSEED file
     :raises ValueError: if one of the flag group, flag name or flag value is
@@ -719,7 +738,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 # Check flag values and store them in an "easy to parse" way:
                 # either bool or list of tuples (start, end)
                 flag_value = value[flag_group][flag_name]
-                corrected_flag = _checkFlagValue(flag_value)
+                corrected_flag = _check_flag_value(flag_value)
                 flags_bytes[net][sta][loc][cha][flag_group][flag_name] = \
                     corrected_flag
 
@@ -792,11 +811,11 @@ def set_flags_in_fixed_headers(filename, flags):
 
                 # Manage blockette's datation informations
                 # Search for blockette 100's "Actual sample rate" field
-                samp_rate = _searchFlagInBlockette(mseed_file, 4, 100, 4, 1)
+                samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
                     samp_rate = unpack(native_str(">b"), samp_rate)
                 # Search for blockette 1001's "microsec" field
-                microsec = _searchFlagInBlockette(mseed_file, 4, 1001, 5, 1)
+                microsec = _search_flag_in_blockette(mseed_file, 4, 1001, 5, 1)
                 if microsec is not None:
                     microsec = unpack(native_str(">b"), microsec)[0]
                 else:
@@ -826,7 +845,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
                 # Convert flags to bytes : activity
                 if 'activity_flags' in flags_value:
-                    act_flag = _convertFlagsToRawByte(
+                    act_flag = _convert_flags_to_raw_byte(
                         FIXED_HEADER_ACTIVITY_FLAGS,
                         flags_value['activity_flags'],
                         realstarttime, realendtime)
@@ -835,7 +854,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
                 # Convert flags to bytes : i/o and clock
                 if 'io_clock_flags' in flags_value:
-                    io_clock_flag = _convertFlagsToRawByte(
+                    io_clock_flag = _convert_flags_to_raw_byte(
                         FIXED_HEADER_IO_CLOCK_FLAGS,
                         flags_value['io_clock_flags'],
                         realstarttime, realendtime)
@@ -844,7 +863,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
                 # Convert flags to bytes : data quality flags
                 if 'data_qual_flags' in flags_value:
-                    data_qual_flag = _convertFlagsToRawByte(
+                    data_qual_flag = _convert_flags_to_raw_byte(
                         FIXED_HEADER_DATA_QUAL_FLAGS,
                         flags_value['data_qual_flags'],
                         realstarttime, realendtime)
@@ -864,7 +883,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 mseed_file.seek(28, os.SEEK_CUR)
 
             # Read record length in blockette 1000 to seek to the next record
-            reclen_pow = _searchFlagInBlockette(mseed_file, 0, 1000, 6, 1)
+            reclen_pow = _search_flag_in_blockette(mseed_file, 0, 1000, 6, 1)
 
             if reclen_pow is None:
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
@@ -875,7 +894,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 mseed_file.seek(record_start + reclen, os.SEEK_SET)
 
 
-def _checkFlagValue(flag_value):
+def _check_flag_value(flag_value):
     """
     Search for a given flag in a given blockette for the current record.
 
@@ -899,7 +918,7 @@ def _checkFlagValue(flag_value):
 
 
     This function then returns all datation events as a list of tuples
-    [(start1, end1), ...] to ease the work of _convertFlagsToRawByte. Bool
+    [(start1, end1), ...] to ease the work of _convert_flags_to_raw_byte. Bool
     values are unchanged, instant events become a tuple
     (event_date, event_date).
 
@@ -1050,8 +1069,8 @@ def _checkFlagValue(flag_value):
     return corrected_flag
 
 
-def _searchFlagInBlockette(mseed_file_desc, first_blockette_offset,
-                           blockette_number, field_offset, field_length):
+def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
+                              blockette_number, field_offset, field_length):
     """
     Search for a given flag in a given blockette for the current record.
 
@@ -1120,7 +1139,7 @@ def _searchFlagInBlockette(mseed_file_desc, first_blockette_offset,
     return returned_bytes
 
 
-def _convertFlagsToRawByte(expected_flags, user_flags, recstart, recend):
+def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
     """
     Converts a flag dictionary to a byte, ready to be encoded in a MiniSEED
     header.
@@ -1175,7 +1194,13 @@ def _convertFlagsToRawByte(expected_flags, user_flags, recstart, recend):
     return flag_byte
 
 
-def shiftTimeOfFile(input_file, output_file, timeshift):
+@deprecated("'shiftTimeOfFile' has been renamed to "
+            "'shift_time_of_file'. Use that instead.")
+def shiftTimeOfFile(*args, **kwargs):
+    return shift_time_of_file(*args, **kwargs)
+
+
+def shift_time_of_file(input_file, output_file, timeshift):
     """
     Takes a MiniSEED file and shifts the time of every record by the given
     amount.
@@ -1227,7 +1252,7 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
         raise ValueError(msg)
 
     # Get the necessary information from the file.
-    info = getRecordInformation(input_file)
+    info = get_record_information(input_file)
     record_length = info["record_length"]
 
     byteorder = info["byteorder"]

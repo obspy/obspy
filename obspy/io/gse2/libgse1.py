@@ -25,7 +25,7 @@ import doctest
 import numpy as np
 
 from obspy import UTCDateTime
-from .libgse2 import uncompress_CM6, verifyChecksum
+from .libgse2 import uncompress_CM6, verify_checksum
 
 
 def read(fh, verify_chksum=True):
@@ -46,21 +46,21 @@ def read(fh, verify_chksum=True):
     :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
-    header = readHeader(fh)
+    header = read_header(fh)
     dtype = header['gse1']['datatype']
     if dtype == 'CMP6':
         data = uncompress_CM6(fh, header['npts'])
     elif dtype == 'INTV':
-        data = readIntegerData(fh, header['npts'])
+        data = read_integer_data(fh, header['npts'])
     else:
         raise Exception("Unsupported data type %s in GSE1 file" % dtype)
     # test checksum only if enabled
     if verify_chksum:
-        verifyChecksum(fh, data, version=1)
+        verify_checksum(fh, data, version=1)
     return header, data
 
 
-def readIntegerData(fh, npts):
+def read_integer_data(fh, npts):
     """
     Reads npts points of uncompressed integers from given file handler.
     """
@@ -80,7 +80,7 @@ def readIntegerData(fh, npts):
     return np.array(data, dtype=np.int32)
 
 
-def readHeader(fh):
+def read_header(fh):
     """
     Reads GSE1 header from file pointer and returns it as dictionary.
 

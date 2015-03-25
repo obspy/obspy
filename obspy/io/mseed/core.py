@@ -225,7 +225,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         bo = None
 
-    info = util.getRecordInformation(mseed_object, endian=bo)
+    info = util.get_record_information(mseed_object, endian=bo)
 
     # Map the encoding to a readable string value.
     if info["encoding"] in ENCODINGS:
@@ -297,7 +297,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 msg = 'starttime needs to be a UTCDateTime object'
                 raise ValueError(msg)
             selections.timewindows.contents.starttime = \
-                util._convertDatetimeToMSTime(starttime)
+                util._convert_datetime_to_MSTime(starttime)
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.starttime = HPTERROR
@@ -306,7 +306,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                 msg = 'endtime needs to be a UTCDateTime object'
                 raise ValueError(msg)
             selections.timewindows.contents.endtime = \
-                util._convertDatetimeToMSTime(endtime)
+                util._convert_datetime_to_MSTime(endtime)
         else:
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
@@ -396,7 +396,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         while True:
             header['sampling_rate'] = currentSegment.samprate
             header['starttime'] = \
-                util._convertMSTimeToDatetime(currentSegment.starttime)
+                util._convert_MSTime_to_datetime(currentSegment.starttime)
             if details:
                 timing_quality = currentSegment.timing_quality
                 if timing_quality == 0xFF:  # 0xFF is mask for not known timing
@@ -566,7 +566,7 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
         # and the timing quality. If starttime or sampling rate has a precision
         # of more than 100 microseconds, or if timing quality is set, \
         # Blockette 1001 will be written for every record.
-        starttime = util._convertDatetimeToMSTime(trace.stats.starttime)
+        starttime = util._convert_datetime_to_MSTime(trace.stats.starttime)
         if starttime % 100 != 0 or \
            (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
             use_blkt_1001 = True
@@ -891,9 +891,9 @@ class MST(object):
         self.mst.contents.dataquality = dataquality.encode('ascii', 'strict')
         self.mst.contents.type = b'\x00'
         self.mst.contents.starttime = \
-            util._convertDatetimeToMSTime(trace.stats.starttime)
+            util._convert_datetime_to_MSTime(trace.stats.starttime)
         self.mst.contents.endtime = \
-            util._convertDatetimeToMSTime(trace.stats.endtime)
+            util._convert_datetime_to_MSTime(trace.stats.endtime)
         self.mst.contents.samprate = trace.stats.sampling_rate
         self.mst.contents.samplecnt = trace.stats.npts
         self.mst.contents.numsamples = trace.stats.npts

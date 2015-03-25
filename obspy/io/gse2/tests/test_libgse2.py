@@ -109,7 +109,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'twiceCHK2.gse2')
         with open(gse2file, 'rb') as f:
-            header = libgse2.readHeader(f)
+            header = libgse2.read_header(f)
         self.assertEqual('RNHA', header['station'])
         self.assertEqual('EHN', header['channel'])
         self.assertEqual(200, header['sampling_rate'])
@@ -125,10 +125,10 @@ class LibGSE2TestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'loc_RNON20040609200559.z')
         with open(filename, 'rb') as f:
             pos = f.tell()
-            self.assertEqual(None, libgse2.isGse2(f))
+            self.assertEqual(None, libgse2.is_gse2(f))
             self.assertEqual(pos, f.tell())
             f.seek(10)
-            self.assertRaises(TypeError, libgse2.isGse2, f)
+            self.assertRaises(TypeError, libgse2.is_gse2, f)
             self.assertEqual(10, f.tell())
 
     def test_maxValueExceeded(self):

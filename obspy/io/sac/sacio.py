@@ -278,25 +278,25 @@ class SacIO(object):
     def __init__(self, filen=False, headonly=False, alpha=False,
                  debug_headers=False):
         self.byteorder = 'little'
-        self.InitArrays()
+        self.init_arrays()
         self.debug_headers = debug_headers
         if filen is False:
             return
         # parse Trace object if we get one
         if isinstance(filen, Trace):
-            self.readTrace(filen)
+            self.read_trace(filen)
             return
         if alpha:
             if headonly:
-                self.ReadSacXYHeader(filen)
+                self.read_sac_xy_header(filen)
             else:
-                self.ReadSacXY(filen)
+                self.read_sac_xy(filen)
         elif headonly:
-            self.ReadSacHeader(filen)
+            self.read_sac_header(filen)
         else:
-            self.ReadSacFile(filen)
+            self.read_sac_file(filen)
 
-    def InitArrays(self):
+    def init_arrays(self):
         """
         Function to initialize the floating, character and integer
         header arrays (self.hf, self.hs, self.hi) with dummy values. This
@@ -332,7 +332,7 @@ class SacIO(object):
         >>> t = SacIO()
         >>> b = np.arange(10)
         >>> t.fromarray(b)
-        >>> t.GetHvalue('npts')
+        >>> t.get_header_value('npts')
         10
         """
         if not isinstance(trace, np.ndarray):
@@ -353,32 +353,32 @@ class SacIO(object):
         if microsecond != 0:
             begin += microsecond * 1e-6
         # set a few values that are required to create a valid SAC-file
-        self.SetHvalue('int1', 2)
-        self.SetHvalue('cmpaz', 0)
-        self.SetHvalue('cmpinc', 0)
-        self.SetHvalue('nvhdr', 6)
-        self.SetHvalue('leven', 1)
-        self.SetHvalue('lpspol', 1)
-        self.SetHvalue('lcalda', 0)
-        self.SetHvalue('lovrok', 1)
-        self.SetHvalue('nzyear', reftime.year)
-        self.SetHvalue('nzjday', reftime.strftime("%j"))
-        self.SetHvalue('nzhour', reftime.hour)
-        self.SetHvalue('nzmin', reftime.minute)
-        self.SetHvalue('nzsec', reftime.second)
-        self.SetHvalue('nzmsec', millisecond)
-        self.SetHvalue('kcmpnm', 'Z')
-        self.SetHvalue('evla', 0)
-        self.SetHvalue('evlo', 0)
-        self.SetHvalue('iftype', 1)
-        self.SetHvalue('npts', len(trace))
-        self.SetHvalue('delta', delta)
-        self.SetHvalue('b', begin)
-        self.SetHvalue('e', begin + (len(trace) - 1) * delta)
-        self.SetHvalue('iztype', 9)
-        self.SetHvalue('dist', distkm)
+        self.set_header_value('int1', 2)
+        self.set_header_value('cmpaz', 0)
+        self.set_header_value('cmpinc', 0)
+        self.set_header_value('nvhdr', 6)
+        self.set_header_value('leven', 1)
+        self.set_header_value('lpspol', 1)
+        self.set_header_value('lcalda', 0)
+        self.set_header_value('lovrok', 1)
+        self.set_header_value('nzyear', reftime.year)
+        self.set_header_value('nzjday', reftime.strftime("%j"))
+        self.set_header_value('nzhour', reftime.hour)
+        self.set_header_value('nzmin', reftime.minute)
+        self.set_header_value('nzsec', reftime.second)
+        self.set_header_value('nzmsec', millisecond)
+        self.set_header_value('kcmpnm', 'Z')
+        self.set_header_value('evla', 0)
+        self.set_header_value('evlo', 0)
+        self.set_header_value('iftype', 1)
+        self.set_header_value('npts', len(trace))
+        self.set_header_value('delta', delta)
+        self.set_header_value('b', begin)
+        self.set_header_value('e', begin + (len(trace) - 1) * delta)
+        self.set_header_value('iztype', 9)
+        self.set_header_value('dist', distkm)
 
-    def GetHvalue(self, item):
+    def get_header_value(self, item):
         """
         Read SAC-header variable.
 
@@ -386,12 +386,13 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO('test.sac') # doctest: +SKIP
-        >>> tr.GetHvalue('npts') # doctest: +SKIP
+        >>> tr.get_header_value('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
 
-        >>> SacIO().GetHvalueFromFile('test.sac','npts') # doctest: +SKIP
+        >>> SacIO().get_header_value_from_file('test.sac','npts') \
+        ... # doctest: +SKIP
         100
 
         Or:
@@ -420,7 +421,7 @@ class SacIO(object):
         else:
             raise SacError("Cannot find header entry for: " + item)
 
-    def SetHvalue(self, item, value):
+    def set_header_value(self, item, value):
         """
         Assign new value to SAC-header variable.
 
@@ -430,10 +431,10 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO
         >>> tr = SacIO()
-        >>> print(tr.GetHvalue('kstnm').strip())
+        >>> print(tr.get_header_value('kstnm').strip())
         -12345
-        >>> tr.SetHvalue('kstnm', 'STA_NEW')
-        >>> print(tr.GetHvalue('kstnm').strip())
+        >>> tr.set_header_value('kstnm', 'STA_NEW')
+        >>> print(tr.get_header_value('kstnm').strip())
         STA_NEW
         """
         key = item.lower()  # convert the item to lower case
@@ -463,7 +464,7 @@ class SacIO(object):
         else:
             raise SacError("Cannot find header entry for: " + item)
 
-    def IsSACfile(self, fh, fsize=True, lenchk=False):
+    def is_sac_file(self, fh, fsize=True, lenchk=False):
         """
         Test for a valid SAC file using arrays.
         """
@@ -471,7 +472,7 @@ class SacIO(object):
         length = fh.seek(0, 2)
         fh.seek(cur_pos, 0)
         try:
-            npts = self.GetHvalue('npts')
+            npts = self.get_header_value('npts')
         except:
             raise SacError("Unable to read number of points from header")
         if lenchk and npts != len(self.seis):
@@ -485,13 +486,13 @@ class SacIO(object):
                       "Check that headers are consistent with time series."
                 raise SacError(msg)
         # get the SAC file version number
-        version = self.GetHvalue('nvhdr')
+        version = self.get_header_value('nvhdr')
         if version < 0 or version > 20:
             raise SacError("Unknown header version!")
-        if self.GetHvalue('delta') <= 0:
+        if self.get_header_value('delta') <= 0:
             raise SacError("Delta < 0 is not a valid header entry!")
 
-    def ReadSacHeader(self, fh):
+    def read_sac_header(self, fh):
         """
         Reads only the header portion of a binary SAC-file.
 
@@ -500,7 +501,7 @@ class SacIO(object):
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> with open('test.sac', 'rb') as fh:
-        ...     tr.ReadSacHeader(fh) # doctest: +SKIP
+        ...     tr.read_sac_header(fh) # doctest: +SKIP
 
         This is equivalent to:
 
@@ -522,7 +523,7 @@ class SacIO(object):
             self.hf = self.hi = self.hs = None
             raise SacIOError("Cannot read all header values")
         try:
-            self.IsSACfile(fh)
+            self.is_sac_file(fh)
         except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
@@ -532,7 +533,7 @@ class SacIO(object):
                 self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
                 self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
-                self.IsSACfile(fh)
+                self.is_sac_file(fh)
                 self.byteorder = 'big'
             except SacError as e:
                 self.hf = self.hi = self.hs = None
@@ -541,13 +542,13 @@ class SacIO(object):
             self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
-        if self.GetHvalue('lcalda'):
+        if self.get_header_value('lcalda'):
             try:
                 self._get_dist()
             except SacError:
                 pass
 
-    def WriteSacHeader(self, fh):
+    def write_sac_header(self, fh):
         """
         Writes an updated header to an
         existing binary SAC-file.
@@ -558,13 +559,13 @@ class SacIO(object):
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
+        ...     tr.write_sac_binary(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'rb') as fh:
         ...     u = SacIO(fh) # doctest: +SKIP
-        >>> u.SetHvalue('kevnm','hullahulla') # doctest: +SKIP
+        >>> u.set_header_value('kevnm','hullahulla') # doctest: +SKIP
         >>> with open('test2.sac', 'rb+') as fh:
-        ...     u.WriteSacHeader(fh) # doctest: +SKIP
-        >>> u.GetHvalueFromFile('test2.sac',"kevnm") # doctest: +SKIP
+        ...     u.write_sac_header(fh) # doctest: +SKIP
+        >>> u.get_header_value_from_file('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
         fh.seek(0, 0)  # set pointer to the file beginning
@@ -576,7 +577,7 @@ class SacIO(object):
         except Exception:
             raise SacError("Cannot write header.")
 
-    def ReadSacFile(self, fh, fsize=True):
+    def read_sac_file(self, fh, fsize=True):
         """
         Read read in the header and data in a SAC file
 
@@ -588,7 +589,7 @@ class SacIO(object):
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
         >>> with open('test.sac') as fh:
-        ...     tr.ReadSacFile(fh)  # doctest: +SKIP
+        ...     tr.read_sac_file(fh)  # doctest: +SKIP
 
         This is equivalent to:
 
@@ -612,7 +613,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         # only continue if it is a SAC file
         try:
-            self.IsSACfile(fh, fsize)
+            self.is_sac_file(fh, fsize)
         except SacError:
             try:
                 # if it is not a valid SAC-file try with big endian
@@ -622,7 +623,7 @@ class SacIO(object):
                 self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
                 self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
-                self.IsSACfile(fh, fsize)
+                self.is_sac_file(fh, fsize)
                 self.byteorder = 'big'
             except SacError as e:
                 raise SacError(e)
@@ -643,13 +644,13 @@ class SacIO(object):
             self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
-        if self.GetHvalue('lcalda'):
+        if self.get_header_value('lcalda'):
             try:
                 self._get_dist()
             except SacError:
                 pass
 
-    def ReadSacXY(self, fh):
+    def read_sac_xy(self, fh):
         """
         Read SAC XY files (ascii)
 
@@ -657,8 +658,8 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
-        >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
-        >>> tr.GetHvalue('npts') # doctest: +SKIP
+        >>> tr.read_sac_xy('testxy.sac') # doctest: +SKIP
+        >>> tr.get_header_value('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
@@ -704,13 +705,13 @@ class SacIO(object):
             self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
-        if self.GetHvalue('lcalda'):
+        if self.get_header_value('lcalda'):
             try:
                 self._get_dist()
             except SacError:
                 pass
 
-    def ReadSacXYHeader(self, fh):
+    def read_sac_xy_header(self, fh):
         """
         Read SAC XY files (ascii)
 
@@ -718,8 +719,8 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> tr = SacIO() # doctest: +SKIP
-        >>> tr.ReadSacXY('testxy.sac') # doctest: +SKIP
-        >>> tr.GetHvalue('npts') # doctest: +SKIP
+        >>> tr.read_sac_xy('testxy.sac') # doctest: +SKIP
+        >>> tr.get_header_value('npts') # doctest: +SKIP
         100
 
         This is equivalent to:
@@ -757,20 +758,20 @@ class SacIO(object):
             self.hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'),
                                              count=3)
         try:
-            self.IsSACfile(fh, fsize=False)
+            self.is_sac_file(fh, fsize=False)
         except SacError as e:
             raise SacError(e)
         try:
             self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
-        if self.GetHvalue('lcalda'):
+        if self.get_header_value('lcalda'):
             try:
                 self._get_dist()
             except SacError:
                 pass
 
-    def readTrace(self, trace):
+    def read_trace(self, trace):
         """
         Fill in SacIO object with data from obspy trace.
         Warning: Currently only the case of a previously empty SacIO object is
@@ -786,19 +787,19 @@ class SacIO(object):
                        starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
         for _j, _k in convert_dict.items():
-            self.SetHvalue(_j, trace.stats[_k])
+            self.set_header_value(_j, trace.stats[_k])
         # overwriting up SAC specific values
         # note that the SAC reference time values (including B and E) are
         # not used in here any more, they are already set by t.fromarray
         # and directly deduce from tr.starttime
         for _i in SAC_EXTRA:
             try:
-                self.SetHvalue(_i, trace.stats.sac[_i])
+                self.set_header_value(_i, trace.stats.sac[_i])
             except (AttributeError, KeyError):
                 pass
         return
 
-    def WriteSacXY(self, fh):
+    def write_sac_xy(self, fh):
         """
         Write SAC XY file (ascii)
 
@@ -808,9 +809,9 @@ class SacIO(object):
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.WriteSacXY(fh) # doctest: +SKIP
+        ...     tr.write_sac_xy(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.IsValidXYSacFile(fh) # doctest: +SKIP
+        ...     tr.is_valid_xy_sac_file(fh) # doctest: +SKIP
         True
         """
         # header
@@ -826,7 +827,7 @@ class SacIO(object):
         except Exception as e:
             raise SacIOError("Cannot write header values.", e)
         # traces
-        npts = self.GetHvalue('npts')
+        npts = self.get_header_value('npts')
         if npts == -12345 or npts == 0:
             return
         try:
@@ -837,7 +838,7 @@ class SacIO(object):
         except Exception as e:
             raise SacIOError("Cannot write trace values.", e)
 
-    def WriteSacBinary(self, fh):
+    def write_sac_binary(self, fh):
         """
         Write a SAC binary file using the head arrays and array seis.
 
@@ -847,7 +848,7 @@ class SacIO(object):
         >>> with open('test.sac', 'rb') as fh:
         ...     tr = SacIO(fh) # doctest: +SKIP
         >>> with open('test2.sac', 'wb') as fh:
-        ...     tr.WriteSacBinary(fh) # doctest: +SKIP
+        ...     tr.write_sac_binary(fh) # doctest: +SKIP
         >>> import os
         >>> os.stat('test2.sac')[6] == os.stat('test.sac')[6] # doctest: +SKIP
         True
@@ -863,28 +864,28 @@ class SacIO(object):
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, e)
 
-    def PrintIValue(self, label='=', value=-12345):
+    def print_header_int_value(self, label='=', value=-12345):
         """
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
             print(label, value)
 
-    def PrintFValue(self, label='=', value=-12345.0):
+    def print_float_header_value(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
         if value != -12345.0:
             print('%s %.8g' % (label, value))
 
-    def PrintSValue(self, label='=', value='-12345'):
+    def print_header_string_value(self, label='=', value='-12345'):
         """
         Convenience function for printing undefined string header values.
         """
         if value.find('-12345') == -1:
             print(label, value)
 
-    def ListStdValues(self):  # h is a header list, s is a float list
+    def list_std_values(self):  # h is a header list, s is a float list
         """
         Convenience function for printing common header values.
 
@@ -893,7 +894,7 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO  # doctest: +SKIP
         >>> t = SacIO('test.sac')  # doctest: +SKIP
-        >>> t.ListStdValues()  # doctest: +SKIP +NORMALIZE_WHITESPACE
+        >>> t.list_std_values()  # doctest: +SKIP +NORMALIZE_WHITESPACE
         <BLANKLINE>
         Reference Time = 07/18/1978 (199) 8:0:0.0
         Npts  =  100
@@ -915,54 +916,73 @@ class SacIO(object):
         # Seismogram Info:
         #
         try:
-            nzyear = self.GetHvalue('nzyear')
-            nzjday = self.GetHvalue('nzjday')
+            nzyear = self.get_header_value('nzyear')
+            nzjday = self.get_header_value('nzjday')
             month = time.strptime(repr(nzyear) + " " + repr(nzjday),
                                   "%Y %j").tm_mon
             date = time.strptime(repr(nzyear) + " " + repr(nzjday),
                                  "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
             print(pattern % (month, date,
-                             self.GetHvalue('nzyear'),
-                             self.GetHvalue('nzjday'),
-                             self.GetHvalue('nzhour'),
-                             self.GetHvalue('nzmin'),
-                             self.GetHvalue('nzsec'),
-                             self.GetHvalue('nzmsec')))
+                             self.get_header_value('nzyear'),
+                             self.get_header_value('nzjday'),
+                             self.get_header_value('nzhour'),
+                             self.get_header_value('nzmin'),
+                             self.get_header_value('nzsec'),
+                             self.get_header_value('nzmsec')))
         except ValueError:
             pass
-        self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
-        self.PrintFValue('Delta = ', self.GetHvalue('delta'))
-        self.PrintFValue('Begin = ', self.GetHvalue('b'))
-        self.PrintFValue('End   = ', self.GetHvalue('e'))
-        self.PrintFValue('Min   = ', self.GetHvalue('depmin'))
-        self.PrintFValue('Mean  = ', self.GetHvalue('depmen'))
-        self.PrintFValue('Max   = ', self.GetHvalue('depmax'))
+        self.print_header_int_value('Npts  = ', self.get_header_value('npts'))
+        self.print_float_header_value('Delta = ',
+                                      self.get_header_value('delta'))
+        self.print_float_header_value('Begin = ', self.get_header_value('b'))
+        self.print_float_header_value('End   = ', self.get_header_value('e'))
+        self.print_float_header_value('Min   = ',
+                                      self.get_header_value('depmin'))
+        self.print_float_header_value('Mean  = ',
+                                      self.get_header_value('depmen'))
+        self.print_float_header_value('Max   = ',
+                                      self.get_header_value('depmax'))
         #
-        self.PrintIValue('Header Version = ', self.GetHvalue('nvhdr'))
+        self.print_header_int_value('Header Version = ',
+                                    self.get_header_value('nvhdr'))
         #
         # station Info:
         #
-        self.PrintSValue('Station = ', self.GetHvalue('kstnm'))
-        self.PrintSValue('Channel = ', self.GetHvalue('kcmpnm'))
-        self.PrintFValue('Station Lat  = ', self.GetHvalue('stla'))
-        self.PrintFValue('Station Lon  = ', self.GetHvalue('stlo'))
-        self.PrintFValue('Station Elev = ', self.GetHvalue('stel'))
+        self.print_header_string_value('Station = ',
+                                       self.get_header_value('kstnm'))
+        self.print_header_string_value('Channel = ',
+                                       self.get_header_value('kcmpnm'))
+        self.print_float_header_value('Station Lat  = ',
+                                      self.get_header_value('stla'))
+        self.print_float_header_value('Station Lon  = ',
+                                      self.get_header_value('stlo'))
+        self.print_float_header_value('Station Elev = ',
+                                      self.get_header_value('stel'))
         #
         # Event Info:
         #
-        self.PrintSValue('Event       = ', self.GetHvalue('kevnm'))
-        self.PrintFValue('Event Lat   = ', self.GetHvalue('evla'))
-        self.PrintFValue('Event Lon   = ', self.GetHvalue('evlo'))
-        self.PrintFValue('Event Depth = ', self.GetHvalue('evdp'))
-        self.PrintFValue('Origin Time = ', self.GetHvalue('o'))
+        self.print_header_string_value('Event       = ',
+                                       self.get_header_value('kevnm'))
+        self.print_float_header_value('Event Lat   = ',
+                                      self.get_header_value('evla'))
+        self.print_float_header_value('Event Lon   = ',
+                                      self.get_header_value('evlo'))
+        self.print_float_header_value('Event Depth = ',
+                                      self.get_header_value('evdp'))
+        self.print_float_header_value('Origin Time = ',
+                                      self.get_header_value('o'))
         #
-        self.PrintFValue('Azimuth        = ', self.GetHvalue('az'))
-        self.PrintFValue('Back Azimuth   = ', self.GetHvalue('baz'))
-        self.PrintFValue('Distance (km)  = ', self.GetHvalue('dist'))
-        self.PrintFValue('Distance (deg) = ', self.GetHvalue('gcarc'))
+        self.print_float_header_value('Azimuth        = ',
+                                      self.get_header_value('az'))
+        self.print_float_header_value('Back Azimuth   = ',
+                                      self.get_header_value('baz'))
+        self.print_float_header_value('Distance (km)  = ',
+                                      self.get_header_value('dist'))
+        self.print_float_header_value('Distance (deg) = ',
+                                      self.get_header_value('gcarc'))
 
-    def GetHvalueFromFile(self, thePath, theItem):
+    def get_header_value_from_file(self, thePath, theItem):
         """
         Quick access to a specific header item in specified file.
 
@@ -972,7 +992,8 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> t = SacIO() # doctest: +SKIP
-        >>> t.GetHvalueFromFile('test.sac','kcmpnm').rstrip() # doctest: +SKIP
+        >>> t.get_header_value_from_file('test.sac','kcmpnm').rstrip() \
+        ... # doctest: +SKIP
         'Q'
 
         String header values have a fixed length of 8 or 16 characters. This
@@ -983,10 +1004,10 @@ class SacIO(object):
         #  Read in the Header
         #
         with open(thePath, "rb") as fh:
-            self.ReadSacHeader(fh)
-            return(self.GetHvalue(theItem))
+            self.read_sac_header(fh)
+            return(self.get_header_value(theItem))
 
-    def SetHvalueInFile(self, thePath, theItem, theValue):
+    def set_header_value_in_file(self, thePath, theItem, theValue):
         """
         Quick access to change a specific header item in a specified file.
 
@@ -1000,41 +1021,44 @@ class SacIO(object):
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
         >>> t = SacIO() # doctest: +SKIP
-        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
+        >>> t.get_header_value_from_file('test.sac','kstnm').rstrip() \
+        ... # doctest: +SKIP
         'STA'
-        >>> t.SetHvalueInFile('test.sac','kstnm','blub') # doctest: +SKIP
-        >>> t.GetHvalueFromFile('test.sac','kstnm').rstrip() # doctest: +SKIP
+        >>> t.set_header_value_in_file('test.sac','kstnm','blub') \
+        ... # doctest: +SKIP
+        >>> t.get_header_value_from_file('test.sac','kstnm').rstrip() \
+        ... # doctest: +SKIP
         'blub'
         """
         # Read the header.
         with open(thePath, "rb") as fh:
-            self.ReadSacHeader(fh)
+            self.read_sac_header(fh)
 
         # Modify it.
-        self.SetHvalue(theItem, theValue)
+        self.set_header_value(theItem, theValue)
 
         # Write it.
         with open(thePath, "rb+") as fh:
-            self.WriteSacHeader(fh)
+            self.write_sac_header(fh)
 
-    def IsValidSacFile(self, thePath):
+    def is_valid_sac_file(self, thePath):
         """
-        Quick test for a valid SAC binary file (wraps 'IsSACfile').
+        Quick test for a valid SAC binary file (wraps 'is_sac_file').
 
         :param f: filename (SAC binary)
         :rtype: boolean (True or False)
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
-        >>> SacIO().IsValidSacFile('test.sac') # doctest: +SKIP
+        >>> SacIO().is_valid_sac_file('test.sac') # doctest: +SKIP
         True
-        >>> SacIO().IsValidSacFile('testxy.sac') # doctest: +SKIP
+        >>> SacIO().is_valid_sac_file('testxy.sac') # doctest: +SKIP
         False
         """
         #
         #  Read in the Header
         #
         try:
-            self.ReadSacHeader(thePath)
+            self.read_sac_header(thePath)
         except SacError:
             return False
         except SacIOError:
@@ -1042,7 +1066,7 @@ class SacIO(object):
         else:
             return True
 
-    def IsValidXYSacFile(self, fh):
+    def is_valid_xy_sac_file(self, fh):
         """
         Quick test for a valid SAC ascii file.
 
@@ -1050,13 +1074,13 @@ class SacIO(object):
         :rtype: boolean (True or False)
 
         >>> from obspy.io.sac import SacIO # doctest: +SKIP
-        >>> SacIO().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
+        >>> SacIO().is_valid_xy_sac_file('testxy.sac') # doctest: +SKIP
         True
-        >>> SacIO().IsValidXYSacFile('test.sac') # doctest: +SKIP
+        >>> SacIO().is_valid_xy_sac_file('test.sac') # doctest: +SKIP
         False
         """
         try:
-            self.ReadSacXY(fh)
+            self.read_sac_xy(fh)
             return True
         except:
             return False
@@ -1077,34 +1101,36 @@ class SacIO(object):
         # if any of the time-header values are still set to -12345 then
         # UTCDateTime raises an exception and reftime is set to 0.0
         try:
-            ms = self.GetHvalue('nzmsec') * 1000
-            yr = self.GetHvalue('nzyear')
+            ms = self.get_header_value('nzmsec') * 1000
+            yr = self.get_header_value('nzyear')
             if 0 <= yr <= 99:
                 warnings.warn(TWO_DIGIT_YEAR_MSG)
                 yr += 1900
             self.reftime = UTCDateTime(year=yr,
-                                       julday=self.GetHvalue('nzjday'),
-                                       hour=self.GetHvalue('nzhour'),
-                                       minute=self.GetHvalue('nzmin'),
-                                       second=self.GetHvalue('nzsec'),
+                                       julday=self.get_header_value('nzjday'),
+                                       hour=self.get_header_value('nzhour'),
+                                       minute=self.get_header_value('nzmin'),
+                                       second=self.get_header_value('nzsec'),
                                        microsecond=ms)
-            b = float(self.GetHvalue('b'))
+            b = float(self.get_header_value('b'))
             if b != -12345.0:
                 self.starttime = self.reftime + b
             else:
                 self.starttime = self.reftime
             self.endtime = self.starttime + \
-                self.GetHvalue('npts') * float(self.GetHvalue('delta'))
+                self.get_header_value('npts') * float(
+                    self.get_header_value('delta'))
         except:
             try:
                 self.reftime = UTCDateTime(0.0)
-                b = float(self.GetHvalue('b'))
+                b = float(self.get_header_value('b'))
                 if b != -12345.0:
                     self.starttime = self.reftime + b
                 else:
                     self.starttime = self.reftime
                 self.endtime = self.reftime + \
-                    self.GetHvalue('npts') * float(self.GetHvalue('delta'))
+                    self.get_header_value('npts') * float(
+                        self.get_header_value('delta'))
             except:
                 raise SacError("Cannot calculate date")
 
@@ -1116,48 +1142,48 @@ class SacIO(object):
             self.seis = np.require(self.seis, native_str('>f4'))
         else:
             self.seis = np.require(self.seis, native_str('<f4'))
-        self.SetHvalue('npts', self.seis.size)
+        self.set_header_value('npts', self.seis.size)
         if self.seis.size == 0:
             return
-        self.SetHvalue('depmin', self.seis.min())
-        self.SetHvalue('depmax', self.seis.max())
-        self.SetHvalue('depmen', self.seis.mean())
+        self.set_header_value('depmin', self.seis.min())
+        self.set_header_value('depmax', self.seis.max())
+        self.set_header_value('depmen', self.seis.mean())
 
     def _get_dist(self):
         """
         calculate distance from station and event coordinates
 
         >>> t = SacIO()
-        >>> t.SetHvalue('evla',48.15)
-        >>> t.SetHvalue('evlo',11.58333)
-        >>> t.SetHvalue('stla',-41.2869)
-        >>> t.SetHvalue('stlo',174.7746)
+        >>> t.set_header_value('evla',48.15)
+        >>> t.set_header_value('evlo',11.58333)
+        >>> t.set_header_value('stla',-41.2869)
+        >>> t.set_header_value('stlo',174.7746)
         >>> t._get_dist()
-        >>> print('%.2f' % t.GetHvalue('dist'))
+        >>> print('%.2f' % t.get_header_value('dist'))
         18486.53
-        >>> print('%.5f' % t.GetHvalue('az'))
+        >>> print('%.5f' % t.get_header_value('az'))
         65.65415
-        >>> print('%.4f' % t.GetHvalue('baz'))
+        >>> print('%.4f' % t.get_header_value('baz'))
         305.9755
 
         The original SAC-program calculates the distance assuming a
         average radius of 6371 km. Therefore, our routine should be more
         accurate.
         """
-        eqlat = self.GetHvalue('evla')
-        eqlon = self.GetHvalue('evlo')
-        stlat = self.GetHvalue('stla')
-        stlon = self.GetHvalue('stlo')
-        d = self.GetHvalue('dist')
+        eqlat = self.get_header_value('evla')
+        eqlon = self.get_header_value('evlo')
+        stlat = self.get_header_value('stla')
+        stlon = self.get_header_value('stlo')
+        d = self.get_header_value('dist')
         if eqlat == -12345.0 or eqlon == -12345.0 or \
            stlat == -12345.0 or stlon == -12345.0:
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
         dist, az, baz = gps2dist_azimuth(eqlat, eqlon, stlat, stlon)
-        self.SetHvalue('dist', dist / 1000.)
-        self.SetHvalue('az', az)
-        self.SetHvalue('baz', baz)
+        self.set_header_value('dist', dist / 1000.)
+        self.set_header_value('az', az)
+        self.set_header_value('baz', baz)
 
     def swap_byte_order(self):
         """
@@ -1188,10 +1214,10 @@ class SacIO(object):
 
         >>> tr = SacIO()
         >>> tr.fromarray(np.random.randn(100))
-        >>> tr.npts == tr.GetHvalue('npts') # doctest: +SKIP
+        >>> tr.npts == tr.get_header_value('npts') # doctest: +SKIP
         True
         """
-        return self.GetHvalue(hname)
+        return self.get_header_value(hname)
 
     def get_obspy_header(self):
         """
@@ -1203,7 +1229,7 @@ class SacIO(object):
         header = {}
         # convert common header types of the ObsPy trace object
         for i, j in convert_dict.items():
-            value = self.GetHvalue(i)
+            value = self.get_header_value(i)
             if isinstance(value, (str, native_str)):
                 null_term = value.find('\x00')
                 if null_term >= 0:
@@ -1222,7 +1248,7 @@ class SacIO(object):
         # assign extra header types of SAC
         header['sac'] = {}
         for i in SAC_EXTRA:
-            header['sac'][i] = self.GetHvalue(i)
+            header['sac'][i] = self.get_header_value(i)
         # convert time to UTCDateTime
         header['starttime'] = self.starttime
         # always add the begin time (if it's defined) to get the given
@@ -1230,13 +1256,13 @@ class SacIO(object):
         # note that the B and E times should not be in the SAC_EXTRA
         # dictionary, as they would overwrite the self.fromarray which sets
         # them according to the starttime, npts and delta.
-        header['sac']['b'] = float(self.GetHvalue('b'))
-        header['sac']['e'] = float(self.GetHvalue('e'))
+        header['sac']['b'] = float(self.get_header_value('b'))
+        header['sac']['e'] = float(self.get_header_value('e'))
         # ticket #390
         if self.debug_headers:
             for i in ['nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
                       'delta', 'scale', 'npts', 'knetwk', 'kstnm', 'kcmpnm']:
-                header['sac'][i] = self.GetHvalue(i)
+                header['sac'][i] = self.get_header_value(i)
         return header
 
 

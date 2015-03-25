@@ -83,7 +83,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(200, trace.stats.sampling_rate)
             self.assertEqual(
                 starttime[i],
-                util._convertDatetimeToMSTime(trace.stats.starttime))
+                util._convert_datetime_to_MSTime(trace.stats.starttime))
             self.assertEqual(datalist[i], trace.data[0:9].tolist())
             i += 1
         del stream
@@ -171,7 +171,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                  'int32_Steim2_bigEndian.mseed',
                  'int32_Steim2_littleEndian.mseed']
         for file in files:
-            info = util.getRecordInformation(os.path.join(path, file))
+            info = util.get_record_information(os.path.join(path, file))
             if 'ASCII' not in file:
                 encoding = file.split('_')[1].upper()
                 byteorder = file.split('_')[2].split('.')[0]
@@ -188,11 +188,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(256, info['record_length'])
         # No really good test files for the record length so just two files
         # with known record lengths are tested.
-        info = util.getRecordInformation(
+        info = util.get_record_information(
             os.path.join(self.path, 'data', 'timingquality.mseed'))
         self.assertEqual(info['record_length'], 512)
-        info = util.getRecordInformation(os.path.join(self.path, 'data',
-                                         'steim2.mseed'))
+        info = util.get_record_information(os.path.join(self.path, 'data',
+                                                        'steim2.mseed'))
         self.assertEqual(info['record_length'], 4096)
 
     def test_readAndWriteFileWithGaps(self):
@@ -256,7 +256,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         ms = _MSStruct(filename, init_msrmsf=False)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(start, clibmseed.msr_starttime(ms.msr))
-        ms.offset = ms.filePosFromRecNum(-1)
+        ms.offset = ms.file_pos_from_rec_num(-1)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
         del ms  # for valgrind
@@ -517,7 +517,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 tempfile = tf.name
                 st.write(tempfile, format="MSEED", reclen=rec_len)
                 # Get additional header info
-                info = util.getRecordInformation(tempfile)
+                info = util.get_record_information(tempfile)
                 # Test reading the two files.
                 temp_st = read(tempfile)
             np.testing.assert_array_equal(data, temp_st[0].data)

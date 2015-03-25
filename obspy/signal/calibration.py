@@ -24,7 +24,7 @@ import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
-from obspy.io.gse2.paz import readPaz
+from obspy.io.gse2.paz import read_paz
 from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
 
@@ -146,7 +146,7 @@ def _calcresp(calfile, nfft, sampfreq):
     :returns: complex transfer function, array of frequencies
     """
     # calculate transfer function
-    poles, zeros, scale_fac = readPaz(calfile)
+    poles, zeros, scale_fac = read_paz(calfile)
     h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
                          nfft, freq=True)
     return h, f

@@ -23,8 +23,8 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
-from obspy.io.mseed.util import (_convertMSRToDict, _ctypesArray2NumpyArray,
-                                 _convertMSTimeToDatetime)
+from obspy.io.mseed.util import (_convert_MSR_to_dict, _ctypes_array_2_numpy_array,
+                                 _convert_MSTime_to_datetime)
 from .seedlinkexception import SeedLinkException
 
 
@@ -136,7 +136,7 @@ class SLPacket(object):
 
         msr, msrecord_py = self.get_ms_record()
         try:
-            header = _convertMSRToDict(msrecord_py)
+            header = _convert_MSR_to_dict(msrecord_py)
 
             # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
             # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
@@ -145,7 +145,7 @@ class SLPacket(object):
             if not isinstance(sampletype, str):
                 sampletype = sampletype.decode()
 
-            data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
+            data = _ctypes_array_2_numpy_array(msrecord_py.datasamples,
                                            msrecord_py.numsamples,
                                            sampletype)
         finally:
@@ -162,7 +162,7 @@ class SLPacket(object):
                 header[key] = value.decode()
 
         # 20111201 AJL - bug fix?
-        header['starttime'] = _convertMSTimeToDatetime(header['starttime'])
+        header['starttime'] = _convert_MSTime_to_datetime(header['starttime'])
         # 20111205 AJL - bug fix?
         if 'samprate' in header:
             header['sampling_rate'] = header['samprate']
@@ -180,7 +180,7 @@ class SLPacket(object):
 
         try:
             # This is the same data buffer that is accessed by
-            # _ctypesArray2NumpyArray in get_trace above.
+            # _ctypes_array_2_numpy_array in get_trace above.
             payload = C.string_at(msrecord_py.datasamples,
                                   msrecord_py.samplecnt)
         finally:

@@ -131,8 +131,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # independent reading of the data
         with open(file, 'rb') as fp:
             data_string = fp.read()[128:]  # 128 Bytes header
-        data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
-                                  verbose=0)
+        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+                                    verbose=0)
         # test readMSTraces
         data_record = _read_mseed(file)[0].data
         np.testing.assert_array_equal(data, data_record)

@@ -13,7 +13,7 @@ from obspy import UTCDateTime
 from .headers import HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord, clibmseed
 
 
-def _getMSFileInfo(f, real_name):
+def _get_ms_file_info(f, real_name):
     """
     Takes a Mini-SEED filename as an argument and returns a dictionary
     with some basic information about the file. Also suitable for Full
@@ -69,7 +69,7 @@ class _MSStruct(object):
             self.read(-1, 0, 1, 0)
             self.offset = 0
 
-    def getEnd(self):
+    def get_end(self):
         """
         Return endtime
         """
@@ -77,7 +77,7 @@ class _MSStruct(object):
         dtime = clibmseed.msr_endtime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
 
-    def getStart(self):
+    def get_start(self):
         """
         Return starttime
         """
@@ -85,23 +85,23 @@ class _MSStruct(object):
         dtime = clibmseed.msr_starttime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
 
-    def fileinfo(self):
+    def file_info(self):
         """
-        For details see util._getMSFileInfo
+        For details see util._get_ms_file_info
         """
         fp = open(self.file, 'rb')
-        self.info = _getMSFileInfo(fp, self.file)
+        self.info = _get_ms_file_info(fp, self.file)
         fp.close()
         return self.info
 
-    def filePosFromRecNum(self, record_number=0):
+    def file_pos_from_rec_num(self, record_number=0):
         """
         Return byte position of file given a certain record_number.
 
         The byte position can be used to seek to certain points in the file
         """
         if not hasattr(self, 'info'):
-            self.info = self.fileinfo()
+            self.info = self.file_info()
         # Calculate offset of the record to be read.
         if record_number < 0:
             record_number = self.info['number_of_records'] + record_number
@@ -153,10 +153,10 @@ class _MSStruct(object):
         if errcode != MS_NOERROR:
             raise Exception("Error %d in ms_readmsr_r" % errcode)
 
-    def setOffset(self, value):
+    def set_offset(self, value):
         self.msf.contents.readoffset = C.c_int(value)
 
-    def getOffset(self):
+    def get_offset(self):
         return int(self.msf.contents.readoffset)
 
-    offset = property(getOffset, setOffset)
+    offset = property(get_offset, set_offset)

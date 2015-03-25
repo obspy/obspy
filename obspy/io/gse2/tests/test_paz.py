@@ -30,7 +30,7 @@ class PAZTestCase(unittest.TestCase):
         0.0 0.0
         0.0 0.0
         0.4""")
-        p, z, k = paz.readPaz(f)
+        p, z, k = paz.read_paz(f)
         self.assertAlmostEqual(-4.39823, p[0].real)
         self.assertAlmostEqual(4.48709, p[0].imag)
         self.assertAlmostEqual(-4.39823, p[1].real)
@@ -54,7 +54,7 @@ class PAZTestCase(unittest.TestCase):
 -1.09823-3.08709
 -1.0982330.08709
 0.5""")
-        p, z, k = paz.readPaz(f)
+        p, z, k = paz.read_paz(f)
         self.assertAlmostEqual(-4.39823, p[0].real)
         self.assertAlmostEqual(40.48709, p[0].imag)
         self.assertAlmostEqual(-4.39823, p[1].real)

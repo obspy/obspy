@@ -36,7 +36,7 @@ def _is_ah(filename):
     :rtype: bool
     :return: ``True`` if a AH waveform file.
     """
-    if _get_AH_version(filename):
+    if _get_ah_version(filename):
         return True
     return False
 
@@ -54,14 +54,14 @@ def _read_ah(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream with Traces specified by given file.
     """
-    version = _get_AH_version(filename)
+    version = _get_ah_version(filename)
     if version == '2.0':
         return _read_ah2(filename)
     else:
         return _read_ah1(filename)
 
 
-def _get_AH_version(filename):
+def _get_ah_version(filename):
     """
     Returns version of AH waveform data.
 

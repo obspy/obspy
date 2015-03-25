@@ -24,7 +24,7 @@ def _is_gse2(filename):
     # Open file.
     try:
         with open(filename, 'rb') as f:
-            libgse2.isGse2(f)
+            libgse2.is_gse2(f)
     except:
         return False
     return True
@@ -62,7 +62,7 @@ def _read_gse2(filename, headonly=False, verify_chksum=True,
         while True:
             try:
                 if headonly:
-                    header = libgse2.readHeader(f)
+                    header = libgse2.read_header(f)
                     traces.append(Trace(header=header))
                 else:
                     header, data = libgse2.read(f, verify_chksum=verify_chksum)
@@ -163,7 +163,7 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
         while True:
             try:
                 if headonly:
-                    header = libgse1.readHeader(fh)
+                    header = libgse1.read_header(fh)
                     traces.append(Trace(header=header))
                 else:
                     header, data = \

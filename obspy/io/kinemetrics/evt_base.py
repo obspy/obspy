@@ -70,7 +70,7 @@ class EvtVirtual(object):
         if key in self.HEADER:
             return self.HEADER[key][2]
 
-    def unsetdico(self):
+    def unset_dict(self):
         """
         remove all values from dictionary
         """
@@ -80,7 +80,7 @@ class EvtVirtual(object):
             except IndexError:
                 pass
 
-    def setdico(self, val, offset=0):
+    def set_dict(self, val, offset=0):
         """
         fill the dictionary with values found in the input 'val' list
             the nth value in val is placed in the dictionary if a key
@@ -93,7 +93,7 @@ class EvtVirtual(object):
         :param offset : offset in the dictionary
         """
         if not isinstance(val, tuple):
-            raise TypeError("setdico() expects a tuple")
+            raise TypeError("set_dict() expects a tuple")
         for key in self.HEADER:
             index = self.HEADER[key][0] - offset
             if 0 <= index < len(val):
