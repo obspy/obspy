@@ -77,7 +77,7 @@ def _namespace(self, prefix=None):
 SchemaObject.namespace = _namespace
 
 
-def _mapKwargs(f):
+def _map_kwargs(f):
     """
     Maps function arguments to keyword arguments.
     """
@@ -193,39 +193,6 @@ class Client(object):
             event['depth'] = -event['depth']
             events.append(event)
         return events
-
-    @_mapKwargs
-    def getEvents(self, min_datetime=None, max_datetime=None,
-                  min_longitude=None, max_longitude=None, min_latitude=None,
-                  max_latitude=None, min_depth=None, max_depth=None,
-                  min_magnitude=None, max_magnitude=None, magnitude_type=None,
-                  author=None, sort_by="datetime", sort_direction="ASC",
-                  max_results=100, format=None, **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side, please use the
-        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
-        """
-        raise Exception(DEPR_WARN)
-
-    def getLatestEvents(self, num=10, format=None):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side, please use the
-        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
-        """
-        raise Exception(DEPR_WARN)
-
-    def getEventDetail(self, uri, format=None):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side, please use the
-        obspy.clients.fdsn Client instead (with `base_url='NERIES'`).
-        """
-        raise Exception(DEPR_WARN)
 
     def getTravelTimes(self, latitude, longitude, depth, locations=[],
                        model='iasp91'):
