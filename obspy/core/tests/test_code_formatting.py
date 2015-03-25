@@ -28,7 +28,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         file_count = report.counters["files"]
         error_count = report.get_count()
         self.assertGreater(file_count, 10)
-        self.assertEqual(error_count, 0, message)
+        self.assertEqual(error_count, 0, "\n" + message.decode())
 
 
 class FutureUsageTestCase(unittest.TestCase):
