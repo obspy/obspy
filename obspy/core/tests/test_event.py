@@ -679,21 +679,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         rid = ResourceIdentifier()
         self.assertEqual(rid.id, rid.get_quakeml_uri())
 
-    def test_resource_id_init_deprecation(self):
-        """
-        Test that a resource identifier initialized with deprecated
-        "resource_id" gets initialized correctly and that a warning is shown.
-        """
-        with warnings.catch_warnings(record=True) as w:
-            warnings.resetwarnings()
-            rid = ResourceIdentifier(id="blablup")
-        self.assertEqual(rid.id, "blablup")
-        self.assertEqual(len(w), 1)
-        w = w[0]
-        self.assertEqual(w.category, DeprecationWarning)
-        self.assertTrue(
-            str(w.message).startswith("Deprecated keyword resource_id "))
-
     def test_resource_id_tracking(self):
         """
         The class keeps track of all instances.
