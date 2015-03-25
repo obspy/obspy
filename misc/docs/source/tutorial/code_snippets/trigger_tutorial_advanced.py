@@ -9,7 +9,7 @@ from obspy.signal.trigger import recSTALTA, triggerOnset
 client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                 user="test@obspy.de")
 t = UTCDateTime("2009-08-24 00:19:45")
-st = client.getWaveform('BW', 'RTSH', '', 'EHZ', t, t + 50)
+st = client.get_waveforms('BW', 'RTSH', '', 'EHZ', t, t + 50)
 
 # For convenience
 tr = st[0]  # only one trace in mseed volume

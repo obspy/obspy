@@ -15,13 +15,13 @@ paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
 client = Client(user="sed-workshop@obspy.org")
 t = UTCDateTime("2012-04-03T02:45:03")
 
-stations = client.getStations(t, t + 300, "CH")
+stations = client.get_stations(t, t + 300, "CH")
 mags = []
 
 for station in stations:
     station = station['code']
     try:
-        st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300,
+        st = client.get_waveforms("CH", station, "", "[EH]H[ZNE]", t - 300,
                                 t + 300, metadata=True)
         assert(len(st) == 3)
     except:

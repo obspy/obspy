@@ -19,7 +19,7 @@ stations = ["LKBD", "SIMPL", "DIX"]
 mags = []
 
 for station in stations:
-    st = client.getWaveform("CH", station, "", "[EH]H*", t - 300, t + 300,
+    st = client.get_waveforms("CH", station, "", "[EH]H*", t - 300, t + 300,
                             metadata=True)
 
     st.simulate(paz_remove="self", paz_simulate=paz_wa, water_level=10)

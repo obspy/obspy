@@ -39,8 +39,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
@@ -65,8 +65,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
@@ -84,8 +84,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
@@ -110,8 +110,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
@@ -125,7 +125,7 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(ArcLinkException, client.getWaveform, 'GE', 'APE',
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'GE', 'APE',
                           '', 'BHZ', start, end)
 
     @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
@@ -138,8 +138,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.getWaveform, 'GE', 'APE', '', 'BHZ',
-                          start, end)
+        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
+                          'BHZ', start, end)
 
     @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformNoPassword(self):
@@ -151,8 +151,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.getWaveform, 'GE', 'APE', '', 'BHZ',
-                          start, end)
+        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
+                          'BHZ', start, end)
 
 
 def suite():

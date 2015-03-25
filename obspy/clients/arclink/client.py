@@ -25,7 +25,7 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
-from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.decorator import deprecated_keywords, deprecated
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -177,8 +177,8 @@ class Client(object):
                           self._client.port,
                           self._client.timeout)
 
-    def _writeln(self, buffer):
-        # Py3k: might be confusing, _writeln accepts str
+    def _write_ln(self, buffer):
+        # Py3k: might be confusing, _write_ln accepts str
         # readln accepts bytes (but was smallest change like that)
         if self.command_delay:
             time.sleep(self.command_delay)
@@ -187,7 +187,7 @@ class Client(object):
         if self.debug:
             print(b'>>> ' + b_buffer)
 
-    def _readln(self, value=b''):
+    def _read_ln(self, value=b''):
         line = self._client.read_until(value + b'\r\n', self.timeout)
         line = line.strip()
         if value not in line:
@@ -199,19 +199,19 @@ class Client(object):
 
     def _hello(self):
         self._reconnect()
-        self._writeln('HELLO')
-        self.version = self._readln(b')')
-        self.node = self._readln()
+        self._write_ln('HELLO')
+        self.version = self._read_ln(b')')
+        self.node = self._read_ln()
         if self.password:
-            self._writeln('USER %s %s' % (self.user, self.password))
+            self._write_ln('USER %s %s' % (self.user, self.password))
         else:
-            self._writeln('USER %s' % self.user)
-        self._readln(b'OK')
-        self._writeln('INSTITUTION %s' % self.institution)
-        self._readln(b'OK')
+            self._write_ln('USER %s' % self.user)
+        self._read_ln(b'OK')
+        self._write_ln('INSTITUTION %s' % self.institution)
+        self._read_ln(b'OK')
 
     def _bye(self):
-        self._writeln('BYE')
+        self._write_ln('BYE')
         self._client.close()
 
     def _fetch(self, request_type, request_data, route=True):
@@ -223,12 +223,12 @@ class Client(object):
             return self._request(request_type, request_data)
         # request routing table for given network/station/times combination
         # location and channel information are ignored by ArcLink
-        routes = self.getRouting(network=request_data[2],
-                                 station=request_data[3],
-                                 starttime=request_data[0],
-                                 endtime=request_data[1])
+        routes = self.get_routing(network=request_data[2],
+                                  station=request_data[3],
+                                  starttime=request_data[0],
+                                  endtime=request_data[1])
         # search routes for network/station/location/channel
-        table = self._findRoute(routes, request_data)
+        table = self._find_route(routes, request_data)
         if not table:
             # retry first ArcLink node if host or port has been changed
             if self._client.host != self.init_host or \
@@ -271,18 +271,18 @@ class Client(object):
 
     def _request(self, request_type, request_data):
         self._hello()
-        self._writeln(request_type)
+        self._write_ln(request_type)
         # create request string
         # adding one second to start and end time to ensure right date times
         out = (request_data[0] - 1).formatArcLink() + ' '
         out += (request_data[1] + 1).formatArcLink() + ' '
         out += ' '.join([str(i) for i in request_data[2:]])
-        self._writeln(out)
-        self._writeln('END')
-        self._readln(b'OK')
+        self._write_ln(out)
+        self._write_ln('END')
+        self._read_ln(b'OK')
         # get status id
         while True:
-            status = self._readln()
+            status = self._read_ln()
             try:
                 req_id = int(status)
             except:
@@ -296,8 +296,8 @@ class Client(object):
         _loops = 0
         _old_xml_doc = None
         while True:
-            self._writeln('STATUS %d' % req_id)
-            xml_doc = self._readln(b'END')
+            self._write_ln('STATUS %d' % req_id)
+            xml_doc = self._read_ln(b'END')
             if b'ready="true"' in xml_doc:
                 break
             # check if status messages changes over time
@@ -319,7 +319,7 @@ class Client(object):
             err_str = b'status="' + err_code + b'"'
             if err_str in xml_doc:
                 # cleanup
-                self._writeln('PURGE %d' % req_id)
+                self._write_ln('PURGE %d' % req_id)
                 self._bye()
                 # parse XML for reason
                 xml_doc = objectify.fromstring(xml_doc[:-3])
@@ -327,23 +327,23 @@ class Client(object):
                 raise ArcLinkException("%s %s" % (err_code, msg))
         if b'status="NODATA"' in xml_doc:
             # cleanup
-            self._writeln('PURGE %d' % req_id)
+            self._write_ln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No data available')
         elif b'id="NODATA"' in xml_doc or b'id="ERROR"' in xml_doc:
             # cleanup
-            self._writeln('PURGE %d' % req_id)
+            self._write_ln('PURGE %d' % req_id)
             self._bye()
             # parse XML for error message
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
         elif b'<line content' not in xml_doc:
             # safeguard for not covered status messages
-            self._writeln('PURGE %d' % req_id)
+            self._write_ln('PURGE %d' % req_id)
             self._bye()
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
-        self._writeln('DOWNLOAD %d' % req_id)
+        self._write_ln('DOWNLOAD %d' % req_id)
         try:
             fd = self._client.get_socket().makefile('rb')
             length = int(fd.readline(100).strip())
@@ -360,7 +360,7 @@ class Client(object):
                 else:
                     print("%d bytes of data read" % len(data))
         finally:
-            self._writeln('PURGE %d' % req_id)
+            self._write_ln('PURGE %d' % req_id)
             self._bye()
         # check for encryption
         if b'encrypted="true"' in xml_doc:
@@ -379,9 +379,14 @@ class Client(object):
                 warnings.warn(msg % (dcid))
         return data
 
-    def getWaveform(self, network, station, location, channel, starttime,
-                    endtime, format="MSEED", compressed=True, metadata=False,
-                    route=True, **kwargs):
+    @deprecated("'getWaveforms' has been renamed to 'get_waveforms'. Use "
+                "that instead.")
+    def getWaveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime, format="MSEED", compressed=True, metadata=False,
+                      route=True, **kwargs):
         """
         Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
@@ -419,7 +424,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime("2009-08-20 04:03:12")
-        >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+        >>> st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
         >>> st.plot() #doctest: +SKIP
 
         .. plot::
@@ -428,20 +433,20 @@ class Client(object):
             from obspy.clients.arclink.client import Client
             client = Client("webdc.eu", 18001, 'test@obspy.org')
             t = UTCDateTime("2009-08-20 04:03:12")
-            st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+            st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
-        if kwargs.get('getPAZ') or kwargs.get('getCoordinates'):
-            msg = "Keywords getPAZ and getCoordinates are deprecated. " + \
+        if kwargs.get('get_paz') or kwargs.get('getCoordinates'):
+            msg = "Keywords get_paz and getCoordinates are deprecated. " + \
                   "Please use keyword metadata instead."
             warnings.warn(msg, DeprecationWarning)
         # handle deprecated keywords - one must be True to enable metadata
-        metadata = metadata or kwargs.get('getPAZ', False) or \
+        metadata = metadata or kwargs.get('get_paz', False) or \
             kwargs.get('getCoordinates', False)
         file_stream = io.BytesIO()
-        self.saveWaveform(file_stream, network, station, location, channel,
-                          starttime, endtime, format=format,
-                          compressed=compressed, route=route)
+        self.save_waveforms(file_stream, network, station, location, channel,
+                            starttime, endtime, format=format,
+                            compressed=compressed, route=route)
         file_stream.seek(0, 0)
         stream = read(file_stream, 'MSEED')
         file_stream.close()
@@ -450,10 +455,10 @@ class Client(object):
         # fetching PAZ and coordinates
         if metadata:
             # fetch metadata only once
-            inv = self.getInventory(network=network, station=station,
-                                    location=location, channel=channel,
-                                    starttime=starttime, endtime=endtime,
-                                    instruments=True, route=route)
+            inv = self.get_inventory(network=network, station=station,
+                                     location=location, channel=channel,
+                                     starttime=starttime, endtime=endtime,
+                                     instruments=True, route=route)
             netsta = '.'.join([network, station])
             coordinates = AttribDict()
             for key in ['latitude', 'longitude', 'elevation']:
@@ -485,9 +490,14 @@ class Client(object):
                     tr.stats['paz'] = entry.paz
         return stream
 
-    def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED", compressed=True,
-                     route=True, unpack=True):
+    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
+                "that instead.")
+    def saveWaveform(self, *args, **kwargs):
+        return self.save_waveforms(*args, **kwargs)
+
+    def save_waveforms(self, filename, network, station, location, channel,
+                       starttime, endtime, format="MSEED", compressed=True,
+                       route=True, unpack=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -535,7 +545,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
-        >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
+        >>> client.save_waveforms('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
         format = format.upper()
@@ -590,8 +600,13 @@ class Client(object):
         if is_name:
             fh.close()
 
-    def getRouting(self, network, station, starttime, endtime,
-                   modified_after=None):
+    @deprecated("'getRouting' has been renamed to 'get_routing'. Use "
+                "that instead.")
+    def getRouting(self, *args, **kwargs):
+        return self.get_routing(*args, **kwargs)
+
+    def get_routing(self, network, station, starttime, endtime,
+                    modified_after=None):
         """
         Get primary ArcLink host for given network/stations/time combination.
 
@@ -657,7 +672,7 @@ class Client(object):
                 result[id].append(temp)
         return result
 
-    def _findRoute(self, routes, request_data):
+    def _find_route(self, routes, request_data):
         """
         Searches routing table for requested stream id and date/times.
         """
@@ -692,8 +707,13 @@ class Client(object):
         out = sorted(out, key=lambda x: x.get('priority', 1000))
         return out
 
-    def getQC(self, network, station, location, channel, starttime,
-              endtime, parameters='*', outages=True, logs=True):
+    @deprecated("'getQC' has been renamed to 'get_qc'. Use "
+                "that instead.")
+    def getQC(self, *args, **kwargs):
+        return self.get_qc(*args, **kwargs)
+
+    def get_qc(self, network, station, location, channel, starttime,
+               endtime, parameters='*', outages=True, logs=True):
         """
         Retrieve QC information of ArcLink streams.
 
@@ -744,9 +764,14 @@ class Client(object):
         result = self._fetch(rtype, rdata, route=False)
         return result
 
-    @deprecated_keywords({'getPAZ': None, 'getCoordinates': None})
-    def getMetadata(self, network, station, location, channel, starttime=None,
-                    endtime=None, time=None, route=True):
+    @deprecated("'getMetadata' has been renamed to 'get_metadata'. Use "
+                "that instead.")
+    def getMetadata(self, *args, **kwargs):
+        return self.get_metadata(*args, **kwargs)
+
+    @deprecated_keywords({'get_paz': None, 'getCoordinates': None})
+    def get_metadata(self, network, station, location, channel, starttime=None,
+                     endtime=None, time=None, route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity and station
         coordinates for a single channel at a given time.
@@ -772,7 +797,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
-        >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', t)
+        >>> data = client.get_metadata('BW', 'MANZ', '', 'EHZ', t)
         >>> data  # doctest: +NORMALIZE_WHITESPACE +SKIP
         {'paz': AttribDict({'poles': [(-0.037004+0.037016j),
                                       (-0.037004-0.037016j), (-251.33+0j),
@@ -803,14 +828,14 @@ class Client(object):
         # check if single trace
         id = '.'.join([network, station, location, channel])
         if '*' in id:
-            msg = 'getMetadata supports only a single channel, use ' + \
-                  'getInventory instead'
+            msg = 'get_metadata supports only a single channel, use ' + \
+                  'get_inventory instead'
             raise ArcLinkException(msg)
         # fetch inventory
-        result = self.getInventory(network=network, station=station,
-                                   location=location, channel=channel,
-                                   starttime=starttime, endtime=endtime,
-                                   instruments=True, route=route)
+        result = self.get_inventory(network=network, station=station,
+                                    location=location, channel=channel,
+                                    starttime=starttime, endtime=endtime,
+                                    instruments=True, route=route)
         data = {}
         # paz
         id = '.'.join([network, station, location, channel])
@@ -899,8 +924,13 @@ class Client(object):
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    def getPAZ(self, network, station, location, channel, starttime=None,
-               endtime=None, time=None, route=True):
+    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
+                "that instead.")
+    def getPAZ(self, *args, **kwargs):
+        return self.get_paz(*args, **kwargs)
+
+    def get_paz(self, network, station, location, channel, starttime=None,
+                endtime=None, time=None, route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -925,7 +955,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
-        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t)
+        >>> paz = client.get_paz('BW', 'MANZ', '', 'EHZ', t)
         >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
         AttribDict({'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
                               (-251.33+0j), (-131.04-467.29j),
@@ -940,7 +970,7 @@ class Client(object):
             # warn if old scheme
             msg = "The 'starttime' and 'endtime' keywords will be " + \
                 "deprecated. Please use 'time' instead. Be aware that the" + \
-                "result of getPAZ() will differ using the 'time' keyword."
+                "result of get_paz() will differ using the 'time' keyword."
             warnings.warn(msg, category=DeprecationWarning)
         elif starttime and not endtime:
             # use a single starttime as time keyword
@@ -956,14 +986,14 @@ class Client(object):
         # check if single trace
         id = '.'.join([network, station, location, channel])
         if '*' in id:
-            msg = 'getPAZ supports only a single channel, use getInventory' + \
+            msg = 'get_paz supports only a single channel, use get_inventory' + \
                   ' instead'
             raise ArcLinkException(msg)
         # fetch inventory
-        result = self.getInventory(network=network, station=station,
-                                   location=location, channel=channel,
-                                   starttime=starttime, endtime=endtime,
-                                   instruments=True, route=route)
+        result = self.get_inventory(network=network, station=station,
+                                    location=location, channel=channel,
+                                    starttime=starttime, endtime=endtime,
+                                    instruments=True, route=route)
         try:
             if time is None:
                 # old deprecated schema (ARGS!!!!)
@@ -980,8 +1010,13 @@ class Client(object):
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
 
-    def saveResponse(self, filename, network, station, location, channel,
-                     starttime, endtime, format='SEED'):
+    @deprecated("'saveResponse' has been renamed to 'save_response'. Use "
+                "that instead.")
+    def saveResponse(self, *args, **kwargs):
+        return self.save_response(*args, **kwargs)
+
+    def save_response(self, filename, network, station, location, channel,
+                      starttime, endtime, format='SEED'):
         """
         Writes response information into a file.
 
@@ -1010,8 +1045,8 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
-        >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
-        ...                     t, t + 1, format="SEED")  # doctest: +SKIP
+        >>> client.save_response('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '',
+        ...                      '*', t, t + 1, format="SEED") # doctest: +SKIP
         """
         # check format
         format = format.upper()
@@ -1031,12 +1066,17 @@ class Client(object):
             with open(filename, "wb") as fp:
                 fp.write(data)
 
-    def getInventory(self, network, station='*', location='*', channel='*',
-                     starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=False, route=True, sensortype='',
-                     min_latitude=None, max_latitude=None,
-                     min_longitude=None, max_longitude=None,
-                     restricted=None, permanent=None, modified_after=None):
+    @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
+                "that instead.")
+    def getInventory(self, *args, **kwargs):
+        return self.get_inventory(*args, **kwargs)
+
+    def get_inventory(self, network, station='*', location='*', channel='*',
+                      starttime=UTCDateTime(), endtime=UTCDateTime(),
+                      instruments=False, route=True, sensortype='',
+                      min_latitude=None, max_latitude=None,
+                      min_longitude=None, max_longitude=None,
+                      restricted=None, permanent=None, modified_after=None):
         """
         Returns information about the available networks and stations in that
         particular space/time region.
@@ -1088,9 +1128,10 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
-        >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
-        ...                           permanent=True, min_longitude=12,
-        ...                           max_longitude=12.2) #doctest: +SKIP
+        >>> inv = client.get_inventory('BW', 'M*', '*', 'EHZ',
+        ...                            restricted=False,
+        ...                            permanent=True, min_longitude=12,
+        ...                            max_longitude=12.2) #doctest: +SKIP
         >>> inv.keys()  # doctest: +SKIP
         ['BW.MROB', 'BW.MANZ..EHZ', 'BW', 'BW.MANZ', 'BW.MROB..EHZ']
         >>> inv['BW']  # doctest: +SKIP
@@ -1346,7 +1387,12 @@ class Client(object):
 
         return data
 
-    def getNetworks(self, starttime, endtime, route=True):
+    @deprecated("'getNetworks' has been renamed to 'get_networks'. Use "
+                "that instead.")
+    def getNetworks(self, *args, **kwargs):
+        return self.get_networks(*args, **kwargs)
+
+    def get_networks(self, starttime, endtime, route=True):
         """
         Returns a dictionary of available networks within the given time span.
 
@@ -1362,10 +1408,15 @@ class Client(object):
         :type route: bool, optional
         :param route: Enables ArcLink routing (default is ``False``).
         """
-        return self.getInventory(network='*', starttime=starttime,
-                                 endtime=endtime, route=route)
+        return self.get_inventory(network='*', starttime=starttime,
+                                  endtime=endtime, route=route)
 
-    def getStations(self, starttime, endtime, network, route=True):
+    @deprecated("'getStations' has been renamed to 'get_stations'. Use "
+                "that instead.")
+    def getStations(self, *args, **kwargs):
+        return self.get_stations(*args, **kwargs)
+
+    def get_stations(self, starttime, endtime, network, route=True):
         """
         Returns a dictionary of available stations in the given network(s).
 
@@ -1382,10 +1433,9 @@ class Client(object):
         :return: Dictionary of station data.
         :type route: bool, optional
         :param route: Enables ArcLink routing (default is ``True``).
-
         """
-        data = self.getInventory(network=network, starttime=starttime,
-                                 endtime=endtime, route=route)
+        data = self.get_inventory(network=network, starttime=starttime,
+                                  endtime=endtime, route=route)
         stations = [value for key, value in data.items()
                     if key.startswith(network + '.') and
                     "code" in value]

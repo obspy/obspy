@@ -26,13 +26,13 @@ class ClientTestCase(unittest.TestCase):
     """
     def test_getWaveform(self):
         """
-        Tests getWaveform method.
+        Tests get_waveforms method.
         """
         # example 1
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2010, 1, 1)
         end = start + 1
-        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
+        stream = client.get_waveforms('BW', 'MANZ', '', 'EH*', start, end)
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertTrue(trace.stats.starttime <= start)
@@ -45,7 +45,7 @@ class ClientTestCase(unittest.TestCase):
         client = Client(user='test@obspy.org')
         start = UTCDateTime("2010-12-31T23:59:50.495000Z")
         end = start + 100
-        stream = client.getWaveform('GE', 'APE', '', 'BHE', start, end)
+        stream = client.get_waveforms('GE', 'APE', '', 'BHE', start, end)
         self.assertEqual(len(stream), 1)
         trace = stream[0]
         self.assertTrue(trace.stats.starttime <= start)
@@ -57,21 +57,21 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getWaveformNoRouting(self):
         """
-        Tests routing parameter of getWaveform method.
+        Tests routing parameter of get_waveforms method.
         """
         # 1 - requesting BW data w/o routing on webdc.eu
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MANZ',
                           '', 'EH*', start, end, route=False)
         # 2 - requesting BW data w/o routing directly from BW ArcLink node
         client = Client(host='erde.geophysik.uni-muenchen.de', port=18001,
                         user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
-                                    route=False)
+        stream = client.get_waveforms('BW', 'MANZ', '', 'EH*', start, end,
+                                      route=False)
         for trace in stream:
             self.assertTrue(trace.stats.starttime <= start)
             self.assertTrue(trace.stats.endtime >= end)
@@ -88,22 +88,22 @@ class ClientTestCase(unittest.TestCase):
                         user='test@obspy.org')
         start = UTCDateTime(2010, 1, 1)
         end = start + 100
-        # getWaveform with 0.1 delay
-        stream = client.getWaveform('GR', 'FUR', '', 'HHE', start, end)
+        # get_waveforms with 0.1 delay
+        stream = client.get_waveforms('GR', 'FUR', '', 'HHE', start, end)
         self.assertEqual(len(stream), 1)
-        # getRouting with 0.1 delay
-        results = client.getRouting('GR', 'FUR', start, end)
+        # get_routing with 0.1 delay
+        results = client.get_routing('GR', 'FUR', start, end)
         self.assertIn('GR...', results)
 
     def test_getRouting(self):
         """
-        Tests getRouting method on various ArcLink nodes.
+        Tests get_routing method on various ArcLink nodes.
         """
         dt = UTCDateTime(2010, 1, 1)
         # 1 - BW network via erde.geophysik.uni-muenchen.de:18001
         client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                         user='test@obspy.org')
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
+        results = client.get_routing('BW', 'RJOB', dt, dt + 1)
         self.assertEqual(
             results,
             {'BW.RJOB..': [{'priority': 1,
@@ -112,7 +112,7 @@ class ClientTestCase(unittest.TestCase):
                             'port': 18001}]})
         # 2 - BW network via webdc:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
+        results = client.get_routing('BW', 'RJOB', dt, dt + 1)
         self.assertEqual(
             results,
             {'BW.RJOB..': [{'priority': 1,
@@ -122,7 +122,7 @@ class ClientTestCase(unittest.TestCase):
                             'port': 18001}]})
         # 3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
+        results = client.get_routing('BW', 'RJOB', dt, dt + 1)
         self.assertEqual(
             results,
             {'BW.RJOB..': [{'priority': 1,
@@ -132,7 +132,7 @@ class ClientTestCase(unittest.TestCase):
                             'port': 18001}]})
         # 4 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
-        results = client.getRouting('IV', '', dt, dt + 1)
+        results = client.get_routing('IV', '', dt, dt + 1)
         self.assertEqual(
             results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
@@ -140,7 +140,7 @@ class ClientTestCase(unittest.TestCase):
                         'port': 18002}]})
         # 5 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
-        results = client.getRouting('IV', '', dt, dt + 1)
+        results = client.get_routing('IV', '', dt, dt + 1)
         self.assertEqual(
             results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
@@ -148,7 +148,7 @@ class ClientTestCase(unittest.TestCase):
                         'port': 18002}]})
         # 6 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
-        results = client.getRouting('GE', 'APE', dt, dt + 1)
+        results = client.get_routing('GE', 'APE', dt, dt + 1)
         self.assertEqual(
             results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
@@ -156,7 +156,7 @@ class ClientTestCase(unittest.TestCase):
                         'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
-        results = client.getRouting('GE', 'APE', dt, dt + 1)
+        results = client.get_routing('GE', 'APE', dt, dt + 1)
         self.assertEqual(
             results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
@@ -164,43 +164,44 @@ class ClientTestCase(unittest.TestCase):
                         'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
-        results = client.getRouting('00', '', dt, dt + 1)
+        results = client.get_routing('00', '', dt, dt + 1)
         self.assertEqual(results, {})
 
     def test_getInventory(self):
         """
-        Tests getInventory method on various ArcLink nodes.
+        Tests get_inventory method on various ArcLink nodes.
         """
         client = Client(user='test@obspy.org')
         dt = UTCDateTime(2010, 1, 1)
         # 1 - GE network
-        result = client.getInventory('GE', 'APE', starttime=dt, endtime=dt + 1)
+        result = client.get_inventory('GE', 'APE', starttime=dt,
+                                      endtime=dt + 1)
         self.assertIn('GE', result)
         self.assertIn('GE.APE', result)
         # 2 - GE network
-        result = client.getInventory('GE', 'APE', '', 'BHE', starttime=dt,
-                                     endtime=dt + 1, instruments=True)
+        result = client.get_inventory('GE', 'APE', '', 'BHE', starttime=dt,
+                                      endtime=dt + 1, instruments=True)
         self.assertIn('GE', result)
         self.assertIn('GE.APE', result)
         self.assertIn('GE.APE..BHE', result)  # only for instruments=True
         # 3 - BW network
-        result = client.getInventory('BW', 'RJOB', starttime=dt,
-                                     endtime=dt + 1)
+        result = client.get_inventory('BW', 'RJOB', starttime=dt,
+                                      endtime=dt + 1)
         self.assertIn('BW', result)
         self.assertIn('BW.RJOB', result)
         # 4 - BW network
-        result = client.getInventory('BW', 'MANZ', '', 'EHE', starttime=dt,
-                                     endtime=dt + 1, instruments=True)
+        result = client.get_inventory('BW', 'MANZ', '', 'EHE', starttime=dt,
+                                      endtime=dt + 1, instruments=True)
         self.assertIn('BW', result)
         self.assertIn('BW.MANZ', result)
         self.assertIn('BW.MANZ..EHE', result)
         # 5 - unknown network 00 via webdc.eu:18002
-        self.assertRaises(ArcLinkException, client.getInventory, '00', '',
+        self.assertRaises(ArcLinkException, client.get_inventory, '00', '',
                           starttime=dt, endtime=dt + 1)
         # 6 - get channel gain without PAZ
         start = UTCDateTime("1970-01-01 00:00:00")
         end = UTCDateTime("2020-10-19 00:00:00")
-        result = client.getInventory('BW', 'MANZ', '', 'EHE', start, end)
+        result = client.get_inventory('BW', 'MANZ', '', 'EHE', start, end)
         self.assertIn('BW', result)
         self.assertIn('BW.MANZ', result)
         self.assertIn('BW.MANZ..EHE', result)
@@ -210,8 +211,8 @@ class ClientTestCase(unittest.TestCase):
         # 7 - history of instruments
         # GE.SNAA sometimes needs a while therefore we use command_delay=0.1
         client = Client(user='test@obspy.org', command_delay=0.1)
-        result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
-                                     instruments=True)
+        result = client.get_inventory('GE', 'SNAA', '', 'BHZ', start, end,
+                                      instruments=True)
         self.assertIn('GE', result)
         self.assertIn('GE.SNAA', result)
         self.assertIn('GE.SNAA..BHZ', result)
@@ -237,11 +238,11 @@ class ClientTestCase(unittest.TestCase):
         client = Client(user='test@obspy.org')
         dt = UTCDateTime(2009, 1, 1)
         # station
-        client.getInventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
-        client.getInventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
+        client.get_inventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
+        client.get_inventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
         # network
-        client.getInventory('BW', starttime=dt, endtime=dt + 1)
-        client.getInventory('BW', starttime=dt, endtime=dt + 1)
+        client.get_inventory('BW', starttime=dt, endtime=dt + 1)
+        client.get_inventory('BW', starttime=dt, endtime=dt + 1)
 
     def test_getWaveformWithMetadata(self):
         """
@@ -250,8 +251,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(user='test@obspy.org')
         # example 1
         t = UTCDateTime("2010-08-01T12:00:00")
-        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60,
-                                metadata=True)
+        st = client.get_waveforms("BW", "RJOB", "", "EHZ", t, t + 60,
+                                  metadata=True)
         results = {
             'network': 'BW',
             '_format': 'MSEED',
@@ -294,8 +295,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats, results)
         # example 2
         client = Client(user='test@obspy.org')
-        st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60,
-                                metadata=True)
+        st = client.get_waveforms("CZ", "VRAC", "", "BHZ", t, t + 60,
+                                  metadata=True)
         results = {
             'network': 'CZ',
             '_format': 'MSEED',
@@ -345,12 +346,12 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        self.assertRaises(ArcLinkException, client.getWaveform, 'AA', 'AAAAA',
-                          '', '*', start, end)
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'AA',
+                          'AAAAA', '', '*', start, end)
         # example 2
         start = UTCDateTime(2038, 1, 1)
         end = start + 1
-        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MANZ',
                           '', '*', start, end)
 
     def test_getWaveformWrongPattern(self):
@@ -361,7 +362,7 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MAN*',
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MAN*',
                           '', '*', start, end)
 
     def test_getNetworks(self):
@@ -372,7 +373,7 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        result = client.getNetworks(start, end)
+        result = client.get_networks(start, end)
         self.assertIn('BW', result.keys())
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
@@ -385,7 +386,7 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
-        result = client.getStations(start, end, 'BW')
+        result = client.get_stations(start, end, 'BW')
         self.assertTrue(
             AttribDict({'remark': '', 'code': 'RWMO', 'elevation': 763.0,
                         'description': 'Wildenmoos, Bavaria, BW-Net',
@@ -408,7 +409,8 @@ class ClientTestCase(unittest.TestCase):
         # MiniSEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             mseedfile = tf.name
-            client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            client.save_waveforms(mseedfile, 'BW', 'MANZ', '', 'EHZ', start,
+                                  end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
             with open(mseedfile, 'rb') as fp:
@@ -423,8 +425,8 @@ class ClientTestCase(unittest.TestCase):
         # Full SEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             fseedfile = tf.name
-            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                                format='FSEED')
+            client.save_waveforms(fseedfile, 'BW', 'MANZ', '', 'EHZ', start,
+                                  end, format='FSEED')
             st = read(fseedfile)
             # Full SEED must start with Volume Index Control Headers (V)
             with open(fseedfile, 'rb') as fp:
@@ -445,8 +447,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2011, 1, 1, 0, 0)
         end = start + 10
-        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
-                                    compressed=False)
+        stream = client.get_waveforms('BW', 'MANZ', '', 'EH*', start, end,
+                                      compressed=False)
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertEqual(trace.stats.network, 'BW')
@@ -464,8 +466,8 @@ class ClientTestCase(unittest.TestCase):
         # MiniSEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             mseedfile = tf.name
-            client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                                compressed=False)
+            client.save_waveforms(mseedfile, 'GE', 'APE', '', 'BHZ', start,
+                                  end, compressed=False)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
             with open(mseedfile, 'rb') as fp:
@@ -478,12 +480,12 @@ class ClientTestCase(unittest.TestCase):
         # Full SEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             fseedfile = tf.name
-            client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                                format='FSEED')
+            client.save_waveforms(fseedfile, 'GE', 'APE', '', 'BHZ', start,
+                                  end, format='FSEED')
             st = read(fseedfile)
             # Full SEED
-            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                                format='FSEED')
+            client.save_waveforms(fseedfile, 'BW', 'MANZ', '', 'EHZ', start,
+                                  end, format='FSEED')
             # ArcLink cuts on record base
             self.assertEqual(st[0].stats.network, 'GE')
             self.assertEqual(st[0].stats.station, 'APE')
@@ -501,8 +503,8 @@ class ClientTestCase(unittest.TestCase):
         # MiniSEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             mseedfile = tf.name
-            client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                                unpack=False)
+            client.save_waveforms(mseedfile, 'GE', 'APE', '', 'BHZ', start,
+                                  end, unpack=False)
             # check if compressed
             with open(mseedfile, 'rb') as fp:
                 self.assertEqual(fp.read(2), b'BZ')
@@ -511,8 +513,8 @@ class ClientTestCase(unittest.TestCase):
         # Full SEED
         with NamedTemporaryFile(suffix='.bz2') as tf:
             fseedfile = tf.name
-            client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                                format="FSEED", unpack=False)
+            client.save_waveforms(fseedfile, 'GE', 'APE', '', 'BHZ', start,
+                                  end, format="FSEED", unpack=False)
             # check if compressed
             with open(fseedfile, 'rb') as fp:
                 self.assertEqual(fp.read(2), b'BZ')
@@ -521,7 +523,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getPAZ(self):
         """
-        Test for the Client.getPAZ function.
+        Test for the Client.get_paz function.
 
         As reference the EHZ channel of MANZ is taken, the result is compared
         to the entries of the local response file of the Bavarian network.
@@ -538,26 +540,27 @@ class ClientTestCase(unittest.TestCase):
                         user='test@obspy.org')
         # fetch poles and zeros
         dt = UTCDateTime(2009, 1, 1)
-        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
+        paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
         # compare instrument
         self.assertEqual(normalization_factor, paz.normalization_factor)
         self.assertEqual(poles, paz.poles)
         self.assertEqual(zeros, paz.zeros)
         self.assertAlmostEqual(sensitivity / 1e9, paz.sensitivity / 1e9, 4)
         # PAZ over multiple channels should raise an exception
-        self.assertRaises(ArcLinkException, client.getPAZ, 'BW', 'MANZ', '',
+        self.assertRaises(ArcLinkException, client.get_paz, 'BW', 'MANZ', '',
                           'EH*', dt)
 
     def test_getPAZ2(self):
         """
-        Test for the Client.getPAZ function for erde.geophysik.uni-muenchen.de.
+        Test for the Client.get_paz function for
+        erde.geophysik.uni-muenchen.de.
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         dt = UTCDateTime(2009, 1, 1)
         client = Client("erde.geophysik.uni-muenchen.de", 18001,
                         user='test@obspy.org')
         # fetch poles and zeros
-        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
+        paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
         self.assertEqual(len(poles), 2)
         self.assertEqual(poles, paz['poles'][:2])
 
@@ -604,11 +607,11 @@ class ClientTestCase(unittest.TestCase):
         # Retrieve data via ArcLink
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
-        st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
+        st = client.get_waveforms("BW", "RJOB", "", "EHZ", t, t + 30)
         # original but deprecated call
-        # poles_zeros = list(client.getPAZ("BW", "RJOB", "", "EHZ",
+        # poles_zeros = list(client.get_paz("BW", "RJOB", "", "EHZ",
         #                                 t, t+30).values())[0]
-        poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ", t)
+        poles_zeros = client.get_paz("BW", "RJOB", "", "EHZ", t)
         self.assertEqual(paz['gain'], poles_zeros['gain'])
         self.assertEqual(paz['poles'], poles_zeros['poles'])
         self.assertEqual(paz['sensitivity'], poles_zeros['sensitivity'])
@@ -629,14 +632,14 @@ class ClientTestCase(unittest.TestCase):
         client = Client("webdc.eu", 18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-20 04:03:12")
         # 1
-        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                metadata=False)
+        st = client.get_waveforms("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                  metadata=False)
         self.assertEqual(len(st), 3)
         self.assertNotIn('paz', st[0].stats)
         self.assertNotIn('coordinates', st[0].stats)
         # 2
-        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                metadata=True)
+        st = client.get_waveforms("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                  metadata=True)
         self.assertEqual(len(st), 3)
         self.assertIn('paz', st[0].stats)
         self.assertIn('coordinates', st[0].stats)
@@ -647,8 +650,8 @@ class ClientTestCase(unittest.TestCase):
         """
         dt = UTCDateTime("20120729070000")
         client = Client(user='test@obspy.org')
-        st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
-                                metadata=True)
+        st = client.get_waveforms("BS", "JMB", "", "BH*", dt, dt + 7200,
+                                  metadata=True)
         for tr in st:
             self.assertIn('paz', tr.stats)
             self.assertIn('coordinates', tr.stats)
@@ -658,44 +661,44 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getInventoryInstrumentChange(self):
         """
-        Check results of getInventory if instrumentation has been changed.
+        Check results of get_inventory if instrumentation has been changed.
 
         Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
         """
         client = Client(user='test@obspy.org')
         # one instrument in given time span
         dt = UTCDateTime("2003-01-09T00:00:00")
-        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                  instruments=True, route=False)
+        inv = client.get_inventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                   instruments=True, route=False)
         self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
         # two instruments in given time span
         dt = UTCDateTime("2003-01-09T23:59:59")
-        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                  instruments=True, route=False)
+        inv = client.get_inventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                   instruments=True, route=False)
         self.assertTrue(len(inv['GE.SNAA..BHZ']), 2)
         # one instrument in given time span
         dt = UTCDateTime("2003-01-10T00:00:00")
-        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                  instruments=True, route=False)
+        inv = client.get_inventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                   instruments=True, route=False)
         self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
 
     def test_getWaveformInstrumentChange(self):
         """
-        Check results of getWaveform if instrumentation has been changed.
+        Check results of get_waveforms if instrumentation has been changed.
 
         Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
         """
         client = Client(user='test@obspy.org')
         # one instrument in given time span
         dt = UTCDateTime("2003-01-09T00:00:00")
-        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                metadata=True)
+        st = client.get_waveforms("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                  metadata=True)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.paz.sensitivity, 596224500.0)
         # two instruments in given time span
         dt = UTCDateTime("2003-01-09T23:59:00")
-        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 120,
-                                metadata=True)
+        st = client.get_waveforms("GE", "SNAA", "", "BHZ", dt, dt + 120,
+                                  metadata=True)
         # results into two traces
         self.assertEqual(len(st), 2)
         # with different PAZ
@@ -704,8 +707,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[1].stats.paz.sensitivity, 588000000.0)
         # one instrument in given time span
         dt = UTCDateTime("2003-01-10T01:00:00")
-        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                metadata=True)
+        st = client.get_waveforms("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                  metadata=True)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.paz.sensitivity, 588000000.0)
 
