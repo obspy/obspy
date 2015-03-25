@@ -302,12 +302,12 @@ class SEGYTestCase(unittest.TestCase):
                 segy.file = f
                 segy.textual_header_encoding = None
                 # Read the textual header.
-                segy._readTextualHeader()
+                segy._read_textual_header()
                 # Assert the encoding and compare with known values.
                 self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
             new_header = io.BytesIO()
-            segy._writeTextualHeader(new_header)
+            segy._write_textual_header(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
             # Assert the correct length.

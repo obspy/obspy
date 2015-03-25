@@ -13,7 +13,7 @@ import numpy as np
 
 from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.seisan.core import _getVersion, _is_seisan, _read_seisan
+from obspy.io.seisan.core import _get_version, _is_seisan, _read_seisan
 
 
 class CoreTestCase(unittest.TestCase):
@@ -32,12 +32,12 @@ class CoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
-        self.assertEqual(_getVersion(data), ('>', 32, 7))
+        self.assertEqual(_get_version(data), ('>', 32, 7))
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
-        self.assertEqual(_getVersion(data), ('<', 32, 7))
+        self.assertEqual(_get_version(data), ('<', 32, 7))
 
     def test_is_seisan(self):
         """

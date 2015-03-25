@@ -267,7 +267,7 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            sio.write("START: %s\n" % fromUTCDateTime(dt))
+            sio.write("START: %s\n" % from_UTCDateTime(dt))
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
             sio.write("COMP: %c\n" % trace.stats.channel[2])
@@ -547,14 +547,14 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        temp += "S021:%s~ " % fromUTCDateTime(dt)
+        temp += "S021:%s~ " % from_UTCDateTime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
-                value = fromUTCDateTime(value)
+                value = from_UTCDateTime(value)
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
@@ -637,7 +637,7 @@ def toUTCDateTime(value):
     return UTCDateTime(year, month, day, hour, mins) + secs
 
 
-def fromUTCDateTime(dt):
+def from_UTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
@@ -649,7 +649,7 @@ def fromUTCDateTime(dt):
 
     >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
-    >>> print(fromUTCDateTime(dt))
+    >>> print(from_UTCDateTime(dt))
      2-JAN-2008_03:04:05.123
     """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"

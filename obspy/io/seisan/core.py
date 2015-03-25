@@ -41,12 +41,12 @@ def _is_seisan(filename):
     except:
         return False
     # read some data - contains at least 12 lines a 80 characters
-    if _getVersion(data):
+    if _get_version(data):
         return True
     return False
 
 
-def _getVersion(data):
+def _get_version(data):
     """
     Extracts SEISAN version from given data chunk.
 
@@ -149,7 +149,7 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     fh = open(filename, 'rb')
     data = fh.read(80 * 12)
     # get version info from file
-    (byteorder, arch, _version) = _getVersion(data)
+    (byteorder, arch, _version) = _get_version(data)
     # fetch lines
     fh.seek(0)
     # start with event file header

@@ -23,7 +23,8 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
-from obspy.io.mseed.util import (_convert_MSR_to_dict, _ctypes_array_2_numpy_array,
+from obspy.io.mseed.util import (_convert_MSR_to_dict,
+                                 _ctypes_array_2_numpy_array,
                                  _convert_MSTime_to_datetime)
 from .seedlinkexception import SeedLinkException
 
@@ -146,8 +147,8 @@ class SLPacket(object):
                 sampletype = sampletype.decode()
 
             data = _ctypes_array_2_numpy_array(msrecord_py.datasamples,
-                                           msrecord_py.numsamples,
-                                           sampletype)
+                                               msrecord_py.numsamples,
+                                               sampletype)
         finally:
             self.free_ms_record(msr, msrecord_py)
 

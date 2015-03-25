@@ -96,7 +96,7 @@ class SEGYFile(object):
             Defaults to False.
         """
         if file is None:
-            self._createEmptySEGYFileObject()
+            self._create_empty_segy_file_object()
             # Set the endianness to big.
             if endian is None:
                 self.endian = '>'
@@ -110,15 +110,15 @@ class SEGYFile(object):
         self.file = file
         # If endian is None autodetect is.
         if not endian:
-            self._autodetectEndianness()
+            self._autodetect_endianness()
         else:
             self.endian = ENDIAN[endian]
         # If the textual header encoding is None, autodetection will be used.
         self.textual_header_encoding = textual_header_encoding
         # Read the headers.
-        self._readHeaders()
+        self._read_headers()
         # Read the actual traces.
-        self._readTraces(unpack_headers=unpack_headers, headonly=headonly)
+        self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
 
     def __str__(self):
         """
@@ -129,7 +129,7 @@ class SEGYFile(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    def _autodetectEndianness(self):
+    def _autodetect_endianness(self):
         """
         Tries to automatically determine the endianness of the file at hand.
         """
@@ -153,7 +153,7 @@ class SEGYFile(object):
         # Jump to previous position.
         self.file.seek(pos, 0)
 
-    def _createEmptySEGYFileObject(self):
+    def _create_empty_segy_file_object(self):
         """
         Creates an empty SEGYFile object.
         """
@@ -161,7 +161,7 @@ class SEGYFile(object):
         self.binary_file_header = None
         self.traces = []
 
-    def _readTextualHeader(self):
+    def _read_textual_header(self):
         """
         Reads the textual header.
         """
@@ -197,13 +197,13 @@ class SEGYFile(object):
         # Finally set it.
         self.textual_file_header = textual_header
 
-    def _readHeaders(self):
+    def _read_headers(self):
         """
         Reads the textual and binary file headers starting at the current file
         pointer position.
         """
         # Read the textual header.
-        self._readTextualHeader()
+        self._read_textual_header()
         # The next 400 bytes are from the Binary File Header.
         binary_file_header = self.file.read(400)
         bfh = SEGYBinaryFileHeader(binary_file_header, self.endian)
@@ -236,7 +236,7 @@ class SEGYFile(object):
         If data_encoding or endian is set, these values will be enforced.
         """
         # Write the textual header.
-        self._writeTextualHeader(file)
+        self._write_textual_header(file)
 
         # Write certain fields in the binary header if they are not set. Most
         # fields will be written using the data from the first trace. It is
@@ -270,7 +270,7 @@ class SEGYFile(object):
         for trace in self.traces:
             trace.write(file, data_encoding=data_encoding, endian=endian)
 
-    def _writeTextualHeader(self, file):
+    def _write_textual_header(self, file):
         """
         Write the textual header in various encodings. The encoding will depend
         on self.textual_header_encoding. If self.textual_file_header is too
@@ -300,7 +300,7 @@ class SEGYFile(object):
             raise SEGYWritingError(msg)
         file.write(textual_header)
 
-    def _readTraces(self, unpack_headers=False, headonly=False):
+    def _read_traces(self, unpack_headers=False, headonly=False):
         """
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
@@ -347,11 +347,11 @@ class SEGYBinaryFileHeader(object):
         """
         self.endian = endian
         if header is None:
-            self._createEmptyBinaryFileHeader()
+            self._create_empty_binary_file_header()
             return
-        self._readBinaryFileHeader(header)
+        self._read_binary_file_header(header)
 
-    def _readBinaryFileHeader(self, header):
+    def _read_binary_file_header(self, header):
         """
         Reads the binary file header and stores every value in a class
         attribute.
@@ -429,7 +429,7 @@ class SEGYBinaryFileHeader(object):
             else:
                 raise Exception
 
-    def _createEmptyBinaryFileHeader(self):
+    def _create_empty_binary_file_header(self):
         """
         Just fills all necessary class attributes with zero.
         """
@@ -487,7 +487,7 @@ class SEGYTrace(object):
         self.data_encoding = data_encoding
         # If None just return empty structure.
         if file is None:
-            self._createEmptyTrace()
+            self._create_empty_trace()
             return
         self.file = file
         # Set the filesize if necessary.
@@ -502,9 +502,9 @@ class SEGYTrace(object):
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
-        self._readTrace(unpack_headers=unpack_headers, headonly=headonly)
+        self._read_trace(unpack_headers=unpack_headers, headonly=headonly)
 
-    def _readTrace(self, unpack_headers=False, headonly=False):
+    def _read_trace(self, unpack_headers=False, headonly=False):
         """
         Reads the complete next header starting at the file pointer at
         self.file.
@@ -578,7 +578,7 @@ class SEGYTrace(object):
         DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_encoding](file, self.data,
                                                          endian=endian)
 
-    def _createEmptyTrace(self):
+    def _create_empty_trace(self):
         """
         Creates an empty trace with an empty header.
         """
@@ -647,7 +647,7 @@ class SEGYTraceHeader(object):
         """
         self.endian = endian
         if header is None:
-            self._createEmptyTraceHeader()
+            self._create_empty_trace_header()
             return
         # Check the length of the string,
         if len(header) != 240:
@@ -659,9 +659,9 @@ class SEGYTraceHeader(object):
             self.unpacked_header = header
         else:
             self.unpacked_header = None
-            self._readTraceHeader(header)
+            self._read_trace_header(header)
 
-    def _readTraceHeader(self, header):
+    def _read_trace_header(self, header):
         """
         Reads the 240 byte long header and unpacks all values into
         corresponding class attributes.
@@ -749,7 +749,7 @@ class SEGYTraceHeader(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    def _createEmptyTraceHeader(self):
+    def _create_empty_trace_header(self):
         """
         Init the trace header with zeros.
         """
@@ -852,7 +852,7 @@ class SUFile(object):
             Defaults to False.
         """
         if file is None:
-            self._createEmptySUFileObject()
+            self._create_empty_SU_file_object()
             return
             # Set the endianness to big.
             if endian is None:
@@ -863,13 +863,13 @@ class SUFile(object):
         self.file = file
         # If endian is None autodetect is.
         if not endian:
-            self._autodetectEndianness()
+            self._autodetect_endianness()
         else:
             self.endian = ENDIAN[endian]
         # Read the actual traces.
-        self._readTraces(unpack_headers=unpack_headers, headonly=headonly)
+        self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
 
-    def _autodetectEndianness(self):
+    def _autodetect_endianness(self):
         """
         Tries to automatically determine the endianness of the file at hand.
         """
@@ -879,7 +879,7 @@ class SUFile(object):
                   'by hand or contact the developers.'
             raise Exception(msg)
 
-    def _createEmptySUFileObject(self):
+    def _create_empty_SU_file_object(self):
         """
         Creates an empty SUFile object.
         """
@@ -894,7 +894,7 @@ class SUFile(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    def _readTraces(self, unpack_headers=False, headonly=False):
+    def _read_traces(self, unpack_headers=False, headonly=False):
         """
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
