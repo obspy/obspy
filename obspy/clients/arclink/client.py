@@ -379,7 +379,7 @@ class Client(object):
                 warnings.warn(msg % (dcid))
         return data
 
-    @deprecated("'getWaveforms' has been renamed to 'get_waveforms'. Use "
+    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
                 "that instead.")
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
