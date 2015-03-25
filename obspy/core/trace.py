@@ -23,11 +23,11 @@ import numpy as np
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk
-from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.decorator import (deprecated_keywords, raiseIfMasked,
-                                       skipIfNoData)
-from obspy.core.util.misc import flatnotmaskedContiguous
+from obspy.core.util import AttribDict, create_empty_data_chunk
+from obspy.core.util.base import _get_function_from_entry_point
+from obspy.core.util.decorator import (deprecated_keywords, raise_if_masked,
+                                       skip_if_no_data)
+from obspy.core.util.misc import flat_not_masked_contiguous
 
 
 class Stats(AttribDict):
@@ -712,7 +712,7 @@ class Trace(object):
                 # check if data are the same
                 data = [lt.data[:-delta], rt.data]
             elif method == 0:
-                overlap = createEmptyDataChunk(delta, lt.data.dtype,
+                overlap = create_empty_data_chunk(delta, lt.data.dtype,
                                                fill_value)
                 data = [lt.data[:-delta], overlap, rt.data[delta:]]
             elif method == 1 and interpolation_samples >= -1:
@@ -766,7 +766,7 @@ class Trace(object):
                 else:
                     data = [lt.data]
             elif method == 0:
-                gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
+                gap = create_empty_data_chunk(lenrt, lt.data.dtype, fill_value)
                 data = [lt.data[:t1], gap, lt.data[t2:]]
             elif method == 1:
                 data = [lt.data]
@@ -778,7 +778,7 @@ class Trace(object):
         else:
             # gap
             # use fixed value or interpolate in between
-            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+            gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on NumPy array type
         if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
@@ -942,10 +942,10 @@ class Trace(object):
             return self
         elif delta < 0 and pad:
             try:
-                gap = createEmptyDataChunk(abs(delta), self.data.dtype,
+                gap = create_empty_data_chunk(abs(delta), self.data.dtype,
                                            fill_value)
             except ValueError:
-                # createEmptyDataChunk returns negative ValueError ?? for
+                # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and "
                                 "trace.starttime too large")
@@ -1001,9 +1001,9 @@ class Trace(object):
             return self
         if delta > 0 and pad:
             try:
-                gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
+                gap = create_empty_data_chunk(delta, self.data.dtype, fill_value)
             except ValueError:
-                # createEmptyDataChunk returns negative ValueError ?? for
+                # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
@@ -1358,7 +1358,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('filter', type)
+        func = _get_function_from_entry_point('filter', type)
         # filtering
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
@@ -1437,7 +1437,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('trigger', type)
+        func = _get_function_from_entry_point('trigger', type)
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
         # used in length of trigger averages)...
@@ -1451,7 +1451,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, **options)
         return self
 
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -1703,7 +1703,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @deprecated_keywords({'type': 'method'})
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
@@ -1733,13 +1733,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('differentiate', method)
+        func = _get_function_from_entry_point('differentiate', method)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
         return self
 
     @deprecated_keywords({'type': 'method'})
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
         """
@@ -1767,13 +1767,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('integrate', method)
+        func = _get_function_from_entry_point('integrate', method)
 
         self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self
 
-    @skipIfNoData
-    @raiseIfMasked
+    @skip_if_no_data
+    @raise_if_masked
     @_add_processing_info
     def detrend(self, type='simple', **options):
         """
@@ -1807,7 +1807,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('detrend', type)
+        func = _get_function_from_entry_point('detrend', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
             # SciPy need to set the type keyword
@@ -1818,7 +1818,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, **options)
         return self
 
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
@@ -1916,7 +1916,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if side not in side_valid:
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('taper', type)
+        func = _get_function_from_entry_point('taper', type)
         # store all constraints for maximum taper length
         max_half_lenghts = []
         if max_percentage is not None:
@@ -2069,7 +2069,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
             return Stream([self])
-        slices = flatnotmaskedContiguous(self.data)
+        slices = flat_not_masked_contiguous(self.data)
         trace_list = []
         for slice in slices:
             if slice.step:
@@ -2082,8 +2082,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_list.append(tr)
         return Stream(trace_list)
 
-    @skipIfNoData
-    @raiseIfMasked
+    @skip_if_no_data
+    @raise_if_masked
     @_add_processing_info
     def interpolate(self, sampling_rate, method="weighted_average_slopes",
                     starttime=None, npts=None):
@@ -2169,9 +2169,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(method, int) or method in ["linear", "nearest", "zero",
                                                  "slinear", "quadratic",
                                                  "cubic"]:
-            func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
+            func = _get_function_from_entry_point('interpolate', 'interpolate_1d')
         else:
-            func = _getFunctionFromEntryPoint('interpolate', method)
+            func = _get_function_from_entry_point('interpolate', method)
         old_start = self.stats.starttime.timestamp
         old_dt = self.stats.delta
 

@@ -12,14 +12,14 @@ from ctypes import CDLL
 from ctypes.util import find_library
 
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skip_if
 
 
 class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @skipIf(sys.platform == "darwin" and
+    @skip_if(sys.platform == "darwin" and
             platform.python_version_tuple()[0] == "3",
             "Does not work on OSX and Python 3 for some reason.")
     def test_CatchOutput(self):

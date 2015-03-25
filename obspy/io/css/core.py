@@ -11,7 +11,7 @@ import os
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 
 
 DTYPE = {
@@ -107,7 +107,7 @@ def readCSS(filename, **kwargs):
         with open(filename, "rb") as fh:
             fh.seek(offset)
             data = fh.read(read_fmt.itemsize * npts)
-            data = frombuffer(data, dtype=read_fmt)
+            data = from_buffer(data, dtype=read_fmt)
             data = np.require(data, dtype=fmt)
         header = {}
         header['station'] = line[0:6].strip().decode()

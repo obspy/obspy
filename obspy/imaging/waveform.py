@@ -36,9 +36,9 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import createEmptyDataChunk
+from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, locations2degrees
-from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.base import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
 
@@ -791,7 +791,7 @@ class WaveformPlotting(object):
             locator = MaxNLocator(5)
         else:
             ax.xaxis_date()
-            if getMatplotlibVersion() < [1, 0, 0]:
+            if get_matplotlib_version() < [1, 0, 0]:
                 locator = AutoDateLocator()
             else:
                 locator = AutoDateLocator(minticks=3, maxticks=6)
@@ -866,7 +866,7 @@ class WaveformPlotting(object):
             trace.data = trace.data[:number_of_samples]
         elif delta > 0:
             trace.data = np.ma.concatenate(
-                [trace.data, createEmptyDataChunk(delta, trace.data.dtype)])
+                [trace.data, create_empty_data_chunk(delta, trace.data.dtype)])
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))

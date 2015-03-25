@@ -26,9 +26,9 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import getBasemapVersion, getMatplotlibVersion
+from obspy.core.util.base import get_basemap_version, get_matplotlib_version
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 if MATPLOTLIB_VERSION < [1, 0, 0]:
     path_effect_kwargs = {}
@@ -37,7 +37,7 @@ else:
     path_effect_kwargs = dict(
         path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
 
-BASEMAP_VERSION = getBasemapVersion()
+BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True

@@ -27,7 +27,7 @@ with standard_library.hooks():
 from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
 
-from obspy.core.util.misc import toIntOrZero
+from obspy.core.util.misc import to_int_or_zero
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -115,7 +115,7 @@ class NamedTemporaryFile(io.BufferedIOBase):
         os.remove(self.name)
 
 
-def createEmptyDataChunk(delta, dtype, fill_value=None):
+def create_empty_data_chunk(delta, dtype, fill_value=None):
     """
     Creates an NumPy array depending on the given data type and fill value.
 
@@ -128,13 +128,13 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
     .. rubric:: Example
 
-    >>> createEmptyDataChunk(3, 'int', 10)
+    >>> create_empty_data_chunk(3, 'int', 10)
     array([10, 10, 10])
 
-    >>> createEmptyDataChunk(6, np.complex128, 0)
+    >>> create_empty_data_chunk(6, np.complex128, 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
 
-    >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    >>> create_empty_data_chunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
                  mask = ...,
                  ...)
@@ -160,7 +160,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     return temp
 
 
-def getExampleFile(filename):
+def get_example_file(filename):
     """
     Function to find the absolute path of a test data file
 
@@ -174,10 +174,10 @@ def getExampleFile(filename):
 
     .. rubric:: Example
 
-    >>> getExampleFile('slist.ascii')  # doctest: +SKIP
+    >>> get_example_file('slist.ascii')  # doctest: +SKIP
     /custom/path/to/obspy/io/ascii/tests/data/slist.ascii
 
-    >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
+    >>> get_example_file('does.not.exists')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
     OSError: Could not find file does.not.exists ...
@@ -196,7 +196,7 @@ def getExampleFile(filename):
     raise OSError(msg)
 
 
-def _getEntryPoints(group, subgroup=None):
+def _get_entry_points(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
 
@@ -209,7 +209,7 @@ def _getEntryPoints(group, subgroup=None):
 
     .. rubric:: Example
 
-    >>> _getEntryPoints('obspy.plugin.waveform')  # doctest: +ELLIPSIS
+    >>> _get_entry_points('obspy.plugin.waveform')  # doctest: +ELLIPSIS
     {...'SLIST': EntryPoint.parse('SLIST = obspy.io.ascii.core')...}
     """
     features = {}
@@ -222,12 +222,12 @@ def _getEntryPoints(group, subgroup=None):
     return features
 
 
-def _getOrderedEntryPoints(group, subgroup=None, order_list=[]):
+def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     """
     Gets a ordered dictionary of all available plug-ins of a group or subgroup.
     """
     # get all available entry points
-    ep_dict = _getEntryPoints(group, subgroup)
+    ep_dict = _get_entry_points(group, subgroup)
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
     entry_points = OrderedDict()
@@ -243,27 +243,27 @@ def _getOrderedEntryPoints(group, subgroup=None, order_list=[]):
 
 
 ENTRY_POINTS = {
-    'trigger': _getEntryPoints('obspy.plugin.trigger'),
-    'filter': _getEntryPoints('obspy.plugin.filter'),
-    'rotate': _getEntryPoints('obspy.plugin.rotate'),
-    'detrend': _getEntryPoints('obspy.plugin.detrend'),
-    'interpolate': _getEntryPoints('obspy.plugin.interpolate'),
-    'integrate': _getEntryPoints('obspy.plugin.integrate'),
-    'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
-    'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                       'readFormat', WAVEFORM_PREFERRED_ORDER),
-    'waveform_write': _getOrderedEntryPoints(
+    'trigger': _get_entry_points('obspy.plugin.trigger'),
+    'filter': _get_entry_points('obspy.plugin.filter'),
+    'rotate': _get_entry_points('obspy.plugin.rotate'),
+    'detrend': _get_entry_points('obspy.plugin.detrend'),
+    'interpolate': _get_entry_points('obspy.plugin.interpolate'),
+    'integrate': _get_entry_points('obspy.plugin.integrate'),
+    'differentiate': _get_entry_points('obspy.plugin.differentiate'),
+    'waveform': _get_ordered_entry_points(
+        'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _get_ordered_entry_points(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
-    'event_write': _getEntryPoints('obspy.plugin.event', 'writeFormat'),
-    'taper': _getEntryPoints('obspy.plugin.taper'),
-    'inventory': _getEntryPoints('obspy.plugin.inventory', 'readFormat'),
-    'inventory_write': _getEntryPoints('obspy.plugin.inventory',
-                                       'writeFormat'),
+    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
+    'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
+    'taper': _get_entry_points('obspy.plugin.taper'),
+    'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
+    'inventory_write': _get_entry_points(
+        'obspy.plugin.inventory', 'writeFormat'),
 }
 
 
-def _getFunctionFromEntryPoint(group, type):
+def _get_function_from_entry_point(group, type):
     """
     A "automagic" function searching a given dict of entry points for a valid
     entry point and returns the function call. Otherwise it will raise a
@@ -271,10 +271,10 @@ def _getFunctionFromEntryPoint(group, type):
 
     .. rubric:: Example
 
-    >>> _getFunctionFromEntryPoint('detrend', 'simple')  # doctest: +ELLIPSIS
+    >>> _get_function_from_entry_point('detrend', 'simple')  # doctest: +ELLIPSIS
     <function simple at 0x...>
 
-    >>> _getFunctionFromEntryPoint('detrend', 'XXX')  # doctest: +ELLIPSIS
+    >>> _get_function_from_entry_point('detrend', 'XXX')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
     ValueError: Detrend type "XXX" is not supported. Supported types: ...
@@ -306,7 +306,7 @@ def _getFunctionFromEntryPoint(group, type):
     return func
 
 
-def getMatplotlibVersion():
+def get_matplotlib_version():
     """
     Get matplotlib version information.
 
@@ -322,13 +322,13 @@ def getMatplotlibVersion():
         import matplotlib
         version = matplotlib.__version__
         version = version.split("rc")[0].strip("~")
-        version = list(map(toIntOrZero, version.split(".")))
+        version = list(map(to_int_or_zero, version.split(".")))
     except ImportError:
         version = None
     return version
 
 
-def getBasemapVersion():
+def get_basemap_version():
     """
     Get basemap version information.
 
@@ -344,13 +344,13 @@ def getBasemapVersion():
         from mpl_toolkits import basemap
         version = basemap.__version__
         version = version.split("rc")[0].strip("~")
-        version = list(map(toIntOrZero, version.split(".")))
+        version = list(map(to_int_or_zero, version.split(".")))
     except ImportError:
         version = None
     return version
 
 
-def getSciPyVersion():
+def get_scipy_version():
     """
     Get SciPy version information.
 
@@ -366,13 +366,13 @@ def getSciPyVersion():
         import scipy
         version = scipy.__version__
         version = version.split("~rc")[0]
-        version = list(map(toIntOrZero, version.split(".")))
+        version = list(map(to_int_or_zero, version.split(".")))
     except ImportError:
         version = None
     return version
 
 
-def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
+def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
@@ -424,7 +424,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     return list_obj, format_ep.name
 
 
-def getScriptDirName():
+def get_script_dir_name():
     """
     Get the directory of the current script file. This is more robust than
     using __file__.
@@ -468,8 +468,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
         raise ValueError("no valid type: %s" % method)
 
     method += "Format"
-    eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
-                                 WAVEFORM_PREFERRED_ORDER)
+    eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
+                                    WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.items():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:3])
@@ -511,7 +511,7 @@ class ComparingObject(object):
         return not self.__eq__(other)
 
 
-def _DeprecatedArgumentAction(old_name, new_name, real_action='store'):
+def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
     """
     Specifies deprecated command-line arguments to scripts
     """

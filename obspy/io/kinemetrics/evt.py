@@ -17,7 +17,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from .evt_base import (EvtBadDataError, EvtBadHeaderError, EvtEOFError,
                        EvtVirtual)
 
@@ -171,9 +171,9 @@ class EvtData(object):
             raise EvtBadDataError("Bad data length")
 
         if numbyte == 2:
-            data = frombuffer(buff, ">h").reshape((-1, numchan)).T
+            data = from_buffer(buff, ">h").reshape((-1, numchan)).T
         elif numbyte == 4:
-            data = frombuffer(buff, ">i").reshape((-1, numchan)).T
+            data = from_buffer(buff, ">i").reshape((-1, numchan)).T
         elif numbyte == 3:
             data = np.empty((numchan, samplerate // 10))
             for j in range(samplerate // 10):

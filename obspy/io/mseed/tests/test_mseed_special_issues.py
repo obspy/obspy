@@ -18,10 +18,10 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skip_if
 from obspy.io.mseed import util
 from obspy.io.mseed.core import readMSEED, writeMSEED
 from obspy.io.mseed.headers import clibmseed
@@ -171,7 +171,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
                 dtype = np.dtype(native_str('>f4'))
-                bin_data = frombuffer(fp.read(7 * dtype.itemsize),
+                bin_data = from_buffer(fp.read(7 * dtype.itemsize),
                                       dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
@@ -179,7 +179,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # test results
         np.testing.assert_array_equal(data, st2[0].data)
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS,
+    @skip_if(NO_NEGATIVE_TIMESTAMPS,
             'times before 1970 are not supported on this operation system')
     def test_writeWithDateTimeBefore1970(self):
         """

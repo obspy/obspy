@@ -23,10 +23,10 @@ else:
     maketrans = bytes.maketrans
 
 
-# NumPy does not offer the frombuffer method under Python 3 and instead
+# NumPy does not offer the from_buffer method under Python 3 and instead
 # relies on the built-in memoryview object.
 if PY2:
-    def frombuffer(data, dtype):
+    def from_buffer(data, dtype):
         # For compatibility with NumPy 1.4
         if isinstance(dtype, unicode):  # noqa
             dtype = str(dtype)
@@ -35,7 +35,7 @@ if PY2:
         else:
             return np.array([], dtype=dtype)
 else:
-    def frombuffer(data, dtype):
+    def from_buffer(data, dtype):
         return np.array(memoryview(data)).view(dtype).copy()  # NOQA
 
 

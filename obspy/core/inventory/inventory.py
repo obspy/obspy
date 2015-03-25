@@ -22,7 +22,7 @@ from pkg_resources import load_entry_point
 import numpy as np
 
 import obspy
-from ..util.base import ENTRY_POINTS, ComparingObject, _readFromPlugin
+from ..util.base import ENTRY_POINTS, ComparingObject, _read_from_plugin
 from ..util.decorator import map_example_filename
 from .network import Network
 
@@ -54,7 +54,7 @@ def read_inventory(path_or_file_object=None, format=None):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleInventory()
-    return _readFromPlugin("inventory", path_or_file_object, format=format)[0]
+    return _read_from_plugin("inventory", path_or_file_object, format=format)[0]
 
 
 class Inventory(ComparingObject):

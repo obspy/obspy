@@ -40,8 +40,8 @@ from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction, \
-    getMatplotlibVersion
+from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action, \
+    get_matplotlib_version
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
@@ -206,27 +206,27 @@ def main(argv=None):
                         help='Files or directories to scan.')
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('--endtime', '--end-time')
+    action = _get_deprecated_argument_action('--endtime', '--end-time')
     parser.add_argument('--endtime', type=UTCDateTime,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--event-times', '--event-time')
+    action = _get_deprecated_argument_action('--event-times', '--event-time')
     parser.add_argument('--event-times', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--ids', '--id')
+    action = _get_deprecated_argument_action('--ids', '--id')
     parser.add_argument('--ids', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--nox', '--no-x',
+    action = _get_deprecated_argument_action('--nox', '--no-x',
                                        real_action='store_true')
     parser.add_argument('--nox', dest='no_x', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--nogaps', '--no-gaps',
+    action = _get_deprecated_argument_action('--nogaps', '--no-gaps',
                                        real_action='store_true')
     parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--starttime', '--start-time')
+    action = _get_deprecated_argument_action('--starttime', '--start-time')
     parser.add_argument('--starttime', type=UTCDateTime,
                         action=action, help=SUPPRESS)
 
@@ -368,7 +368,7 @@ def main(argv=None):
     ax.xaxis_date()
     # set custom formatters to always show date in first tick
     formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
-    if getMatplotlibVersion() >= [1, 0, 0]:
+    if get_matplotlib_version() >= [1, 0, 0]:
         formatter.scaled[1 / 24.] = \
             FuncFormatter(decimal_seconds_format_date_first_tick)
         formatter.scaled.pop(1/(24.*60.))

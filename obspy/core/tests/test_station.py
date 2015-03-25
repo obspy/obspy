@@ -21,10 +21,10 @@ import numpy as np
 from matplotlib import rcParams
 
 from obspy import read_inventory
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class StationTestCase(unittest.TestCase):

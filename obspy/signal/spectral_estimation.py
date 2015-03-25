@@ -37,12 +37,12 @@ from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace
-from obspy.core.util import getMatplotlibVersion
+from obspy.core.util import get_matplotlib_version
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
 

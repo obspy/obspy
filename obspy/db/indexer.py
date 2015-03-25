@@ -20,7 +20,7 @@ import time
 
 from obspy import read
 from obspy.core.preview import createPreview
-from obspy.core.util.base import _getEntryPoints
+from obspy.core.util.base import _get_entry_points
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
 
@@ -397,7 +397,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getEntryPoints('obspy.db.feature').items():
+        for (key, ep) in _get_entry_points('obspy.db.feature').items():
             try:
                 # load plug-in
                 cls = ep.load()

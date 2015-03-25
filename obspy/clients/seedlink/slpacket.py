@@ -19,7 +19,7 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
@@ -114,7 +114,7 @@ class SLPacket(object):
     def getMSRecord(self):
         # following from obspy.io.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(None)
-        pyobj = frombuffer(self.msrecord, dtype=np.uint8)
+        pyobj = from_buffer(self.msrecord, dtype=np.uint8)
         errcode = \
             clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
                                 len(pyobj), C.pointer(msr), -1, 1, 1)

@@ -57,9 +57,9 @@ To somewhat rectify this issue all SEG Y specific trace header attributes are
 only unpacked on demand by default.
 
 >>> from obspy.io.segy.core import readSEGY
->>> from obspy.core.util import getExampleFile
+>>> from obspy.core.util import get_example_file
 >>> # or 'from obspy import read' if file wide headers are of no interest
->>> filename = getExampleFile("00001034.sgy_first_trace")
+>>> filename = get_example_file("00001034.sgy_first_trace")
 >>> st = readSEGY(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>

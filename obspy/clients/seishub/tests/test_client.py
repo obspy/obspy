@@ -14,7 +14,7 @@ with standard_library.hooks():
     import urllib.request
 
 from obspy.core import AttribDict, UTCDateTime
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skip_if
 from obspy.clients.seishub import Client
 from obspy.io.xseed.utils import SEEDParserException
 
@@ -36,7 +36,7 @@ def _check_server_availability():
     return ""
 
 
-@skipIf(_check_server_availability(), TESTSERVER_UNREACHABLE_MSG)
+@skip_if(_check_server_availability(), TESTSERVER_UNREACHABLE_MSG)
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for the SeisHub client.

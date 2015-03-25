@@ -19,7 +19,7 @@ from struct import pack, unpack
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util import scoreatpercentile
+from obspy.core.util import score_at_percentile
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
@@ -44,8 +44,8 @@ def getStartAndEndTime(file_or_file_object):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import getExampleFile
-    >>> filename = getExampleFile("BW.BGLD.__.EHE.D.2008.001.first_10_records")
+    >>> from obspy.core.util import get_example_file
+    >>> filename = get_example_file("BW.BGLD.__.EHE.D.2008.001.first_10_records")
     >>> getStartAndEndTime(filename)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -143,8 +143,8 @@ def getTimingAndDataQuality(file_or_file_object):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import getExampleFile
-    >>> filename = getExampleFile("qualityflags.mseed")
+    >>> from obspy.core.util import get_example_file
+    >>> filename = get_example_file("qualityflags.mseed")
     >>> tq = getTimingAndDataQuality(filename)
     >>> for k, v in tq.items():
     ...     print(k, v)
@@ -180,7 +180,7 @@ def getTimingAndDataQuality(file_or_file_object):
     The data quality flags will always exists because they are part of the
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
 
-    >>> filename = getExampleFile("timingquality.mseed")
+    >>> filename = get_example_file("timingquality.mseed")
     >>> tq = getTimingAndDataQuality(filename)
     >>> for k, v in sorted(tq.items()):
     ...     print(k, v)
@@ -254,11 +254,11 @@ def getTimingAndDataQuality(file_or_file_object):
     result['timing_quality_max'] = max(timing_quality)
     result['timing_quality_average'] = sum(timing_quality) / count
     result['timing_quality_median'] = \
-        scoreatpercentile(timing_quality, 50, issorted=False)
+        score_at_percentile(timing_quality, 50, issorted=False)
     result['timing_quality_lower_quantile'] = \
-        scoreatpercentile(timing_quality, 25, issorted=False)
+        score_at_percentile(timing_quality, 25, issorted=False)
     result['timing_quality_upper_quantile'] = \
-        scoreatpercentile(timing_quality, 75, issorted=False)
+        score_at_percentile(timing_quality, 75, issorted=False)
     return result
 
 
@@ -272,8 +272,8 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
 
     .. rubric:: Example
 
-    >>> from obspy.core.util import getExampleFile
-    >>> filename = getExampleFile("test.mseed")
+    >>> from obspy.core.util import get_example_file
+    >>> filename = get_example_file("test.mseed")
     >>> ri = getRecordInformation(filename)
     >>> for k, v in sorted(ri.items()):
     ...     print(k, v)

@@ -51,8 +51,8 @@ from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      OriginUncertaintyDescription, PickOnset,
                                      PickPolarity, SourceTimeFunctionType)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import (AttribDict, NamedTemporaryFile, _readFromPlugin,
-                             uncompressFile)
+from obspy.core.util import (AttribDict, NamedTemporaryFile, _read_from_plugin,
+                             uncompress_file)
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import (deprecated, deprecated_keywords,
                                        map_example_filename)
@@ -145,12 +145,12 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
                 catalog.extend(_read(filename, format, **kwargs).events)
 
 
-@uncompressFile
+@uncompress_file
 def _read(filename, format=None, **kwargs):
     """
     Reads a single event file into a ObsPy Catalog object.
     """
-    catalog, format = _readFromPlugin('event', filename, format=format,
+    catalog, format = _read_from_plugin('event', filename, format=format,
                                       **kwargs)
     for event in catalog:
         event._format = format

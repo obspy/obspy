@@ -32,11 +32,11 @@ from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.base import (ENTRY_POINTS, _getFunctionFromEntryPoint,
-                                  _readFromPlugin)
+from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
+                                  _read_from_plugin)
 from obspy.core.util.decorator import (deprecated_keywords,
-                                       map_example_filename, raiseIfMasked,
-                                       uncompressFile)
+                                       map_example_filename, raise_if_masked,
+                                       uncompress_file)
 
 
 @map_example_filename("pathname_or_url")
@@ -266,12 +266,12 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     return st
 
 
-@uncompressFile
+@uncompress_file
 def _read(filename, format=None, headonly=False, **kwargs):
     """
     Read a single file into a ObsPy Stream object.
     """
-    stream, format = _readFromPlugin('waveform', filename, format=format,
+    stream, format = _read_from_plugin('waveform', filename, format=format,
                                      headonly=headonly, **kwargs)
     # set _format identifier for each element
     for trace in stream:
@@ -2268,7 +2268,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.integrate(method=method, **options)
         return self
 
-    @raiseIfMasked
+    @raise_if_masked
     def detrend(self, type='simple'):
         """
         Remove a linear trend from all traces.
@@ -2499,7 +2499,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
                              "'ZNE->LQT', or 'LQT->ZNE').")
         # Retrieve function call from entry points
-        func = _getFunctionFromEntryPoint("rotate", func)
+        func = _get_function_from_entry_point("rotate", func)
         # Split to get the components. No need for further checks for the
         # method as invalid methods will be caught by previous conditional.
         input_components, output_components = method.split("->")

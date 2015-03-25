@@ -21,14 +21,14 @@ from math import pi
 
 import numpy as np
 
-from ..util.base import ComparingObject, getMatplotlibVersion
+from ..util.base import ComparingObject, get_matplotlib_version
 from ..util.obspy_types import (CustomComplex, CustomFloat,
                                 FloatWithUncertainties,
                                 FloatWithUncertaintiesAndUnit)
 from .util import Angle, Frequency
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class ResponseStage(ComparingObject):

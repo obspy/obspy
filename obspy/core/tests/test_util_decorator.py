@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.core.util import getExampleFile
+from obspy.core.util import get_example_file
 from obspy.core.util.decorator import map_example_filename
 
 
@@ -17,7 +17,7 @@ class TestCase(unittest.TestCase):
         dummy = "abc"
         example_file = "example.npz"
         path = "/path/to/" + example_file
-        path_mapped = getExampleFile(example_file)
+        path_mapped = get_example_file(example_file)
 
         def unchanged(a, b="", **kwargs):
             return list(map(str, (a, b, kwargs)))

@@ -13,11 +13,11 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
                               read_events)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import getBasemapVersion
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import get_basemap_version
+from obspy.core.util.decorator import skip_if
 from obspy.core.util.testing import ImageComparison
 
-BASEMAP_VERSION = getBasemapVersion()
+BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from matplotlib import rcParams
 
@@ -424,7 +424,7 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @skip_if(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters.
@@ -438,7 +438,7 @@ class CatalogTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @skip_if(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
@@ -451,7 +451,7 @@ class CatalogTestCase(unittest.TestCase):
                      resolution="c",
                      water_fill_color="b", label=None)
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @skip_if(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default

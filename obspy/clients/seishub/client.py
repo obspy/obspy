@@ -30,7 +30,7 @@ from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, read_events
-from obspy.core.util import guessDelta
+from obspy.core.util import guess_delta
 from obspy.io.xseed import Parser
 
 
@@ -514,7 +514,7 @@ master/seishub/plugins/seismology/waveform.py
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
         # only possible if a channel is specified otherwise delta = 0
-        delta = 2 * guessDelta(kwargs['channel'])
+        delta = 2 * guess_delta(kwargs['channel'])
         kwargs['starttime'] = trim_start - delta
         kwargs['endtime'] = trim_end + delta
 

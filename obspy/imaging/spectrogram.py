@@ -27,10 +27,10 @@ import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
 
-from obspy.core.util import getMatplotlibVersion
+from obspy.core.util import get_matplotlib_version
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def _nearestPow2(x):

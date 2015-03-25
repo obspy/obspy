@@ -21,11 +21,11 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy.core.util.testing import ImageComparison, getMatplotlibVersion
+from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy import read_inventory
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class ChannelTestCase(unittest.TestCase):

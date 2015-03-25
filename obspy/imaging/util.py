@@ -19,7 +19,7 @@ from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.base import get_matplotlib_version
 
 
 def _seconds_to_days(sec):
@@ -100,13 +100,13 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if getMatplotlibVersion() < [1, 2, 0]:
+        if get_matplotlib_version() < [1, 2, 0]:
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
         # Ooooold matplotlib does not have the new .scaled workings, can be
         # removed after release of 0.10.0.
-        if getMatplotlibVersion() < [1, 0, 0]:
+        if get_matplotlib_version() < [1, 0, 0]:
             return
         self.scaled[1. / 24.] = FuncFormatter(format_hour_minute)
         self.scaled[1. / (24. * 60.)] = \
@@ -128,7 +128,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __call__(self, x, pos=None):
         # Ooooold matplotlib does not have the new .scaled workings, can be
         # removed after release of 0.10.0.
-        if getMatplotlibVersion() < [1, 0, 0]:
+        if get_matplotlib_version() < [1, 0, 0]:
             return AutoDateFormatter.__call__(self, x, pos=pos)
         # Always show full precision date string on info pane (pos=None)
         # because for some zoom levels the ticks might be ambiguous (e.g. hours

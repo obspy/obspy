@@ -31,7 +31,7 @@ import warnings
 import numpy as np
 
 from obspy import Trace, UTCDateTime
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import AttribDict
 from obspy.geodetics import gps2DistAzimuth
 
@@ -514,10 +514,10 @@ class SacIO(object):
         #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('<f4'))
-        self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('<i4'))
+        self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+        self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             raise SacIOError("Cannot read all header values")
@@ -528,10 +528,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 fh.seek(0, 0)
-                self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('>f4'))
-                self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('>i4'))
+                self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+                self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
                 self.IsSACfile(fh)
                 self.byteorder = 'big'
             except SacError as e:
@@ -602,10 +602,10 @@ class SacIO(object):
         #    in strings. Store them in array (and convert the char to a
         #    list). That's a total of 632 bytes.
         # --------------------------------------------------------------
-        self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('<f4'))
-        self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('<i4'))
+        self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('<f4'))
+        self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('<i4'))
         # read in the char values
-        self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+        self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
         if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             fh.close()
@@ -618,10 +618,10 @@ class SacIO(object):
                 # if it is not a valid SAC-file try with big endian
                 # byte order
                 fh.seek(0, 0)
-                self.hf = frombuffer(fh.read(4 * 70), dtype=native_str('>f4'))
-                self.hi = frombuffer(fh.read(4 * 40), dtype=native_str('>i4'))
+                self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('>f4'))
+                self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
-                self.hs = frombuffer(fh.read(24 * 8), dtype=native_str('|S8'))
+                self.hs = from_buffer(fh.read(24 * 8), dtype=native_str('|S8'))
                 self.IsSACfile(fh, fsize)
                 self.byteorder = 'big'
             except SacError as e:
@@ -633,9 +633,9 @@ class SacIO(object):
         # actually, it's in the SAC manual
         npts = int(self.hi[9])
         if self.byteorder == 'big':
-            self.seis = frombuffer(fh.read(npts * 4), dtype=native_str('>f4'))
+            self.seis = from_buffer(fh.read(npts * 4), dtype=native_str('>f4'))
         else:
-            self.seis = frombuffer(fh.read(npts * 4), dtype=native_str('<f4'))
+            self.seis = from_buffer(fh.read(npts * 4), dtype=native_str('<f4'))
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             raise SacIOError("Cannot read all data points")

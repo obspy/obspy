@@ -31,7 +31,7 @@ from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
 
 from obspy import Stream, UTCDateTime, __version__, read
-from obspy.core.util import NamedTemporaryFile, guessDelta
+from obspy.core.util import NamedTemporaryFile, guess_delta
 
 
 DEPR_WARN = ("This service was shut down on the server side, please use the "
@@ -536,7 +536,7 @@ class Client(object):
         # adding default record length (4096) * delta to start and end time to
         # ensure right date times
         # XXX: 4096 may be overkill
-        delta = guessDelta(channel) * 4096
+        delta = guess_delta(channel) * 4096
         stationid.TimeSpan.TimePeriod.beginPosition = \
             (UTCDateTime(starttime) - delta).strftime("%Y-%m-%dT%H:%M:%S")
         stationid.TimeSpan.TimePeriod.endPosition = \

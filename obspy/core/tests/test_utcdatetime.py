@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skip_if
 
 
 # some Python version don't support negative timestamps
@@ -320,13 +320,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
         self.assertAlmostEqual(end - start, 0.000002, 6)
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
+    @skip_if(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_negativeTimestamp(self):
         dt = UTCDateTime(-1000.1)
         self.assertEqual(str(dt), "1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
+    @skip_if(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_subWithNegativeTimestamp(self):
         start = UTCDateTime(0)
         end = UTCDateTime(-1000.5)
@@ -377,7 +377,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEqual(dt.timestamp, -43199.123456, 6)
         self.assertEqual(str(dt), "1969-12-31T12:00:00.876544Z")
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
+    @skip_if(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_bigNegativeUTCDateTime(self):
         # 1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
@@ -492,7 +492,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, UTCDateTime, "2010-02-13T99999")
         self.assertRaises(TypeError, UTCDateTime, "2010-02-13T02:09:09.XXXXX")
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
+    @skip_if(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_issue168(self):
         """
         Couldn't calculate julday before 1900.

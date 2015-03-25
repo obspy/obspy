@@ -24,7 +24,7 @@ from lxml import etree, objectify
 import numpy as np
 
 from obspy import UTCDateTime, read
-from obspy.core.util import AttribDict, complexifyString
+from obspy.core.util import AttribDict, complexify_string
 from obspy.core.util.decorator import deprecated_keywords
 
 
@@ -874,7 +874,7 @@ class Client(object):
                                   namespaces={'ns': xml_ns})[0]
             temp = zeros.strip().replace(' ', '').replace(')(', ') (')
             for zeros in temp.split():
-                paz['zeros'].append(complexifyString(zeros))
+                paz['zeros'].append(complexify_string(zeros))
         except:
             pass
         # check number of zeros
@@ -891,7 +891,7 @@ class Client(object):
                                   namespaces={'ns': xml_ns})[0]
             temp = poles.strip().replace(' ', '').replace(')(', ') (')
             for poles in temp.split():
-                paz['poles'].append(complexifyString(poles))
+                paz['poles'].append(complexify_string(poles))
         except:
             pass
         # check number of poles

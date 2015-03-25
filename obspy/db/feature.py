@@ -12,7 +12,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util import scoreatpercentile
+from obspy.core.util import score_at_percentile
 
 
 class BandpassPreviewFeature(object):
@@ -56,9 +56,9 @@ class MinMaxAmplitudeFeature(object):
         result['min'] = float(trace.data.min())
         result['max'] = float(trace.data.max())
         result['avg'] = float(trace.data.mean())
-        result['median'] = float(scoreatpercentile(trace.data, 50, False))
-        result['lower_quantile'] = float(scoreatpercentile(trace.data, 25))
-        result['upper_quantile'] = float(scoreatpercentile(trace.data, 75))
+        result['median'] = float(score_at_percentile(trace.data, 50, False))
+        result['lower_quantile'] = float(score_at_percentile(trace.data, 25))
+        result['upper_quantile'] = float(score_at_percentile(trace.data, 75))
         return result
 
 

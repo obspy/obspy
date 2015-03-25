@@ -18,7 +18,7 @@ import warnings
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 
 
 def isSEISAN(filename):
@@ -195,7 +195,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = frombuffer(
+            data = from_buffer(
                 fh.read((header['npts'] + 2) * dtype.itemsize),
                 dtype=dtype)
             # convert to system byte order

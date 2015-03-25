@@ -42,7 +42,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from obspy import __version__
-from obspy.core.util.base import _DeprecatedArgumentAction
+from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.db.db import Base
 from obspy.db.indexer import WaveformFileCrawler, worker
 from obspy.db.util import parseMappingData
@@ -246,21 +246,21 @@ Default path option is 'data=*.*'.""")
         help="Port number. If not given a free port will be picked.")
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('--check_duplicates',
+    action = _get_deprecated_argument_action('--check_duplicates',
                                        '--check-duplicates',
                                        real_action='store_true')
     parser.add_argument('--check_duplicates', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--drop_database', '--drop-database',
+    action = _get_deprecated_argument_action('--drop_database', '--drop-database',
                                        real_action='store_true')
     parser.add_argument('--drop_database', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--mapping_file', '--mapping-file')
+    action = _get_deprecated_argument_action('--mapping_file', '--mapping-file')
     parser.add_argument('--mapping_file', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--run_once', '--run-once',
+    action = _get_deprecated_argument_action('--run_once', '--run-once',
                                        real_action='store_true')
     parser.add_argument('--run_once', nargs=0, action=action, help=SUPPRESS)
 

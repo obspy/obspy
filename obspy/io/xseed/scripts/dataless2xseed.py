@@ -13,7 +13,7 @@ from argparse import SUPPRESS, ArgumentParser
 from glob import glob
 
 from obspy import __version__
-from obspy.core.util.base import _DeprecatedArgumentAction
+from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.io.xseed.parser import Parser
 
 
@@ -89,7 +89,7 @@ def main(argv=None):
     parser.add_argument('files', nargs='+', help='files to process')
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('-v', '--xml-version')
+    action = _get_deprecated_argument_action('-v', '--xml-version')
     parser.add_argument('-v', dest='version', default=1.1, type=float,
                         action=action, help=SUPPRESS)
 

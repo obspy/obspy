@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.text
 import numpy as np
 
-from obspy.core.util import getMatplotlibVersion
+from obspy.core.util import get_matplotlib_version
 
 from .tau_model import TauModel
 from .taup_create import TauP_Create
@@ -23,7 +23,7 @@ from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
 cmap = plt.get_cmap('Paired', lut=12)

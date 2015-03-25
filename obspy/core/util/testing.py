@@ -28,11 +28,11 @@ import warnings
 from lxml import etree
 import numpy as np
 
-from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
 from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def add_unittests(testsuite, module_name):

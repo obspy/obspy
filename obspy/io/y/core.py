@@ -17,7 +17,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Stream
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
@@ -328,7 +328,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
                 trace.stats.y.tag_station_response = params
             elif tag_type == 7:
                 # TAG_DATA_INT32
-                trace.data = frombuffer(
+                trace.data = from_buffer(
                     fh.read(np.dtype(np.int32).itemsize * count),
                     dtype=np.int32)
                 # break loop as TAG_DATA_INT32 should be the last tag in file
