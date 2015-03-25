@@ -115,12 +115,11 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
             # core.preview functions. obspy.core.preview has to be imported
             # once before as it is not imported during the initialization.
             from obspy.core import preview  # NOQA
-            self.assertTrue(obspy.core.preview.createPreview is
-                            obspy.core.preview.create_preview)
-            self.assertTrue(obspy.core.preview.mergePreviews is
-                            obspy.core.preview.merge_previews)
-            self.assertTrue(obspy.core.preview.resamplePreview is
-                            obspy.core.preview.resample_preview)
+            # Just attempt the access..these are a different deprecation
+            # wrappers.
+            obspy.core.preview.createPreview
+            obspy.core.preview.mergePreviews
+            obspy.core.preview.resamplePreview
 
         self.assertTrue(len(w), 15)
         for warn in w:

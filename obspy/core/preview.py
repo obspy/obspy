@@ -14,15 +14,19 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 from copy import copy
-import sys
 
 import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
+from obspy.core.util.decorator import deprecated
+
+
+@deprecated("Method 'createPreview' was renamed to 'create_preview'. Use "
+            "that instead.")
+def createPreview(trace, delta=60):
+    return create_preview(trace, delta)
 
 
 def create_preview(trace, delta=60):
@@ -86,6 +90,12 @@ def create_preview(trace, delta=60):
     tr.stats.starttime = UTCDateTime(start_time)
     tr.stats.preview = True
     return tr
+
+
+@deprecated("Method 'mergePreviews' was renamed to 'merge_previews'. Use "
+            "that instead.")
+def mergePreviews(stream):
+    return merge_previews(stream)
 
 
 def merge_previews(stream):
@@ -160,6 +170,12 @@ def merge_previews(stream):
     return new_stream
 
 
+@deprecated("Method 'resamplePreview' was renamed to 'resample_preview'. Use "
+            "that instead.")
+def resamplePreview(trace, samples, method='accurate'):
+    return resample_preview(trace, samples, method)
+
+
 def resample_preview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
@@ -231,14 +247,3 @@ def resample_preview(trace, samples, method='accurate'):
         return npts - int(samples * step)
     else:
         raise NotImplementedError('Unknown method')
-
-
-# Remove once 0.11 has been released!
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    import_map={}, function_map={
-        "createPreview": "obspy.core.preview.create_preview",
-        "mergePreviews": "obspy.core.preview.merge_previews",
-        "resamplePreview": "obspy.core.preview.resample_preview",
-
-    })
