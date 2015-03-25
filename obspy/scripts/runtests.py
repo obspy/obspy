@@ -129,7 +129,7 @@ HOSTNAME = platform.node().split('.', 1)[0]
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
-    Used to decorate file-like objects with a handy 'write_ln' method
+    Used to decorate file-like objects with a handy 'writeln' method
     """
     def __init__(self, stream):
         self.stream = stream
@@ -139,7 +139,7 @@ class _WritelnDecorator(object):
             raise AttributeError(attr)
         return getattr(self.stream, attr)
 
-    def write_ln(self, arg=None):
+    def writeln(self, arg=None):
         if arg:
             self.write(arg)
         self.write('\n')  # text-mode streams translate to \r\n if needed
@@ -427,7 +427,7 @@ class _TextTestRunner:
             total = stop - start
             results[id].__dict__['timetaken'] = total
             if self.timeit:
-                self.stream.write_ln('')
+                self.stream.writeln('')
                 self.stream.write("obspy.%s: " % (id))
                 num = test.countTestCases()
                 try:
@@ -435,15 +435,15 @@ class _TextTestRunner:
                 except:
                     avg = 0
                 msg = '%d tests in %.3fs (average of %.4fs per test)'
-                self.stream.write_ln(msg % (num, total, avg))
-                self.stream.write_ln('')
+                self.stream.writeln(msg % (num, total, avg))
+                self.stream.writeln('')
             time_taken += total
         runs = 0
         faileds = 0
         erroreds = 0
         wasSuccessful = True
         if self.verbosity:
-            self.stream.write_ln()
+            self.stream.writeln()
         for result in results.values():
             failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
@@ -453,10 +453,10 @@ class _TextTestRunner:
                 result.printErrors()
             runs += result.testsRun
         if self.verbosity:
-            self.stream.write_ln(unittest._TextTestResult.separator2)
-            self.stream.write_ln("Ran %d test%s in %.3fs" %
-                                 (runs, runs != 1 and "s" or "", time_taken))
-            self.stream.write_ln()
+            self.stream.writeln(unittest._TextTestResult.separator2)
+            self.stream.writeln("Ran %d test%s in %.3fs" %
+                                (runs, runs != 1 and "s" or "", time_taken))
+            self.stream.writeln()
         if not wasSuccessful:
             self.stream.write("FAILED (")
             if faileds:
@@ -465,9 +465,9 @@ class _TextTestRunner:
                 if faileds:
                     self.stream.write(", ")
                 self.stream.write("errors=%d" % erroreds)
-            self.stream.write_ln(")")
+            self.stream.writeln(")")
         elif self.verbosity:
-            self.stream.write_ln("OK")
+            self.stream.writeln("OK")
         return results, time_taken, (faileds + erroreds)
 
 

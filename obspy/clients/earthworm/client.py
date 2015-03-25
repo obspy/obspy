@@ -209,7 +209,7 @@ class Client(object):
 
         >>> from obspy.clients.earthworm import Client
         >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
-        >>> response = client.get_get_availability(
+        >>> response = client.get_availability(
         ...     network="UW", station="TUCA", channel="BH*")
         >>> print(response)  # doctest: +SKIP
         [('UW',

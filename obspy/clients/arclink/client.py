@@ -274,8 +274,8 @@ class Client(object):
         self._write_ln(request_type)
         # create request string
         # adding one second to start and end time to ensure right date times
-        out = (request_data[0] - 1).formatArcLink() + ' '
-        out += (request_data[1] + 1).formatArcLink() + ' '
+        out = (request_data[0] - 1).format_arclink() + ' '
+        out += (request_data[1] + 1).format_arclink() + ' '
         out += ' '.join([str(i) for i in request_data[2:]])
         self._write_ln(out)
         self._write_ln('END')
@@ -986,8 +986,8 @@ class Client(object):
         # check if single trace
         id = '.'.join([network, station, location, channel])
         if '*' in id:
-            msg = 'get_paz supports only a single channel, use get_inventory' + \
-                  ' instead'
+            msg = ('get_paz supports only a single channel, '
+                   'use get_inventory instead')
             raise ArcLinkException(msg)
         # fetch inventory
         result = self.get_inventory(network=network, station=station,
