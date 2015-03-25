@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import ImageComparison
-from obspy.imaging.beachball import (TDL, AuxPlane, Beach, Beachball,
-                                     MomentTensor, MT2Axes, MT2Plane,
-                                     StrikeDip)
+from obspy.imaging.beachball import (tdl, AuxPlane, beach, beachball,
+                                     MomentTensor, mt2axes, mt2plane,
+                                     strike_dip)
 
 
 class BeachballTestCase(unittest.TestCase):
@@ -26,7 +26,7 @@ class BeachballTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    def test_Beachball(self):
+    def test_beachball(self):
         """
         Create beachball examples in tests/output directory.
         """
@@ -79,7 +79,7 @@ class BeachballTestCase(unittest.TestCase):
                      ]
         for data_, filename in zip(data, filenames):
             with ImageComparison(self.path, filename) as ic:
-                Beachball(data_, outfile=ic.name)
+                beachball(data_, outfile=ic.name)
 
     def test_BeachBallOutputFormats(self):
         """
@@ -87,39 +87,39 @@ class BeachballTestCase(unittest.TestCase):
         """
         fm = [115, 35, 50]
         # PDF
-        data = Beachball(fm, format='pdf')
+        data = beachball(fm, format='pdf')
         self.assertEqual(data[0:4], b"%PDF")
         # as file
         # create and compare image
         with NamedTemporaryFile(suffix='.pdf') as tf:
-            Beachball(fm, format='pdf', outfile=tf.name)
+            beachball(fm, format='pdf', outfile=tf.name)
         # PS
-        data = Beachball(fm, format='ps')
+        data = beachball(fm, format='ps')
         self.assertEqual(data[0:4], b"%!PS")
         # as file
         with NamedTemporaryFile(suffix='.ps') as tf:
-            Beachball(fm, format='ps', outfile=tf.name)
+            beachball(fm, format='ps', outfile=tf.name)
         # PNG
-        data = Beachball(fm, format='png')
+        data = beachball(fm, format='png')
         self.assertEqual(data[1:4], b"PNG")
         # as file
         with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(fm, format='png', outfile=tf.name)
+            beachball(fm, format='png', outfile=tf.name)
         # SVG
-        data = Beachball(fm, format='svg')
+        data = beachball(fm, format='svg')
         self.assertEqual(data[0:5], b"<?xml")
         # as file
         with NamedTemporaryFile(suffix='.svg') as tf:
-            Beachball(fm, format='svg', outfile=tf.name)
+            beachball(fm, format='svg', outfile=tf.name)
 
     def test_StrikeDip(self):
         """
-        Test StrikeDip function - all values are taken from MatLab.
+        Test strike_dip function - all values are taken from MatLab.
         """
         sl1 = -0.048901208623019
         sl2 = 0.178067035725425
         sl3 = 0.982802524713469
-        (strike, dip) = StrikeDip(sl2, sl1, sl3)
+        (strike, dip) = strike_dip(sl2, sl1, sl3)
         self.assertAlmostEqual(strike, 254.64386091007400)
         self.assertAlmostEqual(dip, 10.641291652406172)
 
@@ -155,32 +155,32 @@ class BeachballTestCase(unittest.TestCase):
 
     def test_TDL(self):
         """
-        Test TDL function - all values are taken from MatLab.
+        Test tdl function - all values are taken from MatLab.
         """
         AN = [0.737298200871146, -0.668073596186761, -0.100344571703004]
         BN = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
-        (FT, FD, FL) = TDL(AN, BN)
+        (FT, FD, FL) = tdl(AN, BN)
         self.assertAlmostEqual(FT, 227.81994742784540)
         self.assertAlmostEqual(FD, 84.240987194376590)
         self.assertAlmostEqual(FL, 81.036627358961210)
 
     def test_MT2Plane(self):
         """
-        Tests MT2Plane.
+        Tests mt2plane.
         """
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
-        np = MT2Plane(mt)
+        np = mt2plane(mt)
         self.assertAlmostEqual(np.strike, 129.86262672080011)
         self.assertAlmostEqual(np.dip, 79.022700906654734)
         self.assertAlmostEqual(np.rake, 97.769255185515192)
 
     def test_MT2Axes(self):
         """
-        Tests MT2Axes.
+        Tests mt2axes.
         """
         # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
-        (T, N, P) = MT2Axes(mt)
+        (T, N, P) = mt2axes(mt)
         self.assertAlmostEqual(T.val, 2.52461359)
         self.assertAlmostEqual(T.dip, 55.33018576)
         self.assertAlmostEqual(T.strike, 49.53656116)
@@ -232,7 +232,7 @@ class BeachballTestCase(unittest.TestCase):
         y = -100
         for i, t in enumerate(mt):
             # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
+            ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
             x += 50
             if (i + 1) % 5 == 0:
                 x = -100
@@ -257,7 +257,7 @@ class BeachballTestCase(unittest.TestCase):
         # add the beachball (a collection of two patches) to the axis
         # give it an axes to keep make the beachballs circular
         # even though axes are not scaled
-        ax.add_collection(Beach(mt, width=400, xy=(0, 0), linewidth=.6,
+        ax.add_collection(beach(mt, width=400, xy=(0, 0), linewidth=.6,
                                 axes=ax))
         # set the x and y limits
         ax.axis(axis)
@@ -272,7 +272,7 @@ class BeachballTestCase(unittest.TestCase):
         # add the beachball (a collection of two patches) to the axis
         # give it an axes to keep make the beachballs circular
         # even though axes are not scaled
-        ax.add_collection(Beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
+        ax.add_collection(beach(mt, width=(400, 200), xy=(0, 0), linewidth=.6,
                           axes=ax))
         # set the x and y limits and save the output
         ax.axis(axis)

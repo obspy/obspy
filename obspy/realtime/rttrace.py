@@ -87,9 +87,9 @@ class RtTrace(Trace):
     3. Assemble real time trace and register two processes::
 
         >>> rt_trace = RtTrace()
-        >>> rt_trace.registerRtProcess('integrate')
+        >>> rt_trace.register_rt_process('integrate')
         1
-        >>> rt_trace.registerRtProcess('mwpIntegral', mem_time=240,
+        >>> rt_trace.register_rt_process('mwpIntegral', mem_time=240,
         ...     ref_time=(data_trace.stats.starttime + ref_time_offset),
         ...     max_time=120, gain=1.610210e+09)
         2
@@ -114,7 +114,7 @@ class RtTrace(Trace):
     have_appended_data = False
 
     @classmethod
-    def rtProcessFunctionsToString(cls):
+    def rt_process_functions_to_string(cls):
         """
         Return doc string for all predefined real-time processing functions.
 
@@ -122,7 +122,7 @@ class RtTrace(Trace):
         :return: String containing doc for all real-time processing functions.
         """
         string = 'Real-time processing functions (use as: ' + \
-            'RtTrace.registerRtProcess(process_name, [parameter values])):\n'
+            'RtTrace.register_rt_process(process_name, [parameter values])):\n'
         for key in REALTIME_PROCESS_FUNCTIONS:
             string += '\n'
             string += '  ' + (str(key) + ' ' + 80 * '-')[:80]
@@ -307,7 +307,7 @@ class RtTrace(Trace):
                             fill_value=None)
         return trace
 
-    def registerRtProcess(self, process, **options):
+    def register_rt_process(self, process, **options):
         """
         Adds real-time processing algorithm to processing list of this RtTrace.
 

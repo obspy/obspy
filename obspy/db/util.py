@@ -15,7 +15,7 @@ from future.builtins import *  # NOQA
 from obspy import UTCDateTime
 
 
-def parseMappingData(lines):
+def parse_mapping_data(lines):
     """
     Parses a mapping file used by the indexer.
     """

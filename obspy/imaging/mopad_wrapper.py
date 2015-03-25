@@ -269,15 +269,15 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     (1) Using basis system ``'NED'``.
 
-        >>> from obspy.imaging.mopad_wrapper import Beachball
+        >>> from obspy.imaging.mopad_wrapper import beachball
         >>> mt = [1, 2, 3, -4, -5, -10]
-        >>> Beachball(mt, mopad_basis='NED') #doctest: +SKIP
+        >>> beachball(mt, mopad_basis='NED') #doctest: +SKIP
 
         .. plot::
 
-            from obspy.imaging.mopad_wrapper import Beachball
+            from obspy.imaging.mopad_wrapper import beachball
             mt = [1, 2, 3, -4, -5, -10]
-            Beachball(mt, mopad_basis='NED')
+            beachball(mt, mopad_basis='NED')
     """
     mopad_kwargs = {}
     loc = locals()

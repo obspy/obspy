@@ -491,7 +491,7 @@ master:
    * proper DeprecationWarning for deprecated keywords for
      Client.getWaveform()
  - obspy.core:
-   * fixing negative azimuths returned by gps2DistAzimuth [#375]
+   * fixing negative azimuths returned by gps2dist_azimuth [#375]
 
 0.7.0:
  - obspy.arclink:

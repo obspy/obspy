@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 
-from obspy.imaging.beachball import Beach
+from obspy.imaging.beachball import beach
 
 
 # read in topo data (on a regular lat/lon grid)
@@ -53,7 +53,7 @@ x, y = m(lons, lats)
 focmecs = [[80, 50, 80], [85, 30, 90]]
 ax = plt.gca()
 for i in range(len(focmecs)):
-    b = Beach(focmecs[i], xy=(x[i], y[i]), width=1000, linewidth=1)
+    b = beach(focmecs[i], xy=(x[i], y[i]), width=1000, linewidth=1)
     b.set_zorder(10)
     ax.add_collection(b)
 

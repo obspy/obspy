@@ -28,13 +28,13 @@ from matplotlib import mlab
 from matplotlib.colors import Normalize
 
 
-def _nearestPow2(x):
+def _nearest_pow_2(x):
     """
     Find power of two nearest to x
 
-    >>> _nearestPow2(3)
+    >>> _nearest_pow_2(3)
     2.0
-    >>> _nearestPow2(15)
+    >>> _nearest_pow_2(15)
     16.0
 
     :type x: float
@@ -110,12 +110,12 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
     # XXX add condition for too many windows => calculation takes for ever
-    nfft = int(_nearestPow2(wlen * samp_rate))
+    nfft = int(_nearest_pow_2(wlen * samp_rate))
     if nfft > npts:
-        nfft = int(_nearestPow2(npts / 8.0))
+        nfft = int(_nearest_pow_2(npts / 8.0))
 
     if mult is not None:
-        mult = int(_nearestPow2(mult))
+        mult = int(_nearest_pow_2(mult))
         mult = mult * nfft
     nlap = int(nfft * float(per_lap))
 

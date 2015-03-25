@@ -45,7 +45,7 @@ from obspy import __version__
 from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.db.db import Base
 from obspy.db.indexer import WaveformFileCrawler, worker
-from obspy.db.util import parseMappingData
+from obspy.db.util import parse_mapping_data
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
@@ -119,13 +119,13 @@ def _runIndexer(options):
             paths = options.data.split(',')
         else:
             paths = [options.data]
-        paths = service._preparePaths(paths)
+        paths = service._prepare_paths(paths)
         if not paths:
             return
         # prepare map file
         if options.mapping_file:
             data = open(options.mapping_file, 'r').readlines()
-            mappings = parseMappingData(data)
+            mappings = parse_mapping_data(data)
             logging.info("Parsed %d lines from mapping file %s" %
                          (len(data), options.mapping_file))
         else:
@@ -161,8 +161,8 @@ def _runIndexer(options):
         service.output_queue = out_queue
         service.log_queue = log_queue
         service.paths = paths
-        service._resetWalker()
-        service._stepWalker()
+        service._reset_walker()
+        service._step_walker()
         service.serve_forever(options.poll_interval)
     except KeyboardInterrupt:
         quit()

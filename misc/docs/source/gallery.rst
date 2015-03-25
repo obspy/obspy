@@ -76,7 +76,7 @@ Gallery
 
 .. gallery-plot:: tutorial/code_snippets/beachball_plot.py
     :target: tutorial/code_snippets/beachball_plot.html
-    :alt: Beachball Plot
+    :alt: beachball Plot
 
 .. gallery-plot:: tutorial/code_snippets/basemap_plot_with_beachballs.py
     :target: tutorial/code_snippets/basemap_plot_with_beachballs.html

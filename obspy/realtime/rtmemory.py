@@ -72,7 +72,7 @@ class RtMemory:
             memory_array = np.concatenate((memory_array, data))
         return memory_array
 
-    def updateOutput(self, data):
+    def update_output(self, data):
         """
         Update output memory using specified number of points from end of
         specified array.
@@ -82,7 +82,7 @@ class RtMemory:
         """
         self.output = self._update(self.output, data)
 
-    def updateInput(self, data):
+    def update_input(self, data):
         """
         Update input memory using specified number of points from end of
         specified array.

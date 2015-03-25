@@ -92,91 +92,92 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests for method getNetworkIds.
         """
-        data = self.client.getNetworkIDs()
+        data = self.client.get_network_ids()
         self.assertEqual(len(data), 2)
         self.assertIn('BW', data)
         self.assertIn('GE', data)
 
     def test_getStationIds(self):
         """
-        Tests for method getStationIds.
+        Tests for method get_station_ids.
         """
         # 1 - all
-        data = self.client.getStationIds()
+        data = self.client.get_station_ids()
         self.assertEqual(len(data), 2)
         self.assertIn('MANZ', data)
         self.assertIn('FUR', data)
         # 2 - BW network
-        data = self.client.getStationIds(network='BW')
+        data = self.client.get_station_ids(network='BW')
         self.assertEqual(len(data), 1)
         self.assertIn('MANZ', data)
         # 3 - not existing network
-        data = self.client.getStationIds(network='XX')
+        data = self.client.get_station_ids(network='XX')
         self.assertEqual(len(data), 0)
 
     def test_getLocationIds(self):
         """
-        Tests for method getLocationIds.
+        Tests for method get_location_ids.
         """
-        data = self.client.getLocationIds()
+        data = self.client.get_location_ids()
         self.assertEqual(len(data), 2)
         self.assertIn('', data)
         self.assertIn('00', data)
         # 2 - BW network
-        data = self.client.getLocationIds(network='BW')
+        data = self.client.get_location_ids(network='BW')
         self.assertEqual(len(data), 1)
         self.assertIn('', data)
         # 3 - not existing network
-        data = self.client.getLocationIds(network='XX')
+        data = self.client.get_location_ids(network='XX')
         self.assertEqual(len(data), 0)
         # 4 - MANZ station
-        data = self.client.getLocationIds(station='MANZ')
+        data = self.client.get_location_ids(station='MANZ')
         self.assertEqual(len(data), 1)
         self.assertIn('', data)
         # 5 - not existing station
-        data = self.client.getLocationIds(station='XXXXX')
+        data = self.client.get_location_ids(station='XXXXX')
         self.assertEqual(len(data), 0)
         # 4 - GE network, FUR station
-        data = self.client.getLocationIds(network='GE', station='FUR')
+        data = self.client.get_location_ids(network='GE', station='FUR')
         self.assertEqual(len(data), 1)
         self.assertIn('00', data)
 
     def test_getChannelIds(self):
         """
-        Tests for method getChannelIds.
+        Tests for method get_channel_ids.
         """
-        data = self.client.getChannelIds()
+        data = self.client.get_channel_ids()
         self.assertEqual(len(data), 2)
         self.assertIn('EHZ', data)
         self.assertIn('BHZ', data)
 
     def test_getEndtimes(self):
         """
-        Tests for method getEndtimes.
+        Tests for method get_endtimes.
         """
         # 1
-        data = self.client.getEndtimes()
+        data = self.client.get_endtimes()
         self.assertEqual(len(data), 2)
         self.assertEqual(data['BW.MANZ..EHZ'],
                          UTCDateTime(2012, 1, 2, 23, 59, 59, 999999))
         self.assertEqual(data['GE.FUR.00.BHZ'],
                          UTCDateTime(2012, 1, 1, 8, 19, 59, 990000))
         # 2 - using wildcards
-        data = self.client.getEndtimes(network='?W', station='M*', location='')
+        data = self.client.get_endtimes(network='?W', station='M*',
+                                        location='')
         self.assertEqual(len(data), 1)
         self.assertEqual(data['BW.MANZ..EHZ'],
                          UTCDateTime(2012, 1, 2, 23, 59, 59, 999999))
         # 3 - no data
-        data = self.client.getEndtimes(network='GE', station='*', location='')
+        data = self.client.get_endtimes(network='GE', station='*', location='')
         self.assertEqual(len(data), 0)
 
     def test_getWaveformPath(self):
         """
-        Tests for method getWaveformPath.
+        Tests for method get_waveform_path.
         """
         # 1
         dt = UTCDateTime('2012-01-01 00:00:00.000000')
-        data = self.client.getWaveformPath(starttime=dt, endtime=dt + 5)
+        data = self.client.get_waveform_path(starttime=dt, endtime=dt + 5)
         self.assertEqual(len(data), 2)
         self.assertEqual(data['BW.MANZ..EHZ'],
                          [os.path.join('/path/to/1', 'file_001.mseed')])
@@ -184,40 +185,40 @@ class ClientTestCase(unittest.TestCase):
                          [os.path.join('/path/to/2', 'file_001.gse2')])
         # 2 - no data
         dt = UTCDateTime('2012-01-01 00:00:00.000000')
-        data = self.client.getWaveformPath(starttime=dt - 5, endtime=dt - 4)
+        data = self.client.get_waveform_path(starttime=dt - 5, endtime=dt - 4)
         self.assertEqual(data, {})
         # 3
         dt = UTCDateTime('2012-01-02 01:00:00.000000')
-        data = self.client.getWaveformPath(starttime=dt, endtime=dt + 5)
+        data = self.client.get_waveform_path(starttime=dt, endtime=dt + 5)
         self.assertEqual(len(data), 1)
         self.assertEqual(data['BW.MANZ..EHZ'],
                          [os.path.join('/path/to/1', 'file_002.mseed')])
         # 4 - filter by network
         dt = UTCDateTime('2012-01-01 00:00:00.000000')
         dt2 = UTCDateTime('2012-01-02 23:00:00.000000')
-        data = self.client.getWaveformPath(starttime=dt, endtime=dt2,
-                                           network='BW')
+        data = self.client.get_waveform_path(starttime=dt, endtime=dt2,
+                                             network='BW')
         self.assertEqual(len(data), 1)
         self.assertEqual(data['BW.MANZ..EHZ'],
                          [os.path.join('/path/to/1', 'file_001.mseed'),
                           os.path.join('/path/to/1', 'file_002.mseed')])
         # 5 - filter by network and station using wildcards
-        data = self.client.getWaveformPath(starttime=dt, endtime=dt2,
-                                           network='BW', station='MA*')
+        data = self.client.get_waveform_path(starttime=dt, endtime=dt2,
+                                             network='BW', station='MA*')
         self.assertEqual(len(data), 1)
         # 6 - filter by channel and location
-        data = self.client.getWaveformPath(starttime=dt, endtime=dt2,
-                                           channel='?HZ', location='')
+        data = self.client.get_waveform_path(starttime=dt, endtime=dt2,
+                                             channel='?HZ', location='')
         self.assertEqual(len(data), 1)
 
     def test_getPreview(self):
         """
-        Tests for method getPreview.
+        Tests for method get_preview.
         """
         # 1
         dt = UTCDateTime('2012-01-01 00:00:00.000000')
         dt2 = UTCDateTime('2012-01-01T08:19:30.000000Z')
-        st = self.client.getPreview(starttime=dt, endtime=dt2)
+        st = self.client.get_preview(starttime=dt, endtime=dt2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, 'GE.FUR.00.BHZ')
         self.assertEqual(st[0].stats.starttime,
@@ -229,21 +230,22 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.preview, True)
         np.testing.assert_equal(st[0].data, self.preview)
         # 2 - no data
-        st = self.client.getPreview(network='XX', starttime=dt, endtime=dt + 2)
+        st = self.client.get_preview(network='XX', starttime=dt,
+                                     endtime=dt + 2)
         self.assertEqual(len(st), 0)
         # 3 - trimmed
         dt = UTCDateTime('2012-01-01 00:00:00.000000')
         dt2 = UTCDateTime('2012-01-01T04:09:30.000000Z')
-        st = self.client.getPreview(network='G?', location='00', station='*',
-                                    starttime=dt, endtime=dt2)
+        st = self.client.get_preview(network='G?', location='00', station='*',
+                                     starttime=dt, endtime=dt2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.npts, 500)
         # 4 - using trace_ids and pad=True
         dt = UTCDateTime('2011-12-31 00:00:00.000000')
         dt2 = UTCDateTime('2012-01-01T04:09:30.000000Z')
-        st = self.client.getPreview(trace_ids=['GE.FUR.00.BHZ',
-                                               'GE.FUR.00.BHN'], pad=True,
-                                    starttime=dt, endtime=dt2)
+        st = self.client.get_preview(trace_ids=['GE.FUR.00.BHZ',
+                                                'GE.FUR.00.BHN'], pad=True,
+                                     starttime=dt, endtime=dt2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.npts, 3380)
 

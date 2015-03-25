@@ -25,7 +25,7 @@ the names of all available test cases.
     or via Python interpreter
 
     >>> import obspy.core
-    >>> obspy.core.runTests()  # DOCTEST: +SKIP
+    >>> obspy.core.run_tests()  # DOCTEST: +SKIP
 
 (2) Run all tests on command line::
 
@@ -34,7 +34,7 @@ the names of all available test cases.
     or via Python interpreter
 
     >>> import obspy.core
-    >>> obspy.core.runTests(all=True)  # DOCTEST: +SKIP
+    >>> obspy.core.run_tests(all=True)  # DOCTEST: +SKIP
 
 (3) Verbose output::
 
@@ -43,7 +43,7 @@ the names of all available test cases.
     or
 
     >>> import obspy.core
-    >>> obspy.core.runTests(verbosity=2)  # DOCTEST: +SKIP
+    >>> obspy.core.run_tests(verbosity=2)  # DOCTEST: +SKIP
 
 (4) Run tests of module :mod:`obspy.io.mseed`::
 
@@ -66,7 +66,7 @@ the names of all available test cases.
 
     >>> import obspy.core
     >>> tests = ['obspy.core.tests.test_stats.StatsTestCase.test_init']
-    >>> obspy.core.runTests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
+    >>> obspy.core.run_tests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 
 (7) Report test results to http://tests.obspy.org/::
 
@@ -129,7 +129,7 @@ HOSTNAME = platform.node().split('.', 1)[0]
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
-    Used to decorate file-like objects with a handy 'writeln' method
+    Used to decorate file-like objects with a handy 'write_ln' method
     """
     def __init__(self, stream):
         self.stream = stream
@@ -139,7 +139,7 @@ class _WritelnDecorator(object):
             raise AttributeError(attr)
         return getattr(self.stream, attr)
 
-    def writeln(self, arg=None):
+    def write_ln(self, arg=None):
         if arg:
             self.write(arg)
         self.write('\n')  # text-mode streams translate to \r\n if needed
@@ -148,7 +148,7 @@ unittest._WritelnDecorator = _WritelnDecorator
 # XXX: end of ugly monkey patch
 
 
-def _getSuites(verbosity=1, names=[]):
+def _get_suites(verbosity=1, names=[]):
     """
     The ObsPy test suite.
     """
@@ -177,7 +177,7 @@ def _getSuites(verbosity=1, names=[]):
     return suites, status
 
 
-def _createReport(ttrs, timetaken, log, server, hostname, sorted_tests):
+def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -394,7 +394,7 @@ class _TextTestRunner:
         self.verbosity = verbosity
         self.timeit = timeit
 
-    def _makeResult(self):
+    def _make_result(self):
         return _TextTestResult(self.stream, self.descriptions, self.verbosity)
 
     def run(self, suites):
@@ -419,7 +419,7 @@ class _TextTestRunner:
             # message
             if msg:
                 _recursive_skip(test, msg)
-            result = self._makeResult()
+            result = self._make_result()
             start = time.time()
             test(result)
             stop = time.time()
@@ -427,7 +427,7 @@ class _TextTestRunner:
             total = stop - start
             results[id].__dict__['timetaken'] = total
             if self.timeit:
-                self.stream.writeln('')
+                self.stream.write_ln('')
                 self.stream.write("obspy.%s: " % (id))
                 num = test.countTestCases()
                 try:
@@ -435,15 +435,15 @@ class _TextTestRunner:
                 except:
                     avg = 0
                 msg = '%d tests in %.3fs (average of %.4fs per test)'
-                self.stream.writeln(msg % (num, total, avg))
-                self.stream.writeln('')
+                self.stream.write_ln(msg % (num, total, avg))
+                self.stream.write_ln('')
             time_taken += total
         runs = 0
         faileds = 0
         erroreds = 0
         wasSuccessful = True
         if self.verbosity:
-            self.stream.writeln()
+            self.stream.write_ln()
         for result in results.values():
             failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
@@ -453,10 +453,10 @@ class _TextTestRunner:
                 result.printErrors()
             runs += result.testsRun
         if self.verbosity:
-            self.stream.writeln(unittest._TextTestResult.separator2)
-            self.stream.writeln("Ran %d test%s in %.3fs" %
-                                (runs, runs != 1 and "s" or "", time_taken))
-            self.stream.writeln()
+            self.stream.write_ln(unittest._TextTestResult.separator2)
+            self.stream.write_ln("Ran %d test%s in %.3fs" %
+                                 (runs, runs != 1 and "s" or "", time_taken))
+            self.stream.write_ln()
         if not wasSuccessful:
             self.stream.write("FAILED (")
             if faileds:
@@ -465,16 +465,16 @@ class _TextTestRunner:
                 if faileds:
                     self.stream.write(", ")
                 self.stream.write("errors=%d" % erroreds)
-            self.stream.writeln(")")
+            self.stream.write_ln(")")
         elif self.verbosity:
-            self.stream.writeln("OK")
+            self.stream.write_ln("OK")
         return results, time_taken, (faileds + erroreds)
 
 
-def runTests(verbosity=1, tests=[], report=False, log=None,
-             server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0, exclude=[], tutorial=False,
-             hostname=HOSTNAME):
+def run_tests(verbosity=1, tests=[], report=False, log=None,
+              server="tests.obspy.org", all=False, timeit=False,
+              interactive=False, slowest=0, exclude=[], tutorial=False,
+              hostname=HOSTNAME):
     """
     This function executes ObsPy test suites.
 
@@ -504,7 +504,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites, status = _getSuites(verbosity, tests)
+    suites, status = _get_suites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -546,7 +546,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server, hostname, sorted_tests)
+        _create_report(ttr, total_time, log, server, hostname, sorted_tests)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -663,10 +663,10 @@ def run(argv=None, interactive=True):
         os.environ['OBSPY_KEEP_ONLY_FAILED_IMAGES'] = ""
     if args.no_flake8:
         os.environ['OBSPY_NO_FLAKE8'] = ""
-    return runTests(verbosity, args.tests, report, args.log, args.server,
-                    args.all, args.timeit, interactive, args.n,
-                    exclude=args.exclude, tutorial=args.tutorial,
-                    hostname=args.hostname)
+    return run_tests(verbosity, args.tests, report, args.log, args.server,
+                     args.all, args.timeit, interactive, args.n,
+                     exclude=args.exclude, tutorial=args.tutorial,
+                     hostname=args.hostname)
 
 
 def main(argv=None, interactive=True):

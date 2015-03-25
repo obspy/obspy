@@ -1128,7 +1128,7 @@ class Stream(object):
         """
         from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        return waveform.plotWaveform(*args, **kwargs)
+        return waveform.plot_waveform(*args, **kwargs)
 
     def spectrogram(self, **kwargs):
         """

@@ -108,11 +108,11 @@ class MySLClient(SLClient):
 def main():
     # initialize realtime trace
     rttrace = RtTrace(max_length=60)
-    # rttrace.registerRtProcess('integrate')
-    rttrace.registerRtProcess(np.abs)
+    # rttrace.register_rt_process('integrate')
+    rttrace.register_rt_process(np.abs)
     # width in num samples
     boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
-    rttrace.registerRtProcess('boxcar', width=boxcar_width)
+    rttrace.register_rt_process('boxcar', width=boxcar_width)
 
     print("The SeedLink client will collect data packets and append " +
           "them to an RTTrace object.")

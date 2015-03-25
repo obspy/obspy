@@ -33,7 +33,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import AttribDict
-from obspy.geodetics import gps2DistAzimuth
+from obspy.geodetics import gps2dist_azimuth
 
 
 # we put here everything but the time, they are going to stats.starttime
@@ -1154,7 +1154,7 @@ class SacIO(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
+        dist, az, baz = gps2dist_azimuth(eqlat, eqlon, stlat, stlon)
         self.SetHvalue('dist', dist / 1000.)
         self.SetHvalue('az', az)
         self.SetHvalue('baz', baz)

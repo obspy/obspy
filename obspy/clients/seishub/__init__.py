@@ -34,11 +34,11 @@ Advanced Examples
 >>> client.waveform.getNetworkIds()     #doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
->>> sta_ids = client.waveform.getStationIds(network='BW')
+>>> sta_ids = client.waveform.get_station_ids(network='BW')
 >>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
->>> cha_ids = client.waveform.getChannelIds(network='BW', station='MANZ')
+>>> cha_ids = client.waveform.get_channel_ids(network='BW', station='MANZ')
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
 

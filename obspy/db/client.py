@@ -21,6 +21,7 @@ from sqlalchemy.orm import sessionmaker
 from obspy.core.preview import merge_previews
 from obspy.core.stream import Stream
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import deprecated
 from obspy.db.db import Base, WaveformChannel, WaveformFile, WaveformPath
 
 
@@ -53,7 +54,12 @@ class Client(object):
         else:
             self.session = session
 
+    @deprecated("'getNetworkIDs' has been renamed to 'get_network_ids'. Use "
+                "that instead.")
     def getNetworkIDs(self):
+        return self.get_network_ids()
+
+    def get_network_ids(self):
         """
         Fetches all possible network id's.
         """
@@ -64,7 +70,12 @@ class Client(object):
         session.close()
         return [r[0] for r in results if len(r) == 1]
 
-    def getStationIds(self, network=None):
+    @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
+                "Use that instead.")
+    def getStationIds(self, *args, **kwargs):
+        return self.get_station_ids(*args, **kwargs)
+
+    def get_station_ids(self, network=None):
         """
         Fetches all possible station id's.
 
@@ -81,7 +92,12 @@ class Client(object):
         session.close()
         return [r[0] for r in results if len(r) == 1]
 
-    def getLocationIds(self, network=None, station=None):
+    @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
+                "that instead.")
+    def getLocationIds(self, *args, **kwargs):
+        return self.get_location_ids(*args, **kwargs)
+
+    def get_location_ids(self, network=None, station=None):
         """
         Fetches all possible location id's.
 
@@ -103,7 +119,12 @@ class Client(object):
         session.close()
         return [r[0] for r in results if len(r) == 1]
 
-    def getChannelIds(self, network=None, station=None, location=None):
+    @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
+                "that instead.")
+    def getChannelIds(self, *args, **kwargs):
+        return self.get_channel_ids(*args, **kwargs)
+
+    def get_channel_ids(self, network=None, station=None, location=None):
         """
         Fetches all possible channel id's.
 
@@ -130,8 +151,13 @@ class Client(object):
         session.close()
         return [r[0] for r in results if len(r) == 1]
 
-    def getEndtimes(self, network=None, station=None, location=None,
-                    channel=None):
+    @deprecated("'getEndtimes' has been renamed to 'get_endtimes'. Use "
+                "that instead.")
+    def getEndtimes(self, *args, **kwargs):
+        return self.get_endtimes(*args, **kwargs)
+
+    def get_endtimes(self, network=None, station=None, location=None,
+                     channel=None):
         """
         Generates a list of last end times for each channel.
         """
@@ -167,8 +193,13 @@ class Client(object):
             adict[key] = UTCDateTime(result[4])
         return adict
 
-    def getWaveformPath(self, network=None, station=None, location=None,
-                        channel=None, starttime=None, endtime=None):
+    @deprecated("'getWaveformPath' has been renamed to 'get_waveform_path'. "
+                "Use that instead.")
+    def getWaveformPath(self, *args, **kwargs):
+        return self.get_waveform_path(*args, **kwargs)
+
+    def get_waveform_path(self, network=None, station=None, location=None,
+                          channel=None, starttime=None, endtime=None):
         """
         Generates a list of available waveform files.
         """
@@ -219,9 +250,14 @@ class Client(object):
             file_dict.setdefault(key, []).append(fname)
         return file_dict
 
-    def getPreview(self, trace_ids=[], starttime=None, endtime=None,
-                   network=None, station=None, location=None, channel=None,
-                   pad=False):
+    @deprecated("'getPreview' has been renamed to 'get_preview'. Use "
+                "that instead.")
+    def getPreview(self, *args, **kwargs):
+        return self.get_preview(*args, **kwargs)
+
+    def get_preview(self, trace_ids=[], starttime=None, endtime=None,
+                    network=None, station=None, location=None, channel=None,
+                    pad=False):
         """
         Returns the preview trace.
         """
@@ -277,7 +313,7 @@ class Client(object):
         # create Stream
         st = Stream()
         for result in results:
-            preview = result.getPreview()
+            preview = result.get_preview()
             st.append(preview)
         # merge and trim
         st = merge_previews(st)

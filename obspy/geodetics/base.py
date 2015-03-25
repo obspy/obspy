@@ -17,8 +17,16 @@ import warnings
 
 import numpy as np
 
+from obspy.core.util.decorator import deprecated
 
+
+@deprecated("'calcVincentyInverse' has been renamed to "
+            "'calc_vincenty_inverse'. Use that instead.")
 def calcVincentyInverse(lat1, lon1, lat2, lon2):
+    return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
+
+
+def calc_vincenty_inverse(lat1, lon1, lat2, lon2):
     """
     Vincenty Inverse Solution of Geodesics on the Ellipsoid.
 
@@ -180,7 +188,13 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     return dist, alpha12, alpha21
 
 
+@deprecated("'gps2DistAzimuth' has been renamed to "
+            "'gps2dist_azimuth'. Use that instead.")
 def gps2DistAzimuth(lat1, lon1, lat2, lon2):
+    return gps2dist_azimuth(lat1, lon1, lat2, lon2)
+
+
+def gps2dist_azimuth(lat1, lon1, lat2, lon2):
     """
     Computes the distance between two geographic points on the WGS84
     ellipsoid and the forward and backward azimuths between these points.
@@ -202,7 +216,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         for converting between geographic, UTM, UPS, MGRS, and geocentric
         coordinates, for geoid calculations, and for solving geodesic problems.
         Otherwise the locally implemented Vincenty's Inverse formulae
-        (:func:`obspy.core.util.geodetics.calcVincentyInverse`) is used which
+        (:func:`obspy.core.util.geodetics.calc_vincenty_inverse`) is used which
         has known limitations for two nearly antipodal points and is ca. 4x
         slower.
     """
@@ -218,7 +232,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     except ImportError:
         pass
     try:
-        values = calcVincentyInverse(lat1, lon1, lat2, lon2)
+        values = calc_vincenty_inverse(lat1, lon1, lat2, lon2)
         if np.alltrue(np.isnan(values)):
             raise StopIteration
         return values

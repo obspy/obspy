@@ -9,8 +9,8 @@
        :toctree: autogen
        :nosignatures:
 
-       ~base.calcVincentyInverse
-       ~base.gps2DistAzimuth
+       ~base.calc_vincenty_inverse
+       ~base.gps2dist_azimuth
        ~base.kilometer2degrees
        ~base.locations2degrees
        ~flinnengdahl.FlinnEngdahl

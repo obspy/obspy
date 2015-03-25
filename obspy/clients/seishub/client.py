@@ -389,7 +389,7 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getStationIds'
+        url = '/seismology/waveform/get_station_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
@@ -408,7 +408,7 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getLocationIds'
+        url = '/seismology/waveform/get_location_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
@@ -430,7 +430,7 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getChannelIds'
+        url = '/seismology/waveform/get_channel_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
@@ -586,7 +586,7 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        url = '/seismology/waveform/getPreview'
+        url = '/seismology/waveform/get_preview'
         data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
@@ -616,7 +616,7 @@ master/seishub/plugins/seismology/waveform.py
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
                 kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
-        url = '/seismology/waveform/getPreview'
+        url = '/seismology/waveform/get_preview'
         data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
