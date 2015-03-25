@@ -139,7 +139,7 @@ class Client(object):
         doc = response.read()
         return doc
 
-    def _toFileOrData(self, filename, data, binary=False):
+    def _to_file_or_data(self, filename, data, binary=False):
         """
         Either writes data into a file if filename is given or directly returns
         it.
@@ -176,61 +176,6 @@ class Client(object):
             # Only close if also opened.
             if file_opened is True:
                 fh.close()
-
-    def getWaveform(self, network, station, location, channel, starttime,
-                    endtime, quality='B'):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_waveform'])
-
-    def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, quality='B'):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_waveform'])
-
-    def saveResponse(self, filename, network, station, location, channel,
-                     starttime, endtime, format='RESP'):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_stations'])
-
-    def getEvents(self, format='catalog', **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_events'])
 
     def timeseries(self, network, station, location, channel,
                    starttime, endtime, filter=[], filename=None,
@@ -404,7 +349,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             raise Exception(msg)
         # write directly if file name is given
         if filename:
-            return self._toFileOrData(filename, data, True)
+            return self._to_file_or_data(filename, data, True)
         # create temporary file for writing data
         with NamedTemporaryFile() as tf:
             tf.write(data)
@@ -508,69 +453,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        return self._toFileOrData(filename, data)
-
-    def station(self, network, station, location="*", channel="*",
-                starttime=None, endtime=None, level='sta', filename=None,
-                **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_stations'])
-
-    def dataselect(self, network, station, location, channel,
-                   starttime, endtime, quality='B', filename=None, **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_waveform'])
-
-    def bulkdataselect(self, bulk, quality=None, filename=None,
-                       minimumlength=None, longestonly=False):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/
-        new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_waveform_bulk'])
-
-    def availability(self, network="*", station="*", location="*",
-                     channel="*", starttime=UTCDateTime() - (60 * 60 * 24 * 7),
-                     endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
-                     lat=None, lon=None, minradius=None, maxradius=None,
-                     minlat=None, maxlat=None, minlon=None, maxlon=None,
-                     output="bulkdataselect", restricted=False, filename=None,
-                     **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_stations'])
+        return self._to_file_or_data(filename, data)
 
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
@@ -678,7 +561,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             except:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)
-        return self._toFileOrData(filename, data)
+        return self._to_file_or_data(filename, data)
 
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
@@ -942,7 +825,7 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        return self._toFileOrData(filename, data)
+        return self._to_file_or_data(filename, data)
 
     def evalresp(self, network, station, location, channel, time=UTCDateTime(),
                  minfreq=0.00001, maxfreq=None, nfreq=200, units='def',
@@ -1124,26 +1007,13 @@ new-fdsn-web-services-and-retirement-of-deprecated-services/
                 # show plot
                 plt.show()
             else:
-                self._toFileOrData(filename, data, binary=True)
+                self._to_file_or_data(filename, data, binary=True)
         else:
             # ASCII data
             if filename is None:
                 return loadtxt(io.BytesIO(data), ndmin=1)
             else:
-                return self._toFileOrData(filename, data, binary=True)
-
-    def event(self, filename=None, **kwargs):
-        """
-        SHUT DOWN ON SERVER SIDE!
-
-        This service was shut down on the server side in December
-        2013, please use :mod:`obspy.clients.fdsn` instead.
-
-        Further information:
-        http://www.iris.edu/ds/nodes/dmc/news/2013/03/\
-new-fdsn-web-services-and-retirement-of-deprecated-services/
-        """
-        raise Exception(DEPR_WARNS['get_events'])
+                return self._to_file_or_data(filename, data, binary=True)
 
 
 if __name__ == '__main__':
