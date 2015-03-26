@@ -62,7 +62,6 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         _test_rerouted_imps("obspy.earthworm", "obspy.clients.earthworm")
         _test_rerouted_imps("obspy.iris", "obspy.clients.iris")
         _test_rerouted_imps("obspy.neic", "obspy.clients.neic")
-        # Don't test neries as it requires suds which is not a test dependency.
         _test_rerouted_imps("obspy.seedlink", "obspy.clients.seedlink")
         _test_rerouted_imps("obspy.seishub", "obspy.clients.seishub")
         _test_rerouted_imps("obspy.core.util.geodetics", "obspy.geodetics")

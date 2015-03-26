@@ -106,7 +106,6 @@ _import_map = {
     "obspy.fdsn": "obspy.clients.fdsn",
     "obspy.iris": "obspy.clients.iris",
     "obspy.neic": "obspy.clients.neic",
-    "obspy.neries": "obspy.clients.neries",
     "obspy.seedlink": "obspy.clients.seedlink",
     "obspy.seishub": "obspy.clients.seishub",
     # geodetics

@@ -39,8 +39,8 @@ DEFAULT_MODULES = ['core', 'db', 'geodetics', 'imaging',
                    'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
                    'realtime', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
-                   'clients.iris', 'clients.neic', 'clients.neries',
-                   'clients.seedlink', 'clients.seishub']
+                   'clients.iris', 'clients.neic', 'clients.seedlink',
+                   'clients.seishub']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection

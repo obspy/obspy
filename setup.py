@@ -105,8 +105,7 @@ INSTALL_REQUIRES = [
     'sqlalchemy<=0.9.9']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
-    'arclink': ['m2crypto'],
-    'neries': ['suds-jurko']}
+    'arclink': ['m2crypto']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
