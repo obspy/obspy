@@ -24,8 +24,8 @@ print("  Time correction for pick 2: %.6f" % dt)
 print("  Correlation coefficient: %.2f" % coeff)
 # estimate the time correction with bandpass prefiltering
 dt, coeff = xcorr_pick_correction(t1, tr1, t2, tr2, 0.05, 0.2, 0.1, plot=True,
-                                filter="bandpass",
-                                filter_options={'freqmin': 1, 'freqmax': 10})
+                                  filter="bandpass",
+                                  filter_options={'freqmin': 1, 'freqmax': 10})
 print("Bandpass prefiltering:")
 print("  Time correction for pick 2: %.6f" % dt)
 print("  Correlation coefficient: %.2f" % coeff)

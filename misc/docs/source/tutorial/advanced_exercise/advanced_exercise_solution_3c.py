@@ -2,9 +2,9 @@ from __future__ import print_function
 
 from math import log10
 
-from obspy.arclink import Client
-from obspy.core import UTCDateTime, read
-from obspy.core.util.geodetics import gps2DistAzimuth
+from obspy.clients.arclink import Client
+from obspy import UTCDateTime, read
+from obspy.geodetics import gps2dist_azimuth
 
 
 st = read("../data/LKBD.MSEED")
@@ -32,7 +32,7 @@ sta_lon = 7.62714
 event_lat = 46.218
 event_lon = 7.706
 
-epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat, sta_lon)
+epi_dist, az, baz = gps2dist_azimuth(event_lat, event_lon, sta_lat, sta_lon)
 epi_dist = epi_dist / 1000
 
 a = 0.018

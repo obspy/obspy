@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import hilbert
 
 from obspy.signal.tf_misfit import plot_tf_misfits
 
@@ -38,7 +37,7 @@ st2 = st1.copy()
 st1a = st1 * amp_fac + ste
 
 plot_tf_misfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, show=False)
-plot_tf_misfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local', clim=0.15,
-              show=False)
+plot_tf_misfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local',
+                clim=0.15, show=False)
 
 plt.show()
