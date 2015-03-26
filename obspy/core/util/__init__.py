@@ -31,8 +31,6 @@ from obspy.core.util.base import (ALL_MODULES, DEFAULT_MODULES,
                                   NamedTemporaryFile, _read_from_plugin,
                                   create_empty_data_chunk, get_example_file,
                                   get_matplotlib_version, get_script_dir_name)
-from obspy.core.util.decorator import (deprecated, deprecated_keywords, skip,
-                                       skip_if, uncompress_file)
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import (BAND_CODE, CatchOutput, complexify_string,

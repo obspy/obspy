@@ -51,10 +51,10 @@ from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      OriginUncertaintyDescription, PickOnset,
                                      PickPolarity, SourceTimeFunctionType)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import (AttribDict, NamedTemporaryFile, _read_from_plugin,
-                             uncompress_file)
+from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import (deprecated, map_example_filename)
+from obspy.core.util.decorator import (deprecated, map_example_filename,
+                                       uncompress_file)
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']

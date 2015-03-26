@@ -7,7 +7,6 @@ import math
 import unittest
 import warnings
 
-from obspy.core.util.decorator import skip_if
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
                              gps2dist_azimuth, kilometer2degrees,
                              locations2degrees)
@@ -58,7 +57,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertRaises(ValueError, calc_vincenty_inverse, 0, 0, 91, 0)
         self.assertRaises(ValueError, calc_vincenty_inverse, 0, 0, -91, 0)
 
-    @skip_if(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
+    @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
+                                            'installed')
     def test_gps2DistAzimuthWithGeographiclib(self):
         """
         Testing gps2dist_azimuth function using the module geographiclib.
@@ -110,8 +110,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
-    @skip_if(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
-                                'not using calc_vincenty_inverse')
+    @unittest.skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
+                                        'not using calc_vincenty_inverse')
     def test_gps2DistAzimuthBUG150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is
@@ -180,7 +180,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assertLoc(0, 0, 0, 180, 20004)
         assertLoc(11, 55, 11, 55, 0)
 
-    @skip_if(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
+    @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
+                                            'installed')
     def test_issue_375(self):
         """
         Test for #375.

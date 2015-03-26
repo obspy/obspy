@@ -10,7 +10,6 @@ import os
 import re
 import unittest
 
-from obspy.core.util.decorator import skip_if
 from obspy.core.util.testing import check_flake8
 
 
@@ -19,7 +18,7 @@ class CodeFormattingTestCase(unittest.TestCase):
     Test codebase for compliance with the flake8 tool.
     """
 
-    @skip_if('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
+    @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.

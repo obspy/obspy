@@ -17,7 +17,6 @@ from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skip_if
 from obspy.core.util.testing import compare_xml_strings
 from obspy.io.quakeml.core import Pickler, _read_quakeml, _write_quakeml
 
@@ -589,7 +588,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 catalog2 = read_events(tmpfile)
         self.assertTrue(len(catalog2), 3)
 
-    @skip_if(not IS_RECENT_LXML, "lxml >= 2.3 is required")
+    @unittest.skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
     def test_enums(self):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are

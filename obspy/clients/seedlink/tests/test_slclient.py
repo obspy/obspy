@@ -9,13 +9,12 @@ from future.builtins import *  # NOQA
 import unittest
 
 from obspy import UTCDateTime
-from obspy.core.util.decorator import skip_if
 from obspy.clients.seedlink.slclient import SLClient
 
 
 class SLClientTestCase(unittest.TestCase):
 
-    @skip_if(__name__ != '__main__', 'test must be started manually')
+    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_info(self):
         slClient = SLClient(loglevel='DEBUG')
         slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
@@ -24,7 +23,7 @@ class SLClientTestCase(unittest.TestCase):
         slClient.initialize()
         slClient.run()
 
-    @skip_if(__name__ != '__main__', 'test must be started manually')
+    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_time_window(self):
         slClient = SLClient()
         slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
@@ -37,7 +36,7 @@ class SLClientTestCase(unittest.TestCase):
         slClient.initialize()
         slClient.run()
 
-    @skip_if(__name__ != '__main__', 'test must be started manually')
+    @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_issue708(self):
         slClient = SLClient()
         slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")

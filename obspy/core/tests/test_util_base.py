@@ -8,7 +8,6 @@ import shutil
 import unittest
 
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
-from obspy.core.util.decorator import skip_if
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 # checking for matplotlib
@@ -31,7 +30,7 @@ class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
-    @skip_if(not HAS_MATPLOTLIB, 'matplotlib is not installed')
+    @unittest.skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
         Tests for the get_matplotlib_version() function as it continues to

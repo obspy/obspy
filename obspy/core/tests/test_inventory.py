@@ -21,7 +21,6 @@ import numpy as np
 
 from obspy import UTCDateTime, read_inventory
 from obspy.core.util.base import get_basemap_version
-from obspy.core.util.decorator import skip_if
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
                                   Station)
@@ -150,7 +149,7 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
-    @skip_if(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_global(self):
         """
         Tests the inventory location preview plot, default parameters.
@@ -166,7 +165,7 @@ class InventoryTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             inv.plot(outfile=ic.name)
 
-    @skip_if(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_ortho(self):
         """
         Tests the inventory location preview plot, ortho projection, some
@@ -180,7 +179,7 @@ class InventoryTestCase(unittest.TestCase):
                      label=False, outfile=ic.name, colormap="hsv",
                      color_per_network=True)
 
-    @skip_if(not HAS_BASEMAP, 'basemap not installed')
+    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
     def test_location_plot_local(self):
         """
         Tests the inventory location preview plot, local projection, some more

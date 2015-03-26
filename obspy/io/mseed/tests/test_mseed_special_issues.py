@@ -21,7 +21,6 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.decorator import skip_if
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -179,8 +178,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # test results
         np.testing.assert_array_equal(data, st2[0].data)
 
-    @skip_if(NO_NEGATIVE_TIMESTAMPS,
-             'times before 1970 are not supported on this operation system')
+    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS,
+                     'times before 1970 are not supported on this operation '
+                     'system')
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.

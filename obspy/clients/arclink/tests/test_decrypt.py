@@ -14,7 +14,7 @@ import numpy as np
 from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, skip_if
+from obspy.core.util import NamedTemporaryFile
 
 try:
     from M2Crypto.EVP import EVPError
@@ -27,7 +27,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKey(self):
         """
         """
@@ -45,7 +45,7 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKeyFile(self):
         """
         Tests various DCID key file formats (with space or equal sign). Also
@@ -90,9 +90,9 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skip_if(os.path.isfile(DCID_KEY_FILE),
-             '$HOME/dcidpasswords.txt already exists')
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(os.path.isfile(DCID_KEY_FILE),
+                     '$HOME/dcidpasswords.txt already exists')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDefaultDCIDKeyFile(self):
         """
         Use $HOME/dcidpasswords.txt.
@@ -116,7 +116,7 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformUnknownUser(self):
         """
         Unknown user raises an ArcLinkException: DENIED.
@@ -128,7 +128,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'GE', 'APE',
                           '', 'BHZ', start, end)
 
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWrongPassword(self):
         """
         A wrong password password raises a "EVPError: bad decrypt".
@@ -141,7 +141,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
                           'BHZ', start, end)
 
-    @skip_if(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformNoPassword(self):
         """
         No password raises a "EVPError: bad decrypt".

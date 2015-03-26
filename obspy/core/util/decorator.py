@@ -82,38 +82,6 @@ def deprecated_keywords(keywords):
     return fdec
 
 
-def skip(reason):
-    """
-    Unconditionally skip a test.
-    """
-    def decorator(test_item):
-        if not (isinstance(test_item, type) and issubclass(test_item,
-                                                           unittest.TestCase)):
-            @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):  # @UnusedVariable
-                return
-
-            test_item = skip_wrapper
-
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = reason
-        return test_item
-    return decorator
-
-
-def skip_if(condition, reason):
-    """
-    Skip a test if the condition is true.
-    """
-    if condition:
-        return skip(reason)
-
-    def _id(obj):
-        return obj
-
-    return _id
-
-
 def skip_on_network_error(func):
     """
     Decorator for unittest to mark test routines that fail with certain network
