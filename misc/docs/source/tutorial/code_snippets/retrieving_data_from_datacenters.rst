@@ -6,7 +6,7 @@ Retrieving Data from Data Centers
 ArcLink Protocol
 ----------------
 
-In the following example uses the :mod:`obspy.arclink` module in order to
+In the following example uses the :mod:`obspy.clients.arclink` module in order to
 retrieve waveforms data as well as poles and zeros from a remote server
 via the `ArcLink <http://www.seiscomp3.org/wiki/doc/applications/arclink>`_
 protocol. The retrieved poles and zeros are then used to correct for the
@@ -25,20 +25,15 @@ instrument response and to simulate a 1Hz instrument with damping 0.707.
 .. plot:: tutorial/code_snippets/retrieving_data_from_datacenters_1.py
    :include-source:
 
------------------
-IRIS Web Services
------------------
-
-TODO - for now see :mod:`obspy.iris`
 
 ---------------------
 Earthworm Wave Server
 ---------------------
 
-TODO - for now see :mod:`obspy.earthworm`
+TODO - for now see :mod:`obspy.clients.earthworm`
 
--------------------
-NERIES Web Services
--------------------
+-----------------
+FDSN Web Services
+-----------------
 
-TODO - for now see :mod:`obspy.neries`
+TODO - for now see :mod:`obspy.clients.fdsn`
