@@ -1,5 +1,5 @@
 ==============
-beachball Plot
+Beachball Plot
 ==============
 
 The following lines show how to create a graphical representation of a
