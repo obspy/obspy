@@ -5,7 +5,6 @@ The obspy-mopad script test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY3
 from future import standard_library
 
 import io
@@ -52,12 +51,8 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         try:
             expected = expected.encode(sys.stdout.encoding)
         except:
-            expected = expected.encode('utf-8')
-            if PY3:
-                # This may look like Py3k does extra stuff, but it's actually
-                # saner!
-                expected = repr(expected)
-                expected = expected.encode('ascii')
+            expected = expected.replace('°', ' deg')
+            expected = expected.encode(sys.stdout.encoding)
 
         self.assertEqual(expected, result)
 
@@ -162,12 +157,8 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         try:
             expected = expected.encode(sys.stdout.encoding)
         except:
-            expected = expected.encode('utf-8')
-            if PY3:
-                # This may look like Py3k does extra stuff, but it's actually
-                # saner!
-                expected = repr(expected)
-                expected = expected.encode('ascii')
+            expected = expected.replace('°', ' deg')
+            expected = expected.encode(sys.stdout.encoding)
 
         self.assertEqual(expected, result)
 
