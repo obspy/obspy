@@ -1,8 +1,7 @@
 from __future__ import print_function
 
 import numpy as np
-
-from obspy.core import Stream, Trace, UTCDateTime, read
+import obspy
 
 
 weather = """
@@ -24,11 +23,11 @@ stats = {'network': 'BW', 'station': 'RJOB', 'location': '',
          'channel': 'WLZ', 'npts': len(data), 'sampling_rate': 0.1,
          'mseed': {'dataquality': 'D'}}
 # set current time
-stats['starttime'] = UTCDateTime()
-st = Stream([Trace(data=data, header=stats)])
+stats['starttime'] = obspy.UTCDateTime()
+st = obspy.Stream([obspy.Trace(data=data, header=stats)])
 # write as ASCII file (encoding=0)
 st.write("weather.mseed", format='MSEED', encoding=0, reclen=256)
 
 # Show that it worked, convert NumPy character array back to string
-st1 = read("weather.mseed")
+st1 = obspy.read("weather.mseed")
 print(st1[0].data.tostring())

@@ -1,5 +1,5 @@
-from obspy.core import read
-from obspy.signal import cornFreq2Paz
+import obspy
+from obspy.signal.invsim import corn_freq_2_paz
 
 
 paz_sts2 = {
@@ -8,10 +8,10 @@ paz_sts2 = {
     'zeros': [0j, 0j],
     'gain': 60077000.0,
     'sensitivity': 2516778400.0}
-paz_1hz = cornFreq2Paz(1.0, damp=0.707)  # 1Hz instrument
+paz_1hz = corn_freq_2_paz(1.0, damp=0.707)  # 1Hz instrument
 paz_1hz['sensitivity'] = 1.0
 
-st = read()
+st = obspy.read()
 # make a copy to keep our original data
 st_orig = st.copy()
 

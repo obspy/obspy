@@ -1,20 +1,20 @@
 from __future__ import print_function
 
-from obspy.core import UTCDateTime, read
+import obspy
 from obspy.signal.cross_correlation import xcorr_pick_correction
 
 
 # read example data of two small earthquakes
-st1 = read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.a.slist.gz")
-st2 = read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.b.slist.gz")
+st1 = obspy.read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.a.slist.gz")
+st2 = obspy.read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.b.slist.gz")
 # select the single traces to use in correlation.
 # to avoid artifacts from preprocessing there should be some data left and
 # right of the short time window actually used in the correlation.
 tr1 = st1.select(component="Z")[0]
 tr2 = st2.select(component="Z")[0]
 # these are the original pick times set during routine analysis
-t1 = UTCDateTime("2010-05-27T16:24:33.315000Z")
-t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
+t1 = obspy.UTCDateTime("2010-05-27T16:24:33.315000Z")
+t2 = obspy.UTCDateTime("2010-05-27T16:27:30.585000Z")
 
 # estimate the time correction for pick 2 without any preprocessing and open
 # a plot window to visually validate the results

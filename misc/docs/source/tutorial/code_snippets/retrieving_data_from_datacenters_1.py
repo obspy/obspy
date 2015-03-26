@@ -1,25 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from obspy.arclink import Client
-from obspy.core import UTCDateTime
-from obspy.signal import cornFreq2Paz, seisSim
+import obspy
+from obspy.clients.arclink import Client
+from obspy.signal.invsim import corn_freq_2_paz, simulate_seismometer
 
 
 # Retrieve data via ArcLink
 # please provide a valid email address for the keyword user
 client = Client(user="test@obspy.de")
-t = UTCDateTime("2009-08-24 00:20:03")
+t = obspy.UTCDateTime("2009-08-24 00:20:03")
 st = client.get_waveforms('BW', 'RJOB', '', 'EHZ', t, t + 30)
 paz = client.get_paz('BW', 'RJOB', '', 'EHZ', t)
 
 # 1Hz instrument
-one_hertz = cornFreq2Paz(1.0)
+one_hertz = corn_freq_2_paz(1.0)
 # Correct for frequency response of the instrument
-res = seisSim(st[0].data.astype('float32'),
-              st[0].stats.sampling_rate,
-              paz,
-              inst_sim=one_hertz)
+res = simulate_seismometer(st[0].data.astype('float32'),
+                           st[0].stats.sampling_rate, paz, inst_sim=one_hertz)
 # Correct for overall sensitivity
 res = res / paz['sensitivity']
 
