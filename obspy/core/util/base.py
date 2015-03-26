@@ -255,15 +255,15 @@ ENTRY_POINTS = {
     'integrate': _get_entry_points('obspy.plugin.integrate'),
     'differentiate': _get_entry_points('obspy.plugin.differentiate'),
     'waveform': _get_ordered_entry_points(
-        'obspy.plugin.waveform', 'read_format', WAVEFORM_PREFERRED_ORDER),
+        'obspy.plugin.waveform', 'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _get_ordered_entry_points(
-        'obspy.plugin.waveform', 'write_format', WAVEFORM_PREFERRED_ORDER),
-    'event': _get_entry_points('obspy.plugin.event', 'read_format'),
-    'event_write': _get_entry_points('obspy.plugin.event', 'write_format'),
+        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
+    'event': _get_entry_points('obspy.plugin.event', 'readFormat'),
+    'event_write': _get_entry_points('obspy.plugin.event', 'writeFormat'),
     'taper': _get_entry_points('obspy.plugin.taper'),
-    'inventory': _get_entry_points('obspy.plugin.inventory', 'read_format'),
+    'inventory': _get_entry_points('obspy.plugin.inventory', 'readFormat'),
     'inventory_write': _get_entry_points(
-        'obspy.plugin.inventory', 'write_format'),
+        'obspy.plugin.inventory', 'writeFormat'),
 }
 
 
@@ -379,7 +379,7 @@ def get_scipy_version():
 
 def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
-    Reads a single file from a plug-in's read_format function.
+    Reads a single file from a plug-in's readFormat function.
     """
     EPS = ENTRY_POINTS[plugin_type]
     # get format entry point
@@ -387,13 +387,13 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     if not format:
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
-            # search is_format for given entry point
+            # search isFormat for given entry point
             is_format = load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
-                'is_format')
+                'isFormat')
             # If it is a file-like object, store the position and restore it
-            # later to avoid that the is_format() functions move the file
+            # later to avoid that the isFormat() functions move the file
             # pointer.
             if hasattr(filename, "tell") and hasattr(filename, "seek"):
                 position = filename.tell()
@@ -417,11 +417,11 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
     try:
-        # search read_format for given entry point
+        # search readFormat for given entry point
         read_format = load_entry_point(
             format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
-            'read_format')
+            'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
         raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
@@ -473,7 +473,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     if method not in ("read", "write"):
         raise ValueError("no valid type: %s" % method)
 
-    method = "%s_format" % method
+    method = "%sFormat" % method
     eps = _get_ordered_entry_points("obspy.plugin.%s" % group, method,
                                     WAVEFORM_PREFERRED_ORDER)
     mod_list = []

@@ -228,10 +228,10 @@ class Inventory(ComparingObject):
         try:
             # get format specific entry point
             format_ep = ENTRY_POINTS['inventory_write'][format]
-            # search write_format method for given entry point
+            # search writeFormat method for given entry point
             write_format = load_entry_point(
                 format_ep.dist.key,
-                'obspy.plugin.inventory.%s' % (format_ep.name), 'write_format')
+                'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format,
