@@ -705,7 +705,7 @@ master/seishub/plugins/seismology/waveform.py
         return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                 for node in root.getchildren()]
 
-    @deprecated("'get_coordinates' has been renamed to 'get_coordinates'. Use "
+    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. Use "
                 "that instead.")
     def getCoordinates(self, *args, **kwargs):
         return self.get_coordinates(*args, **kwargs)
@@ -853,7 +853,7 @@ master/seishub/plugins/seismology/event.py
     package = 'seismology'
     resourcetype = 'event'
 
-    @deprecated("'get_list' has been renamed to 'get_list'. Use "
+    @deprecated("'getList' has been renamed to 'get_list'. Use "
                 "that instead.")
     def getList(self, *args, **kwargs):
         return self.get_list(*args, **kwargs)

@@ -51,7 +51,7 @@ def get_numpy_type(tpstr):
     return tp
 
 
-class TraceBuf2:
+class TraceBuf2(object):
     """
     """
     byteswap = False
