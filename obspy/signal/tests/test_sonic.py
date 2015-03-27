@@ -19,8 +19,9 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import (array_processing,
                                          array_transff_freqslowness,
-                                         array_transff_wavenumber, get_spoint)
-from obspy.signal.util import util_lon_lat
+                                         array_transff_wavenumber,
+                                         get_stream_offsets)
+from obspy.signal.util import utlLonLat
 
 
 class SonicTestCase(unittest.TestCase):
@@ -155,7 +156,10 @@ class SonicTestCase(unittest.TestCase):
         # XXX relative tolerance should be lower!
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
 
-    def test_get_spoint(self):
+    def test_get_stream_offset(self):
+        """
+        Test case for #682
+        """
         stime = UTCDateTime(1970, 1, 1, 0, 0)
         etime = UTCDateTime(1970, 1, 1, 0, 0) + 10
         data = np.empty(20)

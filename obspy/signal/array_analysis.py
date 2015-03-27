@@ -251,7 +251,7 @@ class SeismicArray(object):
             x *= 1000.0
             y *= 1000.0
 
-            z = absolute_height_in_km 
+            z = absolute_height_in_km
 
             distance = np.sqrt(x ** 2 + y ** 2 + z ** 2)
             if min_distance is None or distance < min_distance:
@@ -363,7 +363,7 @@ class SeismicArray(object):
                            endtime=endtime, method=method, nthroot=nthroot)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
-                                   longitude, absolute_height_in_km =0.0            
+                                   longitude, absolute_height_in_km =0.0
                                    ):
         geo = self.geometry
 
@@ -1668,40 +1668,18 @@ def get_stream_offsets(stream, stime, etime):
     :param etime: End time
     :returns: start and end sample offset arrays
     """
-    slatest = stream[0].stats.starttime
-    eearliest = stream[0].stats.endtime
-    for tr in stream:
-        if tr.stats.starttime >= slatest:
-            slatest = tr.stats.starttime
-        if tr.stats.endtime <= eearliest:
-            eearliest = tr.stats.endtime
-
-    nostat = len(stream)
-    spoint = np.empty(nostat, dtype="int32", order="C")
-    epoint = np.empty(nostat, dtype="int32", order="C")
-    # now we have to adjust to the beginning of real start time
-    if (slatest - stime) > stream[0].stats.delta/2.:
-        msg = "Specified start-time is smaller than starttime in stream"
-        raise ValueError(msg)
-    if (eearliest - etime) < -stream[0].stats.delta/2.:
-        msg = "Specified end-time bigger is than endtime in stream"
-        print eearliest, etime
-        raise ValueError(msg)
-    for i in xrange(nostat):
-        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
-        diffstart = slatest - stream[i].stats.starttime
-        frac, ddummy = math.modf(diffstart)
-        spoint[i] = int(ddummy)
-        if frac > stream[i].stats.delta * 0.25:
-            msg = "Difference in start times exceeds 25% of samp rate"
-            warnings.warn(msg)
-        spoint[i] += offset
-        diffend = stream[i].stats.endtime - eearliest
-        frac, ddummy = math.modf(diffend)
-        epoint[i] = int(ddummy)
-        epoint[i] += negoffset
-
+    spoint = np.empty(len(stream), dtype=np.int32, order="C")
+    epoint = np.empty(len(stream), dtype=np.int32, order="C")
+    for i, tr in enumerate(stream):
+        if tr.stats.starttime > stime:
+            msg = "Specified stime %s is smaller than starttime %s in stream"
+            raise ValueError(msg % (stime, tr.stats.starttime))
+        if tr.stats.endtime < etime:
+            msg = "Specified etime %s is bigger than endtime %s in stream"
+            raise ValueError(msg % (etime, tr.stats.endtime))
+        # now we have to adjust to the beginning of real start time
+        spoint[i] = int((stime - tr.stats.starttime) * tr.stats.sampling_rate + .5)
+        epoint[i] = int((tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
     return spoint, epoint
 
 
