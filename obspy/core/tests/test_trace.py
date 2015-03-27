@@ -550,7 +550,7 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.assertEqual((bigtrace_sort.data, myArray).all())
+            self.assertTrue((bigtrace_sort.data == myArray).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
@@ -558,7 +558,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(bigtrace_sort, myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.assertEqual((bigtrace.data, myArray).all(), failinfo)
+            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)

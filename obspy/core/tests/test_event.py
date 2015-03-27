@@ -116,7 +116,7 @@ class EventTestCase(unittest.TestCase):
         # A shallow copy should just use the exact same resource identifier,
         # while a deep copy should not.
         self.assertIs(ev.resource_id, ev2.resource_id)
-        self.assertIs(ev.resource_id, not ev3.resource_id)
+        self.assertIsNot(ev.resource_id, ev3.resource_id)
         self.assertEqual(ev.resource_id, ev3.resource_id)
 
         # But all should point to the same object.
