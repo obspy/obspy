@@ -64,7 +64,7 @@ STANDARD_ASC_HEADERS = ['START', 'COMP', 'CHAN1', 'CHAN2', 'STATION', 'CALIB']
 
 SH_KEYS_INT = [k for (k, v) in SH_IDX.items() if v.startswith('I')]
 SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
-INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.items()])
+INVERTED_SH_IDX = {v: k for k, v in SH_IDX.items()}
 
 
 def _is_asc(filename):

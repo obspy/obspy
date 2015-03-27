@@ -606,7 +606,7 @@ class QuakeMLTestCase(unittest.TestCase):
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
-        nsmap = dict((k, v) for k, v in root.nsmap.items() if k is not None)
+        nsmap = {k: v for k, v in root.nsmap.items() if k is not None}
         for stype in root.findall("xs:simpleType", namespaces=nsmap):
             type_name = stype.get("name")
             restriction = stype.find("xs:restriction", namespaces=nsmap)

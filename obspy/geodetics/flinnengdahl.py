@@ -93,7 +93,7 @@ class FlinnEngdahl(object):
                                 quotechar=native_str('#'),
                                 skipinitialspace=True)
             self.by_number = \
-                dict((int(row[0]), row[1]) for row in FE_csv if len(row) > 1)
+                {int(row[0]): row[1] for row in FE_csv if len(row) > 1}
 
     def get_quadrant(self, longitude, latitude):
         """

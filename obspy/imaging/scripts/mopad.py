@@ -4206,8 +4206,8 @@ def main(argv=None):
 
         if args.GMT_projection:
             lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
-            do_allowed_projections = dict((x[0], x.lower()) for x in
-                                          lo_allowed_projections)
+            do_allowed_projections = {x[0]: x.lower()
+                                      for x in lo_allowed_projections}
             try:
                 gmtp = args.GMT_projection
                 if gmtp in lo_allowed_projections:
@@ -4427,8 +4427,8 @@ def main(argv=None):
 
         if args.plot_projection:
             lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
-            do_allowed_projections = dict((x[0], x.lower()) for x in
-                                          lo_allowed_projections)
+            do_allowed_projections = {x[0]: x.lower()
+                                      for x in lo_allowed_projections}
             try:
                 ppl = args.plot_projection
                 if ppl in lo_allowed_projections:

@@ -1369,7 +1369,7 @@ def _convert_and_check_encoding_for_writing(encoding):
     written using libmseed. Appropriate errors will be raised if necessary.
     """
     # Check if encoding kwarg is set and catch invalid encodings.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
+    encoding_strings = {v[0]: k for k, v in ENCODINGS.items()}
 
     try:
         encoding = int(encoding)

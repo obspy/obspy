@@ -819,8 +819,7 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs["plusError"] = obj_.upper_uncertainty
     for key1, key2 in additional_mapping.items():
         attribs[key1] = getattr(obj_, key2)
-    attribs = dict([(k, str(v)) for k, v in attribs.items()
-                    if v is not None])
+    attribs = {k: str(v) for k, v in attribs.items() if v is not None}
     etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
 
@@ -835,8 +834,7 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
         attribs["plusError"] = obj_.upper_uncertainty
         for key1, key2 in additional_mapping.items():
             attribs[key2] = getattr(obj_, key1)
-        attribs = dict([(k, str(v)) for k, v in attribs.items()
-                        if v is not None])
+        attribs = {k: str(v) for k, v in attribs.items() if v is not None}
         etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
 

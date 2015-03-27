@@ -450,7 +450,7 @@ class TauModel(object):
         keys = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch', 'iocbDepth',
                 'mohoBranch', 'mohoDepth', 'noDisconDepths', 'radiusOfEarth',
                 'ray_params', 'sourceBranch', 'source_depth', 'spherical']
-        arrays = dict([(key, getattr(self, key)) for key in keys])
+        arrays = {k: getattr(self, k) for k in keys}
         # b) handle .tauBranches
         i, j = self.tauBranches.shape
         for j_ in range(j):
