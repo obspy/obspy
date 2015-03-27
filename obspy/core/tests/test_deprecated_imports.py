@@ -29,9 +29,9 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
                 warnings.simplefilter("always")
                 mod_1 = importlib.import_module(old_imp)
                 mod_2 = importlib.import_module(new_imp)
-            self.assertTrue(mod_1 is mod_2)
+            self.assertIs(mod_1, mod_2)
             self.assertTrue(len(w), 1)
-            self.assertTrue(w[0].category is ObsPyDeprecationWarning)
+            self.assertIs(w[0].category, ObsPyDeprecationWarning)
             self.assertTrue(old_imp in str(w[0].message))
             self.assertTrue(new_imp in str(w[0].message))
 
@@ -84,33 +84,33 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         # Old obspy.station. This has potentially been used a lot.
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            self.assertTrue(obspy.station.Inventory is
-                            obspy.core.inventory.Inventory)
-            self.assertTrue(obspy.station.Network is
-                            obspy.core.inventory.Network)
-            self.assertTrue(obspy.station.Station is
-                            obspy.core.inventory.Station)
-            self.assertTrue(obspy.station.Channel is
-                            obspy.core.inventory.Channel)
+            self.assertIs(obspy.station.Inventory,
+                          obspy.core.inventory.Inventory)
+            self.assertIs(obspy.station.Network,
+                          obspy.core.inventory.Network)
+            self.assertIs(obspy.station.Station,
+                          obspy.core.inventory.Station)
+            self.assertIs(obspy.station.Channel,
+                          obspy.core.inventory.Channel)
             # Submodule imports.
             self.assertTrue(obspy.station, obspy.core.inventory)
             self.assertTrue(obspy.mseed, obspy.io.mseed)
             self.assertTrue(obspy.xseed, obspy.io.xseed)
             self.assertTrue(obspy.fdsn, obspy.clients.fdsn)
             # obspy.geodetics used to be part of obspy.core.util.
-            self.assertTrue(obspy.core.util.geodetics is obspy.geodetics)
+            self.assertIs(obspy.core.util.geodetics, obspy.geodetics)
             # Parser.
-            self.assertTrue(obspy.xseed.Parser is obspy.io.xseed.Parser)
+            self.assertIs(obspy.xseed.Parser, obspy.io.xseed.Parser)
             # File formats previously part of obspy.core.
-            self.assertTrue(obspy.core.stationxml is
-                            obspy.io.stationxml.core)
-            self.assertTrue(obspy.core.json is
-                            obspy.io.json.core)
-            self.assertTrue(obspy.core.quakeml is
-                            obspy.io.quakeml.core)
+            self.assertIs(obspy.core.stationxml,
+                          obspy.io.stationxml.core)
+            self.assertIs(obspy.core.json,
+                          obspy.io.json.core)
+            self.assertIs(obspy.core.quakeml,
+                          obspy.io.quakeml.core)
             # readEvents() function.
-            self.assertTrue(obspy.readEvents is
-                            obspy.read_events)
+            self.assertIs(obspy.readEvents,
+                          obspy.read_events)
             # core.preview functions. obspy.core.preview has to be imported
             # once before as it is not imported during the initialization.
             from obspy.core import preview  # NOQA
@@ -128,22 +128,22 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
             obspy.signal.util.nextpow2
 
             # geodetic functions used to be imported into obspy.core.utils
-            self.assertTrue(obspy.core.util.FlinnEngdahl is
-                            obspy.geodetics.FlinnEngdahl)
-            self.assertTrue(obspy.core.util.calcVincentyInverse is
-                            obspy.geodetics.calc_vincenty_inverse)
-            self.assertTrue(obspy.core.util.degrees2kilometers is
-                            obspy.geodetics.degrees2kilometers)
-            self.assertTrue(obspy.core.util.gps2DistAzimuth is
-                            obspy.geodetics.gps2dist_azimuth)
-            self.assertTrue(obspy.core.util.kilometer2degrees is
-                            obspy.geodetics.kilometer2degrees)
-            self.assertTrue(obspy.core.util.locations2degrees is
-                            obspy.geodetics.locations2degrees)
+            self.assertIs(obspy.core.util.FlinnEngdahl,
+                          obspy.geodetics.FlinnEngdahl)
+            self.assertIs(obspy.core.util.calcVincentyInverse,
+                          obspy.geodetics.calc_vincenty_inverse)
+            self.assertIs(obspy.core.util.degrees2kilometers,
+                          obspy.geodetics.degrees2kilometers)
+            self.assertIs(obspy.core.util.gps2DistAzimuth,
+                          obspy.geodetics.gps2dist_azimuth)
+            self.assertIs(obspy.core.util.kilometer2degrees,
+                          obspy.geodetics.kilometer2degrees)
+            self.assertIs(obspy.core.util.locations2degrees,
+                          obspy.geodetics.locations2degrees)
 
         self.assertTrue(len(w), 16)
         for warn in w:
-            self.assertTrue(warn.category is ObsPyDeprecationWarning)
+            self.assertIs(warn.category, ObsPyDeprecationWarning)
 
 
 def suite():

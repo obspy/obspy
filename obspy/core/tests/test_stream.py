@@ -244,8 +244,8 @@ class StreamTestCase(unittest.TestCase):
         # Traces compare equal and are identical.
         self.assertEqual(stream[0], stream[-2])
         self.assertEqual(stream[1], stream[-1])
-        self.assertTrue(stream[0] is stream[-2])
-        self.assertTrue(stream[1] is stream[-1])
+        self.assertIs(stream[0], stream[-2])
+        self.assertIs(stream[1], stream[-1])
         # Using extend with a single Traces, or a wrong list, or ...
         # should fail.
         self.assertRaises(TypeError, stream.extend, stream[0])
@@ -1932,10 +1932,10 @@ class StreamTestCase(unittest.TestCase):
                 endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
         self.assertEqual(len(st[0]), 3002)
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertTrue(st[0].data[0] is np.ma.masked)
+        self.assertIs(st[0].data[0], np.ma.masked)
         self.assertTrue(st[0].data[1] is not np.ma.masked)
         self.assertTrue(st[0].data[-2] is not np.ma.masked)
-        self.assertTrue(st[0].data[-1] is np.ma.masked)
+        self.assertIs(st[0].data[-1], np.ma.masked)
         # fill_value = 999
         st = read()
         self.assertEqual(len(st[1]), 3000)
@@ -1969,7 +1969,7 @@ class StreamTestCase(unittest.TestCase):
             .extend(st2)\
             .insert(0, st1[0].copy())\
             .remove(st1[0])
-        self.assertTrue(temp_st is st1)
+        self.assertIs(temp_st, st1)
         self.assertEqual(len(st1), 5)
         self.assertEqual(st1[0], st1[1])
         self.assertEqual(st1[2], st2[0])
@@ -1982,7 +1982,7 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.channel = "C"
         st[2].stats.channel = "A"
         temp_st = st.sort(keys=["channel"]).reverse()
-        self.assertTrue(temp_st is st)
+        self.assertIs(temp_st, st)
         self.assertEqual([tr.stats.channel for tr in st], ["C", "B", "A"])
 
         # The others are pretty hard to properly test and probably not worth
@@ -2026,7 +2026,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertIn("normalize", pr[10])
         self.assertIn("trigger", pr[11])
 
-        self.assertTrue(temp is st)
+        self.assertIs(temp, st)
         # Cutout duplicates the number of traces.
         self.assertTrue(len(st), 6)
         # Clearing also works for method chaining.

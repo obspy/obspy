@@ -548,7 +548,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 # Test missing blockette
                 read_bytes = util._search_flag_in_blockette(file_desc,
                                                             32, 201, 4, 4)
-                self.assertTrue(read_bytes is None)
+                self.assertIs(read_bytes, None)
 
     def test_convertFlagsToRawByte(self):
         """

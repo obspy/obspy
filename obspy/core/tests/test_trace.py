@@ -1465,10 +1465,10 @@ class TraceTestCase(unittest.TestCase):
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
         self.assertEqual(len(tr), 3002)
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
-        self.assertTrue(tr.data[0] is np.ma.masked)
+        self.assertIs(tr.data[0], np.ma.masked)
         self.assertTrue(tr.data[1] is not np.ma.masked)
         self.assertTrue(tr.data[-2] is not np.ma.masked)
-        self.assertTrue(tr.data[-1] is np.ma.masked)
+        self.assertIs(tr.data[-1], np.ma.masked)
         # fill_value = 999
         tr = read()[0]
         self.assertEqual(len(tr), 3000)
@@ -1539,7 +1539,7 @@ class TraceTestCase(unittest.TestCase):
             .detrend()\
             .taper(max_percentage=0.05, type='cosine')\
             .normalize()
-        self.assertTrue(temp_tr is tr)
+        self.assertIs(temp_tr, tr)
         self.assertTrue(isinstance(tr, Trace))
         self.assertGreater(tr.stats.npts, 0)
 
