@@ -82,18 +82,17 @@ class ScanTestCase(unittest.TestCase):
         ]
 
         files = []
-        with NamedTemporaryFile() as f1:
-            with NamedTemporaryFile() as f2:
-                with NamedTemporaryFile() as f3:
-                    for i, fp in enumerate([f1, f2, f3]):
-                        fp.write(("%s\n" % lines[i]).encode('ascii',
-                                                            'strict'))
-                        fp.flush()
-                        fp.seek(0)
-                        files.append(fp.name)
-                    with ImageComparison(self.path, 'scan_mult_sampl.png')\
-                            as ic:
-                        obspy_scan(files + ['--output', ic.name, '--quiet'])
+        with NamedTemporaryFile() as f1, NamedTemporaryFile() as f2, \
+                NamedTemporaryFile() as f3:
+            for i, fp in enumerate([f1, f2, f3]):
+                fp.write(("%s\n" % lines[i]).encode('ascii',
+                                                    'strict'))
+                fp.flush()
+                fp.seek(0)
+                files.append(fp.name)
+            with ImageComparison(self.path, 'scan_mult_sampl.png')\
+                    as ic:
+                obspy_scan(files + ['--output', ic.name, '--quiet'])
 
 
 def suite():
