@@ -36,7 +36,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertLessEqual(trace.stats.starttime, start)
-            self.assertTrue(trace.stats.endtime >= end)
+            self.assertGreaterEqual(trace.stats.endtime, end)
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
             self.assertEqual(trace.stats.location, '')
@@ -49,7 +49,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 1)
         trace = stream[0]
         self.assertLessEqual(trace.stats.starttime, start)
-        self.assertTrue(trace.stats.endtime >= end)
+        self.assertGreaterEqual(trace.stats.endtime, end)
         self.assertEqual(trace.stats.network, 'GE')
         self.assertEqual(trace.stats.station, 'APE')
         self.assertEqual(trace.stats.location, '')
@@ -74,7 +74,7 @@ class ClientTestCase(unittest.TestCase):
                                       route=False)
         for trace in stream:
             self.assertLessEqual(trace.stats.starttime, start)
-            self.assertTrue(trace.stats.endtime >= end)
+            self.assertGreaterEqual(trace.stats.endtime, end)
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
             self.assertEqual(trace.stats.location, '')
@@ -417,7 +417,7 @@ class ClientTestCase(unittest.TestCase):
                 self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertLessEqual(st[0].stats.starttime, start)
-            self.assertTrue(st[0].stats.endtime >= end)
+            self.assertGreaterEqual(st[0].stats.endtime, end)
             self.assertEqual(st[0].stats.network, 'BW')
             self.assertEqual(st[0].stats.station, 'MANZ')
             self.assertEqual(st[0].stats.location, '')
@@ -433,7 +433,7 @@ class ClientTestCase(unittest.TestCase):
                 self.assertEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
             self.assertLessEqual(st[0].stats.starttime, start)
-            self.assertTrue(st[0].stats.endtime >= end)
+            self.assertGreaterEqual(st[0].stats.endtime, end)
             self.assertEqual(st[0].stats.network, 'BW')
             self.assertEqual(st[0].stats.station, 'MANZ')
             self.assertEqual(st[0].stats.location, '')

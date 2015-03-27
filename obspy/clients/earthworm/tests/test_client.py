@@ -42,9 +42,9 @@ class ClientTestCase(unittest.TestCase):
         delta = stream[0].stats.delta
         trace = stream[0]
         self.assertTrue(len(trace) == 1201)
-        self.assertTrue(trace.stats.starttime >= start - delta)
+        self.assertGreaterEqual(trace.stats.starttime, start - delta)
         self.assertLessEqual(trace.stats.starttime, start + delta)
-        self.assertTrue(trace.stats.endtime >= end - delta)
+        self.assertGreaterEqual(trace.stats.endtime, end - delta)
         self.assertLessEqual(trace.stats.endtime, end + delta)
         self.assertEqual(trace.stats.network, 'UW')
         self.assertEqual(trace.stats.station, 'TUCA')
@@ -53,12 +53,12 @@ class ClientTestCase(unittest.TestCase):
         # example 2 -- 1 channel, no cleanup
         stream = client.get_waveforms('UW', 'TUCA', '', 'BHZ', start, end,
                                       cleanup=False)
-        self.assertTrue(len(stream) >= 2)
+        self.assertGreaterEqual(len(stream), 2)
         summed_length = sum(len(tr) for tr in stream)
         self.assertTrue(summed_length == 1201)
-        self.assertTrue(stream[0].stats.starttime >= start - delta)
+        self.assertGreaterEqual(stream[0].stats.starttime, start - delta)
         self.assertLessEqual(stream[0].stats.starttime, start + delta)
-        self.assertTrue(stream[-1].stats.endtime >= end - delta)
+        self.assertGreaterEqual(stream[-1].stats.endtime, end - delta)
         self.assertLessEqual(stream[-1].stats.endtime, end + delta)
         for trace in stream:
             self.assertEqual(trace.stats.network, 'UW')
@@ -70,9 +70,9 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertTrue(len(trace) == 1201)
-            self.assertTrue(trace.stats.starttime >= start - delta)
+            self.assertGreaterEqual(trace.stats.starttime, start - delta)
             self.assertLessEqual(trace.stats.starttime, start + delta)
-            self.assertTrue(trace.stats.endtime >= end - delta)
+            self.assertGreaterEqual(trace.stats.endtime, end - delta)
             self.assertLessEqual(trace.stats.endtime, end + delta)
             self.assertEqual(trace.stats.network, 'UW')
             self.assertEqual(trace.stats.station, 'TUCA')
@@ -100,9 +100,9 @@ class ClientTestCase(unittest.TestCase):
         delta = stream[0].stats.delta
         trace = stream[0]
         self.assertTrue(len(trace) == 1201)
-        self.assertTrue(trace.stats.starttime >= start - delta)
+        self.assertGreaterEqual(trace.stats.starttime, start - delta)
         self.assertLessEqual(trace.stats.starttime, start + delta)
-        self.assertTrue(trace.stats.endtime >= end - delta)
+        self.assertGreaterEqual(trace.stats.endtime, end - delta)
         self.assertLessEqual(trace.stats.endtime, end + delta)
         self.assertEqual(trace.stats.network, 'UW')
         self.assertEqual(trace.stats.station, 'TUCA')

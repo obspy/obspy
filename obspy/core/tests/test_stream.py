@@ -1916,9 +1916,9 @@ class StreamTestCase(unittest.TestCase):
         st.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertLessEqual(st[0].data[i], 1.)
-            self.assertTrue(st[0].data[i] >= 0.)
+            self.assertGreaterEqual(st[0].data[i], 0.)
             self.assertLessEqual(st[1].data[i], 1.)
-            self.assertTrue(st[1].data[i] >= 0.)
+            self.assertGreaterEqual(st[1].data[i], 0.)
 
     def test_issue540(self):
         """

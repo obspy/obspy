@@ -65,7 +65,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         window = konno_ohmachi_smoothing_window(self.frequencies, 20)
         self.assertEqual(np.any(np.isnan(window)), False)
         self.assertEqual(np.any(np.isinf(window)), False)
-        self.assertLessEqual(np.all(window, 1.0))
+        self.assertTrue(np.all(window <= 1.0))
         self.assertTrue(np.all(window >= 0.0))
         np.seterr(**temp)
 
