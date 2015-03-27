@@ -1295,7 +1295,7 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
-            self.assertTrue(tr.data[i] <= 1.)
+            self.assertLessEqual(tr.data[i], 1.)
             self.assertGreaterEqual(tr.data[i], 0.)
 
     def test_taper_onesided(self):
@@ -1731,7 +1731,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(int_tr.stats.delta, 0.003)
         # Assert that the new end time is smaller than the old one. SAC at
         # times performs some extrapolation which we do not want to do here.
-        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
         # SAC extrapolates a bit which we don't want here. The deviations
         # to SAC are likely due to the fact that we use double precision
         # math while SAC uses single precision math.
@@ -1746,7 +1746,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(int_tr.stats.delta, 0.077)
         # Assert that the new end time is smaller than the old one. SAC
         # calculates one sample less in this case.
-        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
         self.assertTrue(np.allclose(
             int_tr.data[:interp_delta_0_077.stats.npts],
             interp_delta_0_077.data,
@@ -1766,7 +1766,7 @@ class TraceTestCase(unittest.TestCase):
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
                                                method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
-            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+            self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
 
         for inter_type in ["slinear", "quadratic", "cubic", 1, 2, 3]:
             with mock.patch("scipy.interpolate.InterpolatedUnivariateSpline") \
@@ -1786,7 +1786,7 @@ class TraceTestCase(unittest.TestCase):
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
                                                method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
-            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+            self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
 
     def test_interpolation_arguments(self):
         """

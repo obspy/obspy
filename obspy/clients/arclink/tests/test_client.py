@@ -35,7 +35,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.get_waveforms('BW', 'MANZ', '', 'EH*', start, end)
         self.assertEqual(len(stream), 3)
         for trace in stream:
-            self.assertTrue(trace.stats.starttime <= start)
+            self.assertLessEqual(trace.stats.starttime, start)
             self.assertTrue(trace.stats.endtime >= end)
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
@@ -48,7 +48,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.get_waveforms('GE', 'APE', '', 'BHE', start, end)
         self.assertEqual(len(stream), 1)
         trace = stream[0]
-        self.assertTrue(trace.stats.starttime <= start)
+        self.assertLessEqual(trace.stats.starttime, start)
         self.assertTrue(trace.stats.endtime >= end)
         self.assertEqual(trace.stats.network, 'GE')
         self.assertEqual(trace.stats.station, 'APE')
@@ -73,7 +73,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.get_waveforms('BW', 'MANZ', '', 'EH*', start, end,
                                       route=False)
         for trace in stream:
-            self.assertTrue(trace.stats.starttime <= start)
+            self.assertLessEqual(trace.stats.starttime, start)
             self.assertTrue(trace.stats.endtime >= end)
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
@@ -416,7 +416,7 @@ class ClientTestCase(unittest.TestCase):
             with open(mseedfile, 'rb') as fp:
                 self.assertNotEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
-            self.assertTrue(st[0].stats.starttime <= start)
+            self.assertLessEqual(st[0].stats.starttime, start)
             self.assertTrue(st[0].stats.endtime >= end)
             self.assertEqual(st[0].stats.network, 'BW')
             self.assertEqual(st[0].stats.station, 'MANZ')
@@ -432,7 +432,7 @@ class ClientTestCase(unittest.TestCase):
             with open(fseedfile, 'rb') as fp:
                 self.assertEqual(fp.read(8)[6:7], b"V")
             # ArcLink cuts on record base
-            self.assertTrue(st[0].stats.starttime <= start)
+            self.assertLessEqual(st[0].stats.starttime, start)
             self.assertTrue(st[0].stats.endtime >= end)
             self.assertEqual(st[0].stats.network, 'BW')
             self.assertEqual(st[0].stats.station, 'MANZ')

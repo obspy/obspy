@@ -480,7 +480,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.nzsec, 14)
         self.assertEqual(tr.stats.sac.nzmsec, 0)
         # we should never test equality for float values:
-        self.assertTrue(abs(tr.stats.sac.delta - 0.01) <= 1e-9)
+        self.assertLessEqual(abs(tr.stats.sac.delta - 0.01), 1e-9)
         self.assertEqual(tr.stats.sac.scale, -12345.0)
         self.assertEqual(tr.stats.sac.npts, 998)
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
