@@ -949,7 +949,7 @@ class QuakeMLTestCase(unittest.TestCase):
             {'weight': {'value': '2',
                         'namespace': r'http://test.org/xmlns/0.1'}})
         self.assertTrue(hasattr(cat, "nsmap"))
-        self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
+        self.assertEqual(getattr(cat, "nsmap")['ns0'], nsmap['ns0'])
 
 
 def suite():

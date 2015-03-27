@@ -152,7 +152,7 @@ class TriggerTestCase(unittest.TestCase):
         res = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 3, sta=0.5,
                                   lta=10)
         self.assertTrue(isinstance(res, list))
-        self.assertTrue(len(res) == 3)
+        self.assertEqual(len(res), 3)
         expected_keys = ['time', 'coincidence_sum', 'duration', 'stations',
                          'trace_ids']
         expected_types = [UTCDateTime, float, float, list, list]
@@ -164,18 +164,18 @@ class TriggerTestCase(unittest.TestCase):
         self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
-        self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
-        self.assertTrue(res[0]['coincidence_sum'] == 4)
+        self.assertEqual(res[0]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertEqual(res[0]['coincidence_sum'], 4)
         self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
-        self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
-        self.assertTrue(res[1]['coincidence_sum'] == 3)
+        self.assertEqual(res[1]['stations'], ['UH2', 'UH3', 'UH1'])
+        self.assertEqual(res[1]['coincidence_sum'], 3)
         self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
-        self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
-        self.assertTrue(res[2]['coincidence_sum'] == 4)
+        self.assertEqual(res[2]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertEqual(res[2]['coincidence_sum'], 4)
         # 2. no weighting, station selection
         # => 2 events, no false triggers
         trace_ids = ['BW.UH1..SHZ', 'BW.UH3..SHZ', 'BW.UH4..EHZ']
@@ -184,41 +184,41 @@ class TriggerTestCase(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 3,
                                      trace_ids=trace_ids, sta=0.5, lta=10)
-            self.assertTrue(len(re) == 2)
+            self.assertEqual(len(re), 2)
             self.assertGreater(re[0]['time'],
                                UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
             self.assertTrue(4.2 < re[0]['duration'] < 4.8)
-            self.assertTrue(re[0]['stations'] == ['UH3', 'UH1', 'UH4'])
-            self.assertTrue(re[0]['coincidence_sum'] == 3)
+            self.assertEqual(re[0]['stations'], ['UH3', 'UH1', 'UH4'])
+            self.assertEqual(re[0]['coincidence_sum'], 3)
             self.assertGreater(re[1]['time'],
                                UTCDateTime("2010-05-27T16:27:27"))
             self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
             self.assertTrue(4.2 < re[1]['duration'] < 4.4)
-            self.assertTrue(re[1]['stations'] == ['UH3', 'UH1', 'UH4'])
-            self.assertTrue(re[1]['coincidence_sum'] == 3)
+            self.assertEqual(re[1]['stations'], ['UH3', 'UH1', 'UH4'])
+            self.assertEqual(re[1]['coincidence_sum'], 3)
         # 3. weighting, station selection
         # => 3 events, no false triggers
         trace_ids = {'BW.UH1..SHZ': 0.4, 'BW.UH2..SHZ': 0.35,
                      'BW.UH3..SHZ': 0.4, 'BW.UH4..EHZ': 0.25}
         res = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 1.0,
                                   trace_ids=trace_ids, sta=0.5, lta=10)
-        self.assertTrue(len(res) == 3)
+        self.assertEqual(len(res), 3)
         self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
-        self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
-        self.assertTrue(res[0]['coincidence_sum'] == 1.4)
+        self.assertEqual(res[0]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertEqual(res[0]['coincidence_sum'], 1.4)
         self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
-        self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
-        self.assertTrue(res[1]['coincidence_sum'] == 1.15)
+        self.assertEqual(res[1]['stations'], ['UH2', 'UH3', 'UH1'])
+        self.assertEqual(res[1]['coincidence_sum'], 1.15)
         self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
-        self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
-        self.assertTrue(res[2]['coincidence_sum'] == 1.4)
+        self.assertEqual(res[2]['stations'], ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertEqual(res[2]['coincidence_sum'], 1.4)
         # 4. weighting, station selection, max_len
         # => 2 events, no false triggers, small event does not overlap anymore
         trace_ids = {'BW.UH1..SHZ': 0.6, 'BW.UH2..SHZ': 0.6}
@@ -228,30 +228,30 @@ class TriggerTestCase(unittest.TestCase):
             re = coincidence_trigger("recstalta", 3.5, 1, st.copy(), 1.2,
                                      trace_ids=trace_ids,
                                      max_trigger_length=0.13, sta=0.5, lta=10)
-            self.assertTrue(len(re) == 2)
+            self.assertEqual(len(re), 2)
             self.assertGreater(re[0]['time'],
                                UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
             self.assertTrue(0.2 < re[0]['duration'] < 0.3)
-            self.assertTrue(re[0]['stations'] == ['UH2', 'UH1'])
-            self.assertTrue(re[0]['coincidence_sum'] == 1.2)
+            self.assertEqual(re[0]['stations'], ['UH2', 'UH1'])
+            self.assertEqual(re[0]['coincidence_sum'], 1.2)
             self.assertGreater(re[1]['time'],
                                UTCDateTime("2010-05-27T16:27:27"))
             self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
             self.assertTrue(0.18 < re[1]['duration'] < 0.2)
-            self.assertTrue(re[1]['stations'] == ['UH2', 'UH1'])
-            self.assertTrue(re[1]['coincidence_sum'] == 1.2)
+            self.assertEqual(re[1]['stations'], ['UH2', 'UH1'])
+            self.assertEqual(re[1]['coincidence_sum'], 1.2)
         # 5. station selection, extremely sensitive settings
         # => 4 events, 1 false triggers
         res = coincidence_trigger("recstalta", 2.5, 1, st.copy(), 2,
                                   trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
                                   sta=0.3, lta=5)
-        self.assertTrue(len(res) == 5)
+        self.assertEqual(len(res), 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
-        self.assertTrue(res[3]['stations'] == ['UH3', 'UH1'])
-        self.assertTrue(res[3]['coincidence_sum'] == 2.0)
+        self.assertEqual(res[3]['stations'], ['UH3', 'UH1'])
+        self.assertEqual(res[3]['coincidence_sum'], 2.0)
         # 6. same as 5, gappy stream
         # => same as 5 (almost, duration of 1 event changes by 0.02s)
         st2 = st.copy()
@@ -266,12 +266,12 @@ class TriggerTestCase(unittest.TestCase):
         res = coincidence_trigger("recstalta", 2.5, 1, st2, 2,
                                   trace_ids=['BW.UH1..SHZ', 'BW.UH3..SHZ'],
                                   sta=0.3, lta=5)
-        self.assertTrue(len(res) == 5)
+        self.assertEqual(len(res), 5)
         self.assertGreater(res[3]['time'], UTCDateTime("2010-05-27T16:27:01"))
         self.assertTrue(res[3]['time'] < UTCDateTime("2010-05-27T16:27:02"))
         self.assertTrue(1.5 < res[3]['duration'] < 1.7)
-        self.assertTrue(res[3]['stations'] == ['UH3', 'UH1'])
-        self.assertTrue(res[3]['coincidence_sum'] == 2.0)
+        self.assertEqual(res[3]['stations'], ['UH3', 'UH1'])
+        self.assertEqual(res[3]['coincidence_sum'], 2.0)
         # 7. same as 3 but modify input trace ids and check output of trace_ids
         # and other additional information with ``details=True``
         st2 = st.copy()
@@ -289,33 +289,33 @@ class TriggerTestCase(unittest.TestCase):
         res = coincidence_trigger("recstalta", 3.5, 1, st2, 1.0,
                                   trace_ids=trace_ids, details=True,
                                   sta=0.5, lta=10)
-        self.assertTrue(len(res) == 3)
+        self.assertEqual(len(res), 3)
         self.assertGreater(res[0]['time'], UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
         self.assertTrue(4.2 < res[0]['duration'] < 4.8)
-        self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', ''])
-        self.assertTrue(res[0]['trace_ids'][0] == st2[2].id)
-        self.assertTrue(res[0]['trace_ids'][1] == st2[1].id)
-        self.assertTrue(res[0]['trace_ids'][2] == st2[0].id)
-        self.assertTrue(res[0]['trace_ids'][3] == st2[3].id)
-        self.assertTrue(res[0]['coincidence_sum'] == 1.4)
+        self.assertEqual(res[0]['stations'], ['UH3', 'UH2', 'UH1', ''])
+        self.assertEqual(res[0]['trace_ids'][0], st2[2].id)
+        self.assertEqual(res[0]['trace_ids'][1], st2[1].id)
+        self.assertEqual(res[0]['trace_ids'][2], st2[0].id)
+        self.assertEqual(res[0]['trace_ids'][3], st2[3].id)
+        self.assertEqual(res[0]['coincidence_sum'], 1.4)
         self.assertGreater(res[1]['time'], UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
         self.assertTrue(3.2 < res[1]['duration'] < 3.7)
-        self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
-        self.assertTrue(res[1]['trace_ids'][0] == st2[1].id)
-        self.assertTrue(res[1]['trace_ids'][1] == st2[2].id)
-        self.assertTrue(res[1]['trace_ids'][2] == st2[0].id)
-        self.assertTrue(res[1]['coincidence_sum'] == 1.15)
+        self.assertEqual(res[1]['stations'], ['UH2', 'UH3', 'UH1'])
+        self.assertEqual(res[1]['trace_ids'][0], st2[1].id)
+        self.assertEqual(res[1]['trace_ids'][1], st2[2].id)
+        self.assertEqual(res[1]['trace_ids'][2], st2[0].id)
+        self.assertEqual(res[1]['coincidence_sum'], 1.15)
         self.assertGreater(res[2]['time'], UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
         self.assertTrue(4.2 < res[2]['duration'] < 4.4)
-        self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', ''])
-        self.assertTrue(res[2]['trace_ids'][0] == st2[2].id)
-        self.assertTrue(res[2]['trace_ids'][1] == st2[1].id)
-        self.assertTrue(res[2]['trace_ids'][2] == st2[0].id)
-        self.assertTrue(res[2]['trace_ids'][3] == st2[3].id)
-        self.assertTrue(res[2]['coincidence_sum'] == 1.4)
+        self.assertEqual(res[2]['stations'], ['UH3', 'UH2', 'UH1', ''])
+        self.assertEqual(res[2]['trace_ids'][0], st2[2].id)
+        self.assertEqual(res[2]['trace_ids'][1], st2[1].id)
+        self.assertEqual(res[2]['trace_ids'][2], st2[0].id)
+        self.assertEqual(res[2]['trace_ids'][3], st2[3].id)
+        self.assertEqual(res[2]['coincidence_sum'], 1.4)
         expected_keys = ['cft_peak_wmean', 'cft_std_wmean', 'cft_peaks',
                          'cft_stds']
         expected_types = [float, float, list, list]
@@ -417,7 +417,7 @@ class TriggerTestCase(unittest.TestCase):
               'time': UTCDateTime(2010, 5, 27, 16, 27, 30, 510000),
               'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ',
                             'BW.UH4..EHZ']}]
-        self.assertTrue(trig == remaining_results)
+        self.assertEqual(trig, remaining_results)
 
     def test_classicSTALTAPyC(self):
         """

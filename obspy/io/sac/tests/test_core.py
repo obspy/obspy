@@ -67,7 +67,7 @@ class CoreTestCase(unittest.TestCase):
         # is therefore just a fix until we have come to a conclusive
         # solution how to handle the two different approaches
         tr1.stats.sac['depmen'] = tr.stats.sac['depmen']
-        self.assertTrue(tr == tr1)
+        self.assertEqual(tr, tr1)
 
     def test_readXYwriteXYViaObsPy(self):
         """
@@ -78,7 +78,7 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format='SACXY')
             tr1 = read(tempfile)[0]
-        self.assertTrue(tr == tr1)
+        self.assertEqual(tr, tr1)
 
     def test_readwriteXYViaObsPy(self):
         """
@@ -618,7 +618,7 @@ class CoreTestCase(unittest.TestCase):
             fh.seek(0, 0)
             st2 = _read_sacXY(fh)
 
-        self.assertTrue(st == st2)
+        self.assertEqual(st, st2)
 
     def test_readXYwriteXY_from_open_file_binary_mode(self):
         """
@@ -632,7 +632,7 @@ class CoreTestCase(unittest.TestCase):
             tf.seek(0, 0)
             st2 = _read_sacXY(tf)
 
-        self.assertTrue(st == st2)
+        self.assertEqual(st, st2)
 
     def test_is_sac_bytes_io(self):
         """

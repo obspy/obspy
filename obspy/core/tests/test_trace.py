@@ -550,23 +550,23 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.assertTrue((bigtrace_sort.data == myArray).all())
+            self.assertEqual((bigtrace_sort.data, myArray).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.assertTrue(bigtrace_sort == myTrace, failinfo)
+            self.assertEqual(bigtrace_sort, myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
+            self.assertEqual((bigtrace.data, myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.assertTrue(bigtrace == myTrace, failinfo)
+            self.assertEqual(bigtrace, myTrace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
                 failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.assertTrue(myArray.dtype == array_.dtype, failinfo)
+                self.assertEqual(myArray.dtype, array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1306,12 +1306,12 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.taper(max_percentage=None, side="left")
         self.assertTrue(tr.data[:5].sum() < 5.)
-        self.assertTrue(tr.data[6:].sum() == 5.)
+        self.assertEqual(tr.data[6:].sum(), 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
         tr.taper(max_percentage=None, side="right")
-        self.assertTrue(tr.data[:5].sum() == 5.)
+        self.assertEqual(tr.data[:5].sum(), 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
     def test_taper_length(self):
@@ -1373,7 +1373,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertRaises(ValueError, tr.__mod__, -11)
         # If num is more then the number of samples, a copy will be returned.
         st = tr % 500
-        self.assertTrue(tr == st[0])
+        self.assertEqual(tr, st[0])
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 

@@ -93,8 +93,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = _read_segy(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1.stats.textual_file_header[3:21] ==
-                        b'CLIENT: LITHOPROBE')
+        self.assertEqual(st1.stats.textual_file_header[3:21],
+                         b'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
@@ -153,7 +153,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             _write_segy(st, out_file, data_encoding=1)
             with open(out_file, 'rb') as f:
                 data2 = f.read()
-            self.assertTrue(data1 == data2)
+            self.assertEqual(data1, data2)
             # Writing IEEE floats which should not require any dtype changes.
             _write_segy(st, out_file, data_encoding=5)
             with open(out_file, 'rb') as f:
@@ -239,7 +239,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Compare header.
             with open(out_file, 'rb') as f:
                 new_header = f.read(3200)
-        self.assertTrue(header == new_header)
+        self.assertEqual(header, new_header)
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
@@ -248,7 +248,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Compare header.
         with open(out_file, 'rb') as f:
             new_header = f.read(3200)
-        self.assertTrue(header == new_header)
+        self.assertEqual(header, new_header)
         os.remove(out_file)
         self.assertEqual(st3.stats.textual_file_header_encoding,
                          'EBCDIC')

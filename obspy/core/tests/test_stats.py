@@ -171,7 +171,7 @@ class StatsTestCase(unittest.TestCase):
         # therefore all traces in the test stream are identical
         # (python list behavior)
         for tr in st:
-            self.assertTrue(tr == st[0])
+            self.assertEqual(tr, st[0])
             self.assertEqual(tr.stats.station, 'BBB')
             self.assertEqual(tr.stats['station'], 'BBB')
             self.assertEqual(tr.stats.get('station'), 'BBB')

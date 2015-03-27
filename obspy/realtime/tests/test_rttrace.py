@@ -31,7 +31,7 @@ class RtTraceTestCase(unittest.TestCase):
         # RtTrace should never be equal with Trace objects
         self.assertFalse(tr2 == tr)
         self.assertFalse(tr2.__eq__(tr))
-        self.assertTrue(tr2 == tr3)
+        self.assertEqual(tr2, tr3)
         self.assertTrue(tr2.__eq__(tr3))
 
     def test_ne(self):

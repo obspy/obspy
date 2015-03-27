@@ -41,7 +41,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 1)
         delta = stream[0].stats.delta
         trace = stream[0]
-        self.assertTrue(len(trace) == 1201)
+        self.assertEqual(len(trace), 1201)
         self.assertGreaterEqual(trace.stats.starttime, start - delta)
         self.assertLessEqual(trace.stats.starttime, start + delta)
         self.assertGreaterEqual(trace.stats.endtime, end - delta)
@@ -55,7 +55,7 @@ class ClientTestCase(unittest.TestCase):
                                       cleanup=False)
         self.assertGreaterEqual(len(stream), 2)
         summed_length = sum(len(tr) for tr in stream)
-        self.assertTrue(summed_length == 1201)
+        self.assertEqual(summed_length, 1201)
         self.assertGreaterEqual(stream[0].stats.starttime, start - delta)
         self.assertLessEqual(stream[0].stats.starttime, start + delta)
         self.assertGreaterEqual(stream[-1].stats.endtime, end - delta)
@@ -69,7 +69,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.get_waveforms('UW', 'TUCA', '', 'BH?', start, end)
         self.assertEqual(len(stream), 3)
         for trace in stream:
-            self.assertTrue(len(trace) == 1201)
+            self.assertEqual(len(trace), 1201)
             self.assertGreaterEqual(trace.stats.starttime, start - delta)
             self.assertLessEqual(trace.stats.starttime, start + delta)
             self.assertGreaterEqual(trace.stats.endtime, end - delta)
@@ -99,7 +99,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(stream), 1)
         delta = stream[0].stats.delta
         trace = stream[0]
-        self.assertTrue(len(trace) == 1201)
+        self.assertEqual(len(trace), 1201)
         self.assertGreaterEqual(trace.stats.starttime, start - delta)
         self.assertLessEqual(trace.stats.starttime, start + delta)
         self.assertGreaterEqual(trace.stats.endtime, end - delta)

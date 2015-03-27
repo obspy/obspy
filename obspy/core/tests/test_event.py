@@ -53,8 +53,8 @@ class EventTestCase(unittest.TestCase):
             ev1 = Event(resource_id='id1')
             ev2 = Event(resource_id='id1')
             ev3 = Event(resource_id='id2')
-        self.assertTrue(ev1 == ev2)
-        self.assertTrue(ev2 == ev1)
+        self.assertEqual(ev1, ev2)
+        self.assertEqual(ev2, ev1)
         self.assertFalse(ev1 == ev3)
         self.assertFalse(ev3 == ev1)
         # comparing with other objects fails
@@ -73,7 +73,7 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(len(e.comments), 1)
         self.assertEqual(e.event_type, "explosion")
         e.clear()
-        self.assertTrue(e == Event(force_resource_id=False))
+        self.assertEqual(e, Event(force_resource_id=False))
         self.assertEqual(len(e.comments), 0)
         self.assertEqual(e.event_type, None)
         # Test with pick object. Does not really fit in the event test case but
@@ -117,7 +117,7 @@ class EventTestCase(unittest.TestCase):
         # while a deep copy should not.
         self.assertTrue(ev.resource_id is ev2.resource_id)
         self.assertTrue(ev.resource_id is not ev3.resource_id)
-        self.assertTrue(ev.resource_id == ev3.resource_id)
+        self.assertEqual(ev.resource_id, ev3.resource_id)
 
         # But all should point to the same object.
         self.assertTrue(ev.resource_id.get_referred_object() is
@@ -367,11 +367,11 @@ class CatalogTestCase(unittest.TestCase):
         """
         cat = read_events()
         cat2 = cat.copy()
-        self.assertTrue(cat == cat2)
-        self.assertTrue(cat2 == cat)
+        self.assertEqual(cat, cat2)
+        self.assertEqual(cat2, cat)
         self.assertFalse(cat is cat2)
         self.assertFalse(cat2 is cat)
-        self.assertTrue(cat.events[0] == cat2.events[0])
+        self.assertEqual(cat.events[0], cat2.events[0])
         self.assertFalse(cat.events[0] is cat2.events[0])
 
     def test_filter(self):

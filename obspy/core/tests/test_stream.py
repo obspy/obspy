@@ -504,7 +504,7 @@ class StreamTestCase(unittest.TestCase):
         stream.remove(stream[-1])
         del(stream2[-1])
         # Compare remaining Streams.
-        self.assertTrue(stream == stream2)
+        self.assertEqual(stream, stream2)
 
     def test_reverse(self):
         """
@@ -1594,28 +1594,28 @@ class StreamTestCase(unittest.TestCase):
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(st == Stream([tr1]))
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(st, Stream([tr1]))
+            self.assertEqual(type(st[0].data), np.ndarray)
         # test mergeable traces (adjacent ones)
         for trB in [tr5, tr6]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
         # test mergeable traces (overlapping ones)
         for trB in [trO1, trO2]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
 
         # test traces that should not be merged
         tr7 = tr1.copy()
@@ -1641,7 +1641,7 @@ class StreamTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
                 st._cleanup()
-            self.assertTrue(st == Stream([trA, trB]))
+            self.assertEqual(st, Stream([trA, trB]))
 
     def test_integrateAndDifferentiate(self):
         """
@@ -1736,11 +1736,11 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         st2 = st.copy()
-        self.assertTrue(st == st2)
-        self.assertTrue(st2 == st)
+        self.assertEqual(st, st2)
+        self.assertEqual(st2, st)
         self.assertFalse(st is st2)
         self.assertFalse(st2 is st)
-        self.assertTrue(st.traces[0] == st2.traces[0])
+        self.assertEqual(st.traces[0], st2.traces[0])
         self.assertFalse(st.traces[0] is st2.traces[0])
 
     def test_merge_with_empty_trace(self):

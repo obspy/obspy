@@ -542,24 +542,24 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests __eq__ operators.
         """
-        self.assertTrue(UTCDateTime(999) == UTCDateTime(999))
+        self.assertEqual(UTCDateTime(999), UTCDateTime(999))
         self.assertFalse(UTCDateTime(1) == UTCDateTime(999))
         # w/ default precision of 6 digits
-        self.assertTrue(UTCDateTime(999.000001) == UTCDateTime(999.000001))
-        self.assertTrue(UTCDateTime(999.999999) == UTCDateTime(999.999999))
+        self.assertEqual(UTCDateTime(999.000001), UTCDateTime(999.000001))
+        self.assertEqual(UTCDateTime(999.999999), UTCDateTime(999.999999))
         self.assertFalse(UTCDateTime(999.0000001) == UTCDateTime(999.0000009))
         self.assertFalse(UTCDateTime(999.9999990) == UTCDateTime(999.9999999))
-        self.assertTrue(UTCDateTime(999.00000001) == UTCDateTime(999.00000009))
-        self.assertTrue(UTCDateTime(999.99999900) == UTCDateTime(999.99999909))
+        self.assertEqual(UTCDateTime(999.00000001), UTCDateTime(999.00000009))
+        self.assertEqual(UTCDateTime(999.99999900), UTCDateTime(999.99999909))
         # w/ precision of 7 digits
-        self.assertFalse(UTCDateTime(999.00000001, precision=7) ==
-                         UTCDateTime(999.00000009, precision=7))
-        self.assertFalse(UTCDateTime(999.99999990, precision=7) ==
-                         UTCDateTime(999.99999999, precision=7))
-        self.assertTrue(UTCDateTime(999.000000001, precision=7) ==
-                        UTCDateTime(999.000000009, precision=7))
-        self.assertTrue(UTCDateTime(999.999999900, precision=7) ==
-                        UTCDateTime(999.999999909, precision=7))
+        self.assertNotEqual(UTCDateTime(999.00000001, precision=7),
+                            UTCDateTime(999.00000009, precision=7))
+        self.assertNotEqual(UTCDateTime(999.99999990, precision=7),
+                            UTCDateTime(999.99999999, precision=7))
+        self.assertEqual(UTCDateTime(999.000000001, precision=7),
+                         UTCDateTime(999.000000009, precision=7))
+        self.assertEqual(UTCDateTime(999.999999900, precision=7),
+                         UTCDateTime(999.999999909, precision=7))
 
     def test_ne(self):
         """
@@ -831,10 +831,10 @@ class UTCDateTimeTestCase(unittest.TestCase):
         t1_float = 1109939624.0
         t2_float = 1109939624.123456
         # test (not) equal
-        self.assertTrue(t1 == t1_int)
-        self.assertTrue(t1 == t1_float)
+        self.assertEqual(t1, t1_int)
+        self.assertEqual(t1, t1_float)
         self.assertFalse(t2 == t2_int)
-        self.assertTrue(t2 == t2_float)
+        self.assertEqual(t2, t2_float)
         self.assertFalse(t1 != t1_int)
         self.assertFalse(t1 != t1_float)
         self.assertTrue(t2 != t2_int)

@@ -72,7 +72,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         st = read(self.filename)
-        self.assertTrue(st == self.st_result)
+        self.assertEqual(st, self.st_result)
 
     def test_readViaModule(self):
         """
@@ -83,7 +83,7 @@ class CoreTestCase(unittest.TestCase):
         # _format entry is not present when using low-level function
         for tr in self.st_result:
             tr.stats.pop('_format')
-        self.assertTrue(st == self.st_result)
+        self.assertEqual(st, self.st_result)
 
 
 def suite():
