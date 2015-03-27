@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 
 from obspy import read
-from obspy.signal.calibration import relcalstack
+from obspy.signal.calibration import rel_calib_stack
 
 
 class CalibrationTestCase(unittest.TestCase):
@@ -33,8 +33,8 @@ class CalibrationTestCase(unittest.TestCase):
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
 
-        freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10,
-                                       save_data=False)
+        freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20, smooth=10,
+                                           save_data=False)
 
         # read in the reference responses
         un_resp = np.loadtxt(os.path.join(self.path, 'unknown.resp'))
@@ -71,11 +71,11 @@ class CalibrationTestCase(unittest.TestCase):
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
         # stream
-        freq, amp, phase = relcalstack(st1, st2, calfile, 20, smooth=10,
-                                       save_data=False)
+        freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20, smooth=10,
+                                           save_data=False)
         # traces
-        freq2, amp2, phase2 = relcalstack(st1[0], st2[0], calfile, 20,
-                                          smooth=10, save_data=False)
+        freq2, amp2, phase2 = rel_calib_stack(st1[0], st2[0], calfile, 20,
+                                              smooth=10, save_data=False)
         np.testing.assert_array_almost_equal(freq, freq2, decimal=4)
         np.testing.assert_array_almost_equal(amp, amp2, decimal=4)
         np.testing.assert_array_almost_equal(phase, phase2, decimal=4)

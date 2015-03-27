@@ -32,7 +32,7 @@ def dsecs(dt):
     return d
 
 
-def getProperty(filename, key):
+def get_property(filename, key):
     """
     Given a property filename get the value of the given key
     """

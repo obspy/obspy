@@ -10,7 +10,6 @@ import os
 import re
 import unittest
 
-from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import check_flake8
 
 
@@ -19,7 +18,7 @@ class CodeFormattingTestCase(unittest.TestCase):
     Test codebase for compliance with the flake8 tool.
     """
 
-    @skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
+    @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.
@@ -28,7 +27,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         file_count = report.counters["files"]
         error_count = report.get_count()
         self.assertGreater(file_count, 10)
-        self.assertEqual(error_count, 0, message)
+        self.assertEqual(error_count, 0, "\n" + message.decode())
 
 
 class FutureUsageTestCase(unittest.TestCase):

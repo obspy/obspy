@@ -29,7 +29,7 @@ import scipy
 
 from obspy import Stream, Trace
 from obspy.signal.headers import clibsignal
-from obspy.signal.invsim import cosTaper
+from obspy.signal.invsim import cosine_taper
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -218,9 +218,9 @@ def xcorr_max(fct, abs_max=True):
     return float(shift), float(value)
 
 
-def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
-                        cc_maxlag, filter=None, filter_options={}, plot=False,
-                        filename=None):
+def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
+                          cc_maxlag, filter=None, filter_options={},
+                          plot=False, filename=None):
     """
     Calculate the correction for the differential pick time determined by cross
     correlation of the waveforms in narrow windows around the pick times.
@@ -319,7 +319,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         if filter:
             tr.data = tr.data.astype(np.float64)
             tr.detrend(type='demean')
-            tr.data *= cosTaper(len(tr), 0.1)
+            tr.data *= cosine_taper(len(tr), 0.1)
             tr.filter(type=filter, **filter_options)
         slices.append(tr.slice(start, end))
     # cross correlate
@@ -443,7 +443,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     need to have a reasonable common starting time.  The stream to check should
     have some additional data to left/right of suspected event, the event
     template streams should be cut to the portion of the event that should be
-    compared. Also see :func:`obspy.signal.trigger.coincidenceTrigger` and the
+    compared. Also see :func:`obspy.signal.trigger.coincidence_trigger` and the
     corresponding example in the
     `Trigger/Picker Tutorial
     <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.

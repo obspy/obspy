@@ -47,8 +47,8 @@ WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
 
 
-def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
-             sactaper=False):
+def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
+                 sactaper=False):
     """
     Cosine Taper.
 
@@ -75,13 +75,13 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
 
     .. rubric:: Example
 
-    >>> tap = cosTaper(100, 1.0)
+    >>> tap = cosine_taper(100, 1.0)
     >>> tap2 = 0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, 50)))
     >>> np.allclose(tap[0:50], tap2)
     True
     >>> npts = 100
     >>> p = 0.1
-    >>> tap3 = cosTaper(npts, p)
+    >>> tap3 = cosine_taper(npts, p)
     >>> (tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p)))).all()
     True
     """
@@ -148,7 +148,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     return cos_win
 
 
-def c_sac_taper(freqs, flimit):
+def cosine_sac_taper(freqs, flimit):
     """
     Generate a cosine flank frequency domain taper similar to the one SAC
     applies before instrument response deconvolution. This acts as a bandpass
@@ -168,14 +168,14 @@ def c_sac_taper(freqs, flimit):
 
         import matplotlib.pylab as plt
         import numpy as np
-        from obspy.signal.invsim import c_sac_taper
+        from obspy.signal.invsim import cosine_sac_taper
 
         plt.figure(figsize=(10, 3))
 
         freqs = np.logspace(-2.01, 0, 2000)
 
         plt.vlines([0.015, 0.03, 0.2, 0.4], -0.1, 1.3, color="#89160F")
-        plt.semilogx(freqs, c_sac_taper(freqs, (0.015, 0.03, 0.2, 0.4)),
+        plt.semilogx(freqs, cosine_sac_taper(freqs, (0.015, 0.03, 0.2, 0.4)),
                      lw=2, color="#4C72B0")
 
         props = {
@@ -271,7 +271,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
             vbs = C.create_string_buffer(b"")
         rtyp = C.create_string_buffer(b"CS")
         datime = C.create_string_buffer(
-            date.formatSEED().encode('ascii', 'strict'))
+            date.format_seed().encode('ascii', 'strict'))
         fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
         nfreqs = C.c_int(freqs.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
@@ -296,7 +296,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     return h
 
 
-def cornFreq2Paz(fc, damp=0.707):
+def corn_freq_2_paz(fc, damp=0.707):
     """
     Convert corner frequency and damping to poles and zeros. 2 zeros at
     position (0j, 0j) are given as output  (m/s).
@@ -310,7 +310,7 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
+def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
@@ -366,7 +366,7 @@ def waterlevel(spec, wlev):
     return np.abs(spec).max() * 10.0 ** (-wlev / 20.0)
 
 
-def specInv(spec, wlev):
+def invert_spectrum(spec, wlev):
     """
     Invert Spectrum and shrink values under water-level of max spec
     amplitude. The water-level is given in db scale.
@@ -395,12 +395,12 @@ def specInv(spec, wlev):
     return found
 
 
-def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
-            remove_sensitivity=True, simulate_sensitivity=True,
-            water_level=600.0, zero_mean=True, taper=True,
-            taper_fraction=0.05, pre_filt=None, seedresp=None,
-            nfft_pow2=False, pitsasim=True, sacsim=False, shsim=False,
-            **_kwargs):
+def simulate_seismometer(
+        data, samp_rate, paz_remove=None, paz_simulate=None,
+        remove_sensitivity=True, simulate_sensitivity=True, water_level=600.0,
+        zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=None,
+        seedresp=None, nfft_pow2=False, pitsasim=True, sacsim=False,
+        shsim=False, **_kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -506,15 +506,15 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         data -= data.mean()
     if taper:
         if sacsim:
-            data *= cosTaper(ndat, taper_fraction,
-                             sactaper=sacsim, halfcosine=False)
+            data *= cosine_taper(ndat, taper_fraction,
+                                 sactaper=sacsim, halfcosine=False)
         else:
-            data *= cosTaper(ndat, taper_fraction)
+            data *= cosine_taper(ndat, taper_fraction)
     # The number of points for the FFT has to be at least 2 * ndat (in
     # order to prohibit wrap around effects during convolution) cf.
     # Numerical Recipes p. 429 calculate next power of 2.
     if nfft_pow2:
-        nfft = util.nextpow2(2 * ndat)
+        nfft = util.next_pow_2(2 * ndat)
     # evalresp scales directly with nfft, therefore taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
@@ -524,10 +524,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
-        freq_response, freqs = pazToFreqResp(paz_remove['poles'],
-                                             paz_remove['zeros'],
-                                             paz_remove['gain'], delta, nfft,
-                                             freq=True)
+        freq_response, freqs = paz_to_freq_resp(
+            paz_remove['poles'], paz_remove['zeros'], paz_remove['gain'],
+            delta, nfft, freq=True)
     if seedresp:
         freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
                                         seedresp['date'],
@@ -546,18 +545,18 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             if sacsim:
-                cos_win = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
+                cos_win = cosine_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
             else:
-                cos_win = cosTaper(freqs.size, freqs=freqs,
-                                   flimit=(fl1, fl2, fl3, fl4))
+                cos_win = cosine_taper(freqs.size, freqs=freqs,
+                                       flimit=(fl1, fl2, fl3, fl4))
             data *= cos_win
-        specInv(freq_response, water_level)
+        invert_spectrum(freq_response, water_level)
         data *= freq_response
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= pazToFreqResp(paz_simulate['poles'], paz_simulate['zeros'],
-                              paz_simulate['gain'], delta, nfft)
+        data *= paz_to_freq_resp(paz_simulate['poles'], paz_simulate['zeros'],
+                                 paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
@@ -576,7 +575,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     return data
 
 
-def paz2AmpValueOfFreqResp(paz, freq):
+def paz_2_amplitude_value_of_freq_resp(paz, freq):
     """
     Returns Amplitude at one frequency for the given poles and zeros
 
@@ -591,7 +590,7 @@ def paz2AmpValueOfFreqResp(paz, freq):
     >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j],
     ...        'zeros': [0 + 0j, 0 + 0j],
     ...        'gain': 0.4}
-    >>> amp = paz2AmpValueOfFreqResp(paz, 1)
+    >>> amp = paz_2_amplitude_value_of_freq_resp(paz, 1)
     >>> print(round(amp, 7))
     0.2830262
     """
@@ -604,7 +603,7 @@ def paz2AmpValueOfFreqResp(paz, freq):
     return abs(fac) * paz['gain']
 
 
-def estimateMagnitude(paz, amplitude, timespan, h_dist):
+def estimate_magnitude(paz, amplitude, timespan, h_dist):
     """
     Estimates local magnitude from poles and zeros of given instrument, the
     peak to peak amplitude and the time span from peak to peak.
@@ -627,10 +626,11 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     >>> paz = {'poles': [-4.444+4.444j, -4.444-4.444j, -1.083+0j],
     ...        'zeros': [0+0j, 0+0j, 0+0j],
     ...        'gain': 1.0, 'sensitivity': 671140000.0}
-    >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
+    >>> mag = estimate_magnitude(paz, 3.34e6, 0.065, 0.255)
     >>> print(round(mag, 6))
     2.132873
-    >>> mag = estimateMagnitude([paz, paz], [3.34e6, 5e6], [0.065, 0.1], 0.255)
+    >>> mag = estimate_magnitude([paz, paz], [3.34e6, 5e6], [0.065, 0.1],
+    ...                          0.255)
     >>> print(round(mag, 6))
     2.347618
     """
@@ -645,7 +645,8 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     wa_ampl_mean = 0.0
     count = 0
     for paz, amplitude, timespan in zip(paz, amplitude, timespan):
-        wa_ampl_mean += estimateWoodAndersonAmplitude(paz, amplitude, timespan)
+        wa_ampl_mean += estimate_wood_anderson_amplitude(paz, amplitude,
+                                                         timespan)
         count += 1
     wa_ampl_mean /= count
     # mean of input amplitudes (if more than one) should be used in final
@@ -655,10 +656,10 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     return magnitude
 
 
-def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
+def estimate_wood_anderson_amplitude(paz, amplitude, timespan):
     """
     Convert amplitude in counts measured of instrument with given Poles and
-    Zeros information for use in :func:`estimateMagnitude`.
+    Zeros information for use in :func:`estimate_magnitude`.
     Amplitude should be measured as full peak to peak amplitude, timespan as
     difference of the two readings.
 
@@ -671,8 +672,9 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     freq = 1.0 / (2 * timespan)
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
-    wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
-    wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
+    wa_ampl /= (paz_2_amplitude_value_of_freq_resp(paz, freq) *
+                paz['sensitivity'])
+    wa_ampl *= paz_2_amplitude_value_of_freq_resp(WOODANDERSON, freq) * \
         WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl

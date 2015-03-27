@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import hilbert
 
-from obspy.signal.tf_misfit import plotTfMisfits
+from obspy.signal.tf_misfit import plot_tf_misfits
 
 
 # general constants
@@ -37,8 +36,8 @@ st2 = st1.copy()
 # signal with amplitude error + small additional pulse aftert 4 seconds
 st1a = st1 * amp_fac + ste
 
-plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, show=False)
-plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local', clim=0.15,
-              show=False)
+plot_tf_misfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, show=False)
+plot_tf_misfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local',
+                clim=0.15, show=False)
 
 plt.show()

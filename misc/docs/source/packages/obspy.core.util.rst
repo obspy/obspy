@@ -11,13 +11,13 @@
 
        ~attribdict.AttribDict
        ~base.NamedTemporaryFile
-       ~base.createEmptyDataChunk
-       ~base.getExampleFile
+       ~base.create_empty_data_chunk
+       ~base.get_example_file
        ~misc.BAND_CODE
-       ~misc.complexifyString
-       ~misc.guessDelta
-       ~misc.scoreatpercentile
-       ~misc.toIntOrZero
+       ~misc.complexify_string
+       ~misc.guess_delta
+       ~misc.score_at_percentile
+       ~misc.to_int_or_zero
        ~obspy_types.Enum
 
 

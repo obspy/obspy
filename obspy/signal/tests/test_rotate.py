@@ -13,8 +13,8 @@ import unittest
 
 import numpy as np
 
-from obspy.signal import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
-                          rotate_ZNE_LQT)
+from obspy.signal.rotate import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
+                                 rotate_ZNE_LQT)
 
 
 class RotateTestCase(unittest.TestCase):

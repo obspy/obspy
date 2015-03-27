@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import Blockette34Lookup, formatRESP
+from ..utils import blockette_34_lookup, format_RESP
 
 
 class Blockette054(Blockette):
@@ -57,7 +57,7 @@ class Blockette054(Blockette):
         ], flat=True)
     ]
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -74,9 +74,9 @@ class Blockette054(Blockette):
             'B054F04     Stage sequence number:                 %s\n' \
             % self.stage_sequence_number + \
             'B054F05     Response in units lookup:              %s\n'\
-            % Blockette34Lookup(abbreviations, self.signal_input_units) +\
+            % blockette_34_lookup(abbreviations, self.signal_input_units) +\
             'B054F06     Response out units lookup:             %s\n'\
-            % Blockette34Lookup(abbreviations, self.signal_output_units) +\
+            % blockette_34_lookup(abbreviations, self.signal_output_units) +\
             'B054F07     Number of numerators:                  %s\n' \
             % self.number_of_numerators + \
             'B054F10     Number of denominators:                %s\n' \
@@ -90,13 +90,13 @@ class Blockette054(Blockette):
                 for _i in range(self.number_of_numerators):
                     string += 'B054F08-09  %3s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.numerator_coefficient[_i], 6),
-                        formatRESP(self.numerator_error[_i], 6))
+                        format_RESP(self.numerator_coefficient[_i], 6),
+                        format_RESP(self.numerator_error[_i], 6))
             else:
                 string += 'B054F08-09  %3s %13s %13s\n' % (
                     0,
-                    formatRESP(self.numerator_coefficient, 6),
-                    formatRESP(self.numerator_error, 6))
+                    format_RESP(self.numerator_coefficient, 6),
+                    format_RESP(self.numerator_error, 6))
         if self.number_of_denominators:
             string += \
                 '#\t\tDenominator coefficients:\n' + \
@@ -106,12 +106,12 @@ class Blockette054(Blockette):
                 for _i in range(self.number_of_numerators):
                     string += 'B054F11-12  %3s %13s %13s\n' % (
                         _i,
-                        formatRESP(self.denominator_coefficient[_i], 6),
-                        formatRESP(self.denominator_error[_i], 6))
+                        format_RESP(self.denominator_coefficient[_i], 6),
+                        format_RESP(self.denominator_error[_i], 6))
             else:
                 string += 'B054F11-12  %3s %13s %13s\n' % (
                     0,
-                    formatRESP(self.denominator_coefficient, 6),
-                    formatRESP(self.denominator_error, 6))
+                    format_RESP(self.denominator_coefficient, 6),
+                    format_RESP(self.denominator_error, 6))
         string += '#\t\t\n'
         return string.encode()

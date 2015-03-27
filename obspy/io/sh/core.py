@@ -67,7 +67,7 @@ SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
 INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.items()])
 
 
-def isASC(filename):
+def _is_asc(filename):
     """
     Checks whether a file is a Seismic Handler ASCII file or not.
 
@@ -78,7 +78,7 @@ def isASC(filename):
 
     .. rubric:: Example
 
-    >>> isASC("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
+    >>> _is_asc("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
     True
     """
     # first six chars should contain 'DELTA:'
@@ -92,8 +92,8 @@ def isASC(filename):
     return True
 
 
-def readASC(filename, headonly=False, skip=0, delta=None, length=None,
-            **kwargs):  # @UnusedVariable
+def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
+              **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
@@ -224,9 +224,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     return stream
 
 
-def writeASC(stream, filename, included_headers=None, npl=4,
-             custom_format="%-.6e", append=False,
-             **kwargs):  # @UnusedVariable
+def _write_asc(stream, filename, included_headers=None, npl=4,
+               custom_format="%-.6e", append=False,
+               **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
@@ -267,7 +267,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            sio.write("START: %s\n" % fromUTCDateTime(dt))
+            sio.write("START: %s\n" % from_UTCDateTime(dt))
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
             sio.write("COMP: %c\n" % trace.stats.channel[2])
@@ -297,7 +297,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         fh.write(sio.read().encode('ascii', 'strict'))
 
 
-def isQ(filename):
+def _is_q(filename):
     """
     Checks whether a file is a Seismic Handler Q file or not.
 
@@ -308,7 +308,7 @@ def isQ(filename):
 
     .. rubric:: Example
 
-    >>> isQ("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
+    >>> _is_q("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
     True
     """
     # file must start with magic number 43981
@@ -322,8 +322,8 @@ def isQ(filename):
     return True
 
 
-def readQ(filename, headonly=False, data_directory=None, byteorder='=',
-          **kwargs):  # @UnusedVariable
+def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
+            **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler Q file and returns an ObsPy Stream object.
 
@@ -477,8 +477,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
-           **kwargs):  # @UnusedVariable
+def _write_q(stream, filename, data_directory=None, byteorder='=',
+             append=False, **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler Q file from given ObsPy Stream object.
 
@@ -513,7 +513,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     # if the header file exists its assumed that the data is also there
     if os.path.exists(filename_header) and append:
         try:
-            trcs = readQ(filename_header, headonly=True)
+            trcs = _read_q(filename_header, headonly=True)
             mode = 'ab'
             count_offset = len(trcs)
         except:
@@ -547,14 +547,14 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        temp += "S021:%s~ " % fromUTCDateTime(dt)
+        temp += "S021:%s~ " % from_UTCDateTime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
-                value = fromUTCDateTime(value)
+                value = from_UTCDateTime(value)
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
@@ -637,7 +637,7 @@ def toUTCDateTime(value):
     return UTCDateTime(year, month, day, hour, mins) + secs
 
 
-def fromUTCDateTime(dt):
+def from_UTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
@@ -649,7 +649,7 @@ def fromUTCDateTime(dt):
 
     >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
-    >>> print(fromUTCDateTime(dt))
+    >>> print(from_UTCDateTime(dt))
      2-JAN-2008_03:04:05.123
     """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"

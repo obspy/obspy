@@ -6,8 +6,7 @@ from __future__ import print_function
 import sys
 
 import numpy as np
-
-from obspy.core import read
+import obspy
 
 
 try:
@@ -18,7 +17,7 @@ except:
     print(__doc__)
     raise
 
-st = read(in_file)
+st = obspy.read(in_file)
 for i, tr in enumerate(st):
     f = open("%s_%d" % (out_file, i), "w")
     f.write("# STATION %s\n" % (tr.stats.station))

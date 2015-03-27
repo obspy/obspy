@@ -20,7 +20,7 @@ import scipy.odr
 from scipy import signal
 from scipy.optimize import fminbound
 
-from obspy.signal.invsim import cosTaper
+from obspy.signal.invsim import cosine_taper
 
 
 def eigval(datax, datay, dataz, fk, normf=1.0):
@@ -477,7 +477,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         nsamp = int(win_len * fs)
         nstep = int(nsamp * win_frac)
         newstart = stime
-        tap = cosTaper(nsamp, p=0.22)
+        tap = cosine_taper(nsamp, p=0.22)
         offset = 0
         while (newstart + (nsamp + nstep) / fs) < etime:
             try:

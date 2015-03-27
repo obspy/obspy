@@ -23,8 +23,8 @@ def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):
     return kwargs
 
 
-def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
-              **kwargs):
+def _write_json(obj, filename, omit_nulls=False, pretty_print=True,
+                **kwargs):
     """
     Write object to a file in JSON format
 

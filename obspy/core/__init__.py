@@ -110,7 +110,7 @@ from obspy.core.util import DynamicAttributeImportRerouteModule
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
-from obspy.scripts.runtests import runTests
+from obspy.scripts.runtests import run_tests
 
 
 # Remove once 0.11 has been released!

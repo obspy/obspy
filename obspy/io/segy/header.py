@@ -171,22 +171,22 @@ TRACE_HEADER_KEYS = [_i[1] for _i in TRACE_HEADER_FORMAT]
 # number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS = {
     1: unpack.unpack_4byte_IBM,
-    2: unpack.unpack_4byte_Integer,
-    3: unpack.unpack_2byte_Integer,
-    4: unpack.unpack_4byte_Fixed_point,
+    2: unpack.unpack_4byte_integer,
+    3: unpack.unpack_2byte_integer,
+    4: unpack.unpack_4byte_fixed_point,
     5: unpack.unpack_4byte_IEEE,
-    8: unpack.unpack_1byte_Integer,
+    8: unpack.unpack_1byte_integer,
 }
 
 # Functions that pack the chosen data format. The keys correspond to the
 # number given for each format by the SEG Y format reference.
 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS = {
     1: pack.pack_4byte_IBM,
-    2: pack.pack_4byte_Integer,
-    3: pack.pack_2byte_Integer,
-    4: pack.pack_4byte_Fixed_point,
+    2: pack.pack_4byte_integer,
+    3: pack.pack_2byte_integer,
+    4: pack.pack_4byte_fixed_point,
     5: pack.pack_4byte_IEEE,
-    8: pack.pack_1byte_Integer,
+    8: pack.pack_1byte_integer,
 }
 
 # Size of one sample.

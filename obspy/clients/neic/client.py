@@ -18,6 +18,7 @@ from time import sleep
 
 from obspy import Stream, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import deprecated
 from .util import ascdate, asctime
 
 
@@ -41,13 +42,13 @@ class Client(object):
     >>> from obspy.clients.neic import Client
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-    >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
+    >>> st = client.get_waveforms("IU", "ANMO", "00", "BH?", t, t + 10)
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
-    >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
+    >>> st = client.get_waveforms_nscl("IUANMO BH.00", t, 10)
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
     IU.ANMO.00.BH... | 20.0 Hz, 201 samples
@@ -67,15 +68,21 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
 
-    def getWaveform(self, network, station, location, channel, starttime,
-                    endtime):
+    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
+                "that instead.")
+    def getWaveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime):
         """
         Gets a waveform for a specified net, station, location and channel
         from start time to end time. The individual elements can contain
         wildcard ``"?"`` representing one character, matches of character
         ranges (e.g. ``channel="BH[Z12]"``). All fields are left justified and
         padded with spaces to the required field width if they are too short.
-        Use getWaveformNSCL for seednames specified with regular expressions.
+        Use get_waveforms_nscl for seednames specified with regular
+        expressions.
 
         .. rubric:: Notes
 
@@ -106,7 +113,7 @@ class Client(object):
         >>> from obspy.clients.neic import Client
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)
+        >>> st = client.get_waveforms("IU", "ANMO", "0?", "BH?", t, t + 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples
@@ -122,9 +129,15 @@ class Client(object):
             location.ljust(2, " ")
         # allow UNIX style "?" wildcard
         seedname = seedname.replace("?", ".")
-        return self.getWaveformNSCL(seedname, starttime, endtime - starttime)
+        return self.get_waveforms_nscl(seedname, starttime,
+                                       endtime - starttime)
 
-    def getWaveformNSCL(self, seedname, starttime, duration):
+    @deprecated("'getWaveformNSCL' has been renamed to 'get_waveforms_nscl'. "
+                "Use that instead.")
+    def getWaveformNSCL(self, *args, **kwargs):
+        return self.get_waveforms_nscl(*args, **kwargs)
+
+    def get_waveforms_nscl(self, seedname, starttime, duration):
         """
         Gets a regular expression of channels from a start time for a duration
         in seconds. The regular expression must represent all characters of
@@ -157,7 +170,7 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
+        >>> st = client.get_waveforms_nscl("IUANMO BH.00", t, 10)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         IU.ANMO.00.BH... | 20.0 Hz, 201 samples

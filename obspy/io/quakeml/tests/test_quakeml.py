@@ -13,13 +13,12 @@ from lxml import etree
 
 from obspy.core.event import (Catalog, Event, FocalMechanism, Magnitude,
                               MomentTensor, Origin, Pick, ResourceIdentifier,
-                              Tensor, WaveformStreamID, readEvents)
+                              Tensor, WaveformStreamID, read_events)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
 from obspy.core.util.testing import compare_xml_strings
-from obspy.io.quakeml.core import Pickler, readQuakeML, writeQuakeML
+from obspy.io.quakeml.core import Pickler, _read_quakeml, _write_quakeml
 
 
 # lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
@@ -37,14 +36,14 @@ class QuakeMLTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.neries_filename = os.path.join(self.path, 'neries_events.xml')
-        self.neries_catalog = readQuakeML(self.neries_filename)
+        self.neries_catalog = _read_quakeml(self.neries_filename)
 
-    def test_readQuakeML(self):
+    def test_read_quakeml(self):
         """
         """
         # IRIS
         filename = os.path.join(self.path, 'iris_events.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 2)
         self.assertEqual(
             catalog[0].resource_id,
@@ -71,7 +70,7 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'usgs_event.xml')
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            catalog = readQuakeML(filename)
+            catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(catalog[0].event_type, 'quarry blast')
 
@@ -80,7 +79,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests Event object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_event.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         event = catalog[0]
         self.assertEqual(
@@ -133,7 +132,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests Origin object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_origin.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].origins), 1)
         origin = catalog[0].origins[0]
@@ -234,7 +233,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests Magnitude object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_magnitude.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
         mag = catalog[0].magnitudes[0]
@@ -280,7 +279,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(
             self.path, 'quakeml_1.2_stationmagnitudecontributions.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
         self.assertEqual(
@@ -313,7 +312,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests StationMagnitude object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_stationmagnitude.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].station_magnitudes), 1)
         mag = catalog[0].station_magnitudes[0]
@@ -353,7 +352,7 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'quakeml_1.2_data_used.xml')
 
         # Test reading first.
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         event = catalog[0]
 
         self.assertTrue(len(event.focal_mechanisms), 2)
@@ -393,7 +392,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests Arrival object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_arrival.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].origins[0].arrivals), 2)
         ar = catalog[0].origins[0].arrivals[0]
@@ -429,7 +428,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests Pick object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_pick.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].picks), 2)
         pick = catalog[0].picks[0]
@@ -467,7 +466,7 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests FocalMechanism object.
         """
         filename = os.path.join(self.path, 'quakeml_1.2_focalmechanism.xml')
-        catalog = readQuakeML(filename)
+        catalog = _read_quakeml(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].focal_mechanisms), 2)
         fm = catalog[0].focal_mechanisms[0]
@@ -556,40 +555,40 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_writeQuakeML(self):
+    def test_write_quakeml(self):
         """
         Tests writing a QuakeML document.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = readQuakeML(filename)
+            catalog = _read_quakeml(filename)
             self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile, validate=IS_RECENT_LXML)
+            _write_quakeml(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readQuakeML(tmpfile)
+                catalog2 = _read_quakeml(tmpfile)
         self.assertTrue(len(catalog2), 1)
 
     def test_readEvents(self):
         """
-        Tests reading a QuakeML document via readEvents.
+        Tests reading a QuakeML document via read_events.
         """
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = readEvents(self.neries_filename)
+            catalog = read_events(self.neries_filename)
             self.assertTrue(len(catalog), 3)
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter("ignore")
-                catalog2 = readEvents(tmpfile)
+                catalog2 = read_events(tmpfile)
         self.assertTrue(len(catalog2), 3)
 
-    @skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
+    @unittest.skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
     def test_enums(self):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are
@@ -657,12 +656,12 @@ class QuakeMLTestCase(unittest.TestCase):
 
     def test_read_string(self):
         """
-        Test reading a QuakeML string/unicode object via readEvents.
+        Test reading a QuakeML string/unicode object via read_events.
         """
         with open(self.neries_filename, 'rb') as fp:
             data = fp.read()
 
-        catalog = readEvents(data)
+        catalog = read_events(data)
         self.assertEqual(len(catalog), 3)
 
     def test_preferred_tags(self):
@@ -676,7 +675,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(ev.preferred_focal_mechanism(), None)
         # testing existing event
         filename = os.path.join(self.path, 'preferred.xml')
-        catalog = readEvents(filename)
+        catalog = read_events(filename)
         self.assertEqual(len(catalog), 1)
         ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
                  "| 2.0 MW"
@@ -735,7 +734,7 @@ class QuakeMLTestCase(unittest.TestCase):
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
-        new_cat = readQuakeML(memfile)
+        new_cat = _read_quakeml(memfile)
         self.assertEqual(len(new_cat), 1)
         event = new_cat[0]
         self.assertEqual(len(event.origins), 1)
@@ -766,11 +765,11 @@ class QuakeMLTestCase(unittest.TestCase):
     def test_read_equivalence(self):
         """
         See #662.
-        Tests if readQuakeML() and readEvents() return the same results.
+        Tests if _read_quakeml() and read_events() return the same results.
         """
         warnings.simplefilter("ignore", UserWarning)
-        cat1 = readEvents(self.neries_filename)
-        cat2 = readQuakeML(self.neries_filename)
+        cat1 = read_events(self.neries_filename)
+        cat2 = _read_quakeml(self.neries_filename)
         warnings.filters.pop(0)
         self.assertEqual(cat1, cat2)
 
@@ -784,9 +783,9 @@ class QuakeMLTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat1 = readQuakeML(filename)
+            cat1 = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
-            cat2 = readQuakeML(filename)
+            cat2 = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
 
         self.assertEqual(cat1, cat2)
@@ -799,7 +798,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat = readQuakeML(filename)
+            cat = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
 
         self.assertEqual(len(cat[0].amplitudes), 1)
@@ -821,7 +820,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat = readQuakeML(filename)
+            cat = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
 
         with NamedTemporaryFile() as tf:
@@ -863,7 +862,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            cat = readQuakeML(filename)
+            cat = _read_quakeml(filename)
             self.assertEqual(len(w), 0)
 
         # add some custom tags to first event:
@@ -925,7 +924,7 @@ class QuakeMLTestCase(unittest.TestCase):
             for line in expected:
                 self.assertIn(line, content)
             # now, read again to test if it's parsed correctly..
-            cat = readQuakeML(tmpfile)
+            cat = _read_quakeml(tmpfile)
         # when reading..
         #  - namespace abbreviations should be disregarded
         #  - we always end up with a namespace definition, even if it was

@@ -18,10 +18,10 @@ import warnings
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 
 
-def isSEISAN(filename):
+def _is_seisan(filename):
     """
     Checks whether a file is SEISAN or not.
 
@@ -32,7 +32,7 @@ def isSEISAN(filename):
 
     .. rubric:: Example
 
-    >>> isSEISAN("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    >>> _is_seisan("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
     try:
@@ -41,12 +41,12 @@ def isSEISAN(filename):
     except:
         return False
     # read some data - contains at least 12 lines a 80 characters
-    if _getVersion(data):
+    if _get_version(data):
         return True
     return False
 
 
-def _getVersion(data):
+def _get_version(data):
     """
     Extracts SEISAN version from given data chunk.
 
@@ -114,7 +114,7 @@ def _getVersion(data):
     return None
 
 
-def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a SEISAN file and returns an ObsPy Stream object.
 
@@ -149,7 +149,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     fh = open(filename, 'rb')
     data = fh.read(80 * 12)
     # get version info from file
-    (byteorder, arch, _version) = _getVersion(data)
+    (byteorder, arch, _version) = _get_version(data)
     # fetch lines
     fh.seek(0)
     # start with event file header
@@ -195,7 +195,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             stream.append(Trace(header=header))
         else:
             # fetch data
-            data = frombuffer(
+            data = from_buffer(
                 fh.read((header['npts'] + 2) * dtype.itemsize),
                 dtype=dtype)
             # convert to system byte order

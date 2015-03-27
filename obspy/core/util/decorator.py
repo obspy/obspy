@@ -22,7 +22,7 @@ import warnings
 
 import numpy as np
 
-from obspy.core.util import getExampleFile
+from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
 
 
@@ -82,38 +82,6 @@ def deprecated_keywords(keywords):
     return fdec
 
 
-def skip(reason):
-    """
-    Unconditionally skip a test.
-    """
-    def decorator(test_item):
-        if not (isinstance(test_item, type) and issubclass(test_item,
-                                                           unittest.TestCase)):
-            @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):  # @UnusedVariable
-                return
-
-            test_item = skip_wrapper
-
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = reason
-        return test_item
-    return decorator
-
-
-def skipIf(condition, reason):
-    """
-    Skip a test if the condition is true.
-    """
-    if condition:
-        return skip(reason)
-
-    def _id(obj):
-        return obj
-
-    return _id
-
-
 def skip_on_network_error(func):
     """
     Decorator for unittest to mark test routines that fail with certain network
@@ -139,7 +107,7 @@ def skip_on_network_error(func):
     return new_func
 
 
-def uncompressFile(func):
+def uncompress_file(func):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
@@ -215,7 +183,7 @@ def uncompressFile(func):
     return wrapped_func
 
 
-def raiseIfMasked(func):
+def raise_if_masked(func):
     """
     Raises if the first argument (self in case of methods) is a Trace with
     masked values or a Stream containing a Trace with masked values.
@@ -244,7 +212,7 @@ def raiseIfMasked(func):
     return new_func
 
 
-def skipIfNoData(func):
+def skip_if_no_data(func):
     """
     Does nothing if the first argument (self in case of methods) is a Trace
     with no data in it.
@@ -280,8 +248,8 @@ def map_example_filename(arg_kwarg_name):
                     if kwargs[arg_kwarg_name].startswith(prefix):
                         try:
                             kwargs[arg_kwarg_name] = \
-                                getExampleFile(kwargs[arg_kwarg_name][9:])
-                        # file not found by getExampleFile:
+                                get_example_file(kwargs[arg_kwarg_name][9:])
+                        # file not found by get_example_file:
                         except IOError:
                             pass
             # check args
@@ -297,9 +265,9 @@ def map_example_filename(arg_kwarg_name):
                         if args[ind].startswith(prefix):
                             try:
                                 args = list(args)
-                                args[ind] = getExampleFile(args[ind][9:])
+                                args[ind] = get_example_file(args[ind][9:])
                                 args = tuple(args)
-                            # file not found by getExampleFile:
+                            # file not found by get_example_file:
                             except IOError:
                                 pass
             return func(*args, **kwargs)

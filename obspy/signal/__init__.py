@@ -39,8 +39,8 @@ comparison with the other traces in the plot.
 >>> import obspy.signal
 >>> st = read()
 >>> tr = st[0]
->>> tr.data = obspy.signal.highpass(tr.data, 1.0, corners=1, zerophase=True,
-...                                 df=tr.stats.sampling_rate)
+>>> tr.data = obspy.signal.filter.highpass(
+...     tr.data, 1.0, corners=1, zerophase=True, df=tr.stats.sampling_rate)
 >>> st.plot()  # doctest: +SKIP
 
 Working with the convenience methods implemented on
@@ -57,7 +57,7 @@ works similar:
     import obspy.signal
     st = read()
     tr = st[0]
-    tr.data = obspy.signal.highpass(tr.data, 1.0,
+    tr.data = obspy.signal.filter.highpass(tr.data, 1.0,
             df=tr.stats.sampling_rate, corners=1, zerophase=True)
     st.plot()
 
@@ -80,8 +80,8 @@ corner frequency.
 
 Now we apply the instrument correction and simulation:
 
->>> from obspy.signal import seisSim, cornFreq2Paz
->>> inst2hz = cornFreq2Paz(2.0)
+>>> from obspy.signal.invsim import simulate_seismometer, corn_freq_2_paz
+>>> inst2hz = corn_freq_2_paz(2.0)
 >>> sts2 = {'gain': 60077000.0,
 ...         'poles': [(-0.037004+0.037016j),
 ...                   (-0.037004-0.037016j),
@@ -92,7 +92,7 @@ Now we apply the instrument correction and simulation:
 ...         'zeros': [0j, 0j]}
 >>> for tr in st:
 ...     df = tr.stats.sampling_rate
-...     tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+...     tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
 ...                       water_level=60.0)
 >>> st.plot()  # doctest: +SKIP
 
@@ -106,8 +106,8 @@ Again, there are convenience methods implemented on
 .. plot::
 
     from obspy import read
-    from obspy.signal import seisSim, cornFreq2Paz
-    inst2hz = cornFreq2Paz(2.0)
+    from obspy.signal import simulate_seismometer, corn_freq_2_paz
+    inst2hz = corn_freq_2_paz(2.0)
     st = read()
     tr = st[0]
     sts2 = {'gain': 60077000.0,
@@ -120,7 +120,7 @@ Again, there are convenience methods implemented on
             'zeros': [0j, 0j]}
     for tr in st:
         df = tr.stats.sampling_rate
-        tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+        tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
                           water_level=60.0)
     st.plot()
 
@@ -134,33 +134,33 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 The following example demonstrates a recursive STA/LTA triggering:
 
 >>> from obspy import read
->>> from obspy.signal.trigger import recSTALTA, plotTrigger
+>>> from obspy.signal.trigger import recursive_STALTA, plot_trigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
 <...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
->>> cft = recSTALTA(tr.data, int(sta * tr.stats.sampling_rate),
+>>> cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
 ...                 int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
->>> plotTrigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
+>>> plot_trigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
 
 .. plot::
 
     from obspy import read
-    from obspy.signal.trigger import recSTALTA, plotTrigger
+    from obspy.signal.trigger import recursive_STALTA, plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
     sta = 0.5
     lta = 4
-    cft = recSTALTA(tr.data, int(sta * tr.stats.sampling_rate),
+    cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
                     int(lta * tr.stats.sampling_rate))
     thr_on = 4
     thr_off = 0.7
-    plotTrigger(tr, cft, thr_on, thr_off)
+    plot_trigger(tr, cft, thr_on, thr_off)
 
 There is also a convenience method implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`.
@@ -182,7 +182,7 @@ But it also means that the trace's built-in methods can be used.
     tr.plot()
 
 For more examples check out the `trigger`_ in the `Tutorial`_. For
-network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
+network coincidence refer to :func:`obspy.signal.trigger.coincidence_trigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
@@ -194,25 +194,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal.cpxtrace import centroid, instBwith, instFreq, normEnvelope
-from obspy.signal.cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
-from obspy.signal.filter import (bandpass, bandstop, envelope, highpass,
-                                 integerDecimation, lowpass, lowpassFIR,
-                                 remezFIR)
-from obspy.signal.freqattributes import bwith, cfrequency, domperiod, logcep
-from obspy.signal.hoctavbands import sonogram
-from obspy.signal.invsim import (cornFreq2Paz, cosTaper, estimateMagnitude,
-                                 pazToFreqResp, seisSim, specInv)
-from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothing
-from obspy.signal.polarization import eigval
-from obspy.signal.rotate import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
-                                 rotate_ZNE_LQT)
-from obspy.signal.spectral_estimation import PPSD, psd
-from obspy.signal.trigger import (arPick, carlSTATrig, classicSTALTA,
-                                  classicSTALTAPy, coincidenceTrigger,
-                                  delayedSTALTA, pkBaer, recSTALTA,
-                                  recSTALTAPy, triggerOnset, zDetect)
-from obspy.signal.util import utlGeoKm, utlLonLat
+from .spectral_estimation import PPSD
+
 
 if __name__ == '__main__':
     import doctest

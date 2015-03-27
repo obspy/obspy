@@ -48,7 +48,7 @@ def sonogram(data, fs, fc1, nofb, no_win):
     fmin = fc / np.sqrt(5. / 3.)
     fmax = fc * np.sqrt(5. / 3.)
 
-    nfft = util.nextpow2(data.shape[-1])
+    nfft = util.next_pow_2(data.shape[-1])
     new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
     data = np.require(data, dtype=new_dtype)
     c = fftpack.fft(data, nfft)

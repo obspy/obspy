@@ -42,10 +42,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from obspy import __version__
-from obspy.core.util.base import _DeprecatedArgumentAction
+from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.db.db import Base
 from obspy.db.indexer import WaveformFileCrawler, worker
-from obspy.db.util import parseMappingData
+from obspy.db.util import parse_mapping_data
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
@@ -119,13 +119,13 @@ def _runIndexer(options):
             paths = options.data.split(',')
         else:
             paths = [options.data]
-        paths = service._preparePaths(paths)
+        paths = service._prepare_paths(paths)
         if not paths:
             return
         # prepare map file
         if options.mapping_file:
             data = open(options.mapping_file, 'r').readlines()
-            mappings = parseMappingData(data)
+            mappings = parse_mapping_data(data)
             logging.info("Parsed %d lines from mapping file %s" %
                          (len(data), options.mapping_file))
         else:
@@ -161,8 +161,8 @@ def _runIndexer(options):
         service.output_queue = out_queue
         service.log_queue = log_queue
         service.paths = paths
-        service._resetWalker()
-        service._stepWalker()
+        service._reset_walker()
+        service._step_walker()
         service.serve_forever(options.poll_interval)
     except KeyboardInterrupt:
         quit()
@@ -246,22 +246,22 @@ Default path option is 'data=*.*'.""")
         help="Port number. If not given a free port will be picked.")
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('--check_duplicates',
-                                       '--check-duplicates',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--check_duplicates', '--check-duplicates', real_action='store_true')
     parser.add_argument('--check_duplicates', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--drop_database', '--drop-database',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--drop_database', '--drop-database', real_action='store_true')
     parser.add_argument('--drop_database', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--mapping_file', '--mapping-file')
+    action = _get_deprecated_argument_action('--mapping_file',
+                                             '--mapping-file')
     parser.add_argument('--mapping_file', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--run_once', '--run-once',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--run_once', '--run-once', real_action='store_true')
     parser.add_argument('--run_once', nargs=0, action=action, help=SUPPRESS)
 
     args = parser.parse_args(argv)

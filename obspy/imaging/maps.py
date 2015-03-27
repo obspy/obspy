@@ -27,9 +27,9 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
                                MaxNLocator)
 
 from obspy import UTCDateTime
-from obspy.core.util.base import getBasemapVersion
+from obspy.core.util.base import get_basemap_version
 
-BASEMAP_VERSION = getBasemapVersion()
+BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from mpl_toolkits.basemap import Basemap
     HAS_BASEMAP = True

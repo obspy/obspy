@@ -10,7 +10,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>268</TotalNumberStations>
   <SelectedNumberStations>4</SelectedNumberStations>
-  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_ANSS,_ANSS-BB,.EARTHSCOPE,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_STS-1,.UNRESTRICTED,_US-ALL,_US-REF">
+  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_ANSS,_ANSS-BB,.EARTHSCOPE,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,_STS-1,.UNRESTRICTED,_US-ALL,_US-REF">
    <Comment>
     <Value>TEST DATA:  Calibration, and testing in progress.</Value>
     <BeginEffectiveTime>1995-08-24T00:00:00</BeginEffectiveTime>

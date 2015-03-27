@@ -14,7 +14,7 @@
        ~trace.Stats
        ~stream.Stream
        ~utcdatetime.UTCDateTime
-       ~event.readEvents
+       ~event.read_events
 
     .. comment to end block
 

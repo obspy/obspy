@@ -41,7 +41,7 @@ res_id_prefix = 'quakeml:us.anss.org'
 
 
 @map_example_filename('filename')
-def isMchedr(filename):
+def _is_mchedr(filename):
     """
     Checks whether a file format is mchedr
     (machine-readable Earthquake Data Report).
@@ -53,7 +53,7 @@ def isMchedr(filename):
 
     .. rubric:: Example
 
-    >>> isMchedr('/path/to/mchedr.dat')  # doctest: +SKIP
+    >>> _is_mchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
     if not isinstance(filename, (str, native_str)):
@@ -111,13 +111,13 @@ class Unpickler(object):
         except ValueError:
             return None
 
-    def _intUnused(self, string):
+    def _int_unused(self, string):
         val = self._int(string)
         if val < 0:
             val = None
         return val
 
-    def _intZero(self, string):
+    def _int_zero(self, string):
         val = self._int(string)
         if val is None:
             val = 0
@@ -129,13 +129,13 @@ class Unpickler(object):
         except ValueError:
             return None
 
-    def _floatUnused(self, string):
+    def _float_unused(self, string):
         val = self._float(string)
         if val < 0:
             val = None
         return val
 
-    def _floatWithFormat(self, string, format_string, scale=1):
+    def _float_with_format(self, string, format_string, scale=1):
         ndigits, ndec = map(int, format_string.split('.'))
         nint = ndigits - ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint + ndec])
@@ -143,19 +143,19 @@ class Unpickler(object):
             val *= scale
         return val
 
-    def _storeUncertainty(self, error, value, scale=1):
+    def _store_uncertainty(self, error, value, scale=1):
         if not isinstance(error, QuantityError):
             raise TypeError("'error' is not a 'QuantityError'")
         if value is not None:
             error['uncertainty'] = value * scale
 
-    def _coordinateSign(self, type):
+    def _coordinate_sign(self, type):
         if type == 'S' or type == 'W':
             return -1
         else:
             return 1
 
-    def _tensorCodeSign(self, code):
+    def _tensor_code_sign(self, code):
         """
         Converts tensor from 'x,y,z' system to 'r,t,p'
         and translates 'f' code to 'p'
@@ -165,14 +165,14 @@ class Unpickler(object):
                   'ff': ('pp', 1), 'rf': ('rp', 1), 'tf': ('tp', 1)}
         return system.get(code, (code, 1))
 
-    def _tensorStore(self, tensor, code, value, error):
-        code, sign = self._tensorCodeSign(code)
+    def _tensor_store(self, tensor, code, value, error):
+        code, sign = self._tensor_code_sign(code)
         if code in ('rr', 'tt', 'pp', 'rt', 'rp', 'tp'):
             setattr(tensor, "m_%s" % code, value * sign)
-            self._storeUncertainty(getattr(tensor, "m_%s_errors" % code),
-                                   error)
+            self._store_uncertainty(getattr(tensor, "m_%s_errors" % code),
+                                    error)
 
-    def _decodeFERegionNumber(self, number):
+    def _decode_FE_region_number(self, number):
         """
         Converts Flinn-Engdahl region number to string.
         """
@@ -180,24 +180,24 @@ class Unpickler(object):
             number = int(number)
         return self.flinn_engdahl.get_region_by_number(number)
 
-    def _toRad(self, degrees):
+    def _to_rad(self, degrees):
         radians = np.pi * degrees / 180
         return radians
 
-    def _toDeg(self, radians):
+    def _to_deg(self, radians):
         degrees = 180 * radians / np.pi
         return degrees
 
-    def _sphericalToCartesian(self, spherical_coords):
+    def _spherical_to_cartesian(self, spherical_coords):
         length, azimuth, plunge = spherical_coords
-        plunge_rad = self._toRad(plunge)
-        azimuth_rad = self._toRad(azimuth)
+        plunge_rad = self._to_rad(plunge)
+        azimuth_rad = self._to_rad(azimuth)
         x = length * np.sin(plunge_rad) * np.cos(azimuth_rad)
         y = length * np.sin(plunge_rad) * np.sin(azimuth_rad)
         z = length * np.cos(plunge_rad)
         return (x, y, z)
 
-    def _angleBetween(self, u1, u2):
+    def _angle_between(self, u1, u2):
         """
         Returns the angle in degrees between unit vectors 'u1' and 'u2':
         Source: http://stackoverflow.com/questions/2827393/\
@@ -209,9 +209,9 @@ angles-between-two-n-dimensional-vectors-in-python
                 angle = 0.0
             else:
                 angle = np.pi
-        return round(self._toDeg(angle), 1)
+        return round(self._to_deg(angle), 1)
 
-    def _latErrToDeg(self, latitude_stderr):
+    def _lat_err_to_deg(self, latitude_stderr):
         """
         Convert latitude error from km to degrees
         using a simple formula
@@ -221,18 +221,18 @@ angles-between-two-n-dimensional-vectors-in-python
         else:
             return None
 
-    def _lonErrToDeg(self, longitude_stderr, latitude):
+    def _lon_err_to_deg(self, longitude_stderr, latitude):
         """
         Convert longitude error from km to degrees
         using a simple formula
         """
         if longitude_stderr is not None and latitude is not None:
             return round(longitude_stderr /
-                         (111.1949 * math.cos(self._toRad(latitude))), 4)
+                         (111.1949 * math.cos(self._to_rad(latitude))), 4)
         else:
             return None
 
-    def _parseRecordHY(self, line):
+    def _parse_record_HY(self, line):
         """
         Parses the 'hypocenter' record HY
         """
@@ -249,7 +249,7 @@ angles-between-two-n-dimensional-vectors-in-python
         station_number = self._int(line[48:51])
         # unused: version_flag = line[51]
         FE_region_number = line[52:55]
-        FE_region_name = self._decodeFERegionNumber(FE_region_number)
+        FE_region_name = self._decode_FE_region_number(FE_region_number)
         source_code = line[55:60].strip()
 
         event = Event()
@@ -276,8 +276,8 @@ angles-between-two-n-dimensional-vectors-in-python
         res_id = '/'.join((res_id_prefix, 'earthmodel/ak135'))
         origin.earth_model_id = ResourceIdentifier(id=res_id)
         origin.time = UTCDateTime(date + time)
-        origin.latitude = latitude * self._coordinateSign(lat_type)
-        origin.longitude = longitude * self._coordinateSign(lon_type)
+        origin.latitude = latitude * self._coordinate_sign(lat_type)
+        origin.longitude = longitude * self._coordinate_sign(lon_type)
         origin.depth = depth * 1000
         origin.depth_type = 'from location'
         origin.quality = OriginQuality()
@@ -292,7 +292,7 @@ angles-between-two-n-dimensional-vectors-in-python
         event.origins.append(origin)
         return event
 
-    def _parseRecordE(self, line, event):
+    def _parse_record_E(self, line, event):
         """
         Parses the 'error and magnitude' record E
         """
@@ -313,13 +313,13 @@ angles-between-two-n-dimensional-vectors-in-python
 
         evid = event.resource_id.id.split('/')[-1]
         origin = event.origins[0]
-        self._storeUncertainty(origin.time_errors, orig_time_stderr)
-        self._storeUncertainty(origin.latitude_errors,
-                               self._latErrToDeg(latitude_stderr))
-        self._storeUncertainty(origin.longitude_errors,
-                               self._lonErrToDeg(longitude_stderr,
-                                                 origin.latitude))
-        self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
+        self._store_uncertainty(origin.time_errors, orig_time_stderr)
+        self._store_uncertainty(origin.latitude_errors,
+                                self._lat_err_to_deg(latitude_stderr))
+        self._store_uncertainty(origin.longitude_errors,
+                                self._lon_err_to_deg(longitude_stderr,
+                                                     origin.latitude))
+        self._store_uncertainty(origin.depth_errors, depth_stderr, scale=1000)
         if mb_mag is not None:
             mag = Magnitude()
             res_id = '/'.join((res_id_prefix, 'magnitude', evid, 'mb'))
@@ -363,7 +363,7 @@ angles-between-two-n-dimensional-vectors-in-python
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
 
-    def _parseRecordL(self, line, event):
+    def _parse_record_l(self, line, event):
         """
         Parses the '90 percent error ellipse' record L
         """
@@ -394,16 +394,16 @@ angles-between-two-n-dimensional-vectors-in-python
 
         # FIXME: The following code needs to be double-checked!
         semi_major_axis_unit_vect = \
-            self._sphericalToCartesian((1,
-                                        semi_major_axis_azimuth,
-                                        semi_major_axis_plunge))
+            self._spherical_to_cartesian((1,
+                                          semi_major_axis_azimuth,
+                                          semi_major_axis_plunge))
         semi_minor_axis_unit_vect = \
-            self._sphericalToCartesian((1,
-                                        semi_minor_axis_azimuth,
-                                        semi_minor_axis_plunge))
+            self._spherical_to_cartesian((1,
+                                          semi_minor_axis_azimuth,
+                                          semi_minor_axis_plunge))
         major_axis_rotation = \
-            self._angleBetween(semi_major_axis_unit_vect,
-                               semi_minor_axis_unit_vect)
+            self._angle_between(semi_major_axis_unit_vect,
+                                semi_minor_axis_unit_vect)
 
         origin.origin_uncertainty = OriginUncertainty()
         origin.origin_uncertainty.preferred_description = \
@@ -424,7 +424,7 @@ angles-between-two-n-dimensional-vectors-in-python
             major_axis_rotation + 90
         origin.origin_uncertainty.confidence_ellipsoid = confidence_ellipsoid
 
-    def _parseRecordA(self, line, event):
+    def _parse_record_A(self, line, event):
         """
         Parses the 'additional parameters' record A
         """
@@ -447,7 +447,7 @@ angles-between-two-n-dimensional-vectors-in-python
         origin.quality.used_station_count = station_number
         origin.quality.azimuthal_gap = gap
 
-    def _parseRecordC(self, line, event):
+    def _parse_record_C(self, line, event):
         """
         Parses the 'general comment' record C
         """
@@ -463,7 +463,7 @@ angles-between-two-n-dimensional-vectors-in-python
         comment.text = \
             "".join(x for x in comment.text if x in s.printable)
 
-    def _parseRecordAH(self, line, event):
+    def _parse_record_AH(self, line, event):
         """
         Parses the 'additional hypocenter' record AH
         """
@@ -477,9 +477,9 @@ angles-between-two-n-dimensional-vectors-in-python
         # unused: preliminary_flag = line[37]
         depth = self._float(line[38:43])
         # unused: depth_quality = line[43]
-        standard_dev = self._floatUnused(line[44:48])
-        station_number = self._intUnused(line[48:51])
-        phase_number = self._intUnused(line[51:55])
+        standard_dev = self._float_unused(line[44:48])
+        station_number = self._int_unused(line[48:51])
+        phase_number = self._int_unused(line[51:55])
         source_code = line[56:60].strip()
 
         evid = event.resource_id.id.split('/')[-1]
@@ -488,8 +488,8 @@ angles-between-two-n-dimensional-vectors-in-python
         origin.resource_id = ResourceIdentifier(id=res_id)
         origin.creation_info = CreationInfo(agency_id=source_code)
         origin.time = UTCDateTime(date + time)
-        origin.latitude = latitude * self._coordinateSign(lat_type)
-        origin.longitude = longitude * self._coordinateSign(lon_type)
+        origin.latitude = latitude * self._coordinate_sign(lat_type)
+        origin.longitude = longitude * self._coordinate_sign(lon_type)
         origin.depth = depth * 1000
         origin.depth_type = 'from location'
         origin.quality = OriginQuality()
@@ -499,15 +499,15 @@ angles-between-two-n-dimensional-vectors-in-python
         origin.type = 'hypocenter'
         event.origins.append(origin)
 
-    def _parseRecordAE(self, line, event):
+    def _parse_record_AE(self, line, event):
         """
         Parses the 'additional hypocenter error and magnitude record' AE
         """
-        orig_time_stderr = self._floatUnused(line[2:7])
-        latitude_stderr = self._floatUnused(line[8:14])
-        longitude_stderr = self._floatUnused(line[15:21])
-        depth_stderr = self._floatUnused(line[22:27])
-        gap = self._floatUnused(line[28:33])
+        orig_time_stderr = self._float_unused(line[2:7])
+        latitude_stderr = self._float_unused(line[8:14])
+        longitude_stderr = self._float_unused(line[15:21])
+        depth_stderr = self._float_unused(line[22:27])
+        gap = self._float_unused(line[28:33])
         mag1 = self._float(line[33:36])
         mag1_type = line[36:38]
         mag2 = self._float(line[43:46])
@@ -516,13 +516,13 @@ angles-between-two-n-dimensional-vectors-in-python
         evid = event.resource_id.id.split('/')[-1]
         # this record is to be associated to the latest origin
         origin = event.origins[-1]
-        self._storeUncertainty(origin.time_errors, orig_time_stderr)
-        self._storeUncertainty(origin.latitude_errors,
-                               self._latErrToDeg(latitude_stderr))
-        self._storeUncertainty(origin.longitude_errors,
-                               self._lonErrToDeg(longitude_stderr,
-                                                 origin.latitude))
-        self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
+        self._store_uncertainty(origin.time_errors, orig_time_stderr)
+        self._store_uncertainty(origin.latitude_errors,
+                                self._lat_err_to_deg(latitude_stderr))
+        self._store_uncertainty(origin.longitude_errors,
+                                self._lon_err_to_deg(longitude_stderr,
+                                                     origin.latitude))
+        self._store_uncertainty(origin.depth_errors, depth_stderr, scale=1000)
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
@@ -549,13 +549,13 @@ angles-between-two-n-dimensional-vectors-in-python
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
 
-    def _parseRecordDp(self, line, event):
+    def _parse_record_dp(self, line, event):
         """
         Parses the 'source parameter data - primary' record Dp
         """
         source_contributor = line[2:6].strip()
         computation_type = line[6]
-        exponent = self._intZero(line[7])
+        exponent = self._int_zero(line[7])
         scale = math.pow(10, exponent)
         centroid_origin_time = line[8:14] + '.' + line[14]
         orig_time_stderr = line[15:17]
@@ -563,38 +563,38 @@ angles-between-two-n-dimensional-vectors-in-python
             orig_time_stderr = 'Fixed'
         else:
             orig_time_stderr = \
-                self._floatWithFormat(orig_time_stderr, '2.1', scale)
-        centroid_latitude = self._floatWithFormat(line[17:21], '4.2')
+                self._float_with_format(orig_time_stderr, '2.1', scale)
+        centroid_latitude = self._float_with_format(line[17:21], '4.2')
         lat_type = line[21]
         if centroid_latitude is not None:
-            centroid_latitude *= self._coordinateSign(lat_type)
+            centroid_latitude *= self._coordinate_sign(lat_type)
         lat_stderr = line[22:25]
         if lat_stderr == 'FX':
             lat_stderr = 'Fixed'
         else:
-            lat_stderr = self._floatWithFormat(lat_stderr, '3.2', scale)
-        centroid_longitude = self._floatWithFormat(line[25:30], '5.2')
+            lat_stderr = self._float_with_format(lat_stderr, '3.2', scale)
+        centroid_longitude = self._float_with_format(line[25:30], '5.2')
         lon_type = line[30]
         if centroid_longitude is not None:
-            centroid_longitude *= self._coordinateSign(lon_type)
+            centroid_longitude *= self._coordinate_sign(lon_type)
         lon_stderr = line[31:34]
         if lon_stderr == 'FX':
             lon_stderr = 'Fixed'
         else:
-            lon_stderr = self._floatWithFormat(lon_stderr, '3.2', scale)
-        centroid_depth = self._floatWithFormat(line[34:38], '4.1')
+            lon_stderr = self._float_with_format(lon_stderr, '3.2', scale)
+        centroid_depth = self._float_with_format(line[34:38], '4.1')
         depth_stderr = line[38:40]
         if depth_stderr == 'FX' or depth_stderr == 'BD':
             depth_stderr = 'Fixed'
         else:
-            depth_stderr = self._floatWithFormat(depth_stderr, '2.1', scale)
-        station_number = self._intZero(line[40:43])
-        component_number = self._intZero(line[43:46])
-        station_number2 = self._intZero(line[46:48])
-        component_number2 = self._intZero(line[48:51])
-        # unused: half_duration = self._floatWithFormat(line[51:54], '3.1')
-        moment = self._floatWithFormat(line[54:56], '2.1')
-        moment_stderr = self._floatWithFormat(line[56:58], '2.1')
+            depth_stderr = self._float_with_format(depth_stderr, '2.1', scale)
+        station_number = self._int_zero(line[40:43])
+        component_number = self._int_zero(line[43:46])
+        station_number2 = self._int_zero(line[46:48])
+        component_number2 = self._int_zero(line[48:51])
+        # unused: half_duration = self._float_with_format(line[51:54], '3.1')
+        moment = self._float_with_format(line[54:56], '2.1')
+        moment_stderr = self._float_with_format(line[56:58], '2.1')
         moment_exponent = self._int(line[58:60])
         if (moment is not None) and (moment_exponent is not None):
             moment *= math.pow(10, moment_exponent)
@@ -617,24 +617,24 @@ angles-between-two-n-dimensional-vectors-in-python
             # Check if centroid time is on the next day:
             if origin.time < event.origins[0].time:
                 origin.time += timedelta(days=1)
-            self._storeUncertainty(origin.time_errors, orig_time_stderr)
+            self._store_uncertainty(origin.time_errors, orig_time_stderr)
             origin.latitude = centroid_latitude
             origin.longitude = centroid_longitude
             origin.depth = centroid_depth * 1000
             if lat_stderr == 'Fixed' and lon_stderr == 'Fixed':
                 origin.epicenter_fixed = True
             else:
-                self._storeUncertainty(origin.latitude_errors,
-                                       self._latErrToDeg(lat_stderr))
-                self._storeUncertainty(origin.longitude_errors,
-                                       self._lonErrToDeg(lon_stderr,
-                                                         origin.latitude))
+                self._store_uncertainty(origin.latitude_errors,
+                                        self._lat_err_to_deg(lat_stderr))
+                self._store_uncertainty(origin.longitude_errors,
+                                        self._lon_err_to_deg(lon_stderr,
+                                                             origin.latitude))
             if depth_stderr == 'Fixed':
                 origin.depth_type = 'operator assigned'
             else:
                 origin.depth_type = 'from location'
-                self._storeUncertainty(origin.depth_errors,
-                                       depth_stderr, scale=1000)
+                self._store_uncertainty(origin.depth_errors,
+                                        depth_stderr, scale=1000)
             quality = OriginQuality()
             quality.used_station_count = \
                 station_number + station_number2
@@ -666,8 +666,8 @@ angles-between-two-n-dimensional-vectors-in-python
                            'mw' + computation_type.lower()))
         moment_tensor.resource_id = ResourceIdentifier(id=res_id)
         moment_tensor.scalar_moment = moment
-        self._storeUncertainty(moment_tensor.scalar_moment_errors,
-                               moment_stderr)
+        self._store_uncertainty(moment_tensor.scalar_moment_errors,
+                                moment_stderr)
         data_used = DataUsed()
         data_used.station_count = station_number + station_number2
         data_used.component_count = component_number + component_number2
@@ -706,37 +706,37 @@ angles-between-two-n-dimensional-vectors-in-python
         event.focal_mechanisms.append(focal_mechanism)
         return focal_mechanism
 
-    def _parseRecordDt(self, line, focal_mechanism):
+    def _parse_record_Dt(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - tensor' record Dt
         """
         tensor = Tensor()
-        exponent = self._intZero(line[3:5])
+        exponent = self._int_zero(line[3:5])
         scale = math.pow(10, exponent)
         for i in range(6, 51 + 1, 9):
             code = line[i:i + 2]
-            value = self._floatWithFormat(line[i + 2:i + 6], '4.2', scale)
-            error = self._floatWithFormat(line[i + 6:i + 9], '3.2', scale)
-            self._tensorStore(tensor, code, value, error)
+            value = self._float_with_format(line[i + 2:i + 6], '4.2', scale)
+            error = self._float_with_format(line[i + 6:i + 9], '3.2', scale)
+            self._tensor_store(tensor, code, value, error)
         focal_mechanism.moment_tensor.tensor = tensor
 
-    def _parseRecordDa(self, line, focal_mechanism):
+    def _parse_record_Da(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - principal axes and
         nodal planes' record Da
         """
-        exponent = self._intZero(line[3:5])
+        exponent = self._int_zero(line[3:5])
         scale = math.pow(10, exponent)
-        t_axis_len = self._floatWithFormat(line[5:9], '4.2', scale)
-        t_axis_stderr = self._floatWithFormat(line[9:12], '3.2', scale)
+        t_axis_len = self._float_with_format(line[5:9], '4.2', scale)
+        t_axis_stderr = self._float_with_format(line[9:12], '3.2', scale)
         t_axis_plunge = self._int(line[12:14])
         t_axis_azimuth = self._int(line[14:17])
-        n_axis_len = self._floatWithFormat(line[17:21], '4.2', scale)
-        n_axis_stderr = self._floatWithFormat(line[21:24], '3.2', scale)
+        n_axis_len = self._float_with_format(line[17:21], '4.2', scale)
+        n_axis_stderr = self._float_with_format(line[21:24], '3.2', scale)
         n_axis_plunge = self._int(line[24:26])
         n_axis_azimuth = self._int(line[26:29])
-        p_axis_len = self._floatWithFormat(line[29:33], '4.2', scale)
-        p_axis_stderr = self._floatWithFormat(line[33:36], '3.2', scale)
+        p_axis_len = self._float_with_format(line[29:33], '4.2', scale)
+        p_axis_stderr = self._float_with_format(line[33:36], '3.2', scale)
         p_axis_plunge = self._int(line[36:38])
         p_axis_azimuth = self._int(line[38:41])
         np1_strike = self._int(line[42:45])
@@ -748,17 +748,17 @@ angles-between-two-n-dimensional-vectors-in-python
 
         t_axis = Axis()
         t_axis.length = t_axis_len
-        self._storeUncertainty(t_axis.length_errors, t_axis_stderr)
+        self._store_uncertainty(t_axis.length_errors, t_axis_stderr)
         t_axis.plunge = t_axis_plunge
         t_axis.azimuth = t_axis_azimuth
         n_axis = Axis()
         n_axis.length = n_axis_len
-        self._storeUncertainty(n_axis.length_errors, n_axis_stderr)
+        self._store_uncertainty(n_axis.length_errors, n_axis_stderr)
         n_axis.plunge = n_axis_plunge
         n_axis.azimuth = n_axis_azimuth
         p_axis = Axis()
         p_axis.length = p_axis_len
-        self._storeUncertainty(p_axis.length_errors, p_axis_stderr)
+        self._store_uncertainty(p_axis.length_errors, p_axis_stderr)
         p_axis.plunge = p_axis_plunge
         p_axis.azimuth = p_axis_azimuth
         principal_axes = PrincipalAxes()
@@ -779,7 +779,7 @@ angles-between-two-n-dimensional-vectors-in-python
         nodal_planes.nodal_plane_2 = nodal_plane_2
         focal_mechanism.nodal_planes = nodal_planes
 
-    def _parseRecordDc(self, line, focal_mechanism):
+    def _parse_record_Dc(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - comment' record Dc
         """
@@ -792,7 +792,7 @@ angles-between-two-n-dimensional-vectors-in-python
             focal_mechanism.comments.append(comment)
             comment.text = line[2:60]
 
-    def _parseRecordP(self, line, event):
+    def _parse_record_P(self, line, event):
         """
         Parses the 'primary phase record' P
 
@@ -892,7 +892,7 @@ angles-between-two-n-dimensional-vectors-in-python
         origin.quality.associated_phase_count += 1
         return pick, arrival
 
-    def _parseRecordM(self, line, event, pick):
+    def _parse_record_M(self, line, event, pick):
         """
         Parses the 'surface wave record' M
         """
@@ -935,7 +935,7 @@ angles-between-two-n-dimensional-vectors-in-python
                 station_magnitude.amplitude_id = amplitude.resource_id
             event.station_magnitudes.append(station_magnitude)
 
-    def _parseRecordS(self, line, event, p_pick, p_arrival):
+    def _parse_record_S(self, line, event, p_pick, p_arrival):
         """
         Parses the 'secondary phases' record S
 
@@ -1024,34 +1024,34 @@ angles-between-two-n-dimensional-vectors-in-python
             line = line.decode()
             record_id = line[0:2]
             if record_id == 'HY':
-                event = self._parseRecordHY(line)
+                event = self._parse_record_HY(line)
                 catalog.append(event)
             elif record_id == 'P ':
-                pick, arrival = self._parseRecordP(line, event)
+                pick, arrival = self._parse_record_P(line, event)
             elif record_id == 'E ':
-                self._parseRecordE(line, event)
+                self._parse_record_E(line, event)
             elif record_id == 'L ':
-                self._parseRecordL(line, event)
+                self._parse_record_l(line, event)
             elif record_id == 'A ':
-                self._parseRecordA(line, event)
+                self._parse_record_A(line, event)
             elif record_id == 'C ':
-                self._parseRecordC(line, event)
+                self._parse_record_C(line, event)
             elif record_id == 'AH':
-                self._parseRecordAH(line, event)
+                self._parse_record_AH(line, event)
             elif record_id == 'AE':
-                self._parseRecordAE(line, event)
+                self._parse_record_AE(line, event)
             elif record_id == 'Dp':
-                focal_mechanism = self._parseRecordDp(line, event)
+                focal_mechanism = self._parse_record_dp(line, event)
             elif record_id == 'Dt':
-                self._parseRecordDt(line, focal_mechanism)
+                self._parse_record_Dt(line, focal_mechanism)
             elif record_id == 'Da':
-                self._parseRecordDa(line, focal_mechanism)
+                self._parse_record_Da(line, focal_mechanism)
             elif record_id == 'Dc':
-                self._parseRecordDc(line, focal_mechanism)
+                self._parse_record_Dc(line, focal_mechanism)
             elif record_id == 'M ':
-                self._parseRecordM(line, event, pick)
+                self._parse_record_M(line, event, pick)
             elif record_id == 'S ':
-                self._parseRecordS(line, event, pick, arrival)
+                self._parse_record_S(line, event, pick, arrival)
         self.fh.close()
         # strip extra whitespaces from event comments
         for event in catalog:
@@ -1061,14 +1061,15 @@ angles-between-two-n-dimensional-vectors-in-python
 
 
 @map_example_filename('filename')
-def readMchedr(filename):
+def _read_mchedr(filename):
     """
     Reads a NEIC PDE mchedr (machine-readable Earthquake Data Report) file
     and returns a ObsPy Catalog object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str
     :param filename: mchedr file to be read.
@@ -1077,8 +1078,8 @@ def readMchedr(filename):
 
     .. rubric:: Example
 
-    >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/mchedr.dat')
+    >>> from obspy.core.event import read_events
+    >>> cat = read_events('/path/to/mchedr.dat')
     >>> print(cat)
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb

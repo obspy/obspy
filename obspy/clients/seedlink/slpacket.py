@@ -19,12 +19,13 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
-from obspy.io.mseed.util import (_convertMSRToDict, _ctypesArray2NumpyArray,
-                                 _convertMSTimeToDatetime)
+from obspy.io.mseed.util import (_convert_MSR_to_dict,
+                                 _ctypes_array_2_numpy_array,
+                                 _convert_MSTime_to_datetime)
 from .seedlinkexception import SeedLinkException
 
 
@@ -84,7 +85,7 @@ class SLPacket(object):
                              offset + self.SLHEADSIZE + self.SLRECSIZE]
         self.trace = None
 
-    def getSequenceNumber(self):
+    def get_sequence_number(self):
         # print "DEBUG: repr(self.slhead):", repr(self.slhead)
         # print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():",
         # print self.slhead[0 : len(self.INFOSIGNATURE)].lower()
@@ -106,15 +107,15 @@ class SLPacket(object):
         try:
             seqnum = int(seqbytes, 16)
         except Exception:
-            msg = "SLPacket.getSequenceNumber(): bad packet sequence number: "
+            msg = "SLPacket.get_sequence_number(): bad packet sequence number:"
             print(msg, seqbytes)
             return -1
         return seqnum
 
-    def getMSRecord(self):
+    def get_ms_record(self):
         # following from obspy.io.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(None)
-        pyobj = frombuffer(self.msrecord, dtype=np.uint8)
+        pyobj = from_buffer(self.msrecord, dtype=np.uint8)
         errcode = \
             clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
                                 len(pyobj), C.pointer(msr), -1, 1, 1)
@@ -126,17 +127,17 @@ class SLPacket(object):
         # print "DEBUG: msrecord_py:", msrecord_py
         return msr, msrecord_py
 
-    def freeMSRecord(self, msr, msrecord_py):
+    def free_ms_record(self, msr, msrecord_py):
         clibmseed.msr_free(msr)
 
-    def getTrace(self):
+    def get_trace(self):
 
         if self.trace is not None:
             return self.trace
 
-        msr, msrecord_py = self.getMSRecord()
+        msr, msrecord_py = self.get_ms_record()
         try:
-            header = _convertMSRToDict(msrecord_py)
+            header = _convert_MSR_to_dict(msrecord_py)
 
             # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
             # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
@@ -145,11 +146,11 @@ class SLPacket(object):
             if not isinstance(sampletype, str):
                 sampletype = sampletype.decode()
 
-            data = _ctypesArray2NumpyArray(msrecord_py.datasamples,
-                                           msrecord_py.numsamples,
-                                           sampletype)
+            data = _ctypes_array_2_numpy_array(msrecord_py.datasamples,
+                                               msrecord_py.numsamples,
+                                               sampletype)
         finally:
-            self.freeMSRecord(msr, msrecord_py)
+            self.free_ms_record(msr, msrecord_py)
 
         # XXX Workaround: the fields in the returned struct of type
         # obspy.io.mseed.header.MSRecord_s have byte values in Python 3, while
@@ -162,7 +163,7 @@ class SLPacket(object):
                 header[key] = value.decode()
 
         # 20111201 AJL - bug fix?
-        header['starttime'] = _convertMSTimeToDatetime(header['starttime'])
+        header['starttime'] = _convert_MSTime_to_datetime(header['starttime'])
         # 20111205 AJL - bug fix?
         if 'samprate' in header:
             header['sampling_rate'] = header['samprate']
@@ -172,23 +173,23 @@ class SLPacket(object):
         self.trace = Trace(data, header)
         return self.trace
 
-    def getStringPayload(self):
+    def get_string_payload(self):
         """
         Get the MiniSEED payload, parsed as string.
         """
-        msr, msrecord_py = self.getMSRecord()
+        msr, msrecord_py = self.get_ms_record()
 
         try:
             # This is the same data buffer that is accessed by
-            # _ctypesArray2NumpyArray in getTrace above.
+            # _ctypes_array_2_numpy_array in get_trace above.
             payload = C.string_at(msrecord_py.datasamples,
                                   msrecord_py.samplecnt)
         finally:
-            self.freeMSRecord(msr, msrecord_py)
+            self.free_ms_record(msr, msrecord_py)
 
         return payload
 
-    def getType(self):
+    def get_type(self):
         # print "DEBUG: self.slhead:", repr(self.slhead)
         if self.slhead[0: len(SLPacket.INFOSIGNATURE)].lower() == \
                 SLPacket.INFOSIGNATURE.lower():
@@ -196,9 +197,9 @@ class SLPacket(object):
                 return self.TYPE_SLINFT
             else:
                 return self.TYPE_SLINF
-        msr, msrecord_py = self.getMSRecord()
+        msr, msrecord_py = self.get_ms_record()
         try:
             ret = msrecord_py.blkts.contents.blkt_type
         finally:
-            self.freeMSRecord(msr, msrecord_py)
+            self.free_ms_record(msr, msrecord_py)
         return ret

@@ -7,7 +7,7 @@ import sys
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import Blockette34Lookup, formatRESP
+from ..utils import blockette_34_lookup, format_RESP
 
 
 class Blockette062(Blockette):
@@ -28,7 +28,6 @@ class Blockette062(Blockette):
     blockette facilitates the access to Earth units for sensors with
     non-linear responses.
     """
-
     id = 62
     name = "Response Polynomial"
     fields = [
@@ -52,8 +51,8 @@ class Blockette062(Blockette):
     ]
 
     # Changes the name of the blockette because of an error in XSEED 1.0
-    def getXML(self, *args, **kwargs):
-        xml = Blockette.getXML(self, *args, **kwargs)
+    def get_XML(self, *args, **kwargs):
+        xml = Blockette.get_XML(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             msg = 'The xsd-validation file for XML-SEED version 1.0 does ' + \
                 'not support Blockette 62. It will be written but ' + \
@@ -63,7 +62,7 @@ class Blockette062(Blockette):
             sys.stdout.write(msg)
         return xml
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -91,9 +90,11 @@ class Blockette062(Blockette):
             'B062F04     Stage sequence number:                 %s\n' \
             % self.stage_sequence_number + \
             'B062F05     Response in units lookup:              %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_signal_in_units) + \
+            % blockette_34_lookup(abbreviations,
+                                  self.stage_signal_in_units) + \
             'B062F06     Response out units lookup:             %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_signal_out_units) + \
+            % blockette_34_lookup(abbreviations,
+                                  self.stage_signal_out_units) + \
             'B062F07     Polynomial Approximation Type:         %s\n' \
             % polynomial_dict[self.polynomial_approximation_type] + \
             'B062F08     Valid Frequency Units:                 %s\n' \
@@ -116,12 +117,12 @@ class Blockette062(Blockette):
             if self.number_of_polynomial_coefficients > 1:
                 for _i in range(self.number_of_polynomial_coefficients):
                     string += 'B062F15-16   %2s %13s %13s\n' \
-                        % (_i, formatRESP(self.polynomial_coefficient[_i], 6),
-                           formatRESP(self.polynomial_coefficient_error[_i],
-                                      6))
+                        % (_i, format_RESP(self.polynomial_coefficient[_i], 6),
+                           format_RESP(self.polynomial_coefficient_error[_i],
+                                       6))
             else:
                 string += 'B062F15-16   %2s %13s %13s\n' \
-                    % (0, formatRESP(self.polynomial_coefficient, 6),
-                       formatRESP(self.polynomial_coefficient_error, 6))
+                    % (0, format_RESP(self.polynomial_coefficient, 6),
+                       format_RESP(self.polynomial_coefficient_error, 6))
         string += '#\t\t\n'
         return string

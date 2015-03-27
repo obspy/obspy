@@ -215,7 +215,7 @@ class EasySeedLinkClient(object):
                 raise EasySeedLinkClientException(msg)
 
             # Wait for the terminated INFO response
-            packet_type = data.getType()
+            packet_type = data.get_type()
             if packet_type == SLPacket.TYPE_SLINFT:
                 return self.conn.getInfoString()
 
@@ -410,12 +410,12 @@ class EasySeedLinkClient(object):
             #     there is no way that self.conn.collect() can ever return None
             assert(isinstance(data, SLPacket))
 
-            packet_type = data.getType()
+            packet_type = data.get_type()
 
             # Ignore in-stream INFO packets (not supported)
             if packet_type not in (SLPacket.TYPE_SLINF, SLPacket.TYPE_SLINFT):
                 # The packet should be a data packet
-                trace = data.getTrace()
+                trace = data.get_trace()
                 # Pass the trace to the on_data callback
                 self.on_data(trace)
 

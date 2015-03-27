@@ -270,8 +270,8 @@ class Unpickler(object):
         return t
 
 
-def writeZmap(catalog, filename, with_uncertainties=False,
-              **kwargs):  # @UnusedVariable
+def _write_zmap(catalog, filename, with_uncertainties=False,
+                **kwargs):  # @UnusedVariable
     """
     Writes a ZMAP file.
 
@@ -295,13 +295,14 @@ def writeZmap(catalog, filename, with_uncertainties=False,
     Pickler(with_uncertainties).dump(catalog, filename)
 
 
-def readZmap(filename, **kwargs):
+def _read_zmap(filename, **kwargs):
     """
     Reads a ZMAP file and returns an ObsPy Catalog object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str or file
     :param filename: ZMAP string, name of ZMAP file to be read or open
@@ -320,11 +321,11 @@ def readZmap(filename, **kwargs):
 
 
 @map_example_filename("filename")
-def isZmap(filename):
+def _is_zmap(filename):
     """
     Checks whether a file is ZMAP format.
 
-    Unlike :func:`~obspy.io.zmap.core.readZmap` *isZmap* is strict, i.e. it
+    Unlike :func:`~obspy.io.zmap.core._read_zmap` *_is_zmap* is strict, i.e. it
     will not detect a ZMAP file unless it consists of exactly 10 or 13
     numerical columns.
 
@@ -336,7 +337,7 @@ def isZmap(filename):
 
     .. rubric:: Example
 
-    >>> isZmap('/path/to/zmap_events.txt')
+    >>> _is_zmap('/path/to/zmap_events.txt')
     True
     """
     if all(hasattr(filename, attr) for attr in ['tell', 'seek', 'read']):

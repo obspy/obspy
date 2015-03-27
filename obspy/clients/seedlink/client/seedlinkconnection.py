@@ -700,7 +700,7 @@ class SeedLinkConnection(object):
                     statefile_file.write(
                         curstream.net + " " +
                         curstream.station + " " + str(curstream.seqnum) +
-                        " " + curstream.btime.formatSeedLink() + "\n")
+                        " " + curstream.btime.format_seedlink() + "\n")
         except IOError as e:
             msg = "%s: writing state file: %s" % (e, self.statefile)
             logger.critical(msg)
@@ -895,14 +895,14 @@ class SeedLinkConnection(object):
                             else:
                                 slpacket = self.state.getPacket()
                                 # construct info String
-                                packet_type = slpacket.getType()
-                                # print("DEBUG: slpacket.getType():",
-                                #       slpacket.getType())
+                                packet_type = slpacket.get_type()
+                                # print("DEBUG: slpacket.get_type():",
+                                #       slpacket.get_type())
                                 # print("DEBUG: SLPacket.TYPE_SLINF:",
                                 #       SLPacket.TYPE_SLINF)
                                 # print("DEBUG: SLPacket.TYPE_SLINFT:",
                                 #       SLPacket.TYPE_SLINFT)
-                                data = slpacket.getStringPayload()
+                                data = slpacket.get_string_payload()
                                 self.info_response_buffer.write(data)
 
                                 if (packet_type == SLPacket.TYPE_SLINFT):
@@ -1565,12 +1565,12 @@ class SeedLinkConnection(object):
 
         :raise SeedLinkException: on error.
         """
-        seqnum = slpacket.getSequenceNumber()
+        seqnum = slpacket.get_sequence_number()
         if (seqnum == -1):
             raise SeedLinkException("could not determine sequence number")
         trace = None
         try:
-            trace = slpacket.getTrace()
+            trace = slpacket.get_trace()
         except Exception as e:
             msg = "blockette not 1000 (Data Only SEED Blockette) or other " + \
                 "error reading miniseed data: %s"

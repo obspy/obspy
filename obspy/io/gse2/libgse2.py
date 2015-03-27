@@ -123,7 +123,7 @@ GSE2_FIELDS = [
 ]
 
 
-def isGse2(f):
+def is_gse2(f):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
 
@@ -137,7 +137,7 @@ def isGse2(f):
         raise TypeError("File is not in GSE2 format")
 
 
-def readHeader(fh):
+def read_header(fh):
     """
     Reads GSE2 header from file pointer and returns it as dictionary.
 
@@ -186,7 +186,7 @@ def readHeader(fh):
                 for k, v in header.items())
 
 
-def writeHeader(f, headdict):
+def write_header(f, headdict):
     """
     Rewriting the write_header Function of gse_functions.c
 
@@ -295,7 +295,7 @@ def compress_CM6(data):
         return carr[:(cnt // 80 + 1) * 80].view(native_str('|S80'))
 
 
-def verifyChecksum(fh, data, version=2):
+def verify_checksum(fh, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
 
@@ -346,11 +346,11 @@ def read(f, verify_chksum=True):
     :rtype: Dictionary, :class:`numpy.ndarray`, dtype=int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
-    headdict = readHeader(f)
+    headdict = read_header(f)
     data = uncompress_CM6(f, headdict['npts'])
     # test checksum only if enabled
     if verify_chksum:
-        verifyChecksum(f, data, version=2)
+        verify_checksum(f, data, version=2)
     return headdict, data
 
 
@@ -403,8 +403,8 @@ def write(headdict, data, f, inplace=False):
     headdict['gse2'].setdefault('vang', -1)
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on Windows and Linux.
-    # For further details, see the __doc__ of writeHeader
-    writeHeader(f, headdict)
+    # For further details, see the __doc__ of write_header
+    write_header(f, headdict)
     f.write(b"DAT2\n")
     for line in data_cm6:
         f.write(line + b"\n")

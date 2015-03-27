@@ -21,7 +21,7 @@ from obspy.core.compatibility import is_bytes_buffer
 from .sacio import SacIO
 
 
-def isSAC(filename):
+def _is_sac(filename):
     """
     Checks whether a file is a SAC file or not.
 
@@ -32,18 +32,18 @@ def isSAC(filename):
 
     .. rubric:: Example
 
-    >>> isSAC('/path/to/test.sac')  #doctest: +SKIP
+    >>> _is_sac('/path/to/test.sac')  #doctest: +SKIP
     """
     if is_bytes_buffer(filename):
-        return _isSAC(filename)
+        return __is_sac(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return _isSAC(fh)
+            return __is_sac(fh)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _isSAC(buf):
+def __is_sac(buf):
     """
     Checks whether a file-like object contains a SAC file or not.
 
@@ -110,7 +110,7 @@ def _isSAC(buf):
     return True
 
 
-def isSACXY(filename):
+def _is_sacXY(filename):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
@@ -121,18 +121,18 @@ def isSACXY(filename):
 
     .. rubric:: Example
 
-    >>> isSACXY('/path/to/testxy.sac')  #doctest: +SKIP
+    >>> _is_sacXY('/path/to/testxy.sac')  #doctest: +SKIP
     """
     if is_bytes_buffer(filename):
-        return _isSACXY(filename)
+        return __is_sacXY(filename)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return _isSACXY(fh)
+            return __is_sacXY(fh)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _isSACXY(buf):
+def __is_sacXY(buf):
     """
     Checks whether a file is alphanumeric SAC file or not.
 
@@ -161,8 +161,8 @@ def _isSACXY(buf):
         buf.seek(cur_pos, 0)
 
 
-def readSACXY(filename, headonly=False, debug_headers=False,
-              **kwargs):  # @UnusedVariable
+def _read_sacXY(filename, headonly=False, debug_headers=False,
+                **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -191,16 +191,16 @@ def readSACXY(filename, headonly=False, debug_headers=False,
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
     if is_bytes_buffer(filename):
-        return _readSACXY(buf=filename, headonly=headonly,
-                          debug_headers=debug_headers, **kwargs)
+        return __read_sacXY(buf=filename, headonly=headonly,
+                            debug_headers=debug_headers, **kwargs)
     else:
         with open(filename, "rb") as fh:
-            return _readSACXY(buf=fh, headonly=headonly,
-                              debug_headers=debug_headers, **kwargs)
+            return __read_sacXY(buf=fh, headonly=headonly,
+                                debug_headers=debug_headers, **kwargs)
 
 
-def _readSACXY(buf, headonly=False, debug_headers=False,
-               **kwargs):  # @UnusedVariable
+def __read_sacXY(buf, headonly=False, debug_headers=False,
+                 **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -230,9 +230,9 @@ def _readSACXY(buf, headonly=False, debug_headers=False,
     """
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacXYHeader(buf)
+        t.read_sac_xy_header(buf)
     else:
-        t.ReadSacXY(buf)
+        t.read_sac_xy(buf)
     # assign all header entries to a new dictionary compatible with ObsPy
     header = t.get_obspy_header()
 
@@ -243,7 +243,7 @@ def _readSACXY(buf, headonly=False, debug_headers=False,
     return Stream([tr])
 
 
-def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
+def _write_sacXY(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a alphanumeric SAC file.
 
@@ -273,7 +273,7 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
                              "one Trace.")
-        _writeSACXY(stream[0], filename, **kwargs)
+        __write_sacXY(stream[0], filename, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
         # Otherwise treat it as a filename
@@ -283,12 +283,12 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
             if len(stream) != 1:
                 filename = "%s%02d%s" % (base, i + 1, ext)
             with open(filename, "wb") as fh:
-                _writeSACXY(trace, fh, **kwargs)
+                __write_sacXY(trace, fh, **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _writeSACXY(trace, buf, **kwargs):  # @UnusedVariable
+def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
     """
     Writes a single trace to alphanumeric SAC file.
 
@@ -303,11 +303,11 @@ def _writeSACXY(trace, buf, **kwargs):  # @UnusedVariable
     :type buf: file-like object
     """
     t = SacIO(trace)
-    t.WriteSacXY(buf)
+    t.write_sac_xy(buf)
 
 
-def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
-            **kwargs):  # @UnusedVariable
+def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
+              **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -340,18 +340,19 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     """
     # Only byte buffers for binary SAC.
     if is_bytes_buffer(filename):
-        return _readSAC(buf=filename, headonly=headonly,
-                        debug_headers=debug_headers, fsize=fsize, **kwargs)
+        return __read_sac(buf=filename, headonly=headonly,
+                          debug_headers=debug_headers, fsize=fsize, **kwargs)
     elif isinstance(filename, (str, bytes)):
         with open(filename, "rb") as fh:
-            return _readSAC(buf=fh, headonly=headonly,
-                            debug_headers=debug_headers, fsize=fsize, **kwargs)
+            return __read_sac(buf=fh, headonly=headonly,
+                              debug_headers=debug_headers, fsize=fsize,
+                              **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
-             **kwargs):  # @UnusedVariable
+def __read_sac(buf, headonly=False, debug_headers=False, fsize=True,
+               **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -380,9 +381,9 @@ def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
     # read SAC file
     t = SacIO(debug_headers=debug_headers)
     if headonly:
-        t.ReadSacHeader(buf)
+        t.read_sac_header(buf)
     else:
-        t.ReadSacFile(buf, fsize)
+        t.read_sac_file(buf, fsize)
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = t.get_obspy_header()
 
@@ -393,7 +394,7 @@ def _readSAC(buf, headonly=False, debug_headers=False, fsize=True,
     return Stream([tr])
 
 
-def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
+def _write_sac(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
     """
     Writes a SAC file.
 
@@ -428,7 +429,7 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
             raise ValueError("If writing to a file-like object in the SAC "
                              "format, the Stream object can only contain "
                              "one Trace.")
-        _writeSAC(stream[0], filename, byteorder=byteorder, **kwargs)
+        __write_sac(stream[0], filename, byteorder=byteorder, **kwargs)
         return
     elif isinstance(filename, (str, bytes)):
         # Otherwise treat it as a filename
@@ -438,12 +439,12 @@ def writeSAC(stream, filename, byteorder="<", **kwargs):  # @UnusedVariable
             if len(stream) != 1:
                 filename = "%s%02d%s" % (base, i + 1, ext)
             with open(filename, "wb") as fh:
-                _writeSAC(trace, fh, byteorder=byteorder, **kwargs)
+                __write_sac(trace, fh, byteorder=byteorder, **kwargs)
     else:
         raise ValueError("Cannot open '%s'." % filename)
 
 
-def _writeSAC(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
+def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
     """
     Writes a single trace to an open file or file-like object.
 
@@ -472,4 +473,4 @@ def _writeSAC(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
     if (byteorder == 1 and t.byteorder == 'little') or \
             (byteorder == 0 and t.byteorder == 'big'):
         t.swap_byte_order()
-    t.WriteSacBinary(buf)
+    t.write_sac_binary(buf)

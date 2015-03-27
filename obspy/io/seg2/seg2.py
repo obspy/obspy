@@ -61,7 +61,7 @@ class SEG2(object):
     def __init__(self):
         pass
 
-    def readFile(self, file_object):
+    def read_file(self, file_object):
         """
         Reads the following file and will return a Stream object. If
         file_object is a string it will be treated as a file name, otherwise it
@@ -82,18 +82,18 @@ class SEG2(object):
 
         # Read the file descriptor block. This will also determine the
         # endianness.
-        self.readFileDescriptorBlock()
+        self.read_file_descriptor_block()
 
         # Loop over every trace, read it and append it to the Stream.
         for tr_pointer in self.trace_pointers:
             self.file_pointer.seek(tr_pointer, 0)
-            self.stream.append(self.parseNextTrace())
+            self.stream.append(self.parse_next_trace())
 
         if not hasattr(file_object, 'write'):
             self.file_pointer.close()
         return self.stream
 
-    def readFileDescriptorBlock(self):
+    def read_file_descriptor_block(self):
         """
         Handles the reading of the file descriptor block and the free form
         section following it.
@@ -166,9 +166,10 @@ class SEG2(object):
         # a free form section.
         self.stream.stats = AttribDict()
         self.stream.stats.seg2 = AttribDict()
-        self.parseFreeForm(self.file_pointer.read(
-                           self.trace_pointers[0] - self.file_pointer.tell()),
-                           self.stream.stats.seg2)
+        self.parse_free_form(
+            self.file_pointer.read(self.trace_pointers[0] -
+                                   self.file_pointer.tell()),
+            self.stream.stats.seg2)
 
         # Get the time information from the file header.
         # XXX: Need some more generic date/time parsers.
@@ -180,7 +181,7 @@ class SEG2(object):
         day, month, year = int(date[0]), MONTHS[date[1].lower()], int(date[2])
         self.starttime = UTCDateTime(year, month, day, hour, minute, second)
 
-    def parseNextTrace(self):
+    def parse_next_trace(self):
         """
         Parse the next trace in the trace pointer list and return a Trace
         object.
@@ -222,8 +223,8 @@ class SEG2(object):
         # The rest of the trace block is free form.
         header = {}
         header['seg2'] = AttribDict()
-        self.parseFreeForm(self.file_pointer.read(size_of_this_block - 32),
-                           header['seg2'])
+        self.parse_free_form(self.file_pointer.read(size_of_this_block - 32),
+                             header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's start time.
         header['starttime'] = deepcopy(self.starttime)
@@ -246,7 +247,7 @@ class SEG2(object):
         header['seg2'] = tmp
         return Trace(data=data, header=header)
 
-    def parseFreeForm(self, free_form_str, attrib_dict):
+    def parse_free_form(self, free_form_str, attrib_dict):
         """
         Parse the free form section stored in free_form_str and save it in
         attrib_dict.
@@ -299,7 +300,7 @@ class SEG2(object):
                 setattr(attrib_dict.NOTE, key, value)
 
 
-def isSEG2(filename):
+def _is_seg2(filename):
     if not hasattr(filename, 'write'):
         file_pointer = open(filename, 'rb')
     else:
@@ -328,8 +329,8 @@ def isSEG2(filename):
     return True
 
 
-def readSEG2(filename, **kwargs):  # @UnusedVariable
+def _read_seg2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
-    st = seg2.readFile(filename)
+    st = seg2.read_file(filename)
     warnings.warn(WARNING_HEADER)
     return st

@@ -27,8 +27,8 @@ import warnings
 import numpy as np
 
 
-def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
-                                normalize=False):
+def konno_ohmachi_smoothing_window(frequencies, center_frequency,
+                                   bandwidth=40.0, normalize=False):
     """
     Returns the Konno & Ohmachi Smoothing window for every frequency in
     frequencies.
@@ -104,7 +104,7 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     return smoothing_window
 
 
-def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
+def calculate_smoothing_matrix(frequencies, bandwidth=40.0, normalize=False):
     """
     Calculates a len(frequencies) x len(frequencies) matrix with the Konno &
     Ohmachi window for each frequency as the center frequency.
@@ -137,14 +137,14 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     sm_matrix = np.empty((len(frequencies), len(frequencies)),
                          frequencies.dtype)
     for _i, freq in enumerate(frequencies):
-        sm_matrix[_i, :] = konnoOhmachiSmoothingWindow(
+        sm_matrix[_i, :] = konno_ohmachi_smoothing_window(
             frequencies, freq, bandwidth, normalize=normalize)
     return sm_matrix
 
 
-def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
-                          enforce_no_matrix=False, max_memory_usage=512,
-                          normalize=False):
+def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
+                            enforce_no_matrix=False, max_memory_usage=512,
+                            normalize=False):
     """
     Smooths a matrix containing one spectra per row with the Konno-Ohmachi
     smoothing window.
@@ -216,8 +216,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         # of zero.
         temp = np.geterr()
         np.seterr(all='ignore')
-        smoothing_matrix = calculateSmoothingMatrix(frequencies, bandwidth,
-                                                    normalize=normalize)
+        smoothing_matrix = calculate_smoothing_matrix(frequencies, bandwidth,
+                                                      normalize=normalize)
         np.seterr(**temp)
         new_spec = np.dot(spectra, smoothing_matrix)
         # Eventually apply more than once.
@@ -234,7 +234,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             temp = np.geterr()
             np.seterr(all='ignore')
             for _i in range(len(frequencies)):
-                window = konnoOhmachiSmoothingWindow(
+                window = konno_ohmachi_smoothing_window(
                     frequencies, frequencies[_i], bandwidth,
                     normalize=normalize)
                 new_spec[_i] = (window * spectra).sum()
@@ -246,7 +246,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             temp = np.geterr()
             np.seterr(all='ignore')
             for _i in range(len(frequencies)):
-                window = konnoOhmachiSmoothingWindow(
+                window = konno_ohmachi_smoothing_window(
                     frequencies, frequencies[_i], bandwidth,
                     normalize=normalize)
                 for _j, spec in enumerate(spectra):
@@ -254,7 +254,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             np.seterr(**temp)
         # Eventually apply more than once.
         while count > 1:
-            new_spec = konnoOhmachiSmoothing(
+            new_spec = konno_ohmachi_smoothing(
                 new_spec, frequencies, bandwidth, enforce_no_matrix=True,
                 normalize=normalize)
             count -= 1

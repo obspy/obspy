@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-from obspy.core import AttribDict, UTCDateTime, read
-from obspy.signal import cornFreq2Paz
+import obspy
+from obspy.core import AttribDict
+from obspy.signal.invsim import corn_freq_2_paz
 from obspy.signal.array_analysis import array_processing
 
 
 # Load data
-st = read("http://examples.obspy.org/agfa.mseed")
+st = obspy.read("http://examples.obspy.org/agfa.mseed")
 
 # Set PAZ and coordinates for all 5 channels
 st[0].stats.paz = AttribDict({
@@ -62,12 +63,12 @@ st[4].stats.coordinates = AttribDict({
 
 
 # Instrument correction to 1Hz corner frequency
-paz1hz = cornFreq2Paz(1.0, damp=0.707)
+paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
 # Execute array_processing
-stime = UTCDateTime("20080217110515")
-etime = UTCDateTime("20080217110545")
+stime = obspy.UTCDateTime("20080217110515")
+etime = obspy.UTCDateTime("20080217110545")
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
     sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,

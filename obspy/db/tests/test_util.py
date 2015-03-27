@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.db.util import parseMappingData
+from obspy.db.util import parse_mapping_data
 
 
 class UtilTestCase(unittest.TestCase):
@@ -15,7 +15,7 @@ class UtilTestCase(unittest.TestCase):
 
     def test_parseMappingData(self):
         """
-        Tests for function parseMappingData.
+        Tests for function parse_mapping_data.
         """
         # 1
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 1970-01-01 2007-12-31",
@@ -24,7 +24,7 @@ class UtilTestCase(unittest.TestCase):
                 ".MANZ.00.EHE GE.ROTZ..EHZ",
                 "# comment",
                 "BW...EHE GE.ROTZ..EHZ"]
-        results = parseMappingData(data)
+        results = parse_mapping_data(data)
         self.assertEqual(len(results['.MANZ.00.EHE']), 1)
         self.assertEqual(results['.MANZ.00.EHE'][0]['network'], 'GE')
         self.assertEqual(results['.MANZ.00.EHE'][0]['station'], 'ROTZ')
@@ -36,24 +36,24 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(len(results['BW...EHE']), 1)
         # 2 invalid ids
         data = ["BWMANZ00EHE GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.MANZ.00EHE GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.MANZ.00.EHE. GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["XXX.MANZ.00.EHE GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.XXXXXX.00.EHE GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.MANZ.XXX.EHE GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.MANZ.00.XXXX GE.ROTZ..EHZ"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         # 3 invalid date/times
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2008 2009"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
         data = ["BW.MANZ.00.EHE GE.ROTZ..EHZ 2009-01-01 2008-01-01"]
-        self.assertRaises(Exception, parseMappingData, data)
+        self.assertRaises(Exception, parse_mapping_data, data)
 
 
 def suite():

@@ -19,7 +19,7 @@ from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
-from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.base import get_matplotlib_version
 
 
 def _seconds_to_days(sec):
@@ -100,7 +100,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
     def __init__(self, *args, **kwargs):
         # the root class of AutoDateFormatter (TickHelper) is an old style
         # class prior to matplotlib version 1.2
-        if getMatplotlibVersion() < [1, 2, 0]:
+        if get_matplotlib_version() < [1, 2, 0]:
             AutoDateFormatter.__init__(self, *args, **kwargs)
         else:
             super(ObsPyAutoDateFormatter, self).__init__(*args, **kwargs)
@@ -145,7 +145,7 @@ class ObsPyAutoDateFormatter(AutoDateFormatter):
             raise NotImplementedError()
 
 
-def _ID_key(id_):
+def _id_key(id_):
     """
     Compare two trace IDs by network/station/location single character
     component codes according to sane ZNE/ZRT/LQT order. Any other characters
@@ -163,7 +163,7 @@ def _ID_key(id_):
     ...                 trace_ids.append(".".join([net, sta, loc, cha]))
     >>> from random import shuffle
     >>> shuffle(trace_ids)
-    >>> trace_ids = sorted(trace_ids, key=_ID_key)
+    >>> trace_ids = sorted(trace_ids, key=_id_key)
     >>> print(" ".join(trace_ids))  # doctest: +NORMALIZE_WHITESPACE
     A.X.00.Z A.X.00.EHZ A.X.00.EHN A.X.00.EHE A.X.01.Z A.X.01.EHZ A.X.01.EHN
     A.X.01.EHE A.XY.00.Z A.XY.00.EHZ A.XY.00.EHN A.XY.00.EHE A.XY.01.Z

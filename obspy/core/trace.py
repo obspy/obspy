@@ -23,11 +23,11 @@ import numpy as np
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk
-from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.decorator import (deprecated_keywords, raiseIfMasked,
-                                       skipIfNoData)
-from obspy.core.util.misc import flatnotmaskedContiguous
+from obspy.core.util import AttribDict, create_empty_data_chunk
+from obspy.core.util.base import _get_function_from_entry_point
+from obspy.core.util.decorator import (deprecated_keywords, raise_if_masked,
+                                       skip_if_no_data)
+from obspy.core.util.misc import flat_not_masked_contiguous
 
 
 class Stats(AttribDict):
@@ -712,8 +712,8 @@ class Trace(object):
                 # check if data are the same
                 data = [lt.data[:-delta], rt.data]
             elif method == 0:
-                overlap = createEmptyDataChunk(delta, lt.data.dtype,
-                                               fill_value)
+                overlap = create_empty_data_chunk(delta, lt.data.dtype,
+                                                  fill_value)
                 data = [lt.data[:-delta], overlap, rt.data[delta:]]
             elif method == 1 and interpolation_samples >= -1:
                 try:
@@ -766,7 +766,7 @@ class Trace(object):
                 else:
                     data = [lt.data]
             elif method == 0:
-                gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
+                gap = create_empty_data_chunk(lenrt, lt.data.dtype, fill_value)
                 data = [lt.data[:t1], gap, lt.data[t2:]]
             elif method == 1:
                 data = [lt.data]
@@ -778,7 +778,7 @@ class Trace(object):
         else:
             # gap
             # use fixed value or interpolate in between
-            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
+            gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on NumPy array type
         if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
@@ -841,7 +841,7 @@ class Trace(object):
         """
         from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, **kwargs)
-        return waveform.plotWaveform()
+        return waveform.plot_waveform()
 
     def spectrogram(self, **kwargs):
         """
@@ -942,10 +942,10 @@ class Trace(object):
             return self
         elif delta < 0 and pad:
             try:
-                gap = createEmptyDataChunk(abs(delta), self.data.dtype,
-                                           fill_value)
+                gap = create_empty_data_chunk(abs(delta), self.data.dtype,
+                                              fill_value)
             except ValueError:
-                # createEmptyDataChunk returns negative ValueError ?? for
+                # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and "
                                 "trace.starttime too large")
@@ -1001,9 +1001,10 @@ class Trace(object):
             return self
         if delta > 0 and pad:
             try:
-                gap = createEmptyDataChunk(delta, self.data.dtype, fill_value)
+                gap = create_empty_data_chunk(delta, self.data.dtype,
+                                              fill_value)
             except ValueError:
-                # createEmptyDataChunk returns negative ValueError ?? for
+                # create_empty_data_chunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
@@ -1191,7 +1192,7 @@ class Trace(object):
         `paz_simulate`.
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
-        :func:`~obspy.signal.invsim.seisSim`.
+        :func:`~obspy.signal.invsim.simulate_seismometer`.
 
         `paz_remove` and `paz_simulate` are expected to be dictionaries
         containing information on poles, zeros and gain (and usually also
@@ -1206,8 +1207,8 @@ class Trace(object):
             Instead of the builtin deconvolution based on Poles and Zeros
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
-            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
-            <http://docs.obspy.org/master/tutorial/code_snippets/\
+            :func:`~obspy.signal.invsim.simulate_seismometer` and the `ObsPy
+            Tutorial <http://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
@@ -1222,7 +1223,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. rubric:: Example
 
         >>> from obspy import read
-        >>> from obspy.signal import cornFreq2Paz
+        >>> from obspy.signal.invsim import corn_freq_2_paz
         >>> st = read()
         >>> tr = st[0]
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
@@ -1231,7 +1232,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ...             'zeros': [0j, 0j],
         ...             'gain': 60077000.0,
         ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
         >>> paz_1hz['sensitivity'] = 1.0
         >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
         ... # doctest: +ELLIPSIS
@@ -1241,7 +1242,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read
-            from obspy.signal import cornFreq2Paz
+            from obspy.signal import corn_freq_2_paz
             st = read()
             tr = st[0]
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
@@ -1250,7 +1251,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         'zeros': [0j, 0j],
                         'gain': 60077000.0,
                         'sensitivity': 2516778400.0}
-            paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
             paz_1hz['sensitivity'] = 1.0
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             tr.plot()
@@ -1273,7 +1274,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 resp_key = ".".join(("RESP", self.stats.network,
                                      self.stats.station, self.stats.location,
                                      self.stats.channel))
-                for key, stringio in seedresp['filename'].getRESP():
+                for key, stringio in seedresp['filename'].get_RESP():
                     if key == resp_key:
                         stringio.seek(0, 0)
                         seedresp['filename'] = stringio
@@ -1285,8 +1286,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             for item in ["network", "station", "location", "channel"]:
                 seedresp[item] = self.stats[item]
 
-        from obspy.signal import seisSim
-        self.data = seisSim(
+        from obspy.signal.invsim import simulate_seismometer
+        self.data = simulate_seismometer(
             self.data, self.stats.sampling_rate, paz_remove=paz_remove,
             paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
             simulate_sensitivity=simulate_sensitivity, **kwargs)
@@ -1329,8 +1330,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'highpass'``
             Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
 
-        ``'lowpassCheby2'``
-            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+        ``'lowpass_cheby_2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
         ``'lowpassFIR'`` (experimental)
             FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
@@ -1358,7 +1359,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('filter', type)
+        func = _get_function_from_entry_point('filter', type)
         # filtering
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
@@ -1394,24 +1395,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classicSTALTA`).
+            :func:`obspy.signal.trigger.classic_STALTA`).
 
         ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+            Recursive STA/LTA
+            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recSTALTAPy`).
+            :func:`obspy.signal.trigger.recursive_STALTA_py`).
 
         ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+            Delayed STA/LTA.
+            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
 
         ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
-            :func:`obspy.signal.trigger.carlSTATrig`).
+            Computes the carl_STA_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_STA_trig`).
 
         ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
 
         .. rubric:: Example
 
@@ -1437,7 +1440,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('trigger', type)
+        func = _get_function_from_entry_point('trigger', type)
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
         # used in length of trigger averages)...
@@ -1451,7 +1454,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, **options)
         return self
 
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -1526,7 +1529,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                       "above 16. Manual resampling is necessary."
                 raise ArithmeticError(msg)
             freq = self.stats.sampling_rate * 0.5 / float(factor)
-            self.filter('lowpassCheby2', freq=freq, maxorder=12)
+            self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
         orig_dtype = self.data.dtype
         new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
@@ -1649,12 +1652,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                       "factors above 16. Manual decimation is necessary."
                 raise ArithmeticError(msg)
             freq = self.stats.sampling_rate * 0.5 / float(factor)
-            self.filter('lowpassCheby2', freq=freq, maxorder=12)
+            self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure
-        from obspy.signal import integerDecimation
-        self.data = integerDecimation(self.data, factor)
+        from obspy.signal.filter import integer_decimation
+        self.data = integer_decimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
         return self
 
@@ -1703,7 +1706,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @deprecated_keywords({'type': 'method'})
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
@@ -1733,13 +1736,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('differentiate', method)
+        func = _get_function_from_entry_point('differentiate', method)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
         return self
 
     @deprecated_keywords({'type': 'method'})
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
         """
@@ -1767,13 +1770,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         method = method.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('integrate', method)
+        func = _get_function_from_entry_point('integrate', method)
 
         self.data = func(data=self.data, dx=self.stats.delta, **options)
         return self
 
-    @skipIfNoData
-    @raiseIfMasked
+    @skip_if_no_data
+    @raise_if_masked
     @_add_processing_info
     def detrend(self, type='simple', **options):
         """
@@ -1807,7 +1810,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         type = type.lower()
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('detrend', type)
+        func = _get_function_from_entry_point('detrend', type)
         # handle function specific settings
         if func.__module__.startswith('scipy'):
             # SciPy need to set the type keyword
@@ -1818,7 +1821,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, **options)
         return self
 
-    @skipIfNoData
+    @skip_if_no_data
     @_add_processing_info
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
@@ -1867,7 +1870,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'cosine'``
             Cosine taper, for additional options like taper percentage see:
-            :func:`obspy.signal.invsim.cosTaper`.
+            :func:`obspy.signal.invsim.cosine_taper`.
         ``'barthann'``
             Modified Bartlett-Hann window. (uses:
             :func:`scipy.signal.barthann`)
@@ -1916,7 +1919,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if side not in side_valid:
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
-        func = _getFunctionFromEntryPoint('taper', type)
+        func = _get_function_from_entry_point('taper', type)
         # store all constraints for maximum taper length
         max_half_lenghts = []
         if max_percentage is not None:
@@ -1931,7 +1934,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         max_half_lenghts.append(int(npts / 2))
         # select shortest acceptable window half-length
         wlen = min(max_half_lenghts)
-        # obspy.signal.cosTaper has a default value for taper percentage,
+        # obspy.signal.cosine_taper has a default value for taper percentage,
         # we need to override is as we control percentage completely via npts
         # of taper function and insert ones in the middle afterwards
         if type == "cosine":
@@ -2069,7 +2072,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
             return Stream([self])
-        slices = flatnotmaskedContiguous(self.data)
+        slices = flat_not_masked_contiguous(self.data)
         trace_list = []
         for slice in slices:
             if slice.step:
@@ -2082,8 +2085,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_list.append(tr)
         return Stream(trace_list)
 
-    @skipIfNoData
-    @raiseIfMasked
+    @skip_if_no_data
+    @raise_if_masked
     @_add_processing_info
     def interpolate(self, sampling_rate, method="weighted_average_slopes",
                     starttime=None, npts=None):
@@ -2169,9 +2172,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(method, int) or method in ["linear", "nearest", "zero",
                                                  "slinear", "quadratic",
                                                  "cubic"]:
-            func = _getFunctionFromEntryPoint('interpolate', 'interpolate_1d')
+            func = _get_function_from_entry_point('interpolate',
+                                                  'interpolate_1d')
         else:
-            func = _getFunctionFromEntryPoint('interpolate', method)
+            func = _get_function_from_entry_point('interpolate', method)
         old_start = self.stats.starttime.timestamp
         old_dt = self.stats.delta
 
@@ -2360,7 +2364,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param taper_fraction: Taper fraction of cosine taper to use.
         """
         from obspy.core.inventory import Response, PolynomialResponseStage
-        from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
+        from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
+                                         invert_spectrum)
 
         if "response" not in self.stats:
             msg = ("No response information attached to trace "
@@ -2402,8 +2407,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if zero_mean:
             data -= data.mean()
         if taper:
-            data *= cosTaper(npts, taper_fraction,
-                             sactaper=True, halfcosine=False)
+            data *= cosine_taper(npts, taper_fraction,
+                                 sactaper=True, halfcosine=False)
         # smart calculation of nfft dodging large primes
         from obspy.signal.util import _npts2nfft
         nfft = _npts2nfft(npts)
@@ -2415,9 +2420,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.stats.response.get_evalresp_response(self.stats.delta, nfft,
                                                       output=output, **kwargs)
         if pre_filt:
-            data *= c_sac_taper(freqs, flimit=pre_filt)
+            data *= cosine_sac_taper(freqs, flimit=pre_filt)
         if water_level is not None:
-            specInv(freq_response, water_level)
+            invert_spectrum(freq_response, water_level)
         data *= freq_response
 
         data[-1] = abs(data[-1]) + 0.0j

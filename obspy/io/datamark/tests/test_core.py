@@ -12,7 +12,7 @@ import unittest
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.datamark.core import readDATAMARK
+from obspy.io.datamark.core import _read_datamark
 
 
 class CoreTestCase(unittest.TestCase):
@@ -45,11 +45,11 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readViaModule(self):
         """
-        Read files via obspy.io.datamark.core.readDATAMARK function.
+        Read files via obspy.io.datamark.core._read_datamark function.
         """
         filename = os.path.join(self.path, '10030302.00')
         # 1
-        st = readDATAMARK(filename)
+        st = _read_datamark(filename)
         st.verify()
         st.sort(keys=['channel'])
         self.assertEqual(len(st), 2)

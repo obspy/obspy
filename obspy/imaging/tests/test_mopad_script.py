@@ -18,7 +18,6 @@ with standard_library.hooks():
 
 import numpy as np
 
-from obspy.core.util.decorator import skip
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
@@ -242,7 +241,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     # obspy-mopad plot
     #
 
-    @skip('Currently broken until further review.')
+    @unittest.skip('Currently broken until further review.')
     def test_script_plot(self):
         # See test_Beachball:
         data = [

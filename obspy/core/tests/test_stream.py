@@ -13,13 +13,13 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import mock
-from obspy.core.stream import isPickle, readPickle, writePickle
+from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, getSciPyVersion
+from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
 from obspy.io.xseed import Parser
 
 
-SCIPY_VERSION = getSciPyVersion()
+SCIPY_VERSION = get_scipy_version()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -1246,40 +1246,40 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
 
-    def test_isPickle(self):
+    def test_is_pickle(self):
         """
-        Testing isPickle function.
+        Testing _is_pickle function.
         """
         # existing file
         st = read()
         with NamedTemporaryFile() as tf:
             st.write(tf.name, format='PICKLE')
             # check using file name
-            self.assertTrue(isPickle(tf.name))
+            self.assertTrue(_is_pickle(tf.name))
             # check using file handler
-            self.assertTrue(isPickle(tf))
+            self.assertTrue(_is_pickle(tf))
         # not existing files
-        self.assertFalse(isPickle('/path/to/pickle.file'))
-        self.assertFalse(isPickle(12345))
+        self.assertFalse(_is_pickle('/path/to/pickle.file'))
+        self.assertFalse(_is_pickle(12345))
 
     def test_readWritePickle(self):
         """
-        Testing readPickle and writePickle functions.
+        Testing _read_pickle and _write_pickle functions.
         """
         st = read()
         # write
         with NamedTemporaryFile() as tf:
             # write using file name
-            writePickle(st, tf.name)
-            self.assertTrue(isPickle(tf.name))
+            _write_pickle(st, tf.name)
+            self.assertTrue(_is_pickle(tf.name))
             # write using file handler
-            writePickle(st, tf)
+            _write_pickle(st, tf)
             tf.seek(0)
-            self.assertTrue(isPickle(tf))
+            self.assertTrue(_is_pickle(tf))
             # write using stream write method
             st.write(tf.name, format='PICKLE')
             # check and read directly
-            st2 = readPickle(tf.name)
+            st2 = _read_pickle(tf.name)
             self.assertEqual(len(st2), 3)
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() with given format
@@ -2047,7 +2047,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st:
             tr.stats.processing.pop()
 
-        for resp_string, stringio in p.getRESP():
+        for resp_string, stringio in p.get_RESP():
             stringio.seek(0, 0)
             component = resp_string[-1]
             with NamedTemporaryFile() as tf:

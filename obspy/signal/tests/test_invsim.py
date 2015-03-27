@@ -21,7 +21,8 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
 from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
-from obspy.signal.invsim import cosTaper, estimateMagnitude, evalresp, seisSim
+from obspy.signal.invsim import (cosine_taper, estimate_magnitude, evalresp,
+                                 simulate_seismometer)
 
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
@@ -74,8 +75,8 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa1(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation
-        of Pitsa - LE3D seismometer.
+        Test simulate_seismometer seismometer simulation against seismometer
+        simulation of Pitsa - LE3D seismometer.
         """
         # load test file
         filename = os.path.join(self.path, 'rjob_20051006.gz')
@@ -93,9 +94,9 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.items():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_LE3D,
-                              paz_simulate=paz, water_level=600.0,
-                              zero_mean=False, nfft_pow2=True)
+            datcorr = simulate_seismometer(
+                data, samp_rate, paz_remove=PAZ_LE3D, paz_simulate=paz,
+                water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
             filename = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             with gzip.open(filename) as f:
@@ -107,8 +108,8 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa2(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation of
-        Pitsa - STS-2 seismometer.
+        Test simulate_seismometer seismometer simulation against seismometer
+        simulation of Pitsa - STS-2 seismometer.
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
@@ -125,9 +126,9 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.items():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_STS2,
-                              paz_simulate=paz, water_level=600.0,
-                              zero_mean=False, nfft_pow2=True)
+            datcorr = simulate_seismometer(
+                data, samp_rate, paz_remove=PAZ_STS2, paz_simulate=paz,
+                water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             # no with due to py 2.6
@@ -154,11 +155,11 @@ class InvSimTestCase(unittest.TestCase):
                'zeros': [0 + 0j, 0 + 0j, 0 + 0j],
                'gain': 1.0,
                'sensitivity': 671140000.0}
-        mag_RTSH = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
+        mag_RTSH = estimate_magnitude(paz, 3.34e6, 0.065, 0.255)
         self.assertAlmostEqual(mag_RTSH, 2.1328727151723488)
-        mag_RTBE = estimateMagnitude(paz, 3.61e4, 0.08, 2.197)
+        mag_RTBE = estimate_magnitude(paz, 3.61e4, 0.08, 2.197)
         self.assertAlmostEqual(mag_RTBE, 1.1962687721890191)
-        mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
+        mag_RNON = estimate_magnitude(paz, 6.78e4, 0.125, 1.538)
         self.assertAlmostEqual(mag_RNON, 1.4995311686507182)
 
     # XXX: Test for really big signal is missing, where the water level is
@@ -217,9 +218,9 @@ class InvSimTestCase(unittest.TestCase):
             tr = Trace(np.loadtxt(f), stats)
 
         attach_paz(tr, pzf, tovel=False)
-        tr.data = seisSim(tr.data, tr.stats.sampling_rate,
-                          paz_remove=tr.stats.paz, remove_sensitivity=False,
-                          pre_filt=(fl1, fl2, fl3, fl4))
+        tr.data = simulate_seismometer(
+            tr.data, tr.stats.sampling_rate, paz_remove=tr.stats.paz,
+            remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4))
 
         with gzip.open(testsacf) as f:
             data = np.loadtxt(f)
@@ -269,10 +270,10 @@ class InvSimTestCase(unittest.TestCase):
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
                     'network': 'NZ', 'station': 'CRLZ', 'location': '10',
                     'channel': 'HHZ'}
-        tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
-                          pre_filt=(fl1, fl2, fl3, fl4),
-                          seedresp=seedresp, taper_fraction=0.1,
-                          pitsasim=False, sacsim=True)
+        tr.data = simulate_seismometer(
+            tr.data, tr.stats.sampling_rate, paz_remove=None,
+            pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp,
+            taper_fraction=0.1, pitsasim=False, sacsim=True)
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
@@ -293,10 +294,10 @@ class InvSimTestCase(unittest.TestCase):
             sac_taper = os.path.join(self.path,
                                      'ones_trace_%d_tapered.sac' % i)
             tr = read(sac_taper)[0]
-            tap = cosTaper(i, p=0.1, halfcosine=False, sactaper=True)
+            tap = cosine_taper(i, p=0.1, halfcosine=False, sactaper=True)
             np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
 
-        # The following lines compare the cosTaper result with
+        # The following lines compare the cosine_taper result with
         # the result of the algorithm used by SAC in its taper routine
         # (taper.c)
         # freqs = np.fft.fftfreq(2**15,0.01)
@@ -305,8 +306,9 @@ class InvSimTestCase(unittest.TestCase):
         # fl3 = 30.0
         # fl4 = 35.0
         # npts = freqs.size
-        # tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        # tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
+        # tap = cosine_taper(freqs.size, freqs=freqs, flimit=(fl1, fl2,
+        #                                                     fl3, fl4))
+        # tap2 = cosine_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
         # import matplotlib.pyplot as plt
         # plt.plot(tap,'b')
         # plt.plot(tap2,'g--')
@@ -365,14 +367,14 @@ class InvSimTestCase(unittest.TestCase):
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
                     'network': 'NZ', 'station': 'CRLZ', 'location': '10',
                     'channel': 'HHZ'}
-        tr1.data = seisSim(tr1.data, tr1.stats.sampling_rate,
-                           seedresp=seedresp)
+        tr1.data = simulate_seismometer(
+            tr1.data, tr1.stats.sampling_rate, seedresp=seedresp)
 
         with open(respf, 'rb') as fh:
             stringio = io.BytesIO(fh.read())
         seedresp['filename'] = stringio
-        tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
-                           seedresp=seedresp)
+        tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
+                                        seedresp=seedresp)
 
         self.assertEqual(tr1, tr2)
 

@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.segy.segy import SEGYTraceReadingError, readSU
+from obspy.io.segy.segy import SEGYTraceReadingError, _read_su
 
 
 class SUTestCase(unittest.TestCase):
@@ -40,7 +40,7 @@ class SUTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             # Read the SU file.
-            su = readSU(file)
+            su = _read_su(file)
             # Write it.
             su.write(outfile)
             with open(outfile, 'rb') as f:
@@ -57,14 +57,14 @@ class SUTestCase(unittest.TestCase):
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')
         # The following should both work.
-        su = readSU(file)
+        su = _read_su(file)
         self.assertEqual(su.endian, '<')
-        su = readSU(file, endian='<')
+        su = _read_su(file, endian='<')
         self.assertEqual(su.endian, '<')
         # The following not because it will unpack the header and try to unpack
         # the number of data samples specified there which will of course not
         # correct.
-        self.assertRaises(SEGYTraceReadingError, readSU, file, endian='>')
+        self.assertRaises(SEGYTraceReadingError, _read_su, file, endian='>')
 
     def test_readingAndWritingDifferentByteorders(self):
         """
@@ -75,7 +75,7 @@ class SUTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             outfile = tf.name
             # The following should both work.
-            su = readSU(file)
+            su = _read_su(file)
             data = su.traces[0].data
             # Also read the original file.
             with open(file, 'rb') as f:
@@ -86,7 +86,7 @@ class SUTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 new_data = f.read()
             self.assertEqual(org_data, new_data)
-            su2 = readSU(outfile)
+            su2 = _read_su(outfile)
             self.assertEqual(su2.endian, '<')
             np.testing.assert_array_equal(data, su2.traces[0].data)
             # Write it big endian.
@@ -94,7 +94,7 @@ class SUTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 new_data = f.read()
             self.assertFalse(org_data == new_data)
-            su3 = readSU(outfile)
+            su3 = _read_su(outfile)
         self.assertEqual(su3.endian, '>')
         np.testing.assert_array_equal(data, su3.traces[0].data)
 
@@ -105,7 +105,7 @@ class SUTestCase(unittest.TestCase):
         # This file has the same data as 1.sgy_first_trace.
         file = os.path.join(self.path, '1.su_first_trace')
         data_file = os.path.join(self.path, '1.sgy_first_trace.npy')
-        su = readSU(file)
+        su = _read_su(file)
         data = su.traces[0].data
         # The data is written as integer so it is also converted to float32.
         correct_data = np.require(np.load(data_file).ravel(), np.float32)
@@ -120,7 +120,7 @@ class SUTestCase(unittest.TestCase):
         filename = os.path.join(self.path, '1.su_first_trace')
         with open(filename, 'rb') as fp:
             data = fp.read()
-        st = readSU(io.BytesIO(data))
+        st = _read_su(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
 
 

@@ -39,13 +39,13 @@ import sys
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
-from obspy.core.util import _getVersionString
+from obspy.core.util import _get_version_string
 from obspy.core.util.deprecation_helpers import (
     ObsPyDeprecationWarning, DynamicAttributeImportRerouteModule)
-__version__ = _getVersionString(abbrev=10)
+__version__ = _get_version_string(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
-from obspy.core.event import readEvents, Catalog
+from obspy.core.event import read_events, Catalog
 from obspy.core.inventory import read_inventory  # NOQA
 
 
@@ -53,8 +53,8 @@ from obspy.core.inventory import read_inventory  # NOQA
 from obspy.core.util.base import make_format_plugin_table
 read.__doc__ = \
     read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
-readEvents.__doc__ = \
-    readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
+read_events.__doc__ = \
+    read_events.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
 
 
 if PY2:
@@ -73,7 +73,7 @@ else:
                                                          numspaces=8)
 
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
-           "readEvents", "Catalog", "read_inventory"]
+           "read_events", "Catalog", "read_inventory"]
 __all__ = [native_str(i) for i in __all__]
 
 
@@ -106,7 +106,6 @@ _import_map = {
     "obspy.fdsn": "obspy.clients.fdsn",
     "obspy.iris": "obspy.clients.iris",
     "obspy.neic": "obspy.clients.neic",
-    "obspy.neries": "obspy.clients.neries",
     "obspy.seedlink": "obspy.clients.seedlink",
     "obspy.seishub": "obspy.clients.seishub",
     # geodetics
@@ -118,6 +117,10 @@ _import_map = {
     "obspy.core.quakeml": "obspy.io.quakeml",
     "obspy.core.stationxml": "obspy.io.stationxml",
     "obspy.core.json": "obspy.io.json"
+}
+
+_function_map = {
+    "readEvents": "obspy.read_events"
 }
 
 
@@ -178,7 +181,8 @@ sys.meta_path.append(ObsPyRestructureMetaPathFinderAndLoader())
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
     import_map={key.split(".")[1]: value for key, value in
-                _import_map.items() if len(key.split(".")) == 2})
+                _import_map.items() if len(key.split(".")) == 2},
+    function_map=_function_map)
 
 
 if __name__ == '__main__':

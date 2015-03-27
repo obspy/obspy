@@ -11,8 +11,8 @@ import unittest
 import warnings
 
 from obspy.io.json.default import Default
-from obspy.io.json.core import get_dump_kwargs, writeJSON
-from obspy.io.quakeml.core import readQuakeML
+from obspy.io.json.core import get_dump_kwargs, _write_json
+from obspy.io.quakeml.core import _read_quakeml
 
 
 warnings.filterwarnings("ignore")
@@ -24,7 +24,7 @@ class JSONTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__))
         qml_file = os.path.join(self.path, "..", "..", "quakeml", "tests",
                                 "data", "qml-example-1.2-RC3.xml")
-        self.c = readQuakeML(qml_file)
+        self.c = _read_quakeml(qml_file)
         self.event = self.c.events[0]
 
     def verify_json(self, s):
@@ -66,7 +66,7 @@ class JSONTestCase(unittest.TestCase):
 
     def test_write_json(self):
         memfile = io.StringIO()
-        writeJSON(self.c, memfile)
+        _write_json(self.c, memfile)
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)

@@ -62,14 +62,13 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         _test_rerouted_imps("obspy.earthworm", "obspy.clients.earthworm")
         _test_rerouted_imps("obspy.iris", "obspy.clients.iris")
         _test_rerouted_imps("obspy.neic", "obspy.clients.neic")
-        # Don't test neries as it requires suds which is not a test dependency.
         _test_rerouted_imps("obspy.seedlink", "obspy.clients.seedlink")
         _test_rerouted_imps("obspy.seishub", "obspy.clients.seishub")
         _test_rerouted_imps("obspy.core.util.geodetics", "obspy.geodetics")
         _test_rerouted_imps("obspy.core.ascii", "obspy.io.ascii")
         _test_rerouted_imps("obspy.core.quakeml", "obspy.io.quakeml")
         _test_rerouted_imps("obspy.core.stationxml", "obspy.io.stationxml")
-        _test_rerouted_imps("obspy.core.json", "obspy.io.json")
+        _test_rerouted_imps("obspy.core.json", "obspy.io.json"),
 
     def test_attribute_import(self):
         """
@@ -109,7 +108,40 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
                             obspy.io.json.core)
             self.assertTrue(obspy.core.quakeml is
                             obspy.io.quakeml.core)
-        self.assertTrue(len(w), 14)
+            # readEvents() function.
+            self.assertTrue(obspy.readEvents is
+                            obspy.read_events)
+            # core.preview functions. obspy.core.preview has to be imported
+            # once before as it is not imported during the initialization.
+            from obspy.core import preview  # NOQA
+            # Just attempt the access..these are a different deprecation
+            # wrappers.
+            obspy.core.preview.createPreview
+            obspy.core.preview.mergePreviews
+            obspy.core.preview.resamplePreview
+
+            self.assertTrue(obspy.core.util.geodetics.calcVincentyInverse,
+                            obspy.geodetics.base.calc_vincenty_inverse)
+
+            from obspy.signal import util  # NOQA
+            # Attempt to import due to different deprecation mechanism.
+            obspy.signal.util.nextpow2
+
+            # geodetic functions used to be imported into obspy.core.utils
+            self.assertTrue(obspy.core.util.FlinnEngdahl is
+                            obspy.geodetics.FlinnEngdahl)
+            self.assertTrue(obspy.core.util.calcVincentyInverse is
+                            obspy.geodetics.calc_vincenty_inverse)
+            self.assertTrue(obspy.core.util.degrees2kilometers is
+                            obspy.geodetics.degrees2kilometers)
+            self.assertTrue(obspy.core.util.gps2DistAzimuth is
+                            obspy.geodetics.gps2dist_azimuth)
+            self.assertTrue(obspy.core.util.kilometer2degrees is
+                            obspy.geodetics.kilometer2degrees)
+            self.assertTrue(obspy.core.util.locations2degrees is
+                            obspy.geodetics.locations2degrees)
+
+        self.assertTrue(len(w), 16)
         for warn in w:
             self.assertTrue(warn.category is ObsPyDeprecationWarning)
 

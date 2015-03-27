@@ -11,7 +11,7 @@ import os
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 
 
 DTYPE = {
@@ -38,7 +38,7 @@ DTYPE = {
 }
 
 
-def isCSS(filename):
+def _is_css(filename):
     """
     Checks whether a file is CSS waveform data (header) or not.
 
@@ -72,7 +72,7 @@ def isCSS(filename):
     return True
 
 
-def readCSS(filename, **kwargs):
+def _read_css(filename, **kwargs):
     """
     Reads a CSS waveform file and returns a Stream object.
 
@@ -107,7 +107,7 @@ def readCSS(filename, **kwargs):
         with open(filename, "rb") as fh:
             fh.seek(offset)
             data = fh.read(read_fmt.itemsize * npts)
-            data = frombuffer(data, dtype=read_fmt)
+            data = from_buffer(data, dtype=read_fmt)
             data = np.require(data, dtype=fmt)
         header = {}
         header['station'] = line[0:6].strip().decode()

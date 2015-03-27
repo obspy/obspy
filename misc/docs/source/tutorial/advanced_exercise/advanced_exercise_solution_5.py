@@ -4,10 +4,10 @@ from math import log10
 
 import numpy as np
 
-from obspy.arclink import Client
-from obspy.core import Stream, UTCDateTime
-from obspy.core.util.geodetics import gps2DistAzimuth
-from obspy.signal import coincidenceTrigger
+from obspy.clients.arclink import Client
+from obspy import Stream, UTCDateTime
+from obspy.geodetics import gps2dist_azimuth
+from obspy.signal.trigger import coincidence_trigger
 
 
 client = Client(user="sed-workshop@obspy.org")
@@ -20,8 +20,8 @@ st = Stream()
 
 for station in stations:
     try:
-        tmp = client.getWaveform("CH", station, "", "[EH]HZ", t, t2,
-                                 metadata=True)
+        tmp = client.get_waveforms("CH", station, "", "[EH]HZ", t, t2,
+                                   metadata=True)
     except:
         print(station, "---")
         continue
@@ -29,7 +29,7 @@ for station in stations:
 
 st.taper()
 st.filter("bandpass", freqmin=1, freqmax=20)
-triglist = coincidenceTrigger("recstalta", 10, 2, st, 4, sta=0.5, lta=10)
+triglist = coincidence_trigger("recstalta", 10, 2, st, 4, sta=0.5, lta=10)
 print(len(triglist), "events triggered.")
 
 for trig in triglist:
@@ -47,13 +47,13 @@ for trig in triglist:
     print("Trigger time:", t)
     mags = []
 
-    stations = client.getStations(t, t + 300, "CH")
+    stations = client.get_stations(t, t + 300, "CH")
 
     for station in stations:
         station = station['code']
         try:
-            st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300,
-                                    t + 300, metadata=True)
+            st = client.get_waveforms("CH", station, "", "[EH]H[ZNE]", t - 300,
+                                      t + 300, metadata=True)
             assert(len(st) == 3)
         except:
             print(station, "---")
@@ -73,8 +73,8 @@ for trig in triglist:
         event_lat = trig['latitude']
         event_lon = trig['longitude']
 
-        epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat,
-                                            sta_lon)
+        epi_dist, az, baz = gps2dist_azimuth(event_lat, event_lon, sta_lat,
+                                             sta_lon)
         epi_dist = epi_dist / 1000
 
         if epi_dist < 60:

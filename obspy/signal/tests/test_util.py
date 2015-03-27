@@ -13,7 +13,7 @@ import unittest
 import numpy as np
 
 from obspy.core.util.libnames import _load_CDLL
-from obspy.signal import xcorr
+from obspy.signal.cross_correlation import xcorr
 
 
 class UtilTestCase(unittest.TestCase):

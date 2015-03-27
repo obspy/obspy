@@ -87,7 +87,7 @@ def unpack_4byte_IBM(file, count, endian='>'):
 #    return mantissa
 
 
-def unpack_4byte_Integer(file, count, endian='>'):
+def unpack_4byte_integer(file, count, endian='>'):
     """
     Unpacks 4 byte integers.
     """
@@ -99,7 +99,7 @@ def unpack_4byte_Integer(file, count, endian='>'):
     return data
 
 
-def unpack_2byte_Integer(file, count, endian='>'):
+def unpack_2byte_integer(file, count, endian='>'):
     """
     Unpacks 2 byte integers.
     """
@@ -111,7 +111,7 @@ def unpack_2byte_Integer(file, count, endian='>'):
     return data
 
 
-def unpack_4byte_Fixed_point(file, count, endian='>'):
+def unpack_4byte_fixed_point(file, count, endian='>'):
     raise NotImplementedError
 
 
@@ -127,7 +127,7 @@ def unpack_4byte_IEEE(file, count, endian='>'):
     return data
 
 
-def unpack_1byte_Integer(file, count, endian='>'):
+def unpack_1byte_integer(file, count, endian='>'):
     raise NotImplementedError
 
 

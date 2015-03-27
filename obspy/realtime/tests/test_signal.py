@@ -258,7 +258,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self.rt_trace = RtTrace(max_length=max_length)
 
         for (process, options) in process_list:
-            self.rt_trace.registerRtProcess(process, **options)
+            self.rt_trace.register_rt_process(process, **options)
 
         # append packet data to RtTrace
         self.rt_appended_traces = []

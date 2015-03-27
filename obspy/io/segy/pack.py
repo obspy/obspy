@@ -121,7 +121,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     file.write(new_data.tostring())
 
 
-def pack_4byte_Integer(file, data, endian='>'):
+def pack_4byte_integer(file, data, endian='>'):
     """
     Packs 4 byte integers.
     """
@@ -135,7 +135,7 @@ def pack_4byte_Integer(file, data, endian='>'):
     file.write(data.tostring())
 
 
-def pack_2byte_Integer(file, data, endian='>'):
+def pack_2byte_integer(file, data, endian='>'):
     """
     Packs 2 byte integers.
     """
@@ -149,7 +149,7 @@ def pack_2byte_Integer(file, data, endian='>'):
     file.write(data.tostring())
 
 
-def pack_4byte_Fixed_point(file, data, endian='>'):
+def pack_4byte_fixed_point(file, data, endian='>'):
     raise NotImplementedError
 
 
@@ -167,5 +167,5 @@ def pack_4byte_IEEE(file, data, endian='>'):
     file.write(data.tostring())
 
 
-def pack_1byte_Integer(file, data, endian='>'):
+def pack_1byte_integer(file, data, endian='>'):
     raise NotImplementedError

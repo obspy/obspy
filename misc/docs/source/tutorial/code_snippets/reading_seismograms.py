@@ -1,5 +1,5 @@
-from obspy.core import read
+import obspy
 
 
-st = read('http://examples.obspy.org/RJOB_061005_072159.ehz.new')
+st = obspy.read('http://examples.obspy.org/RJOB_061005_072159.ehz.new')
 st.plot()

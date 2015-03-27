@@ -10,7 +10,7 @@ from future.builtins import *  # NOQA
 from argparse import SUPPRESS, ArgumentParser
 
 from obspy import Stream, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
+from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action
 
 
 def main(argv=None):
@@ -29,9 +29,8 @@ def main(argv=None):
                         help='Files to process.')
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('--nomerge',
-                                       '--no-merge',
-                                       real_action='store_false')
+    action = _get_deprecated_argument_action(
+        '--nomerge', '--no-merge', real_action='store_false')
     parser.add_argument('--nomerge', nargs=0, action=action, dest='merge',
                         help=SUPPRESS)
 

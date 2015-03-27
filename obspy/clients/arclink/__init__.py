@@ -40,7 +40,7 @@ Basic Usage
     with the ArcLink server as well as for usage statistics within the data
     center, so please provide a meaningful user id such as an email address.
 
-(1) :meth:`~obspy.clients.arclink.client.Client.getWaveform()`: The following
+(1) :meth:`~obspy.clients.arclink.client.Client.get_waveforms()`: The following
     example illustrates how to request and plot 18 seconds of all three single
     band channels (``"EH*"``) of station Jochberg/Hochstaufen (``"RJOB"``)
     of the Bavarian network (``"BW"``) for an seismic event around
@@ -50,7 +50,7 @@ Basic Usage
     >>> from obspy.clients.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime("2009-08-20 04:03:12")
-    >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+    >>> st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
     >>> st.plot()  # doctest: +SKIP
 
     Waveform data fetched from an ArcLink node is converted into an ObsPy
@@ -66,17 +66,17 @@ Basic Usage
         from obspy.clients.arclink.client import Client
         client = Client(user='test@obspy.org')
         t = UTCDateTime("2009-08-20 04:03:12")
-        st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+        st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
         st.plot()  # doctest: +SKIP
 
-(2) :meth:`~obspy.clients.arclink.client.Client.getPAZ()`: Requests poles,
+(2) :meth:`~obspy.clients.arclink.client.Client.get_paz()`: Requests poles,
     zeros, gain and sensitivity of a single channel at a given time.
 
     >>> from obspy import UTCDateTime
     >>> from obspy.clients.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> dt = UTCDateTime(2009, 1, 1)
-    >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
+    >>> paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
     >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
     AttribDict({'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
                           (-251.33+0j), (-131.04-467.29j), (-131.04+467.29j)],
@@ -85,17 +85,17 @@ Basic Usage
                 'name': 'LMU:STS-2/N/g=1500',
                 'gain': 60077000.0})
 
-(3) :meth:`~obspy.clients.arclink.client.Client.saveResponse()`: Writes
+(3) :meth:`~obspy.clients.arclink.client.Client.save_response()`: Writes
     response information into a file.
 
     >>> from obspy import UTCDateTime
     >>> from obspy.clients.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1)
-    >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
+    >>> client.save_response('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
     ...                     t, t + 1, format="SEED")  # doctest: +SKIP
 
-(4) :meth:`~obspy.clients.arclink.client.Client.saveWaveform()`: Writes the
+(4) :meth:`~obspy.clients.arclink.client.Client.save_waveforms()`: Writes the
     requested waveform unmodified into your local file system. Here we request
     a Full SEED volume.
 
@@ -103,16 +103,16 @@ Basic Usage
     >>> from obspy.clients.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1, 12, 0)
-    >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
+    >>> client.save_waveforms('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
     ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
 
-(5) :meth:`~obspy.clients.arclink.client.Client.getInventory()`: Request
+(5) :meth:`~obspy.clients.arclink.client.Client.get_inventory()`: Request
     inventory data.
 
     >>> from obspy import UTCDateTime
     >>> from obspy.clients.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
-    >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
+    >>> inv = client.get_inventory('BW', 'M*', '*', 'EHZ', restricted=False,
     ...                           permanent=True, min_longitude=12,
     ...                           max_longitude=12.2) #doctest: +SKIP
     >>> inv.keys()  # doctest: +SKIP

@@ -20,7 +20,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime() - 3600
         for request in [["G", "FDF", "00", "LHN", t, t + 20],
                         ["G", "CLF", "00", "BHZ", t, t + 10]]:
-            st = self.client.get_waveform(*request)
+            st = self.client.get_waveforms(*request)
             self.assertGreater(len(st), 0)
             for tr in st:
                 self.assertEqual(tr.id, ".".join(request[:4]))

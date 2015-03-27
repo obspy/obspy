@@ -34,9 +34,9 @@ advantages/disadvantages. Most of the following also applies to SU files with
 some changes (keep in mind that SU files have no file wide headers).
 
 1. Using the standard :func:`~obspy.core.stream.read` function.
-2. Using the :mod:`obspy.io.segy` specific :func:`obspy.io.segy.core.readSEGY`
+2. Using the :mod:`obspy.io.segy` specific :func:`obspy.io.segy.core._read_segy`
    function.
-3. Using the internal :func:`obspy.io.segy.segy.readSEGY` function.
+3. Using the internal :func:`obspy.io.segy.segy._read_segy` function.
 
 Reading using methods 1 and 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,11 +56,11 @@ memory intensive.
 To somewhat rectify this issue all SEG Y specific trace header attributes are
 only unpacked on demand by default.
 
->>> from obspy.io.segy.core import readSEGY
->>> from obspy.core.util import getExampleFile
+>>> from obspy.io.segy.core import _read_segy
+>>> from obspy.core.util import get_example_file
 >>> # or 'from obspy import read' if file wide headers are of no interest
->>> filename = getExampleFile("00001034.sgy_first_trace")
->>> st = readSEGY(filename)
+>>> filename = get_example_file("00001034.sgy_first_trace")
+>>> st = _read_segy(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +ELLIPSIS
@@ -70,17 +70,17 @@ Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - 2009-06-22T14:47:41...
 SEG Y files contain a large amount of additional trace header fields which are
 not unpacked by default. However these values can be accessed by calling the
 header key directly or by using the ``unpack_trace_headers`` keyword with the
-:func:`~obspy.core.stream.read`/ :func:`~obspy.io.segy.core.readSEGY`
+:func:`~obspy.core.stream.read`/ :func:`~obspy.io.segy.core._read_segy`
 functions to unpack all header fields.
 
->>> st1 = readSEGY(filename)
+>>> st1 = _read_segy(filename)
 >>> len(st1[0].stats.segy.trace_header)
 8
 >>> st1[0].stats.segy.trace_header.data_use # Unpacking a value on the fly.
 1
 >>> len(st1[0].stats.segy.trace_header) # This value will remain unpacked.
 9
->>> st2 = readSEGY(filename, unpack_trace_headers=True)
+>>> st2 = _read_segy(filename, unpack_trace_headers=True)
 >>> len(st2[0].stats.segy.trace_header)
 92
 
@@ -96,8 +96,8 @@ not return a :class:`~obspy.core.stream.Stream` object. Instead it returns a
 :class:`~obspy.core.stream.Stream` object used in ObsPy but specific to
 :mod:`~obspy.io.segy`.
 
->>> from obspy.io.segy.segy import readSEGY
->>> segy = readSEGY(filename)
+>>> from obspy.io.segy.segy import _read_segy
+>>> segy = _read_segy(filename)
 >>> segy #doctest: +ELLIPSIS
 <obspy.io.segy.segy.SEGYFile object at 0x...>
 >>> print(segy)
@@ -120,8 +120,8 @@ very large datasets. To skip loading data into memory, read SEG Y files with
 ``headonly=True``.  The ``data`` class attribute will not show up in ipython's
 tab completion, but data are read directly from the disk when it is accessed:
 
->>> from obspy.io.segy.segy import readSEGY
->>> segy = readSEGY(filename, headonly=True)
+>>> from obspy.io.segy.segy import _read_segy
+>>> segy = _read_segy(filename, headonly=True)
 >>> print(len(segy.traces[0].data))
 2001
 
@@ -142,7 +142,7 @@ or
 It is possible to control the data encoding, the byte order and the textual
 header encoding of the final file either via the file wide stats object (see
 sample code below) or directly via the write method. Possible values and their
-meaning are documented here: :func:`~obspy.io.segy.core.writeSEGY`
+meaning are documented here: :func:`~obspy.io.segy.core._write_segy`
 
 
 Writing :class:`~obspy.io.segy.segy.SEGYFile` objects
@@ -175,7 +175,7 @@ script::
     from obspy import read, Trace, Stream, UTCDateTime
     from obspy.core import AttribDict
     from obspy.io.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
-    from obspy.io.segy.core import readSEGY
+    from obspy.io.segy.core import _read_segy
     import numpy as np
     import sys
 
@@ -224,7 +224,7 @@ _i + 1
     print stream
 
     print "Reading using obspy.io.segy..."
-    st1 = readSEGY("TEST.sgy")
+    st1 = _read_segy("TEST.sgy")
     print st1
 
     print "Reading using obspy.core..."

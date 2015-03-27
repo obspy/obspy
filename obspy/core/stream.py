@@ -32,11 +32,11 @@ from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.base import (ENTRY_POINTS, _getFunctionFromEntryPoint,
-                                  _readFromPlugin)
+from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
+                                  _read_from_plugin)
 from obspy.core.util.decorator import (deprecated_keywords,
-                                       map_example_filename, raiseIfMasked,
-                                       uncompressFile)
+                                       map_example_filename, raise_if_masked,
+                                       uncompress_file)
 
 
 @map_example_filename("pathname_or_url")
@@ -266,13 +266,13 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     return st
 
 
-@uncompressFile
+@uncompress_file
 def _read(filename, format=None, headonly=False, **kwargs):
     """
     Read a single file into a ObsPy Stream object.
     """
-    stream, format = _readFromPlugin('waveform', filename, format=format,
-                                     headonly=headonly, **kwargs)
+    stream, format = _read_from_plugin('waveform', filename, format=format,
+                                       headonly=headonly, **kwargs)
     # set _format identifier for each element
     for trace in stream:
         trace.stats._format = format
@@ -286,7 +286,8 @@ def _createExampleStream(headonly=False):
     Data arrays are stored in NumPy's NPZ format. The header information are
     fixed values.
 
-    PAZ of the used instrument, needed to demonstrate seisSim() etc.:
+    PAZ of the used instrument, needed to demonstrate simulate_seismometer()
+    etc.:
     paz = {'gain': 60077000.0,
            'poles': [-0.037004+0.037016j, -0.037004-0.037016j, -251.33+0j,
                      -131.04-467.29j, -131.04+467.29j],
@@ -1128,7 +1129,7 @@ class Stream(object):
         """
         from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        return waveform.plotWaveform(*args, **kwargs)
+        return waveform.plot_waveform(*args, **kwargs)
 
     def spectrogram(self, **kwargs):
         """
@@ -1408,14 +1409,14 @@ class Stream(object):
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
-            writeFormat = load_entry_point(
+            write_format = load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format,
                                    ', '.join(ENTRY_POINTS['waveform_write'])))
-        writeFormat(self, filename, **kwargs)
+        write_format(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
@@ -1863,7 +1864,7 @@ class Stream(object):
 
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
-        :func:`~obspy.signal.invsim.seisSim`.
+        :func:`~obspy.signal.invsim.simulate_seismometer`.
 
         The keywords `paz_remove` and `paz_simulate` are expected to be
         dictionaries containing information on poles, zeros and gain (and
@@ -1878,7 +1879,8 @@ class Stream(object):
             Instead of the builtin deconvolution based on Poles and Zeros
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
-            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            :func:`~obspy.signal.invsim.simulate_seismometer` and the
+            `ObsPy Tutorial
             <http://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
@@ -1894,7 +1896,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. rubric:: Example
 
         >>> from obspy import read
-        >>> from obspy.signal import cornFreq2Paz
+        >>> from obspy.signal.invsim import corn_freq_2_paz
         >>> st = read()
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
@@ -1902,7 +1904,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ...             'zeros': [0j, 0j],
         ...             'gain': 60077000.0,
         ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
         ... # doctest: +ELLIPSIS
         <...Stream object at 0x...>
@@ -1911,7 +1913,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read
-            from obspy.signal import cornFreq2Paz
+            from obspy.signal import corn_freq_2_paz
             st = read()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
@@ -1919,7 +1921,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         'zeros': [0j, 0j],
                         'gain': 60077000.0,
                         'sensitivity': 2516778400.0}
-            paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
             paz_1hz['sensitivity'] = 1.0
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
@@ -1965,8 +1967,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'highpass'``
             Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
 
-        ``'lowpassCheby2'``
-            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+        ``'lowpass_cheby_2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
         ``'lowpassFIR'`` (experimental)
             FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
@@ -2021,24 +2023,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classicSTALTA`).
+            :func:`obspy.signal.trigger.classic_STALTA`).
 
         ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+            Recursive STA/LTA
+            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recSTALTAPy`).
+            :func:`obspy.signal.trigger.recursive_STALTA_py`).
 
         ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+            Delayed STA/LTA.
+            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
 
         ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
-            :func:`obspy.signal.trigger.carlSTATrig`).
+            Computes the carl_STA_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_STA_trig`).
 
         ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
 
         .. rubric:: Example
 
@@ -2269,7 +2273,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.integrate(method=method, **options)
         return self
 
-    @raiseIfMasked
+    @raise_if_masked
     def detrend(self, type='simple'):
         """
         Remove a linear trend from all traces.
@@ -2500,7 +2504,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
                              "'ZNE->LQT', or 'LQT->ZNE').")
         # Retrieve function call from entry points
-        func = _getFunctionFromEntryPoint("rotate", func)
+        func = _get_function_from_entry_point("rotate", func)
         # Split to get the components. No need for further checks for the
         # method as invalid methods will be caught by previous conditional.
         input_components, output_components = method.split("->")
@@ -2937,7 +2941,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
 
-def isPickle(filename):  # @UnusedVariable
+def _is_pickle(filename):  # @UnusedVariable
     """
     Check whether a file is a pickled ObsPy Stream file.
 
@@ -2948,7 +2952,7 @@ def isPickle(filename):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
+    >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
     if isinstance(filename, (str, native_str)):
@@ -2965,7 +2969,7 @@ def isPickle(filename):  # @UnusedVariable
     return isinstance(st, Stream)
 
 
-def readPickle(filename, **kwargs):  # @UnusedVariable
+def _read_pickle(filename, **kwargs):  # @UnusedVariable
     """
     Read and return Stream from pickled ObsPy Stream file.
 
@@ -2985,7 +2989,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
         return pickle.load(filename)
 
 
-def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
+def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     """
     Write a Python pickle of current stream.
 

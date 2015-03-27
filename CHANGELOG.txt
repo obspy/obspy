@@ -1,10 +1,17 @@
 master:
  - General:
-   * Requirements have been increased to reflect latest distributions:
+    * Requirements have been increased to reflect latest distributions:
     * Removed support for Python 2.6.
     * matplotlib >= 1.1.0 is now required.
-   * Reorganized the submodule structure. We provide a deprecation path so the
-     old imports will continue to work for one ObsPy version.
+    * Reorganized the submodule structure. We provide a deprecation path so the
+      old imports will continue to work for one ObsPy version.
+    * Consistent naming scheme across the code base. This results in some
+	  functions having different names. Most things that worked with ObsPy
+	  0.10 will continue to work with this version, but starting with the next
+	  version they will fail. Pay attention to the deprecation warnings.
+  - obspy.clients.neries:
+    * Removed the dedicated client. Data can still be accessed by using the
+	  FDSN client.
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release

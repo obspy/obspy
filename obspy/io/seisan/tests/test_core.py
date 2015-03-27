@@ -13,7 +13,7 @@ import numpy as np
 
 from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.seisan.core import _getVersion, isSEISAN, readSEISAN
+from obspy.io.seisan.core import _get_version, _is_seisan, _read_seisan
 
 
 class CoreTestCase(unittest.TestCase):
@@ -32,31 +32,31 @@ class CoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
-        self.assertEqual(_getVersion(data), ('>', 32, 7))
+        self.assertEqual(_get_version(data), ('>', 32, 7))
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
         with open(file, 'rb') as fp:
             data = fp.read(80 * 12)
-        self.assertEqual(_getVersion(data), ('<', 32, 7))
+        self.assertEqual(_get_version(data), ('<', 32, 7))
 
-    def test_isSEISAN(self):
+    def test_is_seisan(self):
         """
         Tests SEISAN file check.
         """
         # 1 - big endian, 32 bit
         file = os.path.join(self.path, '1996-06-03-1917-52S.TEST__002')
-        self.assertTrue(isSEISAN(file))
+        self.assertTrue(_is_seisan(file))
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
-        self.assertTrue(isSEISAN(file))
+        self.assertTrue(_is_seisan(file))
 
-    def test_readSEISAN(self):
+    def test_read_seisan(self):
         """
         Test SEISAN file reader.
         """
         # 1 - big endian, 32 bit
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
-        st1 = readSEISAN(file)
+        st1 = _read_seisan(file)
         st1.verify()
         self.assertEqual(len(st1), 21)
         self.assertEqual(st1[20].stats.network, '')
@@ -78,18 +78,18 @@ class CoreTestCase(unittest.TestCase):
                          np.loadtxt(datafile, dtype=np.int32).tolist())
         # 2 - little endian, 32 bit
         file = os.path.join(self.path, '2001-01-13-1742-24S.KONO__004')
-        st2 = readSEISAN(file)
+        st2 = _read_seisan(file)
         st2.verify()
         self.assertEqual(len(st2), 4)
         self.assertEqual(list(st2[0].data[1:4]), [492, 519, 542])
 
-    def test_readSEISANHeadOnly(self):
+    def test_read_seisanHeadOnly(self):
         """
         Test SEISAN file reader with headonly flag.
         """
         # 1 - big endian, 32 bit
         file = os.path.join(self.path, '9701-30-1048-54S.MVO_21_1')
-        st1 = readSEISAN(file, headonly=True)
+        st1 = _read_seisan(file, headonly=True)
         self.assertEqual(len(st1), 21)
         self.assertEqual(st1[0].stats.network, '')
         self.assertEqual(st1[0].stats.station, 'MBGA')
@@ -104,7 +104,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         self.assertEqual(list(st1[0].data), [])  # no data
 
-    def test_readSEISANVsReference(self):
+    def test_read_seisanVsReference(self):
         """
         Test for #970
         """

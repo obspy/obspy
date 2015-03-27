@@ -31,7 +31,7 @@ class MySLClient(SLClient):
         self.rt_trace = rt_trace
         super(self.__class__, self).__init__(*args, **kwargs)
 
-    def packetHandler(self, count, slpack):
+    def packet_handler(self, count, slpack):
         """
         Processes each packet received from the SeedLinkConnection.
 
@@ -52,8 +52,8 @@ class MySLClient(SLClient):
             return False
 
         # get basic packet info
-        seqnum = slpack.getSequenceNumber()
-        type = slpack.getType()
+        seqnum = slpack.get_sequence_number()
+        type = slpack.get_type()
 
         # process INFO packets here
         if (type == SLPacket.TYPE_SLINF):
@@ -77,7 +77,7 @@ class MySLClient(SLClient):
         print(str(seqnum) + ": blockette type: " + str(type))
 
         # process packet data
-        trace = slpack.getTrace()
+        trace = slpack.get_trace()
         if trace is not None:
             print(self.__class__.__name__ +
                   ": blockette contains a trace: ", end=' ')
@@ -108,11 +108,11 @@ class MySLClient(SLClient):
 def main():
     # initialize realtime trace
     rttrace = RtTrace(max_length=60)
-    # rttrace.registerRtProcess('integrate')
-    rttrace.registerRtProcess(np.abs)
+    # rttrace.register_rt_process('integrate')
+    rttrace.register_rt_process(np.abs)
     # width in num samples
     boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
-    rttrace.registerRtProcess('boxcar', width=boxcar_width)
+    rttrace.register_rt_process('boxcar', width=boxcar_width)
 
     print("The SeedLink client will collect data packets and append " +
           "them to an RTTrace object.")
@@ -133,8 +133,8 @@ def main():
         #
         # set a time window from 2 min in the past to 5 sec in the future
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).formatSeedLink()
-        slClient.end_time = (dt + 5.0).formatSeedLink()
+        slClient.begin_time = (dt - 120.0).format_seedlink()
+        slClient.end_time = (dt + 5.0).format_seedlink()
         print("SeedLink date-time range:", slClient.begin_time, " -> ",
               end=' ')
         print(slClient.end_time)

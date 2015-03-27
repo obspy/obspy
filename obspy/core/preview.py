@@ -20,9 +20,16 @@ import numpy as np
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import deprecated
 
 
+@deprecated("Method 'createPreview' was renamed to 'create_preview'. Use "
+            "that instead.")
 def createPreview(trace, delta=60):
+    return create_preview(trace, delta)
+
+
+def create_preview(trace, delta=60):
     """
     Creates a preview trace.
 
@@ -85,7 +92,13 @@ def createPreview(trace, delta=60):
     return tr
 
 
+@deprecated("Method 'mergePreviews' was renamed to 'merge_previews'. Use "
+            "that instead.")
 def mergePreviews(stream):
+    return merge_previews(stream)
+
+
+def merge_previews(stream):
     """
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
@@ -157,7 +170,13 @@ def mergePreviews(stream):
     return new_stream
 
 
+@deprecated("Method 'resamplePreview' was renamed to 'resample_preview'. Use "
+            "that instead.")
 def resamplePreview(trace, samples, method='accurate'):
+    return resample_preview(trace, samples, method)
+
+
+def resample_preview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 

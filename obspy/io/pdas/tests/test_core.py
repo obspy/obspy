@@ -9,7 +9,7 @@ import unittest
 import numpy as np
 
 from obspy import Stream, UTCDateTime
-from obspy.io.pdas import isPDAS, readPDAS
+from obspy.io.pdas import _is_pdas, _read_pdas
 
 
 class PDASTestCase(unittest.TestCase):
@@ -21,11 +21,11 @@ class PDASTestCase(unittest.TestCase):
         self.path = os.path.dirname(__file__)
         self.testfile = os.path.join(self.path, 'data', 'p1246001.108')
 
-    def test_readPDAS(self):
+    def test_read_pdas(self):
         """
-        Tests the readPDAS function.
+        Tests the _read_pdas function.
         """
-        st = readPDAS(self.testfile)
+        st = _read_pdas(self.testfile)
         self.assertTrue(isinstance(st, Stream))
         self.assertTrue(len(st) == 1)
         tr = st[0]
@@ -53,11 +53,11 @@ class PDASTestCase(unittest.TestCase):
                             dtype=np.int16)
         np.testing.assert_array_equal(tr.data[:10], expected)
 
-    def test_isPDAS(self):
+    def test_is_pdas(self):
         """
-        Tests the readPDAS function.
+        Tests the _read_pdas function.
         """
-        self.assertTrue(isPDAS(self.testfile))
+        self.assertTrue(_is_pdas(self.testfile))
 
 
 def suite():

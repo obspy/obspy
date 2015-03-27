@@ -40,7 +40,7 @@ class SSLWrapper:
                 raise Exception('Invalid first chunk (Size < 16).')
             if chunk[0:8] != "Salted__":
                 raise Exception('Invalid first chunk (expected: Salted__')
-            [key, iv] = self._getKeyIv(self._password, chunk[8:16])
+            [key, iv] = self._get_key_iv(self._password, chunk[8:16])
             self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
             chunk = chunk[16:]
         if len(chunk) > 0:
@@ -53,7 +53,7 @@ class SSLWrapper:
             raise Exception('Wrapper has not started yet.')
         return self._cypher.final()
 
-    def _getKeyIv(self, password, salt=None, size=8):
+    def _get_key_iv(self, password, salt=None, size=8):
         chunk = None
         key = ""
         iv = ""

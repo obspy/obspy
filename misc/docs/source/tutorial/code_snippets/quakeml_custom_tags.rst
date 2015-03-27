@@ -74,8 +74,8 @@ the respective Event type objects (in this example to the Catalog object) as
 
 .. code-block:: python
 
-    from obspy import readEvents
-    
+    from obspy import read_events
+
     cat = read("my_catalog.xml")
     print(cat.extra)
 

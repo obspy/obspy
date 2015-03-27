@@ -16,7 +16,7 @@ import numpy as np
 from obspy import read
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.css.core import isCSS, readCSS
+from obspy.io.css.core import _is_css, _read_css
 
 
 class CoreTestCase(unittest.TestCase):
@@ -53,18 +53,18 @@ class CoreTestCase(unittest.TestCase):
             st += tr
         self.st_result = st
 
-    def test_isCSS(self):
+    def test_is_css(self):
         """
         Read files via obspy.core.stream.read function.
         """
         # 1
-        assert(isCSS(self.filename))
+        assert(_is_css(self.filename))
         # check that empty files are not recognized as CSS
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             fh = open(tempfile, "wb")
             fh.close()
-            assert(not isCSS(tempfile))
+            assert(not _is_css(tempfile))
 
     def test_readViaObsPy(self):
         """
@@ -76,10 +76,10 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readViaModule(self):
         """
-        Read files via obspy.io.css.core.readCSS function.
+        Read files via obspy.io.css.core._read_css function.
         """
         # 1
-        st = readCSS(self.filename)
+        st = _read_css(self.filename)
         # _format entry is not present when using low-level function
         for tr in self.st_result:
             tr.stats.pop('_format')

@@ -218,7 +218,7 @@ class CoreTestCase(unittest.TestCase):
         # add wrong starttime flag of mseed, should also not fail
         read(gse2file, verify_chksum=False, starttime=None)
 
-    def test_readGSE1ViaObsPy(self):
+    def test_read_gse1ViaObsPy(self):
         """
         Read files via L{obspy.Trace}
         """
@@ -237,7 +237,7 @@ class CoreTestCase(unittest.TestCase):
                          '2003-11-19T01:16:59.990000Z')
         self.assertEqual(tr.data[0:10].tolist(), testdata)
 
-    def test_readGSE1HeadViaObsPy(self):
+    def test_read_gse1HeadViaObsPy(self):
         """
         Read header via L{obspy.Trace}
         """

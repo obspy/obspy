@@ -87,4 +87,4 @@ class SLNetStation(object):
 
         :return: SeedLink time
         """
-        return self.btime.formatSeedLink()
+        return self.btime.format_seedlink()

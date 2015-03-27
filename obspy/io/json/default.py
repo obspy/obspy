@@ -11,9 +11,9 @@ python :py:mod:`json` module Encoder classes, valid for
 Example
 -------
 >>> import json
->>> from obspy import readEvents
+>>> from obspy import read_events
 >>> from obspy.io.json.default import Default
->>> c = readEvents()
+>>> c = read_events()
 >>> d = Default(omit_nulls=False)
 >>> s = json.dumps(c, default=d)
 

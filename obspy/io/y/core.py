@@ -17,13 +17,13 @@ from struct import unpack
 import numpy as np
 
 from obspy import Stream
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 
 
-def __parseTag(fh):
+def __parse_tag(fh):
     """
     Reads and parses a single tag.
 
@@ -56,7 +56,7 @@ def __parseTag(fh):
     return endian, tag_type, next_tag, next_same
 
 
-def isY(filename):
+def _is_y(filename):
     """
     Checks whether a file is a Nanometrics Y file or not.
 
@@ -67,13 +67,13 @@ def isY(filename):
 
     .. rubric:: Example
 
-    >>> isY("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
+    >>> _is_y("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
     True
     """
     try:
         # get first tag (16 bytes)
         with open(filename, 'rb') as fh:
-            _, tag_type, _, _ = __parseTag(fh)
+            _, tag_type, _, _ = __parse_tag(fh)
     except:
         return False
     # The first tag in a Y-file must be the TAG_Y_FILE tag (tag type 0)
@@ -82,7 +82,7 @@ def isY(filename):
     return True
 
 
-def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a Nanometrics Y file and returns an ObsPy Stream object.
 
@@ -126,7 +126,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
         trace.stats.y = AttribDict()
         count = -1
         while True:
-            endian, tag_type, next_tag, _next_same = __parseTag(fh)
+            endian, tag_type, next_tag, _next_same = __parse_tag(fh)
             if tag_type == 1:
                 # TAG_STATION_INFO
                 # UCHAR Update[8]
@@ -328,7 +328,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
                 trace.stats.y.tag_station_response = params
             elif tag_type == 7:
                 # TAG_DATA_INT32
-                trace.data = frombuffer(
+                trace.data = from_buffer(
                     fh.read(np.dtype(np.int32).itemsize * count),
                     dtype=np.int32)
                 # break loop as TAG_DATA_INT32 should be the last tag in file

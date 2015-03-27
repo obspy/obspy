@@ -41,9 +41,9 @@ DATATYPE_KEY = {
 }
 
 
-def getNumpyType(tpstr):
+def get_numpy_type(tpstr):
     """
-    given a tracebuf2 type string from header,
+    given a TraceBuf2 type string from header,
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
@@ -51,30 +51,30 @@ def getNumpyType(tpstr):
     return tp
 
 
-class tracebuf2:
+class TraceBuf2(object):
     """
     """
     byteswap = False
     ndata = 0           # number of samples in instance
     inputType = None    # NumPy data type
 
-    def readTB2(self, tb2):
+    def read_tb2(self, tb2):
         """
-        Reads single tracebuf2 packet from beginning of input byte array tb.
+        Reads single TraceBuf2 packet from beginning of input byte array tb.
         returns number of bytes read or 0 on read fail.
         """
         if len(tb2) < 64:
             return 0   # not enough array to hold header
         head = tb2[:64]
-        self.parseHeader(head)
+        self.parse_header(head)
         nbytes = 64 + self.ndata * self.inputType.itemsize
         if len(tb2) < nbytes:
             return 0   # not enough array to hold data specified in header
         dat = tb2[64:nbytes]
-        self.parseData(dat)
+        self.parse_data(dat)
         return nbytes
 
-    def parseHeader(self, head):
+    def parse_header(self, head):
         """
         Parse tracebuf header into class variables
         """
@@ -86,7 +86,7 @@ class tracebuf2:
             endian = b'<'
         else:
             raise ValueError
-        self.inputType = getNumpyType(dtype)
+        self.inputType = get_numpy_type(dtype)
         (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
             struct.unpack(endian + packStr, head)
@@ -96,7 +96,7 @@ class tracebuf2:
         self.end = UTCDateTime(te)
         return
 
-    def parseData(self, dat):
+    def parse_data(self, dat):
         """
         Parse tracebuf char array data into self.data
         """
@@ -108,7 +108,7 @@ class tracebuf2:
             self.ndata = ndat
         return
 
-    def getObspyTrace(self):
+    def get_obspy_trace(self):
         """
         Return class contents as obspy.Trace object
         """
@@ -127,7 +127,7 @@ class tracebuf2:
         return Trace(data=self.data, header=stat)
 
 
-def sendSockReq(server, port, reqStr, timeout=None):
+def send_sock_req(server, port, reqStr, timeout=None):
     """
     Sets up socket to server and port, sends reqStr
     to socket and returns open socket
@@ -142,7 +142,7 @@ def sendSockReq(server, port, reqStr, timeout=None):
     return s
 
 
-def getSockCharLine(sock, timeout=10.):
+def get_sock_char_line(sock, timeout=10.):
     """
     Retrieves one newline terminated string from input open socket
     """
@@ -156,7 +156,7 @@ def getSockCharLine(sock, timeout=10.):
             indat = sock.recv(1)
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in getSockCharLine()')
+        print('socket timeout in get_sock_char_line()')
         return None
     if chunks:
         response = b''.join(chunks)
@@ -165,7 +165,7 @@ def getSockCharLine(sock, timeout=10.):
         return None
 
 
-def getSockBytes(sock, nbytes, timeout=None):
+def get_sock_bytes(sock, nbytes, timeout=None):
     """
     Listens for nbytes from open socket.
     Returns byte array as python string or None if timeout
@@ -179,7 +179,7 @@ def getSockBytes(sock, nbytes, timeout=None):
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in getSockBytes()')
+        print('socket timeout in get_sock_bytes()')
         return None
     if chunks:
         response = b''.join(chunks)
@@ -188,11 +188,11 @@ def getSockBytes(sock, nbytes, timeout=None):
         return None
 
 
-def getMenu(server, port, scnl=None, timeout=None):
+def get_menu(server, port, scnl=None, timeout=None):
     """
     Return list of tanks on server
     """
-    rid = 'getMenu'
+    rid = 'get_menu'
     if scnl:
         # only works on regular waveservers (not winston)
         getstr = 'MENUSCNL: %s %s %s %s %s\n' % (
@@ -200,10 +200,9 @@ def getMenu(server, port, scnl=None, timeout=None):
     else:
         # added SCNL not documented but required
         getstr = 'MENU: %s SCNL\n' % rid
-    sock = sendSockReq(server, port,
-                       getstr.encode('ascii', 'strict'),
-                       timeout=timeout)
-    r = getSockCharLine(sock, timeout=timeout)
+    sock = send_sock_req(server, port, getstr.encode('ascii', 'strict'),
+                         timeout=timeout)
+    r = get_sock_char_line(sock, timeout=timeout)
     sock.close()
     if r:
         # XXX: we got here from bytes to utf-8 to keep the remaining code
@@ -220,7 +219,7 @@ def getMenu(server, port, scnl=None, timeout=None):
         elif tokens[6] in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
-            print('no type token found in getMenu')
+            print('no type token found in get_menu')
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
@@ -235,50 +234,50 @@ def getMenu(server, port, scnl=None, timeout=None):
     return []
 
 
-def readWaveServerV(server, port, scnl, start, end, timeout=None):
+def read_wave_server_v(server, port, scnl, start, end, timeout=None):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
-    Returns list of tracebuf2 objects
+    Returns list of TraceBuf2 objects
     """
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
-    sock = sendSockReq(server, port, reqstr.encode('ascii', 'strict'),
-                       timeout=timeout)
-    r = getSockCharLine(sock, timeout=timeout)
+    sock = send_sock_req(server, port, reqstr.encode('ascii', 'strict'),
+                         timeout=timeout)
+    r = get_sock_char_line(sock, timeout=timeout)
     if not r:
         return []
     tokens = r.decode().split()
     flag = tokens[6]
     if flag != 'F':
-        msg = 'readWaveServerV returned flag %s - %s'
+        msg = 'read_wave_server_v returned flag %s - %s'
         print(msg % (flag, RETURNFLAG_KEY[flag]))
         return []
     nbytes = int(tokens[-1])
-    dat = getSockBytes(sock, nbytes, timeout=timeout)
+    dat = get_sock_bytes(sock, nbytes, timeout=timeout)
     sock.close()
     tbl = []
-    new = tracebuf2()  # empty..filled below
+    new = TraceBuf2()  # empty..filled below
     bytesread = 1
     p = 0
     while bytesread and p < len(dat):
-        bytesread = new.readTB2(dat[p:])
+        bytesread = new.read_tb2(dat[p:])
         if bytesread:
             tbl.append(new)
-            new = tracebuf2()  # empty..filled on next iteration
+            new = TraceBuf2()  # empty..filled on next iteration
             p += bytesread
     return tbl
 
 
-def tracebufs2obspyStream(tbuflist):
+def trace_bufs2obspy_stream(tbuflist):
     """
-    Returns obspy.Stream object from input list of tracebuf2 objects
+    Returns obspy.Stream object from input list of TraceBuf2 objects
     """
     if not tbuflist:
         return None
     tlist = []
     for tb in tbuflist:
-        tlist.append(tb.getObspyTrace())
+        tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm

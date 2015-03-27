@@ -289,7 +289,7 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            cat = obspy.readEvents(data_stream, format="quakeml")
+            cat = obspy.read_events(data_stream, format="quakeml")
             data_stream.close()
             return cat
 

@@ -4,9 +4,9 @@ from math import log10
 
 import numpy as np
 
-from obspy.arclink import Client
-from obspy.core import UTCDateTime
-from obspy.core.util.geodetics import gps2DistAzimuth
+from obspy.clients.arclink import Client
+from obspy import UTCDateTime
+from obspy.geodetics import gps2dist_azimuth
 
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
@@ -19,8 +19,8 @@ stations = ["LKBD", "SIMPL", "DIX"]
 mags = []
 
 for station in stations:
-    st = client.getWaveform("CH", station, "", "[EH]H*", t - 300, t + 300,
-                            metadata=True)
+    st = client.get_waveforms("CH", station, "", "[EH]H*", t - 300, t + 300,
+                              metadata=True)
 
     st.simulate(paz_remove="self", paz_simulate=paz_wa, water_level=10)
     st.trim(t, t + 50)
@@ -36,7 +36,8 @@ for station in stations:
     event_lat = 46.218
     event_lon = 7.706
 
-    epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat, sta_lon)
+    epi_dist, az, baz = gps2dist_azimuth(event_lat, event_lon, sta_lat,
+                                         sta_lon)
     epi_dist = epi_dist / 1000
 
     a = 0.018

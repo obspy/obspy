@@ -37,12 +37,12 @@ from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace
-from obspy.core.util import getMatplotlibVersion
-from obspy.signal import cosTaper
-from obspy.signal.util import prevpow2
+from obspy.core.util import get_matplotlib_version
+from obspy.signal.invsim import cosine_taper
+from obspy.signal.util import prev_pow_2
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
 
@@ -128,7 +128,7 @@ def fft_taper(data):
     .. warning::
         Inplace operation, so data should be float.
     """
-    data *= cosTaper(len(data), 0.2)
+    data *= cosine_taper(len(data), 0.2)
     return data
 
 
@@ -352,7 +352,7 @@ class PPSD():
         #    (1 full segment length + 25% * 12 full segment lengths)
         self.nfft = self.nfft / 4.0
         #  - go to next smaller power of 2 for nfft
-        self.nfft = prevpow2(self.nfft)
+        self.nfft = prev_pow_2(self.nfft)
         #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
         self.times_used = []

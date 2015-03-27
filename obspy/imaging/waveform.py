@@ -36,10 +36,10 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import createEmptyDataChunk
+from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
-from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
+from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -148,7 +148,7 @@ class WaveformPlotting(object):
             else:
                 # One plot for each trace.
                 if self.automerge:
-                    count = self.__getMergablesIds()
+                    count = self.__get_mergable_ids()
                     count = len(count)
                 else:
                     count = len(self.stream)
@@ -220,7 +220,7 @@ class WaveformPlotting(object):
         if self.kwargs.get("fig", None) is None:
             plt.close()
 
-    def __getMergeId(self, tr):
+    def __get_merge_id(self, tr):
         tr_id = tr.id
         # don't merge normal traces with previews
         try:
@@ -236,13 +236,13 @@ class WaveformPlotting(object):
             pass
         return tr_id
 
-    def __getMergablesIds(self):
+    def __get_mergable_ids(self):
         ids = set()
         for tr in self.stream:
-            ids.add(self.__getMergeId(tr))
-        return sorted(ids, key=_ID_key)
+            ids.add(self.__get_merge_id(tr))
+        return sorted(ids, key=_id_key)
 
-    def plotWaveform(self, *args, **kwargs):
+    def plot_waveform(self, *args, **kwargs):
         """
         Creates a graph of any given ObsPy Stream object. It either saves the
         image directly to the file system or returns a binary image string.
@@ -256,14 +256,14 @@ class WaveformPlotting(object):
         """
         # Setup the figure if not passed explicitly.
         if not self.fig_obj:
-            self.__setupFigure()
+            self.__setup_figure()
         else:
             self.fig = self.fig_obj
         # Determine kind of plot and do the actual plotting.
         if self.type == 'dayplot':
-            self.plotDay(*args, **kwargs)
+            self.plot_day(*args, **kwargs)
         elif self.type == 'section':
-            self.plotSection(*args, **kwargs)
+            self.plot_section(*args, **kwargs)
         else:
             self.plot(*args, **kwargs)
         # Adjust the subplot so there is always a fixed margin on every side
@@ -331,11 +331,11 @@ class WaveformPlotting(object):
         else:
             # Generate sorted list of traces (no copy)
             # Sort order: id, starttime, endtime
-            ids = self.__getMergablesIds()
+            ids = self.__get_mergable_ids()
             for id in ids:
                 stream_new.append([])
                 for tr in self.stream:
-                    tr_id = self.__getMergeId(tr)
+                    tr_id = self.__get_merge_id(tr)
                     if tr_id == id:
                         # does not copy the elements of the data array
                         tr_ref = copy(tr)
@@ -378,22 +378,22 @@ class WaveformPlotting(object):
                     method_ = "full"
             method_ = method_.lower()
             if method_ == 'full':
-                self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+                self.__plot_straight(stream_new[_i], ax, *args, **kwargs)
             elif method_ == 'fast':
-                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+                self.__plot_min_max(stream_new[_i], ax, *args, **kwargs)
             else:
                 msg = "Invalid plot method: '%s'" % method_
                 raise ValueError(msg)
         # Set ticks.
-        self.__plotSetXTicks()
-        self.__plotSetYTicks()
+        self.__plot_set_x_ticks()
+        self.__plot_set_y_ticks()
         xmin = self._time_to_xvalue(self.starttime)
         xmax = self._time_to_xvalue(self.endtime)
         ax.set_xlim(xmin, xmax)
         self._draw_overlap_axvspan_legend()
 
     @deprecated_keywords({'swap_time_axis': None})
-    def plotDay(self, *args, **kwargs):
+    def plot_day(self, *args, **kwargs):
         """
         Extend the seismogram.
         """
@@ -404,9 +404,9 @@ class WaveformPlotting(object):
             raise ValueError(msg)
         self.stream.trim(self.starttime, self.endtime, pad=True)
         # Get minmax array.
-        self.__dayplotGetMinMaxValues(self, *args, **kwargs)
+        self.__dayplot_get_min_max_values(self, *args, **kwargs)
         # Normalize array
-        self.__dayplotNormalizeValues(self, *args, **kwargs)
+        self.__dayplot_normalize_values(self, *args, **kwargs)
         # Get timezone information. If none is given, use local time.
         self.time_offset = kwargs.get(
             'time_offset',
@@ -453,14 +453,14 @@ class WaveformPlotting(object):
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
-            self._plotDayplotScale(unit=scale_unit)
+            self._plot_dayplot_scale(unit=scale_unit)
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
         ax.set_ylim(-0.3, intervals + 0.3)
         self.axis = [ax]
         # Set ticks.
-        self.__dayplotSetYTicks(*args, **kwargs)
-        self.__dayplotSetXTicks(*args, **kwargs)
+        self.__dayplot_set_y_ticks(*args, **kwargs)
+        self.__dayplot_set_x_ticks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid(color=self.grid_color,
                               linestyle=self.grid_linestyle,
@@ -486,9 +486,9 @@ class WaveformPlotting(object):
                 warnings.warn(msg)
         if events:
             for event in events:
-                self._plotEvent(event)
+                self._plot_event(event)
 
-    def _plotEvent(self, event):
+    def _plot_event(self, event):
         """
         Helper function to plot an event into the dayplot.
         """
@@ -603,7 +603,7 @@ class WaveformPlotting(object):
             ax.plot(x_pos, y_pos, "|", color="red",
                     markersize=50, markeredgewidth=self.linewidth * 4)
 
-    def _plotDayplotScale(self, unit):
+    def _plot_dayplot_scale(self, unit):
         """
         Plots the dayplot scale if requested.
         """
@@ -649,7 +649,7 @@ class WaveformPlotting(object):
             fmt_string % (self._normalization_factor, unit), ha="left",
             va="center", fontsize="small")
 
-    def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
+    def __plot_straight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Just plots the data samples in the self.stream. Useful for smaller
         datasets up to around 1000000 samples (depending on the machine on
@@ -700,7 +700,7 @@ class WaveformPlotting(object):
             tr_id = trace.id
         self.ids.append(tr_id)
 
-    def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
+    def __plot_min_max(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Plots the data using a min/max approach that calculated the minimum and
         maximum values of each "pixel" and then plots only these values. Works
@@ -776,7 +776,7 @@ class WaveformPlotting(object):
             tr_id = trace[0].id
         self.ids.append(tr_id)
 
-    def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __plot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
@@ -798,7 +798,7 @@ class WaveformPlotting(object):
         plt.setp(ax.get_xticklabels(), fontsize='small',
                  rotation=self.tick_rotation)
 
-    def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __plot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         """
         if self.equal_scale:
@@ -819,7 +819,7 @@ class WaveformPlotting(object):
             ax.yaxis.set_major_locator(MaxNLocator(7, prune="both"))
             ax.yaxis.set_major_formatter(ScalarFormatter())
 
-    def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_get_min_max_values(self, *args, **kwargs):  # @UnusedVariable
         """
         Takes a Stream object and calculates the min and max values for each
         pixel in the dayplot.
@@ -862,7 +862,7 @@ class WaveformPlotting(object):
             trace.data = trace.data[:number_of_samples]
         elif delta > 0:
             trace.data = np.ma.concatenate(
-                [trace.data, createEmptyDataChunk(delta, trace.data.dtype)])
+                [trace.data, create_empty_data_chunk(delta, trace.data.dtype)])
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))
@@ -894,7 +894,7 @@ class WaveformPlotting(object):
         # Set class variable.
         self.extreme_values = extreme_values
 
-    def __dayplotNormalizeValues(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_normalize_values(self, *args, **kwargs):  # @UnusedVariable
         """
         Normalizes all values in the 3 dimensional array, so that the minimum
         value will be 0 and the maximum value will be 1.
@@ -935,7 +935,7 @@ class WaveformPlotting(object):
         self.extreme_values = self.extreme_values / self._normalization_factor
         self.extreme_values += 0.5
 
-    def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the xticks for the dayplot.
         """
@@ -1008,7 +1008,7 @@ class WaveformPlotting(object):
         self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
                                            time_type), size=self.x_labels_size)
 
-    def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the yticks for the dayplot.
         """
@@ -1050,13 +1050,13 @@ class WaveformPlotting(object):
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
 
-    def plotSection(self, *args, **kwargs):  # @UnusedVariable
+    def plot_section(self, *args, **kwargs):  # @UnusedVariable
         """
         Plots multiple waveforms as a record section on a single plot.
         """
         # Initialise data and plot
-        self.__sectInitTraces()
-        ax = self.__sectInitPlot()
+        self.__sect_init_traces()
+        ax = self.__sect_init_plot()
         # Setting up line properties
         for line in ax.lines:
             line.set_alpha(self.alpha)
@@ -1064,12 +1064,12 @@ class WaveformPlotting(object):
             line.set_color(self.color)
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            ax.set_xlim(left=self.__sectOffsetToFraction(self._offset_min))
+            ax.set_xlim(left=self.__sect_offset_to_fraction(self._offset_min))
         if self.sect_offset_max is not None:
-            ax.set_xlim(right=self.__sectOffsetToFraction(self._offset_max))
+            ax.set_xlim(right=self.__sect_offset_to_fraction(self._offset_max))
         # Set up offset ticks
         tick_min, tick_max = \
-            self.__sectFractionToOffset(np.array(ax.get_xlim()))
+            self.__sect_fraction_to_offset(np.array(ax.get_xlim()))
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
@@ -1081,7 +1081,7 @@ class WaveformPlotting(object):
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        ax.set_xticks(self.__sectOffsetToFraction(ticks))
+        ax.set_xticks(self.__sect_offset_to_fraction(ticks))
         # Setting up tick labels
         ax.set_ylabel('Time [s]')
         if not self.sect_dist_degree:
@@ -1107,7 +1107,7 @@ class WaveformPlotting(object):
             linewidth=self.grid_linewidth)
         ax.xaxis.grid(False)
 
-    def __sectInitTraces(self):
+    def __sect_init_traces(self):
         """
         Arrange the trace data used for plotting.
 
@@ -1178,9 +1178,9 @@ class WaveformPlotting(object):
                 tr.stats.endtime -
                 tr.stats.starttime) / self._tr_npts[_i]
         # Init time vectors
-        self.__sectInitTime()
+        self.__sect_init_time()
 
-    def __sectScaleTraces(self, scale=None):
+    def __sect_scale_traces(self, scale=None):
         """
         The traces have to be scaled to fit between 0-1., each trace
         gets 1./num_traces space. adjustable by scale=1.0.
@@ -1189,7 +1189,7 @@ class WaveformPlotting(object):
             self.sect_user_scale = scale
         self._sect_scale = self._tr_num * 1.5 * (1. / self.sect_user_scale)
 
-    def __sectInitTime(self):
+    def __sect_init_time(self):
         """
         Define the time vector for each trace
         """
@@ -1205,28 +1205,28 @@ class WaveformPlotting(object):
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
 
-    def __sectOffsetToFraction(self, offset):
+    def __sect_offset_to_fraction(self, offset):
         """
         Helper function to return offsets from fractions
         """
         return offset / self._tr_offsets.max()
 
-    def __sectFractionToOffset(self, fraction):
+    def __sect_fraction_to_offset(self, fraction):
         """
         Helper function to return fractions from offsets
         """
         return fraction * self._tr_offsets.max()
 
-    def __sectInitPlot(self):
+    def __sect_init_plot(self):
         """
         Function initialises plot all the illustration is done by
-        self.plotSection()
+        self.plot_section()
         """
         ax = self.fig.gca()
         # Calculate normalizing factor
-        self.__sectNormalizeTraces()
+        self.__sect_normalize_traces()
         # Calculate scaling factor
-        self.__sectScaleTraces()
+        self.__sect_scale_traces()
         # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
             # Scale, normalize and shift traces by offset
@@ -1237,7 +1237,7 @@ class WaveformPlotting(object):
                     self._tr_times[_tr])
         return ax
 
-    def __sectNormalizeTraces(self):
+    def __sect_normalize_traces(self):
         """
         This helper function normalizes the traces
         """
@@ -1255,7 +1255,7 @@ class WaveformPlotting(object):
                 'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 
-    def __setupFigure(self):
+    def __setup_figure(self):
         """
         The design and look of the whole plot to be produced.
         """

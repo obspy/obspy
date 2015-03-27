@@ -29,8 +29,9 @@ with standard_library.hooks():
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 
-from obspy import Catalog, UTCDateTime, readEvents
-from obspy.core.util import guessDelta
+from obspy import Catalog, UTCDateTime, read_events
+from obspy.core.util import guess_delta
+from obspy.core.util.decorator import deprecated
 from obspy.io.xseed import Parser
 
 
@@ -56,10 +57,10 @@ def _unpickle(data):
     return obj
 
 
-def _callChangeGetPAZ(func):
+def _call_change_get_paz(func):
     """
     This is a decorator to intercept a change in the arg list for
-    seishub.client.station.getPAZ() with revision [3778].
+    seishub.client.station.get_paz() with revision [3778].
 
     * throw a DeprecationWarning
     * make the correct call
@@ -68,7 +69,7 @@ def _callChangeGetPAZ(func):
     def new_func(*args, **kwargs):
         # function itself is first arg so len(args) == 3 means we got 2 args.
         if len(args) > 3:
-            msg = "The arg/kwarg call syntax of getPAZ() has changed. " + \
+            msg = "The arg/kwarg call syntax of get_paz() has changed. " + \
                   "Please update your code! The old call syntax has been " + \
                   "deprecated and will stop working with the next version."
             warnings.warn(msg, DeprecationWarning)
@@ -123,7 +124,7 @@ class Client(object):
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client(timeout=2)
     >>>
-    >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
+    >>> st = client.waveform.get_waveforms("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
@@ -179,7 +180,7 @@ class Client(object):
         except:
             pass
 
-    def testAuth(self):
+    def test_auth(self):
         """
         Test if authentication information is valid. Raises an Exception if
         status code of response is not 200 (OK) or 401 (Forbidden).
@@ -277,7 +278,7 @@ class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
-    def getResource(self, resource_name, format=None, **kwargs):
+    def get_resource(self, resource_name, format=None, **kwargs):
         """
         Gets a resource.
 
@@ -295,7 +296,7 @@ class _BaseRESTClient(object):
               resource_name
         return self.client._fetch(url, **kwargs)
 
-    def getXMLResource(self, resource_name, **kwargs):
+    def get_xml_resource(self, resource_name, **kwargs):
         """
         Gets a XML resource.
 
@@ -307,7 +308,7 @@ class _BaseRESTClient(object):
               resource_name
         return self.client._objectify(url, **kwargs)
 
-    def putResource(self, resource_name, xml_string, headers={}):
+    def put_resource(self, resource_name, xml_string, headers={}):
         """
         PUTs a XML resource.
 
@@ -326,7 +327,7 @@ class _BaseRESTClient(object):
         >>> c = Client()
         >>> xseed_file = "dataless.seed.BW_UH1.xml"
         >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
-        >>> c.station.putResource(xseed_file, xml_str)  # doctest: +SKIP
+        >>> c.station.put_resource(xseed_file, xml_str)  # doctest: +SKIP
         (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
@@ -334,7 +335,7 @@ class _BaseRESTClient(object):
         return self.client._HTTP_request(
             url, method="PUT", xml_string=xml_string, headers=headers)
 
-    def deleteResource(self, resource_name, headers={}):
+    def delete_resource(self, resource_name, headers={}):
         """
         DELETEs a XML resource.
 
@@ -365,18 +366,28 @@ master/seishub/plugins/seismology/waveform.py
     def __init__(self, client):
         self.client = client
 
-    def getNetworkIds(self, **kwargs):
+    @deprecated("'getNetworkIds' has been renamed to 'get_network_ids'. Use "
+                "that instead.")
+    def getNetworkIds(self, *args, **kwargs):
+        return self.get_network_ids(*args, **kwargs)
+
+    def get_network_ids(self, **kwargs):
         """
         Gets a list of network ids.
 
         :rtype: list
         :return: List of containing network ids.
         """
-        url = '/seismology/waveform/getNetworkIds'
+        url = '/seismology/waveform/get_network_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
-    def getStationIds(self, network=None, **kwargs):
+    @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
+                "Use that instead.")
+    def getStationIds(self, *args, **kwargs):
+        return self.get_station_ids(*args, **kwargs)
+
+    def get_station_ids(self, network=None, **kwargs):
         """
         Gets a list of station ids.
 
@@ -389,11 +400,16 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getStationIds'
+        url = '/seismology/waveform/get_station_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
-    def getLocationIds(self, network=None, station=None, **kwargs):
+    @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
+                "that instead.")
+    def getLocationIds(self, *args, **kwargs):
+        return self.get_location_ids(*args, **kwargs)
+
+    def get_location_ids(self, network=None, station=None, **kwargs):
         """
         Gets a list of location ids.
 
@@ -408,12 +424,17 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getLocationIds'
+        url = '/seismology/waveform/get_location_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
-    def getChannelIds(self, network=None, station=None, location=None,
-                      **kwargs):
+    @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
+                "that instead.")
+    def getChannelIds(self, *args, **kwargs):
+        return self.get_channel_ids(*args, **kwargs)
+
+    def get_channel_ids(self, network=None, station=None, location=None,
+                        **kwargs):
         """
         Gets a list of channel ids.
 
@@ -430,12 +451,17 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getChannelIds'
+        url = '/seismology/waveform/get_channel_ids'
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    def getLatency(self, network=None, station=None, location=None,
-                   channel=None, **kwargs):
+    @deprecated("'getLatency' has been renamed to 'get_latency'. Use "
+                "that instead.")
+    def getLatency(self, *args, **kwargs):
+        return self.get_latency(*args, **kwargs)
+
+    def get_latency(self, network=None, station=None, location=None,
+                    channel=None, **kwargs):
         """
         Gets a list of network latency values.
 
@@ -454,15 +480,20 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/waveform/getLatency'
+        url = '/seismology/waveform/get_latency'
         root = self.client._objectify(url, **kwargs)
         return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                 for node in root.getchildren()]
 
-    def getWaveform(self, network, station, location=None, channel=None,
-                    starttime=None, endtime=None, apply_filter=None,
-                    getPAZ=False, getCoordinates=False,
-                    metadata_timecheck=True, **kwargs):
+    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. "
+                "Use that instead.")
+    def getWaveform(self, *args, **kwargs):
+        return self.get_waveforms(*args, **kwargs)
+
+    def get_waveforms(self, network, station, location=None, channel=None,
+                      starttime=None, endtime=None, apply_filter=None,
+                      getPAZ=False, getCoordinates=False,
+                      metadata_timecheck=True, **kwargs):
         """
         Gets a ObsPy Stream object.
 
@@ -490,10 +521,10 @@ master/seishub/plugins/seismology/waveform.py
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request (default is ``False``).
         :type metadata_timecheck: bool, optional
-        :param metadata_timecheck: For ``getPAZ`` and ``getCoordinates`` check
-            if metadata information is changing from start to end time. Raises
-            an Exception if this is the case. This can be deactivated to save
-            time.
+        :param metadata_timecheck: For ``get_paz`` and ``get_coordinates``
+            check if metadata information is changing from start to end
+            time. Raises an Exception if this is the case. This can be
+            deactivated to save time.
         :rtype: :class:`~obspy.core.stream.Stream`
         :return: A ObsPy Stream object.
         """
@@ -514,11 +545,11 @@ master/seishub/plugins/seismology/waveform.py
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
         # only possible if a channel is specified otherwise delta = 0
-        delta = 2 * guessDelta(kwargs['channel'])
+        delta = 2 * guess_delta(kwargs['channel'])
         kwargs['starttime'] = trim_start - delta
         kwargs['endtime'] = trim_end + delta
 
-        url = '/seismology/waveform/getWaveform'
+        url = '/seismology/waveform/get_waveforms'
         data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
@@ -533,11 +564,11 @@ master/seishub/plugins/seismology/waveform.py
             stream.trim(trim_start, trim_end)
         if getPAZ:
             for tr in stream:
-                paz = self.client.station.getPAZ(seed_id=tr.id,
-                                                 datetime=starttime)
+                paz = self.client.station.get_paz(seed_id=tr.id,
+                                                  datetime=starttime)
                 if metadata_timecheck:
-                    paz_check = self.client.station.getPAZ(seed_id=tr.id,
-                                                           datetime=endtime)
+                    paz_check = self.client.station.get_paz(seed_id=tr.id,
+                                                            datetime=endtime)
                     if paz != paz_check:
                         msg = "PAZ information changing from start time to" + \
                               " end time."
@@ -545,11 +576,11 @@ master/seishub/plugins/seismology/waveform.py
                 tr.stats['paz'] = paz
 
         if getCoordinates:
-            coords = self.client.station.getCoordinates(
+            coords = self.client.station.get_coordinates(
                 network=network, station=station, location=location,
                 datetime=starttime)
             if metadata_timecheck:
-                coords_check = self.client.station.getCoordinates(
+                coords_check = self.client.station.get_coordinates(
                     network=network, station=station,
                     location=location, datetime=endtime)
                 if coords != coords_check:
@@ -560,8 +591,13 @@ master/seishub/plugins/seismology/waveform.py
                 tr.stats['coordinates'] = coords.copy()
         return stream
 
-    def getPreview(self, network, station, location=None, channel=None,
-                   starttime=None, endtime=None, trace_ids=None, **kwargs):
+    @deprecated("'getPreview' has been renamed to 'get_previews'. Use "
+                "that instead.")
+    def getPreview(self, *args, **kwargs):
+        return self.get_previews(*args, **kwargs)
+
+    def get_previews(self, network, station, location=None, channel=None,
+                     starttime=None, endtime=None, trace_ids=None, **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
@@ -586,7 +622,7 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        url = '/seismology/waveform/getPreview'
+        url = '/seismology/waveform/get_preview'
         data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
@@ -594,8 +630,13 @@ master/seishub/plugins/seismology/waveform.py
         stream = _unpickle(data)
         return stream
 
-    def getPreviewByIds(self, trace_ids=None, starttime=None, endtime=None,
-                        **kwargs):
+    @deprecated("'getPreviewByIds' has been renamed to 'get_previews_by_ids'. "
+                "Use that instead.")
+    def getPreviewByIds(self, *args, **kwargs):
+        return self.get_previews_by_ids(*args, **kwargs)
+
+    def get_previews_by_ids(self, trace_ids=None, starttime=None, endtime=None,
+                            **kwargs):
         """
         Gets a preview of a ObsPy Stream object.
 
@@ -616,7 +657,7 @@ master/seishub/plugins/seismology/waveform.py
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
                 kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
-        url = '/seismology/waveform/getPreview'
+        url = '/seismology/waveform/get_preview'
         data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
@@ -639,7 +680,12 @@ master/seishub/plugins/seismology/waveform.py
     package = 'seismology'
     resourcetype = 'station'
 
-    def getList(self, network=None, station=None, **kwargs):
+    @deprecated("'getList' has been renamed to 'get_list'. Use "
+                "that instead.")
+    def getList(self, *args, **kwargs):
+        return self.get_list(*args, **kwargs)
+
+    def get_list(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
 
@@ -654,12 +700,17 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/station/getList'
+        url = '/seismology/station/get_list'
         root = self.client._objectify(url, **kwargs)
         return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                 for node in root.getchildren()]
 
-    def getCoordinates(self, network, station, datetime, location=''):
+    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. Use "
+                "that instead.")
+    def getCoordinates(self, *args, **kwargs):
+        return self.get_coordinates(*args, **kwargs)
+
+    def get_coordinates(self, network, station, datetime, location=''):
         """
         Get coordinate information.
 
@@ -702,7 +753,7 @@ master/seishub/plugins/seismology/waveform.py
                 coords[key] = data[key]
             return coords
 
-        metadata = self.getList(**kwargs)
+        metadata = self.get_list(**kwargs)
         if not metadata:
             msg = "No coordinates for station %s.%s at %s" % \
                 (network, station, datetime)
@@ -719,8 +770,13 @@ master/seishub/plugins/seismology/waveform.py
             coords[key] = metadata[key]
         return coords
 
-    @_callChangeGetPAZ
-    def getPAZ(self, seed_id, datetime):
+    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
+                "that instead.")
+    def getPAZ(self, *args, **kwargs):
+        return self.get_paz(*args, **kwargs)
+
+    @_call_change_get_paz
+    def get_paz(self, seed_id, datetime):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
         constant for the poles and zeros.
@@ -737,7 +793,7 @@ master/seishub/plugins/seismology/waveform.py
         .. rubric:: Example
 
         >>> c = Client(timeout=2)
-        >>> paz = c.station.getPAZ('BW.MANZ..EHZ', '20090707')
+        >>> paz = c.station.get_paz('BW.MANZ..EHZ', '20090707')
         >>> paz['zeros']
         [0j, 0j]
         >>> len(paz['poles'])
@@ -760,8 +816,8 @@ master/seishub/plugins/seismology/waveform.py
                 continue
         network, station, location, channel = seed_id.split(".")
         # request station information
-        station_list = self.getList(network=network, station=station,
-                                    datetime=datetime)
+        station_list = self.get_list(network=network, station=station,
+                                     datetime=datetime)
         if not station_list:
             return {}
         # don't allow wild cards
@@ -774,7 +830,7 @@ master/seishub/plugins/seismology/waveform.py
             warnings.warn("Received more than one XSEED file. Using first.")
 
         xml_doc = station_list[0]
-        res = self.client.station.getResource(xml_doc['resource_name'])
+        res = self.client.station.get_resource(xml_doc['resource_name'])
         reslist = self.client.xml_seeds.setdefault(seed_id, [])
         if res not in reslist:
             reslist.append(res)
@@ -797,14 +853,19 @@ master/seishub/plugins/seismology/event.py
     package = 'seismology'
     resourcetype = 'event'
 
-    def getList(self, limit=50, offset=None, localisation_method=None,
-                author=None, min_datetime=None, max_datetime=None,
-                first_pick=None, last_pick=None, min_latitude=None,
-                max_latitude=None, min_longitude=None, max_longitude=None,
-                min_magnitude=None, max_magnitude=None, min_depth=None,
-                max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
-                used_s=None, min_used_s=None, max_used_s=None,
-                document_id=None, **kwargs):
+    @deprecated("'getList' has been renamed to 'get_list'. Use "
+                "that instead.")
+    def getList(self, *args, **kwargs):
+        return self.get_list(*args, **kwargs)
+
+    def get_list(self, limit=50, offset=None, localisation_method=None,
+                 author=None, min_datetime=None, max_datetime=None,
+                 first_pick=None, last_pick=None, min_latitude=None,
+                 max_latitude=None, min_longitude=None, max_longitude=None,
+                 min_magnitude=None, max_magnitude=None, min_depth=None,
+                 max_depth=None, used_p=None, min_used_p=None, max_used_p=None,
+                 used_s=None, min_used_s=None, max_used_s=None,
+                 document_id=None, **kwargs):
         """
         Gets a list of event information.
 
@@ -828,7 +889,7 @@ master/seishub/plugins/seismology/event.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        url = '/seismology/event/getList'
+        url = '/seismology/event/get_list'
         root = self.client._objectify(url, **kwargs)
         results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
                    for node in root.getchildren()]
@@ -841,10 +902,15 @@ master/seishub/plugins/seismology/event.py
             warnings.warn(msg)
         return results
 
-    def getEvents(self, **kwargs):
+    @deprecated("'getEvents' has been renamed to 'get_events'. Use "
+                "that instead.")
+    def getEvents(self, *args, **kwargs):
+        return self.get_events(*args, **kwargs)
+
+    def get_events(self, **kwargs):
         """
         Fetches a catalog with event information. Parameters to narrow down
-        the request are the same as for :meth:`getList`.
+        the request are the same as for :meth:`get_list`.
 
         ..warning::
             Only works when connecting to a SeisHub server of version 1.4.0
@@ -859,17 +925,22 @@ master/seishub/plugins/seismology/event.py
         exception.
         """
         resource_names = [item["resource_name"]
-                          for item in self.getList(**kwargs)]
+                          for item in self.get_list(**kwargs)]
         cat = Catalog()
         for resource_name in resource_names:
-            cat.extend(readEvents(self.getResource(resource_name)))
+            cat.extend(read_events(self.get_resource(resource_name)))
         return cat
 
-    def getKML(self, nolabels=False, **kwargs):
+    @deprecated("'getKML' has been renamed to 'get_kml'. Use "
+                "that instead.")
+    def getKML(self, *args, **kwargs):
+        return self.get_kml(*args, **kwargs)
+
+    def get_kml(self, nolabels=False, **kwargs):
         """
-        Posts an event.getList() and returns the results as a KML file. For
+        Posts an event.get_list() and returns the results as a KML file. For
         optional arguments, see documentation of
-        :meth:`~obspy.clients.seishub.client._EventMapperClient.getList()`
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.get_list()`
 
         :type nolabels: bool
         :param nolabels: Hide labels of events in KML. Can be useful with large
@@ -878,7 +949,7 @@ master/seishub/plugins/seismology/event.py
         :return: String containing KML information of all matching events. This
             string can be written to a file and loaded into e.g. Google Earth.
         """
-        events = self.getList(**kwargs)
+        events = self.get_list(**kwargs)
         timestamp = datetime.now()
 
         # construct the KML file
@@ -973,12 +1044,17 @@ master/seishub/plugins/seismology/event.py
         # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
 
-    def saveKML(self, filename, overwrite=False, **kwargs):
+    @deprecated("'saveKML' has been renamed to 'save_kml'. Use "
+                "that instead.")
+    def saveKML(self, *args, **kwargs):
+        return self.save_kml(*args, **kwargs)
+
+    def save_kml(self, filename, overwrite=False, **kwargs):
         """
-        Posts an event.getList() and writes the results as a KML file. For
+        Posts an event.get_list() and writes the results as a KML file. For
         optional arguments, see help for
-        :meth:`~obspy.clients.seishub.client._EventMapperClient.getList()` and
-        :meth:`~obspy.clients.seishub.client._EventMapperClient.getKML()`
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.get_list()` and
+        :meth:`~obspy.clients.seishub.client._EventMapperClient.get_kml()`
 
         :type filename: str
         :param filename: Filename (complete path) to save KML to.
@@ -994,7 +1070,7 @@ master/seishub/plugins/seismology/event.py
         """
         if not overwrite and os.path.lexists(filename):
             raise OSError("File %s exists and overwrite=False." % filename)
-        kml_string = self.getKML(**kwargs)
+        kml_string = self.get_kml(**kwargs)
         open(filename, "wt").write(kml_string)
         return
 

@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
-from ..utils import LookupCode, formatRESP
+from ..utils import lookup_code, format_RESP
 
 
 RESP = """\
@@ -52,32 +52,32 @@ class Blockette061(Blockette):
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
         out = RESP % (station, channel,
                       self.stage_sequence_number,
                       self.symmetry_code,
-                      LookupCode(abbreviations, 34, 'unit_name',
-                                 'unit_lookup_code', self.signal_in_units),
-                      LookupCode(abbreviations, 34, 'unit_description',
-                                 'unit_lookup_code', self.signal_in_units),
-                      LookupCode(abbreviations, 34, 'unit_name',
-                                 'unit_lookup_code', self.signal_out_units),
-                      LookupCode(abbreviations, 34, 'unit_description',
-                                 'unit_lookup_code', self.signal_out_units),
+                      lookup_code(abbreviations, 34, 'unit_name',
+                                  'unit_lookup_code', self.signal_in_units),
+                      lookup_code(abbreviations, 34, 'unit_description',
+                                  'unit_lookup_code', self.signal_in_units),
+                      lookup_code(abbreviations, 34, 'unit_name',
+                                  'unit_lookup_code', self.signal_out_units),
+                      lookup_code(abbreviations, 34, 'unit_description',
+                                  'unit_lookup_code', self.signal_out_units),
                       self.number_of_coefficients)
         if self.number_of_coefficients > 1:
             out += '#\t\tNumerator coefficients:\n'
             out += '#\t\t  i, coefficient\n'
             for _i in range(self.number_of_coefficients):
                 out += 'B061F09    %4s %13s\n' % \
-                    (_i, formatRESP(self.FIR_coefficient[_i], 6))
+                    (_i, format_RESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_coefficients == 1:
             out += '#\t\tNumerator coefficients:\n'
             out += '#\t\t  i, coefficient\n'
             out += 'B061F09    %4s %13s\n' % \
-                (0, formatRESP(self.FIR_coefficient, 6))
+                (0, format_RESP(self.FIR_coefficient, 6))
         out += '#\t\t\n'
         return out.encode()

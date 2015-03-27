@@ -65,7 +65,7 @@ class RecordAnalyser(object):
         self.record_offset = 0
         self.record_number = 0
         # Parse the header.
-        self._parseHeader()
+        self._parse_header()
         self.did_goto = False
 
     def __eq__(self, other):
@@ -93,7 +93,7 @@ class RecordAnalyser(object):
         self.record_offset += 2 ** self.blockettes[1000]['Data Record Length']
         self.record_number += 1
         try:
-            self._parseHeader()
+            self._parse_header()
         except IOError as e:
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
@@ -110,26 +110,26 @@ class RecordAnalyser(object):
         self.record_offset = (
             record_number * 2 ** self.blockettes[1000]['Data Record Length'])
         try:
-            self._parseHeader()
+            self._parse_header()
         except IOError as e:
             msg = "IOError while trying to read record number %i: %s"
             raise StopIteration(msg % (self.record_number, str(e)))
         self.did_goto = True
 
-    def _parseHeader(self):
+    def _parse_header(self):
         """
         Makes all necessary calls to parse the header.
         """
         # Big or little endian for the header.
-        self._getEndianess()
+        self._get_endianess()
         # Read the fixed header.
-        self._readFixedHeader()
+        self._read_fixed_header()
         # Get the present blockettes.
-        self._getBlockettes()
+        self._get_blockettes()
         # Calculate the starttime.
-        self._calculateStarttime()
+        self._calculate_start_time()
 
-    def _getEndianess(self):
+    def _get_endianess(self):
         """
         Tries to figure out whether or not the file has little or big endian
         encoding and sets self.endian to either '<' for little endian or '>'
@@ -157,7 +157,7 @@ class RecordAnalyser(object):
         # Reset the pointer.
         self.file.seek(current_pointer, 0)
 
-    def _readFixedHeader(self):
+    def _read_fixed_header(self):
         """
         Reads the fixed header of the Mini-SEED file and writes all entries to
         self.fixed_header, a dictionary.
@@ -209,7 +209,7 @@ class RecordAnalyser(object):
         self.fixed_header['Beginning of data'] = int(header_item[34])
         self.fixed_header['First blockette'] = int(header_item[35])
 
-    def _getBlockettes(self):
+    def _get_blockettes(self):
         """
         Loop over header and try to extract all header values!
         """
@@ -234,14 +234,14 @@ class RecordAnalyser(object):
                 raise
             blkt_type = int(blkt_type)
             next_blockette = int(next_blockette)
-            self.blockettes[blkt_type] = self._parseBlockette(blkt_type)
+            self.blockettes[blkt_type] = self._parse_blockette(blkt_type)
             # Also break the loop if next_blockette is zero.
             if next_blockette == 0 or next_blockette < 4 or \
                     next_blockette - 4 < cur_blkt_offset:
                 break
             cur_blkt_offset = next_blockette
 
-    def _parseBlockette(self, blkt_type):
+    def _parse_blockette(self, blkt_type):
         """
         Parses the blockette blkt_type. If nothing is known about the blockette
         is will just return an empty dictionary.
@@ -287,7 +287,7 @@ class RecordAnalyser(object):
             blkt_dict['Frame count'] = int(unpack_values[2])
         return blkt_dict
 
-    def _calculateStarttime(self):
+    def _calculate_start_time(self):
         """
         Calculates the true record starttime. See the SEED manual for all
         necessary information.

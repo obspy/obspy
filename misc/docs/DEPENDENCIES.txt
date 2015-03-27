@@ -23,8 +23,6 @@ lxml
 numpy
 scipy
 matplotlib
-## for obspy.neries:
-suds
 ## for obspy.db:
 sqlalchemy
 

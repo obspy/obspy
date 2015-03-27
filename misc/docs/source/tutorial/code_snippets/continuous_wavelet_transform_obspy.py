@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from obspy.core import read
+import obspy
 from obspy.signal.tf_misfit import cwt
 
 
-st = read()
+st = obspy.read()
 tr = st[0]
 npts = tr.stats.npts
 dt = tr.stats.delta

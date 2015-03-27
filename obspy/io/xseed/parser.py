@@ -31,9 +31,9 @@ import numpy as np
 
 from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.decorator import map_example_filename, deprecated
 from . import DEFAULT_XSEED_VERSION, blockette
-from .utils import IGNORE_ATTR, SEEDParserException, toTag
+from .utils import IGNORE_ATTR, SEEDParserException, to_tag
 
 
 CONTINUE_FROM_LAST_RECORD = b'*'
@@ -115,7 +115,7 @@ class Parser(object):
         except:
             return 'No data'
         ret_str = ""
-        inv = self.getInventory()
+        inv = self.get_inventory()
         ret_str += "Networks:\n"
         # Sort alphabetically.
         networks = sorted(inv["networks"], key=lambda x: x["network_code"])
@@ -186,16 +186,21 @@ class Parser(object):
         data.seek(0)
         if first_byte.isdigit():
             # SEED volumes starts with a number
-            self._parseSEED(data)
+            self._parse_SEED(data)
             self._format = 'SEED'
         elif first_byte == b'<':
             # XML files should always starts with an '<'
-            self._parseXSEED(data)
+            self._parse_XSEED(data)
             self._format = 'XSEED'
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-    def getXSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
+    @deprecated("'getXSEED' has been renamed to 'get_XSEED'. "
+                "Use that instead.")
+    def getXSEED(self, *args, **kwargs):
+        return self.get_XSEED(*args, **kwargs)
+
+    def get_XSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
 
@@ -217,37 +222,37 @@ class Parser(object):
             msg = 'No data to be written available.'
             raise SEEDParserException(msg)
         # Check blockettes:
-        if not self._checkBlockettes():
+        if not self._check_blockettes():
             msg = 'Not all necessary blockettes are available.'
             raise SEEDParserException(msg)
         # Add blockettes 11 and 12 only for XSEED version 1.0.
         if version == '1.0':
-            self._createBlockettes11and12(blockette12=True)
+            self._create_blockettes_11_and_12(blockette12=True)
         # Now start actually filling the XML tree.
         # Volume header:
-        sub = SubElement(doc, toTag('Volume Index Control Header'))
+        sub = SubElement(doc, to_tag('Volume Index Control Header'))
         for blkt in self.volume:
-            sub.append(blkt.getXML(xseed_version=version))
+            sub.append(blkt.get_XML(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
-            self._deleteBlockettes11and12()
+            self._delete_blockettes_11_and_12()
         # Abbreviations:
         sub = SubElement(
-            doc, toTag('Abbreviation Dictionary Control Header'))
+            doc, to_tag('Abbreviation Dictionary Control Header'))
         for blkt in self.abbreviations:
-            sub.append(blkt.getXML(xseed_version=version))
+            sub.append(blkt.get_XML(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
-                sub = SubElement(doc, toTag('Station Control Header'))
+                sub = SubElement(doc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.getXML(xseed_version=version))
+                    sub.append(blkt.get_XML(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
-                SubElement(doc, toTag('Timespan Control Header'))
+                SubElement(doc, to_tag('Timespan Control Header'))
                 # Also no data is present in all supported SEED files.
-                SubElement(doc, toTag('Data Records'))
+                SubElement(doc, to_tag('Data Records'))
             # Return single XML String.
             return tostring(doc, pretty_print=True, xml_declaration=True,
                             encoding='UTF-8')
@@ -256,15 +261,15 @@ class Parser(object):
             result = {}
             for station in self.stations:
                 cdoc = copy.copy(doc)
-                sub = SubElement(cdoc, toTag('Station Control Header'))
+                sub = SubElement(cdoc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.getXML(xseed_version=version))
+                    sub.append(blkt.get_XML(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
-                    SubElement(doc, toTag('Timespan Control Header'))
+                    SubElement(doc, to_tag('Timespan Control Header'))
                     # Also no data is present in all supported SEED files.
-                    SubElement(doc, toTag('Data Records'))
+                    SubElement(doc, to_tag('Data Records'))
                 try:
                     id = station[0].end_effective_date.datetime
                 except AttributeError:
@@ -273,11 +278,16 @@ class Parser(object):
                                       xml_declaration=True, encoding='UTF-8')
             return result
 
-    def writeXSEED(self, filename, *args, **kwargs):
+    @deprecated("'writeXSEED' has been renamed to 'write_XSEED'. "
+                "Use that instead.")
+    def writeXSEED(self, *args, **kwargs):
+        return self.write_XSEED(*args, **kwargs)
+
+    def write_XSEED(self, filename, *args, **kwargs):
         """
         Writes a XML-SEED file with given name.
         """
-        result = self.getXSEED(*args, **kwargs)
+        result = self.get_XSEED(*args, **kwargs)
         if isinstance(result, bytes):
             with open(filename, 'wb') as f:
                 f.write(result)
@@ -297,7 +307,12 @@ class Parser(object):
         else:
             raise TypeError
 
-    def getSEED(self, compact=False):
+    @deprecated("'get_SEED' has been renamed to 'get_SEED'. "
+                "Use that instead.")
+    def getSEED(self, *args, **kwargs):
+        return self.get_SEED(*args, **kwargs)
+
+    def get_SEED(self, compact=False):
         """
         Returns a SEED representation of the current Parser object.
         """
@@ -307,15 +322,15 @@ class Parser(object):
             msg = 'No data to be written available.'
             raise SEEDParserException(msg)
         # Check blockettes:
-        if not self._checkBlockettes():
+        if not self._check_blockettes():
             msg = 'Not all necessary blockettes are available.'
             raise SEEDParserException(msg)
         # String to be written to:
         seed_string = b''
         cur_count = 1
-        volume, abbreviations, stations = self._createBlockettes11and12()
+        volume, abbreviations, stations = self._create_blockettes_11_and_12()
         # Delete Blockette 11 again.
-        self._deleteBlockettes11and12()
+        self._delete_blockettes_11_and_12()
 
         # Finally write the actual SEED String.
         def fmt_seed(cnt, i):
@@ -335,15 +350,25 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    def writeSEED(self, filename, *args, **kwargs):
+    @deprecated("'writeSEED' has been renamed to 'write_SEED'. "
+                "Use that instead.")
+    def writeSEED(self, *args, **kwargs):
+        return self.write_SEED(*args, **kwargs)
+
+    def write_SEED(self, filename, *args, **kwargs):
         """
         Writes a dataless SEED file with given name.
         """
         fh = open(filename, 'wb')
-        fh.write(self.getSEED(*args, **kwargs))
+        fh.write(self.get_SEED(*args, **kwargs))
         fh.close()
 
-    def getRESP(self):
+    @deprecated("'get_RESP' has been renamed to 'get_RESP'. "
+                "Use that instead.")
+    def getRESP(self, *args, **kwargs):
+        return self.get_RESP(*args, **kwargs)
+
+    def get_RESP(self):
         """
         Returns a RESP representation of the current Parser object.
 
@@ -376,7 +401,7 @@ class Parser(object):
                     resp.seek(_pos)
                     if _len != 0:
                         # Send the blockettes to the parser and append to list.
-                        self._getRESPString(resp, blockettes, cur_station)
+                        self._get_RESP_string(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
                     # Create the file name.
                     filename = 'RESP.%s.%s.%s.%s' \
@@ -399,7 +424,7 @@ class Parser(object):
             # It might happen that no blockette 52 is specified,
             if len(blockettes) != 0:
                 # One last time for the last channel.
-                self._getRESPString(resp, blockettes, cur_station)
+                self._get_RESP_string(resp, blockettes, cur_station)
                 resp_list.append([filename, resp])
         # Combine multiple channels.
         new_resp_list = []
@@ -424,7 +449,7 @@ class Parser(object):
         # parse blockettes if not SEED. Needed for XSEED to be initialized.
         # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
-            self.__init__(self.getSEED())
+            self.__init__(self.get_SEED())
         if old_format == "XSEED":
             self._format = "XSEED"
         # split id
@@ -476,7 +501,12 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    def getPAZ(self, seed_id, datetime=None):
+    @deprecated("'getPAZ' has been renamed to 'get_PAZ'. "
+                "Use that instead.")
+    def getPAZ(self, *args, **kwargs):
+        return self.get_PAZ(*args, **kwargs)
+
+    def get_PAZ(self, seed_id, datetime=None):
         """
         Return PAZ.
 
@@ -557,7 +587,12 @@ class Parser(object):
                         (len(data['poles']) - len(data['zeros']))
         return data
 
-    def getCoordinates(self, seed_id, datetime=None):
+    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. "
+                "Use that instead.")
+    def getCoordinates(self, *args, **kwargs):
+        return self.get_coordinates(*args, **kwargs)
+
+    def get_coordinates(self, seed_id, datetime=None):
         """
         Return Coordinates (from blockette 52)
 
@@ -580,7 +615,12 @@ class Parser(object):
                 break
         return data
 
-    def writeRESP(self, folder, zipped=False):
+    @deprecated("'writeRESP' has been renamed to 'write_RESP'. "
+                "Use that instead.")
+    def writeRESP(self, *args, **kwargs):
+        return self.write_RESP(*args, **kwargs)
+
+    def write_RESP(self, folder, zipped=False):
         """
         Writes for each channel a RESP file within a given folder.
 
@@ -588,7 +628,7 @@ class Parser(object):
         :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
         """
-        new_resp_list = self.getRESP()
+        new_resp_list = self.get_RESP()
         # Check if channel information could be found.
         if len(new_resp_list) == 0:
             msg = ("No channel information could be found. The SEED file "
@@ -612,7 +652,7 @@ class Parser(object):
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
 
-    def _parseSEED(self, data):
+    def _parse_SEED(self, data):
         """
         Parses through a whole SEED volume.
 
@@ -656,7 +696,7 @@ class Parser(object):
         record = data.read(self.record_length)
         merged_data = b''
         record_type = None
-        # Loop through file and pass merged records to _parseMergedData.
+        # Loop through file and pass merged records to _parse_merged_data.
         while record:
             record_continuation = (record[7:8] == CONTINUE_FROM_LAST_RECORD)
             same_record_type = (record[6:7].decode() == record_type)
@@ -666,7 +706,7 @@ class Parser(object):
                 # continued record
                 merged_data += record[8:]
             else:
-                self._parseMergedData(merged_data.strip(), record_type)
+                self._parse_merged_data(merged_data.strip(), record_type)
                 # first or new type of record
                 record_type = record[6:7].decode()
                 merged_data = record[8:]
@@ -681,11 +721,16 @@ class Parser(object):
                 print((record[0:8]))
             record = data.read(self.record_length)
         # Use parse once again.
-        self._parseMergedData(merged_data.strip(), record_type)
+        self._parse_merged_data(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
-        self._updateInternalSEEDStructure()
+        self._update_internal_SEED_structure()
 
-    def getInventory(self):
+    @deprecated("'getInventory' has been renamed to 'get_inventory'. "
+                "Use that instead.")
+    def getInventory(self, *args, **kwargs):
+        return self.get_inventory(*args, **kwargs)
+
+    def get_inventory(self):
         """
         Function returning a dictionary about whats actually in the Parser
         object.
@@ -750,7 +795,7 @@ class Parser(object):
             return blkt.abbreviation_description
         return ""
 
-    def _parseXSEED(self, data):
+    def _parse_XSEED(self, data):
         """
         Parse a XML-SEED string.
 
@@ -765,12 +810,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(
-            self._parseXMLBlockette(headers[0].getchildren()[0], 'V',
-                                    xseed_version))
+            self._parse_XML_blockette(headers[0].getchildren()[0], 'V',
+                                      xseed_version))
         # Append all abbreviations.
         for blkt in headers[1].getchildren():
             self.temp['abbreviations'].append(
-                self._parseXMLBlockette(blkt, 'A', xseed_version))
+                self._parse_XML_blockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -778,11 +823,11 @@ class Parser(object):
             self.temp['stations'].append([])
             for blkt in control_header.getchildren():
                 self.temp['stations'][-1].append(
-                    self._parseXMLBlockette(blkt, 'S', xseed_version))
+                    self._parse_XML_blockette(blkt, 'S', xseed_version))
         # Update internal values.
-        self._updateInternalSEEDStructure()
+        self._update_internal_SEED_structure()
 
-    def _getRESPString(self, resp, blockettes, station):
+    def _get_RESP_string(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
         blockettes for one channel and writes them RESP like to the BytesIO.
@@ -799,9 +844,9 @@ class Parser(object):
         if not channel_info['End date']:
             channel_info['End date'] = 'No Ending Time'
         else:
-            channel_info['End date'] = channel_info['End date'].formatSEED()
+            channel_info['End date'] = channel_info['End date'].format_seed()
         # Convert starttime.
-        channel_info['Start date'] = channel_info['Start date'].formatSEED()
+        channel_info['Start date'] = channel_info['Start date'].format_seed()
         # Write Blockette 52 stuff.
         resp.write((
             'B052F03     Location:    %s\n' % channel_info['Location'] +
@@ -824,13 +869,13 @@ class Parser(object):
             if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blkt.getRESP(
+                resp.write(blkt.get_RESP(
                     station, channel_info['Channel'], self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.'
                 raise AttributeError(msg % blkt.id)
 
-    def _parseXMLBlockette(self, XML_blockette, record_type, xseed_version):
+    def _parse_XML_blockette(self, XML_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
@@ -848,13 +893,13 @@ class Parser(object):
                                             version=self.version,
                                             record_type=record_type,
                                             xseed_version=xseed_version)
-            blockette_obj.parseXML(XML_blockette)
+            blockette_obj.parse_XML(XML_blockette)
             return blockette_obj
         elif blockette_id != 0:
             msg = "Unknown blockette type %d found" % blockette_id
             raise SEEDParserException(msg)
 
-    def _createCutAndFlushRecord(self, blockettes, record_type):
+    def _create_cut_and_flush_record(self, blockettes, record_type):
         """
         Takes all blockettes of a record and return a list of finished records.
 
@@ -883,7 +928,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette_.getSEED()
+            blockette_str = blockette_.get_SEED()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -917,7 +962,7 @@ class Parser(object):
                 return_records[_i + 1]
         return return_records
 
-    def _checkBlockettes(self):
+    def _check_blockettes(self):
         """
         Checks if all blockettes necessary for creating a SEED String are
         available.
@@ -936,7 +981,7 @@ class Parser(object):
                 return False
         return True
 
-    def _compareBlockettes(self, blkt1, blkt2):
+    def _compare_blockettes(self, blkt1, blkt2):
         """
         Compares two blockettes.
         """
@@ -948,7 +993,7 @@ class Parser(object):
                 return False
         return True
 
-    def _updateInternalSEEDStructure(self):
+    def _update_internal_SEED_structure(self):
         """
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
@@ -992,14 +1037,14 @@ class Parser(object):
                         continue
                     # Raise the current index if it is the same blockette.
                     cur_index += 1
-                    if not self._compareBlockettes(blkt, ex_blkt):
+                    if not self._compare_blockettes(blkt, ex_blkt):
                         continue
                     # Update the current blockette and all abbreviations.
-                    self._updateTemporaryStations(
+                    self._update_temporary_stations(
                         id, getattr(ex_blkt, INDEX_FIELDS[id]))
                     break
                 else:
-                    self._updateTemporaryStations(id, cur_index)
+                    self._update_temporary_stations(id, cur_index)
                     # Append abbreviation.
                     setattr(blkt, INDEX_FIELDS[id], cur_index)
                     self.abbreviations.append(blkt)
@@ -1010,7 +1055,7 @@ class Parser(object):
         # Also make the version of the format 2.4.
         self.volume[0].version_of_format = 2.4
 
-    def _updateTemporaryStations(self, blkt_id, index_nr):
+    def _update_temporary_stations(self, blkt_id, index_nr):
         """
         Loops over all stations, finds the corresponding blockettes and changes
         all abbreviation lookup codes.
@@ -1033,10 +1078,10 @@ class Parser(object):
                 except:
                     continue
                 for field in fields:
-                    setattr(blkt, blkt.getFields()[field - 2].field_name,
+                    setattr(blkt, blkt.get_fields()[field - 2].field_name,
                             index_nr)
 
-    def _parseMergedData(self, data, record_type):
+    def _parse_merged_data(self, data, record_type):
         """
         This method takes any merged SEED record and writes its blockettes
         in the corresponding dictionary entry of self.temp.
@@ -1093,7 +1138,7 @@ class Parser(object):
                                                 compact=self.compact,
                                                 version=self.version,
                                                 record_type=record_type)
-                blockette_obj.parseSEED(data, blockette_length)
+                blockette_obj.parse_SEED(data, blockette_length)
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id,
                                            []).append(blockette_obj)
@@ -1108,7 +1153,7 @@ class Parser(object):
         if _pos != _len:
             warnings.warn("There exist unparsed elements!")
 
-    def _createBlockettes11and12(self, blockette12=False):
+    def _create_blockettes_11_and_12(self, blockette12=False):
         """
         Creates blockettes 11 and 12 for SEED writing and XSEED version 1.1
         writing.
@@ -1126,10 +1171,11 @@ class Parser(object):
             # Blockette 50 always should be the first blockette
             station.append(_i[0].station_call_letters)
             # Loop over blockettes.
-            station.extend(self._createCutAndFlushRecord(_i, 'S'))
+            station.extend(self._create_cut_and_flush_record(_i, 'S'))
             stations.append(station)
         # Make abbreviations.
-        abbreviations = self._createCutAndFlushRecord(self.abbreviations, 'A')
+        abbreviations = self._create_cut_and_flush_record(self.abbreviations,
+                                                          'A')
         abbr_length = len(abbreviations)
         cur_count = 1 + abbr_length
         while True:
@@ -1147,21 +1193,21 @@ class Parser(object):
                 blkt12 = blockette.Blockette012()
                 blkt12.number_of_spans_in_table = 0
                 self.volume.append(blkt12)
-            volume = self._createCutAndFlushRecord(self.volume, 'V')
+            volume = self._create_cut_and_flush_record(self.volume, 'V')
             if cur_count - abbr_length < len(volume):
                 cur_count += len(volume) - 1
-                self._deleteBlockettes11and12()
+                self._delete_blockettes_11_and_12()
                 continue
             break
         return volume, abbreviations, stations
 
-    def _deleteBlockettes11and12(self):
+    def _delete_blockettes_11_and_12(self):
         """
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
 
-    def rotateToZNE(self, stream):
+    def rotate_to_ZNE(self, stream):
         """
         Rotates the three components of a Stream to ZNE.
 

@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from obspy.core import read
+import obspy
 
 
 # Read in all files starting with dis.
-st = read("http://examples.obspy.org/dis.G.SCZ.__.BHE")
-st += read("http://examples.obspy.org/dis.G.SCZ.__.BHE.1")
-st += read("http://examples.obspy.org/dis.G.SCZ.__.BHE.2")
+st = obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE")
+st += obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE.1")
+st += obspy.read("http://examples.obspy.org/dis.G.SCZ.__.BHE.2")
 
 # sort
 st.sort(['starttime'])

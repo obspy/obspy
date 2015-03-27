@@ -1,23 +1,23 @@
 import matplotlib.pyplot as plt
 
-from obspy.arclink import Client
-from obspy.core import UTCDateTime
-from obspy.signal.trigger import recSTALTA, triggerOnset
+import obspy
+from obspy.clients.arclink import Client
+from obspy.signal.trigger import recursive_STALTA, trigger_onset
 
 
 # Retrieve waveforms via ArcLink
 client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                 user="test@obspy.de")
-t = UTCDateTime("2009-08-24 00:19:45")
-st = client.getWaveform('BW', 'RTSH', '', 'EHZ', t, t + 50)
+t = obspy.UTCDateTime("2009-08-24 00:19:45")
+st = client.get_waveforms('BW', 'RTSH', '', 'EHZ', t, t + 50)
 
 # For convenience
 tr = st[0]  # only one trace in mseed volume
 df = tr.stats.sampling_rate
 
 # Characteristic function and trigger onsets
-cft = recSTALTA(tr.data, int(2.5 * df), int(10. * df))
-on_of = triggerOnset(cft, 3.5, 0.5)
+cft = recursive_STALTA(tr.data, int(2.5 * df), int(10. * df))
+on_of = trigger_onset(cft, 3.5, 0.5)
 
 # Plotting the results
 ax = plt.subplot(211)

@@ -11,8 +11,8 @@ import numpy as np
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.sh.core import (STANDARD_ASC_HEADERS, isASC, isQ, readASC, readQ,
-                              writeASC, writeQ)
+from obspy.io.sh.core import (STANDARD_ASC_HEADERS, _is_asc, _is_q, _read_asc,
+                              _read_q, _write_asc, _write_q)
 
 
 class CoreTestCase(unittest.TestCase):
@@ -28,37 +28,37 @@ class CoreTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', '101.QHD')
         # read
-        stream = readQ(testfile)
+        stream = _read_q(testfile)
         stream.verify()
         self.assertEqual(len(stream), 101)
 
-    def test_isASCFile(self):
+    def test_is_ascFile(self):
         """
         Testing ASC file format.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        self.assertEqual(isASC(testfile), True)
+        self.assertEqual(_is_asc(testfile), True)
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        self.assertEqual(isASC(testfile), False)
+        self.assertEqual(_is_asc(testfile), False)
 
-    def test_isQFile(self):
+    def test_is_qFile(self):
         """
         Testing Q header file format.
         """
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
-        self.assertEqual(isQ(testfile), True)
+        self.assertEqual(_is_q(testfile), True)
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QBN')
-        self.assertEqual(isQ(testfile), False)
+        self.assertEqual(_is_q(testfile), False)
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
-        self.assertEqual(isQ(testfile), False)
+        self.assertEqual(_is_q(testfile), False)
 
     def test_readSingleChannelASCFile(self):
         """
-        Read ASC file test via obspy.io.sh.core.readASC.
+        Read ASC file test via obspy.io.sh.core._read_asc.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
         # read
-        stream = readASC(testfile)
+        stream = _read_asc(testfile)
         stream.verify()
         self.assertEqual(stream[0].stats.delta, 5.000000e-02)
         self.assertEqual(stream[0].stats.npts, 1000)
@@ -116,17 +116,17 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readAndWriteMultiChannelASCFile(self):
         """
-        Read and write ASC file via obspy.io.sh.core.readASC.
+        Read and write ASC file via obspy.io.sh.core._read_asc.
         """
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
         # read original
-        stream1 = readASC(origfile)
+        stream1 = _read_asc(origfile)
         stream1.verify()
         self._compareStream(stream1)
         # write
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
+            _write_asc(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
             # read both files and compare the content
             with open(origfile, 'rt') as f:
                 text1 = f.readlines()
@@ -134,7 +134,7 @@ class CoreTestCase(unittest.TestCase):
                 text2 = f.readlines()
             self.assertEqual(text1, text2)
             # read again
-            stream2 = readASC(tempfile)
+            stream2 = _read_asc(tempfile)
             stream2.verify()
             self._compareStream(stream2)
 
@@ -159,20 +159,20 @@ class CoreTestCase(unittest.TestCase):
 
     def test_readAndWriteMultiChannelQFile(self):
         """
-        Read and write Q file via obspy.io.sh.core.readQ.
+        Read and write Q file via obspy.io.sh.core._read_q.
         """
         # 1 - little endian (PC)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST.QHD')
         # read original
-        stream1 = readQ(origfile)
+        stream1 = _read_q(origfile)
         stream1.verify()
         self._compareStream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
-            writeQ(stream1, tempfile, append=False)
+            _write_q(stream1, tempfile, append=False)
             # read again
-            stream2 = readQ(tempfile)
+            stream2 = _read_q(tempfile)
             stream2.verify()
             self._compareStream(stream2)
             # remove binary file too (dynamically created)
@@ -180,15 +180,15 @@ class CoreTestCase(unittest.TestCase):
         # 2 - big endian (SUN)
         origfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         # read original
-        stream1 = readQ(origfile, byteorder=">")
+        stream1 = _read_q(origfile, byteorder=">")
         stream1.verify()
         self._compareStream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
-            writeQ(stream1, tempfile, byteorder=">", append=False)
+            _write_q(stream1, tempfile, byteorder=">", append=False)
             # read again
-            stream2 = readQ(tempfile, byteorder=">")
+            stream2 = _read_q(tempfile, byteorder=">")
             stream2.verify()
             self._compareStream(stream2)
             # remove binary file too (dynamically created)
@@ -234,7 +234,7 @@ class CoreTestCase(unittest.TestCase):
     def test_skipASClines(self):
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
         # read
-        stream = readASC(testfile, skip=100, delta=0.1, length=2)
+        stream = _read_asc(testfile, skip=100, delta=0.1, length=2)
         stream.verify()
         # skip force one trace only
         self.assertEqual(len(stream), 1)

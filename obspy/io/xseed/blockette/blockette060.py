@@ -11,7 +11,7 @@ from lxml.etree import Element, SubElement
 
 from .blockette import Blockette
 from ..fields import Integer, Loop
-from ..utils import getXPath, setXPath
+from ..utils import get_xpath, set_xpath
 
 
 class Blockette060(Blockette):
@@ -68,7 +68,7 @@ class Blockette060(Blockette):
         ]),
     ]
 
-    def parseSEED(self, data, length=0, *args, **kwargs):  # @UnusedVariable
+    def parse_SEED(self, data, length=0, *args, **kwargs):  # @UnusedVariable
         """
         Read Blockette 60.
         """
@@ -93,7 +93,7 @@ class Blockette060(Blockette):
                 self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
 
-    def getSEED(self, *args, **kwargs):  # @UnusedVariable
+    def get_SEED(self, *args, **kwargs):  # @UnusedVariable
         """
         Writes Blockette 60.
         """
@@ -116,7 +116,7 @@ class Blockette060(Blockette):
         data = header + data
         return data
 
-    def getXML(self, xseed_version, *args, **kwargs):  # @UnusedVariable
+    def get_XML(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
         Write XML.
         """
@@ -137,11 +137,11 @@ class Blockette060(Blockette):
                 str(len(self.stages[_i]))
             for _j in range(len(self.stages[_i])):
                 SubElement(inner_stage, 'response_lookup_key').text = \
-                    setXPath('dictionary', self.stages[_i][_j])
+                    set_xpath('dictionary', self.stages[_i][_j])
         return node
 
-    def parseXML(self, xml_doc,
-                 version='1.0', *args, **kwargs):  # @UnusedVariable
+    def parse_XML(self, xml_doc,
+                  version='1.0', *args, **kwargs):  # @UnusedVariable
         """
         Read XML of blockette 60.
         """
@@ -157,9 +157,9 @@ class Blockette060(Blockette):
                 if inner_child.text.isdigit():
                     self.stages[-1].append(int(inner_child.text))
                 else:
-                    self.stages[-1].append(getXPath(inner_child.text))
+                    self.stages[-1].append(get_xpath(inner_child.text))
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -191,8 +191,8 @@ class Blockette060(Blockette):
                             blockette.response_lookup_key == response_key:
                         try:
                             string += \
-                                blockette.getRESP(station, channel,
-                                                  abbreviations)
+                                blockette.get_RESP(station, channel,
+                                                   abbreviations)
                             found_abbrev = True
                         except AttributeError:
                             msg = 'RESP output not implemented for ' + \

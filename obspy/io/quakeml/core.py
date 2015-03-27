@@ -81,7 +81,7 @@ def _xml_doc_from_anything(source):
     return xml_doc
 
 
-def isQuakeML(filename):
+def _is_quakeml(filename):
     """
     Checks whether a file is QuakeML format.
 
@@ -92,7 +92,7 @@ def isQuakeML(filename):
 
     .. rubric:: Example
 
-    >>> isQuakeML('/path/to/quakeml.xml')  # doctest: +SKIP
+    >>> _is_quakeml('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
     if hasattr(filename, "tell") and hasattr(filename, "seek") and \
@@ -1065,13 +1065,13 @@ class Pickler(object):
 
     def _id(self, obj):
         try:
-            return obj.getQuakeMLURI()
+            return obj.get_quakeml_uri()
         except:
-            return ResourceIdentifier().getQuakeMLURI()
+            return ResourceIdentifier().get_quakeml_uri()
 
     def _str(self, value, root, tag, always_create=False, attrib=None):
         if isinstance(value, ResourceIdentifier):
-            value = value.getQuakeMLURI()
+            value = value.get_quakeml_uri()
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag, attrib=attrib).text = "%s" % value
@@ -1753,13 +1753,14 @@ class Pickler(object):
                               encoding="utf-8", xml_declaration=True)
 
 
-def readQuakeML(filename):
+def _read_quakeml(filename):
     """
     Reads a QuakeML file and returns an ObsPy Catalog object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        ObsPy :func:`~obspy.core.event.readEvents` function, call this instead.
+        ObsPy :func:`~obspy.core.event.read_events` function, call this
+        instead.
 
     :type filename: str
     :param filename: QuakeML file to be read.
@@ -1768,8 +1769,8 @@ def readQuakeML(filename):
 
     .. rubric:: Example
 
-    >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/iris_events.xml')
+    >>> from obspy.core.event import read_events
+    >>> cat = read_events('/path/to/iris_events.xml')
     >>> print(cat)
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
@@ -1778,8 +1779,8 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, validate=False, nsmap=None,
-                 **kwargs):  # @UnusedVariable
+def _write_quakeml(catalog, filename, validate=False, nsmap=None,
+                   **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
 
@@ -1824,7 +1825,7 @@ def writeQuakeML(catalog, filename, validate=False, nsmap=None,
         fh.close()
 
 
-def readSeisHubEventXML(filename):
+def _read_seishub_event_xml(filename):
     """
     Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
@@ -1836,7 +1837,7 @@ def readSeisHubEventXML(filename):
     lines.append(b'  </eventParameters>\n')
     lines.append(b'</quakeml>\n')
     temp = io.BytesIO(b''.join(lines))
-    return readQuakeML(temp)
+    return _read_quakeml(temp)
 
 
 def _validate(xml_file, verbose=False):

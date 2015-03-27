@@ -18,8 +18,8 @@ import warnings
 from lxml.etree import Element, SubElement
 
 from obspy import UTCDateTime
-from .utils import (DateTime2String, SEEDParserException, getXPath, setXPath,
-                    toTag)
+from .utils import (datetime_2_string, SEEDParserException, get_xpath,
+                    set_xpath, to_tag)
 
 
 class SEEDTypeException(Exception):
@@ -43,8 +43,8 @@ class Field(object):
             self.field_id = "F%02d" % self.id
         else:
             self.field_id = None
-        self.field_name = kwargs.get('xml_tag', toTag(self.name))
-        self.attribute_name = toTag(self.name)
+        self.field_name = kwargs.get('xml_tag', to_tag(self.name))
+        self.attribute_name = to_tag(self.name)
         # options
         self.optional = kwargs.get('optional', False)
         self.ignore = kwargs.get('ignore', False)
@@ -76,7 +76,7 @@ class Field(object):
         if self.flags and 'T' in self.flags:
             if not sn and self.default_value:
                 return self.default_value
-            return DateTime2String(sn, self.compact)
+            return datetime_2_string(sn, self.compact)
         if not self.flags:
             return sn
         rx_list = []
@@ -107,7 +107,7 @@ class Field(object):
             raise SEEDTypeException(msg)
         return sn
 
-    def parseSEED(self, blockette, data):
+    def parse_SEED(self, blockette, data):
         """
         """
         try:
@@ -130,7 +130,7 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, text))
 
-    def getSEED(self, blockette, pos=0):
+    def get_SEED(self, blockette, pos=0):
         """
         """
         self.compact = blockette.compact
@@ -149,7 +149,7 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
-    def getXML(self, blockette, pos=0):
+    def get_XML(self, blockette, pos=0):
         """
         """
         if self.ignore:
@@ -183,7 +183,7 @@ class Field(object):
             result = self.write(result)
         # Converts to XPath if necessary.
         if self.xpath:
-            result = setXPath(self.xpath, result)
+            result = set_xpath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
         if isinstance(result, bytes):
@@ -195,7 +195,7 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    def parseXML(self, blockette, xml_doc, pos=0):
+    def parse_XML(self, blockette, xml_doc, pos=0):
         """
         """
         try:
@@ -210,7 +210,7 @@ class Field(object):
         # Parse X-Path if necessary. The isdigit test assures legacy support
         # for XSEED without XPaths.
         if self.xpath and not text.isdigit():
-            text = getXPath(text)
+            text = get_xpath(text)
         # check if already exists
         if hasattr(blockette, self.attribute_name):
             temp = getattr(blockette, self.attribute_name)
@@ -436,14 +436,14 @@ class Loop(Field):
         if not isinstance(data_fields, list):
             data_fields = [data_fields]
         self.data_fields = data_fields
-        self.index_field = toTag(index_field)
+        self.index_field = to_tag(index_field)
         self.length = 0
         # loop types
         self.repeat_title = kwargs.get('repeat_title', False)
         self.omit_tag = kwargs.get('omit_tag', False)
         self.flat = kwargs.get('flat', False)
 
-    def parseSEED(self, blockette, data):
+    def parse_SEED(self, blockette, data):
         """
         """
         try:
@@ -458,7 +458,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parseSEED(blockette, data)
+                field.parse_SEED(blockette, data)
                 if debug:
                     temp.append(field.data)
         # debug
@@ -469,7 +469,7 @@ class Loop(Field):
                 print('  LOOP: %s' % (temp))
             blockette.debug = debug
 
-    def getSEED(self, blockette):
+    def get_SEED(self, blockette):
         """
         """
         try:
@@ -482,10 +482,10 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                data += field.getSEED(blockette, i)
+                data += field.get_SEED(blockette, i)
         return data
 
-    def getXML(self, blockette, pos=0):  # @UnusedVariable
+    def get_XML(self, blockette, pos=0):  # @UnusedVariable
         """
         """
         if self.ignore:
@@ -505,7 +505,7 @@ class Loop(Field):
                 se = SubElement(root, self.field_name)
                 # loop over data fields within one entry
                 for field in self.data_fields:
-                    node = field.getXML(blockette, _i)
+                    node = field.get_XML(blockette, _i)
                     se.extend(node)
             return root.getchildren()
         # loop over number of entries
@@ -513,7 +513,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                node = field.getXML(blockette, _i)
+                node = field.get_XML(blockette, _i)
                 root.extend(node)
         # format output for requested loop type
         if self.flat:
@@ -530,7 +530,7 @@ class Loop(Field):
             # standard loop
             return [root]
 
-    def parseXML(self, blockette, xml_doc, pos=0):
+    def parse_XML(self, blockette, xml_doc, pos=0):
         """
         """
         try:
@@ -572,4 +572,4 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parseXML(blockette, root, i)
+                field.parse_XML(blockette, root, i)

@@ -9,7 +9,7 @@ import os
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
-from ..utils import LookupCode, formatRESP
+from ..utils import lookup_code, format_RESP
 
 
 class Blockette041(Blockette):
@@ -38,7 +38,7 @@ class Blockette041(Blockette):
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
 
-    def parseSEED(self, data, expected_length=0):
+    def parse_SEED(self, data, expected_length=0):
         """
         If number of FIR coefficients are larger than maximal blockette size of
         9999 chars a follow up blockette with the same blockette id and
@@ -90,20 +90,20 @@ class Blockette041(Blockette):
         temp.seek(0, os.SEEK_END)
         _len = temp.tell()
         temp.seek(0)
-        Blockette.parseSEED(self, temp, expected_length=_len)
+        Blockette.parse_SEED(self, temp, expected_length=_len)
 
-    def parseXML(self, xml_doc, *args, **kwargs):
+    def parse_XML(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':
             xml_doc.find('fir_coefficient').tag = 'FIR_coefficient'
-        Blockette.parseXML(self, xml_doc, *args, **kwargs)
+        Blockette.parse_XML(self, xml_doc, *args, **kwargs)
 
-    def getXML(self, *args, **kwargs):
-        xml = Blockette.getXML(self, *args, **kwargs)
+    def get_XML(self, *args, **kwargs):
+        xml = Blockette.get_XML(self, *args, **kwargs)
         if self.xseed_version == '1.0':
             xml.find('FIR_coefficient').tag = 'fir_coefficient'
         return xml
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -117,16 +117,16 @@ class Blockette041(Blockette):
             '#\t\t\n' + \
             'B041F05     Symmetry type:                         %s\n' \
             % self.symmetry_code + \
-            'B041F06     Response in units lookup:              %s - %s\n'\
-            % (LookupCode(abbreviations, 34, 'unit_name',
-                          'unit_lookup_code', self.signal_in_units),
-               LookupCode(abbreviations, 34, 'unit_description',
-                          'unit_lookup_code', self.signal_in_units)) + \
-            'B041F07     Response out units lookup:             %s - %s\n'\
-            % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                          self.signal_out_units),
-               LookupCode(abbreviations, 34, 'unit_description',
-                          'unit_lookup_code', self.signal_out_units)) + \
+            'B041F06     Response in units lookup:              %s - %s\n' \
+            % (lookup_code(abbreviations, 34, 'unit_name',
+                           'unit_lookup_code', self.signal_in_units),
+               lookup_code(abbreviations, 34, 'unit_description',
+                           'unit_lookup_code', self.signal_in_units)) + \
+            'B041F07     Response out units lookup:             %s - %s\n' \
+            % (lookup_code(abbreviations, 34, 'unit_name', 'unit_lookup_code',
+                           self.signal_out_units),
+               lookup_code(abbreviations, 34, 'unit_description',
+                           'unit_lookup_code', self.signal_out_units)) + \
             'B041F08     Number of numerators:                  %s\n' \
             % self.number_of_factors
 
@@ -135,11 +135,11 @@ class Blockette041(Blockette):
                       '#\t\t  i, coefficient\n'
             for _i in range(self.number_of_factors):
                 string += 'B041F09    %4s %13s\n' \
-                    % (_i, formatRESP(self.FIR_coefficient[_i], 6))
+                    % (_i, format_RESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_factors == 1:
             string += '#\t\tNumerator coefficients:\n' + \
                 '#\t\t  i, coefficient\n'
             string += 'B041F09    %4s %13s\n' \
-                % (0, formatRESP(self.FIR_coefficient, 6))
+                % (0, format_RESP(self.FIR_coefficient, 6))
         string += '#\t\t\n'
         return string

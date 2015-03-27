@@ -4,7 +4,7 @@ Simple ASCII time series formats
 
 * ``SLIST``, a ASCII time series format represented with a header line
   followed by a sample lists (see also
-  :func:`SLIST format description<obspy.io.ascii.core.writeSLIST>`)::
+  :func:`SLIST format description<obspy.io.ascii.core._write_slist>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
 00, SLIST, INTEGER,
@@ -13,7 +13,7 @@ Simple ASCII time series formats
     ...
 
 * ``TSPAIR``, a ASCII format where data is written in time-sample pairs (see
-  also :func:`TSPAIR format description<obspy.io.ascii.core.writeTSPAIR>`)::
+  also :func:`TSPAIR format description<obspy.io.ascii.core._write_tspair>`)::
 
     TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
 00, TSPAIR, INTEGER,
@@ -47,7 +47,7 @@ from obspy.core.util import AttribDict, loadtxt
 HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
 
 
-def isSLIST(filename):
+def _is_slist(filename):
     """
     Checks whether a file is ASCII SLIST format.
 
@@ -58,7 +58,7 @@ def isSLIST(filename):
 
     .. rubric:: Example
 
-    >>> isSLIST('/path/to/slist.ascii')  # doctest: +SKIP
+    >>> _is_slist('/path/to/slist.ascii')  # doctest: +SKIP
     True
     """
     try:
@@ -73,7 +73,7 @@ def isSLIST(filename):
     return True
 
 
-def isTSPAIR(filename):
+def _is_tspair(filename):
     """
     Checks whether a file is ASCII TSPAIR format.
 
@@ -84,7 +84,7 @@ def isTSPAIR(filename):
 
     .. rubric:: Example
 
-    >>> isTSPAIR('/path/to/tspair.ascii')  # doctest: +SKIP
+    >>> _is_tspair('/path/to/tspair.ascii')  # doctest: +SKIP
     True
     """
     try:
@@ -99,7 +99,7 @@ def isTSPAIR(filename):
     return True
 
 
-def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a ASCII SLIST file and returns an ObsPy Stream object.
 
@@ -164,7 +164,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
 
@@ -229,7 +229,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
+def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -333,7 +333,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
                          '\n').encode('ascii', 'strict'))
 
 
-def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
+def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII TSPAIR file.
 

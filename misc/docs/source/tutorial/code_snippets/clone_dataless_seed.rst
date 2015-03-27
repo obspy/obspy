@@ -72,7 +72,7 @@ involved:
 
 At the end we can write the adapted DatalessSEED volume to a new file:
 
-    >>> p.writeSEED("dataless.seed.BW_RMOA")
+    >>> p.write_SEED("dataless.seed.BW_RMOA")
 
 
 .. _`examples webserver`: http://examples.obspy.org

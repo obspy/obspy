@@ -2,11 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import mlpy
+import obspy
 
-from obspy.core import read
 
-
-tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
+tr = obspy.read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
 
 omega0 = 8
 wavelet_fct = "morlet"

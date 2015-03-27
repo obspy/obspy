@@ -14,7 +14,7 @@ import numpy as np
 from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import DCID_KEY_FILE, ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, skipIf
+from obspy.core.util import NamedTemporaryFile
 
 try:
     from M2Crypto.EVP import EVPError
@@ -27,7 +27,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for L{obspy.clients.arclink.client.Client}.
     """
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKey(self):
         """
         """
@@ -39,13 +39,13 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKeyFile(self):
         """
         Tests various DCID key file formats (with space or equal sign). Also
@@ -65,8 +65,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
@@ -84,15 +84,15 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skipIf(os.path.isfile(DCID_KEY_FILE),
-            '$HOME/dcidpasswords.txt already exists')
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(os.path.isfile(DCID_KEY_FILE),
+                     '$HOME/dcidpasswords.txt already exists')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDefaultDCIDKeyFile(self):
         """
         Use $HOME/dcidpasswords.txt.
@@ -110,13 +110,13 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
-        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream1 = client1.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.get_waveforms('GE', 'APE', '', 'BHZ', start, end)
         # compare results
         np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
         self.assertEqual(stream1[0].stats, stream2[0].stats)
 
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformUnknownUser(self):
         """
         Unknown user raises an ArcLinkException: DENIED.
@@ -125,10 +125,10 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(ArcLinkException, client.getWaveform, 'GE', 'APE',
+        self.assertRaises(ArcLinkException, client.get_waveforms, 'GE', 'APE',
                           '', 'BHZ', start, end)
 
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWrongPassword(self):
         """
         A wrong password password raises a "EVPError: bad decrypt".
@@ -138,10 +138,10 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.getWaveform, 'GE', 'APE', '', 'BHZ',
-                          start, end)
+        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
+                          'BHZ', start, end)
 
-    @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
+    @unittest.skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformNoPassword(self):
         """
         No password raises a "EVPError: bad decrypt".
@@ -151,8 +151,8 @@ class ClientTestCase(unittest.TestCase):
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100
-        self.assertRaises(EVPError, client.getWaveform, 'GE', 'APE', '', 'BHZ',
-                          start, end)
+        self.assertRaises(EVPError, client.get_waveforms, 'GE', 'APE', '',
+                          'BHZ', start, end)
 
 
 def suite():

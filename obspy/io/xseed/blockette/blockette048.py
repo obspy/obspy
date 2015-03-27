@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop, VariableString
-from ..utils import formatRESP
+from ..utils import format_RESP
 
 
 class Blockette048(Blockette):
@@ -32,7 +32,7 @@ class Blockette048(Blockette):
         ])
     ]
 
-    def getRESP(self, station, channel, abbreviations):
+    def get_RESP(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -47,9 +47,9 @@ class Blockette048(Blockette):
             '                  +\n' + \
             '#\t\t\n' + \
             'B048F05     Sensitivity:                           %s\n' \
-            % formatRESP(self.sensitivity_gain, 6) + \
+            % format_RESP(self.sensitivity_gain, 6) + \
             'B048F06     Frequency of sensitivity:              %s\n' \
-            % formatRESP(self.frequency, 6) + \
+            % format_RESP(self.frequency, 6) + \
             'B048F07     Number of calibrations:                %s\n' \
             % self.number_of_history_values
         if self.number_of_history_values > 1:
@@ -59,17 +59,17 @@ class Blockette048(Blockette):
             for _i in range(self.number_of_history_values):
                 string += \
                     'B048F08-09   %2s %13s %13s %s\n' \
-                    % (formatRESP(self.sensitivity_for_calibration[_i], 6),
-                        formatRESP(
+                    % (format_RESP(self.sensitivity_for_calibration[_i], 6),
+                        format_RESP(
                             self.frequency_of_calibration_sensitivity[_i], 6),
-                       self.time_of_above_calibration[_i].formatSEED())
+                       self.time_of_above_calibration[_i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n' + \
                 'B048F08-09    0 %13s %13s %s\n' % (
-                    formatRESP(self.sensitivity_for_calibration, 6),
-                    formatRESP(self.frequency_of_calibration_sensitivity, 6),
-                    self.time_of_above_calibration.formatSEED())
+                    format_RESP(self.sensitivity_for_calibration, 6),
+                    format_RESP(self.frequency_of_calibration_sensitivity, 6),
+                    self.time_of_above_calibration.format_seed())
         string += '#\t\t\n'
         return string

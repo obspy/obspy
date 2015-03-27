@@ -75,7 +75,6 @@ The functionality is provided through the following packages:
    obspy.clients.fdsn
    obspy.clients.iris
    obspy.clients.neic
-   obspy.clients.neries
    obspy.clients.seedlink
    obspy.clients.seishub
    obspy.db

@@ -18,12 +18,11 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.decorator import skipIf
 from obspy.io.mseed import util
-from obspy.io.mseed.core import readMSEED, writeMSEED
+from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -71,13 +70,13 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Not a power of 2.
-            self.assertRaises(ValueError, writeMSEED, st, tempfile,
+            self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", reclen=1000)
             # Too small.
-            self.assertRaises(ValueError, writeMSEED, st, tempfile,
+            self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", reclen=8)
             # Not a number.
-            self.assertRaises(ValueError, writeMSEED, st, tempfile,
+            self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", reclen='A')
 
     def test_invalidEncoding(self):
@@ -92,10 +91,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             st = Stream([Trace(data=data)])
             # Writing should fail with invalid record lengths.
             # Wrong number.
-            self.assertRaises(ValueError, writeMSEED, st, tempfile,
+            self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", encoding=2)
             # Wrong Text.
-            self.assertRaises(ValueError, writeMSEED, st, tempfile,
+            self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", encoding='FLOAT_64')
 
     def test_ctypesArgtypes(self):
@@ -131,10 +130,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # independent reading of the data
         with open(file, 'rb') as fp:
             data_string = fp.read()[128:]  # 128 Bytes header
-        data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
-                                  verbose=0)
+        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
+                                    verbose=0)
         # test readMSTraces
-        data_record = readMSEED(file)[0].data
+        data_record = _read_mseed(file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
     def test_oneSampleOverlap(self):
@@ -150,9 +149,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # write into MSEED
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            writeMSEED(st, tempfile, format="MSEED")
+            _write_mseed(st, tempfile, format="MSEED")
             # read it again
-            new_stream = readMSEED(tempfile)
+            new_stream = _read_mseed(tempfile)
             self.assertEqual(len(new_stream), 2)
 
     def test_bugWriteReadFloat32SEEDWin32(self):
@@ -166,21 +165,22 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            writeMSEED(st, tempfile, format="MSEED")
+            _write_mseed(st, tempfile, format="MSEED")
             # read temp file directly without libmseed
             with open(tempfile, 'rb') as fp:
                 fp.seek(56)
                 dtype = np.dtype(native_str('>f4'))
-                bin_data = frombuffer(fp.read(7 * dtype.itemsize),
-                                      dtype=dtype)
+                bin_data = from_buffer(fp.read(7 * dtype.itemsize),
+                                       dtype=dtype)
             np.testing.assert_array_equal(data, bin_data)
             # read via ObsPy
-            st2 = readMSEED(tempfile)
+            st2 = _read_mseed(tempfile)
         # test results
         np.testing.assert_array_equal(data, st2[0].data)
 
-    @skipIf(NO_NEGATIVE_TIMESTAMPS,
-            'times before 1970 are not supported on this operation system')
+    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS,
+                     'times before 1970 are not supported on this operation '
+                     'system')
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
@@ -194,9 +194,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # write file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            writeMSEED(Stream([tr]), tempfile, format="MSEED")
+            _write_mseed(Stream([tr]), tempfile, format="MSEED")
             # read again
-            stream = readMSEED(tempfile)
+            stream = _read_mseed(tempfile)
             stream.verify()
 
     def test_invalidDataType(self):
@@ -262,7 +262,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
 
-    def test_readQualityInformationWarns(self):
+    def test_read_qualityInformationWarns(self):
         """
         Reading the quality information while reading the data files is no more
         supported in newer obspy.io.mseed versions. Check that a warning is

@@ -17,7 +17,7 @@ from struct import unpack
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 from .evt_base import (EvtBadDataError, EvtBadHeaderError, EvtEOFError,
                        EvtVirtual)
 
@@ -103,7 +103,7 @@ class Evt(object):
         try:
             self.e_tag.read(file_pointer)
             endian = self.e_tag.endian
-            self.e_header.unsetdico()
+            self.e_header.unset_dict()
             self.e_header.read(file_pointer, self.e_tag.length, endian)
 
             self.data = np.ndarray([self.e_header.nchannels, 0])
@@ -140,7 +140,7 @@ class Evt(object):
             cur_trace.stats.station = self.e_header.stnid
             cur_trace.stats.sampling_rate = float(self.samplingrate)
             cur_trace.stats.starttime = self.e_header.starttime
-            cur_trace.stats.kinemetrics_evt = self.e_header.makeobspydico(i)
+            cur_trace.stats.kinemetrics_evt = self.e_header.make_obspy_dict(i)
             traces.append(cur_trace)
 
         return Stream(traces=traces)
@@ -171,9 +171,9 @@ class EvtData(object):
             raise EvtBadDataError("Bad data length")
 
         if numbyte == 2:
-            data = frombuffer(buff, ">h").reshape((-1, numchan)).T
+            data = from_buffer(buff, ">h").reshape((-1, numchan)).T
         elif numbyte == 4:
-            data = frombuffer(buff, ">i").reshape((-1, numchan)).T
+            data = from_buffer(buff, ">i").reshape((-1, numchan)).T
         elif numbyte == 3:
             data = np.empty((numchan, samplerate // 10))
             for j in range(samplerate // 10):
@@ -242,19 +242,19 @@ class EvtHeader(EvtVirtual):
 
     def analyse_header12(self, head_buff):
         val = unpack(self.endian + HEADER_STRUCT1, head_buff[0:0x7c])
-        self.setdico(val, 0)
+        self.set_dict(val, 0)
         val = unpack(self.endian + HEADER_STRUCT2, head_buff[0x7c:0x22c])
-        self.setdico(val, 35)
+        self.set_dict(val, 35)
         val = unpack(self.endian + HEADER_STRUCT3, head_buff[0x22c:0x2c8])
-        self.setdico(val, 107)
+        self.set_dict(val, 107)
         val = unpack(self.endian + HEADER_STRUCT4, head_buff[0x2c8:0x658])
-        self.setdico(val, 140)
+        self.set_dict(val, 140)
         # Those three do not do anything... (For futur extensions)
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
         # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
 
-    def makeobspydico(self, numchan):
+    def make_obspy_dict(self, numchan):
         """
         Make an ObsPy dictionary from header dictionary for 1 channel
 
@@ -336,7 +336,7 @@ class EvtFrameHeader(EvtVirtual):
     def analyse_frame32(self, head_buff):
         self.numframe += 1
         val = unpack(self.endian+FRAME_STRUCT, head_buff)
-        self.setdico(val, 0)
+        self.set_dict(val, 0)
         if not self.verify(verbose=False):
             raise EvtBadHeaderError("Bad Frame values")
 
@@ -397,7 +397,7 @@ class EvtTag(EvtVirtual):
         else:
             raise EvtBadHeaderError
         val = unpack(endian + b"cBBBLHHHH", mystr)
-        self.setdico(val)
+        self.set_dict(val)
         self.endian = endian
         if not self.verify(verbose=False):
             raise EvtBadHeaderError("Bad Tag values")

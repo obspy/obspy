@@ -19,8 +19,8 @@ import sys
 import time
 
 from obspy import read
-from obspy.core.preview import createPreview
-from obspy.core.util.base import _getEntryPoints
+from obspy.core.preview import create_preview
+from obspy.core.util.base import _get_entry_points
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
 
@@ -159,17 +159,17 @@ class WaveformFileCrawler(object):
         session.close()
         return result
 
-    def getFeatures(self):
+    def get_features(self):
         return self.paths[self._root][1]
 
-    features = property(getFeatures)
+    features = property(get_features)
 
-    def getPatterns(self):
+    def get_patterns(self):
         return self.paths[self._root][0]
 
-    patterns = property(getPatterns)
+    patterns = property(get_patterns)
 
-    def hasPattern(self, file):
+    def has_pattern(self, file):
         """
         Checks if the file name fits to the preferred file pattern.
         """
@@ -178,7 +178,7 @@ class WaveformFileCrawler(object):
                 return True
         return False
 
-    def _processOutputQueue(self):
+    def _process_output_queue(self):
         try:
             dataset = self.output_queue.pop(0)
         except:
@@ -186,7 +186,7 @@ class WaveformFileCrawler(object):
         else:
             self._update_or_insert(dataset)
 
-    def _processLogQueue(self):
+    def _process_log_queue(self):
         try:
             msg = self.log_queue.pop(0)
         except:
@@ -197,7 +197,7 @@ class WaveformFileCrawler(object):
             else:
                 self.log.debug(msg)
 
-    def _resetWalker(self):
+    def _reset_walker(self):
         """
         Resets the crawler parameters.
         """
@@ -212,14 +212,14 @@ class WaveformFileCrawler(object):
                     msg = 'log_queue still has %s item(s)'
                     self.log.debug(msg % len(self.log_queue))
                     # Fetch items from the log queue
-                    self._processLogQueue()
+                    self._process_log_queue()
                     continue
                 if self.output_queue:
                     msg = 'output_queue still has %s item(s)'
                     self.log.debug(msg % len(self.output_queue))
                     # try to finalize a single processed stream object from
                     # output queue
-                    self._processOutputQueue()
+                    self._process_output_queue()
                     continue
                 if self.work_queue:
                     msg = 'work_queue still has %s items'
@@ -252,7 +252,7 @@ class WaveformFileCrawler(object):
         self.log.debug("Crawling root '%s' ..." % self._root)
         self.first_run_complete = True
 
-    def _stepWalker(self):
+    def _step_walker(self):
         """
         Steps current walker object to the next directory.
         """
@@ -267,7 +267,7 @@ class WaveformFileCrawler(object):
             except IndexError:
                 # a whole cycle has been done
                 # reset everything
-                self._resetWalker()
+                self._reset_walker()
                 return
             # reset attributes
             self._current_path = None
@@ -293,7 +293,7 @@ class WaveformFileCrawler(object):
         # get all database entries for current path
         self._db_files = self._select(self._current_path)
 
-    def _preparePaths(self, paths):
+    def _prepare_paths(self, paths):
         out = {}
         for path in paths:
             # strip features
@@ -333,9 +333,9 @@ class WaveformFileCrawler(object):
         if len(self.input_queue) > self.options.number_of_cpus:
             return
         # try to finalize a single processed stream object from output queue
-        self._processOutputQueue()
+        self._process_output_queue()
         # Fetch items from the log queue
-        self._processLogQueue()
+        self._process_log_queue()
         # walk through directories and files
         try:
             file = self._current_files.pop(0)
@@ -346,10 +346,10 @@ class WaveformFileCrawler(object):
                 for file in self._db_files.keys():
                     self._delete(self._current_path, file)
             # jump into next directory
-            self._stepWalker()
+            self._step_walker()
             return
         # skip file with wrong pattern
-        if not self.hasPattern(file):
+        if not self.has_pattern(file):
             return
         # process a single file
         path = self._current_path
@@ -397,7 +397,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getEntryPoints('obspy.db.feature').items():
+        for (key, ep) in _get_entry_points('obspy.db.feature').items():
             try:
                 # load plug-in
                 cls = ep.load()
@@ -521,7 +521,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 if '.LOG.L.' not in file or trace.stats.channel != 'LOG':
                     # create previews only for non-log files (see issue #400)
                     try:
-                        trace = createPreview(trace, 30)
+                        trace = create_preview(trace, 30)
                         result['preview'] = trace.data.dumps()
                     except ValueError:
                         pass

@@ -5,7 +5,7 @@ Module to create and use a connection to a SeedLink server using a
 SeedLinkConnection object.
 
 A new SeedLink application can be created by sub-classing SLClient and
-overriding at least the packetHandler method of SLClient.
+overriding at least the packet_handler method of SLClient.
 
 Part of Python implementation of libslink of Chad Trabant and
 JSeedLink of Anthony Lomax
@@ -71,7 +71,7 @@ class SLClient(object):
     SeedLinkConnection object.
 
     A new SeedLink application can be created by sub-classing SLClient and
-    overriding at least the packetHandler method of SLClient.
+    overriding at least the packet_handler method of SLClient.
 
     :var slconn: SeedLinkConnection object for communicating with the
         SeedLinkConnection over a socket.
@@ -125,7 +125,7 @@ class SLClient(object):
         self.infolevel = None
         self.slconn = SeedLinkConnection()
 
-    def parseCmdLineArgs(self, args):
+    def parse_cmd_line_args(self, args):
         """
         Parses the command line arguments.
 
@@ -134,7 +134,7 @@ class SLClient(object):
         :return: -1 on error, 1 if version or help argument found, 0 otherwise.
         """
         if len(args) < 2:
-            self.printUsage(False)
+            self.print_usage(False)
             return 1
         optind = 1
         while optind < len(args):
@@ -142,7 +142,7 @@ class SLClient(object):
                 print(self.VERSION_INFO, file=sys.stderr)
                 return 1
             elif args[optind] == "-h":
-                self.printUsage(False)
+                self.print_usage(False)
                 return 1
             elif args[optind].startswith("-v"):
                 self.verbose += len(args[optind]) - 1
@@ -222,7 +222,7 @@ class SLClient(object):
 
         :type packet_handler: func
         :param packet_handler: Custom packet handler funtion to override
-            `self.packetHandler` for this seedlink request. The function will
+            `self.packet_handler` for this seedlink request. The function will
             be repeatedly called with two arguments: the current packet counter
             (`int`) and the currently served seedlink packet
             (:class:`~obspy.clients.seedlink.SLPacket`). The function should
@@ -230,7 +230,7 @@ class SLClient(object):
             request.
         """
         if packet_handler is None:
-            packet_handler = self.packetHandler
+            packet_handler = self.packet_handler
         if self.infolevel is not None:
             self.slconn.requestInfo(self.infolevel)
         # Loop with the connection manager
@@ -257,7 +257,7 @@ class SLClient(object):
         # Close the SeedLinkConnection
         self.slconn.close()
 
-    def packetHandler(self, count, slpack):
+    def packet_handler(self, count, slpack):
         """
         Processes each packet received from the SeedLinkConnection.
 
@@ -278,8 +278,8 @@ class SLClient(object):
             return False
 
         # get basic packet info
-        seqnum = slpack.getSequenceNumber()
-        type = slpack.getType()
+        seqnum = slpack.get_sequence_number()
+        type = slpack.get_type()
 
         # process INFO packets here
         if (type == SLPacket.TYPE_SLINF):
@@ -307,7 +307,7 @@ class SLClient(object):
             return False
 
         # process packet data
-        trace = slpack.getTrace()
+        trace = slpack.get_trace()
         if trace is not None:
             print(self.__class__.__name__ + ": blockette contains a trace: ")
             print(trace.id, trace.stats['starttime'], end=' ')
@@ -322,7 +322,7 @@ class SLClient(object):
             print(self.__class__.__name__ + ": blockette contains no trace")
         return False
 
-    def printUsage(self, concise=True):
+    def print_usage(self, concise=True):
         """
         Prints the usage message for this class.
         """
@@ -343,7 +343,7 @@ class SLClient(object):
         slClient = None
         try:
             slClient = SLClient()
-            rval = slClient.parseCmdLineArgs(args)
+            rval = slClient.parse_cmd_line_args(args)
             if (rval != 0):
                 sys.exit(rval)
             slClient.initialize()

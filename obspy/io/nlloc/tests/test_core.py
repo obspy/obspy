@@ -9,8 +9,8 @@ import os
 import re
 import unittest
 
-from obspy import UTCDateTime, readEvents
-from obspy.core.util import NamedTemporaryFile, getExampleFile
+from obspy import UTCDateTime, read_events
+from obspy.core.util import NamedTemporaryFile, get_example_file
 from obspy.core.util.testing import compare_xml_strings, remove_unique_IDs
 from obspy.io.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
 
@@ -47,8 +47,8 @@ class NLLOCTestCase(unittest.TestCase):
         Test writing nonlinloc observations phase file.
         """
         # load nlloc.qml QuakeML file to generate OBS file from it
-        filename = getExampleFile("nlloc.qml")
-        cat = readEvents(filename, "QUAKEML")
+        filename = get_example_file("nlloc.qml")
+        cat = read_events(filename, "QUAKEML")
         # adjust one pick time that got cropped by nonlinloc in NLLOC HYP file
         # due to less precision in hypocenter file (that we used to create the
         # reference QuakeML file)
@@ -58,7 +58,7 @@ class NLLOCTestCase(unittest.TestCase):
                 pick.time -= 0.005
 
         # read expected OBS file output
-        filename = getExampleFile("nlloc.obs")
+        filename = get_example_file("nlloc.obs")
         with open(filename, "rb") as fh:
             expected = fh.read().decode()
 
@@ -82,10 +82,10 @@ class NLLOCTestCase(unittest.TestCase):
         """
         Test reading nonlinloc hypocenter phase file.
         """
-        filename = getExampleFile("nlloc.hyp")
+        filename = get_example_file("nlloc.hyp")
         cat = read_nlloc_hyp(filename,
                              coordinate_converter=_mock_coordinate_converter)
-        with open(getExampleFile("nlloc.qml"), 'rb') as tf:
+        with open(get_example_file("nlloc.qml"), 'rb') as tf:
             quakeml_expected = tf.read().decode()
         with NamedTemporaryFile() as tf:
             cat.write(tf, format="QUAKEML")
@@ -117,21 +117,20 @@ class NLLOCTestCase(unittest.TestCase):
         compare_xml_strings(quakeml_expected, quakeml_got)
 
     def test_read_nlloc_hyp_via_plugin(self):
-        filename = getExampleFile("nlloc.hyp")
-        cat = readEvents(filename)
+        filename = get_example_file("nlloc.hyp")
+        cat = read_events(filename)
         self.assertEqual(len(cat), 1)
-        cat = readEvents(filename, format="NLLOC_HYP")
+        cat = read_events(filename, format="NLLOC_HYP")
         self.assertEqual(len(cat), 1)
 
     def test_is_nlloc_hyp(self):
         # test positive
-        filename = getExampleFile("nlloc.hyp")
+        filename = get_example_file("nlloc.hyp")
         self.assertEqual(is_nlloc_hyp(filename), True)
         # test some negatives
         for filenames in ["nlloc.qml", "nlloc.obs", "gaps.mseed",
-                          "BW_RJOB.xml", "QFILE-TEST-ASC.ASC",
-                          "LMOW.BHE.SAC"]:
-            filename = getExampleFile("nlloc.qml")
+                          "BW_RJOB.xml", "QFILE-TEST-ASC.ASC", "LMOW.BHE.SAC"]:
+            filename = get_example_file("nlloc.qml")
             self.assertEqual(is_nlloc_hyp(filename), False)
 
     def test_read_nlloc_with_picks(self):
@@ -139,9 +138,10 @@ class NLLOCTestCase(unittest.TestCase):
         Test correct resource ID linking when reading NLLOC_HYP file with
         providing original picks.
         """
-        picks = readEvents(getExampleFile("nlloc.qml"))[0].picks
-        arrivals = readEvents(getExampleFile("nlloc.hyp"), format="NLLOC_HYP",
-                              picks=picks)[0].origins[0].arrivals
+        picks = read_events(get_example_file("nlloc.qml"))[0].picks
+        arrivals = read_events(
+            get_example_file("nlloc.hyp"), format="NLLOC_HYP",
+            picks=picks)[0].origins[0].arrivals
         expected = [p.resource_id for p in picks]
         got = [a.pick_id for a in arrivals]
         self.assertEqual(expected, got)

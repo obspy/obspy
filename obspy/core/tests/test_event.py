@@ -11,13 +11,12 @@ import warnings
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              readEvents)
+                              read_events)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import getBasemapVersion
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import get_basemap_version
 from obspy.core.util.testing import ImageComparison
 
-BASEMAP_VERSION = getBasemapVersion()
+BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from matplotlib import rcParams
 
@@ -37,7 +36,7 @@ class EventTestCase(unittest.TestCase):
         """
         Testing the __str__ method of the Event object.
         """
-        event = readEvents()[1]
+        event = read_events()[1]
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                          " | 4.3 ML | manual", s)
@@ -101,7 +100,7 @@ class EventTestCase(unittest.TestCase):
         Tests that copying an event does not raise a duplicate resource id
         warning.
         """
-        ev = readEvents()[0]
+        ev = read_events()[0]
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -121,10 +120,10 @@ class EventTestCase(unittest.TestCase):
         self.assertTrue(ev.resource_id == ev3.resource_id)
 
         # But all should point to the same object.
-        self.assertTrue(ev.resource_id.getReferredObject() is
-                        ev2.resource_id.getReferredObject())
-        self.assertTrue(ev.resource_id.getReferredObject() is
-                        ev3.resource_id.getReferredObject())
+        self.assertTrue(ev.resource_id.get_referred_object() is
+                        ev2.resource_id.get_referred_object())
+        self.assertTrue(ev.resource_id.get_referred_object() is
+                        ev3.resource_id.get_referred_object())
 
 
 class OriginTestCase(unittest.TestCase):
@@ -209,30 +208,30 @@ class CatalogTestCase(unittest.TestCase):
 
     def test_readEventsWithoutParameters(self):
         """
-        Calling readEvents w/o any parameter will create an example catalog.
+        Calling read_events w/o any parameter will create an example catalog.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(len(catalog), 3)
 
     def test_str(self):
         """
         Testing the __str__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
         self.assertTrue(catalog.__str__().endswith("37.736 | 3.0 ML | manual"))
 
     def test_readEvents(self):
         """
-        Tests the readEvents function using entry points.
+        Tests the read_events function using entry points.
         """
         # iris
-        catalog = readEvents(self.iris_xml)
+        catalog = read_events(self.iris_xml)
         self.assertEqual(len(catalog), 2)
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
         # neries
-        catalog = readEvents(self.neries_xml)
+        catalog = read_events(self.neries_xml)
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
@@ -317,7 +316,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 0)
         self.assertEqual(catalog.count(), 0)
         # catalog with events
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog.count(), 3)
 
@@ -325,7 +324,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Tests the __getitem__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(catalog[0], catalog.events[0])
         self.assertEqual(catalog[-1], catalog.events[-1])
         self.assertEqual(catalog[2], catalog.events[2])
@@ -337,7 +336,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Tests the __getslice__ method of the Catalog object.
         """
-        catalog = readEvents()
+        catalog = read_events()
         self.assertEqual(catalog[0:], catalog[0:])
         self.assertEqual(catalog[:2], catalog[:2])
         self.assertEqual(catalog[:], catalog[:])
@@ -366,7 +365,7 @@ class CatalogTestCase(unittest.TestCase):
         """
         Testing the copy method of the Catalog object.
         """
-        cat = readEvents()
+        cat = read_events()
         cat2 = cat.copy()
         self.assertTrue(cat == cat2)
         self.assertTrue(cat2 == cat)
@@ -388,7 +387,7 @@ class CatalogTestCase(unittest.TestCase):
             for a in attr.split('.'):
                 obj = getattr(obj, a)
             return obj
-        cat = readEvents()
+        cat = read_events()
         self.assertTrue(all(event.magnitudes[0].mag < 4.
                             for event in cat.filter('magnitude < 4.')))
         attrs = ('magnitude', 'latitude', 'longitude', 'depth', 'time',
@@ -421,15 +420,15 @@ class CatalogTestCase(unittest.TestCase):
         """
         See #662
         """
-        cat = readEvents(self.neries_xml)
+        cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_global(self):
         """
         Tests the catalog preview plot, default parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         reltol = 1
         if BASEMAP_VERSION < [1, 0, 7]:
             reltol = 3
@@ -438,26 +437,26 @@ class CatalogTestCase(unittest.TestCase):
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name)
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
         parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         with ImageComparison(self.image_dir, "catalog2.png") as ic:
             rcParams['savefig.dpi'] = 72
             cat.plot(outfile=ic.name, projection="ortho",
                      resolution="c",
                      water_fill_color="b", label=None)
 
-    @skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default
         parameters.
         """
-        cat = readEvents()
+        cat = read_events()
         reltol = 1.5
         # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
         # tolerance must be much higher.
@@ -560,8 +559,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                                        referred_object=object_b)
         # Object b was the last to added, thus all resource identifiers will
         # now point to it.
-        self.assertEqual(object_b is res_a.getReferredObject(), True)
-        self.assertEqual(object_b is res_b.getReferredObject(), True)
+        self.assertEqual(object_b is res_a.get_referred_object(), True)
+        self.assertEqual(object_b is res_b.get_referred_object(), True)
 
     def test_objects_garbage_collection(self):
         """
@@ -607,15 +606,15 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         ref_b = ResourceIdentifier(res_id)
         ref_c = ResourceIdentifier(res_id)
         # All three will have no resource attached.
-        self.assertEqual(ref_a.getReferredObject(), None)
-        self.assertEqual(ref_b.getReferredObject(), None)
-        self.assertEqual(ref_c.getReferredObject(), None)
+        self.assertEqual(ref_a.get_referred_object(), None)
+        self.assertEqual(ref_b.get_referred_object(), None)
+        self.assertEqual(ref_c.get_referred_object(), None)
         # Setting the object for one will make it available to all other
         # instances.
-        ref_b.setReferredObject(obj)
-        self.assertEqual(id(ref_a.getReferredObject()), obj_id)
-        self.assertEqual(id(ref_b.getReferredObject()), obj_id)
-        self.assertEqual(id(ref_c.getReferredObject()), obj_id)
+        ref_b.set_referred_object(obj)
+        self.assertEqual(id(ref_a.get_referred_object()), obj_id)
+        self.assertEqual(id(ref_b.get_referred_object()), obj_id)
+        self.assertEqual(id(ref_c.get_referred_object()), obj_id)
 
     def test_resources_in_global_dict_get_garbage_collected(self):
         """
@@ -634,8 +633,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         del obj_a, obj_b
         self.assertEqual(len(list(rdict.keys())), 0)
         # references are still around but no longer have associates objects.
-        self.assertEqual(res1.getReferredObject(), None)
-        self.assertEqual(res2.getReferredObject(), None)
+        self.assertEqual(res1.get_referred_object(), None)
+        self.assertEqual(res2.get_referred_object(), None)
 
     def test_quakeml_regex(self):
         """
@@ -648,28 +647,28 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
             "STUVWXYZ0123456789-.*()_~'+?=,;&")
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.getQuakeMLURI())
+        self.assertEqual(res_id, res.get_quakeml_uri())
         # The id has to valid from start to end. Due to the spaces this cannot
         # automatically be converted to a correct one.
         res_id = ("something_before smi:local/something  something_after")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # A colon is an invalid character.
         res_id = ("smi:local/hello:yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # Space as well
         res_id = ("smi:local/hello yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
         # Dots are fine
         res_id = ("smi:local/hello....yea")
         res = ResourceIdentifier(res_id)
-        self.assertEqual(res_id, res.getQuakeMLURI())
+        self.assertEqual(res_id, res.get_quakeml_uri())
         # Hats not
         res_id = ("smi:local/hello^^yea")
         res = ResourceIdentifier(res_id)
-        self.assertRaises(ValueError, res.getQuakeMLURI)
+        self.assertRaises(ValueError, res.get_quakeml_uri)
 
     def test_resource_id_valid_quakemluri(self):
         """
@@ -677,22 +676,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.id, rid.getQuakeMLURI())
-
-    def test_resource_id_init_deprecation(self):
-        """
-        Test that a resource identifier initialized with deprecated
-        "resource_id" gets initialized correctly and that a warning is shown.
-        """
-        with warnings.catch_warnings(record=True) as w:
-            warnings.resetwarnings()
-            rid = ResourceIdentifier(resource_id="blablup")
-        self.assertEqual(rid.id, "blablup")
-        self.assertEqual(len(w), 1)
-        w = w[0]
-        self.assertEqual(w.category, DeprecationWarning)
-        self.assertTrue(
-            str(w.message).startswith("Deprecated keyword resource_id "))
+        self.assertEqual(rid.id, rid.get_quakeml_uri())
 
     def test_resource_id_tracking(self):
         """
