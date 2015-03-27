@@ -753,9 +753,9 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Do some final sanity checks and raise a warning if a file will be written
     # with more than one different encoding, record length or byte order.
-    encodings = set([_i['encoding'] for _i in trace_attributes])
-    reclens = set([_i['reclen'] for _i in trace_attributes])
-    byteorders = set([_i['byteorder'] for _i in trace_attributes])
+    encodings = {_i['encoding'] for _i in trace_attributes}
+    reclens = {_i['reclen'] for _i in trace_attributes}
+    byteorders = {_i['byteorder'] for _i in trace_attributes}
     msg = 'File will be written with more than one different %s.\n' + \
           'This might have a negative influence on the compatibility ' + \
           'with other programs.'

@@ -135,14 +135,14 @@ def merge_previews(stream):
         # grid spacing. It is enough to only check the sampling rate because
         # the algorithm that creates the preview assures that the grid spacing
         # is correct.
-        sampling_rates = set([tr.stats.sampling_rate for tr in value])
+        sampling_rates = {tr.stats.sampling_rate for tr in value}
         if len(sampling_rates) != 1:
             msg = 'More than one sampling rate for traces with id %s.' % \
                   value[0].id
             raise Exception(msg)
         delta = value[0].stats.delta
         # Check dtype.
-        dtypes = set([native_str(tr.data.dtype) for tr in value])
+        dtypes = {native_str(tr.data.dtype) for tr in value}
         if len(dtypes) > 1:
             msg = 'Different dtypes for traces with id %s' % value[0].id
             raise Exception(msg)
