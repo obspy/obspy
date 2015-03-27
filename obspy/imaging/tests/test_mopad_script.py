@@ -49,10 +49,16 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         result = out.stdout[:-1]
         try:
-            expected = expected.encode(sys.stdout.encoding)
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
         except:
             expected = expected.replace('°', ' deg')
-            expected = expected.encode(sys.stdout.encoding)
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
 
         self.assertEqual(expected, result)
 
@@ -155,10 +161,16 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 
         result = out.stdout[:-1]
         try:
-            expected = expected.encode(sys.stdout.encoding)
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
         except:
             expected = expected.replace('°', ' deg')
-            expected = expected.encode(sys.stdout.encoding)
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
 
         self.assertEqual(expected, result)
 
