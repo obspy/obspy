@@ -121,5 +121,5 @@ fi
 
 
 # report
-$BASEDIR/bin/obspy-runtests -x seishub -n sphinx -r --all
+$BASEDIR/bin/obspy-runtests -v -x seishub -n sphinx -r --all
 exit 0

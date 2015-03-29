@@ -1425,9 +1425,9 @@ class SeedLinkConnection(object):
             # begin time specified (should only be at initial startup)
             if self.checkVersion(2.92) >= 0:
                 sendStr = b"TIME " + self.begin_time.\
-                    formatSeedLink().encode('ascii', 'strict')
+                    format_seedlink().encode('ascii', 'strict')
                 if self.end_time is not None:
-                    sendStr += b" " + self.end_time.formatSeedLink().\
+                    sendStr += b" " + self.end_time.format_seedlink().\
                         encode('ascii', 'strict')
                 logger.info("requesting specified time window")
             else:
