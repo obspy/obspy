@@ -2,6 +2,7 @@
  - minor changes for correct distribution of official release
    tar/zipball (see #993, #994)
  - one minor encoding-related bugfix in mopad script (see #992)
+ - fixing python3 compatibility for seedlink.easyseedlink
 
 0.10.0: (doi: 10.5281/zenodo.16200)
  - Highlights:
