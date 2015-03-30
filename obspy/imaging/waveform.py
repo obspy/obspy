@@ -905,7 +905,11 @@ class WaveformPlotting(object):
         self.extreme_values = self.extreme_values.astype(np.float) * \
             self.stream[0].stats.calib
         # Make sure that the mean value is at 0
-        self.extreme_values -= self.extreme_values.mean()
+        # raises underflow warning / error for numpy 1.9
+        # even though mean is 0.09
+        # self.extreme_values -= self.extreme_values.mean()
+        self.extreme_values -= self.extreme_values.sum() / \
+            self.extreme_values.size
 
         # Scale so that 99.5 % of the data will fit the given range.
         if self.vertical_scaling_range is None:
@@ -932,7 +936,12 @@ class WaveformPlotting(object):
         self._normalization_factor = max(abs(max_val), abs(min_val)) * 2
 
         # Scale from 0 to 1.
-        self.extreme_values = self.extreme_values / self._normalization_factor
+        # raises underflow warning / error for numpy 1.9
+        # even though normalization_factor is 2.5
+        # self.extreme_values = self.extreme_values / \
+        #     self._normalization_factor
+        self.extreme_values = self.extreme_values * \
+            (1. / self._normalization_factor)
         self.extreme_values += 0.5
 
     def __dayplot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
