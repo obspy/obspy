@@ -4091,7 +4091,7 @@ def main(argv=None):
                 try:
                     print(decomp)
                 except:
-                    print(decomp.encode('utf-8'))
+                    print(decomp.replace('°', ' deg'))
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -5196,7 +5196,7 @@ The 'source mechanism' as a comma-separated list of length:
         try:
             print(aa)
         except:
-            print(aa.encode('utf-8'))
+            print(aa.replace('°', ' deg'))
 
 
 if __name__ == '__main__':

@@ -13,6 +13,9 @@ master:
     * Removed the dedicated client. Data can still be accessed by using the
 	  FDSN client.
 
+releases:
+ - fixing python3 compatibility for seedlink.easyseedlink
+
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release
    tar/zipball (see #993, #994)
