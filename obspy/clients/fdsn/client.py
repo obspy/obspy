@@ -111,6 +111,13 @@ class Client(object):
         # the client more convenient.
         self.__version_cache = {}
 
+        # handle switch of SCEC to SCEDC, see #998
+        if base_url.upper() == "SCEC":
+            base_url = "SCEDC"
+            msg = ("FDSN short-URL 'SCEC' has been replaced by 'SCEDC'. "
+                   "Please change to 'Client('SCEDC')'. This re-routing will "
+                   "be removed in a future release.")
+            warnings.warn(msg)
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
 
