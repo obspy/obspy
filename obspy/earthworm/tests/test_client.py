@@ -44,7 +44,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime() - 3600
         end = start + 1.0
         # example 1 -- 1 channel, cleanup
-        stream = client.getWaveform('AV', 'ACH', '--', 'EHE', start, end)
+        stream = client.getWaveform('AV', 'ACH', '', 'EHE', start, end)
         self.assertEqual(len(stream), 1)
         delta = stream[0].stats.delta
         trace = stream[0]
@@ -58,7 +58,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'EHE')
         # example 2 -- 1 channel, no cleanup
-        stream = client.getWaveform('AV', 'ACH', '--', 'EHE', start, end,
+        stream = client.getWaveform('AV', 'ACH', '', 'EHE', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
         summed_length = sum(len(tr) for tr in stream)
@@ -73,7 +73,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.location, '')
             self.assertEqual(trace.stats.channel, 'EHE')
         # example 3 -- component wildcarded with '?'
-        stream = client.getWaveform('AV', 'ACH', '--', 'EH?', start, end)
+        stream = client.getWaveform('AV', 'ACH', '', 'EH?', start, end)
         self.assertEqual(len(stream), 3)
         for trace in stream:
             self.assertEqual(len(trace), 101)
@@ -100,7 +100,7 @@ class ClientTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             testfile = tf.name
             # 1 channel, cleanup (using SLIST to avoid dependencies)
-            client.saveWaveform(testfile, 'AV', 'ACH', '--', 'EHE', start, end,
+            client.saveWaveform(testfile, 'AV', 'ACH', '', 'EHE', start, end,
                                 format="SLIST")
             stream = read(testfile)
         self.assertEqual(len(stream), 1)

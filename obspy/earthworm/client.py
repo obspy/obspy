@@ -79,9 +79,9 @@ class Client(object):
         >>> from obspy.earthworm import Client
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('AV', 'ACH', '--', 'EHE', dt, dt + 10)
+        >>> st = client.getWaveform('AV', 'ACH', '', 'EHE', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.getWaveform('AV', 'ACH', '--', 'EH*', dt, dt + 10)
+        >>> st = client.getWaveform('AV', 'ACH', '', 'EH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -90,9 +90,9 @@ class Client(object):
             from obspy import UTCDateTime
             client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
             dt = UTCDateTime() - 2000  # now - 2000 seconds
-            st = client.getWaveform('AV', 'ACH', '--', 'EHE', dt, dt + 10)
+            st = client.getWaveform('AV', 'ACH', '', 'EHE', dt, dt + 10)
             st.plot()
-            st = client.getWaveform('AV', 'ACH', '--', 'EH*', dt, dt + 10)
+            st = client.getWaveform('AV', 'ACH', '', 'EH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -158,7 +158,7 @@ class Client(object):
         >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('AV.ACH.--.EHE.mseed',
-        ...                     'AV', 'ACH', '--', 'EHE',
+        ...                     'AV', 'ACH', '', 'EHE',
         ...                     t, t + 10, format='MSEED')  # doctest: +SKIP
         """
         st = self.getWaveform(network, station, location, channel, starttime,
@@ -180,7 +180,6 @@ class Client(object):
         :param station: Station code, e.g. ``'TUCA'``, wildcards allowed.
         :type location: str
         :param location: Location code, e.g. ``'--'``, wildcards allowed.
-            Use ``'--'`` for empty location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
         :rtype: list
@@ -216,6 +215,8 @@ class Client(object):
           UTCDateTime(...))]
         """
         # build up possibly wildcarded trace id pattern for query
+        if location == '':
+            location = '--'
         pattern = ".".join((network, station, location, channel))
         # get overview of all available data, winston wave servers can not
         # restrict the query via network, station etc. so we do that manually
