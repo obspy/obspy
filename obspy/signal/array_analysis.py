@@ -2226,6 +2226,11 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                 for i in range(nstat):
                     dat = stream[i].data[spoint[i] + offset:
                                          spoint[i] + offset + nsamp]
+                    # The next line is taken from the array_processing method,
+                    # I'm just guessing at the moment (otherwise the tap
+                    # variable is undefined)
+                    # Todo: find out what this really does
+                    tap = cosTaper(nsamp, p=0.22)
                     dat = (dat - dat.mean()) * tap
                     spec[i, :] = np.fft.rfft(dat, nfft)[nlow: nlow + nf]
             except IndexError:
@@ -2346,6 +2351,7 @@ def vespagram_baz(stream, time_shift_table, starttime, endtime,
 
         elif method == 'PWS':
             stack = np.zeros(ndat, dtype='c8')
+            nstat = len(stream)
             for i in range(nstat):
                 s = spoint[i] + int(time_shift_table[i, x] * fs + 0.5)
                 try:
