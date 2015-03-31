@@ -38,7 +38,7 @@ NCEDC   http://service.ncedc.org
 NERIES  http://www.seismicportal.eu
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
-SCEC    http://www.data.scec.org
+SCEDC   http://service.scedc.caltech.edu
 USGS    http://comcat.cr.usgs.gov
 USP     http://sismo.iag.usp.br
 
