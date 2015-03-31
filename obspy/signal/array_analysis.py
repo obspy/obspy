@@ -33,7 +33,8 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from obspy.core import UTCDateTime
-from obspy.core.util.geodetics import gps2DistAzimuth, KM_PER_DEG
+from obspy.geodetics import gps2DistAzimuth, degrees2kilometers, \
+    kilometer2degrees
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream, Trace
@@ -50,7 +51,8 @@ class SeismicArray(object):
     """
     Class representing a seismic array.up
     """
-    def __init__(self, name=u"",):
+
+    def __init__(self, name="", ):
         self.name = name
         self.inventory = None
 
@@ -61,6 +63,7 @@ class SeismicArray(object):
 
     def plot(self):
         import matplotlib.pylab as plt
+
         if self.inventory:
             self.inventory.plot(projection="local", show=False)
             bmap = plt.gca().basemap
@@ -91,9 +94,9 @@ class SeismicArray(object):
                         {"latitude": float(channel.latitude),
                          "longitude": float(channel.longitude),
                          "absolute_height_in_km":
-                         float(channel.elevation - channel.depth) / 1000.0}
+                             float(channel.elevation - channel.depth) / 1000.0}
                     if station_code in geo and \
-                            this_coordinates not in geo.values():
+                                    this_coordinates not in list(geo.values()):
                         msg = ("Different coordinates for station '{n}.{s}' "
                                "in the inventory. The first ones encountered "
                                "will be chosen.".format(n=network.code,
@@ -112,8 +115,8 @@ class SeismicArray(object):
             "longitude": (extend["max_longitude"] +
                           extend["min_longitude"]) / 2.0,
             "absolute_height_in_km":
-            (extend["min_absolute_height_in_km"] +
-             extend["max_absolute_height_in_km"]) / 2.0
+                (extend["min_absolute_height_in_km"] +
+                 extend["max_absolute_height_in_km"]) / 2.0
         }
 
     @property
@@ -135,8 +138,8 @@ class SeismicArray(object):
         """
         distances = []
         geo = self.geometry
-        for station, coordinates in geo.items():
-            for other_station, other_coordinates in geo.items():
+        for station, coordinates in list(geo.items()):
+            for other_station, other_coordinates in list(geo.items()):
                 if station == other_station:
                     continue
                 distances.append(gps2DistAzimuth(
@@ -161,7 +164,7 @@ class SeismicArray(object):
     def __coordinate_values(self):
         geo = self.geometry
         lats, lngs, hgt = [], [], []
-        for coordinates in geo.values():
+        for coordinates in list(geo.values()):
             lats.append(coordinates["latitude"]),
             lngs.append(coordinates["longitude"]),
             hgt.append(coordinates["absolute_height_in_km"])
@@ -171,9 +174,9 @@ class SeismicArray(object):
         """
         Pretty representation of the array.
         """
-        ret_str = u"Seismic Array '{name}'\n".format(name=self.name)
-        ret_str += u"\t{count} Stations\n".format(count=len(self.geometry))
-        ret_str += u"\tAperture: {aperture:.2f} km".format(
+        ret_str = "Seismic Array '{name}'\n".format(name=self.name)
+        ret_str += "\t{count} Stations\n".format(count=len(self.geometry))
+        ret_str += "\tAperture: {aperture:.2f} km".format(
             aperture=self.aperture)
         return ret_str
 
@@ -184,7 +187,7 @@ class SeismicArray(object):
         See here:
         http://stackoverflow.com/questions/1307014/python-str-versus-unicode
         """
-        return unicode(self).encode("utf-8")
+        return str(self).encode("utf-8")
 
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
@@ -203,7 +206,7 @@ class SeismicArray(object):
         """
         geometry = {}
 
-        for key, value in self.geometry.items():
+        for key, value in list(self.geometry.items()):
             x, y = utlGeoKm(longitude, latitude, value["longitude"],
                             value["latitude"])
             geometry[key] = {
@@ -212,7 +215,7 @@ class SeismicArray(object):
                 "z": absolute_height_in_km - value["absolute_height_in_km"]
             }
 
-        # XXX: Adjust to dictionary based distances!!
+        # Todo: Adjust to dictionary based distances!!
         if correct_3dplane:
             A = geometry
             u, s, vh = np.linalg.linalg.svd(A)
@@ -239,12 +242,12 @@ class SeismicArray(object):
 
         return geometry
 
-    def find_closest_station(self, latitude, longitude, absolute_height_in_km=0.0):
+    def find_closest_station(self, latitude, longitude,
+                             absolute_height_in_km=0.0):
         min_distance = None
         min_distance_station = None
 
-
-        for key, value in self.geometry.items():
+        for key, value in list(self.geometry.items()):
             # output in [km]
             x, y = utlGeoKm(longitude, latitude, value["longitude"],
                             value["latitude"])
@@ -288,10 +291,10 @@ class SeismicArray(object):
             try:
                 inc = math.asin(vel_cor * sx)
             except ValueError:
-                 inc = np.pi / 2.0
+                inc = np.pi / 2.0
 
             time_shifts = {}
-            for key, value in geom.items():
+            for key, value in list(geom.items()):
                 time_shifts[key] = sx * (value["x"] * math.sin(baz) +
                                          value["y"] * math.cos(baz))
 
@@ -327,20 +330,24 @@ class SeismicArray(object):
         """
         if static_3D:
             nstat = len(geometry)  # last index are center coordinates
-            time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-            for k in xrange(grdpts_x):
+            time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y),
+                                      dtype="float32")
+            for k in range(grdpts_x):
                 sx = sll_x + k * sl_s
-                for l in xrange(grdpts_y):
+                for l in range(grdpts_y):
                     sy = sll_y + l * sl_s
-                    slow = np.sqrt(sx*sx + sy*sy)
-                    if vel_cor*slow <= 1.:
-                        inc = np.arcsin(vel_cor*slow)
+                    slow = np.sqrt(sx * sx + sy * sy)
+                    if vel_cor * slow <= 1.:
+                        inc = np.arcsin(vel_cor * slow)
                     else:
-                        print ("Warning correction velocity smaller than apparent "
-                               "velocity")
-                        inc = np.pi/2.
-                    time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * \
-                                                                    geometry[:, 1] + geometry[:, 2] * np.cos(inc) / vel_cor
+                        print(
+                            "Warning correction velocity smaller than apparent"
+                            " velocity")
+                        inc = np.pi / 2.
+                    time_shift_tbl[:, k, l] = sx * geometry[:, 0] + \
+                                              sy * geometry[:, 1] + \
+                                              geometry[:, 2] * np.cos(inc) \
+                                              / vel_cor
             return time_shift_tbl
         # optimized version
         else:
@@ -363,8 +370,7 @@ class SeismicArray(object):
                            endtime=endtime, method=method, nthroot=nthroot)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
-                                   longitude, absolute_height_in_km =0.0
-                                   ):
+                                   longitude, absolute_height_in_km=0.0):
         geo = self.geometry
 
         components = collections.defaultdict(list)
@@ -375,18 +381,18 @@ class SeismicArray(object):
         if sorted(components.keys()) != ["E", "N", "Z"]:
             raise ValueError("Three components necessary.")
 
-        for value in components.values():
+        for value in list(components.values()):
             value.sort(key=lambda x: "%s.%s" % (x.stats.network,
                                                 x.stats.station))
 
         ids = [tuple([_i.id[:-1] for _i in traces]) for traces in
-               components.values()]
+               list(components.values())]
         if len(set(ids)) != 1:
             raise ValueError("All stations need to have three components.")
 
         stats = [[(_i.stats.starttime.timestamp, _i.stats.npts,
                    _i.stats.sampling_rate)
-                  for _i in traces] for traces in components.values()]
+                  for _i in traces] for traces in list(components.values())]
         s = []
         for st in stats:
             s.extend(st)
@@ -396,14 +402,14 @@ class SeismicArray(object):
                              "identical for all traces.")
 
         stations = ["%s.%s" % (_i.stats.network, _i.stats.station)
-                    for _i in components.values()[0]]
+                    for _i in list(components.values())[0]]
         for station in stations:
             if station not in geo:
                 raise ValueError("No coordinates known for station '%s'" %
                                  station)
 
         array_coords = np.ndarray(shape=(len(geo), 3))
-        for _i, tr in enumerate(components.values()[0]):
+        for _i, tr in enumerate(list(components.values())[0]):
             station = "%s.%s" % (tr.stats.network, tr.stats.station)
 
             x, y = utlGeoKm(longitude, latitude,
@@ -412,7 +418,7 @@ class SeismicArray(object):
             z = absolute_height_in_km
             array_coords[_i][0] = x * 1000.0
             array_coords[_i][1] = y * 1000.0
-            array_coords[_i][2] = z *1000.0
+            array_coords[_i][2] = z * 1000.0
 
         subarray = np.arange(len(geo))
 
@@ -424,22 +430,20 @@ class SeismicArray(object):
                 tr[_i][:, _j][:] = np.require(trace.data, np.float64)
 
         sp = array_rotation_strain(subarray, tr[0], tr[1], tr[2], vp=vp,
-                                   vs=vs,  array_coords=array_coords,
+                                   vs=vs, array_coords=array_coords,
                                    sigmau=sigmau)
 
         d1 = sp.pop("ts_w1")
         d2 = sp.pop("ts_w2")
         d3 = sp.pop("ts_w3")
 
-        header = {"network": "XX",
-                  "station": "YY",
-                  "location": "99",
-                  "starttime": components.values()[0][0].stats.starttime,
+        header = {"network": "XX", "station": "YY", "location": "99",
+                  "starttime": list(components.values())[0][0].stats.starttime,
                   "sampling_rate":
-                  components.values()[0][0].stats.sampling_rate}
+                  list(components.values())[0][0].stats.sampling_rate,
+                  "channel": "ROZ",
+                  "npts": len(d1)}
 
-        header["channel"] = "ROZ"
-        header["npts"] = len(d1)
         tr1 = Trace(data=d1, header=copy.copy(header))
         header["channel"] = "RON"
         header["npts"] = len(d2)
@@ -539,9 +543,9 @@ class SeismicArray(object):
                                            array_response=array_response)
 
     def delay_and_sum(self, stream, frqlow, frqhigh,
-                     filter=True, baz_plot=True, static3D=False,
-                     vel_corr=4.8, wlen=-1, slx=(-10, 10),
-                     sly=(-10, 10), sls=0.5, array_response=True):
+                      filter=True, baz_plot=True, static3D=False,
+                      vel_corr=4.8, wlen=-1, slx=(-10, 10),
+                      sly=(-10, 10), sls=0.5, array_response=True):
         """
         Delay and sum analysis.
 
@@ -699,11 +703,11 @@ class SeismicArray(object):
             # next step would be needed if the correction velocity needs to be
             # estimated
             #
-            sllx /= KM_PER_DEG
-            slmx /= KM_PER_DEG
-            slly /= KM_PER_DEG
-            slmy /= KM_PER_DEG
-            sls /= KM_PER_DEG
+            sllx = kilometer2degrees(sllx)
+            slmx = kilometer2degrees(slmx)
+            slly = kilometer2degrees(slly)
+            slmy = kilometer2degrees(slmy)
+            sls = kilometer2degrees(sls)
             vc = vel_corr
             if method == 'FK':
                 kwargs = dict(
@@ -771,25 +775,26 @@ class SeismicArray(object):
 
             #
             # we will plot everything in s/deg
-            slow *= KM_PER_DEG
-            sllx *= KM_PER_DEG
-            slmx *= KM_PER_DEG
-            slly *= KM_PER_DEG
-            slmy *= KM_PER_DEG
-            sls *= KM_PER_DEG
+            slow = degrees2kilometers(slow)
+            sllx = degrees2kilometers(sllx)
+            slmx = degrees2kilometers(slmx)
+            slly = degrees2kilometers(slly)
+            slmy = degrees2kilometers(slmy)
+            sls = degrees2kilometers(sls)
 
             numslice = len(t)
             powmap = []
-            slx = np.arange(sllx-sls, slmx, sls)
-            sly = np.arange(slly-sls, slmy, sls)
+            slx = np.arange(sllx - sls, slmx, sls)
+            sly = np.arange(slly - sls, slmy, sls)
             if baz_plot:
-                maxslowg = np.sqrt(slmx*slmx + slmy*slmy)
-                bzs = np.arctan2(sls, np.sqrt(slmx*slmx + slmy*slmy))*180/np.pi
+                maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
+                bzs = np.arctan2(sls, np.sqrt(
+                    slmx * slmx + slmy * slmy)) * 180 / np.pi
                 xi = np.arange(0., maxslowg, sls)
                 yi = np.arange(-180., 180., bzs)
                 grid_x, grid_y = np.meshgrid(xi, yi)
             # reading in the rel-power maps
-            for i in xrange(numslice):
+            for i in range(numslice):
                 powmap.append(np.load(filename_patterns[0] % i))
                 if method != 'FK':
                     trace.append(np.load(filename_patterns[1] % i))
@@ -799,9 +804,9 @@ class SeismicArray(object):
             T = np.arange(0, npts / df, 1 / df)
 
             # if we choose windowlen > 0. we now move through our slices
-            for i in xrange(numslice):
-                slow_x = np.sin((baz[i]+180.)*np.pi/180.)*slow[i]
-                slow_y = np.cos((baz[i]+180.)*np.pi/180.)*slow[i]
+            for i in range(numslice):
+                slow_x = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
+                slow_y = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
                 st = UTCDateTime(t[i]) - starttime
                 if wlen <= 0:
                     en = endtime
@@ -821,7 +826,7 @@ class SeismicArray(object):
                         except IndexError:
                             pass
                 else:
-                    T = np.arange(0, len(trace[i])/df, 1 / df)
+                    T = np.arange(0, len(trace[i]) / df, 1 / df)
                     ax1.plot(T, trace[i], 'k')
 
                 ax1.yaxis.set_major_locator(MaxNLocator(3))
@@ -836,19 +841,20 @@ class SeismicArray(object):
                     pow = np.asarray(powmap[i])
                     for ix, sx in enumerate(slx):
                         for iy, sy in enumerate(sly):
-                            bbaz = np.arctan2(sx, sy)*180/np.pi+180.
+                            bbaz = np.arctan2(sx, sy) * 180 / np.pi + 180.
                             if bbaz > 180.:
-                                bbaz = -180. + (bbaz-180.)
-                            slowgrid.append((np.sqrt(sx*sx+sy*sy), bbaz,
+                                bbaz = -180. + (bbaz - 180.)
+                            slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
                                              pow[ix, iy]))
                             if array_response:
-                                tslow = (np.sqrt((sx+slow_x) *
-                                                 (sx+slow_x)+(sy+slow_y) *
-                                                 (sy+slow_y)))
-                                tbaz = (np.arctan2(sx+slow_x, sy+slow_y) *
+                                tslow = (np.sqrt((sx + slow_x) *
+                                                 (sx + slow_x) + (
+                                    sy + slow_y) *
+                                                 (sy + slow_y)))
+                                tbaz = (np.arctan2(sx + slow_x, sy + slow_y) *
                                         180 / np.pi + 180.)
                                 if tbaz > 180.:
-                                    tbaz = -180. + (tbaz-180.)
+                                    tbaz = -180. + (tbaz - 180.)
                                 transgrid.append((tslow, tbaz,
                                                   transff[ix, iy]))
 
@@ -857,8 +863,8 @@ class SeismicArray(object):
                     bz = slowgrid[:, 1]
                     slowg = slowgrid[:, 2]
                     grid = interpolate.griddata((sl, bz), slowg,
-                                                   (grid_x, grid_y),
-                                                   method='nearest')
+                                                (grid_x, grid_y),
+                                                method='nearest')
                     ax.pcolormesh(xi, yi, grid, cmap=cmap)
 
                     if array_response:
@@ -868,8 +874,8 @@ class SeismicArray(object):
                         tbz = transgrid[:, 1]
                         transg = transgrid[:, 2]
                         trans = interpolate.griddata((tsl, tbz), transg,
-                                                        (grid_x, grid_y),
-                                                        method='nearest')
+                                                     (grid_x, grid_y),
+                                                     method='nearest')
                         ax.contour(xi, yi, trans, level, colors='k',
                                    linewidth=0.2)
 
@@ -880,14 +886,16 @@ class SeismicArray(object):
                 else:
                     ax.set_xlabel('slowness [s/deg]')
                     ax.set_ylabel('slowness [s/deg]')
-                    slow_x = np.cos((baz[i]+180.)*np.pi/180.)*slow[i]
-                    slow_y = np.sin((baz[i]+180.)*np.pi/180.)*slow[i]
+                    slow_x = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
+                    slow_y = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
                     ax.pcolormesh(slx, sly, powmap[i].T)
                     ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
                              head_length=0.01, fc='k', ec='k')
                     if array_response:
-                        tslx = np.arange(sllx+slow_x, slmx+slow_x+sls, sls)
-                        tsly = np.arange(slly+slow_y, slmy+slow_y+sls, sls)
+                        tslx = np.arange(sllx + slow_x, slmx + slow_x + sls,
+                                         sls)
+                        tsly = np.arange(slly + slow_y, slmy + slow_y + sls,
+                                         sls)
                         try:
                             ax.contour(tsly, tslx, transff.T, 5, colors='k',
                                        linewidth=0.5)
@@ -941,11 +949,11 @@ class SeismicArray(object):
 
         sllx, slmx = sx
         slly, slmy = sx
-        sllx /= KM_PER_DEG
-        slmx /= KM_PER_DEG
-        slly /= KM_PER_DEG
-        slmy /= KM_PER_DEG
-        sls = sls/KM_PER_DEG
+        sllx = kilometer2degrees(sllx)
+        slmx = kilometer2degrees(slmx)
+        slly = kilometer2degrees(slly)
+        slmy = kilometer2degrees(slmy)
+        sls = kilometer2degrees(sls)
 
         stepsfreq = (freqmax - freqmin) / float(numfreqs)
         transff = array_transff_freqslowness(
@@ -953,14 +961,14 @@ class SeismicArray(object):
             coordsys=coordsys, correct_3dplane=False, static_3D=static3D,
             vel_cor=velcor)
 
-        sllx *= KM_PER_DEG
-        slmx *= KM_PER_DEG
-        slly *= KM_PER_DEG
-        slmy *= KM_PER_DEG
-        sls *= KM_PER_DEG
+        sllx = degrees2kilometers(sllx)
+        slmx = degrees2kilometers(slmx)
+        slly = degrees2kilometers(slly)
+        slmy = degrees2kilometers(slmy)
+        sls = degrees2kilometers(sls)
 
-        slx = np.arange(sllx, slmx+sls, sls)
-        sly = np.arange(slly, slmy+sls, sls)
+        slx = np.arange(sllx, slmx + sls, sls)
+        sly = np.arange(slly, slmy + sls, sls)
         fig = plt.figure(figsize=(12, 12))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
@@ -1241,7 +1249,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         _a[(3 * i):(3 * i + 3), :] = np.c_[
             np.r_[ss, z3t], np.r_[z3t, ss],
             np.array([-eta * ss[2],
-                     0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
+                      0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
     # ------------------------------------------------------
     # define data covariance matrix cd.
@@ -1270,7 +1278,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         Cu = np.diag(np.reshape(junk[subarray, :], (3 * n_plus_1)))
     elif sigmau.shape == (na, 3):
         Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(),
-                     (3 * n_plus_1)))
+                                (3 * n_plus_1)))
     else:
         raise ValueError('sigmau has the wrong dimensions')
 
@@ -1594,11 +1602,11 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
             if coordsys == 'lonlat':
                 geometry[i, 0] = tr.stats.coordinates.longitude
                 geometry[i, 1] = tr.stats.coordinates.latitude
-                geometry[i, 2] = tr.stats.coordinates.elevation/1000.
+                geometry[i, 2] = tr.stats.coordinates.elevation / 1000.
             elif coordsys == 'xy':
                 geometry[i, 0] = tr.stats.coordinates.x
                 geometry[i, 1] = tr.stats.coordinates.y
-                geometry[i, 2] = tr.stats.coordinates.elevation/1000.
+                geometry[i, 2] = tr.stats.coordinates.elevation / 1000.
     elif isinstance(stream, np.ndarray):
         geometry = stream.copy()
     else:
@@ -1638,15 +1646,15 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         result[:, 0] = (geometry[:, 0] - n[0] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         result[:, 1] = (geometry[:, 1] - n[1] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         result[:, 2] = (geometry[:, 2] - n[2] * (
             n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
             geometry[:, 2]) / (
-                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         geometry = result[:]
         print "Best fitting plane-coordinates :", geometry
 
@@ -1678,8 +1686,10 @@ def get_stream_offsets(stream, stime, etime):
             msg = "Specified etime %s is bigger than endtime %s in stream"
             raise ValueError(msg % (etime, tr.stats.endtime))
         # now we have to adjust to the beginning of real start time
-        spoint[i] = int((stime - tr.stats.starttime) * tr.stats.sampling_rate + .5)
-        epoint[i] = int((tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
+        spoint[i] = int(
+            (stime - tr.stats.starttime) * tr.stats.sampling_rate + .5)
+        epoint[i] = int(
+            (tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
     return spoint, epoint
 
 
@@ -1718,7 +1728,13 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     kygrid, kxgrid = np.meshgrid(np.linspace(kymin, kymax, nky),
                                  np.linspace(kxmin, kxmax, nkx))
 
-    ks = np.transpose(np.vstack((kxgrid.flatten(), kygrid.flatten())))
+    for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
+        for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
+            _sum = 0j
+            for k in range(len(coords)):
+                _sum += np.exp(complex(0.,
+                                       coords[k, 0] * kx + coords[k, 1] * ky))
+            transff[i, j] = abs(_sum) ** 2
 
     # z coordinate is not used
     k_dot_r = np.einsum('ni,mi->nm', ks, coords[:, :2])
@@ -1885,9 +1901,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(stream)
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
-    time_shift_table = get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x,
-                                     grdpts_y, vel_cor=vel_cor,
-                                     static_3D=static_3D)
+    time_shift_table = SeismicArray.get_timeshift(geometry, sll_x, sll_y, sl_s,
+                                                  grdpts_x, grdpts_y,
+                                                  vel_cor=vel_cor,
+                                                  static_3D=static_3D)
     # offset of arrays
     mini = np.min(time_shift_table[:, :, :])
     maxi = np.max(time_shift_table[:, :, :])
@@ -1898,8 +1915,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nstat = len(stream)
     fs = stream[0].stats.sampling_rate
     if win_len < 0.:
-        nsamp = int((etime - stime)*fs)
-        print nsamp
+        nsamp = int((etime - stime) * fs)
+        print(nsamp)
         nstep = 1
     else:
         nsamp = int(win_len * fs)
@@ -2000,7 +2017,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
 
 
 def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
-                stime, etime,   win_len=-1, win_frac=0.5,
+                stime, etime, win_len=-1, win_frac=0.5,
                 verbose=False, coordsys='lonlat', timestamp='mlabday',
                 method="DLS", nthroot=1, store=None, correct_3dplane=False,
                 static_3D=False, vel_cor=4.):
@@ -2011,24 +2028,24 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
         contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
         degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
         items/attributes. See param coordsys
-    :type sll_x: Float
+    :type sll_x: float
     :param sll_x: slowness x min (lower)
-    :type slm_x: Float
+    :type slm_x: float
     :param slm_x: slowness x max
-    :type sll_y: Float
+    :type sll_y: float
     :param sll_y: slowness y min (lower)
-    :type slm_y: Float
+    :type slm_y: float
     :param slm_y: slowness y max
-    :type sl_s: Float
+    :type sl_s: float
     :param sl_s: slowness step
     :type stime: UTCDateTime
     :param stime: Starttime of interest
     :type etime: UTCDateTime
     :param etime: Endtime of interest
-    :type win_len: Float
+    :type win_len: float
     :param window length for sliding window analysis, default is -1 which means
         the whole trace;
-    :type win_frac: Float
+    :type win_frac: float
     :param fraction of win_len which is used to 'hop' forward in time
     :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
         attributes to use for coordinates
@@ -2041,7 +2058,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
     :type method: string
     :param method: the method to use "DLS" delay and sum; "PWS" phase weigted
         stack; "SWP" slowness weightend power spectrum
-    :type nthroot: Float
+    :type nthroot: float
     :param nthroot: nth-root processing; nth gives the root (1,2,3,4), default
         1 (no nth-root)
     :type store: function
@@ -2061,7 +2078,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
         the inc angle is slowness dependend and thus must
         be estimated for each grid-point:
             inc = asin(v_cor*slow)
-    :type vel_cor: Float
+    :type vel_cor: float
     :param vel_cor: Velocity for the upper layer (static correction) in km/s
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness, maximum beam (for DLS)
@@ -2093,20 +2110,22 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
         print(stream)
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
-    time_shift_table = get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x,
-                                     grdpts_y, vel_cor=vel_cor,
-                                     static_3D=static_3D)
+    time_shift_table = SeismicArray.get_timeshift(geometry, sll_x, sll_y, sl_s,
+                                                  grdpts_x, grdpts_y,
+                                                  vel_cor=vel_cor,
+                                                  static_3D=static_3D)
 
     mini = np.min(time_shift_table[:, :, :])
     maxi = np.max(time_shift_table[:, :, :])
-    spoint, _epoint = get_stream_offsets(stream, (stime-mini), (etime-maxi))
+    spoint, _epoint = get_stream_offsets(stream, (stime - mini),
+                                         (etime - maxi))
     minend = np.min(_epoint)
     maxstart = np.max(spoint)
 
     # recalculate the maximum possible trace length
     #    ndat = int(((etime-maxi) - (stime-mini))*fs)
-    if(win_len < 0):
-            nsamp = int(((etime-maxi) - (stime-mini))*fs)
+    if win_len < 0:
+        nsamp = int(((etime - maxi) - (stime - mini)) * fs)
     else:
         #nsamp = int((win_len-np.abs(maxi)-np.abs(mini)) * fs)
         nsamp = int(win_len * fs)
@@ -2126,20 +2145,21 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
     while eotr:
         max_beam = 0.
         if method == 'DLS':
-            for x in xrange(grdpts_x):
-                for y in xrange(grdpts_y):
+            for x in range(grdpts_x):
+                for y in range(grdpts_y):
                     singlet = 0.
                     beam = np.zeros(nsamp, dtype='f8')
-                    for i in xrange(nstat):
-                        s = spoint[i]+int(time_shift_table[i, x, y] * fs + 0.5)
+                    for i in range(nstat):
+                        s = spoint[i] + int(
+                            time_shift_table[i, x, y] * fs + 0.5)
                         try:
                             shifted = stream[i].data[s + offset:
                                                      s + nsamp + offset]
                             if len(shifted) < nsamp:
                                 shifted = np.pad(
-                                    shifted, (0, nsamp-len(shifted)),
+                                    shifted, (0, nsamp - len(shifted)),
                                     'constant', constant_values=(0, 1))
-                            singlet += 1./nstat*np.sum(shifted*shifted)
+                            singlet += 1. / nstat * np.sum(shifted * shifted)
                             beam += 1. / nstat * np.power(
                                 np.abs(shifted), 1. / nthroot) * \
                                 shifted / np.abs(shifted)
@@ -2153,12 +2173,12 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                         max_beam = abspow_map[x, y]
                         beam_max = beam
         if method == 'PWS':
-            for x in xrange(grdpts_x):
-                for y in xrange(grdpts_y):
+            for x in range(grdpts_x):
+                for y in range(grdpts_y):
                     singlet = 0.
                     beam = np.zeros(nsamp, dtype='f8')
                     stack = np.zeros(nsamp, dtype='c8')
-                    for i in xrange(nstat):
+                    for i in range(nstat):
                         s = spoint[i] + int(time_shift_table[i, x, y] * fs +
                                             0.5)
                         try:
@@ -2166,7 +2186,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                                 s + offset: s + nsamp + offset])
                             if len(shifted) < nsamp:
                                 shifted = np.pad(
-                                    shifted, (0, nsamp-len(shifted)),
+                                    shifted, (0, nsamp - len(shifted)),
                                     'constant', constant_values=(0, 1))
                         except IndexError:
                             break
@@ -2174,12 +2194,14 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
                         stack.real += np.cos(phase)
                         stack.imag += np.sin(phase)
                     coh = 1. / nstat * np.abs(stack)
-                    for i in xrange(nstat):
-                        s = spoint[i]+int(time_shift_table[i, x, y] * fs + 0.5)
-                        shifted = stream[i].data[s+offset: s + nsamp + offset]
+                    for i in range(nstat):
+                        s = spoint[i] + int(
+                            time_shift_table[i, x, y] * fs + 0.5)
+                        shifted = stream[i].data[
+                            s + offset: s + nsamp + offset]
                         singlet += 1. / nstat * np.sum(shifted * shifted)
                         beam += 1. / nstat * shifted * np.power(coh, nthroot)
-                    bs = np.sum(beam*beam)
+                    bs = np.sum(beam * beam)
                     abspow_map[x, y] = bs / singlet
                     if abspow_map[x, y] > max_beam:
                         max_beam = abspow_map[x, y]
@@ -2201,7 +2223,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
             clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                                  deltaf, time_shift_table, steer)
             try:
-                for i in xrange(nstat):
+                for i in range(nstat):
                     dat = stream[i].data[spoint[i] + offset:
                                          spoint[i] + offset + nsamp]
                     dat = (dat - dat.mean()) * tap
@@ -2209,18 +2231,18 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
             except IndexError:
                 break
 
-            for i in xrange(grdpts_x):
-                for j in xrange(grdpts_y):
-                    for k in xrange(nf):
-                        for l in xrange(nstat):
+            for i in range(grdpts_x):
+                for j in range(grdpts_y):
+                    for k in range(nf):
+                        for l in range(nstat):
                             steer[k, i, j, l] *= spec[l, k]
 
             beam = np.absolute(np.sum(steer, axis=3))
             less = np.max(beam, axis=1)
             max_buffer = np.max(less, axis=1)
 
-            for i in xrange(grdpts_x):
-                for j in xrange(grdpts_y):
+            for i in range(grdpts_x):
+                for j in range(grdpts_y):
                     abspow_map[i, j] = np.sum(beam[:, i, j] / max_buffer[:],
                                               axis=0) / float(nf)
 
@@ -2283,8 +2305,8 @@ def vespagram_baz(stream, time_shift_table, starttime, endtime,
     """
     fs = stream[0].stats.sampling_rate
 
-    mini = min(min(i.values()) for i in time_shift_table.values())
-    maxi = max(max(i.values()) for i in time_shift_table.values())
+    mini = min(min(i.values()) for i in list(time_shift_table.values()))
+    maxi = max(max(i.values()) for i in list(time_shift_table.values()))
     spoint, _ = get_stream_offsets(stream, (starttime - mini),
                                    (endtime - maxi))
 
@@ -2324,7 +2346,7 @@ def vespagram_baz(stream, time_shift_table, starttime, endtime,
 
         elif method == 'PWS':
             stack = np.zeros(ndat, dtype='c8')
-            for i in xrange(nstat):
+            for i in range(nstat):
                 s = spoint[i] + int(time_shift_table[i, x] * fs + 0.5)
                 try:
                     shifted = sp.signal.hilbert(stream[i].data[s:s + ndat])
@@ -2334,24 +2356,24 @@ def vespagram_baz(stream, time_shift_table, starttime, endtime,
                 stack.real += np.cos(phase)
                 stack.imag += np.sin(phase)
             coh = 1. / nstat * np.abs(stack)
-            for i in xrange(nstat):
-                s = spoint[i]+int(time_shift_table[i, x] * fs + 0.5)
+            for i in range(nstat):
+                s = spoint[i] + int(time_shift_table[i, x] * fs + 0.5)
                 shifted = stream[i].data[s: s + ndat]
                 singlet += 1. / nstat * np.sum(shifted * shifted)
                 beams[x] += 1. / nstat * shifted * np.power(coh, nthroot)
-            bs = np.sum(beams[x]*beams[x])
+            bs = np.sum(beams[x] * beams[x])
             bs = bs / singlet
             if bs > max_beam:
                 max_beam = bs
                 beam_max = x
                 slow = np.abs(sll + x * sls)
-                if (slow) < 1e-8:
+                if slow < 1e-8:
                     slow = 1e-8
         else:
             msg = "Method '%s' unknown." % method
             raise ValueError(msg)
 
-    return(slow, beams, beam_max, max_beam)
+    return slow, beams, beam_max, max_beam
 
 
 def shifttrace_freq(stream, t_shift):
@@ -2362,7 +2384,7 @@ def shifttrace_freq(stream, t_shift):
             nfft = nextpow2(ndat)
             nfft *= 2
             tr1 = np.fft.rfft(tr.data, nfft)
-            for k in xrange(0, nfft / 2):
+            for k in range(0, nfft / 2):
                 tr1[k] *= np.complex(
                     np.cos((t_shift[i] * samp) * (k / float(nfft))
                            * 2. * np.pi),
@@ -2375,4 +2397,5 @@ def shifttrace_freq(stream, t_shift):
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod(exclude_empty=True)
