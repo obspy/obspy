@@ -41,7 +41,7 @@ class ClientTestCase(unittest.TestCase):
         Tests getWaveform method.
         """
         client = self.client
-        start = UTCDateTime(2015, 3, 22)
+        start = UTCDateTime() - 3600
         end = start + 1.0
         # example 1 -- 1 channel, cleanup
         stream = client.getWaveform('AV', 'ACH', '--', 'EHE', start, end)
@@ -95,7 +95,7 @@ class ClientTestCase(unittest.TestCase):
         """
         # initialize client
         client = self.client
-        start = UTCDateTime(2015, 3, 22)
+        start = UTCDateTime() - 3600
         end = start + 1.0
         with NamedTemporaryFile() as tf:
             testfile = tf.name
