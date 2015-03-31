@@ -77,22 +77,22 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
-        >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022)
+        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
+        >>> st = client.getWaveform('AV', 'ACH', '--', 'EHE', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+        >>> st = client.getWaveform('AV', 'ACH', '--', 'EH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
             from obspy.earthworm import Client
             from obspy import UTCDateTime
-            client = Client("pele.ess.washington.edu", 16017, timeout=5)
-            dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-            st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+            client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
+            dt = UTCDateTime() - 2000  # now - 2000 seconds
+            st = client.getWaveform('AV', 'ACH', '--', 'EHE', dt, dt + 10)
             st.plot()
-            st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+            st = client.getWaveform('AV', 'ACH', '--', 'EH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -155,9 +155,10 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
+        >>> client.saveWaveform('AV.ACH.--.EHE.mseed',
+        ...                     'AV', 'ACH', '--', 'EHE',
         ...                     t, t + 10, format='MSEED')  # doctest: +SKIP
         """
         st = self.getWaveform(network, station, location, channel, starttime,
@@ -191,28 +192,28 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
-        >>> response = client.availability(network="UW", station="TUCA",
-        ...         channel="BH*")
-        >>> print(response)  # doctest: +SKIP
-        [('UW',
-          'TUCA',
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
+        >>> response = client.availability(network="AV", station="ACH",
+        ...                                channel="EH*")
+        >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        [('AV',
+          'ACH',
           '--',
-          'BHE',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
-         ('UW',
-          'TUCA',
+          'EHE',
+          UTCDateTime(...),
+          UTCDateTime(...)),
+         ('AV',
+          'ACH',
           '--',
-          'BHN',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
-         ('UW',
-          'TUCA',
+          'EHN',
+          UTCDateTime(...),
+          UTCDateTime(...)),
+         ('AV',
+          'ACH',
           '--',
-          'BHZ',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000))]
+          'EHZ',
+          UTCDateTime(...),
+          UTCDateTime(...))]
         """
         # build up possibly wildcarded trace id pattern for query
         pattern = ".".join((network, station, location, channel))
