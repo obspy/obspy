@@ -1,5 +1,8 @@
 releases:
- - fixing python3 compatibility for seedlink.easyseedlink
+ - obspy.earthworm
+   * Fix Python3 compatibility problem
+ - obspy.seedlink:
+   * Fix Python3 compatibility for seedlink.easyseedlink
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release
