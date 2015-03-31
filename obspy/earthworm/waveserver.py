@@ -150,7 +150,7 @@ def getSockCharLine(sock, timeout=10.):
     chunks = []
     indat = b'^'
     try:
-        while indat[-1] != b'\n':
+        while indat[-1:] != b'\n':
             # see http://obspy.org/ticket/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
@@ -215,9 +215,9 @@ def getMenu(server, port, scnl=None, timeout=None):
         if flag in ['FN', 'FC', 'FU']:
             print('request returned %s - %s' % (flag, RETURNFLAG_KEY[flag]))
             return []
-        if tokens[7] in DATATYPE_KEY:
+        if tokens[7].encode() in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
-        elif tokens[6] in DATATYPE_KEY:
+        elif tokens[6].encode() in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
             print('no type token found in getMenu')
