@@ -1,6 +1,8 @@
 releases:
  - obspy.earthworm
    * Fix Python3 compatibility problem
+ - obspy.imaging:
+   * Fix flipped maps due to bug in Basemap
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
 
