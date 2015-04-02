@@ -160,12 +160,12 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
     if projection == 'global':
-        bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 10),
+        bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
                        resolution=resolution, ax=map_ax)
     elif projection == 'ortho':
         bmap = Basemap(projection='ortho', resolution=resolution,
-                       area_thresh=1000.0, lat_0=round(np.mean(lats), 10),
-                       lon_0=round(np.mean(lons), 10), ax=map_ax)
+                       area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
+                       lon_0=round(np.mean(lons), 4), ax=map_ax)
     elif projection == 'local':
         if min(lons) < -150 and max(lons) > 150:
             max_lons = max(np.array(lons) % 360)
@@ -200,8 +200,8 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             height = width / aspect
 
         bmap = Basemap(projection='aea', resolution=resolution,
-                       area_thresh=1000.0, lat_0=round(lat_0, 10),
-                       lon_0=round(lon_0, 10),
+                       area_thresh=1000.0, lat_0=round(lat_0, 4),
+                       lon_0=round(lon_0, 4),
                        width=width, height=height, ax=map_ax)
         # not most elegant way to calculate some round lats/lons
 
