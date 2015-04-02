@@ -57,6 +57,7 @@ version.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 from future import standard_library
 with standard_library.hooks():
@@ -135,7 +136,7 @@ class EasySeedLinkClient(object):
 
     def __init__(self, server_url, autoconnect=True):
         # Catch invalid server_url parameters
-        if not isinstance(server_url, basestring):
+        if not isinstance(server_url, (str, native_str)):
             raise ValueError('Expected string for SeedLink server URL')
         # Allow for sloppy server URLs (e.g. 'geofon.gfz-potsdam.de:18000).
         # (According to RFC 1808 the net_path segment needs to start with '//'
