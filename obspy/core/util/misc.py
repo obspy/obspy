@@ -22,7 +22,7 @@ import sys
 import tempfile
 import warnings
 from contextlib import contextmanager
-from subprocess import PIPE, Popen
+from subprocess import STDOUT, CalledProcessError, check_output
 
 import numpy as np
 
@@ -243,22 +243,21 @@ def get_untracked_files_from_git():
     dir_ = os.path.dirname(os.path.dirname(os.path.dirname(dir_)))
     try:
         # Check that the git root directory is actually the ObsPy directory.
-        p = Popen(['git', 'rev-parse', '--show-toplevel'],
-                  cwd=dir_, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        git_root_dir = p.stdout.readlines()[0].strip()
-        p.stdout.close()
+        p = check_output(['git', 'rev-parse', '--show-toplevel'],
+                         cwd=dir_, stderr=STDOUT)
+        git_root_dir = p.decode().strip()
+        if git_root_dir:
+            git_root_dir = os.path.abspath(git_root_dir)
         if git_root_dir != dir_:
-            raise Exception
-        p = Popen(['git', 'status', '-u', '--porcelain'],
-                  cwd=dir_, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        stdout = p.stdout.readlines()
-        p.stdout.close()
+            raise ValueError('Git root directory (%s) does not match expected '
+                             'path (%s).' % (git_root_dir, dir_))
+        p = check_output(['git', 'status', '-u', '--porcelain'],
+                         cwd=dir_, stderr=STDOUT)
+        stdout = p.decode().splitlines()
         files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
                  for line in stdout
                  if line.startswith("??")]
-    except:
+    except (OSError, CalledProcessError):
         return None
     return files
 
