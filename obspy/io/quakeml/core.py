@@ -1640,7 +1640,7 @@ class Pickler(object):
             self._str(sub.decay_time, sub_el, 'decayTime')
             self._extra(sub, sub_el)
             mt_el.append(sub_el)
-        self._str(moment_tensor.method_id, mt_el, 'MethodID')
+        self._str(moment_tensor.method_id, mt_el, 'methodID')
         self._str(moment_tensor.category, mt_el, 'category')
         self._str(moment_tensor.inversion_type, mt_el, 'inversionType')
         self._comments(moment_tensor.comments, mt_el)
