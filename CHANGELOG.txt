@@ -12,6 +12,9 @@ master:
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
+ - obspy.imaging:
+   * Experimental support for Cartopy when plotting maps. Use the `method`
+     argument to functions that plot maps to select between Basemap or Cartopy.
 
 releases:
  - obspy.earthworm
