@@ -415,7 +415,7 @@ class Inventory(ComparingObject):
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', color_per_network=False,
              colormap="jet", legend="upper left", time=None, show=True,
-             outfile=None, **kwargs):  # @UnusedVariable
+             outfile=None, method=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
         object.
@@ -480,6 +480,14 @@ class Inventory(ComparingObject):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type method: str
+        :param method: Method to use for plotting. Possible values are:
+
+            * ``'basemap'`` to use the Basemap library
+            * ``'cartopy'`` to use the Cartopy library
+            * ``None`` to use the best available library
+
+            Defaults to ``None``.
 
         .. rubric:: Example
 
@@ -520,7 +528,7 @@ class Inventory(ComparingObject):
                      color_per_network={'GR': 'blue',
                                         'BW': 'green'})
         """
-        from obspy.imaging.maps import plot_basemap
+        from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
 
         # The empty ones must be kept as otherwise inventory files without
@@ -562,12 +570,12 @@ class Inventory(ComparingObject):
         if not label:
             labels = None
 
-        fig = plot_basemap(lons, lats, size, colors, labels,
-                           projection=projection, resolution=resolution,
-                           continent_fill_color=continent_fill_color,
-                           water_fill_color=water_fill_color,
-                           colormap=None, colorbar=False, marker=marker,
-                           title=None, show=False, **kwargs)
+        fig = plot_map(method, lons, lats, size, colors, labels,
+                       projection=projection, resolution=resolution,
+                       continent_fill_color=continent_fill_color,
+                       water_fill_color=water_fill_color,
+                       colormap=None, colorbar=False, marker=marker,
+                       title=None, show=False, **kwargs)
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]

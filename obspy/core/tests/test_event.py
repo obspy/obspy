@@ -13,12 +13,18 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
                               read_events)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import get_basemap_version
+from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
 
 BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
     from matplotlib import rcParams
+
+CARTOPY_VERSION = get_cartopy_version()
+if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
+    HAS_CARTOPY = True
+else:
+    HAS_CARTOPY = False
 
 
 class EventTestCase(unittest.TestCase):
@@ -423,38 +429,49 @@ class CatalogTestCase(unittest.TestCase):
         cat = read_events(self.neries_xml)
         self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
 
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+
+@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+class CatalogBasemapTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.Catalog.plot with Basemap
+    """
+    def setUp(self):
+        # directory where the test files are located
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+
     def test_catalog_plot_global(self):
         """
-        Tests the catalog preview plot, default parameters.
+        Tests the catalog preview plot, default parameters, using Basemap.
         """
         cat = read_events()
         reltol = 1
         if BASEMAP_VERSION < [1, 0, 7]:
             reltol = 3
-        with ImageComparison(self.image_dir, "catalog1.png",
+        with ImageComparison(self.image_dir, 'catalog-basemap1.png',
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            cat.plot(outfile=ic.name)
+            cat.plot(method='basemap', outfile=ic.name)
 
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_ortho(self):
         """
         Tests the catalog preview plot, ortho projection, some non-default
-        parameters.
+        parameters, using Basemap.
         """
         cat = read_events()
-        with ImageComparison(self.image_dir, "catalog2.png") as ic:
+        with ImageComparison(self.image_dir, 'catalog-basemap2.png') as ic:
             rcParams['savefig.dpi'] = 72
-            cat.plot(outfile=ic.name, projection="ortho",
-                     resolution="c",
-                     water_fill_color="b", label=None)
+            cat.plot(method='basemap', outfile=ic.name, projection='ortho',
+                     resolution='c', water_fill_color='b', label=None)
 
-    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default
-        parameters.
+        parameters, using Basemap.
         """
         cat = read_events()
         reltol = 1.5
@@ -462,12 +479,59 @@ class CatalogTestCase(unittest.TestCase):
         # tolerance must be much higher.
         if BASEMAP_VERSION < [1, 0, 4]:
             reltol = 100
-        with ImageComparison(self.image_dir, "catalog3.png",
+        with ImageComparison(self.image_dir, "catalog-basemap3.png",
                              reltol=reltol) as ic:
             rcParams['savefig.dpi'] = 72
-            cat.plot(outfile=ic.name, projection="local",
-                     resolution="i", continent_fill_color="0.3",
-                     color="date", colormap="gist_heat")
+            cat.plot(method='basemap', outfile=ic.name, projection='local',
+                     resolution='i', continent_fill_color='0.3',
+                     color='date', colormap='gist_heat')
+
+
+@unittest.skipIf(not HAS_CARTOPY, 'Cartopy not installed or too old')
+class CatalogCartopyTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.Catalog.plot using Cartopy
+    """
+    def setUp(self):
+        # directory where the test files are located
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        # Clear the Resource Identifier dict for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
+        # Also clear the tracker.
+        ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
+
+    def test_catalog_plot_global(self):
+        """
+        Tests the catalog preview plot, default parameters, using Cartopy.
+        """
+        cat = read_events()
+        with ImageComparison(self.image_dir, 'catalog-cartopy1.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(method='cartopy', outfile=ic.name)
+
+    def test_catalog_plot_ortho(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters, using Cartopy.
+        """
+        cat = read_events()
+        with ImageComparison(self.image_dir, 'catalog-cartopy2.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
+                     resolution='c', water_fill_color='b', label=None)
+
+    def test_catalog_plot_local(self):
+        """
+        Tests the catalog preview plot, local projection, some more non-default
+        parameters, using Cartopy.
+        """
+        cat = read_events()
+        with ImageComparison(self.image_dir, 'catalog-cartopy3.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            cat.plot(method='cartopy', outfile=ic.name, projection='local',
+                     resolution='50m', continent_fill_color='0.3',
+                     color='date', colormap='gist_heat')
 
 
 class WaveformStreamIDTestCase(unittest.TestCase):
@@ -759,6 +823,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(CatalogBasemapTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(CatalogCartopyTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))

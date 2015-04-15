@@ -18,30 +18,22 @@ import unittest
 import warnings
 
 import numpy as np
+from matplotlib import rcParams
 
 from obspy import UTCDateTime, read_inventory
-from obspy.core.util.base import get_basemap_version
+from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import Channel, Network, Response, Station
 
-# checking for matplotlib/basemap
-try:
-    from matplotlib import rcParams
-    import mpl_toolkits.basemap
-    # avoid flake8 complaining about unused import
-    mpl_toolkits.basemap
-    HAS_BASEMAP = True
-except ImportError:
-    HAS_BASEMAP = False
-
 
 BASEMAP_VERSION = get_basemap_version()
+CARTOPY_VERSION = get_cartopy_version()
 MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class NetworkTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.core.inventory.network.Network` class.
+    Tests for the :class:`~obspy.core.inventory.network.Network` class.
     """
     def setUp(self):
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
@@ -134,55 +126,6 @@ class NetworkTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, network.get_coordinates, 'BW.RJOB..XXX')
 
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
-    def test_location_plot_global(self):
-        """
-        Tests the network location preview plot, default parameters.
-        """
-        net = read_inventory()[0]
-        reltol = 1.0
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        if BASEMAP_VERSION < [1, 0, 7]:
-            reltol = 3.0
-        with ImageComparison(self.image_dir, "network_location1.png",
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(outfile=ic.name)
-
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
-    def test_location_plot_ortho(self):
-        """
-        Tests the network location preview plot, ortho projection, some
-        non-default parameters.
-        """
-        net = read_inventory()[0]
-        with ImageComparison(self.image_dir, "network_location2.png") as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(projection="ortho", resolution="c",
-                     continent_fill_color="0.5", marker="d",
-                     color="yellow", label=False, outfile=ic.name)
-
-    @unittest.skipIf(not HAS_BASEMAP, 'basemap not installed')
-    def test_location_plot_local(self):
-        """
-        Tests the network location preview plot, local projection, some more
-        non-default parameters.
-        """
-        net = read_inventory()[0]
-        # Coordinate lines might be slightly off, depending on the basemap
-        # version.
-        reltol = 2.0
-        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
-        # tolerance must be much higher.
-        if BASEMAP_VERSION < [1, 0, 4]:
-            reltol = 100.0
-        with ImageComparison(self.image_dir, "network_location3.png",
-                             reltol=reltol) as ic:
-            rcParams['savefig.dpi'] = 72
-            net.plot(projection="local", resolution="i", size=13**2,
-                     outfile=ic.name)
-
     def test_response_plot(self):
         """
         Tests the response plot.
@@ -204,8 +147,125 @@ class NetworkTestCase(unittest.TestCase):
                                   time=t, outfile=ic.name)
 
 
+@unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+class NetworkBasemapTestCase(unittest.TestCase):
+    """
+    Tests for the :meth:`~obspy.station.network.Network.plot` with Basemap.
+    """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
+
+    def test_location_plot_global(self):
+        """
+        Tests the network location preview plot, default parameters, using
+        Basemap.
+        """
+        net = read_inventory()[0]
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir, 'network_location-basemap1.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='basemap', outfile=ic.name)
+
+    def test_location_plot_ortho(self):
+        """
+        Tests the network location preview plot, ortho projection, some
+        non-default parameters, using Basemap.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir,
+                             'network_location-basemap2.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='basemap', projection='ortho', resolution='c',
+                     continent_fill_color='0.5', marker='d',
+                     color='yellow', label=False, outfile=ic.name)
+
+    def test_location_plot_local(self):
+        """
+        Tests the network location preview plot, local projection, some more
+        non-default parameters, using Basemap.
+        """
+        net = read_inventory()[0]
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        reltol = 2.0
+        # Basemap smaller 1.0.4 has a serious issue with plotting. Thus the
+        # tolerance must be much higher.
+        if BASEMAP_VERSION < [1, 0, 4]:
+            reltol = 100.0
+        with ImageComparison(self.image_dir, 'network_location-basemap3.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='basemap', projection='local', resolution='i',
+                     size=13**2, outfile=ic.name)
+
+
+@unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),
+                 'cartopy not installed')
+class NetworkCartopyTestCase(unittest.TestCase):
+    """
+    Tests for the :meth:`~obspy.station.network.Network.plot` with Cartopy.
+    """
+    def setUp(self):
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
+
+    def test_location_plot_global(self):
+        """
+        Tests the network location preview plot, default parameters, using
+        Cartopy.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir,
+                             'network_location-cartopy1.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='cartopy', outfile=ic.name)
+
+    def test_location_plot_ortho(self):
+        """
+        Tests the network location preview plot, ortho projection, some
+        non-default parameters, using Cartopy.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir,
+                             'network_location-cartopy2.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='cartopy', projection='ortho', resolution='c',
+                     continent_fill_color='0.5', marker='d',
+                     color='yellow', label=False, outfile=ic.name)
+
+    def test_location_plot_local(self):
+        """
+        Tests the network location preview plot, local projection, some more
+        non-default parameters, using Cartopy.
+        """
+        net = read_inventory()[0]
+        with ImageComparison(self.image_dir,
+                             'network_location-cartopy3.png') as ic:
+            rcParams['savefig.dpi'] = 72
+            net.plot(method='cartopy', projection='local', resolution='50m',
+                     size=13**2, outfile=ic.name)
+
+
 def suite():
-    return unittest.makeSuite(NetworkTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(NetworkTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(NetworkBasemapTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(NetworkCartopyTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':
