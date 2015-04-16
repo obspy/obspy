@@ -758,10 +758,17 @@ class ResourceIdentifier(object):
 
         regex = r"^(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
                 r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*$"
+        # if current string is a valid QuakeML resource ID just use it
         result = re.match(regex, str(id))
         if result is not None:
             return id
-        id = 'smi:%s/%s' % (authority_id, str(id))
+        # if not, we replace invalid characters and prepend a valid prefix
+        id_string, replace_count = \
+            re.subn(r"[^\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]", '_', str(id))
+        if replace_count:
+            msg = "Replaced %i invalid character(s) to get valid QuakeML URI."
+            warnings.warn(msg % replace_count)
+        id = 'smi:%s/%s' % (authority_id, id_string)
         # Check once again just to be sure no weird symbols are stored in the
         # ID.
         result = re.match(regex, id)
