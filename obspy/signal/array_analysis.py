@@ -49,7 +49,7 @@ import matplotlib.pyplot as plt
 
 class SeismicArray(object):
     """
-    Class representing a seismic array.up
+    Class representing a seismic array.
     """
 
     def __init__(self, name="", ):
@@ -89,6 +89,7 @@ class SeismicArray(object):
             for station in network:
                 station_code = "{n}.{s}".format(n=network.code,
                                                 s=station.code)
+                # todo this must work without channels, for just stations!
                 for channel in station:
                     this_coordinates = \
                         {"latitude": float(channel.latitude),
@@ -481,11 +482,11 @@ class SeismicArray(object):
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
         :type wlen: float
-        :param slx: Min/Max slowness for analysis in x direction.
+        :param slx: Min/Max slowness for analysis in x direction [s/km].
         :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
+        :param sly: Min/Max slowness for analysis in y direction [s/km].
         :type sly: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid [s/km].
         :type sls: float
         :param array_response: superimpose array reponse function in plot (slow!)
         :type array_response: bool
@@ -525,11 +526,11 @@ class SeismicArray(object):
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
         :type wlen: float
-        :param slx: Min/Max slowness for analysis in x direction.
+        :param slx: Min/Max slowness for analysis in x direction [s/km].
         :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
+        :param sly: Min/Max slowness for analysis in y direction [s/km].
         :type sly: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid [s/km].
         :type sls: float
         :param array_response: superimpose array reponse function in plot (slow!)
         :type array_response: bool
@@ -569,11 +570,11 @@ class SeismicArray(object):
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
         :type wlen: float
-        :param slx: Min/Max slowness for analysis in x direction.
+        :param slx: Min/Max slowness for analysis in x direction [s/km].
         :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
+        :param sly: Min/Max slowness for analysis in y direction [s/km].
         :type sly: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid [s/km].
         :type sls: float
         :param array_response: superimpose array reponse function in plot (slow!)
         :type array_response: bool
@@ -588,7 +589,7 @@ class SeismicArray(object):
 
     def fk_analysis(self, stream, frqlow, frqhigh,
                     filter=True, baz_plot=True, static3D=False,
-                    vel_corr=4.8, wlen=-1, slx=(-10, 10),
+                    vel_corr=4.8, wlen=-1, wfrac=0.8, slx=(-10, 10),
                     sly=(-10, 10), sls=0.5, array_response=True):
         """
         FK analysis.
@@ -613,11 +614,13 @@ class SeismicArray(object):
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
         :type wlen: float
-        :param slx: Min/Max slowness for analysis in x direction.
+        :param wfrac: fraction of sliding window to use for step.
+        :type wfrac: float
+        :param slx: Min/Max slowness for analysis in x direction [s/km].
         :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
+        :param sly: Min/Max slowness for analysis in y direction [s/km].
         :type sly: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid [s/km].
         :type sls: float
         :param array_response: superimpose array reponse function in plot (slow!)
         :type array_response: bool
@@ -626,13 +629,14 @@ class SeismicArray(object):
                                            frqlow=frqlow, frqhigh=frqhigh,
                                            filter=filter, baz_plot=baz_plot,
                                            static3D=static3D,
-                                           vel_corr=vel_corr, wlen=wlen,
+                                           vel_corr=vel_corr,
+                                           wlen=wlen, wfrac=wfrac,
                                            slx=slx, sly=sly, sls=sls,
                                            array_response=array_response)
 
     def _array_analysis_helper(self, stream, method, frqlow, frqhigh,
                                filter=True, baz_plot=True, static3D=False,
-                               vel_corr=4.8, wlen=-1, slx=(-10, 10),
+                               vel_corr=4.8, wlen=-1, wfrac=0.8, slx=(-10, 10),
                                sly=(-10, 10), sls=0.5, array_response=True):
         """
         Array analysis wrapper routine.
@@ -661,11 +665,13 @@ class SeismicArray(object):
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
         :type wlen: float
-        :param slx: Min/Max slowness for analysis in x direction.
+        :param wfrac: fraction of sliding window to use for step.
+        :type wfrac: float
+        :param slx: Min/Max slowness for analysis in x direction [s/km].
         :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
+        :param sly: Min/Max slowness for analysis in y direction [s/km].
         :type sly: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid [s/km].
         :type sls: float
         :param array_response: superimpose array reponse function in plot (slow!)
         :type array_response: bool
@@ -677,19 +683,19 @@ class SeismicArray(object):
         sllx, slmx = slx
         slly, slmy = sly
 
-        starttime = max([tr.stats.starttime for tr in stream])
-        endtime = min([tr.stats.endtime for tr in stream])
-        stream.trim(starttime, endtime)
+        # Do not modify the given stream in place.
+        st_workon = stream.copy()
+        # Trim the stream so all traces are present.
+        starttime = max([tr.stats.starttime for tr in st_workon])
+        endtime = min([tr.stats.endtime for tr in st_workon])
+        st_workon.trim(starttime, endtime)
 
-        #stream.attach_response(inventory)
-        stream.merge()
-        self._attach_coords_to_stream(stream)
+        #st_workon.merge()
+        self._attach_coords_to_stream(st_workon)
 
         if filter:
-            stream.filter('bandpass', freqmin=frqlow, freqmax=frqhigh,
-                          zerophase=True)
-
-        spl = stream.copy()
+            st_workon.filter('bandpass', freqmin=frqlow, freqmax=frqhigh,
+                             zerophase=True)
 
         tmpdir = tempfile.mkdtemp(prefix="obspy-")
         filename_patterns = (os.path.join(tmpdir, 'pow_map_%03d.npy'),
@@ -700,38 +706,32 @@ class SeismicArray(object):
             np.save(filename_patterns[1] % i, apow_map)
 
         try:
-            # next step would be needed if the correction velocity needs to be
-            # estimated
-            #
-            sllx = kilometer2degrees(sllx)
-            slmx = kilometer2degrees(slmx)
-            slly = kilometer2degrees(slly)
-            slmy = kilometer2degrees(slmy)
-            sls = kilometer2degrees(sls)
-            vc = vel_corr
             if method == 'FK':
                 kwargs = dict(
                     #slowness grid: X min, X max, Y min, Y max, Slow Step
                     sll_x=sllx, slm_x=slmx, sll_y=slly, slm_y=slmy, sl_s=sls,
                     # sliding window properties
-                    win_len=wlen, win_frac=0.8,
+                    win_len=wlen, win_frac=wfrac,
                     # frequency properties
                     frqlow=frqlow, frqhigh=frqhigh, prewhiten=0,
                     # restrict output
                     store=dump,
                     semb_thres=-1e9, vel_thres=-1e9, verbose=False,
                     timestamp='julsec', stime=starttime, etime=endtime,
-                    method=0, correct_3dplane=False, vel_cor=vc,
+                    method=0, correct_3dplane=False, vel_cor=vel_corr,
                     static_3D=static3D)
 
                 # here we do the array processing
                 start = UTCDateTime()
-                out = array_processing(stream, **kwargs)
+                out = array_processing(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
                 # make output human readable, adjust backazimuth to values
                 # between 0 and 360
                 t, rel_power, abs_power, baz, slow = out.T
+                baz[baz < 0.0] += 360
+                # todo: optionally return out to allow for other plots etc.
+                # Or add more plotting options here.
 
             else:
                 kwargs = dict(
@@ -745,18 +745,19 @@ class SeismicArray(object):
                     win_len=wlen, win_frac=0.5,
                     nthroot=4, method=method,
                     verbose=False, timestamp='julsec',
-                    stime=starttime, etime=endtime, vel_cor=vc,
+                    stime=starttime, etime=endtime, vel_cor=vel_corr,
                     static_3D=False)
 
                 # here we do the array processing
                 start = UTCDateTime()
-                out = beamforming(stream, **kwargs)
+                out = beamforming(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
                 # make output human readable, adjust backazimuth to values
                 # between 0 and 360
                 trace = []
                 t, rel_power, baz, slow_x, slow_y, slow = out.T
+                baz[baz < 0.0] += 360
 
                 # calculating array response
             if array_response:
@@ -766,9 +767,9 @@ class SeismicArray(object):
                 tf_sly = slly
                 tf_smy = slmy
                 transff = array_transff_freqslowness(
-                    stream, (tf_slx, tf_smx, tf_sly, tf_smy), sls, frqlow,
+                    st_workon, (tf_slx, tf_smx, tf_sly, tf_smy), sls, frqlow,
                     frqhigh, stepsfreq, coordsys='lonlat',
-                    correct_3dplane=False, static_3D=False, vel_cor=vc)
+                    correct_3dplane=False, static_3D=False, vel_cor=vel_corr)
 
             # now let's do the plotting
             cmap = cm.rainbow
@@ -799,8 +800,8 @@ class SeismicArray(object):
                 if method != 'FK':
                     trace.append(np.load(filename_patterns[1] % i))
 
-            npts = stream[0].stats.npts
-            df = stream[0].stats.sampling_rate
+            npts = st_workon[0].stats.npts
+            df = st_workon[0].stats.sampling_rate
             T = np.arange(0, npts / df, 1 / df)
 
             # if we choose windowlen > 0. we now move through our slices
@@ -819,7 +820,7 @@ class SeismicArray(object):
                 # here we plot the first trace on top of the slowness map
                 # and indicate the possibiton of the lsiding window as green box
                 if method == 'FK':
-                    ax1.plot(T, spl[0].data, 'k')
+                    ax1.plot(T, st_workon[0].data, 'k')
                     if wlen > 0.:
                         try:
                             ax1.axvspan(st, en, facecolor='g', alpha=0.3)
