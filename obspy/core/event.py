@@ -40,6 +40,7 @@ from uuid import uuid4
 with standard_library.hooks():
     import urllib.request
 
+import numpy as np
 from pkg_resources import load_entry_point
 
 from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
@@ -3332,7 +3333,7 @@ class Catalog(object):
             if color == 'date':
                 c_ = event.origins[0].get('time')
             else:
-                c_ = event.origins[0].get('depth') / 1e3
+                c_ = (event.origins[0].get('depth') or np.nan) / 1e3
             colors.append(c_)
 
         # Create the colormap for date based plotting.

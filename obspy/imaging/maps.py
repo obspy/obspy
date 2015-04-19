@@ -273,6 +273,16 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             map_ax.text(x[0], y[0], labels[0], weight="heavy", color="k",
                         **path_effect_kwargs)
 
+    # scatter plot is removing valid x/y points with invalid color value,
+    # so we plot those points separately.
+    if not isinstance(color, (str, native_str)):
+        if any(np.isnan(color)):
+            mask = np.isnan(color)
+            x_ = np.array(x)[mask]
+            y_ = np.array(y)[mask]
+            size_ = np.array(size)[mask]
+            scatter = bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
+                                   zorder=10, cmap=None)
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
 
