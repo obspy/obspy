@@ -3331,7 +3331,7 @@ class Catalog(object):
             labels.append(('  %.1f' % mag) if mag and label == 'magnitude'
                           else '')
             if color == 'date':
-                c_ = origin.get('time')
+                c_ = origin.get('time') or np.nan
             else:
                 c_ = (origin.get('depth') or np.nan) / 1e3
             colors.append(c_)
@@ -3341,12 +3341,17 @@ class Catalog(object):
             colormap = plt.get_cmap("RdYlGn_r")
 
         if len(lons) > 1:
+            # if we have a `None` in the origin time list it likely ends up as
+            # min and/or max and causes problems..
+            times_ = np.ma.masked_equal(times, None).compressed()
+            min_time = times_.min()
+            max_time = times_.max()
             title = (
                 "{event_count} events ({start} to {end}) "
                 "- Color codes {colorcode}, size the magnitude".format(
                     event_count=len(self.events),
-                    start=min(times).strftime("%Y-%m-%d"),
-                    end=max(times).strftime("%Y-%m-%d"),
+                    start=min_time.strftime("%Y-%m-%d"),
+                    end=max_time.strftime("%Y-%m-%d"),
                     colorcode="origin time" if color == "date" else "depth"))
         else:
             title = "Event at %s" % times[0].strftime("%Y-%m-%d")
