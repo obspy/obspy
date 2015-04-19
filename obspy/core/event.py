@@ -3331,9 +3331,9 @@ class Catalog(object):
             labels.append(('  %.1f' % mag) if mag and label == 'magnitude'
                           else '')
             if color == 'date':
-                c_ = event.origins[0].get('time')
+                c_ = origin.get('time')
             else:
-                c_ = (event.origins[0].get('depth') or np.nan) / 1e3
+                c_ = (origin.get('depth') or np.nan) / 1e3
             colors.append(c_)
 
         # Create the colormap for date based plotting.
