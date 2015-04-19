@@ -121,7 +121,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
     if isinstance(color[0], (datetime.datetime, UTCDateTime)):
         datetimeplot = True
-        color = [date2num(t) for t in color]
+        color = [t and date2num(t) or np.nan for t in color]
     else:
         datetimeplot = False
 
