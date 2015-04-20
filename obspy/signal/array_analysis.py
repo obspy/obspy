@@ -193,17 +193,19 @@ class SeismicArray(object):
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
         """
-        Method to calculate the array geometry and the center coordinates in km
+        Method to calculate the array geometry and each station's coordinates
+        in km, relative to a given reference (centre) point.
 
+        :param latitude: Latitude of reference origin
+        :param longitude: Longitude of reference origin
+        :param absolute_height_in_km: Elevation of reference origin
         :param correct_3dplane: applies a 3D best fitting plane to the array.
-               This might be important if the array is located on a inclinde
-               slope (e.g., at a volcano)
+               This might be important if the array is located on an inclined
+               slope (e.g., at a volcano).
         :return: Returns the geometry of the stations as 2d numpy.ndarray
                 The first dimension are the station indexes with the same order
                 as the traces in the stream object. The second index are the
-                values of [lat, lon, elev] in km
-                last index contains center [lat, lon, elev] in degrees and
-                km if return_center is true
+                values of [lat, lon, elev] in km.
         """
         geometry = {}
 
@@ -264,25 +266,33 @@ class SeismicArray(object):
 
         return min_distance_station
 
-    def get_timeshift_baz(self, sll, slm, sls, baz, latitude, longitude,
-                          absolute_height_in_km, static_3D=False,
-                          vel_cor=4.0):
+    def get_timeshift_baz(self, sll, slm, sls, baz, latitude=None,
+                          longitude=None, absolute_height=None,
+                          static_3D=False, vel_cor=4.0):
         """
-        Returns timeshift table for given array geometry and a pre-defined
-        backazimuth.
+        Returns timeshift table for the geometry of the current array, in
+        kilometres relative to a given centre (uses geometric centre if not
+        specified), and a pre-defined backazimuth.
 
-        :param sll_x: slowness x min (lower)
-        :param slm_y: slowness x max (lower)
-        :param sl_s: slowness step
+        :param sll: slowness x min (lower)
+        :param slm: slowness x max (lower)
+        :param sls: slowness step
         :param baz:  backazimuth applied
+        :param latitude: latitude of reference origin
+        :param longitude: longitude of reference origin
+        :param absolute_height: elevation of reference origin, in km
         :param vel_cor: correction velocity (upper layer) in km/s
         :param static_3D: a correction of the station height is applied using
             vel_cor the correction is done according to the formula:
             t = rxy*s - rz*cos(inc)/vel_cor
             where inc is defined by inv = asin(vel_cor*slow)
         """
+        if any([_i is None for _i in [latitude, longitude, absolute_height]]):
+            latitude = self.geometrical_center["latitude"]
+            longitude = self.geometrical_center["longitude"]
+            absolute_height = self.geometrical_center["absolute_height_in_km"]
         geom = self.get_geometry_xyz(latitude, longitude,
-                                     absolute_height_in_km)
+                                     absolute_height)
 
         baz = math.pi * baz / 180.0
 
@@ -311,32 +321,50 @@ class SeismicArray(object):
 
         return time_shift_tbl
 
-    def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x,
-                      grdpts_y, vel_cor=4., static_3D=False):
+    def get_timeshift(self, sllx, slly, sls, grdpts_x, grdpts_y,
+                      latitude=None, longitude=None, absolute_height=None,
+                      vel_cor=4., static_3D=False):
         """
-        Returns timeshift table for given array geometry
+        Returns timeshift table for the geometry of the current array, in
+        kilometres relative to a given centre (uses geometric centre if not
+        specified).
 
-        :param geometry: Nested list containing the arrays geometry,
-            as returned by get_group_geometry
-        :param sll_x: slowness x min (lower)
-        :param sll_y: slowness y min (lower)
-        :param sl_s: slowness step
+        :param sllx: slowness x min (lower)
+        :param slly: slowness y min (lower)
+        :param sls: slowness step
         :param grdpts_x: number of grid points in x direction
         :param grdpts_x: number of grid points in y direction
+        :param latitude: latitude of reference origin
+        :param longitude: longitude of reference origin
+        :param absolute_height: elevation of reference origin, in km
         :param vel_cor: correction velocity (upper layer) in km/s
         :param static_3D: a correction of the station height is applied using
             vel_cor the correction is done according to the formula:
             t = rxy*s - rz*cos(inc)/vel_cor
             where inc is defined by inv = asin(vel_cor*slow)
         """
+        if any([_i is None for _i in [latitude, longitude, absolute_height]]):
+            latitude = self.geometrical_center["latitude"]
+            longitude = self.geometrical_center["longitude"]
+            absolute_height = self.geometrical_center["absolute_height_in_km"]
+        geom = self.get_geometry_xyz(latitude, longitude,
+                                     absolute_height)
+        nstat = len(geom)
+        # Cludge to allow using the code further below which is still based
+        # on a simple geometry array rather than a dictionary.
+        geometry = np.empty((nstat, 3), dtype="float32")
+        for _i, (key, value) in enumerate(list(geom.items())):
+            geometry[_i, 0] = value["x"]
+            geometry[_i, 1] = value["y"]
+            geometry[_i, 2] = value["z"]
+
         if static_3D:
-            nstat = len(geometry)  # last index are center coordinates
             time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y),
                                       dtype="float32")
             for k in range(grdpts_x):
-                sx = sll_x + k * sl_s
+                sx = sllx + k * sls
                 for l in range(grdpts_y):
-                    sy = sll_y + l * sl_s
+                    sy = slly + l * sls
                     slow = np.sqrt(sx * sx + sy * sy)
                     if vel_cor * slow <= 1.:
                         inc = np.arcsin(vel_cor * slow)
@@ -352,8 +380,8 @@ class SeismicArray(object):
             return time_shift_tbl
         # optimized version
         else:
-            mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
-            my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
+            mx = np.outer(geometry[:, 0], sllx + np.arange(grdpts_x) * sls)
+            my = np.outer(geometry[:, 1], slly + np.arange(grdpts_y) * sls)
             return np.require(
                 mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
                 my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
