@@ -16,7 +16,7 @@ source:
   #path: ../../../..
 
 build:
-  number: 0
+  number: 1
   script: python setup.py install
 
 requirements:
@@ -29,7 +29,7 @@ requirements:
     - scipy
     - matplotlib
     - lxml
-    - sqlalchemy
+    - sqlalchemy <1.0.0
     - flake8
   run:
     - python
@@ -40,7 +40,7 @@ requirements:
     - scipy
     - matplotlib
     - lxml
-    - sqlalchemy
+    - sqlalchemy <1.0.0
     - flake8
 
 test:
