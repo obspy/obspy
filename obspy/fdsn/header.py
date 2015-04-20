@@ -35,6 +35,10 @@ URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "GEONET": "http://service.geonet.org.nz",
                 "INGV": "http://webservices.rm.ingv.it",
                 "BGR": "http://eida.bgr.de",
+                "ETH": "http://eida.ethz.ch",
+                "NEIP": "http://eida-sc3.infp.ro",
+                "LMU": "http://erde.geophysik.uni-muenchen.de",
+                "IPGP": "http://eida.ipgp.fr",
                 }
 
 FDSNWS = ("dataselect", "event", "station")
