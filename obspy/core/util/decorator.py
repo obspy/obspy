@@ -119,8 +119,8 @@ def uncompress_file(func):
             raise IOError(msg)
         # check if we got a compressed file or archive
         obj_list = []
-        if filename.endswith('.tar') or filename.endswith('.tgz') or \
-                filename.endswith('.tar.gz') or filename.endswith('.tar.bz2'):
+        SUFFIX_TAR = ('tar', 'tgz', 'tar.gz', 'tbz', 'tar.bz2')
+        if filename.endswith(SUFFIX_TAR):
             # tarfile module
             try:
                 import tarfile
