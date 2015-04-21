@@ -17,8 +17,10 @@ import functools
 import inspect
 import os
 import socket
+import tarfile
 import unittest
 import warnings
+import zipfile
 
 import numpy as np
 
@@ -119,30 +121,20 @@ def uncompress_file(func):
             raise IOError(msg)
         # check if we got a compressed file or archive
         obj_list = []
-        SUFFIX_TAR = ('tar', 'tgz', 'tar.gz', 'tbz', 'tar.bz2')
-        if filename.endswith(SUFFIX_TAR):
-            # tarfile module
+        if tarfile.is_tarfile(filename):
             try:
-                import tarfile
-                if not tarfile.is_tarfile(filename):
-                    raise
                 # reading with transparent compression
-                tar = tarfile.open(filename, 'r|*')
-                for tarinfo in tar:
-                    # only handle regular files
-                    if not tarinfo.isfile():
-                        continue
-                    data = tar.extractfile(tarinfo).read()
-                    obj_list.append(data)
-                tar.close()
+                with tarfile.open(filename, 'r|*') as tar:
+                    for tarinfo in tar:
+                        # only handle regular files
+                        if not tarinfo.isfile():
+                            continue
+                        data = tar.extractfile(tarinfo).read()
+                        obj_list.append(data)
             except:
                 pass
-        elif filename.endswith('.zip'):
-            # zipfile module
+        elif zipfile.is_zipfile(filename):
             try:
-                import zipfile
-                if not zipfile.is_zipfile(filename):
-                    raise
                 zip = zipfile.ZipFile(filename)
                 obj_list = [zip.read(name) for name in zip.namelist()]
             except:
