@@ -708,7 +708,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
             attrib={
                 ("{http://www.w3.org/2001/XMLSchema-instance}"
                  "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
-                "http://www.fdsn.org/xml/station/fdsn-station_"
+                "http://www.fdsn.org/xml/station/fdsn-station+"
                 "availability-1.0.xsd",
                 "schemaVersion": SCHEMA_VERSION},
             nsmap={None: "http://www.fdsn.org/xml/station/1",
