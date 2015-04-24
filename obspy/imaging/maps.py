@@ -276,9 +276,13 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
     # scatter plot is removing valid x/y points with invalid color value,
     # so we plot those points separately.
-    if not isinstance(color, (str, native_str)):
+    try:
         nan_points = np.isnan(np.array(color, dtype=np.float))
-        if any(nan_points):
+    except ValueError:
+        # `color' was not a list of values, but a list of colors.
+        pass
+    else:
+        if nan_points.any():
             x_ = np.array(x)[nan_points]
             y_ = np.array(y)[nan_points]
             size_ = np.array(size)[nan_points]
