@@ -1,4 +1,7 @@
 releases:
+ - obspy.core:
+   * Fix catalog plot with events that have no origin depth or
+     origin time (see #1021)
  - obspy.earthworm
    * Fix Python3 compatibility problem
  - obspy.imaging:
