@@ -8,6 +8,8 @@ releases:
    * Fix flipped maps due to bug in Basemap
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
+ - obspy.station:
+   * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release
