@@ -23,6 +23,7 @@ class FDSNException(Exception):
 
 # A curated list collecting some implementations:
 # http://www.fdsn.org/webservices/datacenters/
+# http://www.orfeus-eu.org/eida/eida_odc.html
 URL_MAPPINGS = {
     "BGR": "http://eida.bgr.de",
     "ETH": "http://eida.ethz.ch",
