@@ -1186,14 +1186,12 @@ class WaveformPlotting(object):
         # Init time vectors
         self.__sectInitTime()
 
-    def __sectScaleTraces(self, scale=None):
+    def __sectScaleTraces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
         gets 1./num_traces space. adjustable by scale=1.0.
         """
-        if scale:
-            self.sect_user_scale = scale
-        self._sect_scale = self._tr_num * 1.5 * (1. / self.sect_user_scale)
+        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
 
     def __sectInitTime(self):
         """
@@ -1238,7 +1236,7 @@ class WaveformPlotting(object):
             # Scale, normalize and shift traces by offset
             # for plotting
             ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] *
-                    (1. / self._sect_scale) +
+                    self._sect_scale +
                     self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         return ax
