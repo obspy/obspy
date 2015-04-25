@@ -8,6 +8,7 @@ releases:
    * Fix flipped maps due to bug in Basemap
    * Fix handling of velocity reduction in section plots with degree offsets
      (see #1029)
+   * Allow section plots over existing figures by not modifying existing lines
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
  - obspy.station:

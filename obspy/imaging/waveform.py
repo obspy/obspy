@@ -1062,9 +1062,9 @@ class WaveformPlotting(object):
         """
         # Initialise data and plot
         self.__sectInitTraces()
-        ax = self.__sectInitPlot()
+        ax, lines = self.__sectInitPlot()
         # Setting up line properties
-        for line in ax.lines:
+        for line in lines:
             line.set_alpha(self.alpha)
             line.set_linewidth(self.linewidth)
             line.set_color(self.color)
@@ -1231,15 +1231,16 @@ class WaveformPlotting(object):
         self.__sectNormalizeTraces()
         # Calculate scaling factor
         self.__sectScaleTraces()
+        lines = []
         # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
-            # Scale, normalize and shift traces by offset
-            # for plotting
-            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] *
-                    self._sect_scale +
-                    self._tr_offsets_norm[_tr],
-                    self._tr_times[_tr])
-        return ax
+            # Scale, normalize and shift traces by offset for plotting
+            data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
+                     self._sect_scale) +
+                    self._tr_offsets_norm[_tr])
+            time = self._tr_times[_tr]
+            lines += ax.plot(data, time)
+        return ax, lines
 
     def __sectNormalizeTraces(self):
         """
