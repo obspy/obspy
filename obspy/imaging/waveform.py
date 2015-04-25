@@ -37,7 +37,7 @@ import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import (FlinnEngdahl, createEmptyDataChunk,
-                             locations2degrees)
+                             kilometer2degrees, locations2degrees)
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _ID_key, _timestring)
@@ -110,6 +110,8 @@ class WaveformPlotting(object):
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
+        if self.sect_vred and self.sect_dist_degree:
+            self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
         if self.type == 'relative':
             self.reftime = kwargs.get('reftime', self.starttime)
         elif self.type == 'section':
