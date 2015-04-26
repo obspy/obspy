@@ -345,10 +345,12 @@ def isZmap(filename):
         filename.seek(0)
         first_line = filename.readline()
         filename.seek(pos)
+        if hasattr(first_line, 'decode'):
+            first_line = first_line.decode()
     else:
         try:
             with open(filename, 'rb') as f:
-                first_line = f.readline()
+                first_line = f.readline().decode()
         except:
             try:
                 first_line = filename.decode()
@@ -358,9 +360,6 @@ def isZmap(filename):
             if line_ending == -1:
                 return False
             first_line = first_line[:line_ending]
-
-    if hasattr(first_line, 'decode'):
-        first_line = first_line.decode('utf-8')
 
     # we expect 10 (standard) or 13 columns (extended)
     columns = first_line.split('\t')
