@@ -894,7 +894,9 @@ class Stream(object):
         :param color: Color of the graph as a matplotlib color string as
             described below. If ``type='dayplot'`` a list/tuple of color
             strings is expected that will be periodically repeated for each
-            line plotted.
+            line plotted. If ``type='section'`` then the values ``'network'``,
+            ``'station'`` or ``'channel'`` are also accepted, and traces will
+            be uniquely colored by the given information.
             Defaults to ``'black'`` or to ``('#B2000F', '#004C12', '#847200',
             '#0E01FF')`` for ``type='dayplot'``.
         :param bgcolor: Background color of the graph.

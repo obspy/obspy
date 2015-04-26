@@ -327,6 +327,21 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_reftime_section.png') as ic:
             st.plot(outfile=ic.name, type='section', reftime=reftime)
 
+    def test_plotColoredSection(self):
+        """
+        Tests plotting 10 in a section colored by channel
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_color_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', color='channel')
+
     def test_plotDefaultRelative(self):
         """
         Plots one hour, starting Jan 1970, with a relative scale.

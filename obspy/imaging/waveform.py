@@ -31,6 +31,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.dates import AutoDateLocator, date2num
+import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
@@ -1070,11 +1071,28 @@ class WaveformPlotting(object):
         # Initialise data and plot
         self.__sect_init_traces()
         ax, lines = self.__sect_init_plot()
+
         # Setting up line properties
-        for line in lines:
-            line.set_alpha(self.alpha)
-            line.set_linewidth(self.linewidth)
-            line.set_color(self.color)
+        if isinstance(self.sect_color, dict):
+            for line, tr in zip(lines, self.stream):
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                color = self.sect_color[getattr(tr.stats, self.color)]
+                line.set_color(color)
+
+            legend_lines = []
+            for name, color in sorted(self.sect_color.items()):
+                legend_lines.append(
+                    mlines.Line2D([], [], color=color, alpha=self.alpha,
+                                  linewidth=self.linewidth, label=name))
+            plt.legend(handles=legend_lines)
+
+        else:
+            for line in lines:
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                line.set_color(self.sect_color)
+
         # Setting up plot axes
         if self.sect_offset_min is not None:
             self.set_offset_lim(
@@ -1167,7 +1185,7 @@ class WaveformPlotting(object):
         mask = ((self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
-        stream = [tr for m, tr in zip(mask, self.stream) if m]
+        self.stream = stream = [tr for m, tr in zip(mask, self.stream) if m]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
@@ -1195,6 +1213,8 @@ class WaveformPlotting(object):
                 tr.stats.starttime) / self._tr_npts[_i]
         # Init time vectors
         self.__sect_init_time()
+        # Init trace colors
+        self.__sect_init_color()
 
     def __sect_scale_traces(self):
         """
@@ -1218,6 +1238,23 @@ class WaveformPlotting(object):
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
+
+    def __sect_init_color(self):
+        """
+        Define the color of each trace
+        """
+        if self.color == 'network':
+            colours = {_tr.stats.network for _tr in self.stream}
+        elif self.color == 'station':
+            colours = {_tr.stats.station for _tr in self.stream}
+        elif self.color == 'channel':
+            colours = {_tr.stats.channel for _tr in self.stream}
+        else:
+            self.sect_color = self.color
+            return
+
+        cmap = plt.get_cmap('Paired', lut=len(colours))
+        self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colours))}
 
     def __sect_offset_to_fraction(self, offset):
         """
