@@ -1088,6 +1088,9 @@ class Stream(object):
         :type reftime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param reftime: The reference time to which the time scale will refer.
             Defaults to the minimum start time of the visible traces.
+        :type orientation: str, optional
+        :param orientation: The orientation of the time axis, either
+            ``'vertical'`` or ``'horizontal'``. Defaults to ``'vertical'``.
 
         **Relative Parameters**
 

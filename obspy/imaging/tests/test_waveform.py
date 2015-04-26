@@ -299,6 +299,19 @@ class WaveformTestCase(unittest.TestCase):
             st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
 
+    def test_plotHorizontalSection(self):
+        """
+        Tests plotting 10 in a horizontal section
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            st += self._createStream(start, start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_horiz_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='horizontal')
+
     def test_plotRefTimeSection(self):
         """
         Tests plotting 10 in a section with alternate reference time

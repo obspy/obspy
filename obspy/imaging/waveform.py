@@ -111,6 +111,7 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         if self.sect_vred and self.sect_dist_degree:
             self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
+        self.sect_orientation = kwargs.get('orientation', 'vertical')
         if self.type == 'relative':
             self.reftime = kwargs.get('reftime', self.starttime)
         elif self.type == 'section':
@@ -1076,12 +1077,14 @@ class WaveformPlotting(object):
             line.set_color(self.color)
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            ax.set_xlim(left=self.__sect_offset_to_fraction(self._offset_min))
+            self.set_offset_lim(
+                left=self.__sect_offset_to_fraction(self._offset_min))
         if self.sect_offset_max is not None:
-            ax.set_xlim(right=self.__sect_offset_to_fraction(self._offset_max))
+            self.set_offset_lim(
+                right=self.__sect_offset_to_fraction(self._offset_max))
         # Set up offset ticks
         tick_min, tick_max = \
-            self.__sect_fraction_to_offset(np.array(ax.get_xlim()))
+            self.__sect_fraction_to_offset(np.array(self.get_offset_lim()))
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
@@ -1093,31 +1096,32 @@ class WaveformPlotting(object):
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        ax.set_xticks(self.__sect_offset_to_fraction(ticks))
+        self.set_offset_ticks(self.__sect_offset_to_fraction(ticks))
         # Setting up tick labels
-        ax.set_ylabel('Time [s]')
+        self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
-            ax.set_xlabel('Offset [km]')
-            ax.set_xticklabels(ticks / 1e3)
+            self.set_offset_label('Offset [km]')
+            self.set_offset_ticklabels(ticks / 1e3)
         else:
-            ax.set_xlabel(u'Offset [°]')
-            ax.set_xticklabels(ticks)
+            self.set_offset_label(u'Offset [°]')
+            self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
-        ax.set_ylim([self._time_min, self._time_max])
+        self.set_time_lim([self._time_min, self._time_max])
         if self.sect_recordstart is not None:
-            ax.set_ylim(bottom=self.sect_recordstart)
+            self.set_time_lim(bottom=self.sect_recordstart)
         if self.sect_recordlength is not None:
-            ax.set_ylim(top=self.sect_recordlength + ax.get_ylim()[0])
+            self.set_time_lim(
+                top=self.sect_recordlength + self.get_time_lim()[0])
         # Invert time axis if requested
-        if self.sect_timedown:
+        if self.sect_orientation == 'vertical' and self.sect_timedown:
             ax.invert_yaxis()
         # Draw grid on xaxis only
         ax.grid(
             color=self.grid_color,
             linestyle=self.grid_linestyle,
             linewidth=self.grid_linewidth)
-        ax.xaxis.grid(False)
+        self.offset_axis.grid(False)
 
     def __sect_init_traces(self):
         """
@@ -1245,7 +1249,40 @@ class WaveformPlotting(object):
                      self._sect_scale) +
                     self._tr_offsets_norm[_tr])
             time = self._tr_times[_tr]
-            lines += ax.plot(data, time)
+            if self.sect_orientation == 'vertical':
+                lines += ax.plot(data, time)
+            else:
+                lines += ax.plot(time, data)
+
+        # Set correct axes orientation
+        if self.sect_orientation == 'vertical':
+            self.set_offset_lim = ax.set_xlim
+            self.get_offset_lim = ax.get_xlim
+            self.set_offset_ticks = ax.set_xticks
+            self.set_offset_label = ax.set_xlabel
+            self.set_offset_ticklabels = ax.set_xticklabels
+            self.offset_axis = ax.xaxis
+            self.set_time_lim = ax.set_ylim
+            self.get_time_lim = ax.get_ylim
+            self.set_time_label = ax.set_ylabel
+        else:
+            def _set_xlim_from_ylim(*args, **kwargs):
+                if 'bottom' in kwargs:
+                    kwargs['left'] = kwargs.pop('bottom')
+                if 'top' in kwargs:
+                    kwargs['right'] = kwargs.pop('top')
+                ax.set_xlim(*args, **kwargs)
+
+            self.set_offset_lim = ax.set_ylim
+            self.get_offset_lim = ax.get_ylim
+            self.set_offset_ticks = ax.set_yticks
+            self.set_offset_label = ax.set_ylabel
+            self.set_offset_ticklabels = ax.set_yticklabels
+            self.offset_axis = ax.yaxis
+            self.set_time_lim = _set_xlim_from_ylim
+            self.get_time_lim = ax.get_xlim
+            self.set_time_label = ax.set_xlabel
+
         return ax, lines
 
     def __sect_normalize_traces(self):
