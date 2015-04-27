@@ -17,12 +17,20 @@ master:
      argument to functions that plot maps to select between Basemap or Cartopy.
 
 releases:
+ - obspy.core:
+   * Fix catalog plot with events that have no origin depth or
+     origin time (see #1021)
  - obspy.earthworm
    * Fix Python3 compatibility problem
  - obspy.imaging:
    * Fix flipped maps due to bug in Basemap
+   * Fix handling of velocity reduction in section plots with degree offsets
+     (see #1029)
+   * Allow section plots over existing figures by not modifying existing lines
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
+ - obspy.station:
+   * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release

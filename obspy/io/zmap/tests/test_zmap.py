@@ -8,7 +8,7 @@ import unittest
 
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, get_example_file
 from obspy.io.zmap import core as zmap
 
 
@@ -183,6 +183,15 @@ class ZMAPTestCase(unittest.TestCase):
         with NamedTemporaryFile() as f:
             f.write(self._serialize(test_events).encode('utf-8'))
             self.assertFalse(zmap._is_zmap(f.name))
+
+    def test_is_zmap_binary_files(self):
+        """
+        Test zmap format detection on non-ZMAP (e.g. binary) files, see #1022.
+        """
+        # Non-ZMAP file, binary
+        for filename in ["test.mseed", "test.sac"]:
+            file_ = get_example_file(filename)
+            self.assertFalse(zmap._is_zmap(file_))
 
     def test_deserialize(self):
         """

@@ -125,8 +125,7 @@ class Client(object):
             msg = "channel expression matches less than 3 characters " + \
                   "(use e.g. 'BHZ', 'BH?', 'BH[Z12]', 'B??')"
             raise Exception(msg)
-        seedname = network.ljust(2, " ") + station.ljust(5, " ") + channel + \
-            location.ljust(2, " ")
+        seedname = '%-2s%-5s%s%-2s' % (network, station, channel, location)
         # allow UNIX style "?" wildcard
         seedname = seedname.replace("?", ".")
         return self.get_waveforms_nscl(seedname, starttime,

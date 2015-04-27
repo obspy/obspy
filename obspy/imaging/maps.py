@@ -149,9 +149,10 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     min_color = min(color)
     max_color = max(color)
 
-    if isinstance(color[0], (datetime.datetime, UTCDateTime)):
+    if any([isinstance(c, (datetime.datetime, UTCDateTime)) for c in color]):
         datetimeplot = True
-        color = [date2num(t) for t in color]
+        color = [np.isfinite(float(t)) and date2num(t) or np.nan
+                 for t in color]
     else:
         datetimeplot = False
 
@@ -310,6 +311,20 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                             PathEffects.withStroke(linewidth=3,
                                                    foreground="white")])
 
+    # scatter plot is removing valid x/y points with invalid color value,
+    # so we plot those points separately.
+    try:
+        nan_points = np.isnan(np.array(color, dtype=np.float))
+    except ValueError:
+        # `color' was not a list of values, but a list of colors.
+        pass
+    else:
+        if nan_points.any():
+            x_ = np.array(x)[nan_points]
+            y_ = np.array(y)[nan_points]
+            size_ = np.array(size)[nan_points]
+            scatter = bmap.scatter(x_, y_, marker=marker, s=size_, c="0.3",
+                                   zorder=10, cmap=None)
     scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
                            zorder=10, cmap=colormap)
 
