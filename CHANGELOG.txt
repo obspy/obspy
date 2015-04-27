@@ -15,6 +15,9 @@ master:
  - obspy.imaging:
    * Experimental support for Cartopy when plotting maps. Use the `method`
      argument to functions that plot maps to select between Basemap or Cartopy.
+ - obspy.signal:
+   * Switch to second-order sections for filters; backported from SciPy 0.16.0
+     (see #1028)
 
 releases:
  - obspy.core:
