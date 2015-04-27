@@ -4,10 +4,12 @@ BUILD_DIR=conda_builds
 rm -rf $BUILD_DIR
 mkdir $BUILD_DIR
 
+
+################################################################################
+### 32 bit
+
 # Dockerfiles only work with files in their directory structure
 cp obspy/meta.yaml LinuxCondaBuilder_32bit/meta.yaml
-cp obspy/meta.yaml LinuxCondaBuilder_64bit/meta.yaml
-
 
 ID=$RANDOM-$RANDOM-$RANDOM
 $DOCKER build -t temp:temp LinuxCondaBuilder_32bit
@@ -18,6 +20,14 @@ $DOCKER stop -t 0 $ID
 $DOCKER rm $ID
 $DOCKER rmi temp:temp
 
+rm -f LinuxCondaBuilder_32bit/meta.yaml
+
+
+################################################################################
+### 64 bit
+
+# Dockerfiles only work with files in their directory structure
+cp obspy/meta.yaml LinuxCondaBuilder_64bit/meta.yaml
 
 ID=$RANDOM-$RANDOM-$RANDOM
 $DOCKER build -t temp:temp LinuxCondaBuilder_64bit
@@ -28,5 +38,4 @@ $DOCKER stop -t 0 $ID
 $DOCKER rm $ID
 $DOCKER rmi temp:temp
 
-rm -f LinuxCondaBuilder_32bit/meta.yaml
 rm -f LinuxCondaBuilder_64bit/meta.yaml
