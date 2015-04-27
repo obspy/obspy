@@ -8,6 +8,9 @@ releases:
    * Fix flipped maps due to bug in Basemap
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
+ - obspy.signal:
+   * Switch to second-order sections for filters; backported from SciPy 0.15.0
+     (see #1028)
  - obspy.station:
    * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
 
