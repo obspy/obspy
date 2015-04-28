@@ -363,9 +363,9 @@ def particle_motion_odr(stream, noise_thres=0):
     incidence = math.atan2(1.0, in_slope)
 
     az_error = 1.0 / ((1.0 ** 2 + az_slope ** 2) * azimuth) * az_error
-   # az_error = math.degrees(az_error)
+    # az_error = math.degrees(az_error)
     in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * incidence) * in_error
-   # in_error = math.degrees(in_error)
+    # in_error = math.degrees(in_error)
 
     azimuth = math.degrees(azimuth)
     incidence = math.degrees(incidence)
@@ -382,7 +382,6 @@ def particle_motion_odr(stream, noise_thres=0):
             azimuth += 180.0
     if azimuth > 180.0:
         azimuth -= 180.0
-
 
     return azimuth, incidence, az_error, in_error
 
@@ -459,9 +458,9 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
         ``"vidale"``.
     :type method: str
-    :returns: Dictionary with posix timestamp, azimuth, incidence angle, errors,
-        rectilinearity, planarity, and/or ellipticity (the returned values
-        depend on the used method).
+    :returns: Dictionary with posix timestamp, azimuth, incidence angle,
+        errors, rectilinearity, planarity, and/or ellipticity (the returned
+        values depend on the used method).
     """
     if method.lower() not in ["pm", "flinn", "vidale"]:
         msg = "Invalid method ('%s')" % method
@@ -513,17 +512,16 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
             except IndexError:
                 break
 
-            #we plot against the centre of the sliding window
-
+            # we plot against the centre of the sliding window
             if method.lower() == "pm":
                 azimuth, incidence, error_az, error_inc = \
                     particle_motion_odr(data, var_noise)
                 res.append(np.array([newstart.timestamp + float(nstep) / fs,
-                    azimuth, incidence, error_az,error_inc]))
+                           azimuth, incidence, error_az, error_inc]))
             if method.lower() == "flinn":
                 azimuth, incidence, reclin, plan = flinn(data, var_noise)
-                res.append(np.array([newstart.timestamp + float(nstep) / fs, azimuth,
-                                     incidence, reclin, plan]))
+                res.append(np.array([newstart.timestamp + float(nstep) / fs,
+                                    azimuth, incidence, reclin, plan]))
 
             if verbose:
                 print(newstart, newstart + nsamp / fs, res[-1][1:])
@@ -533,11 +531,9 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
     res = np.array(res)
 
-    npt = len(res[:, 0])
-
     if method.lower() == "pm":
         return {
-            "timestamp": res[:,0],
+            "timestamp": res[:, 0],
             "azimuth": res[:, 1],
             "incidence": res[:, 2],
             "azimuth_error": res[:, 3],
@@ -546,7 +542,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         }
     elif method.lower() == "vidale":
         return {
-            "timestamp": res[:,0],
+            "timestamp": res[:, 0],
             "azimuth": res[:, 1],
             "incidence": res[:, 2],
             "rectilinearity": res[:, 3],
@@ -555,7 +551,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         }
     elif method.lower() == "flinn":
         return {
-            "timestamp": res[:,0],
+            "timestamp": res[:, 0],
             "azimuth": res[:, 1],
             "incidence": res[:, 2],
             "rectilinearity": res[:, 3],
