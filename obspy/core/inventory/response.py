@@ -21,10 +21,10 @@ from math import pi
 
 import numpy as np
 
-from ..util.base import ComparingObject
-from ..util.obspy_types import (CustomComplex, CustomFloat,
-                                FloatWithUncertainties,
-                                FloatWithUncertaintiesAndUnit)
+from obspy.core.util.base import ComparingObject
+from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+                                         FloatWithUncertainties,
+                                         FloatWithUncertaintiesAndUnit)
 from .util import Angle, Frequency
 
 

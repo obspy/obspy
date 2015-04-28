@@ -49,29 +49,6 @@ from obspy.core.event import read_events, Catalog
 from obspy.core.inventory import read_inventory  # NOQA
 
 
-# insert supported read/write format plugin lists dynamically in docstrings
-from obspy.core.util.base import make_format_plugin_table
-read.__doc__ = \
-    read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
-read_events.__doc__ = \
-    read_events.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
-
-
-if PY2:
-    Stream.write.im_func.func_doc = \
-        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
-                                                        numspaces=8)
-    Catalog.write.im_func.func_doc = \
-        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
-                                                         numspaces=8)
-else:
-    Stream.write.__doc__ = \
-        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
-                                                        numspaces=8)
-    Catalog.write.__doc__ = \
-        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
-                                                         numspaces=8)
-
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "read_events", "Catalog", "read_inventory"]
 __all__ = [native_str(i) for i in __all__]
@@ -160,17 +137,13 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
             # Warn here as at this point the module has already been imported.
             warnings.warn("Module '%s' is deprecated and will stop working "
                           "with the next ObsPy version. Please import module "
-                          "'%s'instead." % (name, new_name),
+                          "'%s' instead." % (name, new_name),
                           ObsPyDeprecationWarning)
             sys.modules[new_name] = module
-        # This probably does not happen with a proper import. Not sure if we
-        # should keep this condition as it might obsfuscate non-working
-        # imports.
+            sys.modules[name] = module
+            return module
         else:
-            module = importlib.import_module(name)
-
-        sys.modules[name] = module
-        return module
+            return None
 
 
 # Install meta path handler.
@@ -183,6 +156,30 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     import_map={key.split(".")[1]: value for key, value in
                 _import_map.items() if len(key.split(".")) == 2},
     function_map=_function_map)
+
+
+# insert supported read/write format plugin lists dynamically in docstrings
+from obspy.core.util.base import make_format_plugin_table
+read.__doc__ = \
+    read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
+read_events.__doc__ = \
+    read_events.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
+
+
+if PY2:
+    Stream.write.im_func.func_doc = \
+        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+                                                        numspaces=8)
+    Catalog.write.im_func.func_doc = \
+        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+                                                         numspaces=8)
+else:
+    Stream.write.__doc__ = \
+        Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+                                                        numspaces=8)
+    Catalog.write.__doc__ = \
+        Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+                                                         numspaces=8)
 
 
 if __name__ == '__main__':

@@ -22,8 +22,9 @@ from pkg_resources import load_entry_point
 import numpy as np
 
 import obspy
-from ..util.base import ENTRY_POINTS, ComparingObject, _read_from_plugin
-from ..util.decorator import map_example_filename
+from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
+                                  _read_from_plugin)
+from obspy.core.util.decorator import map_example_filename
 from .network import Network
 
 
