@@ -109,6 +109,8 @@ class WaveformPlotting(object):
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
+        if self.sect_vred and self.sect_dist_degree:
+            self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
         if self.type == 'relative':
             self.reftime = kwargs.get('reftime', self.starttime)
         elif self.type == 'section':
@@ -905,7 +907,11 @@ class WaveformPlotting(object):
         self.extreme_values = self.extreme_values.astype(np.float) * \
             self.stream[0].stats.calib
         # Make sure that the mean value is at 0
-        self.extreme_values -= self.extreme_values.mean()
+        # raises underflow warning / error for numpy 1.9
+        # even though mean is 0.09
+        # self.extreme_values -= self.extreme_values.mean()
+        self.extreme_values -= self.extreme_values.sum() / \
+            self.extreme_values.size
 
         # Scale so that 99.5 % of the data will fit the given range.
         if self.vertical_scaling_range is None:
@@ -932,7 +938,12 @@ class WaveformPlotting(object):
         self._normalization_factor = max(abs(max_val), abs(min_val)) * 2
 
         # Scale from 0 to 1.
-        self.extreme_values = self.extreme_values / self._normalization_factor
+        # raises underflow warning / error for numpy 1.9
+        # even though normalization_factor is 2.5
+        # self.extreme_values = self.extreme_values / \
+        #     self._normalization_factor
+        self.extreme_values = self.extreme_values * \
+            (1. / self._normalization_factor)
         self.extreme_values += 0.5
 
     def __dayplot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
@@ -1056,9 +1067,9 @@ class WaveformPlotting(object):
         """
         # Initialise data and plot
         self.__sect_init_traces()
-        ax = self.__sect_init_plot()
+        ax, lines = self.__sect_init_plot()
         # Setting up line properties
-        for line in ax.lines:
+        for line in lines:
             line.set_alpha(self.alpha)
             line.set_linewidth(self.linewidth)
             line.set_color(self.color)
@@ -1180,14 +1191,12 @@ class WaveformPlotting(object):
         # Init time vectors
         self.__sect_init_time()
 
-    def __sect_scale_traces(self, scale=None):
+    def __sect_scale_traces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
         gets 1./num_traces space. adjustable by scale=1.0.
         """
-        if scale:
-            self.sect_user_scale = scale
-        self._sect_scale = self._tr_num * 1.5 * (1. / self.sect_user_scale)
+        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
 
     def __sect_init_time(self):
         """
@@ -1227,15 +1236,16 @@ class WaveformPlotting(object):
         self.__sect_normalize_traces()
         # Calculate scaling factor
         self.__sect_scale_traces()
+        lines = []
         # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
-            # Scale, normalize and shift traces by offset
-            # for plotting
-            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] *
-                    (1. / self._sect_scale) +
-                    self._tr_offsets_norm[_tr],
-                    self._tr_times[_tr])
-        return ax
+            # Scale, normalize and shift traces by offset for plotting
+            data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
+                     self._sect_scale) +
+                    self._tr_offsets_norm[_tr])
+            time = self._tr_times[_tr]
+            lines += ax.plot(data, time)
+        return ax, lines
 
     def __sect_normalize_traces(self):
         """

@@ -355,6 +355,28 @@ def get_basemap_version():
     return version
 
 
+def get_cartopy_version():
+    """
+    Get cartopy version information.
+
+    :returns: Cartopy version as a list of three integers or ``None`` if
+        cartopy import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
+    """
+    try:
+        import cartopy
+        version = cartopy.__version__
+        version = version.split("rc")[0].strip("~")
+        version = list(map(to_int_or_zero, version.split(".")))
+    except ImportError:
+        version = None
+    return version
+
+
 def get_scipy_version():
     """
     Get SciPy version information.

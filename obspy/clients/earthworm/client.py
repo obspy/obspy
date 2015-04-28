@@ -83,22 +83,22 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.clients.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
-        >>> dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-        >>> st = client.get_waveforms('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022)
+        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
+        >>> st = client.get_waveforms('AV', 'ACH', '', 'EHE', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.get_waveforms('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+        >>> st = client.get_waveforms('AV', 'ACH', '', 'EH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
             from obspy.clients.earthworm import Client
             from obspy import UTCDateTime
-            client = Client("pele.ess.washington.edu", 16017, timeout=5)
-            dt = UTCDateTime(2013, 1, 17) - 2000  # now - 2000 seconds
-            st = client.get_waveforms('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
+            client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
+            dt = UTCDateTime() - 2000  # now - 2000 seconds
+            st = client.get_waveforms('AV', 'ACH', '', 'EHE', dt, dt + 10)
             st.plot()
-            st = client.get_waveforms('UW', 'TUCA', '', 'BH*', dt, dt + 10)
+            st = client.get_waveforms('AV', 'ACH', '', 'EH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -166,11 +166,11 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.clients.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017)
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> client.save_waveforms('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '',
-        ...                       'BHZ', t, t + 10, format='MSEED') \
-        ... # doctest: +SKIP
+        >>> client.save_waveforms('AV.ACH.--.EHE.mseed',
+        ...                       'AV', 'ACH', '', 'EHE',
+        ...                       t, t + 10, format='MSEED')  # doctest: +SKIP
         """
         st = self.get_waveforms(network, station, location, channel, starttime,
                                 endtime, cleanup=cleanup)
@@ -196,7 +196,6 @@ class Client(object):
         :param station: Station code, e.g. ``'TUCA'``, wildcards allowed.
         :type location: str
         :param location: Location code, e.g. ``'--'``, wildcards allowed.
-            Use ``'--'`` for empty location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
         :rtype: list
@@ -208,30 +207,32 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.clients.earthworm import Client
-        >>> client = Client("pele.ess.washington.edu", 16017, timeout=5)
+        >>> client = Client("pubavo1.wr.usgs.gov", 16022, timeout=5)
         >>> response = client.get_availability(
-        ...     network="UW", station="TUCA", channel="BH*")
-        >>> print(response)  # doctest: +SKIP
-        [('UW',
-          'TUCA',
+        ...     network="AV", station="ACH", channel="EH*")
+        >>> print(response)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        [('AV',
+          'ACH',
           '--',
-          'BHE',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
-         ('UW',
-          'TUCA',
+          'EHE',
+          UTCDateTime(...),
+          UTCDateTime(...)),
+         ('AV',
+          'ACH',
           '--',
-          'BHN',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
-         ('UW',
-          'TUCA',
+          'EHN',
+          UTCDateTime(...),
+          UTCDateTime(...)),
+         ('AV',
+          'ACH',
           '--',
-          'BHZ',
-          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
-          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000))]
+          'EHZ',
+          UTCDateTime(...),
+          UTCDateTime(...))]
         """
         # build up possibly wildcarded trace id pattern for query
+        if location == '':
+            location = '--'
         pattern = ".".join((network, station, location, channel))
         # get overview of all available data, winston wave servers can not
         # restrict the query via network, station etc. so we do that manually

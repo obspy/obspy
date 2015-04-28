@@ -16,37 +16,47 @@ source:
   #path: ../../../..
 
 build:
-  number: 0
+  number: 1
   script: python setup.py install
+  # Needed as obspy uses entry points.
+  preserve_egg_dir: yes
 
 requirements:
   build:
     - python
     - setuptools
+    - argparse # [py26]
     - future
     - numpy
     - mock  # [py2k]
-    - scipy
+    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
+    - scipy ==0.14.0 # [py26 and osx]
+    - scipy # [not py26 or not osx]
     - matplotlib
     - lxml
-    - sqlalchemy
+    - sqlalchemy <1.0.0
     - flake8
   run:
     - python
     - setuptools
+    - argparse # [py26]
     - future
     - numpy
     - mock  # [py2k]
-    - scipy
+    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
+    - scipy ==0.14.0 # [py26 and osx]
+    - scipy # [not py26 or not osx]
     - matplotlib
     - lxml
-    - sqlalchemy
+    - sqlalchemy <1.0.0
     - flake8
 
 test:
   imports:
     - obspy
     - obspy.mseed
+  commands:
+    - obspy-runtests -r
 
 about:
   home: http://obspy.org

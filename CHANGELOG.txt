@@ -1,17 +1,39 @@
 master:
  - General:
-    * Requirements have been increased to reflect latest distributions:
-    * Removed support for Python 2.6.
-    * matplotlib >= 1.1.0 is now required.
-    * Reorganized the submodule structure. We provide a deprecation path so the
-      old imports will continue to work for one ObsPy version.
-    * Consistent naming scheme across the code base. This results in some
-	  functions having different names. Most things that worked with ObsPy
-	  0.10 will continue to work with this version, but starting with the next
-	  version they will fail. Pay attention to the deprecation warnings.
-  - obspy.clients.neries:
-    * Removed the dedicated client. Data can still be accessed by using the
-	  FDSN client.
+   * Requirements have been increased to reflect latest distributions:
+     * Removed support for Python 2.6.
+     * matplotlib >= 1.1.0 is now required.
+   * Reorganized the submodule structure. We provide a deprecation path so the
+     old imports will continue to work for one ObsPy version.
+   * Consistent naming scheme across the code base. This results in some
+     functions having different names. Most things that worked with ObsPy 0.10
+     will continue to work with this version, but starting with the next
+     version they will fail. Pay attention to the deprecation warnings.
+ - obspy.clients.neries:
+   * Removed the dedicated client. Data can still be accessed by using the FDSN
+     client.
+ - obspy.imaging:
+   * Experimental support for Cartopy when plotting maps. Use the `method`
+     argument to functions that plot maps to select between Basemap or Cartopy.
+ - obspy.signal:
+   * Switch to second-order sections for filters; backported from SciPy 0.16.0
+     (see #1028)
+
+releases:
+ - obspy.core:
+   * Fix catalog plot with events that have no origin depth or
+     origin time (see #1021)
+ - obspy.earthworm
+   * Fix Python3 compatibility problem
+ - obspy.imaging:
+   * Fix flipped maps due to bug in Basemap
+   * Fix handling of velocity reduction in section plots with degree offsets
+     (see #1029)
+   * Allow section plots over existing figures by not modifying existing lines
+ - obspy.seedlink:
+   * Fix Python3 compatibility for seedlink.easyseedlink
+ - obspy.station:
+   * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
 
 0.10.1: (doi: 10.5281/zenodo.16248)
  - minor changes for correct distribution of official release

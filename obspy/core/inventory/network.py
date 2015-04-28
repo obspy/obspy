@@ -336,7 +336,7 @@ class Network(BaseNode):
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='blue', time=None, show=True,
-             outfile=None, **kwargs):  # @UnusedVariable
+             outfile=None, method=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all stations in current network object.
 
@@ -384,6 +384,14 @@ class Network(BaseNode):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :type method: str
+        :param method: Method to use for plotting. Possible values are:
+
+            * ``'basemap'`` to use the Basemap library
+            * ``'cartopy'`` to use the Cartopy library
+            * ``None`` to use the best available library
+
+            Defaults to ``None``.
 
         .. rubric:: Example
 
@@ -419,7 +427,7 @@ class Network(BaseNode):
             net = read_inventory()[0]
             net.plot(projection="local")
         """
-        from obspy.imaging.maps import plot_basemap
+        from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
 
         # lat/lon coordinates, magnitudes, dates
@@ -440,12 +448,12 @@ class Network(BaseNode):
         if not label:
             labels = None
 
-        fig = plot_basemap(lons, lats, size, color, labels,
-                           projection=projection, resolution=resolution,
-                           continent_fill_color=continent_fill_color,
-                           water_fill_color=water_fill_color,
-                           colormap=None, marker=marker, title=None,
-                           show=False, **kwargs)
+        fig = plot_map(method, lons, lats, size, color, labels,
+                       projection=projection, resolution=resolution,
+                       continent_fill_color=continent_fill_color,
+                       water_fill_color=water_fill_color,
+                       colormap=None, marker=marker, title=None,
+                       show=False, **kwargs)
 
         if outfile:
             fig.savefig(outfile)
