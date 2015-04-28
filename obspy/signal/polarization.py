@@ -458,9 +458,16 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
         ``"vidale"``.
     :type method: str
-    :returns: Dictionary with posix timestamp, azimuth, incidence angle,
-        errors, rectilinearity, planarity, and/or ellipticity (the returned
-        values depend on the used method).
+    :rtype: dict
+    :returns: Dictionary with keys ``"timestamp"`` (POSIX timestamp, can be
+        used to initialize :class:`~obspy.core.utcdatetime.UTCDateTime`
+        objects), ``"azimuth"``, ``"incidence"`` (incidence angle) and
+        additional keys depending on used method: ``"azimuth_error"`` and
+        ``"incidence_error"`` (for method ``"pm"``), ``"rectilinearity"`` and
+        ``"planarity"`` (for methods ``"flinn"`` and ``"vidale"``) and
+        ``"ellipticity"`` (for method ``"flinn"``). Under each key a
+        :class:`~numpy.ndarray` is stored, giving the respective values
+        corresponding to the ``"timestamp"`` :class:`~numpy.ndarray`.
     """
     if method.lower() not in ["pm", "flinn", "vidale"]:
         msg = "Invalid method ('%s')" % method
@@ -531,34 +538,20 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
 
     res = np.array(res)
 
+    result_dict = {"timestamp": res[:, 0],
+                   "azimuth": res[:, 1],
+                   "incidence": res[:, 2]}
     if method.lower() == "pm":
-        return {
-            "timestamp": res[:, 0],
-            "azimuth": res[:, 1],
-            "incidence": res[:, 2],
-            "azimuth_error": res[:, 3],
-            "incidence_error": res[:, 4]
-
-        }
+        result_dict["azimuth_error"] = res[:, 3]
+        result_dict["incidence_error"] = res[:, 4]
     elif method.lower() == "vidale":
-        return {
-            "timestamp": res[:, 0],
-            "azimuth": res[:, 1],
-            "incidence": res[:, 2],
-            "rectilinearity": res[:, 3],
-            "planarity": res[:, 4],
-            "ellipticity": res[:, 5]
-        }
+        result_dict["rectilinearity"] = res[:, 3]
+        result_dict["planarity"] = res[:, 4]
+        result_dict["ellipticity"] = res[:, 5]
     elif method.lower() == "flinn":
-        return {
-            "timestamp": res[:, 0],
-            "azimuth": res[:, 1],
-            "incidence": res[:, 2],
-            "rectilinearity": res[:, 3],
-            "planarity": res[:, 4]
-        }
-    else:
-        raise NotImplementedError
+        result_dict["rectilinearity"] = res[:, 3]
+        result_dict["planarity"] = res[:, 4]
+    return result_dict
 
 
 if __name__ == "__main__":

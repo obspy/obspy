@@ -29,6 +29,7 @@
        ~filter.lowpass
        ~invsim.pazToFreqResp
        ~trigger.pkBaer
+       ~polarization.polarization_analysis
        ~spectral_estimation.PPSD
        ~spectral_estimation.psd
        ~trigger.recSTALTA
