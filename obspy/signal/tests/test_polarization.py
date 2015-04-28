@@ -130,7 +130,7 @@ class PolarizationTestCase(unittest.TestCase):
 
         out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
-            verbose=False, timestamp='mlabday', stime=t, etime=e, method="pm",
+            verbose=False, stime=t, etime=e, method="pm",
             var_noise=0.0)
 
         self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
@@ -145,7 +145,7 @@ class PolarizationTestCase(unittest.TestCase):
 
         out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
-            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            verbose=False, stime=t, etime=e,
             method="flinn", var_noise=0.0)
 
         self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
@@ -160,7 +160,7 @@ class PolarizationTestCase(unittest.TestCase):
 
         out = polarization.polarization_analysis(
             st, win_len=10.0, win_frac=0.1, frqlow=1.0, frqhigh=5.0,
-            verbose=False, timestamp='mlabday', stime=t, etime=e,
+            verbose=False, stime=t, etime=e,
             method="vidale", var_noise=0.0)
 
         self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
