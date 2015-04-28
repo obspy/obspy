@@ -25,15 +25,15 @@ class RealTimeSignalTestCase(unittest.TestCase):
     """
     The obspy.realtime.signal test suite.
     """
-    def __init__(self, *args, **kwargs):
-        super(RealTimeSignalTestCase, self).__init__(*args, **kwargs)
+    @classmethod
+    def setUpClass(cls):
         # read test data as float64
-        self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
-                                            'II.TLY.BHZ.SAC'),
-                               dtype=np.float64)[0]
+        cls.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
+                                           'II.TLY.BHZ.SAC'),
+                              dtype=np.float64)[0]
         # make really sure test data is float64
-        self.orig_trace.data = np.require(self.orig_trace.data, np.float64)
-        self.orig_trace_chunks = self.orig_trace / NUM_PACKETS
+        cls.orig_trace.data = np.require(cls.orig_trace.data, np.float64)
+        cls.orig_trace_chunks = cls.orig_trace / NUM_PACKETS
 
     def setUp(self):
         # clear results

@@ -244,8 +244,8 @@ class StreamTestCase(unittest.TestCase):
         # Traces compare equal and are identical.
         self.assertEqual(stream[0], stream[-2])
         self.assertEqual(stream[1], stream[-1])
-        self.assertTrue(stream[0] is stream[-2])
-        self.assertTrue(stream[1] is stream[-1])
+        self.assertIs(stream[0], stream[-2])
+        self.assertIs(stream[1], stream[-1])
         # Using extend with a single Traces, or a wrong list, or ...
         # should fail.
         self.assertRaises(TypeError, stream.extend, stream[0])
@@ -504,7 +504,7 @@ class StreamTestCase(unittest.TestCase):
         stream.remove(stream[-1])
         del(stream2[-1])
         # Compare remaining Streams.
-        self.assertTrue(stream == stream2)
+        self.assertEqual(stream, stream2)
 
     def test_reverse(self):
         """
@@ -1594,28 +1594,28 @@ class StreamTestCase(unittest.TestCase):
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(st == Stream([tr1]))
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(st, Stream([tr1]))
+            self.assertEqual(type(st[0].data), np.ndarray)
         # test mergeable traces (adjacent ones)
         for trB in [tr5, tr6]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
         # test mergeable traces (overlapping ones)
         for trB in [trO1, trO2]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
 
         # test traces that should not be merged
         tr7 = tr1.copy()
@@ -1641,7 +1641,7 @@ class StreamTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
                 st._cleanup()
-            self.assertTrue(st == Stream([trA, trB]))
+            self.assertEqual(st, Stream([trA, trB]))
 
     def test_integrateAndDifferentiate(self):
         """
@@ -1736,11 +1736,11 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         st2 = st.copy()
-        self.assertTrue(st == st2)
-        self.assertTrue(st2 == st)
+        self.assertEqual(st, st2)
+        self.assertEqual(st2, st)
         self.assertFalse(st is st2)
         self.assertFalse(st2 is st)
-        self.assertTrue(st.traces[0] == st2.traces[0])
+        self.assertEqual(st.traces[0], st2.traces[0])
         self.assertFalse(st.traces[0] is st2.traces[0])
 
     def test_merge_with_empty_trace(self):
@@ -1915,10 +1915,10 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr, tr])
         st.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
-            self.assertTrue(st[0].data[i] <= 1.)
-            self.assertTrue(st[0].data[i] >= 0.)
-            self.assertTrue(st[1].data[i] <= 1.)
-            self.assertTrue(st[1].data[i] >= 0.)
+            self.assertLessEqual(st[0].data[i], 1.)
+            self.assertGreaterEqual(st[0].data[i], 0.)
+            self.assertLessEqual(st[1].data[i], 1.)
+            self.assertGreaterEqual(st[1].data[i], 0.)
 
     def test_issue540(self):
         """
@@ -1932,10 +1932,10 @@ class StreamTestCase(unittest.TestCase):
                 endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
         self.assertEqual(len(st[0]), 3002)
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertTrue(st[0].data[0] is np.ma.masked)
+        self.assertIs(st[0].data[0], np.ma.masked)
         self.assertTrue(st[0].data[1] is not np.ma.masked)
         self.assertTrue(st[0].data[-2] is not np.ma.masked)
-        self.assertTrue(st[0].data[-1] is np.ma.masked)
+        self.assertIs(st[0].data[-1], np.ma.masked)
         # fill_value = 999
         st = read()
         self.assertEqual(len(st[1]), 3000)
@@ -1969,7 +1969,7 @@ class StreamTestCase(unittest.TestCase):
             .extend(st2)\
             .insert(0, st1[0].copy())\
             .remove(st1[0])
-        self.assertTrue(temp_st is st1)
+        self.assertIs(temp_st, st1)
         self.assertEqual(len(st1), 5)
         self.assertEqual(st1[0], st1[1])
         self.assertEqual(st1[2], st2[0])
@@ -1982,7 +1982,7 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.channel = "C"
         st[2].stats.channel = "A"
         temp_st = st.sort(keys=["channel"]).reverse()
-        self.assertTrue(temp_st is st)
+        self.assertIs(temp_st, st)
         self.assertEqual([tr.stats.channel for tr in st], ["C", "B", "A"])
 
         # The others are pretty hard to properly test and probably not worth
@@ -2026,7 +2026,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertIn("normalize", pr[10])
         self.assertIn("trigger", pr[11])
 
-        self.assertTrue(temp is st)
+        self.assertIs(temp, st)
         # Cutout duplicates the number of traces.
         self.assertTrue(len(st), 6)
         # Clearing also works for method chaining.

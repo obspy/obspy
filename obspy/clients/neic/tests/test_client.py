@@ -34,7 +34,7 @@ class ClientTestCase(unittest.TestCase):
         for args_ in args:
             st2 = client.get_waveforms(*args_, starttime=t,
                                        endtime=t + duration)
-            self.assertTrue(st == st2)
+            self.assertEqual(st, st2)
 
     def test_getWaveformNSCL(self):
         """
@@ -51,34 +51,34 @@ class ClientTestCase(unittest.TestCase):
         # merge to avoid failing tests simply due to gaps
         st.merge()
         st.sort()
-        self.assertTrue(len(st) == 3)
+        self.assertEqual(len(st), 3)
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertTrue(stats.station == "ANMO")
-            self.assertTrue(stats.network == "IU")
-            self.assertTrue(stats.location == "00")
-            self.assertTrue(stats.channel == "BH" + component)
-            self.assertTrue(stats.endtime - stats.starttime == duration_long)
+            self.assertEqual(stats.station, "ANMO")
+            self.assertEqual(stats.network, "IU")
+            self.assertEqual(stats.location, "00")
+            self.assertEqual(stats.channel, "BH" + component)
+            self.assertEqual(stats.endtime - stats.starttime, duration_long)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertTrue(stats.sampling_rate == 20.0)
-            self.assertTrue(len(tr) == 72001)
+            self.assertEqual(stats.sampling_rate, 20.0)
+            self.assertEqual(len(tr), 72001)
         # now use shorter piece, this is faster and less error prone (gaps etc)
         st = client.get_waveforms_nscl("IUANMO BH.00", t, duration)
         st.sort()
         # test returned stream
-        self.assertTrue(len(st) == 3)
+        self.assertEqual(len(st), 3)
         for tr, component in zip(st, components):
             stats = tr.stats
-            self.assertTrue(stats.station == "ANMO")
-            self.assertTrue(stats.network == "IU")
-            self.assertTrue(stats.location == "00")
-            self.assertTrue(stats.channel == "BH" + component)
-            self.assertTrue(stats.endtime - stats.starttime == duration)
+            self.assertEqual(stats.station, "ANMO")
+            self.assertEqual(stats.network, "IU")
+            self.assertEqual(stats.location, "00")
+            self.assertEqual(stats.channel, "BH" + component)
+            self.assertEqual(stats.endtime - stats.starttime, duration)
             # if the following fails this is likely due to a change at the
             # requested station and simply has to be adapted
-            self.assertTrue(stats.sampling_rate == 20.0)
-            self.assertTrue(len(tr) == 21)
+            self.assertEqual(stats.sampling_rate, 20.0)
+            self.assertEqual(len(tr), 21)
 
         # try a series of regex patterns that should return the same data
         st = client.get_waveforms_nscl("IUANMO BH", t, duration)
@@ -90,7 +90,7 @@ class ClientTestCase(unittest.TestCase):
                     "..ANMO B.*"]
         for pattern in patterns:
             st2 = client.get_waveforms_nscl(pattern, t, duration)
-            self.assertTrue(st == st2)
+            self.assertEqual(st, st2)
 
 
 def suite():

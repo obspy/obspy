@@ -164,8 +164,8 @@ def read_header(fh):
             header[key] = value
     # convert and remove date entries from header dict
     header['microsecond'] *= 1000
-    date = dict((k, header.pop(k)) for k in
-                "year month day hour minute second microsecond".split())
+    date = {k: header.pop(k) for k in
+            "year month day hour minute second microsecond".split()}
     header['starttime'] = UTCDateTime(**date)
     # search for STA2 line (mandatory but often omitted in practice)
     # according to manual this has to follow immediately after WID2

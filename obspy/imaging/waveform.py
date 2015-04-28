@@ -356,7 +356,7 @@ class WaveformPlotting(object):
         self.axis = []
         for _i, tr in enumerate(stream_new):
             # Each trace needs to have the same sampling rate.
-            sampling_rates = set([_tr.stats.sampling_rate for _tr in tr])
+            sampling_rates = {_tr.stats.sampling_rate for _tr in tr}
             if len(sampling_rates) > 1:
                 msg = "All traces with the same id need to have the same " + \
                       "sampling rate."

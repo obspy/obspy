@@ -53,7 +53,7 @@ class InventoryTestCase(unittest.TestCase):
         # If no time is given, the creation time should be set to the current
         # time. Use a large offset for potentially slow computers and test
         # runs.
-        self.assertTrue(inv.created - dt <= 10.0)
+        self.assertLessEqual(inv.created - dt, 10.0)
 
     def test_get_response(self):
         responseN1S1 = Response('RESPN1S1')

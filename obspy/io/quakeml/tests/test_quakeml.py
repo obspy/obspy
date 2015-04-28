@@ -606,7 +606,7 @@ class QuakeMLTestCase(unittest.TestCase):
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
-        nsmap = dict((k, v) for k, v in root.nsmap.items() if k is not None)
+        nsmap = {k: v for k, v in root.nsmap.items() if k is not None}
         for stype in root.findall("xs:simpleType", namespaces=nsmap):
             type_name = stype.get("name")
             restriction = stype.find("xs:restriction", namespaces=nsmap)
@@ -949,7 +949,7 @@ class QuakeMLTestCase(unittest.TestCase):
             {'weight': {'value': '2',
                         'namespace': r'http://test.org/xmlns/0.1'}})
         self.assertTrue(hasattr(cat, "nsmap"))
-        self.assertTrue(getattr(cat, "nsmap")['ns0'] == nsmap['ns0'])
+        self.assertEqual(getattr(cat, "nsmap")['ns0'], nsmap['ns0'])
 
 
 def suite():

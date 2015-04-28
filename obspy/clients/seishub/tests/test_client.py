@@ -301,48 +301,48 @@ class ClientTestCase(unittest.TestCase):
                 'zeros': [0j, 0j, 0j]}
         c = self.client
         # before any requests
-        self.assertTrue(len(c.xml_seeds) == 0)
-        self.assertTrue(len(c.station_list) == 0)
+        self.assertEqual(len(c.xml_seeds), 0)
+        self.assertEqual(len(c.station_list), 0)
         # after first t1 requests
         ret = c.station.get_coordinates(net, sta, t1)
-        self.assertTrue(ret == coords1)
-        self.assertTrue(len(c.station_list) == 1)
-        self.assertTrue(len(c.station_list[netsta]) == 1)
+        self.assertEqual(ret, coords1)
+        self.assertEqual(len(c.station_list), 1)
+        self.assertEqual(len(c.station_list[netsta]), 1)
         ret = c.station.get_paz(seed_id, t1)
-        self.assertTrue(ret == paz1)
-        self.assertTrue(len(c.xml_seeds) == 1)
-        self.assertTrue(len(c.xml_seeds[seed_id]) == 1)
+        self.assertEqual(ret, paz1)
+        self.assertEqual(len(c.xml_seeds), 1)
+        self.assertEqual(len(c.xml_seeds[seed_id]), 1)
         # after first t2 requests
         ret = c.station.get_coordinates(net, sta, t2)
-        self.assertTrue(ret == coords2)
-        self.assertTrue(len(c.station_list) == 1)
-        self.assertTrue(len(c.station_list[netsta]) == 2)
+        self.assertEqual(ret, coords2)
+        self.assertEqual(len(c.station_list), 1)
+        self.assertEqual(len(c.station_list[netsta]), 2)
         ret = c.station.get_paz(seed_id, t2)
-        self.assertTrue(ret == paz2)
-        self.assertTrue(len(c.xml_seeds) == 1)
-        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        self.assertEqual(ret, paz2)
+        self.assertEqual(len(c.xml_seeds), 1)
+        self.assertEqual(len(c.xml_seeds[seed_id]), 2)
         # get_list() is called if get_paz or get_coordinates ends up making a
         # request to server so we just overwrite it and let it raise to check
         # that no request is issued
         c.station.get_list = raiseOnCall
         # after second t1 requests
         ret = c.station.get_coordinates(net, sta, t1)
-        self.assertTrue(ret == coords1)
-        self.assertTrue(len(c.station_list) == 1)
-        self.assertTrue(len(c.station_list[netsta]) == 2)
+        self.assertEqual(ret, coords1)
+        self.assertEqual(len(c.station_list), 1)
+        self.assertEqual(len(c.station_list[netsta]), 2)
         ret = c.station.get_paz(seed_id, t1)
-        self.assertTrue(ret == paz1)
-        self.assertTrue(len(c.xml_seeds) == 1)
-        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        self.assertEqual(ret, paz1)
+        self.assertEqual(len(c.xml_seeds), 1)
+        self.assertEqual(len(c.xml_seeds[seed_id]), 2)
         # after second t2 requests
         ret = c.station.get_coordinates(net, sta, t2)
-        self.assertTrue(ret == coords2)
-        self.assertTrue(len(c.station_list) == 1)
-        self.assertTrue(len(c.station_list[netsta]) == 2)
+        self.assertEqual(ret, coords2)
+        self.assertEqual(len(c.station_list), 1)
+        self.assertEqual(len(c.station_list[netsta]), 2)
         ret = c.station.get_paz(seed_id, t2)
-        self.assertTrue(ret == paz2)
-        self.assertTrue(len(c.xml_seeds) == 1)
-        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        self.assertEqual(ret, paz2)
+        self.assertEqual(len(c.xml_seeds), 1)
+        self.assertEqual(len(c.xml_seeds[seed_id]), 2)
         # new request that needs to connect to server, just to make sure the
         # monkey patch for raising on requests really works
         self.assertRaises(RequestException, c.station.get_coordinates,

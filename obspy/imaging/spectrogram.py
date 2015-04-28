@@ -155,9 +155,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     halfbin_freq = (freq[1] - freq[0]) / 2.0
 
     # argument None is not allowed for kwargs on matplotlib python 3.3
-    kwargs = dict((k, v) for k, v in
-                  (('cmap', cmap), ('zorder', zorder))
-                  if v is not None)
+    kwargs = {k: v for k, v in (('cmap', cmap), ('zorder', zorder))
+              if v is not None}
 
     if log:
         # pcolor expects one bin more at the right end

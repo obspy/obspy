@@ -555,18 +555,18 @@ class TraceTestCase(unittest.TestCase):
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
             failinfo = fail_pattern % (myTrace, bigtrace_sort)
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.assertTrue(bigtrace_sort == myTrace, failinfo)
+            self.assertEqual(bigtrace_sort, myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray, bigtrace.data)
             self.assertTrue((bigtrace.data == myArray).all(), failinfo)
 
             failinfo = fail_pattern % (myTrace, bigtrace)
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.assertTrue(bigtrace == myTrace, failinfo)
+            self.assertEqual(bigtrace, myTrace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
                 failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.assertTrue(myArray.dtype == array_.dtype, failinfo)
+                self.assertEqual(myArray.dtype, array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1295,7 +1295,7 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
-            self.assertTrue(tr.data[i] <= 1.)
+            self.assertLessEqual(tr.data[i], 1.)
             self.assertGreaterEqual(tr.data[i], 0.)
 
     def test_taper_onesided(self):
@@ -1306,12 +1306,12 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.taper(max_percentage=None, side="left")
         self.assertTrue(tr.data[:5].sum() < 5.)
-        self.assertTrue(tr.data[6:].sum() == 5.)
+        self.assertEqual(tr.data[6:].sum(), 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
         tr.taper(max_percentage=None, side="right")
-        self.assertTrue(tr.data[:5].sum() == 5.)
+        self.assertEqual(tr.data[:5].sum(), 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
     def test_taper_length(self):
@@ -1373,7 +1373,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertRaises(ValueError, tr.__mod__, -11)
         # If num is more then the number of samples, a copy will be returned.
         st = tr % 500
-        self.assertTrue(tr == st[0])
+        self.assertEqual(tr, st[0])
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
@@ -1465,10 +1465,10 @@ class TraceTestCase(unittest.TestCase):
                 endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
         self.assertEqual(len(tr), 3002)
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
-        self.assertTrue(tr.data[0] is np.ma.masked)
+        self.assertIs(tr.data[0], np.ma.masked)
         self.assertTrue(tr.data[1] is not np.ma.masked)
         self.assertTrue(tr.data[-2] is not np.ma.masked)
-        self.assertTrue(tr.data[-1] is np.ma.masked)
+        self.assertIs(tr.data[-1], np.ma.masked)
         # fill_value = 999
         tr = read()[0]
         self.assertEqual(len(tr), 3000)
@@ -1539,7 +1539,7 @@ class TraceTestCase(unittest.TestCase):
             .detrend()\
             .taper(max_percentage=0.05, type='cosine')\
             .normalize()
-        self.assertTrue(temp_tr is tr)
+        self.assertIs(temp_tr, tr)
         self.assertTrue(isinstance(tr, Trace))
         self.assertGreater(tr.stats.npts, 0)
 
@@ -1731,7 +1731,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(int_tr.stats.delta, 0.003)
         # Assert that the new end time is smaller than the old one. SAC at
         # times performs some extrapolation which we do not want to do here.
-        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
         # SAC extrapolates a bit which we don't want here. The deviations
         # to SAC are likely due to the fact that we use double precision
         # math while SAC uses single precision math.
@@ -1746,7 +1746,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(int_tr.stats.delta, 0.077)
         # Assert that the new end time is smaller than the old one. SAC
         # calculates one sample less in this case.
-        self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+        self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
         self.assertTrue(np.allclose(
             int_tr.data[:interp_delta_0_077.stats.npts],
             interp_delta_0_077.data,
@@ -1766,7 +1766,7 @@ class TraceTestCase(unittest.TestCase):
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
                                                method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
-            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+            self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
 
         for inter_type in ["slinear", "quadratic", "cubic", 1, 2, 3]:
             with mock.patch("scipy.interpolate.InterpolatedUnivariateSpline") \
@@ -1786,7 +1786,7 @@ class TraceTestCase(unittest.TestCase):
             int_tr = org_tr.copy().interpolate(sampling_rate=0.5,
                                                method=inter_type)
             self.assertEqual(int_tr.stats.delta, 2.0)
-            self.assertTrue(int_tr.stats.endtime <= org_tr.stats.endtime)
+            self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
 
     def test_interpolation_arguments(self):
         """
