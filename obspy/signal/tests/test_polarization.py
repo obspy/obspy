@@ -11,6 +11,7 @@ import unittest
 from os.path import dirname, join
 
 import numpy as np
+from numpy.testing import assert_allclose
 from scipy import signal
 
 import obspy
@@ -133,10 +134,23 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, stime=t, etime=e, method="pm",
             var_noise=0.0)
 
-        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
-        self.assertAlmostEqual(out["azimuth_error"], 0.000000)
-        self.assertAlmostEqual(out["incidence_error"], 0.000000)
+        # all values should be equal for the test data, so check first value
+        # and make sure all values are almost equal
+        self.assertEqual(out["timestamp"][0], 1393632001.0)
+        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
+        self.assertAlmostEqual(out["azimuth_error"][0], 0.000000)
+        self.assertAlmostEqual(out["incidence_error"][0], 0.000000)
+        for key in ["azimuth", "incidence"]:
+            got = out[key]
+            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
+        for key in ["azimuth_error", "incidence_error"]:
+            got = out[key]
+            expected = np.empty_like(got)
+            expected.fill(got[0])
+            assert_allclose(got, expected, rtol=1e-4, atol=1e-16)
+        assert_allclose(out["timestamp"] - out["timestamp"][0],
+                        np.arange(0, 92, 1))
 
     def test_polarization_flinn(self):
         st = _create_test_data()
@@ -148,10 +162,18 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, stime=t, etime=e,
             method="flinn", var_noise=0.0)
 
-        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
-        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
-        self.assertAlmostEqual(out["planarity"], 1.000000)
+        # all values should be equal for the test data, so check first value
+        # and make sure all values are almost equal
+        self.assertEqual(out["timestamp"][0], 1393632001.0)
+        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"][0], 1.000000)
+        self.assertAlmostEqual(out["planarity"][0], 1.000000)
+        for key in ["azimuth", "incidence", "rectilinearity", "planarity"]:
+            got = out[key]
+            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
+        assert_allclose(out["timestamp"] - out["timestamp"][0],
+                        np.arange(0, 92, 1))
 
     def test_polarization_vidale(self):
         st = _create_test_data()
@@ -163,11 +185,20 @@ class PolarizationTestCase(unittest.TestCase):
             verbose=False, stime=t, etime=e,
             method="vidale", var_noise=0.0)
 
-        self.assertAlmostEqual(out["azimuth"], 26.56505117707799)
-        self.assertAlmostEqual(out["incidence"], 65.905157447889309)
-        self.assertAlmostEqual(out["rectilinearity"], 1.000000)
-        self.assertAlmostEqual(out["planarity"], 1.000000)
-        self.assertAlmostEqual(out["ellipticity"], 3.8195545129768958e-06)
+        # all values should be equal for the test data, so check first value
+        # and make sure all values are almost equal
+        self.assertEqual(out["timestamp"][0], 1393632003.0)
+        self.assertAlmostEqual(out["azimuth"][0], 26.56505117707799)
+        self.assertAlmostEqual(out["incidence"][0], 65.905157447889309)
+        self.assertAlmostEqual(out["rectilinearity"][0], 1.000000)
+        self.assertAlmostEqual(out["planarity"][0], 1.000000)
+        self.assertAlmostEqual(out["ellipticity"][0], 3.8195545129768958e-06)
+        for key in ["azimuth", "incidence", "rectilinearity", "planarity",
+                    "ellipticity"]:
+            got = out[key]
+            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
+        assert_allclose(out["timestamp"] - out["timestamp"][0],
+                        np.arange(0, 97.85, 0.05), rtol=1e-5)
 
 
 def suite():
