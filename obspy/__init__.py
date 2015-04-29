@@ -127,23 +127,30 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
         # Otherwise check if the name is part of the import map.
         elif name in _import_map:
             new_name = _import_map[name]
-
-            # Don't load again if already loaded.
-            if new_name in sys.modules:
-                module = sys.modules[new_name]
-            else:
-                module = importlib.import_module(new_name)
-
-            # Warn here as at this point the module has already been imported.
-            warnings.warn("Module '%s' is deprecated and will stop working "
-                          "with the next ObsPy version. Please import module "
-                          "'%s' instead." % (name, new_name),
-                          ObsPyDeprecationWarning)
-            sys.modules[new_name] = module
-            sys.modules[name] = module
-            return module
         else:
-            return None
+            new_name = name
+            for old, new in _import_map.items():
+                if not new_name.startswith(old):
+                    continue
+                new_name = new_name.replace(old, new)
+                break
+            else:
+                return None
+
+        # Don't load again if already loaded.
+        if new_name in sys.modules:
+            module = sys.modules[new_name]
+        else:
+            module = importlib.import_module(new_name)
+
+        # Warn here as at this point the module has already been imported.
+        warnings.warn("Module '%s' is deprecated and will stop working "
+                      "with the next ObsPy version. Please import module "
+                      "'%s' instead." % (name, new_name),
+                      ObsPyDeprecationWarning)
+        sys.modules[new_name] = module
+        sys.modules[name] = module
+        return module
 
 
 # Install meta path handler.
