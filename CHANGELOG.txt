@@ -30,6 +30,7 @@ releases:
    * Fix handling of velocity reduction in section plots with degree offsets
      (see #1029)
    * Allow section plots over existing figures by not modifying existing lines
+   * Don't prematurely close waveform figure if returning its handle
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
  - obspy.station:

@@ -25,6 +25,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import os
 import time
 import warnings
 
@@ -469,8 +470,9 @@ class SacIO(object):
         Test for a valid SAC file using arrays.
         """
         cur_pos = fh.tell()
-        length = fh.seek(0, 2)
-        fh.seek(cur_pos, 0)
+        fh.seek(0, os.SEEK_END)
+        length = fh.tell()
+        fh.seek(cur_pos, os.SEEK_SET)
         try:
             npts = self.get_header_value('npts')
         except:
@@ -528,7 +530,7 @@ class SacIO(object):
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
-                fh.seek(0, 0)
+                fh.seek(0, os.SEEK_SET)
                 self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('>f4'))
                 self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
@@ -568,7 +570,7 @@ class SacIO(object):
         >>> u.get_header_value_from_file('test2.sac',"kevnm") # doctest: +SKIP
         'hullahulla      '
         """
-        fh.seek(0, 0)  # set pointer to the file beginning
+        fh.seek(0, os.SEEK_SET)
         try:
             # write the header
             fh.write(self.hf.data)
@@ -618,7 +620,7 @@ class SacIO(object):
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
-                fh.seek(0, 0)
+                fh.seek(0, os.SEEK_SET)
                 self.hf = from_buffer(fh.read(4 * 70), dtype=native_str('>f4'))
                 self.hi = from_buffer(fh.read(4 * 40), dtype=native_str('>i4'))
                 # read in the char values
