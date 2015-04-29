@@ -1612,19 +1612,19 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
 @deprecated("'plotTfGofs' has been renamed to 'plot_tf_gofs'. "
             "Use that instead.")
-def plotTfGofs(self, *args, **kwargs):
+def plotTfGofs(*args, **kwargs):
     return plot_tf_gofs(*args, **kwargs)
 
 
 @deprecated("'plotTfMisfits' has been renamed to 'plot_tf_misfits'. "
             "Use that instead.")
-def plotTfMisfits(self, *args, **kwargs):
+def plotTfMisfits(*args, **kwargs):
     return plot_tf_misfits(*args, **kwargs)
 
 
 @deprecated("'plotTfr' has been renamed to 'plot_tfr'. "
             "Use that instead.")
-def plotTfr(self, *args, **kwargs):
+def plotTfr(*args, **kwargs):
     return plot_tfr(*args, **kwargs)
 
 
