@@ -27,7 +27,19 @@ fe = FlinnEngdahl()
 
 
 
-def _buffer_proxy(filename_or_buf, function, *args, **kwargs):
+def _buffer_proxy(filename_or_buf, function, reset_fp=True, *args, **kwargs):
+    """
+    Calls a function with an open file or file-like object as the first
+    argument. If the file originally was a filename, the file will be
+    opened, otherwise it will just be passed to the underlying function.
+
+    :param filename_or_buf: File to pass.
+    :type filename_or_buf: str, open file, or file-like object.
+    :param function: The function to call.
+    :param reset_fp: If True, the file pointer will be set to the initial
+        position after the function has been called.
+    :type reset_fp: bool
+    """
     try:
         position = filename_or_buf.tell()
         is_buffer = True
@@ -36,36 +48,57 @@ def _buffer_proxy(filename_or_buf, function, *args, **kwargs):
 
     if is_buffer is True:
         ret_val = function(filename_or_buf, *args, **kwargs)
-        filename_or_buf.seek(position, 0)
+        if reset_fp:
+            filename_or_buf.seek(position, 0)
         return ret_val
     else:
         with open(filename_or_buf, "rb") as fh:
             return function(fh, *args, **kwargs)
 
 
-def is_cmtsolution(filename_or_buf):
-    return _buffer_proxy(filename_or_buf, _is_cmtsolution)
-
-
-def _is_cmtsolution(buf):
+def _is_cmtsolution(filename_or_buf):
     """
-    :param buf:
-    :return:
+    Checks if the file is a CMTSOLUTION file.
+
+    :param filename_or_buf: File to test.
+    :type filename_or_buf: str or file-like object.
+    """
+    return _buffer_proxy(filename_or_buf, __is_cmtsolution, reset_fp=True)
+
+
+def __is_cmtsolution(buf):
+    """
+    Checks if the file is a CMTSOLUTION file.
+
+    :param buf: File to check.
+    :type buf: Open file or open file like object.
     """
     # The file format is so simple. Just attempt to read it. If it passes it
     # will be read again but that has really no performance impact.
     try:
-        read_cmtsolution(buf)
+        _read_cmtsolution(buf)
         return True
     except:
         return False
 
 
-def read_cmtsolution(filename_or_buf):
-    return _buffer_proxy(filename_or_buf, _read_cmtsolution)
+def _read_cmtsolution(filename_or_buf, **kwargs):
+    """
+    Reads a CMTSOLUTION file to a :class:`~obspy.core.stream.Stream` object.
+
+    :param filename_or_buf: File to read.
+    :type filename_or_buf: str or file-like object.
+    """
+    return _buffer_proxy(filename_or_buf, __read_cmtsolution, **kwargs)
 
 
-def _read_cmtsolution(buf):
+def __read_cmtsolution(buf, **kwargs):
+    """
+    Reads a CMTSOLUTION file to a :class:`~obspy.core.stream.Stream` object.
+
+    :param buf: File to read.
+    :type buf: Open file or open file like object.
+    """
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
     origin_time = line[4:].strip().split()[:6]
