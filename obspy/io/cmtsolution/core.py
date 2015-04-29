@@ -14,6 +14,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import math
+import uuid
 import warnings
 
 
@@ -25,6 +26,15 @@ from obspy.geodetics import FlinnEngdahl
 
 fe = FlinnEngdahl()
 
+
+def _get_resource_id(cmtname, res_type, tag=None):
+    """
+    Helper function to create consistent resource ids.
+    """
+    res_id = "smi:local/cmtsolution/%s/%s" % (cmtname, res_type)
+    if tag is not None:
+        res_id += "#" + tag
+    return res_id
 
 
 def _buffer_proxy(filename_or_buf, function, reset_fp=True, *args, **kwargs):
@@ -114,29 +124,8 @@ def __read_cmtsolution(buf, **kwargs):
     latitude, longitude, depth, body_wave_mag, surface_wave_mag = \
         map(float, line[:5])
 
-    preliminary_origin = Origin(
-        time=origin_time,
-        longitude=longitude,
-        latitude=latitude,
-        # Depth is in meters.
-        depth=depth * 1000.0,
-        origin_type="hypocenter",
-        region=fe.get_region(longitude=longitude, latitude=latitude),
-        evaluation_status="preliminary"
-    )
-
-    preliminary_bw_magnitude = Magnitude(
-        mag=body_wave_mag, magnitude_type="Mb",
-        evaluation_status="preliminary",
-        origin_id=preliminary_origin.resource_id)
-
-    preliminary_sw_magnitude = Magnitude(
-        mag=surface_wave_mag, magnitude_type="MS",
-        evaluation_status="preliminary",
-        origin_id=preliminary_origin.resource_id)
-
     # The rest encodes the centroid solution.
-    buf.readline()  # Skip event name.
+    event_name = buf.readline().strip().split()[-1].decode()
 
     values = ["time_shift", "half_duration", "latitude", "longitude",
               "depth", "m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
@@ -160,7 +149,32 @@ def __read_cmtsolution(buf, **kwargs):
     for value in values:
         cmt_values[value] /= 1E7
 
+    preliminary_origin = Origin(
+        resource_id=_get_resource_id(event_name, "origin", tag="prelim"),
+        time=origin_time,
+        longitude=longitude,
+        latitude=latitude,
+        # Depth is in meters.
+        depth=depth * 1000.0,
+        origin_type="hypocenter",
+        region=fe.get_region(longitude=longitude, latitude=latitude),
+        evaluation_status="preliminary"
+    )
+
+    preliminary_bw_magnitude = Magnitude(
+        resource_id=_get_resource_id(event_name, "magnitude", tag="prelim_bw"),
+        mag=body_wave_mag, magnitude_type="Mb",
+        evaluation_status="preliminary",
+        origin_id=preliminary_origin.resource_id)
+
+    preliminary_sw_magnitude = Magnitude(
+        resource_id=_get_resource_id(event_name, "magnitude", tag="prelim_sw"),
+        mag=surface_wave_mag, magnitude_type="MS",
+        evaluation_status="preliminary",
+        origin_id=preliminary_origin.resource_id)
+
     cmt_origin = Origin(
+        resource_id=_get_resource_id(event_name, "origin", tag="cmt"),
         time=origin_time + cmt_values["time_shift"],
         longitude=cmt_values["longitude"],
         latitude=cmt_values["latitude"],
@@ -174,12 +188,14 @@ def __read_cmtsolution(buf, **kwargs):
     )
 
     cmt_mag = Magnitude(
+        resource_id=_get_resource_id(event_name, "magnitude", tag="mw"),
         mag=m_w,
         magnitude_type="mw",
         origin_id=cmt_origin.resource_id
     )
 
     foc_mec = FocalMechanism(
+        resource_id=_get_resource_id(event_name, "focal_mechanism"),
         # The preliminary origin most likely triggered the focal mechanism
         # determination.
         triggering_origin_id=preliminary_origin.resource_id
@@ -202,6 +218,7 @@ def __read_cmtsolution(buf, **kwargs):
     )
 
     mt = MomentTensor(
+        resource_id=_get_resource_id(event_name, "moment_tensor"),
         derived_origin_id=cmt_origin.resource_id,
         moment_magnitude_id=cmt_mag.resource_id,
         # In Nm.
@@ -213,7 +230,7 @@ def __read_cmtsolution(buf, **kwargs):
     # Assemble everything.
     foc_mec.moment_tensor = mt
 
-    ev = Event()
+    ev = Event(resource_id=_get_resource_id(event_name, "event"))
     ev.origins.append(cmt_origin)
     ev.origins.append(preliminary_origin)
     ev.magnitudes.append(cmt_mag)
@@ -221,7 +238,8 @@ def __read_cmtsolution(buf, **kwargs):
     ev.magnitudes.append(preliminary_sw_magnitude)
     ev.focal_mechanisms.append(foc_mec)
 
-    return Catalog(events=[ev])
+    return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
+                  events=[ev])
 
 
 if __name__ == '__main__':
