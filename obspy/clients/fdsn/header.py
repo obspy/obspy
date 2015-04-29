@@ -23,19 +23,26 @@ class FDSNException(Exception):
 
 # A curated list collecting some implementations:
 # http://www.fdsn.org/webservices/datacenters/
-URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
-                "ORFEUS": "http://www.orfeus-eu.org",
-                "USGS": "http://comcat.cr.usgs.gov",
-                "RESIF": "http://ws.resif.fr",
-                "NCEDC": "http://service.ncedc.org",
-                "USP": "http://sismo.iag.usp.br",
-                "GFZ": "http://geofon.gfz-potsdam.de",
-                "NERIES": "http://www.seismicportal.eu",
-                "SCEDC": "http://service.scedc.caltech.edu",
-                "GEONET": "http://service.geonet.org.nz",
-                "INGV": "http://webservices.rm.ingv.it",
-                "BGR": "http://eida.bgr.de",
-                }
+# http://www.orfeus-eu.org/eida/eida_odc.html
+URL_MAPPINGS = {
+    "BGR": "http://eida.bgr.de",
+    "ETH": "http://eida.ethz.ch",
+    "GEONET": "http://service.geonet.org.nz",
+    "GFZ": "http://geofon.gfz-potsdam.de",
+    "INGV": "http://webservices.rm.ingv.it",
+    "IPGP": "http://eida.ipgp.fr",
+    "IRIS": "http://service.iris.edu",
+    "LMU": "http://erde.geophysik.uni-muenchen.de",
+    "NCEDC": "http://service.ncedc.org",
+    "NEIP": "http://eida-sc3.infp.ro",
+    "NERIES": "http://www.seismicportal.eu",
+    "ODC": "http://www.orfeus-eu.org",
+    "ORFEUS": "http://www.orfeus-eu.org",
+    "RESIF": "http://ws.resif.fr",
+    "SCEDC": "http://service.scedc.caltech.edu",
+    "USGS": "http://comcat.cr.usgs.gov",
+    "USP": "http://sismo.iag.usp.br",
+    }
 
 FDSNWS = ("dataselect", "event", "station")
 
