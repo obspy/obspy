@@ -120,34 +120,12 @@ def __read_cmtsolution(buf, **kwargs):
         warnings.warn("Could not determine origin time from line: %s. Will "
                       "be set to zero." % line)
         origin_time = UTCDateTime(0)
-    line = line[6:]
+    line = line.split()[7:]
     latitude, longitude, depth, body_wave_mag, surface_wave_mag = \
         map(float, line[:5])
 
     # The rest encodes the centroid solution.
     event_name = buf.readline().strip().split()[-1].decode()
-
-    values = ["time_shift", "half_duration", "latitude", "longitude",
-              "depth", "m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
-    cmt_values = {_i: float(buf.readline().strip().split()[-1])
-                  for _i in values}
-
-    # Moment magnitude calculation in dyne * cm.
-    m_0 = 1.0 / math.sqrt(2.0) * math.sqrt(
-        cmt_values["m_rr"] ** 2 +
-        cmt_values["m_tt"] ** 2 +
-        cmt_values["m_pp"] ** 2 +
-        2.0 * cmt_values["m_rt"] ** 2 +
-        2.0 * cmt_values["m_rp"] ** 2 +
-        2.0 * cmt_values["m_tp"] ** 2)
-    m_w = 2.0 / 3.0 * (math.log10(m_0) - 16.1)
-
-    # Convert to meters.
-    cmt_values["depth"] *= 1000.0
-    # Convert to Newton meter.
-    values = ["m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
-    for value in values:
-        cmt_values[value] /= 1E7
 
     preliminary_origin = Origin(
         resource_id=_get_resource_id(event_name, "origin", tag="prelim"),
@@ -173,6 +151,29 @@ def __read_cmtsolution(buf, **kwargs):
         evaluation_status="preliminary",
         origin_id=preliminary_origin.resource_id)
 
+    values = ["time_shift", "half_duration", "latitude", "longitude",
+              "depth", "m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
+    cmt_values = {_i: float(buf.readline().strip().split()[-1])
+                  for _i in values}
+
+    # Moment magnitude calculation in dyne * cm.
+    m_0 = 1.0 / math.sqrt(2.0) * math.sqrt(
+        cmt_values["m_rr"] ** 2 +
+        cmt_values["m_tt"] ** 2 +
+        cmt_values["m_pp"] ** 2 +
+        2.0 * cmt_values["m_rt"] ** 2 +
+        2.0 * cmt_values["m_rp"] ** 2 +
+        2.0 * cmt_values["m_tp"] ** 2)
+    m_w = 2.0 / 3.0 * (math.log10(m_0) - 16.1)
+
+    # Convert to meters.
+    cmt_values["depth"] *= 1000.0
+    # Convert to Newton meter.
+    values = ["m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
+    for value in values:
+        cmt_values[value] /= 1E7
+
+
     cmt_origin = Origin(
         resource_id=_get_resource_id(event_name, "origin", tag="cmt"),
         time=origin_time + cmt_values["time_shift"],
@@ -189,7 +190,8 @@ def __read_cmtsolution(buf, **kwargs):
 
     cmt_mag = Magnitude(
         resource_id=_get_resource_id(event_name, "magnitude", tag="mw"),
-        mag=m_w,
+        # Round to 2 digits.
+        mag=round(m_w, 2),
         magnitude_type="mw",
         origin_id=cmt_origin.resource_id
     )
@@ -221,7 +223,7 @@ def __read_cmtsolution(buf, **kwargs):
         resource_id=_get_resource_id(event_name, "moment_tensor"),
         derived_origin_id=cmt_origin.resource_id,
         moment_magnitude_id=cmt_mag.resource_id,
-        # In Nm.
+        # Convert to Nm.
         scalar_moment=m_0 / 1E7,
         tensor=tensor,
         source_time_function=stf
@@ -237,6 +239,11 @@ def __read_cmtsolution(buf, **kwargs):
     ev.magnitudes.append(preliminary_bw_magnitude)
     ev.magnitudes.append(preliminary_sw_magnitude)
     ev.focal_mechanisms.append(foc_mec)
+
+    # Set the preferred items.
+    ev.preferred_origin_id = cmt_origin.resource_id
+    ev.preferred_magnitude_id = cmt_mag.resource_id
+    ev.preferred_focal_mechanism_id = foc_mec.resource_id
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                   events=[ev])
