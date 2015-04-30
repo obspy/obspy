@@ -77,9 +77,9 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
 .. autosummary::
     :toctree: ../../packages/autogen
 
-    ~obspy.signal.trigger.recSTALTA
+    ~obspy.signal.trigger.recursive_STALTA
     ~obspy.signal.trigger.carl_STA_trig
-    ~obspy.signal.trigger.classicSTALTA
+    ~obspy.signal.trigger.classic_STALTA
     ~obspy.signal.trigger.delayed_STALTA
     ~obspy.signal.trigger.z_detect
     ~obspy.signal.trigger.pk_baer
@@ -88,90 +88,6 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
 Help for each function is available  HTML formatted or in the usual Python manner:
 
     >>> from obspy.signal.trigger import classic_STALTA
-    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-
-
-    ~obspy.signal.trigger.recSTALTA
-    ~obspy.signal.trigger.carl_STA_trig
-    ~obspy.signal.trigger.classicSTALTA
-    ~obspy.signal.trigger.delayed_STALTA
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classic_STALTA
-    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-
-
-    ~obspy.signal.trigger.recSTALTA
-    ~obspy.signal.trigger.carl_STA_trig
-    ~obspy.signal.trigger.classicSTALTA
-    ~obspy.signal.trigger.delayed_STALTA
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classic_STALTA
-    >>> help(classic_STALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-
-
-    ~obspy.signal.trigger.recSTALTA
-    ~obspy.signal.trigger.carl_STA_trig
-    ~obspy.signal.trigger.classicSTALTA
-    ~obspy.signal.trigger.delayed_STALTA
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classic_STALTA
-    >>> help(classic_STALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger...
-
-The triggering itself mainly consists of the following two steps:
-
-* Calculating the characteristic function
-* Setting picks based on values of the characteristic function
-
-
-
-    ~obspy.signal.trigger.recSTALTA
-    ~obspy.signal.trigger.carl_STA_trig
-    ~obspy.signal.trigger.classicSTALTA
-    ~obspy.signal.trigger.delayed_STALTA
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
-
-Help for each function is available  HTML formatted or in the usual Python manner:
-
-    >>> from obspy.signal.trigger import classicSTALTA
     >>> help(classicSTALTA)  # doctest: +ELLIPSIS
     Help on function classicSTALTA in module obspy.signal.trigger...
 
@@ -188,22 +104,6 @@ For all the examples, the commands to read in the data and to load the modules
 are the following:
 
     >>> from obspy.core import read
-    >>> from obspy.signal.trigger import plot_trigger
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-
-
-are the following:
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import plot_trigger
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-
-
-are the following:
-
-    >>> from obspy.core import read
     >>> from obspy.signal.trigger import plotTrigger
     >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
@@ -212,11 +112,7 @@ Classic Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import classic_STALTA
-        >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 1.5, 0.5)
-
-
-    >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
+    >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.5, 0.5)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
@@ -225,11 +121,7 @@ Z-Detect
 ========
 
     >>> from obspy.signal.trigger import z_detect
-        >>> cft = z_detect(trace.data, int(10 * df))
-        >>> plot_trigger(trace, cft, -0.4, -0.3)
-
-
-    >>> cft = zDetect(trace.data, int(10 * df))
+    >>> cft = z_detect(trace.data, int(10 * df))
     >>> plot_trigger(trace, cft, -0.4, -0.3)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_z_detect.py
@@ -238,11 +130,7 @@ Recursive Sta Lta
 =================
 
     >>> from obspy.signal.trigger import recursive_STALTA
-        >>> cft = recursive_STALTA(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 1.2, 0.5)
-
-
-    >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
+    >>> cft = recursive_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.2, 0.5)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
@@ -251,11 +139,7 @@ Carl-Sta-Trig
 =============
 
     >>> from obspy.signal.trigger import carl_STA_trig
-        >>> cft = carl_STA_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
-        >>> plot_trigger(trace, cft, 20.0, -20.0)
-
-
-    >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
+    >>> cft = carl_STA_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plot_trigger(trace, cft, 20.0, -20.0)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_carl_sta_trig.py
@@ -264,11 +148,7 @@ Delayed Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import delayed_STALTA
-        >>> cft = delayed_STALTA(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 5, 10)
-
-
-    >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
+    >>> cft = delayed_STALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 5, 10)
 
 .. plot:: tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
@@ -480,86 +360,10 @@ For :func:`~obspy.signal.trigger.pk_baer`, input is in seconds, output is in
 samples.
 
     >>> from obspy.core import read
-    >>> from obspy.signal.trigger import pkBaer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-    >>> p_pick, phase_info = pk_baer(trace.data, df,
-    ...                             20, 60, 7.0, 12.0, 100, 100)
-    >>> print(p_pick)
-    6894
-    >>> print(phase_info)
-    EPU3
-    >>> print(p_pick / df)
-    34.47
-
-This yields the output 34.47 EPU3, which means that a P pick was
-set at 34.47s with Phase information EPU3.
-
-
-samples.
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import pkBaer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-    >>> p_pick, phase_info = pk_baer(trace.data, df,
-    ...                             20, 60, 7.0, 12.0, 100, 100)
-    >>> print(p_pick)
-    6894
-    >>> print(phase_info)
-    EPU3
-    >>> print(p_pick / df)
-    34.47
-
-This yields the output 34.47 EPU3, which means that a P pick was
-set at 34.47s with Phase information EPU3.
-
-
-samples.
-
-    >>> from obspy.core import read
     >>> from obspy.signal.trigger import pk_baer
     >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
     >>> p_pick, phase_info = pk_baer(trace.data, df,
-    ...                             20, 60, 7.0, 12.0, 100, 100)
-    >>> print(p_pick)
-    6894
-    >>> print(phase_info)
-    EPU3
-    >>> print(p_pick / df)
-    34.47
-
-This yields the output 34.47 EPU3, which means that a P pick was
-set at 34.47s with Phase information EPU3.
-
-
-samples.
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import pk_baer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-    >>> p_pick, phase_info = pk_baer(trace.data, df,
-    ...                             20, 60, 7.0, 12.0, 100, 100)
-    >>> print(p_pick)
-    6894
-    >>> print(phase_info)
-    EPU3
-    >>> print(p_pick / df)
-    34.47
-
-This yields the output 34.47 EPU3, which means that a P pick was
-set at 34.47s with Phase information EPU3.
-
-
-samples.
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import pkBaer
-    >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
-    >>> df = trace.stats.sampling_rate
-    >>> p_pick, phase_info = pkBaer(trace.data, df,
     ...                             20, 60, 7.0, 12.0, 100, 100)
     >>> print(p_pick)
     6894
@@ -582,80 +386,8 @@ For :func:`~obspy.signal.trigger.ar_pick`, input and output are in seconds.
     >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
     >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
     >>> df = tr1.stats.sampling_rate
-    >>> p_pick, s_pick = arPick(tr1.data, tr2.data, tr3.data, df,
-    ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
-    >>> print(p_pick)
-    30.6350002289
-    >>> print(s_pick)
-    31.2800006866
-
-This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
-30.64s and an S pick at 31.28s were identified.
-
-
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import ar_pick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
-    >>> df = tr1.stats.sampling_rate
-    >>> p_pick, s_pick = arPick(tr1.data, tr2.data, tr3.data, df,
-    ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
-    >>> print(p_pick)
-    30.6350002289
-    >>> print(s_pick)
-    31.2800006866
-
-This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
-30.64s and an S pick at 31.28s were identified.
-
-
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import ar_pick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
-    >>> df = tr1.stats.sampling_rate
     >>> p_pick, s_pick = ar_pick(tr1.data, tr2.data, tr3.data, df,
-    ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
-    >>> print(p_pick)
-    30.6350002289
-    >>> print(s_pick)
-    31.2800006866
-
-This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
-30.64s and an S pick at 31.28s were identified.
-
-
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import ar_pick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
-    >>> df = tr1.stats.sampling_rate
-    >>> p_pick, s_pick = ar_pick(tr1.data, tr2.data, tr3.data, df,
-    ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
-    >>> print(p_pick)
-    30.6350002289
-    >>> print(s_pick)
-    31.2800006866
-
-This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
-30.64s and an S pick at 31.28s were identified.
-
-
-
-    >>> from obspy.core import read
-    >>> from obspy.signal.trigger import arPick
-    >>> tr1 = read('http://examples.obspy.org/loc_RJOB20050801145719850.z.gse2')[0]
-    >>> tr2 = read('http://examples.obspy.org/loc_RJOB20050801145719850.n.gse2')[0]
-    >>> tr3 = read('http://examples.obspy.org/loc_RJOB20050801145719850.e.gse2')[0]
-    >>> df = tr1.stats.sampling_rate
-    >>> p_pick, s_pick = arPick(tr1.data, tr2.data, tr3.data, df,
-    ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
+    ...                          1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
     >>> print(p_pick)
     30.6350002289
     >>> print(s_pick)

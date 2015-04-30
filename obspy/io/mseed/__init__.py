@@ -129,17 +129,17 @@ Utilities
 This module also contains a couple of utility functions which are useful for
 some purposes. Refer to the documentation of each for details.
 
-+---------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.get_start_and_end_time`         | Fast way of getting the temporal bounds of a well-behaved MiniSEED file. |
-+---------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.get_timing_and_data_quality`    |  Returns information about the data and timing quality flags in a file.  |
-+---------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.shift_time_of_file`            |      Shifts the time of a file preserving all blockettes and flags.      |
-+---------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.get_record_information`       |   Returns record information about given files and file-like object.     |
-+---------------------------------------------------------+--------------------------------------------------------------------------+
-| :func:`~obspy.io.mseed.util.set_flags_in_fixed_headers` |   Updates a given miniSEED file with some fixed header flags.            |
-+---------------------------------------------------------+--------------------------------------------------------------------------+
++----------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.io.mseed.util.get_start_and_end_time`      | Fast way of getting the temporal bounds of a well-behaved MiniSEED file. |
++----------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.io.mseed.util.get_timing_and_data_quality` |  Returns information about the data and timing quality flags in a file.  |
++----------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.io.mseed.util.shift_time_of_file`          |      Shifts the time of a file preserving all blockettes and flags.      |
++----------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.io.mseed.util.get_record_information`      |   Returns record information about given files and file-like object.     |
++----------------------------------------------------------+--------------------------------------------------------------------------+
+| :func:`~obspy.io.mseed.util.set_flags_in_fixed_headers`  |   Updates a given miniSEED file with some fixed header flags.            |
++----------------------------------------------------------+--------------------------------------------------------------------------+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

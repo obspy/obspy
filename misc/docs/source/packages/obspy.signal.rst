@@ -31,7 +31,7 @@
        ~trigger.pk_baer
        ~spectral_estimation.PPSD
        ~spectral_estimation.psd
-       ~trigger.recSTALTA
+       ~trigger.recursive_STALTA
        ~rotate.rotate_NE_RT
        ~invsim.simulate_seismometer
        ~util.util_geo_km
