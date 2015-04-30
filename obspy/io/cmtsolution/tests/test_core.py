@@ -31,7 +31,7 @@ class CmtsolutionTestCase(unittest.TestCase):
         anything.
         """
         filename = os.path.join(self.datapath, "CMTSOLUTION")
-        with open(filename, "rt") as fh:
+        with open(filename, "rb") as fh:
             data = fh.read()
 
         cat = obspy.read_events(filename)
@@ -41,7 +41,7 @@ class CmtsolutionTestCase(unittest.TestCase):
 
         try:
             cat.write(temp_filename, format="CMTSOLUTION")
-            with open(temp_filename, "rt") as fh:
+            with open(temp_filename, "rb") as fh:
                 new_data = fh.read()
         finally:
             try:
@@ -49,7 +49,9 @@ class CmtsolutionTestCase(unittest.TestCase):
             except:
                 pass
 
-        self.assertEqual(data, new_data)
+        for line1, line2 in zip(data.decode().splitlines(),
+                new_data.decode().splitlines()):
+            self.assertEqual(line1, line2)
 
     def test_read_and_write_cmtsolution_from_open_files(self):
         """
@@ -69,7 +71,9 @@ class CmtsolutionTestCase(unittest.TestCase):
             tf.seek(0, 0)
             new_data = tf.read()
 
-        self.assertEqual(data, new_data)
+        for line1, line2 in zip(data.decode().splitlines(),
+                new_data.decode().splitlines()):
+            self.assertEqual(line1, line2)
 
     def test_read_and_write_cmtsolution_from_bytes_io(self):
         """
@@ -93,7 +97,35 @@ class CmtsolutionTestCase(unittest.TestCase):
                 buf2.seek(0, 0)
                 new_data = buf2.read()
 
-        self.assertEqual(data, new_data)
+        for line1, line2 in zip(data.decode().splitlines(),
+                new_data.decode().splitlines()):
+            self.assertEqual(line1, line2)
+
+    def test_read_and_write_cmtsolution_explosion(self):
+        """
+        Tests that reading and writing CMTSOLUTIONS file does not change
+        anything.
+
+        Tests another file.
+        """
+        filename = os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+            fh.seek(0, 0)
+            data = fh.read()
+
+        with buf:
+            buf.seek(0, 0)
+            cat = obspy.read_events(buf)
+
+            with io.BytesIO() as buf2:
+                cat.write(buf2, format="CMTSOLUTION")
+                buf2.seek(0, 0)
+                new_data = buf2.read()
+
+        for line1, line2 in zip(data.decode().splitlines(),
+                                new_data.decode().splitlines()):
+            self.assertEqual(line1, line2)
 
 
 def suite():

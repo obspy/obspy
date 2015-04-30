@@ -1,10 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
-  <eventParameters publicID="smi:local/cmtsolution/catalog/4afbc0b7-749d-4595-89f2-fbd84e6509cb">
+  <eventParameters publicID="smi:local/cmtsolution/catalog/13754b69-a17b-4e3f-a664-2e1cbd764968">
     <event publicID="smi:local/cmtsolution/hom_explosion/event">
       <preferredOriginID>smi:local/cmtsolution/hom_explosion/origin#cmt</preferredOriginID>
       <preferredMagnitudeID>smi:local/cmtsolution/hom_explosion/magnitude#mw</preferredMagnitudeID>
       <preferredFocalMechanismID>smi:local/cmtsolution/hom_explosion/focal_mechanism</preferredFocalMechanismID>
+      <type>earthquake</type>
+      <description>
+        <text>hom_explosion</text>
+        <type>earthquake name</type>
+      </description>
       <origin publicID="smi:local/cmtsolution/hom_explosion/origin#cmt">
         <time>
           <value>1999-01-01T00:00:00.000000Z</value>
@@ -31,7 +36,7 @@
           <value>-122.186</value>
         </longitude>
         <depth>
-          <value>-25000000.0</value>
+          <value>250000.0</value>
         </depth>
         <type>hypocenter</type>
         <evaluationStatus>preliminary</evaluationStatus>
@@ -65,7 +70,7 @@
           <derivedOriginID>smi:local/cmtsolution/hom_explosion/origin#cmt</derivedOriginID>
           <momentMagnitudeID>smi:local/cmtsolution/hom_explosion/magnitude#mw</momentMagnitudeID>
           <scalarMoment>
-            <value>1.22474487139e+16</value>
+            <value>1.224744871391589e+16</value>
           </scalarMoment>
           <tensor>
             <Mrr>

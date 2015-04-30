@@ -1,10 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
-  <eventParameters publicID="smi:local/cmtsolution/catalog/4069a94a-49f5-4d2e-b8cf-3dafc7220bf6">
+  <eventParameters publicID="smi:local/cmtsolution/catalog/77462388-aeec-40c1-b141-eebbc1aadef6">
     <event publicID="smi:local/cmtsolution/122603B/event">
       <preferredOriginID>smi:local/cmtsolution/122603B/origin#cmt</preferredOriginID>
       <preferredMagnitudeID>smi:local/cmtsolution/122603B/magnitude#mw</preferredMagnitudeID>
       <preferredFocalMechanismID>smi:local/cmtsolution/122603B/focal_mechanism</preferredFocalMechanismID>
+      <type>earthquake</type>
+      <description>
+        <text>122603B</text>
+        <type>earthquake name</type>
+      </description>
       <origin publicID="smi:local/cmtsolution/122603B/origin#cmt">
         <time>
           <value>2003-12-26T01:56:58.129999Z</value>

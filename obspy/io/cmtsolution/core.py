@@ -378,22 +378,22 @@ def __write_cmtsolution(buf, catalog,**kwargs):
 
 
     template = (
-        " PDE {year:4d} {month:2d} {day:2d} {hour:2d} "
-        "{minute:2d} {second:5.2f} "
+        " PDE {year:4d} {month:02d} {day:02d} {hour:02d} "
+        "{minute:02d} {second:05.2f} "
         "{latitude:9.4f} {longitude:9.4f} {depth:5.1f} {mb:.1f} {ms:.1f} "
         "{region}\n"
-        "event name:{event_name:>12}\n"
-        "time shift:{time_shift:12.4f}\n"
-        "half duration:{half_duration:9.4f}\n"
-        "latitude:{cmt_latitude:14.4f}\n"
-        "longitude:{cmt_longitude:13.4f}\n"
-        "depth:{cmt_depth:17.4f}\n"
-        "Mrr:{m_rr:19.6E}\n"
-        "Mtt:{m_tt:19.6E}\n"
-        "Mpp:{m_pp:19.6E}\n"
-        "Mrt:{m_rt:19.6E}\n"
-        "Mrp:{m_rp:19.6E}\n"
-        "Mtp:{m_tp:19.6E}\n"
+        "event name:{event_name:>17}\n"
+        "time shift:{time_shift:17.4f}\n"
+        "half duration:{half_duration:14.4f}\n"
+        "latitude:{cmt_latitude:19.4f}\n"
+        "longitude:{cmt_longitude:18.4f}\n"
+        "depth:{cmt_depth:22.4f}\n"
+        "Mrr:{m_rr:24.6E}\n"
+        "Mtt:{m_tt:24.6E}\n"
+        "Mpp:{m_pp:24.6E}\n"
+        "Mrt:{m_rt:24.6E}\n"
+        "Mrp:{m_rp:24.6E}\n"
+        "Mtp:{m_tp:24.6E}\n"
     )
 
     template = template.format(
