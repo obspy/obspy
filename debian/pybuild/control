@@ -19,8 +19,8 @@ Architecture: any
 Section: python
 Priority: extra
 Depends: python (>= 2.7),
- ${python:Depends}, python-numpy (>= 1:1.1), python-setuptools (>= 0.6),
- python-lxml (>= 2.1), python-matplotlib (>= 1.1.0), python-scipy,
+ ${python:Depends}, python-numpy (>= 1:1.6.1), python-setuptools (>= 0.6),
+ python-lxml (>= 2.1), python-matplotlib (>= 1.1.0), python-scipy (>= 0.9.0),
  python-sqlalchemy, python-suds (>= 0.4), ${shlibs:Depends},
  python-tornado, python-future (>= 0.12.4)
 Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
@@ -57,8 +57,8 @@ Architecture: any
 Section: python
 Priority: extra
 Depends: python3 (>= 3.2),
- ${python3:Depends}, python3-numpy (>= 1:1.1), python3-setuptools (>= 0.6),
- python3-lxml (>= 2.1), python3-matplotlib (>= 1.1.0), python3-scipy,
+ ${python3:Depends}, python3-numpy (>= 1:1.6.1), python3-setuptools (>= 0.6),
+ python3-lxml (>= 2.1), python3-matplotlib (>= 1.1.0), python3-scipy (>= 0.9.0),
  python3-sqlalchemy, ${shlibs:Depends}, python3-tornado,
  python3-future (>= 0.12.4)
 Recommends: python-obspy-dbg (= ${binary:Version}),
