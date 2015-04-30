@@ -9,6 +9,8 @@ master:
      functions having different names. Most things that worked with ObsPy 0.10
      will continue to work with this version, but starting with the next
      version they will fail. Pay attention to the deprecation warnings.
+   * Support for additional event data formats:
+     - CMTSOLUTION files used by many waveform solvers.
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
