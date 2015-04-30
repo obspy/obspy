@@ -32,12 +32,12 @@ from obspy.core.util.misc import to_int_or_zero
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'db', 'geodetics', 'imaging',
-                   'io.ah', 'io.ascii', 'io.cnv', 'io.css', 'io.datamark',
-                   'io.gse2', 'io.json', 'io.kinemetrics', 'io.mseed',
-                   'io.ndk', 'io.nlloc', 'io.pdas', 'io.pde', 'io.quakeml',
-                   'io.sac', 'io.seg2', 'io.segy', 'io.seisan', 'io.sh',
-                   'io.stationxml', 'io.wav', 'io.xseed', 'io.y', 'io.zmap',
-                   'realtime', 'signal', 'taup']
+                   'io.ah', 'io.ascii', 'io.cmtsolution', 'io.cnv', 'io.css',
+                   'io.datamark', 'io.gse2', 'io.json', 'io.kinemetrics',
+                   'io.mseed', 'io.ndk', 'io.nlloc', 'io.pdas', 'io.pde',
+                   'io.quakeml', 'io.sac', 'io.seg2', 'io.segy', 'io.seisan',
+                   'io.sh', 'io.stationxml', 'io.wav', 'io.xseed', 'io.y',
+                   'io.zmap', 'realtime', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.seedlink',
                    'clients.seishub']
@@ -472,6 +472,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     ========= ===============... ========================================...
     Format    Required Module    _`Linked Function Call`
     ========= ===============... ========================================...
+    CMTSOLUTION  :mod:`...io.cmtsolution`
+        :func:`obspy.io.cmtsolution.core._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
