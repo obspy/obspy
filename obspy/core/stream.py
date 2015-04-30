@@ -1913,7 +1913,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read
-            from obspy.signal import corn_freq_2_paz
+            from obspy.signal.invsim import corn_freq_2_paz
             st = read()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,

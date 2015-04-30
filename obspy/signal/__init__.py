@@ -92,8 +92,9 @@ Now we apply the instrument correction and simulation:
 ...         'zeros': [0j, 0j]}
 >>> for tr in st:
 ...     df = tr.stats.sampling_rate
-...     tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
-...                       water_level=60.0)
+...     tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2,
+...                                    paz_simulate=inst2hz,
+...                                    water_level=60.0)
 >>> st.plot()  # doctest: +SKIP
 
 Again, there are convenience methods implemented on
@@ -106,7 +107,7 @@ Again, there are convenience methods implemented on
 .. plot::
 
     from obspy import read
-    from obspy.signal import simulate_seismometer, corn_freq_2_paz
+    from obspy.signal.invsim import simulate_seismometer, corn_freq_2_paz
     inst2hz = corn_freq_2_paz(2.0)
     st = read()
     tr = st[0]
@@ -142,7 +143,7 @@ The following example demonstrates a recursive STA/LTA triggering:
 >>> sta = 0.5
 >>> lta = 4
 >>> cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
-...                 int(lta * tr.stats.sampling_rate))
+...                        int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
 >>> plot_trigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
