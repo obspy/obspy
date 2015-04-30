@@ -11,6 +11,7 @@
 
        spectrogram
        beachball
+       cm
        waveform
        mopad_wrapper
        maps
