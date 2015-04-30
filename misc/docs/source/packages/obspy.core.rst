@@ -15,6 +15,9 @@
        ~stream.Stream
        ~utcdatetime.UTCDateTime
        ~event.read_events
+       ~event.Catalog
+       ~inventory.inventory.read_inventory
+       ~inventory.inventory.Inventory
 
     .. comment to end block
 

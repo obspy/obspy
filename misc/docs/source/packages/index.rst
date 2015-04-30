@@ -64,6 +64,14 @@ The functionality is provided through the following packages:
    obspy.io.quakeml
    obspy.io.zmap
 
+.. rubric:: Inventory Data Import/Export Plug-ins
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
+
+   obspy.io.stationxml
+
 .. rubric:: Database or Web Service Access Clients
 
 .. autosummary::

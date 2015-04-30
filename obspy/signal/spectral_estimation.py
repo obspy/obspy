@@ -81,7 +81,7 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
     by dividing with sampling rate.
 
-    .. deprecated::
+    .. deprecated:: 0.11.0
 
         This wrapper is no longer necessary. Please use the
         :func:`matplotlib.mlab.psd` function directly, specifying

@@ -96,6 +96,17 @@ more detailed usage examples.
 
 .. figure:: /_images/Event.png
 
+Station Metadata
+----------------
+
+Station metadata are handled in a hierarchy of classes closely modelled after
+the de-facto standard format
+`FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was developed as a
+human readable XML replacement for Dataless SEED.
+See :mod:`obspy.core.inventory` for more details.
+
+.. figure:: /_images/Inventory.png
+
 .. _NumPy: http://www.numpy.org
 """
 from __future__ import (absolute_import, division, print_function,
