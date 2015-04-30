@@ -1,13 +1,13 @@
- PDE 2003 12 26  1 56 52.40  29.0000   58.3100  10.0 6.0 6.8 SOUTHERN IRAN - INV
+ PDE 2003 12 26  1 56 52.40  29.0000   58.3100  10.0 6.0 6.8 SOUTHERN IRAN
 event name:     122603B
 time shift:      5.7300
 half duration:   4.8000
 latitude:       29.1000
 longitude:      58.2400
 depth:          12.8361
-Mrr:       0.141222E+26
-Mtt:      -0.135777E+26
-Mpp:      -0.544490E+24
-Mrt:      -0.433148E+26
-Mrp:      -0.182892E+26
-Mtp:       0.644610E+26
+Mrr:       1.412220E+25
+Mtt:      -1.357770E+25
+Mpp:      -5.444900E+23
+Mrt:      -4.331480E+25
+Mrp:      -1.828920E+25
+Mtp:       6.446100E+25

@@ -19,8 +19,8 @@ import warnings
 
 
 from obspy import UTCDateTime
-from obspy.core.event import (Catalog, Event, Origin, Magnitude,
-                              FocalMechanism, MomentTensor, Tensor,
+from obspy.core.event import (Catalog, Event, EventDescription, Origin,
+                              Magnitude, FocalMechanism, MomentTensor, Tensor,
                               SourceTimeFunction)
 from obspy.geodetics import FlinnEngdahl
 
@@ -234,7 +234,10 @@ def __read_cmtsolution(buf, **kwargs):
     # Assemble everything.
     foc_mec.moment_tensor = mt
 
-    ev = Event(resource_id=_get_resource_id(event_name, "event"))
+    ev = Event(resource_id=_get_resource_id(event_name, "event"),
+               event_type="earthquake")
+    ev.event_descriptions.append(EventDescription(text=event_name,
+                                                  type="earthquake name"))
     ev.origins.append(cmt_origin)
     ev.origins.append(preliminary_origin)
     ev.magnitudes.append(cmt_mag)
@@ -324,7 +327,7 @@ def __write_cmtsolution(buf, catalog,**kwargs):
         if candidates:
             warnings.warn("No derived origin attached to the moment tensor. "
                           "Will instead use another centroid origin to be "
-                          "written to the file.", UserWarning)
+                          "written to the file.")
             cmt_origin = candidates[0]
         # Otherwise just take the preferred or first one.
         else:
@@ -349,6 +352,30 @@ def __write_cmtsolution(buf, catalog,**kwargs):
                           "the first one that is not identical to the "
                           "centroid origin.")
             hypo_origin = [_i for _i in event.origins if _i != cmt_origin][0]
+
+    # Try to find the half duration.
+    if mt.source_time_function:
+        if mt.source_time_function.duration:
+            half_duration = mt.source_time_function.duration / 2.0
+        else:
+            warnings.warn("Source time function has not duration. The half "
+                          "duration will be set to 1.0.")
+            half_duration = 1.0
+    else:
+        warnings.warn("Moment tensor has no source time function. Half "
+                      "duration will be set to 1.0.")
+        half_duration = 1.0
+
+    # Now attempt to retrieve the event name. Otherwise just get a random one.
+    event_name = None
+    if event.event_descriptions:
+        candidates = [_i for _i in event.event_descriptions
+                      if _i.type == "earthquake name"]
+        if candidates:
+            event_name = candidates[0].text
+    if event_name is None:
+        event_name = str(uuid.uuid4())[:6]
+
 
     template = (
         " PDE {year:4d} {month:2d} {day:2d} {hour:2d} "
@@ -384,9 +411,9 @@ def __write_cmtsolution(buf, catalog,**kwargs):
         ms=ms_mag.mag,
         region=fe.get_region(longitude=hypo_origin.longitude,
                              latitude=hypo_origin.latitude),
-        event_name="blub",
+        event_name=event_name,
         time_shift = cmt_origin.time - hypo_origin.time,
-        half_duration=1.0,
+        half_duration=half_duration,
         cmt_latitude=cmt_origin.latitude,
         cmt_longitude=cmt_origin.longitude,
         cmt_depth=cmt_origin.depth / 1000.0,
