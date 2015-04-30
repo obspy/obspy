@@ -16,7 +16,7 @@ source:
   #path: ../../../..
 
 build:
-  number: 1
+  number: 2
   script: python setup.py install
   # Needed as obspy uses entry points.
   preserve_egg_dir: yes
@@ -34,7 +34,7 @@ requirements:
     - scipy # [not py26 or not osx]
     - matplotlib
     - lxml
-    - sqlalchemy <1.0.0
+    - sqlalchemy
     - flake8
   run:
     - python
@@ -48,7 +48,7 @@ requirements:
     - scipy # [not py26 or not osx]
     - matplotlib
     - lxml
-    - sqlalchemy <1.0.0
+    - sqlalchemy
     - flake8
 
 test:
