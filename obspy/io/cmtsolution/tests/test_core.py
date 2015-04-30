@@ -11,6 +11,7 @@ import unittest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.io.cmtsolution.core import _is_cmtsolution
 
 
 class CmtsolutionTestCase(unittest.TestCase):
@@ -126,6 +127,22 @@ class CmtsolutionTestCase(unittest.TestCase):
         for line1, line2 in zip(data.decode().splitlines(),
                                 new_data.decode().splitlines()):
             self.assertEqual(line1, line2)
+
+    def test_is_cmtsolution(self):
+        """
+        Tests the is_cmtsolution function.
+        """
+        good_files = [os.path.join(self.datapath, "CMTSOLUTION"),
+                      os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")]
+
+        bad_files = [
+            os.path.join(self.datapath, os.path.pardir, "test_core.py"),
+            os.path.join(self.datapath, os.path.pardir, "__init__.py")]
+
+        for filename in good_files:
+            self.assertTrue(_is_cmtsolution(filename))
+        for filename in bad_files:
+            self.assertFalse(_is_cmtsolution(filename))
 
 
 def suite():
