@@ -115,7 +115,7 @@ def __read_cmtsolution(buf, **kwargs):
     line = buf.readline()
     origin_time = line[4:].strip().split()[:6]
     values = list(map(int, origin_time[:-1])) + \
-             [float(origin_time[-1])]
+        [float(origin_time[-1])]
     try:
         origin_time = UTCDateTime(*values)
     except (TypeError, ValueError):
@@ -174,7 +174,6 @@ def __read_cmtsolution(buf, **kwargs):
     values = ["m_rr", "m_tt", "m_pp", "m_rt", "m_rp", "m_tp"]
     for value in values:
         cmt_values[value] /= 1E7
-
 
     cmt_origin = Origin(
         resource_id=_get_resource_id(event_name, "origin", tag="cmt"),
@@ -251,7 +250,8 @@ def __read_cmtsolution(buf, **kwargs):
     ev.preferred_focal_mechanism_id = foc_mec.resource_id.id
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
-                  events=[ev])
+                   events=[ev])
+
 
 def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
     """
@@ -266,7 +266,7 @@ def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
                          catalog=catalog, **kwargs)
 
 
-def __write_cmtsolution(buf, catalog,**kwargs):
+def __write_cmtsolution(buf, catalog, **kwargs):
     """
     Write an event to a file.
 
@@ -322,8 +322,8 @@ def __write_cmtsolution(buf, catalog,**kwargs):
         cmt_origin = mt.derived_origin_id.get_referred_object()
     # Otherwise try to find the first one that is CMT
     else:
-        candidates = [_i for _i in event.origins if _i.origin_type == \
-                      "centroid"]
+        candidates = [_i for _i in event.origins
+                      if _i.origin_type == "centroid"]
         if candidates:
             warnings.warn("No derived origin attached to the moment tensor. "
                           "Will instead use another centroid origin to be "
@@ -337,8 +337,8 @@ def __write_cmtsolution(buf, catalog,**kwargs):
             cmt_origin = event.preferred_origin() or event.origins[0]
 
     # Next step is to find a hypocentral origin.
-    candidates = [_i for _i in event.origins if _i.origin_type == \
-                  "hypocenter"]
+    candidates = [_i for _i in event.origins
+                  if _i.origin_type == "hypocenter"]
     if candidates:
         hypo_origin = candidates[0]
     # Otherwise get the first one that is not equal to the CMT origin.
@@ -376,7 +376,6 @@ def __write_cmtsolution(buf, catalog,**kwargs):
     if event_name is None:
         event_name = str(uuid.uuid4())[:6]
 
-
     template = (
         " PDE {year:4d} {month:02d} {day:02d} {hour:02d} "
         "{minute:02d} {second:05.2f} "
@@ -403,7 +402,7 @@ def __write_cmtsolution(buf, catalog,**kwargs):
         hour=hypo_origin.time.hour,
         minute=hypo_origin.time.minute,
         second=float(hypo_origin.time.second) +
-           hypo_origin.time.microsecond / 1E6,
+        hypo_origin.time.microsecond / 1E6,
         latitude=hypo_origin.latitude,
         longitude=hypo_origin.longitude,
         depth=hypo_origin.depth / 1000.0,
@@ -412,7 +411,7 @@ def __write_cmtsolution(buf, catalog,**kwargs):
         region=fe.get_region(longitude=hypo_origin.longitude,
                              latitude=hypo_origin.latitude),
         event_name=event_name,
-        time_shift = cmt_origin.time - hypo_origin.time,
+        time_shift=cmt_origin.time - hypo_origin.time,
         half_duration=half_duration,
         cmt_latitude=cmt_origin.latitude,
         cmt_longitude=cmt_origin.longitude,

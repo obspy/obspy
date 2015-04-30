@@ -51,7 +51,7 @@ class CmtsolutionTestCase(unittest.TestCase):
                 pass
 
         for line1, line2 in zip(data.decode().splitlines(),
-                new_data.decode().splitlines()):
+                                new_data.decode().splitlines()):
             self.assertEqual(line1, line2)
 
     def test_read_and_write_cmtsolution_from_open_files(self):
@@ -73,7 +73,7 @@ class CmtsolutionTestCase(unittest.TestCase):
             new_data = tf.read()
 
         for line1, line2 in zip(data.decode().splitlines(),
-                new_data.decode().splitlines()):
+                                new_data.decode().splitlines()):
             self.assertEqual(line1, line2)
 
     def test_read_and_write_cmtsolution_from_bytes_io(self):
@@ -99,7 +99,7 @@ class CmtsolutionTestCase(unittest.TestCase):
                 new_data = buf2.read()
 
         for line1, line2 in zip(data.decode().splitlines(),
-                new_data.decode().splitlines()):
+                                new_data.decode().splitlines()):
             self.assertEqual(line1, line2)
 
     def test_read_and_write_cmtsolution_explosion(self):
