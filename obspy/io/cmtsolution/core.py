@@ -37,7 +37,8 @@ def _get_resource_id(cmtname, res_type, tag=None):
     return res_id
 
 
-def _buffer_proxy(filename_or_buf, function, reset_fp=True, *args, **kwargs):
+def _buffer_proxy(filename_or_buf, function, reset_fp=True,
+                  file_mode="rb", *args, **kwargs):
     """
     Calls a function with an open file or file-like object as the first
     argument. If the file originally was a filename, the file will be
@@ -48,6 +49,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True, *args, **kwargs):
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
+    :param file_mode: Mode to open file in if necessary.
     :type reset_fp: bool
     """
     try:
@@ -62,7 +64,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True, *args, **kwargs):
             filename_or_buf.seek(position, 0)
         return ret_val
     else:
-        with open(filename_or_buf, "rb") as fh:
+        with open(filename_or_buf, file_mode) as fh:
             return function(fh, *args, **kwargs)
 
 
@@ -94,7 +96,7 @@ def __is_cmtsolution(buf):
 
 def _read_cmtsolution(filename_or_buf, **kwargs):
     """
-    Reads a CMTSOLUTION file to a :class:`~obspy.core.stream.Stream` object.
+    Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
@@ -104,7 +106,7 @@ def _read_cmtsolution(filename_or_buf, **kwargs):
 
 def __read_cmtsolution(buf, **kwargs):
     """
-    Reads a CMTSOLUTION file to a :class:`~obspy.core.stream.Stream` object.
+    Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
     :type buf: Open file or open file like object.
@@ -241,12 +243,164 @@ def __read_cmtsolution(buf, **kwargs):
     ev.focal_mechanisms.append(foc_mec)
 
     # Set the preferred items.
-    ev.preferred_origin_id = cmt_origin.resource_id
-    ev.preferred_magnitude_id = cmt_mag.resource_id
-    ev.preferred_focal_mechanism_id = foc_mec.resource_id
+    ev.preferred_origin_id = cmt_origin.resource_id.id
+    ev.preferred_magnitude_id = cmt_mag.resource_id.id
+    ev.preferred_focal_mechanism_id = foc_mec.resource_id.id
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                   events=[ev])
+
+def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
+    """
+    Write an event to a file.
+
+    :param catalog: The catalog to write. Can only contain one event.
+    :type catalog: :class:`~obspy.core.event.Catalog`
+    :param filename_or_buf: Filename or file-like object to write to.
+    :type filename_or_buf: str, open file, or file-like object.
+    """
+    return _buffer_proxy(filename_or_buf, __write_cmtsolution, file_mode="wb",
+                         catalog=catalog, **kwargs)
+
+
+def __write_cmtsolution(buf, catalog,**kwargs):
+    """
+    Write an event to a file.
+
+    :param buf: File to write to.
+    :type buf: Open file or file-like object.
+    :param catalog: The catalog to write. Can only contain one event.
+    :type catalog: :class:`~obspy.core.event.Catalog`
+    """
+    # Some sanity checks.
+    if len(catalog) != 1:
+        raise ValueError("The CMTSOLUTION format can only write catalogs "
+                         "with exactly one event at a time.")
+
+    event = catalog[0]
+    if not event.focal_mechanisms:
+        raise ValueError("Event must contain a focal mechanism.")
+    foc_mec = event.preferred_focal_mechanism() or event.focal_mechansisms[0]
+    if not foc_mec.moment_tensor:
+        raise ValueError("The preferred or first focal mechanism must "
+                         "contain a moment tensor.")
+    mt = foc_mec.moment_tensor
+    if not mt.tensor:
+        raise ValueError("The preferred or first focal mechanism must "
+                         "contain a moment tensor element with an actual "
+                         "tensor.")
+    if not event.origins:
+        raise ValueError("Event must have at least one origin.")
+    if not event.magnitudes:
+        raise ValueError("Event must have at least one magnitude.")
+
+    # Attempt to get the body and surface wave magnitudes.
+    mb_candidates = \
+        [_i for _i in event.magnitudes if _i.magnitude_type == "Mb"]
+    ms_candidates = \
+        [_i for _i in event.magnitudes if _i.magnitude_type == "MS"]
+
+    if not mb_candidates:
+        warnings.warn("No body wave magnitude found. Will be replaced by the "
+                      "first magnitude in the event object.")
+        mb_mag = event.origins[0]
+    else:
+        mb_mag = mb_candidates[0]
+    if not ms_candidates:
+        warnings.warn("No surface wave magnitude found. Will be replaced by "
+                      "the first magnitude in the event object.")
+        ms_mag = event.origins[0]
+    else:
+        ms_mag = ms_candidates[0]
+
+    # Now find the cmt origin. First attempt to get the derived origin of
+    # the moment tensor,
+    if mt.derived_origin_id:
+        cmt_origin = mt.derived_origin_id.get_referred_object()
+    # Otherwise try to find the first one that is CMT
+    else:
+        candidates = [_i for _i in event.origins if _i.origin_type == \
+                      "centroid"]
+        if candidates:
+            warnings.warn("No derived origin attached to the moment tensor. "
+                          "Will instead use another centroid origin to be "
+                          "written to the file.", UserWarning)
+            cmt_origin = candidates[0]
+        # Otherwise just take the preferred or first one.
+        else:
+            warnings.warn("Could not find a centroid origin. Will instead "
+                          "assume that the preferred or first origin is the "
+                          "centroid origin.")
+            cmt_origin = event.preferred_origin() or event.origins[0]
+
+    # Next step is to find a hypocentral origin.
+    candidates = [_i for _i in event.origins if _i.origin_type == \
+                  "hypocenter"]
+    if candidates:
+        hypo_origin = candidates[0]
+    # Otherwise get the first one that is not equal to the CMT origin.
+    else:
+        if len(event.origins) == 1:
+            warnings.warn("Hypocentral origin will be identical to the "
+                          "centroid one.")
+            hypo_origin = event.origins[0]
+        else:
+            warnings.warn("No hypocentral origin could be found. Will choose "
+                          "the first one that is not identical to the "
+                          "centroid origin.")
+            hypo_origin = [_i for _i in event.origins if _i != cmt_origin][0]
+
+    template = (
+        " PDE {year:4d} {month:2d} {day:2d} {hour:2d} "
+        "{minute:2d} {second:5.2f} "
+        "{latitude:9.4f} {longitude:9.4f} {depth:5.1f} {mb:.1f} {ms:.1f} "
+        "{region}\n"
+        "event name:{event_name:>12}\n"
+        "time shift:{time_shift:12.4f}\n"
+        "half duration:{half_duration:9.4f}\n"
+        "latitude:{cmt_latitude:14.4f}\n"
+        "longitude:{cmt_longitude:13.4f}\n"
+        "depth:{cmt_depth:17.4f}\n"
+        "Mrr:{m_rr:19.6E}\n"
+        "Mtt:{m_tt:19.6E}\n"
+        "Mpp:{m_pp:19.6E}\n"
+        "Mrt:{m_rt:19.6E}\n"
+        "Mrp:{m_rp:19.6E}\n"
+        "Mtp:{m_tp:19.6E}\n"
+    )
+
+    template = template.format(
+        year=hypo_origin.time.year,
+        month=hypo_origin.time.month,
+        day=hypo_origin.time.day,
+        hour=hypo_origin.time.hour,
+        minute=hypo_origin.time.minute,
+        second=float(hypo_origin.time.second) +
+           hypo_origin.time.microsecond / 1E6,
+        latitude=hypo_origin.latitude,
+        longitude=hypo_origin.longitude,
+        depth=hypo_origin.depth / 1000.0,
+        mb=mb_mag.mag,
+        ms=ms_mag.mag,
+        region=fe.get_region(longitude=hypo_origin.longitude,
+                             latitude=hypo_origin.latitude),
+        event_name="blub",
+        time_shift = cmt_origin.time - hypo_origin.time,
+        half_duration=1.0,
+        cmt_latitude=cmt_origin.latitude,
+        cmt_longitude=cmt_origin.longitude,
+        cmt_depth=cmt_origin.depth / 1000.0,
+        # Convert to dyne * cm.
+        m_rr=mt.tensor.m_rr * 1E7,
+        m_tt=mt.tensor.m_tt * 1E7,
+        m_pp=mt.tensor.m_pp * 1E7,
+        m_rt=mt.tensor.m_rt * 1E7,
+        m_rp=mt.tensor.m_rp * 1E7,
+        m_tp=mt.tensor.m_tp * 1E7
+    )
+
+    # Write to a buffer/file opened in binary mode.
+    buf.write(template.encode())
 
 
 if __name__ == '__main__':
