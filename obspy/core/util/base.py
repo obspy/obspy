@@ -469,17 +469,16 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
     >>> print(table)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-    ========= ===============... ========================================...
+    ======... ===============... ========================================...
     Format    Required Module    _`Linked Function Call`
-    ========= ===============... ========================================...
-    CMTSOLUTION  :mod:`...io.cmtsolution`
-        :func:`obspy.io.cmtsolution.core._write_cmtsolution`
+    ======... ===============... ========================================...
+    CMTSOLUTION  :mod:`...io.cmtsolution` :func:`..._write_cmtsolution`
     CNV       :mod:`...io.cnv`   :func:`obspy.io.cnv.core._write_cnv`
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
-    ========= ===============... ========================================...
+    ======... ===============... ========================================...
 
     :type group: str
     :param group: Plugin group to search (e.g. "waveform" or "event").
