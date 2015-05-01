@@ -37,7 +37,7 @@ import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk
-from obspy.geodetics import FlinnEngdahl, locations2degrees
+from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
