@@ -32,6 +32,7 @@ URL_MAPPINGS = {
     "INGV": "http://webservices.rm.ingv.it",
     "IPGP": "http://eida.ipgp.fr",
     "IRIS": "http://service.iris.edu",
+    "KOERI": "http://eida.koeri.boun.edu.tr",
     "LMU": "http://erde.geophysik.uni-muenchen.de",
     "NCEDC": "http://service.ncedc.org",
     "NEIP": "http://eida-sc3.infp.ro",
