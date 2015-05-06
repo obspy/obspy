@@ -18,9 +18,9 @@ import uuid
 import warnings
 
 from obspy import UTCDateTime
-from obspy.core.event import (Catalog, Event, EventDescription, Origin,
-                              Magnitude, FocalMechanism, MomentTensor, Tensor,
-                              SourceTimeFunction)
+from obspy.core.event import (Catalog, Comment, Event, EventDescription,
+                              Origin, Magnitude, FocalMechanism, MomentTensor,
+                              Tensor, SourceTimeFunction)
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -154,6 +154,12 @@ def __read_single_cmtsolution(buf):
     """
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
+
+    # This is some shortcut for the determination status of the event. We
+    # will just put this in a comment as I don't think its properly defined
+    # anywhere...
+    determination_type = line[:4].strip().decode()
+
     origin_time = line[4:].strip().split()[:6]
     values = list(map(int, origin_time[:-1])) + \
         [float(origin_time[-1])]
@@ -278,6 +284,8 @@ def __read_single_cmtsolution(buf):
                event_type="earthquake")
     ev.event_descriptions.append(EventDescription(text=event_name,
                                                   type="earthquake name"))
+    ev.comments.append(Comment(
+        text="Determination Type: %s" % determination_type))
     ev.origins.append(cmt_origin)
     ev.origins.append(preliminary_origin)
     ev.magnitudes.append(cmt_mag)
@@ -316,7 +324,7 @@ def __write_cmtsolution(buf, catalog, **kwargs):
     :type catalog: :class:`~obspy.core.event.Catalog`
     """
     # Some sanity checks.
-    if len(catalog) == 1:
+    if len(catalog) < 1:
         raise ValueError("Catalog must contain at least one event")
     for event in catalog:
         __write_single_cmtsolution(buf, event)
@@ -429,8 +437,17 @@ def __write_single_cmtsolution(buf, event, **kwargs):
     if event_name is None:
         event_name = str(uuid.uuid4())[:6]
 
+    # Also attempt to retrieve the determination type.
+    determination_type = "PDE"
+    if event.comments:
+        candidates = [_i for _i in event.comments
+                      if _i.text.strip().startswith("Determination Type:")]
+        if candidates:
+            determination_type = \
+                candidates[0].text.strip().split(":")[-1].upper()
+
     template = (
-        " PDE {year:4d} {month:02d} {day:02d} {hour:02d} "
+        "{determination_type:>4} {year:4d} {month:02d} {day:02d} {hour:02d} "
         "{minute:02d} {second:05.2f} "
         "{latitude:9.4f} {longitude:9.4f} {depth:5.1f} {mb:.1f} {ms:.1f} "
         "{region}\n"
@@ -449,6 +466,7 @@ def __write_single_cmtsolution(buf, event, **kwargs):
     )
 
     template = template.format(
+        determination_type=determination_type,
         year=hypo_origin.time.year,
         month=hypo_origin.time.month,
         day=hypo_origin.time.day,
