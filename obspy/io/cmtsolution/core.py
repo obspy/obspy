@@ -75,7 +75,12 @@ def _is_cmtsolution(filename_or_buf):
     :param filename_or_buf: File to test.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __is_cmtsolution, reset_fp=True)
+    try:
+        return _buffer_proxy(filename_or_buf, __is_cmtsolution, reset_fp=True)
+    # Happens for example when passing the data as a string which would be
+    # interpreted as a filename.
+    except (OSError, FileNotFoundError):
+        return False
 
 
 def __is_cmtsolution(buf):
