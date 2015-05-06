@@ -169,6 +169,33 @@ class CmtsolutionTestCase(unittest.TestCase):
         self.assertEqual(data.decode().splitlines(),
             new_data.decode().splitlines())
 
+    def test_read_and_write_multiple_events_from_bytes_io(self):
+        """
+        Tests that reading and writing a CMTSOLUTION file with multiple
+        events does not change anything.
+
+        This time it tests reading from and writing to BytesIO objects.
+        """
+        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
+        with open(filename, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+            fh.seek(0, 0)
+            data = fh.read()
+
+        with buf:
+            buf.seek(0, 0)
+            cat = obspy.read_events(buf)
+
+            self.assertEqual(len(cat), 4)
+
+            with io.BytesIO() as buf2:
+                cat.write(buf2, format="CMTSOLUTION")
+                buf2.seek(0, 0)
+                new_data = buf2.read()
+
+        self.assertEqual(data.decode().splitlines(),
+            new_data.decode().splitlines())
+
 
 def suite():
     return unittest.makeSuite(CmtsolutionTestCase, "test")
