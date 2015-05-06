@@ -28,7 +28,7 @@ class CmtsolutionTestCase(unittest.TestCase):
 
     def test_read_and_write_cmtsolution_from_files(self):
         """
-        Tests that reading and writing CMTSOLUTIONS file does not change
+        Tests that reading and writing a CMTSOLUTION file does not change
         anything.
         """
         filename = os.path.join(self.datapath, "CMTSOLUTION")
@@ -55,7 +55,7 @@ class CmtsolutionTestCase(unittest.TestCase):
 
     def test_read_and_write_cmtsolution_from_open_files(self):
         """
-        Tests that reading and writing CMTSOLUTIONS file does not change
+        Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to open files.
@@ -74,10 +74,9 @@ class CmtsolutionTestCase(unittest.TestCase):
         self.assertEqual(data.decode().splitlines(),
                          new_data.decode().splitlines())
 
-
     def test_read_and_write_cmtsolution_from_bytes_io(self):
         """
-        Tests that reading and writing CMTSOLUTIONS file does not change
+        Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         This time it tests reading from and writing to BytesIO objects.
@@ -98,12 +97,11 @@ class CmtsolutionTestCase(unittest.TestCase):
                 new_data = buf2.read()
 
         self.assertEqual(data.decode().splitlines(),
-            new_data.decode().splitlines())
-
+                         new_data.decode().splitlines())
 
     def test_read_and_write_cmtsolution_explosion(self):
         """
-        Tests that reading and writing CMTSOLUTIONS file does not change
+        Tests that reading and writing a CMTSOLUTION file does not change
         anything.
 
         Tests another file.
@@ -111,11 +109,11 @@ class CmtsolutionTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "CMTSOLUTION_EXPLOSION")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
-            fh.seek(0, 0)
-            data = fh.read()
+
+        data = buf.read()
+        buf.seek(0, 0)
 
         with buf:
-            buf.seek(0, 0)
             cat = obspy.read_events(buf)
 
             with io.BytesIO() as buf2:

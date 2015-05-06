@@ -17,14 +17,14 @@ import math
 import uuid
 import warnings
 
-
 from obspy import UTCDateTime
 from obspy.core.event import (Catalog, Event, EventDescription, Origin,
                               Magnitude, FocalMechanism, MomentTensor, Tensor,
                               SourceTimeFunction)
 from obspy.geodetics import FlinnEngdahl
 
-fe = FlinnEngdahl()
+
+_fe = FlinnEngdahl()
 
 
 def _get_resource_id(cmtname, res_type, tag=None):
@@ -49,8 +49,8 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
     :param function: The function to call.
     :param reset_fp: If True, the file pointer will be set to the initial
         position after the function has been called.
-    :param file_mode: Mode to open file in if necessary.
     :type reset_fp: bool
+    :param file_mode: Mode to open file in if necessary.
     """
     try:
         position = filename_or_buf.tell()
@@ -142,7 +142,7 @@ def __read_cmtsolution(buf, **kwargs):
         # Depth is in meters.
         depth=depth * 1000.0,
         origin_type="hypocenter",
-        region=fe.get_region(longitude=longitude, latitude=latitude),
+        region=_fe.get_region(longitude=longitude, latitude=latitude),
         evaluation_status="preliminary"
     )
 
@@ -188,8 +188,8 @@ def __read_cmtsolution(buf, **kwargs):
         depth=cmt_values["depth"],
         origin_type="centroid",
         # Could rarely be different than the epicentral region.
-        region=fe.get_region(longitude=cmt_values["longitude"],
-                             latitude=cmt_values["latitude"])
+        region=_fe.get_region(longitude=cmt_values["longitude"],
+                              latitude=cmt_values["latitude"])
         # No evaluation status as it could be any of several and the file
         # format does not provide that information.
     )
@@ -363,7 +363,7 @@ def __write_cmtsolution(buf, catalog, **kwargs):
         if mt.source_time_function.duration:
             half_duration = mt.source_time_function.duration / 2.0
         else:
-            warnings.warn("Source time function has not duration. The half "
+            warnings.warn("Source time function has no duration. The half "
                           "duration will be set to 1.0.")
             half_duration = 1.0
     else:
@@ -413,8 +413,8 @@ def __write_cmtsolution(buf, catalog, **kwargs):
         depth=hypo_origin.depth / 1000.0,
         mb=mb_mag.mag,
         ms=ms_mag.mag,
-        region=fe.get_region(longitude=hypo_origin.longitude,
-                             latitude=hypo_origin.latitude),
+        region=_fe.get_region(longitude=hypo_origin.longitude,
+                              latitude=hypo_origin.latitude),
         event_name=event_name,
         time_shift=cmt_origin.time - hypo_origin.time,
         half_duration=half_duration,
