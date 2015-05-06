@@ -11,7 +11,7 @@ import unittest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.cmtsolution.core import _is_cmtsolution
+from obspy.io.cmtsolution.core import _is_cmtsolution, _read_cmtsolution
 
 
 class CmtsolutionTestCase(unittest.TestCase):
@@ -139,6 +139,35 @@ class CmtsolutionTestCase(unittest.TestCase):
             self.assertTrue(_is_cmtsolution(filename))
         for filename in bad_files:
             self.assertFalse(_is_cmtsolution(filename))
+
+    def test_read_and_write_multiple_cmtsolution_from_files(self):
+        """
+        Tests that reading and writing a CMTSOLUTION file with multiple
+        events does not change anything.
+        """
+        filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
+        with open(filename, "rb") as fh:
+            data = fh.read()
+
+        cat = obspy.read_events(filename)
+
+        self.assertEqual(len(cat), 4)
+
+        with NamedTemporaryFile() as tf:
+            temp_filename = tf.name
+
+        try:
+            cat.write(temp_filename, format="CMTSOLUTION")
+            with open(temp_filename, "rb") as fh:
+                new_data = fh.read()
+        finally:
+            try:
+                os.remove(temp_filename)
+            except:
+                pass
+
+        self.assertEqual(data.decode().splitlines(),
+            new_data.decode().splitlines())
 
 
 def suite():

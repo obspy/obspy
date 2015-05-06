@@ -1,0 +1,55 @@
+ MLI 1976  1  1  1 29 39.60 -28.6100 -177.6400  59.0 6.2 0.0 KERMADEC ISLANDS REGION
+event name:     010176A
+time shift:     13.8000
+half duration:   9.4000
+latitude:      -29.2500
+longitude:    -176.9600
+depth:          47.8000
+Mrr:       7.680000e+26
+Mtt:       9.000000e+24
+Mpp:      -7.770000e+26
+Mrt:       1.390000e+26
+Mrp:       4.520000e+26
+Mtp:      -3.260000e+26
+
+ MLI 1976  1  5  2 31 36.30 -13.2900  -74.9000  95.0 6.0 0.0 PERU
+event name:     010576A
+time shift:      8.4000
+half duration:   1.6000
+latitude:      -13.4200
+longitude:     -75.1400
+depth:          85.4000
+Mrr:      -1.780000e+24
+Mtt:      -5.900000e+23
+Mpp:       2.370000e+24
+Mrt:      -1.280000e+24
+Mrp:       1.970000e+24
+Mtp:      -2.900000e+24
+
+ MLI 1976  1  6 21  8 19.30  51.6000  159.3300  33.0 5.7 6.0 OFF EAST COAST OF KAMCHA
+event name:     010676A
+time shift:      5.8000
+half duration:   2.8000
+latitude:       51.4500
+longitude:     159.5000
+depth:          15.0000
+Mrr:       1.100000e+25
+Mtt:      -3.000000e+24
+Mpp:      -8.000000e+24
+Mrt:       1.050000e+25
+Mrp:       1.240000e+25
+Mtp:      -5.600000e+24
+
+ MLI 1976  1  9 23 54 35.60 -15.7600  167.8700 168.0 6.1 0.0 VANUATU ISLANDS
+event name:     010976A
+time shift:      4.5000
+half duration:   3.5000
+latitude:      -15.9700
+longitude:     167.8100
+depth:         173.7000
+Mrr:      -1.700000e+25
+Mtt:       2.290000e+25
+Mpp:      -5.900000e+24
+Mrt:      -2.330000e+25
+Mrp:      -1.230000e+25
+Mtp:       2.010000e+25

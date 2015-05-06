@@ -90,10 +90,11 @@ def __is_cmtsolution(buf):
     :param buf: File to check.
     :type buf: Open file or open file like object.
     """
-    # The file format is so simple. Just attempt to read it. If it passes it
-    # will be read again but that has really no performance impact.
+    # The file format is so simple. Just attempt to read the first event. If
+    # it passes it will be read again but that has really no
+    # significant performance impact.
     try:
-        _read_cmtsolution(buf)
+        __read_single_cmtsolution(buf)
         return True
     except:
         return False
@@ -112,6 +113,41 @@ def _read_cmtsolution(filename_or_buf, **kwargs):
 def __read_cmtsolution(buf, **kwargs):
     """
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
+
+    :param buf: File to read.
+    :type buf: Open file or open file like object.
+    """
+    events = []
+    cur_pos = buf.tell()
+
+    # This also works with BytesIO and what not.
+    buf.seek(0, 2)
+    size = buf.tell()
+    buf.seek(cur_pos, 0)
+
+    # This is pretty inefficient due to all the file pointer jumping but
+    # performance is really the least of our concerns. Also most performance
+    # is still lost initializing the large ObsPy event objects.
+    while True:
+        if buf.tell() >= size:
+            break
+        line = buf.readline().strip()
+
+        # If there is something, jump back to the beginning of the line and
+        # read the next event.
+        if line:
+            buf.seek(cur_pos, 0)
+            events.append(__read_single_cmtsolution(buf))
+        cur_pos = buf.tell()
+
+    return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
+                   events=events)
+
+
+def __read_single_cmtsolution(buf):
+    """
+    Reads a single CMTSOLUTION file to a :class:`~obspy.core.event.Catalog`
+    object.
 
     :param buf: File to read.
     :type buf: Open file or open file like object.
@@ -254,8 +290,7 @@ def __read_cmtsolution(buf, **kwargs):
     ev.preferred_magnitude_id = cmt_mag.resource_id.id
     ev.preferred_focal_mechanism_id = foc_mec.resource_id.id
 
-    return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
-                   events=[ev])
+    return ev
 
 
 def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
@@ -273,19 +308,32 @@ def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
 
 def __write_cmtsolution(buf, catalog, **kwargs):
     """
+    Write events to a file.
+
+    :param buf: File to write to.
+    :type buf: Open file or file-like object.
+    :param catalog: The catalog to write.
+    :type catalog: :class:`~obspy.core.event.Catalog`
+    """
+    # Some sanity checks.
+    if len(catalog) == 1:
+        raise ValueError("Catalog must contain at least one event")
+    for event in catalog:
+        __write_single_cmtsolution(buf, event)
+        # Add an empty line between events.
+        if len(catalog) > 1:
+            buf.write(b"\n")
+
+
+def __write_single_cmtsolution(buf, event, **kwargs):
+    """
     Write an event to a file.
 
     :param buf: File to write to.
     :type buf: Open file or file-like object.
-    :param catalog: The catalog to write. Can only contain one event.
-    :type catalog: :class:`~obspy.core.event.Catalog`
+    :param event: The event to write.
+    :type event: :class:`~obspy.core.event.Event`
     """
-    # Some sanity checks.
-    if len(catalog) != 1:
-        raise ValueError("The CMTSOLUTION format can only write catalogs "
-                         "with exactly one event at a time.")
-
-    event = catalog[0]
     if not event.focal_mechanisms:
         raise ValueError("Event must contain a focal mechanism.")
     foc_mec = event.preferred_focal_mechanism() or event.focal_mechansisms[0]
