@@ -21,6 +21,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
+import collections
 import io
 import warnings
 from copy import copy
@@ -1073,7 +1074,7 @@ class WaveformPlotting(object):
         ax, lines = self.__sect_init_plot()
 
         # Setting up line properties
-        if isinstance(self.sect_color, dict):
+        if isinstance(self.sect_color, collections.Mapping):
             for line, tr in zip(lines, self.stream):
                 line.set_alpha(self.alpha)
                 line.set_linewidth(self.linewidth)
@@ -1185,7 +1186,7 @@ class WaveformPlotting(object):
         mask = ((self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
-        self.stream = stream = [tr for m, tr in zip(mask, self.stream) if m]
+        self.stream = [tr for m, tr in zip(mask, self.stream) if m]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
@@ -1198,7 +1199,7 @@ class WaveformPlotting(object):
         self._tr_npts = np.empty(self._tr_num)
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
-        for _i, tr in enumerate(stream):
+        for _i, tr in enumerate(self.stream):
             if len(tr.data) >= self.max_npts:
                 tmp_data = signal.resample(tr.data, self.max_npts)
             else:
@@ -1288,8 +1289,11 @@ class WaveformPlotting(object):
             time = self._tr_times[_tr]
             if self.sect_orientation == 'vertical':
                 lines += ax.plot(data, time)
-            else:
+            elif self.sect_orientation == 'horizontal':
                 lines += ax.plot(time, data)
+            else:
+                raise NotImplementedError("sect_orientiation '%s' is not "
+                                          "valid." % self.sect_orientation)
 
         # Set correct axes orientation
         if self.sect_orientation == 'vertical':
@@ -1302,7 +1306,7 @@ class WaveformPlotting(object):
             self.set_time_lim = ax.set_ylim
             self.get_time_lim = ax.get_ylim
             self.set_time_label = ax.set_ylabel
-        else:
+        elif self.sect_orientation == 'horizontal':
             def _set_xlim_from_ylim(*args, **kwargs):
                 if 'bottom' in kwargs:
                     kwargs['left'] = kwargs.pop('bottom')
@@ -1319,6 +1323,9 @@ class WaveformPlotting(object):
             self.set_time_lim = _set_xlim_from_ylim
             self.get_time_lim = ax.get_xlim
             self.set_time_label = ax.set_xlabel
+        else:
+            raise NotImplementedError("sect_orientiation '%s' is not "
+                                      "valid." % self.sect_orientation)
 
         return ax, lines
 
