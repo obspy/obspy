@@ -367,13 +367,13 @@ def __write_single_cmtsolution(buf, event, **kwargs):
     if not mb_candidates:
         warnings.warn("No body wave magnitude found. Will be replaced by the "
                       "first magnitude in the event object.")
-        mb_mag = event.origins[0]
+        mb_mag = event.magnitudes[0]
     else:
         mb_mag = mb_candidates[0]
     if not ms_candidates:
         warnings.warn("No surface wave magnitude found. Will be replaced by "
                       "the first magnitude in the event object.")
-        ms_mag = event.origins[0]
+        ms_mag = event.magnitudes[0]
     else:
         ms_mag = ms_candidates[0]
 
@@ -435,7 +435,7 @@ def __write_single_cmtsolution(buf, event, **kwargs):
         if candidates:
             event_name = candidates[0].text
     if event_name is None:
-        event_name = str(uuid.uuid4())[:6]
+        event_name = str(uuid.uuid4())[:6].upper()
 
     # Also attempt to retrieve the determination type.
     determination_type = "PDE"

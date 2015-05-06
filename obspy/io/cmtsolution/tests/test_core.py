@@ -11,7 +11,7 @@ import unittest
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.io.cmtsolution.core import _is_cmtsolution, _read_cmtsolution
+from obspy.io.cmtsolution.core import _is_cmtsolution
 
 
 class CmtsolutionTestCase(unittest.TestCase):
@@ -84,8 +84,8 @@ class CmtsolutionTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "CMTSOLUTION")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
-            fh.seek(0, 0)
-            data = fh.read()
+            data = buf.read()
+            buf.seek(0, 0)
 
         with buf:
             buf.seek(0, 0)
@@ -167,7 +167,7 @@ class CmtsolutionTestCase(unittest.TestCase):
                 pass
 
         self.assertEqual(data.decode().splitlines(),
-            new_data.decode().splitlines())
+                         new_data.decode().splitlines())
 
     def test_read_and_write_multiple_events_from_bytes_io(self):
         """
@@ -179,8 +179,8 @@ class CmtsolutionTestCase(unittest.TestCase):
         filename = os.path.join(self.datapath, "MULTIPLE_EVENTS")
         with open(filename, "rb") as fh:
             buf = io.BytesIO(fh.read())
-            fh.seek(0, 0)
-            data = fh.read()
+            data = buf.read()
+            buf.seek(0, 0)
 
         with buf:
             buf.seek(0, 0)
@@ -194,7 +194,7 @@ class CmtsolutionTestCase(unittest.TestCase):
                 new_data = buf2.read()
 
         self.assertEqual(data.decode().splitlines(),
-            new_data.decode().splitlines())
+                         new_data.decode().splitlines())
 
 
 def suite():
