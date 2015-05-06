@@ -271,7 +271,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotDefaultSection(self):
         """
-        Tests plotting 10 in a section
+        Tests plotting 10 traces in a horizontal section.
         """
         start = UTCDateTime(0)
         st = Stream()
@@ -285,7 +285,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotAzimSection(self):
         """
-        Tests plotting 10 in a azimuthal distant section
+        Tests plotting 10 traces in a azimuthal distant section.
         """
         start = UTCDateTime(0)
         st = Stream()
@@ -301,7 +301,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotHorizontalSection(self):
         """
-        Tests plotting 10 in a horizontal section
+        Tests plotting 10 traces in a horizontal section.
         """
         start = UTCDateTime(0)
         st = Stream()
@@ -314,7 +314,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotRefTimeSection(self):
         """
-        Tests plotting 10 in a section with alternate reference time
+        Tests plotting 10 traces in a section with alternate reference time.
         """
         start = UTCDateTime(0)
         reftime = start + 600
@@ -329,7 +329,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotColoredSection(self):
         """
-        Tests plotting 10 in a section colored by channel
+        Tests plotting 10 traces in a section colored by channel.
         """
         start = UTCDateTime(0)
         st = Stream()

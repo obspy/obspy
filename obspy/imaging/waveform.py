@@ -1244,17 +1244,17 @@ class WaveformPlotting(object):
         Define the color of each trace
         """
         if self.color == 'network':
-            colours = {_tr.stats.network for _tr in self.stream}
+            colors = {_tr.stats.network for _tr in self.stream}
         elif self.color == 'station':
-            colours = {_tr.stats.station for _tr in self.stream}
+            colors = {_tr.stats.station for _tr in self.stream}
         elif self.color == 'channel':
-            colours = {_tr.stats.channel for _tr in self.stream}
+            colors = {_tr.stats.channel for _tr in self.stream}
         else:
             self.sect_color = self.color
             return
 
-        cmap = plt.get_cmap('Paired', lut=len(colours))
-        self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colours))}
+        cmap = plt.get_cmap('Paired', lut=len(colors))
+        self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
 
     def __sect_offset_to_fraction(self, offset):
         """
