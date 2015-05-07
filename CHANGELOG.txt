@@ -35,6 +35,8 @@ releases:
    * Don't prematurely close waveform figure if returning its handle
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
+ - obspy.signal:
+   * Fix return data types/values of polarization routines (see #1026)
  - obspy.station:
    * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
 
