@@ -152,7 +152,7 @@ def flinn(stream, noise_thres=0):
     eigvec, eigenval, v = np.linalg.svd(covmat)
     # Rectilinearity defined after Montalbetti & Kanasewich, 1970
     rect = 1.0 - np.sqrt(eigenval[1] / eigenval[0])
-    # Planarity defined after Jurkevics, 1988
+    # Planarity defined after [Jurkevics1988]_
     plan = 1.0 - (2.0 * eigenval[2] / (eigenval[1] + eigenval[0]))
     azimuth = math.degrees(math.atan2(eigvec[0][0], eigvec[1][0]))
     eve = np.sqrt(eigvec[0][0] ** 2 + eigvec[1][0] ** 2)
@@ -285,7 +285,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         ellip = math.sqrt(1.0 - X ** 2) / X
         # rectilinearity defined after Montalbetti & Kanasewich, 1970
         rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
-        # planarity defined after Jurkevics, 1988
+        # planarity defined after [Jurkevics1988]_
         plan = 1. - (2.0 * eigenval[2] / (eigenval[1] + eigenval[0]))
 
         azimuth = 180 * math.atan2(eigvec[0][0].real, eigvec[1][0].real) / \
@@ -435,8 +435,8 @@ def _get_s_point(stream, stime, etime):
 def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                           etime, verbose=False, method="pm", var_noise=0.0):
     """
-    Method carrying out polarization analysis with the Flinn, Jurkevics,
-    ParticleMotion, or Vidale algorithm.
+    Method carrying out polarization analysis with the [Flinn1965b]_,
+    [Jurkevics1988]_, ParticleMotion, or [Vidale1986]_ algorithm.
 
     :param stream: 3 component input data.
     :type stream: :class:`~obspy.core.stream.Stream`
