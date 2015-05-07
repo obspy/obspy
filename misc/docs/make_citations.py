@@ -132,8 +132,10 @@ fh.write("""
 .. _citations:
 
 .. DON'T EDIT THIS FILE MANUALLY!
-   Instead insert a BibTeX file into the bibliography folder and
-   run ``make citations`` from command line to automatically create this file!
+   Instead insert a BibTeX file into the bibliography folder.
+   This file will be recreated automatically during building the docs.
+   (The creation of the file can be tested manually by running
+    ``make citations`` from command line)
 
 Citations
 ==========
