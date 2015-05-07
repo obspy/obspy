@@ -359,12 +359,31 @@ def particle_motion_odr(stream, noise_thres=0):
     in_slope = out.beta[0]
     in_error = out.sd_beta[0]
 
-    azim = math.atan2(1.0, az_slope)
-    inc = math.atan2(1.0, in_slope)
-    az_error = 1.0 / ((1.0 ** 2 + az_slope ** 2) * azim) * az_error
-    in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * inc) * in_error
+    azimuth = math.atan2(1.0, az_slope)
+    incidence = math.atan2(1.0, in_slope)
 
-    return math.degrees(azim), math.degrees(inc), az_error, in_error
+    az_error = 1.0 / ((1.0 ** 2 + az_slope ** 2) * azimuth) * az_error
+    # az_error = math.degrees(az_error)
+    in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * incidence) * in_error
+    # in_error = math.degrees(in_error)
+
+    azimuth = math.degrees(azimuth)
+    incidence = math.degrees(incidence)
+
+    if azimuth < 0.0:
+        azimuth = 360.0 + azimuth
+    if incidence < 0.0:
+        incidence += 180.0
+    if incidence > 90.0:
+        incidence = 180.0 - incidence
+        if azimuth > 180.0:
+            azimuth -= 180.0
+        else:
+            azimuth += 180.0
+    if azimuth > 180.0:
+        azimuth -= 180.0
+
+    return azimuth, incidence, az_error, in_error
 
 
 def _get_s_point(stream, stime, etime):
@@ -414,8 +433,7 @@ def _get_s_point(stream, stime, etime):
 
 
 def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
-                          etime, verbose=False, timestamp="mlabday",
-                          method="pm", var_noise=0.0):
+                          etime, verbose=False, method="pm", var_noise=0.0):
     """
     Method carrying out polarization analysis with the Flinn, Jurkevics,
     ParticleMotion, or Vidale algorithm.
@@ -437,19 +455,19 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     :type stime: :class:`obspy.core.utcdatetime.UTCDateTime`
     :param etime: End time of interest
     :type etime: :class:`obspy.core.utcdatetime.UTCDateTime`
-    :param timestamp: valid values: ``"julsec"`` and ``"mlabday"``;
-        ``"julsec"`` returns the timestamp in seconds since
-        ``1970-01-01T00:00:00``, ``"mlabday"`` returns the timestamp in days
-        (decimals represent hours, minutes and seconds) since
-        ``0001-01-01T00:00:00`` as needed for matplotlib date plotting (see
-        e.g. matplotlibs num2date)
-    :type timestamp: str
     :param method: the method to use. one of ``"pm"``, ``"flinn"`` or
         ``"vidale"``.
     :type method: str
-    :returns: Dictionary with azimuth, incidence angle, errors,
-        rectilinearity, planarity, and/or ellipticity (the returned values
-        depend on the used method).
+    :rtype: dict
+    :returns: Dictionary with keys ``"timestamp"`` (POSIX timestamp, can be
+        used to initialize :class:`~obspy.core.utcdatetime.UTCDateTime`
+        objects), ``"azimuth"``, ``"incidence"`` (incidence angle) and
+        additional keys depending on used method: ``"azimuth_error"`` and
+        ``"incidence_error"`` (for method ``"pm"``), ``"rectilinearity"`` and
+        ``"planarity"`` (for methods ``"flinn"`` and ``"vidale"``) and
+        ``"ellipticity"`` (for method ``"flinn"``). Under each key a
+        :class:`~numpy.ndarray` is stored, giving the respective values
+        corresponding to the ``"timestamp"`` :class:`~numpy.ndarray`.
     """
     if method.lower() not in ["pm", "flinn", "vidale"]:
         msg = "Invalid method ('%s')" % method
@@ -460,7 +478,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
     if len(stream) != len(stream.select(sampling_rate=fs)):
-        msg = "in array sampling rates of traces in stream are not equal"
+        msg = "sampling rates of traces in stream are not equal"
         raise ValueError(msg)
 
     if verbose:
@@ -468,7 +486,6 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         print(stream)
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
-    # offset of arrays
     spoint, _epoint = _get_s_point(stream, stime, etime)
     if method.lower() == "vidale":
         res = vidale_adapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
@@ -502,61 +519,39 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
             except IndexError:
                 break
 
+            # we plot against the centre of the sliding window
             if method.lower() == "pm":
                 azimuth, incidence, error_az, error_inc = \
                     particle_motion_odr(data, var_noise)
-                if abs(error_az) < 0.1 and abs(error_inc) < 0.1:
-                    res.append(np.array([newstart.timestamp + nsamp / fs,
-                                         azimuth, incidence, error_az,
-                                         error_inc]))
+                res.append(np.array([newstart.timestamp + float(nstep) / fs,
+                           azimuth, incidence, error_az, error_inc]))
             if method.lower() == "flinn":
                 azimuth, incidence, reclin, plan = flinn(data, var_noise)
-                res.append(np.array([newstart.timestamp + nsamp / fs, azimuth,
-                                     incidence, reclin, plan]))
+                res.append(np.array([newstart.timestamp + float(nstep) / fs,
+                                    azimuth, incidence, reclin, plan]))
 
             if verbose:
                 print(newstart, newstart + nsamp / fs, res[-1][1:])
             offset += nstep
 
-            newstart += nstep / fs
+            newstart += float(nstep) / fs
+
     res = np.array(res)
-    # XXX: not used for any return
-    if timestamp == "julsec":
-        pass
-    elif timestamp == "mlabday":
-        # 719163 == hours between 1970 and 0001 + 1
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719163
-    else:
-        msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
-        raise ValueError(msg)
 
-    npt = len(res[:, 0])
-    npt //= 2
-
+    result_dict = {"timestamp": res[:, 0],
+                   "azimuth": res[:, 1],
+                   "incidence": res[:, 2]}
     if method.lower() == "pm":
-        return {
-            "azimuth": res[npt, 1],
-            "incidence": res[npt, 2],
-            "azimuth_error": res[npt, 3],
-            "incidence_error": res[npt, 4]
-        }
+        result_dict["azimuth_error"] = res[:, 3]
+        result_dict["incidence_error"] = res[:, 4]
     elif method.lower() == "vidale":
-        return {
-            "azimuth": res[npt, 1],
-            "incidence": res[npt, 2],
-            "rectilinearity": res[npt, 3],
-            "planarity": res[npt, 4],
-            "ellipticity": res[npt, 5]
-        }
+        result_dict["rectilinearity"] = res[:, 3]
+        result_dict["planarity"] = res[:, 4]
+        result_dict["ellipticity"] = res[:, 5]
     elif method.lower() == "flinn":
-        return {
-            "azimuth": res[npt, 1],
-            "incidence": res[npt, 2],
-            "rectilinearity": res[npt, 3],
-            "planarity": res[npt, 4],
-        }
-    else:
-        raise NotImplementedError
+        result_dict["rectilinearity"] = res[:, 3]
+        result_dict["planarity"] = res[:, 4]
+    return result_dict
 
 
 if __name__ == "__main__":
