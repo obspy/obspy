@@ -155,10 +155,7 @@ def __read_single_cmtsolution(buf):
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
 
-    # This is some shortcut for the determination status of the event. We
-    # will just put this in a comment as I don't think its properly defined
-    # anywhere...
-    determination_type = line[:4].strip().decode()
+    hypocenter_catalog = line[:4].strip().decode()
 
     origin_time = line[4:].strip().split()[:6]
     values = list(map(int, origin_time[:-1])) + \
@@ -285,7 +282,9 @@ def __read_single_cmtsolution(buf):
     ev.event_descriptions.append(EventDescription(text=event_name,
                                                   type="earthquake name"))
     ev.comments.append(Comment(
-        text="Determination Type: %s" % determination_type))
+        text="Hypocenter catalog: %s" % hypocenter_catalog,
+        force_resource_id=False))
+
     ev.origins.append(cmt_origin)
     ev.origins.append(preliminary_origin)
     ev.magnitudes.append(cmt_mag)
@@ -438,16 +437,17 @@ def __write_single_cmtsolution(buf, event, **kwargs):
         event_name = str(uuid.uuid4())[:6].upper()
 
     # Also attempt to retrieve the determination type.
-    determination_type = "PDE"
+    hypocenter_catalog = "PDE"
     if event.comments:
-        candidates = [_i for _i in event.comments
-                      if _i.text.strip().startswith("Determination Type:")]
+        candidates = [
+            _i for _i in event.comments
+            if _i.text.lower().strip().startswith("hypocenter catalog:")]
         if candidates:
-            determination_type = \
+            hypocenter_catalog = \
                 candidates[0].text.strip().split(":")[-1].upper()
 
     template = (
-        "{determination_type:>4} {year:4d} {month:02d} {day:02d} {hour:02d} "
+        "{hypocenter_catalog:>4} {year:4d} {month:02d} {day:02d} {hour:02d} "
         "{minute:02d} {second:05.2f} "
         "{latitude:9.4f} {longitude:9.4f} {depth:5.1f} {mb:.1f} {ms:.1f} "
         "{region}\n"
@@ -466,7 +466,7 @@ def __write_single_cmtsolution(buf, event, **kwargs):
     )
 
     template = template.format(
-        determination_type=determination_type,
+        hypocenter_catalog=hypocenter_catalog,
         year=hypo_origin.time.year,
         month=hypo_origin.time.month,
         day=hypo_origin.time.day,
