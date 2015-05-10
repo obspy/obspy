@@ -257,6 +257,7 @@ ENTRY_POINTS = {
         'NLLOC_HYP = obspy.io.nlloc.core',
         'NLLOC_OBS = obspy.io.nlloc.core',
         'CNV = obspy.io.cnv.core',
+        'CMTSOLUTION = obspy.io.cmtsolution.core'
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -288,6 +289,11 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.event.NLLOC_OBS': [
         'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
+        ],
+    'obspy.plugin.event.CMTSOLUTION': [
+        'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
+        'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
+        'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',

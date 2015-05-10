@@ -56,6 +56,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.io.cmtsolution
    obspy.io.cnv
    obspy.io.json
    obspy.io.ndk
