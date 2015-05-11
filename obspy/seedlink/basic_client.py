@@ -46,14 +46,15 @@ class Client(object):
         """
         self.timeout = timeout
         self.debug = debug
-        self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL")
+        self._slclient = SLClient(loglevel=debug and "DEBUG" or "CRITICAL",
+                                  timeout=self.timeout)
         self._server_url = "%s:%i" % (server, port)
 
     def _connect(self):
         """
         Open new connection to seedlink server.
         """
-        self._slclient.slconn = SeedLinkConnection()
+        self._slclient.slconn = SeedLinkConnection(timeout=self.timeout)
         self._slclient.slconn.setSLAddress(self._server_url)
         self._slclient.slconn.netto = self.timeout
 
