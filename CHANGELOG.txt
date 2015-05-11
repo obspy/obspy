@@ -12,6 +12,8 @@ releases:
    * Don't prematurely close waveform figure if returning its handle
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
+   * Basic seedlink client: Properly timeout requests with valid station
+     selection but no data available in selected time window (see # 1045)
  - obspy.signal:
    * Fix return data types/values of polarization routines (see #1026)
  - obspy.station:
