@@ -96,6 +96,9 @@ class SLClient(object):
     :type  end_time: str
     :var infolevel: INFO LEVEL for info request only.
     :type  infolevel: str
+    :type timeout: float
+    :param timeout: Timeout in seconds, passed on to the underlying
+        SeedLinkConnection.
     """
     VERSION = "1.2.0X00"
     VERSION_YEAR = "2011"
@@ -104,7 +107,7 @@ class SLClient(object):
     PROGRAM_NAME = "SLClient v" + VERSION
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
 
-    def __init__(self, loglevel='DEBUG'):
+    def __init__(self, loglevel='DEBUG', timeout=None):
         """
         Creates a new instance of SLClient with the specified logging object
         """
@@ -123,7 +126,8 @@ class SLClient(object):
         self.begin_time = None
         self.end_time = None
         self.infolevel = None
-        self.slconn = SeedLinkConnection()
+        self.timeout = timeout
+        self.slconn = SeedLinkConnection(timeout=timeout)
 
     def parseCmdLineArgs(self, args):
         """
