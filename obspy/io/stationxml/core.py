@@ -22,6 +22,7 @@ import warnings
 from lxml import etree
 
 import obspy
+from obspy.core.util import AttribDict
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -114,6 +115,7 @@ def _read_stationxml(path_or_file_object):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
+    _extra(root, inv)
     return inv
 
 
@@ -152,6 +154,7 @@ def _read_network(net_element, _ns):
     for station in net_element.findall(_ns("Station")):
         stations.append(_read_station(station, _ns))
     network.stations = stations
+    _extra(net_element, network)
     return network
 
 
@@ -188,6 +191,7 @@ def _read_station(sta_element, _ns):
     for channel in sta_element.findall(_ns("Channel")):
         channels.append(_read_channel(channel, _ns))
     station.channels = channels
+    _extra(sta_element, station)
     return station
 
 
@@ -312,6 +316,7 @@ def _read_channel(cha_element, _ns):
     response = cha_element.find(_ns("Response"))
     if response is not None:
         channel.response = _read_response(response, _ns)
+    _extra(cha_element, channel)
     return channel
 
 
@@ -333,6 +338,7 @@ def _read_response(resp_element, _ns):
         if not len(stage):
             continue
         response.response_stages.append(_read_response_stage(stage, _ns))
+    _extra(resp_element, response)
     return response
 
 
@@ -623,11 +629,13 @@ def _read_equipment(equip_element, _ns):
     calibration_dates = \
         [obspy.core.UTCDateTime(_i.text)
          for _i in equip_element.findall(_ns("CalibrationDate"))]
-    return obspy.core.inventory.Equipment(
+    obj = obspy.core.inventory.Equipment(
         resource_id=resource_id, type=type, description=description,
         manufacturer=manufacturer, vendor=vendor, model=model,
         serial_number=serial_number, installation_date=installation_date,
         removal_date=removal_date, calibration_dates=calibration_dates)
+    _extra(equip_element, obj)
+    return obj
 
 
 def _read_site(site_element, _ns):
@@ -637,9 +645,11 @@ def _read_site(site_element, _ns):
     county = _tag2obj(site_element, _ns("County"), str)
     region = _tag2obj(site_element, _ns("Region"), str)
     country = _tag2obj(site_element, _ns("Country"), str)
-    return obspy.core.inventory.Site(name=name, description=description,
-                                     town=town, county=county, region=region,
-                                     country=country)
+    obj = obspy.core.inventory.Site(name=name, description=description,
+                                    town=town, county=county, region=region,
+                                    country=country)
+    _extra(site_element, obj)
+    return obj
 
 
 def _read_comment(comment_element, _ns):
@@ -1264,6 +1274,59 @@ def _obj2tag(parent, tag_name, tag_value):
 
 def _format_time(value):
     return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+
+def _extra(element, obj):
+    """
+    Add information stored in custom tags/attributes in obj.extra.
+    """
+    # search all namespaces in current scope
+    for ns in element.nsmap.values():
+        # skip any fdsn namespaces,
+        # we're not interested in StationXML defined tags here
+        if ns.startswith("http://www.fdsn.org/") or \
+                ns.startswith("http://www.w3.org/"):
+            continue
+        # process all elements of this custom namespace, if any
+        for el in element.iterfind("{%s}*" % ns):
+            # remove namespace from tag name
+            _, name = el.tag.split("}")
+            value = el.text
+            try:
+                extra = obj.setdefault("extra", AttribDict())
+            # object is not based on AttribDict..
+            except AttributeError:
+                if hasattr(obj, "extra"):
+                    extra = obj.extra
+                else:
+                    extra = AttribDict()
+                    obj.extra = extra
+            extra[name] = {'value': value,
+                           'namespace': '%s' % ns}
+            if el.attrib:
+                extra[name]['attrib'] = el.attrib
+    # process all attributes of custom namespaces, if any
+    for key, value in element.attrib.items():
+        # no custom namespace
+        if "}" not in key:
+            continue
+        # separate namespace from tag name
+        ns, name = key.lstrip("{").split("}")
+        if ns.startswith("http://www.fdsn.org/") or \
+                ns.startswith("http://www.w3.org/"):
+            continue
+        try:
+            extra = obj.setdefault("extra", AttribDict())
+        # object is not based on AttribDict..
+        except AttributeError:
+            if hasattr(obj, "extra"):
+                extra = obj.extra
+            else:
+                extra = AttribDict()
+                obj.extra = extra
+        extra[name] = {'value': str(value),
+                       'namespace': '%s' % ns,
+                       'type': 'attribute'}
 
 
 if __name__ == '__main__':
