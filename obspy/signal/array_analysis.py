@@ -81,6 +81,8 @@ class SeismicArray(object):
             plt.show()
 
     def _get_geometry(self):
+        # Return a dictionary of lat, lon, height values for each item in
+        # the array inventory.
         if not self.inventory:
             return {}
 
@@ -89,22 +91,31 @@ class SeismicArray(object):
             for station in network:
                 station_code = "{n}.{s}".format(n=network.code,
                                                 s=station.code)
-                # todo this must work without channels, for just stations!
-                for channel in station:
+                if len(station.channels) == 0:
+                    # E.g. if using the array class for inventory of sources,
+                    # there won't be channels.
                     this_coordinates = \
-                        {"latitude": float(channel.latitude),
-                         "longitude": float(channel.longitude),
+                        {"latitude": float(station.latitude),
+                         "longitude": float(station.longitude),
                          "absolute_height_in_km":
-                             float(channel.elevation - channel.depth) / 1000.0}
-                    if station_code in geo and \
-                                    this_coordinates not in list(geo.values()):
-                        msg = ("Different coordinates for station '{n}.{s}' "
-                               "in the inventory. The first ones encountered "
-                               "will be chosen.".format(n=network.code,
-                                                        s=station.code))
-                        warnings.warn(msg)
-                        continue
+                         float(station.elevation) / 1000.0}
                     geo[station_code] = this_coordinates
+                else:
+                    for channel in station:
+                        this_coordinates = \
+                            {"latitude": float(channel.latitude),
+                             "longitude": float(channel.longitude),
+                             "absolute_height_in_km":
+                             float(channel.elevation - channel.depth) / 1000.0}
+                        if station_code in geo \
+                                and this_coordinates not in list(geo.values()):
+                            msg = ("Different coordinates for station "
+                                   "'{n}.{s}' in the inventory. The first ones"
+                                   " encountered will be chosen.".format(
+                                   n=network.code, s=station.code))
+                            warnings.warn(msg)
+                            continue
+                        geo[station_code] = this_coordinates
         return geo
 
     @property
@@ -130,6 +141,10 @@ class SeismicArray(object):
 
     @property
     def geometry(self):
+        """
+        A dictionary of latitude, longitude and absolute height [km] values
+        for each station in the array inventory.
+        """
         return self._get_geometry()
 
     @property
@@ -224,6 +239,7 @@ class SeismicArray(object):
             u, s, vh = np.linalg.linalg.svd(A)
             v = vh.conj().transpose()
             # satisfies the plane equation a*x + b*y + c*z = 0
+            nstat = len(self.geometry)
             result = np.zeros((nstat, 3))
             # now we are seeking the station positions on that plane
             # geometry[:,2] += v[2,-1]
