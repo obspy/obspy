@@ -688,6 +688,19 @@ class StationXMLTestCase(unittest.TestCase):
             '<Pole number="1"> <Real>2.0</Real> '
             '<Imaginary>3.0</Imaginary> </Pole>', data)
 
+    def test_stationxml_with_custom_tags(self):
+        """
+        Test reading/writing StationXML with additional custom namespace tags.
+        """
+        filename = os.path.join(
+            self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
+        # don't explicitely specify format
+        inv = obspy.read_inventory(filename)
+        self.assertTrue(hasattr(inv, "extra"))
+        self.assertTrue(hasattr(inv[0], "extra"))
+        self.assertTrue(hasattr(inv[0][0], "extra"))
+        self.assertTrue(hasattr(inv[0][0][0], "extra"))
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")
