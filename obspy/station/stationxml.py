@@ -139,6 +139,11 @@ def _read_base_node(element, object_to_write_to, _ns):
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
+    # Availability.
+    data_availability = element.find(_ns("DataAvailability"))
+    if data_availability is not None:
+        object_to_write_to.data_availability = \
+            _read_data_availability(data_availability, _ns)
 
 
 def _read_network(net_element, _ns):
@@ -302,11 +307,6 @@ def _read_channel(cha_element, _ns):
     equipment = cha_element.find(_ns("Equipment"))
     if equipment is not None:
         channel.equipment = _read_equipment(equipment, _ns)
-    # Availability.
-    data_availability = cha_element.find(_ns("DataAvailability"))
-    if data_availability is not None:
-        channel.data_availability = _read_data_availability(
-            data_availability, _ns)
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:

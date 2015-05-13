@@ -150,12 +150,12 @@ class Channel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
-        self.data_availability = data_availability
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
-            historical_code=historical_code)
+            historical_code=historical_code,
+            data_availability=data_availability)
 
     def __str__(self):
         ret = (
