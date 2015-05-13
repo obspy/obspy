@@ -797,6 +797,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     for network in inventory.networks:
         _write_network(root, network)
 
+    # Add custom namespace tags
+    _write_extra(inventory, root)
+
     tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
@@ -840,6 +843,36 @@ def _write_base_node(element, object_to_read_from):
         _write_comment(element, comment)
 
 
+def _write_extra(obj, element):
+    """
+    Add information stored in `obj.extra` as custom tags/attributes in
+    non-StationXML namespace.
+    """
+    if not hasattr(obj, "extra"):
+        return
+    for key, item in obj.extra.items():
+        value = item["value"]
+        ns = item["namespace"]
+        attrib = item.get("attrib", {})
+        type_ = item.get("type", "element")
+        # XXX self._add_namespace(ns)
+        tag = "{%s}%s" % (ns, key)
+        # add either as subelement or attribute
+        if type_.lower() in ("attribute", "attrib"):
+            element.attrib[tag] = str(value)
+        elif type_.lower() == "element":
+            if isinstance(value, bool):
+                etree.SubElement(element, tag, attrib=attrib).text = \
+                    str(bool(value)).lower()
+            else:
+                etree.SubElement(element, tag, attrib=attrib).text = str(value)
+        else:
+            msg = ("Invalid 'type' for custom QuakeML item: '%s'. "
+                   "Should be either 'element' or 'attribute' or "
+                   "left empty.") % type_
+            raise ValueError(msg)
+
+
 def _write_network(parent, network):
     """
     Helper function converting a Network instance to an etree.Element.
@@ -848,6 +881,8 @@ def _write_network(parent, network):
     network_elem = etree.SubElement(parent, "Network", attribs)
     _write_base_node(network_elem, network)
 
+    # Add custom namespace tags
+    _write_extra(network, network_elem)
     # Add the two, network specific fields.
     if network.total_number_of_stations is not None:
         etree.SubElement(network_elem, "TotalNumberStations").text = \
@@ -955,6 +990,9 @@ def _write_station(parent, station):
     station_elem = etree.SubElement(parent, "Station", attribs)
     _write_base_node(station_elem, station)
 
+    # Add custom namespace tags
+    _write_extra(station, station_elem)
+
     _write_floattype(station_elem, station, "latitude", "Latitude")
     _write_floattype(station_elem, station, "longitude", "Longitude")
     _write_floattype(station_elem, station, "elevation", "Elevation")
@@ -1007,6 +1045,9 @@ def _write_channel(parent, channel):
             "start": _format_time(channel.data_availability.start),
             "end": _format_time(channel.data_availability.end)
         })
+
+    # Add custom namespace tags
+    _write_extra(channel, channel_elem)
 
     for ref in channel.external_references:
         _write_external_reference(channel_elem, ref)
@@ -1133,6 +1174,9 @@ def _write_response(parent, resp):
     # write response stages
     for stage in resp.response_stages:
         _write_response_stage(parent, stage)
+
+    # Add custom namespace tags
+    _write_extra(resp, parent)
 
 
 def _write_response_stage(parent, stage):
