@@ -2,7 +2,9 @@ releases:
  - obspy.core:
    * Fix catalog plot with events that have no origin depth or
      origin time (see #1021)
- - obspy.earthworm
+ - obspy.datamark:
+   * Fix datawide=3 and datawide=0.5 block reading
+ - obspy.earthworm:
    * Fix Python3 compatibility problem
  - obspy.imaging:
    * Fix flipped maps due to bug in Basemap
