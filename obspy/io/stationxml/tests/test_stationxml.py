@@ -701,6 +701,8 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertTrue(hasattr(inv[0][0], "extra"))
         self.assertTrue(hasattr(inv[0][0][0], "extra"))
         self.assertTrue(hasattr(inv[0][0][0].response, "extra"))
+        nsmap = {"test": "http://just.a.test/xmlns/1"}
+        #inv.write("/tmp/blap.xml", "STATIONXML", nsmap=nsmap)
 
 
 def suite():

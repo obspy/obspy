@@ -732,7 +732,7 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      **kwargs):
+                      nsmap=None, **kwargs):
     """
     Writes an inventory object to a buffer.
 
@@ -743,6 +743,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
+    :type nsmap: dict
+    :param nsmap: Additional custom namespace abbreviation mappings
+        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
     """
     # Check if any of the channels has a data availability element. In that
     # case the namespaces need to be adjusted.
@@ -760,25 +763,31 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
             continue
         break
 
+    if nsmap is None:
+        nsmap = {}
+    elif None in nsmap:
+        msg = ("Custom namespace mappings do not allow redefinition of "
+               "default StationXML namespace (key `None`). "
+               "Use other namespace abbreviations for custom namespace tags.")
+        raise ValueError(msg)
+
+    nsmap[None] = "http://www.fdsn.org/xml/station/1"
+    attrib = {"schemaVersion": SCHEMA_VERSION}
+
     if data_availability:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                ("{http://www.w3.org/2001/XMLSchema-instance}"
-                 "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
-                "http://www.fdsn.org/xml/station/fdsn-station+"
-                "availability-1.0.xsd",
-                "schemaVersion": SCHEMA_VERSION},
-            nsmap={None: "http://www.fdsn.org/xml/station/1",
-                   "xsi": "http://www.w3.org/2001/XMLSchema-instance"}
-        )
-    else:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                "xmlns": "http://www.fdsn.org/xml/station/1",
-                "schemaVersion": SCHEMA_VERSION}
-        )
+        attrib["{http://www.w3.org/2001/XMLSchema-instance}"
+               "schemaLocation"] = (
+            "http://www.fdsn.org/xml/station/1 "
+            "http://www.fdsn.org/xml/station/fdsn-station+"
+            "availability-1.0.xsd")
+        if "xsi" in nsmap:
+            msg = ("Custom namespace mappings do not allow redefinition of "
+                   "StationXML availability namespace (key `xsi`). Use other "
+                   "namespace abbreviations for custom namespace tags.")
+            raise ValueError(msg)
+        nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
+
+    root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
 
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
