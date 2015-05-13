@@ -28,7 +28,8 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
     import_map={},
     function_map={
-        "calcVincentyInverse": "obspy.geodetics.base.calc_vincenty_inverse"
+        "calcVincentyInverse": "obspy.geodetics.base.calc_vincenty_inverse",
+        "gps2DistAzimuth": "obspy.geodetics.base.gps2dist_azimuth",
     })
 
 if __name__ == '__main__':

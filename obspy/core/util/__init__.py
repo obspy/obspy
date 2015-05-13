@@ -52,4 +52,6 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         "degrees2kilometers": "obspy.geodetics.degrees2kilometers",
         "gps2DistAzimuth": "obspy.geodetics.gps2dist_azimuth",
         "kilometer2degrees": "obspy.geodetics.kilometer2degrees",
-        "locations2degrees": "obspy.geodetics.locations2degrees"})
+        "locations2degrees": "obspy.geodetics.locations2degrees",
+        "getMatplotlibVersion": "obspy.core.util.get_matplotlib_version",
+        })

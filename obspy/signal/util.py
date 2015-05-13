@@ -25,6 +25,11 @@ from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
 
 
+@deprecated("'utlGeoKm' has been renamed to 'util_geo_km'. Use that instead.")
+def utlGeoKm(*args, **kwargs):
+    return util_geo_km(*args, **kwargs)
+
+
 def util_geo_km(orig_lon, orig_lat, lon, lat):
     """
     Transform lon, lat to km in reference to orig_lon and orig_lat
@@ -49,6 +54,12 @@ def util_geo_km(orig_lon, orig_lat, lon, lat):
 
     clibsignal.utl_geo_km(orig_lon, orig_lat, 0.0, C.byref(x), C.byref(y))
     return x.value, y.value
+
+
+@deprecated("'utlLonLat' has been renamed to 'util_lon_lat'."
+            "Use that instead.")
+def utlLonLat(*args, **kwargs):
+    return util_lon_lat(*args, **kwargs)
 
 
 def util_lon_lat(orig_lon, orig_lat, x, y):
