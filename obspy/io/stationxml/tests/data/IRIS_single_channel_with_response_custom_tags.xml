@@ -131,7 +131,6 @@
         <Name>COUNTS</Name>
         <Description>Digital Counts</Description>
        </OutputUnits>
-       <test:CustomTag>testTag1234</test:CustomTag>
        <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
        <Numerator>.000000000000418952</Numerator>
        <Numerator>.000330318</Numerator>
@@ -185,6 +184,7 @@
        <Frequency>0</Frequency>
       </StageGain>
      </Stage>
+     <test:CustomTag>testTag1234</test:CustomTag>
     </Response>
    </Channel>
   </Station>

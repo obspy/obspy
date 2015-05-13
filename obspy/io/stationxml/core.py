@@ -155,7 +155,7 @@ def _read_stationxml(path_or_file_object):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
-    _extra(root, inv)
+    _read_extra(root, inv)
     return inv
 
 
@@ -199,7 +199,7 @@ def _read_network(net_element, _ns):
     for station in net_element.findall(_ns("Station")):
         stations.append(_read_station(station, _ns))
     network.stations = stations
-    _extra(net_element, network)
+    _read_extra(net_element, network)
     return network
 
 
@@ -236,7 +236,7 @@ def _read_station(sta_element, _ns):
     for channel in sta_element.findall(_ns("Channel")):
         channels.append(_read_channel(channel, _ns))
     station.channels = channels
-    _extra(sta_element, station)
+    _read_extra(sta_element, station)
     return station
 
 
@@ -356,7 +356,7 @@ def _read_channel(cha_element, _ns):
     response = cha_element.find(_ns("Response"))
     if response is not None:
         channel.response = _read_response(response, _ns)
-    _extra(cha_element, channel)
+    _read_extra(cha_element, channel)
     return channel
 
 
@@ -378,7 +378,7 @@ def _read_response(resp_element, _ns):
         if not len(stage):
             continue
         response.response_stages.append(_read_response_stage(stage, _ns))
-    _extra(resp_element, response)
+    _read_extra(resp_element, response)
     return response
 
 
@@ -677,7 +677,7 @@ def _read_equipment(equip_element, _ns):
         manufacturer=manufacturer, vendor=vendor, model=model,
         serial_number=serial_number, installation_date=installation_date,
         removal_date=removal_date, calibration_dates=calibration_dates)
-    _extra(equip_element, obj)
+    _read_extra(equip_element, obj)
     return obj
 
 
@@ -691,7 +691,7 @@ def _read_site(site_element, _ns):
     obj = obspy.core.inventory.Site(name=name, description=description,
                                     town=town, county=county, region=region,
                                     country=country)
-    _extra(site_element, obj)
+    _read_extra(site_element, obj)
     return obj
 
 
@@ -1341,7 +1341,7 @@ def _format_time(value):
         return value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
 
 
-def _extra(element, obj):
+def _read_extra(element, obj):
     """
     Add information stored in custom tags/attributes in obj.extra.
     """

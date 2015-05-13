@@ -700,6 +700,7 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertTrue(hasattr(inv[0], "extra"))
         self.assertTrue(hasattr(inv[0][0], "extra"))
         self.assertTrue(hasattr(inv[0][0][0], "extra"))
+        self.assertTrue(hasattr(inv[0][0][0].response, "extra"))
 
 
 def suite():
