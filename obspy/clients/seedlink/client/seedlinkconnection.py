@@ -79,6 +79,9 @@ class SeedLinkConnection(object):
     :var lastpkttime: Flag to control last packet time usage,
         if true, begin_time is appended to DATA command (Default is False).
     :type lastpkttime: bool
+    :type timeout: float
+    :param timeout: Time in seconds after which a `collect()` call will be
+        interrupted.
 
     Protected parameters
 
@@ -116,7 +119,7 @@ class SeedLinkConnection(object):
     DFT_READBUF_SIZE = 1024
     QUOTE_CHAR = b'"'
 
-    def __init__(self):
+    def __init__(self, timeout=None):
         """
         Creates a new instance of SeedLinkConnection.
         """
@@ -141,6 +144,7 @@ class SeedLinkConnection(object):
         self.state = None
         self.info_response_buffer = io.BytesIO()
         self.state = SLState()
+        self.timeout = timeout
 
     @property
     def infoStrBuf(self):
@@ -731,12 +735,17 @@ class SeedLinkConnection(object):
         Designed to run in a tight loop at the heart of a client program, this
         function will return every time a packet is received.
 
+        If the SeedLinkConnection was initialized with a timeout, the collect()
+        call will be terminated if it takes longer than `self.timeout` seconds
+        to finish.
+
         :return: an SLPacket when something is received.
         :return: null when the connection was closed by
             the server or the termination sequence completed.
 
         :raise SeedLinkException: on error.
         """
+        start_ = UTCDateTime()
         self.terminate_flag = False
 
         # Check if the infoRequestString was set
@@ -759,6 +768,10 @@ class SeedLinkConnection(object):
         # Start the primary loop
         npass = 0
         while True:
+            # manually check if we are over specified timeout
+            if self.timeout is not None:
+                if UTCDateTime() > start_ + self.timeout:
+                    self.terminate_flag = True
 
             _msg = "primary loop pass %s, state %d"
             logger.debug(_msg % (npass, self.state.state))
