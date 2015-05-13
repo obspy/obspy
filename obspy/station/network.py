@@ -34,7 +34,7 @@ class Network(BaseNode):
                  selected_number_of_stations=None, description=None,
                  comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED network code.
@@ -64,6 +64,9 @@ class Network(BaseNode):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :param data_availability: Information about time series availability
+            for the network.
         """
         self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
@@ -73,7 +76,8 @@ class Network(BaseNode):
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,
             restricted_status=restricted_status, alternate_code=alternate_code,
-            historical_code=historical_code)
+            historical_code=historical_code,
+            data_availability=data_availability)
 
     def __getitem__(self, index):
         return self.stations[index]

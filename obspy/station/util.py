@@ -32,7 +32,7 @@ class BaseNode(ComparingObject):
     """
     def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
-                 historical_code=None):
+                 historical_code=None, data_availability=None):
         """
         :type code: str
         :param code: The SEED network, station, or channel code
@@ -53,6 +53,9 @@ class BaseNode(ComparingObject):
         :type historical_code: str, optional
         :param historical_code: A previously used code if different from the
             current code.
+        :type data_availability: :class:`~obspy.station.util.DataAvailability`
+        :param data_availability: Information about time series availability
+            for the network/station/channel.
         """
         self.code = code
         self.comments = comments or []
@@ -62,6 +65,7 @@ class BaseNode(ComparingObject):
         self.restricted_status = restricted_status
         self.alternate_code = alternate_code
         self.historical_code = historical_code
+        self.data_availability = data_availability
 
     @property
     def code(self):
