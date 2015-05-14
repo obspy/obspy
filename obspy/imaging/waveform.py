@@ -220,7 +220,8 @@ class WaveformPlotting(object):
         Destructor closes the figure instance if it has been created by the
         class.
         """
-        if self.kwargs.get("fig", None) is None and not self.handle:
+        if self.kwargs.get('fig', None) is None and \
+                not self.kwargs.get('handle'):
             plt.close()
 
     def __getMergeId(self, tr):
