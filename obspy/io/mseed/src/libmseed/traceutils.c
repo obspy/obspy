@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2014.248
+ * modified: 2015.108
  ***************************************************************************/
 
 #include <stdio.h>
@@ -1397,12 +1397,12 @@ mst_printtracelist ( MSTraceGroup *mstg, flag timeformat,
 	    ms_log (0, "%-17s %-24s %-24s %-4s\n",
 		    srcname, stime, etime, gapstr);
 	  else
-	    ms_log (0, "%-17s %-24s %-24s %-s %-3.3g %-lld\n",
-		    srcname, stime, etime, gapstr, mst->samprate, (long long int)mst->samplecnt);
+	    ms_log (0, "%-17s %-24s %-24s %-s %-3.3g %-"PRId64"\n",
+		    srcname, stime, etime, gapstr, mst->samprate, mst->samplecnt);
 	}
       else if ( details > 0 && gaps <= 0 )
-	ms_log (0, "%-17s %-24s %-24s %-3.3g %-lld\n",
-		srcname, stime, etime, mst->samprate, (long long int)mst->samplecnt);
+	ms_log (0, "%-17s %-24s %-24s %-3.3g %-"PRId64"\n",
+		srcname, stime, etime, mst->samprate, mst->samplecnt);
       else
 	ms_log (0, "%-17s %-24s %-24s\n", srcname, stime, etime);
       
@@ -1470,9 +1470,9 @@ mst_printsynclist ( MSTraceGroup *mstg, char *dccid, flag subsecond )
       ms_hptime2seedtimestr (mst->endtime, etime, subsecond);
       
       /* Print SYNC line */
-      ms_log (0, "%s|%s|%s|%s|%s|%s||%.10g|%lld|||||||%s\n",
+      ms_log (0, "%s|%s|%s|%s|%s|%s||%.10g|%"PRId64"|||||||%s\n",
 	      mst->network, mst->station, mst->location, mst->channel,
-	      stime, etime, mst->samprate, (long long int)mst->samplecnt,
+	      stime, etime, mst->samprate, mst->samplecnt,
 	      yearday);
       
       mst = mst->next;
