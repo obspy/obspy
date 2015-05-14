@@ -173,9 +173,15 @@ class Client(object):
 
     def _reconnect(self):
         self._client.close()
-        self._client.open(native_str(self._client.host),
-                          self._client.port,
-                          self._client.timeout)
+        try:
+            self._client.open(native_str(self._client.host),
+                              self._client.port,
+                              self._client.timeout)
+        except:
+            # old Python 2.7: port needs to be native int or string -> not long
+            self._client.open(native_str(self._client.host),
+                              native_str(self._client.port),
+                              self._client.timeout)
 
     def _write_ln(self, buffer):
         # Py3k: might be confusing, _write_ln accepts str
