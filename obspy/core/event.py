@@ -3340,21 +3340,23 @@ class Catalog(object):
         if colormap is None:
             colormap = plt.get_cmap("RdYlGn_r")
 
-        if len(lons) > 1:
-            # if we have a `None` in the origin time list it likely ends up as
-            # min and/or max and causes problems..
-            times_ = np.ma.masked_equal(times, None).compressed()
-            min_time = times_.min()
-            max_time = times_.max()
-            title = (
-                "{event_count} events ({start} to {end}) "
-                "- Color codes {colorcode}, size the magnitude".format(
-                    event_count=len(self.events),
-                    start=min_time.strftime("%Y-%m-%d"),
-                    end=max_time.strftime("%Y-%m-%d"),
-                    colorcode="origin time" if color == "date" else "depth"))
-        else:
-            title = "Event at %s" % times[0].strftime("%Y-%m-%d")
+        title = kwargs.pop('title', None)
+        if title is None:
+            if len(lons) > 1:
+                # if we have a `None` in the origin time list it likely ends up as
+                # min and/or max and causes problems..
+                times_ = np.ma.masked_equal(times, None).compressed()
+                min_time = times_.min()
+                max_time = times_.max()
+                title = (
+                    "{event_count} events ({start} to {end}) "
+                    "- Color codes {colorcode}, size the magnitude".format(
+                        event_count=len(self.events),
+                        start=min_time.strftime("%Y-%m-%d"),
+                        end=max_time.strftime("%Y-%m-%d"),
+                        colorcode="origin time" if color == "date" else "depth"))
+            else:
+                title = "Event at %s" % times[0].strftime("%Y-%m-%d")
 
         if color not in ("date", "depth"):
             msg = "Invalid option for 'color' parameter (%s)." % color
