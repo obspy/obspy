@@ -208,7 +208,7 @@ def getMenu(server, port, scnl=None, timeout=None):
     if r:
         # XXX: we got here from bytes to utf-8 to keep the remaining code
         # intact
-        tokens = r.decode().split()
+        tokens = str(r.decode()).split()
         if tokens[0] == rid:
             tokens = tokens[1:]
         flag = tokens[-1]
@@ -249,7 +249,7 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
-    tokens = r.decode().split()
+    tokens = str(r.decode()).split()
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
