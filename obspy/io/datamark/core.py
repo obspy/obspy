@@ -80,11 +80,12 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
         start = 0
         while leng < sz:
             pklen = fpin.read(4)
-            if len(pklen) == 0:
-                break  # EOF
+            if len(pklen) < 4:
+                break
             leng = 4
-            # equiv to Str4Int
             truelen = np.fromstring(pklen, native_str('>i'))[0]
+            if truelen == 0:
+                break
             buff = fpin.read(6)
             leng += 6
 
@@ -111,7 +112,7 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
                 srate = ord(buff[3:4])
                 xlen = (srate - 1) * datawide
                 if datawide == 0:
-                    xlen = srate / 2
+                    xlen = srate // 2
                     datawide = 0.5
 
                 idata00 = fpin.read(4)
@@ -133,7 +134,7 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
                     warnings.warn(msg)
 
                 if datawide == 0.5:
-                    for i in range(srate // 2):
+                    for i in range(xlen):
                         idata2 = output[chanum][-1] + \
                             np.fromstring(sdata[i:i + 1], np.int8)[0] >> 4
                         output[chanum].append(idata2)
@@ -155,7 +156,7 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[3 * i:3 * (i + 1)] + ' ',
+                            np.fromstring(sdata[3 * i:3 * (i + 1)] + b' ',
                                           native_str('>i'))[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:

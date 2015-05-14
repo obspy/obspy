@@ -41,7 +41,7 @@ URL_MAPPINGS = {
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
     "SCEDC": "http://service.scedc.caltech.edu",
-    "USGS": "http://comcat.cr.usgs.gov",
+    "USGS": "http://earthquake.usgs.gov",
     "USP": "http://sismo.iag.usp.br",
     }
 
