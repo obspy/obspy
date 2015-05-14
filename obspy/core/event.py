@@ -3343,8 +3343,8 @@ class Catalog(object):
         title = kwargs.pop('title', None)
         if title is None:
             if len(lons) > 1:
-                # if we have a `None` in the origin time list it likely ends up as
-                # min and/or max and causes problems..
+                # if we have a `None` in the origin time list it likely ends up
+                # as min and/or max and causes problems..
                 times_ = np.ma.masked_equal(times, None).compressed()
                 min_time = times_.min()
                 max_time = times_.max()
@@ -3354,7 +3354,9 @@ class Catalog(object):
                         event_count=len(self.events),
                         start=min_time.strftime("%Y-%m-%d"),
                         end=max_time.strftime("%Y-%m-%d"),
-                        colorcode="origin time" if color == "date" else "depth"))
+                        colorcode="origin time"
+                                  if color == "date"
+                                  else "depth"))
             else:
                 title = "Event at %s" % times[0].strftime("%Y-%m-%d")
 
