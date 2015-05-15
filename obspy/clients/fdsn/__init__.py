@@ -30,16 +30,22 @@ available providers are:
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
 BGR     http://eida.bgr.de
+ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
 INGV    http://webservices.rm.ingv.it
+IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu
+KOERI   http://eida.koeri.boun.edu.tr
+LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
+NEIP    http://eida-sc3.infp.ro
 NERIES  http://www.seismicportal.eu
+ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
 SCEDC   http://service.scedc.caltech.edu
-USGS    http://comcat.cr.usgs.gov
+USGS    http://earthquake.usgs.gov
 USP     http://sismo.iag.usp.br
 
 (1) :meth:`~obspy.clients.fdsn.client.Client.get_waveforms()`: The following

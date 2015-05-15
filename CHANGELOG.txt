@@ -23,12 +23,12 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
 
-releases:
+0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
    * Fix catalog plot with events that have no origin depth or
      origin time (see #1021)
  - obspy.datamark:
-   * Fix datawide=3 and datawide=0.5 block reading
+   * Fix datawide=3 and datawide=0.5 block reading (see #1016)
  - obspy.earthworm:
    * Fix Python3 compatibility problem
  - obspy.imaging:
@@ -40,7 +40,7 @@ releases:
  - obspy.seedlink:
    * Fix Python3 compatibility for seedlink.easyseedlink
    * Basic seedlink client: Properly timeout requests with valid station
-     selection but no data available in selected time window (see # 1045)
+     selection but no data available in selected time window (see #1045)
  - obspy.signal:
    * Fix return data types/values of polarization routines (see #1026)
  - obspy.station:

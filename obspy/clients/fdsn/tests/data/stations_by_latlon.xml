@@ -10,7 +10,7 @@
   <Description>Antarctic Seismographic Argentinean Italian Network (ASAIN)</Description>
   <TotalNumberStations>6</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="ORCD" startDate="1997-03-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN-ALL,_REALTIME,.UNRESTRICTED">
+  <Station code="ORCD" startDate="1997-03-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_REALTIME,_FDSN-ALL,.UNRESTRICTED">
    <Latitude>-60.7381</Latitude>
    <Longitude>-44.7361</Longitude>
    <Elevation>20.0</Elevation>
@@ -26,7 +26,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/IDA)</Description>
   <TotalNumberStations>50</TotalNumberStations>
   <SelectedNumberStations>1</SelectedNumberStations>
-  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_CARIBE-EWS,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_LACSN,_REALTIME,_STS-1,.UNRESTRICTED">
+  <Station code="HOPE" startDate="1996-12-10T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,_REALTIME,_GSN,_CARIBE-EWS,_FDSN-ALL,.UNRESTRICTED,_STS-1,_LACSN,_FDSN">
    <Comment>
     <Value>Day contains positive leap second (86401 s/day).</Value>
     <BeginEffectiveTime>1998-12-31T00:00:00</BeginEffectiveTime>
