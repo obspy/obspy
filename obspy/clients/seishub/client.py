@@ -278,6 +278,11 @@ class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
+    @deprecated("'getResource' has been renamed to 'get_resource'. Use "
+                "that instead.")
+    def getResource(self, *args, **kwargs):
+        return self.get_resource(*args, **kwargs)
+
     def get_resource(self, resource_name, format=None, **kwargs):
         """
         Gets a resource.
@@ -296,6 +301,11 @@ class _BaseRESTClient(object):
               resource_name
         return self.client._fetch(url, **kwargs)
 
+    @deprecated("'getXMLResource' has been renamed to 'get_xml_resource'. Use "
+                "that instead.")
+    def getXMLResource(self, *args, **kwargs):
+        return self.get_xml_resource(*args, **kwargs)
+
     def get_xml_resource(self, resource_name, **kwargs):
         """
         Gets a XML resource.
@@ -307,6 +317,11 @@ class _BaseRESTClient(object):
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
         return self.client._objectify(url, **kwargs)
+
+    @deprecated("'putResource' has been renamed to 'put_resource'. Use "
+                "that instead.")
+    def putResource(self, *args, **kwargs):
+        return self.put_resource(*args, **kwargs)
 
     def put_resource(self, resource_name, xml_string, headers={}):
         """
@@ -334,6 +349,11 @@ class _BaseRESTClient(object):
                         self.resourcetype, resource_name])
         return self.client._HTTP_request(
             url, method="PUT", xml_string=xml_string, headers=headers)
+
+    @deprecated("'deleteResource' has been renamed to 'delete_resource'. Use "
+                "that instead.")
+    def deleteResource(self, *args, **kwargs):
+        return self.delete_resource(*args, **kwargs)
 
     def delete_resource(self, resource_name, headers={}):
         """
