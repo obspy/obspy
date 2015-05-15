@@ -3,6 +3,7 @@ from unittest import TestCase
 from obspy.signal.array_analysis import SeismicArray
 from obspy.core.inventory.station import Station
 from obspy.core.inventory.network import Network
+import numpy as np
 
 
 class TestSeismicArray(TestCase):
@@ -11,8 +12,6 @@ class TestSeismicArray(TestCase):
     """
 
     def setUp(self):
-        # self.simpleinv = {}  # a simple dictionary, like inventory? should be better than using actual inventory class
-
         codes = "bl br m ul ur".split()
         lat = [0, 0, 1, 2, 2]
         long = [0, 2, 1, 0, 2]
@@ -31,9 +30,6 @@ class TestSeismicArray(TestCase):
         Test get_geometry_xyz and, implicitly, _get_geometry (necessary because
         self.geometry is a property and can't be set).
         """
-        ref_lat = 5  # result of testarray.center_of_gravity
-        ref_lon = 20
-        ref_height = 10
         geo = self.testarray.get_geometry_xyz(1, 1, 0,
                                               correct_3dplane=False)
         geo_exp = {'5pt.bl': {'x': -111.31564682647114, 'y':
@@ -45,10 +41,15 @@ class TestSeismicArray(TestCase):
                               'z': 0.0},
                    '5pt.ur': {'x': 111.28219117308639, 'y': 110.5751633754653,
                               'z': 0.0}}
-        # use almost equal?
         self.assertEqual(geo, geo_exp)
-        #geo = testarray.get_geometry_xyz(ref_lat, ref_lon, ref_height,
-                                       #  correct_3dplane=True)
+        geo = self.testarray.get_geometry_xyz(1, 1, 0,
+                                              correct_3dplane=True)
+        geo_exp = np.array([[-111.31564683, -110.57516338, 0.],
+                            [111.31564683, -110.57516338, 0.],
+                            [0., 0., 0.],
+                            [-111.28219117, 110.57516338, 0.],
+                            [111.28219117, 110.57516338, 0.]])
+        np.testing.assert_almost_equal(geo_exp, geo)
 
     def test__get_geometry(self):
         geo_exp = {'5pt.bl': {'absolute_height_in_km': 0.0,
@@ -64,7 +65,6 @@ class TestSeismicArray(TestCase):
         geo = self.testarray.geometry
         self.assertEqual(geo, geo_exp)
         # test for both inventories (or fake inventories) with and w/o channels
-
 
     def test_center_of_gravity(self):
         self.assertEqual(self.testarray.center_of_gravity,

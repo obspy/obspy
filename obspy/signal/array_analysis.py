@@ -118,6 +118,26 @@ class SeismicArray(object):
                         geo[station_code] = this_coordinates
         return geo
 
+
+    def _convert_geometry_to_array(self, geometry):
+        """
+        Take a geometry dictionary (as provided by self.geometry, or by
+        get_geometry_xyz) and convert to a numpy array, as used in some
+        methods.
+        """
+        geom_array = np.empty((len(geometry), 3))
+        try:
+            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+                geom_array[_i, 0] = value["x"]
+                geom_array[_i, 1] = value["y"]
+                geom_array[_i, 2] = value["z"]
+        except KeyError:
+            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+                geom_array[_i, 0] = float(value["latitude"])
+                geom_array[_i, 1] = float(value["longitude"])
+                geom_array[_i, 2] = value["absolute_height_in_km"]
+        return geom_array
+
     @property
     def geometrical_center(self):
         extent = self.extent
@@ -214,13 +234,11 @@ class SeismicArray(object):
         :param latitude: Latitude of reference origin
         :param longitude: Longitude of reference origin
         :param absolute_height_in_km: Elevation of reference origin
-        :param correct_3dplane: applies a 3D best fitting plane to the array.
+        :param correct_3dplane: Corrects the returned geometry by a
+               best-fitting 3D plane.
                This might be important if the array is located on an inclined
                slope (e.g., at a volcano).
-        :return: Returns the geometry of the stations as 2d numpy.ndarray
-                The first dimension are the station indexes with the same order
-                as the traces in the stream object. The second index are the
-                values of [lat, lon, elev] in km.
+        :return: Returns the geometry of the stations as dictionary.
         """
         geometry = {}
 
@@ -233,14 +251,14 @@ class SeismicArray(object):
                 "z": absolute_height_in_km - value["absolute_height_in_km"]
             }
 
-        # Todo: Adjust to dictionary based distances!!
         if correct_3dplane:
+            # use the geometry in np.array form - more efficient.
+            geometry = self._convert_geometry_to_array(geometry)
             A = geometry
             u, s, vh = np.linalg.linalg.svd(A)
             v = vh.conj().transpose()
             # satisfies the plane equation a*x + b*y + c*z = 0
-            nstat = len(self.geometry)
-            result = np.zeros((nstat, 3))
+            result = np.zeros((len(geometry), 3))
             # now we are seeking the station positions on that plane
             # geometry[:,2] += v[2,-1]
             n = v[:, -1]
@@ -257,8 +275,8 @@ class SeismicArray(object):
                 geometry[:, 2]) / (
                                 n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
             geometry = result[:]
-            print("Best fitting plane-coordinates :", geometry)
-
+            #print("Best fitting plane-coordinates :\n", geometry)
+            # todo: convert geometry back to a dictionary.
         return geometry
 
     def find_closest_station(self, latitude, longitude,
@@ -365,16 +383,10 @@ class SeismicArray(object):
             absolute_height = self.geometrical_center["absolute_height_in_km"]
         geom = self.get_geometry_xyz(latitude, longitude,
                                      absolute_height)
-        nstat = len(geom)
-        # Cludge to allow using the code further below which is still based
-        # on a simple geometry array rather than a dictionary.
-        geometry = np.empty((nstat, 3), dtype="float32")
-        for _i, (key, value) in enumerate(list(geom.items())):
-            geometry[_i, 0] = value["x"]
-            geometry[_i, 1] = value["y"]
-            geometry[_i, 2] = value["z"]
 
+        geometry = self._convert_geometry_to_array(geom)
         if static_3D:
+
             time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y),
                                       dtype="float32")
             for k in range(grdpts_x):
