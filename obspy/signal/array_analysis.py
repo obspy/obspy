@@ -58,7 +58,7 @@ class SeismicArray(object):
 
     def add_inventory(self, inv):
         if self.inventory is not None:
-            raise NotImplementedError
+            raise NotImplementedError("Already has an inventory attached.")
         self.inventory = inv
 
     def plot(self):
@@ -120,15 +120,15 @@ class SeismicArray(object):
 
     @property
     def geometrical_center(self):
-        extend = self.extend
+        extent = self.extent
         return {
-            "latitude": (extend["max_latitude"] +
-                         extend["min_latitude"]) / 2.0,
-            "longitude": (extend["max_longitude"] +
-                          extend["min_longitude"]) / 2.0,
+            "latitude": (extent["max_latitude"] +
+                         extent["min_latitude"]) / 2.0,
+            "longitude": (extent["max_longitude"] +
+                          extent["min_longitude"]) / 2.0,
             "absolute_height_in_km":
-                (extend["min_absolute_height_in_km"] +
-                 extend["max_absolute_height_in_km"]) / 2.0
+            (extent["min_absolute_height_in_km"] +
+             extent["max_absolute_height_in_km"]) / 2.0
         }
 
     @property
@@ -166,7 +166,7 @@ class SeismicArray(object):
         return max(distances)
 
     @property
-    def extend(self):
+    def extent(self):
         lats, lngs, hgt = self.__coordinate_values()
 
         return {
