@@ -4,11 +4,11 @@
 
 package:
   name: obspy
-  version: "0.10.1"
+  version: "0.10.2"
 
 source:
   fn: obspy-master.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.10.1.zip#md5=0d32bcf8e9534d32c91efee84291bad3
+  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.10.2.zip#md5=7a77c6b96143e6758c38fed0775d2b16
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
   # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
@@ -16,7 +16,7 @@ source:
   #path: ../../../..
 
 build:
-  number: 2
+  number: 0
   script: python setup.py install
   # Needed as obspy uses entry points.
   preserve_egg_dir: yes
