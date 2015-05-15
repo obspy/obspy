@@ -1,4 +1,4 @@
-releases:
+0.10.2:
  - obspy.core:
    * Fix catalog plot with events that have no origin depth or
      origin time (see #1021)
