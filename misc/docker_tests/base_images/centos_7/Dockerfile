@@ -8,6 +8,3 @@ RUN yum -y upgrade || true
 RUN yum install -y gcc numpy scipy python-matplotlib python-sqlalchemy python-lxml python-mock python-basemap python-basemap-data python-pip
 RUN easy_install -U setuptools pip
 RUN pip install flake8 suds-jurko future
-# CentOS 7 has a slightly messed up basemap installation.
-RUN mkdir -p /usr/lib64/python2.7/site-packages/mpl_toolkits/basemap/data/
-RUN mv /usr/share/basemap/* /usr/lib64/python2.7/site-packages/mpl_toolkits/basemap/data/
