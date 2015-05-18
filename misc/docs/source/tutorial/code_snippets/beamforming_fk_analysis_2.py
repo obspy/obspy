@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.colors import Normalize
 
 import obspy
 from obspy.core import AttribDict
+from obspy.imaging.cm import obspy_sequential
 from obspy.signal.invsim import corn_freq_2_paz
 from obspy.signal.array_analysis import array_processing
 
@@ -86,7 +86,7 @@ out = array_processing(st, **kwargs)
 
 # Plot
 
-cmap = cm.hot_r
+cmap = obspy_sequential
 
 # make output human readable, adjust backazimuth to values between 0 and 360
 t, rel_power, abs_power, baz, slow = out.T
@@ -127,6 +127,7 @@ ax.set_xticklabels(['N', 'E', 'S', 'W'])
 
 # set slowness limits
 ax.set_ylim(0, 3)
+[i.set_color('grey') for i in ax.get_yticklabels()]
 ColorbarBase(cax, cmap=cmap,
              norm=Normalize(vmin=hist.min(), vmax=hist.max()))
 
