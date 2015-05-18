@@ -41,8 +41,8 @@ def _get_cmap(name):
     return cmap
 
 
-obspy_BuGnYl = _get_cmap("obspy_BuGnYl")
-obspy_sequential = obspy_BuGnYl
+obspy_viridis = _get_cmap("viridis")
+obspy_sequential = obspy_viridis
 obspy_divergent = get_cmap("RdYlBu_r")
 
 
