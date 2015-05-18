@@ -25,6 +25,7 @@ from future.builtins import *  # NOQA
 import numpy as np
 
 from obspy.core.util.decorator import deprecated
+from obspy.imaging.cm import obspy_sequential, obspy_divergent
 from obspy.signal import util
 
 
@@ -856,7 +857,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                     norm='global', st2_isref=True, left=0.1, bottom=0.1,
                     h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
                     d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
-                    clim=0., cmap=None):
+                    clim=0., cmap=obspy_divergent):
     """
     Plot all time frequency misfits and the time series in one plot (per
     component).
@@ -954,36 +955,10 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
-    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    if cmap is None:
-        CDICT_TFM = {'red': ((0.0, 0.0, 0.0),
-                             (0.2, 0.0, 0.0),
-                             (0.4, 0.0, 0.0),
-                             (0.5, 1.0, 1.0),
-                             (0.6, 1.0, 1.0),
-                             (0.8, 1.0, 1.0),
-                             (1.0, 0.2, 0.2)),
-                     'green': ((0.0, 0.0, 0.0),
-                               (0.2, 0.0, 0.0),
-                               (0.4, 1.0, 1.0),
-                               (0.5, 1.0, 1.0),
-                               (0.6, 1.0, 1.0),
-                               (0.8, 0.0, 0.0),
-                               (1.0, 0.0, 0.0)),
-                     'blue': ((0.0, 0.2, 0.2),
-                              (0.2, 1.0, 1.0),
-                              (0.4, 1.0, 1.0),
-                              (0.5, 1.0, 1.0),
-                              (0.6, 0.0, 0.0),
-                              (0.8, 0.0, 0.0),
-                              (1.0, 0.0, 0.0))}
-
-        cmap = LinearSegmentedColormap('cmap_tfm', CDICT_TFM, 1024)
 
     # compute time frequency misfits
     TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
@@ -1150,7 +1125,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                  norm='global', st2_isref=True, A=10., k=1., left=0.1,
                  bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
                  w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
-                 ylim=0., clim=0., cmap=None):
+                 ylim=0., clim=0., cmap=obspy_sequential):
     """
     Plot all time frequency Goodness-of-Fits and the time series in one plot
     (per component).
@@ -1240,30 +1215,10 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
-    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    if cmap is None:
-        CDICT_GOF = {'red': ((0.0, 0.6, 0.6),
-                             (0.4, 0.6, 1.0),
-                             (0.6, 1.0, 1.0),
-                             (0.8, 1.0, 1.0),
-                             (1.0, 1.0, 1.0)),
-                     'green': ((0.0, 0.0, 0.0),
-                               (0.4, 0.0, 0.5),
-                               (0.6, 0.5, 1.0),
-                               (0.8, 1.0, 1.0),
-                               (1.0, 1.0, 1.0)),
-                     'blue': ((0.0, 0.0, 0.0),
-                              (0.4, 0.0, 0.0),
-                              (0.6, 0.0, 0.0),
-                              (0.8, 0.0, 1.0),
-                              (1.0, 1.0, 1.0))}
-
-        cmap = LinearSegmentedColormap('cmap_gof', CDICT_GOF, 1024)
 
     # compute time frequency misfits
     TFEG = tfeg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
@@ -1428,8 +1383,8 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
 def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
              bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
-             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
-             mode='absolute', fft_zero_pad_fac=0):
+             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0.0,
+             cmap=obspy_sequential, mode='absolute', fft_zero_pad_fac=0):
     """
     Plot time frequency representation, spectrum and time series of the signal.
 
@@ -1484,7 +1439,6 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
-    from matplotlib.colors import LinearSegmentedColormap
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
@@ -1495,31 +1449,6 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         nfft = util.next_pow_2(npts) * fft_zero_pad_fac
 
     f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
-
-    if cmap is None:
-        CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
-                             (0.05, 1.0, 1.0),
-                             (0.2, 0.0, 0.0),
-                             (0.4, 0.0, 0.0),
-                             (0.6, 0.0, 0.0),
-                             (0.8, 1.0, 1.0),
-                             (1.0, 1.0, 1.0)),
-                     'green': ((0.0, 1.0, 1.0),
-                               (0.05, 0.0, 0.0),
-                               (0.2, 0.0, 0.0),
-                               (0.4, 1.0, 1.0),
-                               (0.6, 1.0, 1.0),
-                               (0.8, 1.0, 1.0),
-                               (1.0, 0.0, 0.0)),
-                     'blue': ((0.0, 1.0, 1.0),
-                              (0.05, 1.0, 1.0),
-                              (0.2, 1.0, 1.0),
-                              (0.4, 1.0, 1.0),
-                              (0.6, 0.0, 0.0),
-                              (0.8, 0.0, 0.0),
-                              (1.0, 0.0, 0.0))}
-
-        cmap = LinearSegmentedColormap('cmap_tfr', CDICT_TFR, 1024)
 
     if len(st.shape) == 1:
         W = np.zeros((1, nf, npts), dtype=np.complex)
