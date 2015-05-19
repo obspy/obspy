@@ -118,8 +118,7 @@ class SeismicArray(object):
                         geo[station_code] = this_coordinates
         return geo
 
-
-    def _convert_geometry_to_array(self, geometry):
+    def _geometry_dict_to_array(self, geometry):
         """
         Take a geometry dictionary (as provided by self.geometry, or by
         get_geometry_xyz) and convert to a numpy array, as used in some
@@ -253,9 +252,9 @@ class SeismicArray(object):
 
         if correct_3dplane:
             # use the geometry in np.array form - more efficient.
-            geometry = self._convert_geometry_to_array(geometry)
-            A = geometry
-            u, s, vh = np.linalg.linalg.svd(A)
+            geometry = self._geometry_dict_to_array(geometry)
+            a = geometry
+            u, s, vh = np.linalg.linalg.svd(a)
             v = vh.conj().transpose()
             # satisfies the plane equation a*x + b*y + c*z = 0
             result = np.zeros((len(geometry), 3))
@@ -276,7 +275,14 @@ class SeismicArray(object):
                                 n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
             geometry = result[:]
             #print("Best fitting plane-coordinates :\n", geometry)
-            # todo: convert geometry back to a dictionary.
+
+            # convert geometry array back to a dictionary.
+            geomx = {}
+            for _i, (key, value) in enumerate(sorted(
+                    list(self.geometry.items()))):
+                geomx[key] = {'x': geometry[_i, 0], 'y': geometry[_i, 1],
+                              'z': geometry[_i, 0]}
+            geometry = geomx
         return geometry
 
     def find_closest_station(self, latitude, longitude,
@@ -306,7 +312,8 @@ class SeismicArray(object):
         """
         Returns timeshift table for the geometry of the current array, in
         kilometres relative to a given centre (uses geometric centre if not
-        specified), and a pre-defined backazimuth.
+        specified), and a pre-defined backazimuth. Returns nested dict of
+        timeshifts at each slowness between sll and slm, with sls increment.
 
         :param sll: slowness x min (lower)
         :param slm: slowness x max (lower)
@@ -315,7 +322,9 @@ class SeismicArray(object):
         :param latitude: latitude of reference origin
         :param longitude: longitude of reference origin
         :param absolute_height: elevation of reference origin, in km
-        :param vel_cor: correction velocity (upper layer) in km/s
+        :param vel_cor: correction velocity (upper layer) in km/s. May be given
+            at each station as a dictionary with the station IDs as keys (as in
+            self.geometry).
         :param static_3D: a correction of the station height is applied using
             vel_cor the correction is done according to the formula:
             t = rxy*s - rz*cos(inc)/vel_cor
@@ -336,6 +345,7 @@ class SeismicArray(object):
             try:
                 inc = math.asin(vel_cor * sx)
             except ValueError:
+                # if vel_cor given as dict:
                 inc = np.pi / 2.0
 
             time_shifts = {}
@@ -347,6 +357,7 @@ class SeismicArray(object):
                     try:
                         v = vel_cor[key]
                     except TypeError:
+                        # if vel_cor is a constant:
                         v = vel_cor
                     time_shifts[key] += value["z"] * math.cos(inc) / v
 
@@ -384,7 +395,7 @@ class SeismicArray(object):
         geom = self.get_geometry_xyz(latitude, longitude,
                                      absolute_height)
 
-        geometry = self._convert_geometry_to_array(geom)
+        geometry = self._geometry_dict_to_array(geom)
         if static_3D:
 
             time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y),
