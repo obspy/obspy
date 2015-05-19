@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy import UTCDateTime, read_inventory
+from obspy import UTCDateTime, read_inventory, read_events
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import (Channel, Inventory, Network, Response,
@@ -274,6 +274,25 @@ class InventoryBasemapTestCase(unittest.TestCase):
             inv.plot(method='basemap', projection='local', resolution='i',
                      size=20**2, color_per_network={'GR': 'b', 'BW': 'green'},
                      outfile=ic.name)
+
+    def test_combined_station_event_plot(self):
+        """
+        Tests the coombined plotting of inventory/event data in one plot,
+        reusing the basemap instance.
+        """
+        inv = read_inventory()
+        cat = read_events()
+        reltol = 1.0
+        # Coordinate lines might be slightly off, depending on the basemap
+        # version.
+        if BASEMAP_VERSION < [1, 0, 7]:
+            reltol = 3.0
+        with ImageComparison(self.image_dir,
+                             'basemap_combined_stations-events.png',
+                             reltol=reltol) as ic:
+            rcParams['savefig.dpi'] = 72
+            fig = inv.plot(show=False)
+            cat.plot(outfile=ic.name, fig=fig)
 
 
 @unittest.skipIf(not (CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]),

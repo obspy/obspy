@@ -186,6 +186,16 @@ Gallery
     resp = read_inventory()[0][0][0].response
     resp.plot(0.001, output="VEL")
 
+.. gallery-plot::
+    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :alt: Basemap plot of station and event data together
+
+    from obspy import read_inventory, read_events
+    inv = read_inventory()
+    cat = read_events()
+    fig = inv.plot(show=False)
+    cat.plot(fig=fig)
+
 .. raw:: html
 
     </div>

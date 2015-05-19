@@ -340,7 +340,7 @@ class Network(BaseNode):
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='#b15928', time=None, show=True,
-             outfile=None, method=None, **kwargs):  # @UnusedVariable
+             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all stations in current network object.
 
@@ -397,6 +397,16 @@ class Network(BaseNode):
             * ``None`` to use the best available library
 
             Defaults to ``None``.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse, returned from a previous
+            inventory/catalog plot call with `method=basemap`.
+            If a previous basemap plot is reused, any kwargs regarding the
+            basemap plot setup will be ignored (i.e.  `projection`,
+            `resolution`, `continent_fill_color`, `water_fill_color`). Note
+            that multiple plots using colorbars likely are problematic, but
+            e.g. one station plot (without colorbar) and one event plot (with
+            colorbar) together should work well.
+        :returns: Figure instance with the plot.
 
         .. rubric:: Example
 
