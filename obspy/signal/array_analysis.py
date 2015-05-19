@@ -118,25 +118,6 @@ class SeismicArray(object):
                         geo[station_code] = this_coordinates
         return geo
 
-    def _geometry_dict_to_array(self, geometry):
-        """
-        Take a geometry dictionary (as provided by self.geometry, or by
-        get_geometry_xyz) and convert to a numpy array, as used in some
-        methods.
-        """
-        geom_array = np.empty((len(geometry), 3))
-        try:
-            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
-                geom_array[_i, 0] = value["x"]
-                geom_array[_i, 1] = value["y"]
-                geom_array[_i, 2] = value["z"]
-        except KeyError:
-            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
-                geom_array[_i, 0] = float(value["latitude"])
-                geom_array[_i, 1] = float(value["longitude"])
-                geom_array[_i, 2] = value["absolute_height_in_km"]
-        return geom_array
-
     @property
     def geometrical_center(self):
         extent = self.extent
@@ -240,7 +221,6 @@ class SeismicArray(object):
         :return: Returns the geometry of the stations as dictionary.
         """
         geometry = {}
-
         for key, value in list(self.geometry.items()):
             x, y = utlGeoKm(longitude, latitude, value["longitude"],
                             value["latitude"])
@@ -249,40 +229,8 @@ class SeismicArray(object):
                 "y": y,
                 "z": absolute_height_in_km - value["absolute_height_in_km"]
             }
-
         if correct_3dplane:
-            # use the geometry in np.array form - more efficient.
-            geometry = self._geometry_dict_to_array(geometry)
-            a = geometry
-            u, s, vh = np.linalg.linalg.svd(a)
-            v = vh.conj().transpose()
-            # satisfies the plane equation a*x + b*y + c*z = 0
-            result = np.zeros((len(geometry), 3))
-            # now we are seeking the station positions on that plane
-            # geometry[:,2] += v[2,-1]
-            n = v[:, -1]
-            result[:, 0] = (geometry[:, 0] - n[0] * (
-                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-                geometry[:, 2]) / (
-                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-            result[:, 1] = (geometry[:, 1] - n[1] * (
-                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-                geometry[:, 2]) / (
-                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-            result[:, 2] = (geometry[:, 2] - n[2] * (
-                n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-                geometry[:, 2]) / (
-                                n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-            geometry = result[:]
-            #print("Best fitting plane-coordinates :\n", geometry)
-
-            # convert geometry array back to a dictionary.
-            geomx = {}
-            for _i, (key, value) in enumerate(sorted(
-                    list(self.geometry.items()))):
-                geomx[key] = {'x': geometry[_i, 0], 'y': geometry[_i, 1],
-                              'z': geometry[_i, 0]}
-            geometry = geomx
+            correct_with_3dplane(geometry)
         return geometry
 
     def find_closest_station(self, latitude, longitude,
@@ -395,9 +343,10 @@ class SeismicArray(object):
         geom = self.get_geometry_xyz(latitude, longitude,
                                      absolute_height)
 
-        geometry = self._geometry_dict_to_array(geom)
-        if static_3D:
+        geometry = _geometry_dict_to_array(geom)
 
+        if static_3D:
+            nstat = len(geometry)
             time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y),
                                       dtype="float32")
             for k in range(grdpts_x):
@@ -441,6 +390,7 @@ class SeismicArray(object):
                                    longitude, absolute_height_in_km=0.0):
         geo = self.geometry
 
+        # todo: what is this and should I use it for the _geometry_dict_to_array??
         components = collections.defaultdict(list)
         for tr in stream:
             components[tr.stats.channel[-1].upper()].append(tr)
@@ -479,6 +429,7 @@ class SeismicArray(object):
         array_coords = np.ndarray(shape=(len(geo), 3))
         for _i, tr in enumerate(list(components.values())[0]):
             station = "%s.%s" % (tr.stats.network, tr.stats.station)
+            # todo: This is the same as self.geometry_np_array, isn't it?
 
             x, y = utlGeoKm(longitude, latitude,
                             geo[station]["longitude"],
@@ -1066,6 +1017,82 @@ class SeismicArray(object):
                                 elevation=z))
 
 
+def _geometry_dict_to_array(geometry):
+    """
+    Take a geometry dictionary (as provided by self.geometry, or by
+    get_geometry_xyz) and convert to a numpy array, as used in some
+    methods.
+    """
+    geom_array = np.empty((len(geometry), 3))
+    try:
+        for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+            geom_array[_i, 0] = value["x"]
+            geom_array[_i, 1] = value["y"]
+            geom_array[_i, 2] = value["z"]
+    except KeyError:
+        for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+            geom_array[_i, 0] = float(value["latitude"])
+            geom_array[_i, 1] = float(value["longitude"])
+            geom_array[_i, 2] = value["absolute_height_in_km"]
+    return geom_array
+
+
+def correct_with_3dplane(geometry):
+    """
+    Correct a given array geometry with a best-fitting plane.
+    :param geometry: nested dictionary of stations, as returned for example by
+    self.geometry or self.get_geometry_xyz.
+    :return: Returns corrected geometry, again as dict.
+    """
+
+    # sort keys in the nested dict to be alphabetical:
+    coord_sys_keys = sorted(list(geometry.items())[0][1].keys())
+    if coord_sys_keys[0] == 'x':
+        pass
+    elif coord_sys_keys[0] == 'absolute_height_in_km':
+        # set manually because order is important.
+        coord_sys_keys = ['latitude', 'longitude', 'absolute_height_in_km']
+    else:
+        raise KeyError("Geometry dictionary does not have correct keys.")
+    orig_geometry = geometry.copy()
+    geometry = _geometry_dict_to_array(geometry)
+    a = geometry
+    u, s, vh = np.linalg.linalg.svd(a)
+    v = vh.conj().transpose()
+    # satisfies the plane equation a*x + b*y + c*z = 0
+    result = np.zeros((len(geometry), 3))
+    # now we are seeking the station positions on that plane
+    # geometry[:,2] += v[2,-1]
+    n = v[:, -1]
+    result[:, 0] = (geometry[:, 0] - n[0] * (
+        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+        geometry[:, 2]) / (
+                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+    result[:, 1] = (geometry[:, 1] - n[1] * (
+        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+        geometry[:, 2]) / (
+                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+    result[:, 2] = (geometry[:, 2] - n[2] * (
+        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+        geometry[:, 2]) / (
+                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+    geometry = result[:]
+    #print("Best fitting plane-coordinates :\n", geometry)
+
+    # convert geometry array back to a dictionary.
+    geodict = {}
+    # The sorted list is necessary to match the station IDs (the keys in the
+    # geometry dict) to the correct array row (or column?), same as is done in
+    # _geometry_dict_to_array, but backwards.
+    for _i, (key, value) in enumerate(sorted(
+            list(orig_geometry.items()))):
+        geodict[key] = {coord_sys_keys[0]: geometry[_i, 0],
+                        coord_sys_keys[1]: geometry[_i, 1],
+                        coord_sys_keys[2]: geometry[_i, 2]}
+    geometry = geodict
+    return geometry
+
+
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
     """
@@ -1637,6 +1664,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
+# todo: get rid of this.
+# note: no usage found with return_center=True, so... is the rest equal to _convert etc
 def get_geometry(stream, coordsys='lonlat', return_center=False,
                  correct_3dplane=False, verbose=False):
     """
@@ -1959,6 +1988,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
+    # todo: remove this call to get_geometry.
+    # May have to turn this whole thing into a method... then no need for the
+    # get_geometry, no need for _array_analysis_wrapper to attach coordinates
+    # to the streams etc etc. Maybe even merge both together (almost)
+    # completely?
     geometry = get_geometry(stream, coordsys=coordsys,
                             correct_3dplane=correct_3dplane, verbose=verbose)
 
@@ -2167,6 +2201,7 @@ def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
     grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
     abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    # todo: remove this call to get_geometry
     geometry = get_geometry(stream, coordsys=coordsys,
                             correct_3dplane=correct_3dplane, verbose=verbose)
     #geometry = get_geometry(stream, coordsys=coordsys, verbose=verbose)
