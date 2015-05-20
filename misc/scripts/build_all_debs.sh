@@ -36,6 +36,7 @@ then
     git fetch upstream
 fi
 git clean -fxd
+git fetch --all
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
 then

@@ -11,7 +11,6 @@ import unittest
 from os.path import dirname, join
 
 import numpy as np
-from numpy.testing import assert_allclose
 from scipy import signal
 
 import obspy
@@ -143,14 +142,15 @@ class PolarizationTestCase(unittest.TestCase):
         self.assertAlmostEqual(out["incidence_error"][0], 0.000000)
         for key in ["azimuth", "incidence"]:
             got = out[key]
-            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
+            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4))
         for key in ["azimuth_error", "incidence_error"]:
             got = out[key]
             expected = np.empty_like(got)
             expected.fill(got[0])
-            assert_allclose(got, expected, rtol=1e-4, atol=1e-16)
-        assert_allclose(out["timestamp"] - out["timestamp"][0],
-                        np.arange(0, 92, 1))
+            self.assertTrue(np.allclose(got, expected, rtol=1e-4, atol=1e-16))
+        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 92, 1)))
 
     def test_polarization_flinn(self):
         st = _create_test_data()
@@ -171,9 +171,10 @@ class PolarizationTestCase(unittest.TestCase):
         self.assertAlmostEqual(out["planarity"][0], 1.000000)
         for key in ["azimuth", "incidence", "rectilinearity", "planarity"]:
             got = out[key]
-            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
-        assert_allclose(out["timestamp"] - out["timestamp"][0],
-                        np.arange(0, 92, 1))
+            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4))
+        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 92, 1)))
 
     def test_polarization_vidale(self):
         st = _create_test_data()
@@ -196,9 +197,10 @@ class PolarizationTestCase(unittest.TestCase):
         for key in ["azimuth", "incidence", "rectilinearity", "planarity",
                     "ellipticity"]:
             got = out[key]
-            assert_allclose(got / got[0], np.ones_like(got), rtol=1e-4)
-        assert_allclose(out["timestamp"] - out["timestamp"][0],
-                        np.arange(0, 97.85, 0.05), rtol=1e-5)
+            self.assertTrue(np.allclose(got / got[0], np.ones_like(got),
+                                        rtol=1e-4))
+        self.assertTrue(np.allclose(out["timestamp"] - out["timestamp"][0],
+                                    np.arange(0, 97.85, 0.05), rtol=1e-5))
 
 
 def suite():
