@@ -748,7 +748,6 @@ class SeismicArray(object):
                 # between 0 and 360
                 t, rel_power, abs_power, baz, slow = out.T
                 baz[baz < 0.0] += 360
-                # Or add more plotting options here.
 
             else:
                 kwargs = dict(
@@ -802,8 +801,10 @@ class SeismicArray(object):
 
             numslice = len(t)
             powmap = []
-            slx = np.arange(sllx - sls, slmx, sls)
-            sly = np.arange(slly - sls, slmy, sls)
+            # remove last item as a cludge to get plotting to work - not sure
+            # it's always clever or just a kind of rounding or modulo problem
+            slx = np.arange(sllx - sls, slmx, sls)[:-1]
+            sly = np.arange(slly - sls, slmy, sls)[:-1]
             if baz_plot:
                 maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
                 bzs = np.arctan2(sls, np.sqrt(
@@ -928,9 +929,11 @@ class SeismicArray(object):
                 ax.set_title(result)
 
                 plt.show()
+            # Return the beamforming results to allow working more on them,
+            # make other plots etc.
+            return out
         finally:
             shutil.rmtree(tmpdir)
-            return out
 
     def plot_transfer_function(self, stream, sx=(-10, 10),
                                sy=(-10, 10), sls=0.5, freqmin=0.1, freqmax=4.0,
