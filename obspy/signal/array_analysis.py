@@ -792,13 +792,21 @@ class SeismicArray(object):
                     frqhigh, stepsfreq, coordsys='lonlat',
                     correct_3dplane=False, static_3D=False, vel_cor=vel_corr)
 
-            # now let's do the plotting
-            _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                 filename_patterns, baz_plot, method,
-                                 st_workon, starttime, wlen, endtime,
-                                 array_response, transff)
+                # now let's do the plotting
+                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                                     filename_patterns, baz_plot, method,
+                                     st_workon, starttime, wlen, endtime,
+                                     array_response, transff)
+            # todo: these won't work if they don't have the filename_patterns
+            # passed (?)
+            plot_bf_results_over_time(out, starttime, endtime)
+            if baz_hist_plot is True:
+                plot_baz_hist(out, starttime, endtime)
+
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
+            # todo do this only if store is NOT dump! i.e. make the dump thing
+            # optional? or read dumped file, return if asked.
             return out
         finally:
             shutil.rmtree(tmpdir)
@@ -1318,11 +1326,14 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
 
         plt.show()
 
+
 def plot_baz_hist(out, t_start=None, t_end=None):
     """
     Plot a backazimuth - slowness histogram.
     :param out: beamforming result e.g. from SeismicArray.fk_analysis.
     """
+    from matplotlib.colorbar import ColorbarBase
+    from matplotlib.colors import Normalize
     cmap = cm.hot_r
     # make output human readable, adjust backazimuth to values between 0 and 360
     t, rel_power, abs_power, baz, slow = out.T
@@ -1367,6 +1378,30 @@ def plot_baz_hist(out, t_start=None, t_end=None):
                  norm=Normalize(vmin=hist.min(), vmax=hist.max()))
     if t_start is not None and t_end is not None:
         plt.suptitle('Time: {} - {}'.format(t_start, t_end))
+    plt.show()
+
+
+def plot_bf_results_over_time(out, t_start, t_end):
+    import matplotlib.dates as mdates
+    # Plot
+    labels = ['rel.power', 'abs.power', 'baz', 'slow']
+
+    xlocator = mdates.AutoDateLocator()
+    fig = plt.figure()
+    for i, lab in enumerate(labels):
+        ax = fig.add_subplot(4, 1, i + 1)
+        ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
+                   edgecolors='none')
+        ax.set_ylabel(lab)
+        ax.set_xlim(out[0, 0], out[-1, 0])
+        ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+        ax.xaxis.set_major_locator(xlocator)
+        ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
+
+    fig.suptitle('Time-dependent beamforming results %s' % (
+        t_start.strftime('%Y-%m-%d'), ))
+    #fig.autofmt_xdate()
+    fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
     plt.show()
 
 
@@ -2177,7 +2212,7 @@ def array_transff_freqslowness(stream, slim, sstep, fmin, fmax, fstep,
     transff /= transff.max()
     return transff
 
-
+# todo: remove
 def dump(pow_map, apow_map, i):
     """
     Example function to use with `store` kwarg in
