@@ -475,9 +475,9 @@ class SeismicArray(object):
         return Stream(traces=[tr1, tr2, tr3]), sp
 
     def slowness_whitened_power(self, stream, frqlow, frqhigh,
-                                filter=True, baz_plot=True, static3D=False,
-                                vel_corr=4.8, wlen=-1, slx=(-10, 10),
-                                sly=(-10, 10), sls=0.5, array_response=True):
+                                filter=True, plots=(), show_plots=True,
+                                static3D=False, vel_corr=4.8, wlen=-1,
+                                slx=(-10, 10), sly=(-10, 10), sls=0.5):
         """
         Slowness whitened power analysis.
 
@@ -489,9 +489,6 @@ class SeismicArray(object):
         :type frqlow: float
         :param frqhigh: High corner of frequency range for array analysis
         :type frqhigh: float
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        :type baz_plot: str
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
@@ -507,21 +504,30 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param array_response: superimpose array reponse function in plot (slow!)
-        :type array_response: bool
+        :param plots: List or tuple of desired output plots, e.g.
+         ("baz_slow_map"). Supported options:
+         "baz_slow_map" for a backazimuth-slowness map,
+         "slowness_xy" for a slowness_xy map,
+         "baz_hist" for a backazimuth-slowness polar histogram as in
+          :func:`plot_baz_hist`,
+         "bf_time_dep" for a plot of beamforming results over time as in
+          :func:`plot_bf_results_over_time`.
+        :param show_plots: Rather than showing plots, return the plot objects
+         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="SWP",
                                            frqlow=frqlow, frqhigh=frqhigh,
-                                           filter=filter, baz_plot=baz_plot,
+                                           filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
                                            slx=slx, sly=sly, sls=sls,
-                                           array_response=array_response)
+                                           show_plots=show_plots)
 
     def phase_weighted_stack(self, stream, frqlow, frqhigh,
-                             filter=True, baz_plot=True, static3D=False,
+                             filter=True, plots=(), show_plots=True,
+                             static3D=False,
                              vel_corr=4.8, wlen=-1, slx=(-10, 10),
-                             sly=(-10, 10), sls=0.5, array_response=True):
+                             sly=(-10, 10), sls=0.5):
         """
         Phase weighted stack analysis.
 
@@ -533,9 +539,6 @@ class SeismicArray(object):
         :type frqlow: float
         :param frqhigh: High corner of frequency range for array analysis
         :type frqhigh: float
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        :type baz_plot: str
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
@@ -551,21 +554,29 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param array_response: superimpose array reponse function in plot (slow!)
-        :type array_response: bool
+        :param plots: List or tuple of desired output plots, e.g.
+         ("baz_slow_map"). Supported options:
+         "baz_slow_map" for a backazimuth-slowness map,
+         "slowness_xy" for a slowness_xy map,
+         "baz_hist" for a backazimuth-slowness polar histogram as in
+          :func:`plot_baz_hist`,
+         "bf_time_dep" for a plot of beamforming results over time as in
+          :func:`plot_bf_results_over_time`.
+        :param show_plots: Rather than showing plots, return the plot objects
+         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="PWS",
                                            frqlow=frqlow, frqhigh=frqhigh,
-                                           filter=filter, baz_plot=baz_plot,
+                                           filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
                                            slx=slx, sly=sly, sls=sls,
-                                           array_response=array_response)
+                                           show_plots=show_plots)
 
     def delay_and_sum(self, stream, frqlow, frqhigh,
-                      filter=True, baz_plot=True, static3D=False,
+                      filter=True, plots=(), show_plots=True, static3D=False,
                       vel_corr=4.8, wlen=-1, slx=(-10, 10),
-                      sly=(-10, 10), sls=0.5, array_response=True):
+                      sly=(-10, 10), sls=0.5):
         """
         Delay and sum analysis.
 
@@ -577,9 +588,6 @@ class SeismicArray(object):
         :type frqlow: float
         :param frqhigh: High corner of frequency range for array analysis
         :type frqhigh: float
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        :type baz_plot: str
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
@@ -595,22 +603,29 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param array_response: superimpose array reponse function in plot (slow!)
-        :type array_response: bool
+        :param plots: List or tuple of desired output plots, e.g.
+         ("baz_slow_map"). Supported options:
+         "baz_slow_map" for a backazimuth-slowness map,
+         "slowness_xy" for a slowness_xy map,
+         "baz_hist" for a backazimuth-slowness polar histogram as in
+          :func:`plot_baz_hist`,
+         "bf_time_dep" for a plot of beamforming results over time as in
+          :func:`plot_bf_results_over_time`.
+        :param show_plots: Rather than showing plots, return the plot objects
+         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="DLS",
                                            frqlow=frqlow, frqhigh=frqhigh,
-                                           filter=filter, baz_plot=baz_plot,
+                                           filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
                                            slx=slx, sly=sly, sls=sls,
-                                           array_response=array_response)
+                                           show_plots=show_plots)
 
     def fk_analysis(self, stream, frqlow, frqhigh,
-                    filter=True, baz_plot=True, baz_hist_plot=True,
+                    filter=True, plots=(), show_plots=True,
                     static3D=False, vel_corr=4.8, wlen=-1, wfrac=0.8,
-                    slx=(-10, 10), sly=(-10, 10), sls=0.5,
-                    array_response=True):
+                    slx=(-10, 10), sly=(-10, 10), sls=0.5):
         """
         FK analysis.
 
@@ -622,15 +637,11 @@ class SeismicArray(object):
         :type frqlow: float
         :param frqhigh: High corner of frequency range for array analysis
         :type frqhigh: float
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        :param baz_hist_plot: Whether to show a polar histogram of backazimuth
-         and slowness.
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
-        :param vel_corr: Correction velocity for static topography correction in
-         km/s.
+        :param vel_corr: Correction velocity for static topography correction
+        in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -643,24 +654,31 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param array_response: superimpose array reponse function in plot (slow!)
-        :type array_response: bool
+        :param plots: List or tuple of desired output plots, e.g.
+         ("baz_slow_map"). Supported options:
+         "baz_slow_map" for a backazimuth-slowness map,
+         "slowness_xy" for a slowness_xy map,
+         "baz_hist" for a backazimuth-slowness polar histogram as in
+          :func:`plot_baz_hist`,
+         "bf_time_dep" for a plot of beamforming results over time as in
+          :func:`plot_bf_results_over_time`.
+        :param show_plots: Rather than showing plots, return the plot objects
+         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="FK",
                                            frqlow=frqlow, frqhigh=frqhigh,
-                                           filter=filter, baz_plot=baz_plot,
+                                           filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr,
                                            wlen=wlen, wfrac=wfrac,
                                            slx=slx, sly=sly, sls=sls,
-                                           array_response=array_response,
-                                           baz_hist_plot=baz_hist_plot)
+                                           show_plots=show_plots)
 
     def _array_analysis_helper(self, stream, method, frqlow, frqhigh,
-                               filter=True, baz_plot=True, static3D=False,
+                               filter=True, static3D=False,
                                vel_corr=4.8, wlen=-1, wfrac=0.8, slx=(-10, 10),
-                               sly=(-10, 10), sls=0.5, array_response=True,
-                               baz_hist_plot=False):
+                               sly=(-10, 10), sls=0.5,
+                               plots=(), show_plots=True):
         """
         Array analysis wrapper routine.
 
@@ -676,9 +694,6 @@ class SeismicArray(object):
         :type frqlow: float
         :param frqhigh: High corner of frequency range for array analysis
         :type frqhigh: float
-        :param baz_plot: Whether to show backazimuth-slowness map (True) or
-         slowness x-y map (False).
-        :type baz_plot: str
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
@@ -696,13 +711,35 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param array_response: superimpose array reponse function in plot (slow!)
-        :type array_response: bool
+        :param plots: List or tuple of desired output plots, e.g.
+         ("baz_slow_map"). Supported options:
+         "baz_slow_map" for a backazimuth-slowness map,
+         "slowness_xy" for a slowness_xy map,
+         "baz_hist" for a backazimuth-slowness polar histogram as in
+          :func:`plot_baz_hist`,
+         "bf_time_dep" for a plot of beamforming results over time as in
+          :func:`plot_bf_results_over_time`.
+        :param show_plots: Rather than showing plots, return the plot objects
+         if set to False to allow storing or further manipulation.
         """
 
         if method not in ("FK", "DLS", "PWS", "SWP"):
             raise ValueError("Invalid method: ''" % method)
 
+ #    if "baz_slow_map" for a backazimuth-slowness map,
+         # "slowness_xy" for a slowness_xy map,
+         # "baz_hist" for a backazimuth-slowness polar histogram as in
+         #  :func:`plot_baz_hist`,
+         # "bf_time_dep" for a plot of beamforming results over time as in
+         #  :func:`plot_bf_results_over_time`.
+        if "baz_slow_map" in plots:
+            make_slow_map = True
+        else:
+            make_slow_map = False
+        if "slowness_xy" in plots:
+            make_slowness_xy = True
+        else:
+            make_slowness_xy = False
         sllx, slmx = slx
         slly, slmy = sly
 
@@ -713,20 +750,26 @@ class SeismicArray(object):
         endtime = min([tr.stats.endtime for tr in st_workon])
         st_workon.trim(starttime, endtime)
 
-        #st_workon.merge()
         self._attach_coords_to_stream(st_workon)
 
         if filter:
             st_workon.filter('bandpass', freqmin=frqlow, freqmax=frqhigh,
                              zerophase=True)
-
+        # Making the map plots is efficiently done by saving the power maps to
+        # a temporary directory.
         tmpdir = tempfile.mkdtemp(prefix="obspy-")
         filename_patterns = (os.path.join(tmpdir, 'pow_map_%03d.npy'),
                              os.path.join(tmpdir, 'apow_map_%03d.npy'))
-
-        def dump(pow_map, apow_map, i):
-            np.save(filename_patterns[0] % i, pow_map)
-            np.save(filename_patterns[1] % i, apow_map)
+        if make_slow_map or make_slowness_xy:
+            def dump(pow_map, apow_map, i):
+                """
+                Example function to use with `store` kwarg in
+                :func:`~obspy.signal.array_analysis.SeismicArray.array_processing`.
+                """
+                np.save('pow_map_%d' % i, pow_map)
+                np.save('apow_map_%d' % i, apow_map)
+        else:
+            dump = None
 
         try:
             if method == 'FK':
@@ -776,37 +819,32 @@ class SeismicArray(object):
 
                 # make output human readable, adjust backazimuth to values
                 # between 0 and 360
-                trace = []
                 t, rel_power, baz, slow_x, slow_y, slow = out.T
                 baz[baz < 0.0] += 360
 
-                # calculating array response
-            if array_response:
-                stepsfreq = (frqhigh - frqlow) / 10.
-                tf_slx = sllx
-                tf_smx = slmx
-                tf_sly = slly
-                tf_smy = slmy
-                transff = array_transff_freqslowness(
-                    st_workon, (tf_slx, tf_smx, tf_sly, tf_smy), sls, frqlow,
-                    frqhigh, stepsfreq, coordsys='lonlat',
-                    correct_3dplane=False, static_3D=False, vel_cor=vel_corr)
-
-                # now let's do the plotting
-                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                     filename_patterns, baz_plot, method,
-                                     st_workon, starttime, wlen, endtime,
-                                     array_response, transff)
-            # todo: these won't work if they don't have the filename_patterns
-            # passed (?)
-            plot_bf_results_over_time(out, starttime, endtime)
-            if baz_hist_plot is True:
-                plot_baz_hist(out, starttime, endtime)
+            # now let's do the plotting
+            plot_objects = []
+            if "baz_slow_map" in plots:
+                plt = _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                                           filename_patterns, True, method,
+                                           st_workon, starttime, wlen, endtime)
+                plt.show() if show_plots else plot_objects.append(plt)
+            if "slowness_xy" in plots:
+                plt = _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                                           filename_patterns, False, method,
+                                           st_workon, starttime, wlen, endtime)
+                plt.show() if show_plots else plot_objects.append(plt)
+            if "baz_hist" in plots:
+                plt = plot_baz_hist(out, starttime, endtime)
+                plt.show() if show_plots else plot_objects.append(plt)
+            if "bf_time_dep" in plots:
+                plt = plot_bf_results_over_time(out, starttime, endtime)
+                plt.show() if show_plots else plot_objects.append(plt)
 
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
-            # todo do this only if store is NOT dump! i.e. make the dump thing
-            # optional? or read dumped file, return if asked.
+            if len(plot_objects) > 0:
+                return out, plot_objects
             return out
         finally:
             shutil.rmtree(tmpdir)
@@ -895,11 +933,11 @@ class SeismicArray(object):
                                 longitude=coords["longitude"],
                                 elevation=z))
 
-    def array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
-                     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime,
-                     etime, prewhiten, verbose=False,
-                     timestamp='mlabday', method=0, correct_3dplane=False,
-                     vel_cor=4., static_3D=False, store=None):
+    def array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y,
+                         slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
+                         stime, etime, prewhiten, verbose=False,
+                         timestamp='mlabday', method=0, correct_3dplane=False,
+                         vel_cor=4., static_3D=False, store=None):
         """
         Method for FK-Analysis/Capon
 
@@ -957,7 +995,6 @@ class SeismicArray(object):
         :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
             relpow, backazimuth, slowness
         """
-        BF, CAPON = 0, 1
         res = []
         eotr = True
 
@@ -1011,14 +1048,16 @@ class SeismicArray(object):
         nlow = max(1, nlow)  # avoid using the offset
         nhigh = min(nfft // 2 - 1, nhigh)  # avoid using nyquist
         nf = nhigh - nlow + 1  # include upper and lower frequency
-        # to spead up the routine a bit we estimate all steering vectors in advance
+        # to speed up the routine a bit we estimate all steering vectors in
+        # advance
         steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype=np.complex128)
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
                              deltaf, time_shift_table, steer)
         R = np.empty((nf, nstat, nstat), dtype=np.complex128)
         ft = np.empty((nstat, nf), dtype=np.complex128)
         newstart = stime
-        tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
+        # 0.22 matches 0.2 of historical C bbfk.c
+        tap = cosTaper(nsamp, p=0.22)
         offset = 0
         count = 0
         relpow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
@@ -1093,8 +1132,6 @@ class SeismicArray(object):
             msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
             raise ValueError(msg)
         return np.array(res)
-
-
 
 
 def _geometry_dict_to_array(geometry):
@@ -1172,12 +1209,17 @@ def correct_with_3dplane(geometry):
     geometry = geodict
     return geometry
 
+
 def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
                          baz_plot, method, st_workon, starttime, wlen,
-                         endtime, array_response, transff):
+                         endtime):
     """
-    Some plotting taken out from _array_analysis_helper.
+    Some plotting taken out from _array_analysis_helper. Can't do the array
+    response overlay now though.
+    :param baz_plot: Whether to show backazimuth-slowness map (True) or
+     slowness x-y map (False).
     """
+    trace = []
     t, rel_power, abs_power, baz, slow = out.T
     baz[baz < 0.0] += 360
     # now let's do the plotting
@@ -1261,17 +1303,6 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
                         bbaz = -180. + (bbaz - 180.)
                     slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
                                      pow[ix, iy]))
-                    if array_response:
-                        tslow = (np.sqrt((sx + slow_x) *
-                                         (sx + slow_x) + (
-                            sy + slow_y) *
-                                         (sy + slow_y)))
-                        tbaz = (np.arctan2(sx + slow_x, sy + slow_y) *
-                                180 / np.pi + 180.)
-                        if tbaz > 180.:
-                            tbaz = -180. + (tbaz - 180.)
-                        transgrid.append((tslow, tbaz,
-                                          transff[ix, iy]))
 
             slowgrid = np.asarray(slowgrid)
             sl = slowgrid[:, 0]
@@ -1281,18 +1312,6 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
                                         (grid_x, grid_y),
                                         method='nearest')
             ax.pcolormesh(xi, yi, grid, cmap=cmap)
-
-            if array_response:
-                level = np.arange(0.1, 0.5, 0.1)
-                transgrid = np.asarray(transgrid)
-                tsl = transgrid[:, 0]
-                tbz = transgrid[:, 1]
-                transg = transgrid[:, 2]
-                trans = interpolate.griddata((tsl, tbz), transg,
-                                             (grid_x, grid_y),
-                                             method='nearest')
-                ax.contour(xi, yi, trans, level, colors='k',
-                           linewidth=0.2)
 
             ax.set_xlabel('slowness [s/deg]')
             ax.set_ylabel('backazimuth [deg]')
@@ -1306,16 +1325,6 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
             ax.pcolormesh(slx, sly, powmap[i].T)
             ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
                      head_length=0.01, fc='k', ec='k')
-            if array_response:
-                tslx = np.arange(sllx + slow_x, slmx + slow_x + sls,
-                                 sls)
-                tsly = np.arange(slly + slow_y, slmy + slow_y + sls,
-                                 sls)
-                try:
-                    ax.contour(tsly, tslx, transff.T, 5, colors='k',
-                               linewidth=0.5)
-                except:
-                    pass
             ax.set_ylim(slx[0], slx[-1])
             ax.set_xlim(sly[0], sly[-1])
         new_time = t[i]
@@ -1324,7 +1333,7 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
             baz[i], slow[i], UTCDateTime(new_time))
         ax.set_title(result)
 
-        plt.show()
+        return plt
 
 
 def plot_baz_hist(out, t_start=None, t_end=None):
@@ -1378,7 +1387,7 @@ def plot_baz_hist(out, t_start=None, t_end=None):
                  norm=Normalize(vmin=hist.min(), vmax=hist.max()))
     if t_start is not None and t_end is not None:
         plt.suptitle('Time: {} - {}'.format(t_start, t_end))
-    plt.show()
+    return plt
 
 
 def plot_bf_results_over_time(out, t_start, t_end):
@@ -1402,7 +1411,7 @@ def plot_bf_results_over_time(out, t_start, t_end):
         t_start.strftime('%Y-%m-%d'), ))
     #fig.autofmt_xdate()
     fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
-    plt.show()
+    return plt
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -2211,15 +2220,6 @@ def array_transff_freqslowness(stream, slim, sstep, fmin, fmax, fstep,
 
     transff /= transff.max()
     return transff
-
-# todo: remove
-def dump(pow_map, apow_map, i):
-    """
-    Example function to use with `store` kwarg in
-    :func:`~obspy.signal.array_analysis.SeismicArray.array_processing`.
-    """
-    np.save('pow_map_%d' % i, pow_map)
-    np.save('apow_map_%d' % i, apow_map)
 
 
 def beamforming(stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow, frqhigh,
