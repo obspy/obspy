@@ -1,4 +1,7 @@
 0.10.x:
+  - obspy.station:
+    * ObsPy no longer assumes that the StationXML namespace is the default
+      namespace (see #1060).
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
 

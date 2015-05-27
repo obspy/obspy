@@ -621,6 +621,18 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
+    def test_parse_file_with_no_default_namespace(self):
+        """
+        Tests that reading a file with no default namespace works fine.
+
+        See #1060.
+        """
+        filename = os.path.join(self.data_dir, "no_default_namespace.xml")
+        inv = obspy.read_inventory(filename)
+        # Very small file with almost no content.
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(inv[0].code, "XX")
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

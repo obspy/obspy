@@ -93,7 +93,10 @@ def read_StationXML(path_or_file_object):
     :param path_or_file_object: File name or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
-    namespace = root.nsmap[None]
+
+    # Fix the namespace as its not always the default namespace. Will need
+    # to be adjusted if the StationXML format gets another revision!
+    namespace = "http://www.fdsn.org/xml/station/1"
 
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
