@@ -443,6 +443,42 @@ class TauPyModelTestCase(unittest.TestCase):
         self._compare_arrivals_with_file(arrivals,
                                          "java_tauptime_pnsn")
 
+    def test_surface_wave_ttimes(self):
+        """
+        Tests the calculation of surface ttimes.
+
+        Tested against a reference output from the Java TauP version.
+        """
+        for model, table in [("iasp91", "iasp91_surface_waves_table.txt"),
+                             ("ak135", "ak135_surface_waves_table.txt")]:
+            m = TauPyModel(model=model)
+            filename = os.path.join(DATA, table)
+
+            with open(filename, "rt") as fh:
+                for line in fh:
+                    _, distance, depth, phase, time, ray_param, _, _ \
+                        = line.split()
+                    distance, depth, time, ray_param = \
+                        map(float, [distance, depth, time, ray_param])
+
+                    arrivals = m.get_travel_times(
+                        source_depth_in_km=depth, distance_in_degree=distance,
+                        phase_list=[phase])
+
+                    self.assertTrue(len(arrivals) > 0)
+
+                    # Potentially multiple arrivals. Get the one closest in
+                    # time and closest in ray parameter.
+                    arrivals = sorted(
+                        arrivals,
+                        key=lambda x: (abs(x.time - time),
+                                       abs(x.ray_param_sec_degree -
+                                           ray_param)))
+                    arrival = arrivals[0]
+                    self.assertEqual(round(arrival.time, 2), round(time, 2))
+                    self.assertEqual(round(arrival.ray_param_sec_degree, 2),
+                                     round(ray_param, 2))
+
 
 def suite():
     return unittest.makeSuite(TauPyModelTestCase, 'test')

@@ -23,6 +23,13 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
 
+0.10.x:
+  - obspy.station:
+    * ObsPy no longer assumes that the StationXML namespace is the default
+      namespace (see #1060).
+  - obspy.taup:
+    * Calculating arrival times for surface waves now works (see #1055)
+
 0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
    * Fix catalog plot with events that have no origin depth or

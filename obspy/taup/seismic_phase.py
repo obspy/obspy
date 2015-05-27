@@ -576,16 +576,6 @@ class SeismicPhase(object):
 
     def sum_branches(self, tMod):
         """Sum the appropriate branches for this phase."""
-        if self.maxRayParam < 0 or self.minRayParam > self.maxRayParam:
-            # Phase has no arrivals, possibly due to source depth.
-            self.ray_param = np.empty(0)
-            self.minRayParam = -1
-            self.maxRayParam = -1
-            self.dist = np.empty(0)
-            self.time = np.empty(0)
-            self.maxDistance = -1
-            return
-
         # Special case for surface waves.
         if self.name.endswith("kmps"):
             self.dist = np.zeros(2)
@@ -602,6 +592,16 @@ class SeismicPhase(object):
             self.minDistance = 0
             self.maxDistance = 2 * math.pi
             self.downGoing.append(True)
+            return
+
+        if self.maxRayParam < 0 or self.minRayParam > self.maxRayParam:
+            # Phase has no arrivals, possibly due to source depth.
+            self.ray_param = np.empty(0)
+            self.minRayParam = -1
+            self.maxRayParam = -1
+            self.dist = np.empty(0)
+            self.time = np.empty(0)
+            self.maxDistance = -1
             return
 
         # Find the ray parameter index that corresponds to the minRayParam
