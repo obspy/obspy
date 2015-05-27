@@ -2474,7 +2474,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 seismogram to North- and East-components.
             ``'ZNE->LQT'``: Rotates from left-handed Z, North, and  East system
                 to LQT, e.g. right-handed ray coordinate system.
-            ``'LQR->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
+            ``'LQT->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
                 system to left handed Z, North, and East system.
 
         :type back_azimuth: float, optional
