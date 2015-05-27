@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2015.061
+ * modified: 2015.108
  ***************************************************************************/
 
 #include <stdio.h>
@@ -24,6 +24,9 @@ static hptime_t ms_time2hptime_int (int year, int day, int hour,
 
 static struct tm *ms_gmtime_r (int64_t *timep, struct tm *result);
 
+
+/* A constant number of seconds between the NTP and Posix/Unix time epoch */
+#define NTPPOSIXEPOCHDELTA 2208988800LL
 
 /* Global variable to hold a leap second list */
 LeapSecond *leapsecondlist = NULL;
@@ -1158,10 +1161,10 @@ ms_readleapsecondfile (char *filename)
   FILE *fp = NULL;
   LeapSecond *ls = NULL;
   LeapSecond *lastls = NULL;
-  long long int expires;
+  int64_t expires;
   char readline[200];
   char *cp;
-  long long int leapsecond;
+  int64_t leapsecond;
   int TAIdelta;
   int fields;
   int count = 0;
@@ -1192,12 +1195,12 @@ ms_readleapsecondfile (char *filename)
       if ( ! strncmp (readline, "#@", 2) )
         {
           expires = 0;
-          fields = sscanf (readline, "#@ %lld", &expires);
+          fields = sscanf (readline, "#@ %"SCNd64, &expires);
           
           if ( fields == 1 )
             {
               /* Convert expires to Unix epoch */
-              expires = expires - 2208988800;
+              expires = expires - NTPPOSIXEPOCHDELTA;
 
               /* Compare expire time to current time */
               if ( time(NULL) > expires )
@@ -1216,7 +1219,7 @@ ms_readleapsecondfile (char *filename)
       if ( *readline == '#' )
         continue;
       
-      fields = sscanf (readline, "%lld %d ", &leapsecond, &TAIdelta);
+      fields = sscanf (readline, "%"SCNd64" %d ", &leapsecond, &TAIdelta);
       
       if ( fields == 2 )
         {
@@ -1227,7 +1230,7 @@ ms_readleapsecondfile (char *filename)
             }
           
           /* Convert NTP epoch time to Unix epoch time and then to HPT */
-          ls->leapsecond = MS_EPOCH2HPTIME( (leapsecond - 2208988800) );
+          ls->leapsecond = MS_EPOCH2HPTIME( (leapsecond - NTPPOSIXEPOCHDELTA) );
           ls->TAIdelta = TAIdelta;
           ls->next = NULL;
           

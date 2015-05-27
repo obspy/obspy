@@ -154,8 +154,8 @@ main() {
   precords = mst_pack (mst, &record_handler, srcname, 4096, DE_STEIM2,
                        1, &psamples, 1, verbose, NULL);
 
-  ms_log (0, "Packed %lld samples into %d records\n",
-             (long long int)psamples, precords);
+  ms_log (0, "Packed %"PRId64" samples into %d records\n",
+             psamples, precords);
 
   mst_free (&mst);
 }

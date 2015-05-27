@@ -13,7 +13,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2014.197
+ * modified: 2015.108
  ***************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -813,8 +813,8 @@ msr_unpack_data ( MSRecord *msr, int swapflag, flag verbose )
     }
   
   if ( verbose > 2 )
-    ms_log (1, "%s: Unpacking %lld samples\n",
-	    UNPACK_SRCNAME, (long long int)msr->samplecnt);
+    ms_log (1, "%s: Unpacking %"PRId64" samples\n",
+	    UNPACK_SRCNAME, msr->samplecnt);
   
   /* Decide if this is a encoding that we can decode */
   switch (msr->encoding)
