@@ -61,6 +61,42 @@ class SeismicArray(object):
             raise NotImplementedError("Already has an inventory attached.")
         self.inventory = inv
 
+    def _inventory_cull(self, st):
+        """
+        From the array inventory permanently remove all entries for stations
+        that do not have traces in given stream st. Useful e.g. for beamforming
+        applications where self.geometry would return geometry for more
+        stations than are actually present in the data.
+        """
+        inv = self.inventory
+        # check what staion IDs are in the data
+        stations_present = [tr.getId() for tr in st]
+        # delete all channels that are not represented
+        for k, netw in reversed(list(enumerate(inv.networks))):
+            for j, stn in reversed(list(enumerate(netw.stations))):
+                for i, cha in reversed(list(enumerate(stn.channels))):
+                    if ("{}.{}.{}.{}".format(netw.code, stn.code,
+                                             cha.location_code, cha.code)
+                       not in stations_present):
+                        del stn.channels[i]
+                stn.total_number_of_channels = len(stn.channels)
+                # no point keeping stations with all channels removed
+                if len(stn.channels) == 0:
+                    del netw.stations[j]
+            # no point keeping networks with no stations in them:
+            if len(netw.stations) == 0:
+                del inv.networks[k]
+        # check total number of channels now:
+        contents = inv.get_contents()
+        if len(contents['channels']) < len(stations_present):
+            raise ValueError('Inventory does not contain information for all'
+                             'traces in stream.')
+        # finally
+        self.inventory = inv
+
+        # todo: if traces and/or inventory use station rather than channel
+        # based information
+
     def plot(self):
         import matplotlib.pylab as plt
 
@@ -209,8 +245,10 @@ class SeismicArray(object):
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
         """
-        Method to calculate the array geometry and each station's coordinates
-        in km, relative to a given reference (centre) point.
+        Method to calculate the array geometry and each station's offset
+        in km relative to a given reference (centre) point.
+        Example: To obtain it in relation to the center of gravity, use
+        self.get_geometry_xyz(**self.center_of_gravity).
 
         :param latitude: Latitude of reference origin
         :param longitude: Longitude of reference origin
@@ -726,12 +764,6 @@ class SeismicArray(object):
         if method not in ("FK", "DLS", "PWS", "SWP"):
             raise ValueError("Invalid method: ''" % method)
 
- #    if "baz_slow_map" for a backazimuth-slowness map,
-         # "slowness_xy" for a slowness_xy map,
-         # "baz_hist" for a backazimuth-slowness polar histogram as in
-         #  :func:`plot_baz_hist`,
-         # "bf_time_dep" for a plot of beamforming results over time as in
-         #  :func:`plot_bf_results_over_time`.
         if "baz_slow_map" in plots:
             make_slow_map = True
         else:
@@ -740,6 +772,7 @@ class SeismicArray(object):
             make_slowness_xy = True
         else:
             make_slowness_xy = False
+
         sllx, slmx = slx
         slly, slmy = sly
 
@@ -771,6 +804,12 @@ class SeismicArray(object):
         else:
             dump = None
 
+        # Temporarily trim self.inventory so only stations/channels which are
+        # actually represented in the traces are kept in the inventory.
+        # Otherwise self.geometry and the xyz geometry arrays will have more
+        # entries than the stream.
+        invbkp = copy.deepcopy(self.inventory)
+        self._inventory_cull(st_workon)
         try:
             if method == 'FK':
                 kwargs = dict(
@@ -847,6 +886,7 @@ class SeismicArray(object):
                 return out, plot_objects
             return out
         finally:
+            self.inventory = invbkp
             shutil.rmtree(tmpdir)
 
     def plot_transfer_function(self, stream, sx=(-10, 10),
@@ -927,6 +967,7 @@ class SeismicArray(object):
             station_code = "{n}.{s}".format(n=tr.stats.network,
                                             s=tr.stats.station)
             coords = geo[station_code]
+            # todo: should really take account of channels
             z = coords["absolute_height_in_km"]
             tr.stats.coordinates = \
                 AttribDict(dict(latitude=coords["latitude"],
