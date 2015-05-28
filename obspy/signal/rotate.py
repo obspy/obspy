@@ -155,12 +155,12 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
     >>> r(_dip_azimuth2ZSE_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 0., -1.])
     """
-    dip = -np.deg2rad(dip)
-    azimuth = -np.deg2rad(azimuth)
+    dip = np.deg2rad(dip)
+    azimuth = np.deg2rad(azimuth)
 
-    return np.array([np.sin(dip),
+    return np.array([-np.sin(dip),
                      -np.cos(azimuth) * np.cos(dip),
-                     -np.sin(azimuth) * np.cos(dip)])
+                     np.sin(azimuth) * np.cos(dip)])
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
