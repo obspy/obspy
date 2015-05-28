@@ -164,7 +164,7 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
-               azimuth_3, dip_3):
+               azimuth_3, dip_3, inverse=False):
     """
     Rotates an arbitrarily oriented three-component vector to ZNE.
 
@@ -186,9 +186,16 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     :param data_3: Data component 3.
     :param azimuth_3: The azimuth of component 3.
     :param dip_3: The dip of component 3.
+    :param inverse: If `True`, the data arrays will be converted from ZNE to
+        whatever coordinate system the azimuths and dips specify. In that
+        case data_1, data_2, data_3 have to be data arrays for Z, N,
+        and E and the dips and azimuths specify where to transform to.
+    :type inverse: bool
 
     :rtype: Tuple of three NumPy arrays.
-    :returns: The three rotated components, oriented in Z, N, and E.
+    :returns: The three rotated components, oriented in Z, N, and E if
+        `inverse` is `False`. Otherwise they will be oriented as specified
+        by the dips and azimuths.
 
     >>> # An input of ZNE yields an output of ZNE
     >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 0, 0, \
@@ -214,19 +221,22 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     # Build transformation matrix.
     T = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
 
-    # Apply it.
-    z, s, e = np.dot(T, [data_1, data_2, data_3])
-    # Replace all negative zeros. These might confuse some further processing
-    # programs.
+    if not inverse:
+        x, y, z = np.dot(T, [data_1, data_2, data_3])
+        y *= -1
+    else:
+        x, y, z = np.dot(np.linalg.inv(T), [data_1, -data_2, data_3])
+
+    # Replace all negative zeros. These might confuse some further
+    # processing programs.
+    x = np.array(x).ravel()
+    x[x == -0.0] = 0
+    y = np.array(y).ravel()
+    y[y == -0.0] = 0
     z = np.array(z).ravel()
     z[z == -0.0] = 0
-    # Return a North pointing array.
-    n = -1.0 * np.array(s).ravel()
-    n[n == -0.0] = 0
-    e = np.array(e).ravel()
-    e[e == -0.0] = 0
 
-    return z, n, e
+    return x, y, z
 
 
 if __name__ == '__main__':
