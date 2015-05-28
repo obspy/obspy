@@ -159,31 +159,22 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
     dip = np.deg2rad(dip)
     azimuth = np.deg2rad(azimuth)
 
-    # Define the rotation axis for the dip.
-    c1 = 0.0
-    c2 = 0.0
-    c3 = -1.0
-    # Now the dip rotation matrix.
-    dip_rotation_matrix = np.cos(dip) * \
-        np.matrix(((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))) + \
-        (1 - np.cos(dip)) * np.matrix(((c1 * c1, c1 * c2, c1 * c3),
-                                       (c2 * c1, c2 * c2, c2 * c3),
-                                       (c3 * c1, c3 * c2, c3 * c3))) + \
-        np.sin(dip) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
-    # Do the same for the azimuth.
-    c1 = -1.0
-    c2 = 0.0
-    c3 = 0.0
-    azimuth_rotation_matrix = np.cos(azimuth) * \
-        np.matrix(((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))) + \
-        (1 - np.cos(azimuth)) * np.matrix(((c1 * c1, c1 * c2, c1 * c3),
-                                           (c2 * c1, c2 * c2, c2 * c3),
-                                           (c3 * c1, c3 * c2, c3 * c3))) + \
-        np.sin(azimuth) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
+    # We start with a northwards pointing vector. Thus the dip is just a
+    # rotation around the east axis with the negative angle.
+    dip_rot = np.matrix((
+        (np.cos(-dip), -np.sin(-dip), 0.0),
+        (np.sin(-dip), np.cos(-dip), 0.0),
+        (0.0, 0.0, 1.0)))
 
-    # Now simply rotate a north pointing unit vector with both matrixes.
-    temp = np.dot(azimuth_rotation_matrix, [[0.0], [-1.0], [0.0]])
-    return np.array(np.dot(dip_rotation_matrix, temp)).ravel()
+    # Azimuth is rotation around the vertical axis, again with the negative
+    # angle.
+    azi_rot = np.matrix((
+        (1.0, 0.0, 0.0),
+        (0.0, np.cos(-azimuth), -np.sin(-azimuth)),
+        (0.0, np.sin(-azimuth), np.cos(-azimuth))))
+
+    return np.array(np.dot((azi_rot * dip_rot ),
+                           np.array([0.0, -1.0, 0.0]))).ravel()
 
 
 def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
