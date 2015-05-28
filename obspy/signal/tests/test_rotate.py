@@ -15,6 +15,7 @@ import numpy as np
 
 from obspy.signal import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
                           rotate_ZNE_LQT)
+from obspy.signal.rotate import _dip_azimuth2ZSE_base_vector
 
 
 class RotateTestCase(unittest.TestCase):
@@ -131,6 +132,25 @@ class RotateTestCase(unittest.TestCase):
         new_n, new_e = rotate_RT_NE(new_n, new_e, ba)
         self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
         self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
+
+    def test_base_vector_from_azimuth_and_dip_calculation(self):
+        """
+        Tests the _dip_azimuth2ZSE_base_vector() method against a solution
+        from the Wieland book.
+        """
+        dip = - (90.0 - np.rad2deg(np.arctan(np.sqrt(2.0))))
+
+        v1 = _dip_azimuth2ZSE_base_vector(dip, -90.0)
+        v2 = _dip_azimuth2ZSE_base_vector(dip, 30.0)
+        v3 = _dip_azimuth2ZSE_base_vector(dip, 150.0)
+
+        v1_ref = np.array([np.sqrt(2.0), 0.0, -2.0]) / np.sqrt(6.0)
+        v2_ref = np.array([np.sqrt(2.0), -np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
+        v3_ref = np.array([np.sqrt(2.0), np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
+
+        self.assertTrue(np.allclose(v1, v1_ref, rtol=1E-7, atol=1e-7))
+        self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1e-7))
+        self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1e-7))
 
 
 def suite():
