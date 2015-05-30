@@ -61,15 +61,15 @@ class SeismicArray(object):
             raise NotImplementedError("Already has an inventory attached.")
         self.inventory = inv
 
-    def _inventory_cull(self, st):
+    def inventory_cull(self, st):
         """
         From the array inventory permanently remove all entries for stations
         that do not have traces in given stream st. Useful e.g. for beamforming
         applications where self.geometry would return geometry for more
         stations than are actually present in the data.
         """
-        inv = self.inventory
-        # check what staion IDs are in the data
+        inv = copy.deepcopy(self.inventory)
+        # check what station/channel IDs are in the data
         stations_present = [tr.getId() for tr in st]
         # delete all channels that are not represented
         for k, netw in reversed(list(enumerate(inv.networks))):
@@ -89,17 +89,15 @@ class SeismicArray(object):
         # check total number of channels now:
         contents = inv.get_contents()
         if len(contents['channels']) < len(stations_present):
-            raise ValueError('Inventory does not contain information for all'
+            # Inventory remains unchanged in this case.
+            raise ValueError('Inventory does not contain information for all '
                              'traces in stream.')
-        # finally
         self.inventory = inv
 
         # todo: if traces and/or inventory use station rather than channel
         # based information
 
     def plot(self):
-        import matplotlib.pylab as plt
-
         if self.inventory:
             self.inventory.plot(projection="local", show=False)
             bmap = plt.gca().basemap
@@ -629,8 +627,8 @@ class SeismicArray(object):
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
-        :param vel_corr: Correction velocity for static topography correction in
-         km/s.
+        :param vel_corr: Correction velocity for static topography correction
+         in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -1173,6 +1171,509 @@ class SeismicArray(object):
             msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
             raise ValueError(msg)
         return np.array(res)
+
+    @staticmethod
+    def _three_c_dowhiten(fcoeffZ, fcoeffN, fcoeffE, deltaf):
+        # amplitude spectra whitening with moving average and window width ww
+        # and weighting factor: 1/((Z+E+N)/3)
+        for nst in range(fcoeffZ.shape[0]):
+            for nwin in range(fcoeffZ.shape[1]):
+                ampZ = np.abs(fcoeffZ[nst, nwin, :])
+                ampN = np.abs(fcoeffN[nst, nwin, :])
+                ampE = np.abs(fcoeffE[nst, nwin, :])
+                ww = int(round(0.01 / deltaf))
+                if ww % 2:
+                    ww += 1
+                nn = len(ampZ)
+                csamp = np.zeros((nn, 3), dtype=ampZ.dtype)
+                csamp[:, 0] = np.cumsum(ampZ)
+                csamp[:, 1] = np.cumsum(ampE)
+                csamp[:, 2] = np.cumsum(ampN)
+                ampw = np.zeros(nn, dtype=csamp.dtype)
+                for k in range(3):
+                    ampw[ww / 2:nn - ww / 2] += (csamp[ww:, k] - csamp[:-ww, k])\
+                                                / ww
+                ampw[nn - ww / 2:] = ampw[nn - ww / 2 - 1]
+                ampw[:ww / 2] = ampw[ww / 2]
+                ampw *= 1 / 3.
+                weight = np.where(ampw > np.finfo(np.float).eps * 10.,
+                                  1. / (ampw + np.finfo(np.float).eps), 0.)
+                fcoeffZ[nst, nwin, :] *= weight
+                fcoeffE[nst, nwin, :] *= weight
+                fcoeffN[nst, nwin, :] *= weight
+        return fcoeffZ, fcoeffN, fcoeffE
+
+    def _three_c_plot_transfer_function(self, u, periods):
+        """
+        Plot transfer function of input array geometry 2D.
+        """
+        # todo: merge with the other transff functions here
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
+        theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
+        u_y = -np.cos(theo_backazi)
+        u_x = -np.sin(theo_backazi)
+        geo_array = _geometry_dict_to_array(
+            self.get_geometry_xyz(**self.center_of_gravity))
+        x_ = geo_array[:, 0]
+        y_ = geo_array[:, 1]
+        x_ = np.array(x_)
+        y_ = np.array(y_)
+        steering = u_y * y_ + u_x * x_
+        theo_backazi = theo_backazi[:, 0]
+        beamres = np.zeros((len(theo_backazi), u.size))
+        for p in periods:
+            omega = 2. * math.pi / p
+            R = np.ones((steering.shape[1], steering.shape[1]))
+            for vel in range(len(u)):
+                e_steer = np.exp(-1j * steering * omega * u[vel])
+                w = e_steer
+                wT = w.T.copy()
+                beamres[:, vel] = 1. / (
+                    steering.shape[1] * steering.shape[1]) * abs(
+                    (np.conjugate(w) * np.dot(R, wT).T).sum(1))
+            fig = plt.figure(figsize=(6, 6))
+            ax = fig.add_subplot(1, 1, 1, projection='polar')
+            jetmap = cm.get_cmap('jet')
+            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
+                                beamres.T, 100, cmap=jetmap, antialiased=True,
+                                linstyles='dotted')
+            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, beamres.T, 100,
+                       cmap=jetmap)
+            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
+                              labels=['90', '45', '0', '315', '270', '225',
+                                      '180', '135'])
+            ax.set_rgrids([0.1, 0.2, 0.3, 0.4, 0.5],
+                          labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
+                          color='r')
+            ax.set_rmax(u[-1])
+            fig.colorbar(CONTF)
+            ax.grid(True)
+            ax.set_title('Transfer function s ' + str(p))
+        plt.show()
+
+    def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, u,
+                       sub_freq_range, periods, n_min_stns, polarisation,
+                       whiten, coherency, pol_dict, win_average,
+                       datalen_sec, uindex):
+        # backazimuth range to search
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
+
+        # Number of stations should be the same as the number of traces,
+        # given the checks in the calling method.
+        n_stats = len(stream_N.traces)
+        npts = stream_N[0].stats.npts
+
+        geo_array = _geometry_dict_to_array(
+            self.get_geometry_xyz(**self.center_of_gravity))
+        x_offsets = geo_array[:, 0]
+        y_offsets = geo_array[:, 1]
+        # This must be sorted the same as the entries in geo_array!
+        station_names = []
+        for _i, (key, value) in enumerate(sorted(list(self.geometry.items()))):
+            station_names.append(key)
+        # This is necessary to use np.where below...
+        station_names = np.array(station_names)
+
+        # Arrays to hold all traces' data in one:
+        _alldataZ = np.zeros((n_stats, npts)) * np.nan
+        _alldataE = _alldataZ.copy()
+        _alldataN = _alldataZ.copy()
+        # array used for sorting if needed
+        ans = []
+        for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E, stream_Z)):
+            ans.append(np.where(station_names == '{}.{}'.
+                                format(tr_N.stats.network,
+                                       tr_N.stats.station))[0][0])
+            _alldataN[i, :] = tr_N.data
+            _alldataE[i, :] = tr_E.data
+            _alldataZ[i, :] = tr_Z.data
+
+        win_samples = int(win_len * stream_N.traces[0].stats.sampling_rate)
+        num_win = int(np.floor(datalen_sec / win_len))
+        alldataZ = np.zeros((n_stats, num_win, win_samples))
+        alldataN, alldataE = alldataZ.copy(), alldataZ.copy()
+        nst = np.zeros(num_win)
+
+        # Iterate over the beamfoming windows:
+        for i in range(num_win):
+            for n in range(n_stats):
+                if not np.isnan(_alldataZ[n, i * win_samples:(
+                            i + 1) * win_samples]).any() and not np.isnan(
+                        _alldataN[n, i * win_samples:(
+                                    i + 1) * win_samples]).any() and not np.isnan(
+                        _alldataE[n, i * win_samples:(i + 1) * win_samples]).any():
+                    alldataZ[n, i, :] = _alldataZ[n, i * win_samples:(
+                                                                         i + 1) * win_samples] * cosTaper(
+                        win_samples)
+                    alldataN[n, i, :] = _alldataN[n, i * win_samples:(
+                                                                         i + 1) * win_samples] * cosTaper(
+                        win_samples)
+                    alldataE[n, i, :] = _alldataE[n, i * win_samples:(
+                                                                         i + 1) * win_samples] * cosTaper(
+                        win_samples)
+                    nst[i] += 1
+
+        print(nst, ' stations/window; average over ', win_average)
+
+        deltat = stream_N.traces[0].stats.delta
+        freq_range = np.fft.fftfreq(win_samples, deltat)
+        # Use a narrower 'frequency range' of interest for evaluating incidence
+        # angle.
+        lowcorner = sub_freq_range[0]
+        highcorner = sub_freq_range[1]
+        index = np.where((freq_range > lowcorner)
+                         & (freq_range < highcorner))[0]
+        fr = freq_range[index]
+        fcoeffZ = np.fft.fft(alldataZ, n=win_samples, axis=-1) / win_samples
+        fcoeffN = np.fft.fft(alldataN, n=win_samples, axis=-1) / win_samples
+        fcoeffE = np.fft.fft(alldataE, n=win_samples, axis=-1) / win_samples
+        fcoeffZ = fcoeffZ[:, :, index]
+        fcoeffN = fcoeffN[:, :, index]
+        fcoeffE = fcoeffE[:, :, index]
+        deltaf = 1. / (win_samples * deltat)
+
+        if whiten:
+            fcoeffZ, fcoeffN, fcoeffE = self._three_c_dowhiten(fcoeffZ,
+                                                               fcoeffN,
+                                                               fcoeffE, deltaf)
+
+        # slowness vector u and slowness vector component scale u_x and u_y
+        theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
+        u_y = -np.cos(theo_backazi)
+        u_x = -np.sin(theo_backazi)
+
+        # vector of source direction dependent plane wave travel-distance to
+        # reference point (positive value for later arrival/negative for
+        # earlier arr)
+        x_offsets = np.array(x_offsets)
+        y_offsets = np.array(y_offsets)
+        # This sorts the offset value arrays
+        x_offsets = x_offsets[np.array(ans)]
+        y_offsets = y_offsets[np.array(ans)]
+        steering = u_y * y_offsets + u_x * x_offsets
+
+        # polarizations [Z,E,N]
+        # incident angle P-wave/S-wave or atan(H/V) Rayleigh-wave
+        incs = np.arange(5, 90, 10) * math.pi / 180.
+
+        def pol_love(azi):
+            polE = math.cos(theo_backazi[azi])
+            polN = -1. * math.sin(theo_backazi[azi])
+            return polE, polN
+
+        def pol_rayleigh_retro(azi):
+            polE = math.sin(theo_backazi[azi])
+            polN = math.cos(theo_backazi[azi])
+            return polE, polN
+
+        def pol_rayleigh_prog(azi):
+            polE = -1 * math.sin(theo_backazi[azi])
+            polN = -1 * math.cos(theo_backazi[azi])
+            return polE, polN
+
+        def pol_P(azi):
+            polE = -1 * math.sin(theo_backazi[azi])
+            polN = -1 * math.cos(theo_backazi[azi])
+            return polE, polN
+
+        def pol_SV(azi):
+            polE = math.sin(theo_backazi[azi])
+            polN = math.cos(theo_backazi[azi])
+            return polE, polN
+
+        Cz = [0., 1j, 1j, 1., 1.]
+        Ch = [pol_love, pol_rayleigh_retro, pol_rayleigh_prog, pol_P, pol_SV]
+
+        nfreq = len(fr)
+        out_wins = int(np.floor(num_win / win_average))
+        beamres = np.zeros((len(theo_backazi), u.size, out_wins, nfreq))
+        incidence = np.zeros((out_wins, nfreq))
+        win_average = int(win_average)
+        for f in range(nfreq):
+            omega = 2 * math.pi * fr[f]
+            for win in range(0, out_wins * win_average, win_average):
+                if any(nst[win:win + win_average] < n_min_stns) or any(
+                                nst[win:win + win_average] != nst[win]):
+                    continue
+                Sz = np.squeeze(fcoeffZ[:, win, f])
+                Sn = np.squeeze(fcoeffN[:, win, f])
+                Se = np.squeeze(fcoeffE[:, win, f])
+
+                Y = np.concatenate((Sz, Sn, Se))
+                Y = Y.reshape(1, Y.size)
+                YT = Y.T.copy()
+                R = np.dot(YT, np.conjugate(Y))
+
+                for wi in range(1, win_average):
+                    Sz = np.squeeze(fcoeffZ[:, win + wi, f])
+                    Sn = np.squeeze(fcoeffN[:, win + wi, f])
+                    Se = np.squeeze(fcoeffE[:, win + wi, f])
+
+                    Y = np.concatenate((Sz, Sn, Se))
+                    Y = Y.reshape(1, Y.size)
+                    YT = Y.T.copy()
+                    R += np.dot(YT, np.conjugate(Y))
+
+                R /= float(win_average)
+
+                res = np.zeros((len(theo_backazi), len(u), len(incs)))
+                for vel in range(len(u)):
+                    e_steer = np.exp(-1j * steering * omega * u[vel])
+                    e_steerE = e_steer.copy()
+                    e_steerN = e_steer.copy()
+                    e_steerE = (e_steerE.T * np.array(
+                        [Ch[polarisation](azi)[0]
+                         for azi in range(len(theo_backazi))])).T
+                    e_steerN = (e_steerN.T * np.array(
+                        [Ch[polarisation](azi)[1]
+                         for azi in range(len(theo_backazi))])).T
+
+                    if polarisation == 0:
+                        w = np.concatenate(
+                            (e_steer * Cz[polarisation], e_steerN, e_steerE),
+                            axis=1)
+                        wT = w.T.copy()
+                        if not coherency:
+                            beamres[:, vel, win / win_average, f] = 1. / (
+                                nst[win] * nst[win]) * abs(
+                                (np.conjugate(w) * np.dot(R, wT).T).sum(1))
+                        else:
+                            beamres[:, vel, win / win_average, f] = 1. / (
+                                nst[win]) * abs((np.conjugate(w)
+                                                 * np.dot(R, wT).T).sum(1)) \
+                                / abs(np.sum(np.diag(R[n_stats:, n_stats:])))
+
+                    elif polarisation in [1, 2, 3]:
+                        for inc_angle in range(len(incs)):
+                            w = np.concatenate((e_steer * Cz[polarisation]
+                                                * np.cos(incs[inc_angle]),
+                                                e_steerN
+                                                * np.sin(incs[inc_angle]),
+                                                e_steerE
+                                                * np.sin(incs[inc_angle])),
+                                               axis=1)
+                            wT = w.T.copy()
+                            if not coherency:
+                                res[:, vel, inc_angle] = 1. / (
+                                    nst[win] * nst[win]) * abs(
+                                    (np.conjugate(w) * np.dot(R, wT).T).sum(1))
+                            else:
+                                res[:, vel, inc_angle] = 1. / (nst[win]) * abs(
+                                    (np.conjugate(w) * np.dot(R, wT).T).sum(
+                                        1)) / abs(np.sum(np.diag(R)))
+
+                    elif polarisation == 4:
+                        for inc_angle in range(len(incs)):
+                            w = np.concatenate((e_steer * Cz[polarisation]
+                                                * np.sin(incs[inc_angle]),
+                                                e_steerN
+                                                * np.cos(incs[inc_angle]),
+                                                e_steerE
+                                                * np.cos(incs[inc_angle])),
+                                               axis=1)
+                            wT = w.T.copy()
+                            if not coherency:
+                                res[:, vel, inc_angle] = 1. / (
+                                    nst[win] * nst[win]) * abs(
+                                    (np.conjugate(w) * np.dot(R, wT).T).sum(1))
+                            else:
+                                res[:, vel, inc_angle] = 1. / (nst[win]) * abs(
+                                    (np.conjugate(w) * np.dot(R, wT).T).sum(
+                                        1)) / abs(np.sum(np.diag(R)))
+
+                if polarisation > 0:
+                    i, j, k = np.unravel_index(np.argmax(res[:, uindex, :]),
+                                            res.shape)
+                    beamres[:, :, win / win_average, f] = res[:, :, k]
+                    incidence[win / win_average, f] = incs[k] * 180. / math.pi
+
+        idx = [int((1. / p - fr[0]) / deltaf) for p in periods]
+        theo_backazi = theo_backazi[:, 0]
+        for ind in idx:
+            for win in range(out_wins):
+                tre = beamres[:, :, win, ind]
+                fig = plt.figure(figsize=(6, 6))
+                ax = fig.add_subplot(1, 1, 1, projection='polar')
+                jetmap = cm.get_cmap('jet')
+                CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
+                                    tre.T, 100, cmap=jetmap, antialiased=True,
+                                    linstyles='dotted')
+                ax.contour((theo_backazi[::-1] + math.pi / 2.), u, tre.T, 100,
+                           cmap=jetmap)
+                ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
+                                  labels=['90', '45', '0', '315', '270', '225',
+                                          '180', '135'])
+                # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],
+                # labels=['0.1','0.2','0.3','0.4','0.5'],color='r')
+                ax.set_rmax(u[-1])
+                ax.grid(True)
+                fig.colorbar(CONTF)
+                reversed_pol_dict = dict(zip(pol_dict.values(),
+                                             pol_dict.keys()))
+                ax.set_title(
+                    'Beam {} s polarisation{}, win {}, ind {}'.
+                    format(str(int(round(1. / fr[ind]))),
+                           reversed_pol_dict[polarisation], win, ind))
+        plt.plot()
+        return beamres, fr, incidence
+
+    @staticmethod
+    def _three_c_beamform_plotter(beamresult, periods, u, freqs):
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
+        deltaf = freqs[3:4] - freqs[2:3]
+        idx = [int((1. / p - freqs[0]) / deltaf) for p in periods]
+        for ind in idx:
+            tre = beamresult[:, :, ind]
+            fig = plt.figure(figsize=(6, 6))
+            ax = fig.add_subplot(1, 1, 1, projection='polar')
+            jetmap = cm.get_cmap('jet')
+            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u, tre.T,
+                                100, cmap=jetmap, antialiased=True,
+                                linstyles='dotted')
+            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, tre.T, 100,
+                       cmap=jetmap)
+            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
+                              labels=['90', '45', '0', '315', '270', '225',
+                                      '180', '135'])
+            # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],labels=['0.1','0.2','0.3',
+            # '0.4','0.5'],color='r')
+            ax.set_rmax(u[-1])
+            fig.colorbar(CONTF)
+            ax.grid(True)
+            ax.set_title(
+                'Beamform average ' + str(int(round(1 / freqs[ind]))) + 's')
+        plt.show()
+
+    def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
+                                    smin, smax, sstep, wavetype,
+                                    freq_range=(0.05, 1), plot_periods=(7, 14),
+                                    n_min_stns=7, win_average=1,
+                                    plot_transff=False):
+        """
+        Do three component beamforming following Esmersoy 1985...
+        Three streams representing N, E, Z oriented components must be given,
+        where the traces contained are from the different stations. The
+        traces must all have same length and start/end times (to within
+        sampling distance). (hint: check length with trace.stats.npts)
+        The given streams are not modified in place. All trimming, filtering,
+        downsampling should be done previously.
+        The beamforming can distinguish Love, prograde/retrograde Rayleigh, P
+        and SV waves.
+        Station location information is taken from the array's inventory, so
+        that must contain station/channel location information about all traces
+        used (it may contain more than used in the traces as well).
+
+        :param stream_N: Stream of all traces for the North component.
+        :param stream_E: stream of East components
+        :param stream_Z: stream of Up components
+        :param wlen: window length in seconds
+        :param smin: minimum slowness of the slowness grid [km/s]
+        :param smax: maximum slowness [km/s]
+        :param sstep: slowness step [km/s]
+        :param wavetype: 'love', 'rayleigh_prograde', 'rayleigh_retrograde',
+         'P', or 'SV'
+        :param freq_range: list of frequencies to be beamformed and returned.
+         Data should be pre-filtered to this frequency band (or narrower)!
+        :param plot_periods: periods to plot [s]
+        :param n_min_stns: required minimum number of stations
+        :param win_average: number of windows to average covariance matrix over
+        :param plot_transff: whether to also plot the transfer function of the
+         array
+        :return: A four dimensional :class:`numpy.ndarray` of the beamforming
+         results, with dimensions of backazimuth range, slowness range, number
+         of windows and number of discrete frequencies; as well as frequency
+         and incidence angle arrays (the latter will be zero for Love waves).
+        """
+        pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde': 2,
+                    'P': 3, 'SV': 4}
+        if wavetype not in pol_dict:
+            raise ValueError('Invalid option for wavetype: {}'.format(wavetype))
+
+        # from _array_analysis_helper:
+        starttime = max(max([tr.stats.starttime for tr in st]) for st in
+                        (stream_N, stream_E, stream_E))
+        min_starttime = min(min([tr.stats.starttime for tr in st]) for st in
+                            (stream_N, stream_E, stream_E))
+        endtime = min(min([tr.stats.endtime for tr in st]) for st in
+                      (stream_N, stream_E, stream_E))
+        max_endtime = max(max([tr.stats.endtime for tr in st]) for st in
+                          (stream_N, stream_E, stream_E))
+
+        delta_common = stream_N.traces[0].stats.delta
+        npts_common = stream_N.traces[0].stats.npts
+        if max(abs(min_starttime - starttime),
+               abs(max_endtime - endtime)) > delta_common:
+            raise ValueError("Traces do not have identical start/end times. "
+                             "Trim to same times and number of samples "
+                             "(plus minus one)!")
+
+        # Check for equal deltas and number of samples:
+        for st in (stream_N, stream_E, stream_Z):
+            for tr in st:
+                if tr.stats.npts != npts_common:
+                    raise ValueError('Traces do not have identical number of '
+                                     'samples.')
+                if tr.stats.delta != delta_common:
+                    raise ValueError('Traces do not have identical sampling '
+                                     'rates.')
+        datalen_sec = endtime - starttime
+
+        # Sort all traces just to make sure they're in the same order.
+        for st in (stream_N, stream_E, stream_Z):
+            st.sort()
+
+        for trN, trE, trZ in zip(stream_N, stream_E, stream_Z):
+            if len(set('{}.{}'.format(tr.stats.network, tr.stats.station)
+                       for tr in (trN, trE, trZ))) > 1:
+                raise ValueError("Traces are not from same stations.")
+
+        # Temporarily trim self.inventory so only stations/channels which are
+        # actually represented in the traces are kept in the inventory.
+        # Otherwise self.geometry and the xyz geometry arrays will have more
+        # entries than the stream.
+        invbkp = copy.deepcopy(self.inventory)
+        allstreams = stream_N + stream_E + stream_Z
+        self.inventory_cull(allstreams)
+
+        if wlen < smax * self.aperture:
+            raise ValueError('Window length is smaller than max slowness times'
+                             'aperture.')
+        try:
+            # s/km  slowness range calculated
+            u = np.arange(smin, smax, sstep)
+            # Slowness range evaluated for (incidence) angle measurement
+            # (Rayleigh, P, SV):
+            # These values are a bit arbitrary for now:
+            uindex = np.where((u > 0.5 * smax + smin)
+                              & (u < 0.8 * smax + smin))[0]
+
+            bf_results, freqs, incidence = \
+                self._three_c_do_bf(stream_N, stream_E, stream_Z,
+                                    win_len=wlen, u=u,
+                                    sub_freq_range=freq_range,
+                                    periods=plot_periods,
+                                    n_min_stns=n_min_stns,
+                                    polarisation=pol_dict[wavetype],
+                                    whiten=False,
+                                    coherency=True,
+                                    pol_dict=pol_dict,
+                                    win_average=win_average,
+                                    datalen_sec=datalen_sec,
+                                    uindex=uindex)
+
+            h = np.nonzero(bf_results[0, 0, :, 0])[0]
+            if len(h) > 0:
+                beamresult = bf_results[:, :, h, :].mean(axis=2)
+                self._three_c_beamform_plotter(beamresult, plot_periods,
+                                               u, freqs)
+
+        finally:
+            self.inventory = invbkp
+
+        if plot_transff:
+            self._three_c_plot_transfer_function(u, plot_periods)
+
+        return bf_results, freqs, incidence
 
 
 def _geometry_dict_to_array(geometry):
