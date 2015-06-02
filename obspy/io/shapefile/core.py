@@ -21,21 +21,6 @@ else:
     gdal.UseExceptions()
 
 
-WGS84_WKT = \
-    """
-    GEOGCS["WGS 84",
-        DATUM["WGS_1984",
-            SPHEROID["WGS 84",6378137,298.257223563,
-                AUTHORITY["EPSG","7030"]],
-            AUTHORITY["EPSG","6326"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]],
-        AUTHORITY["EPSG","4326"]]
-    """
-
-
 def _write_shapefile(obj, filename, **kwargs):
     """
     Write :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
@@ -77,15 +62,8 @@ def _add_catalog_layer(data_source, catalog):
     """
     if not has_GDAL:
         raise ImportError(IMPORTERROR_MSG)
-    # create the spatial reference
-    sr = osr.SpatialReference()
-    # Simpler and feels cleaner to initialize by EPSG code but that depends on
-    # a csv file shipping with GDAL and some GDAL environment paths being set
-    # correctly which was not the case out of the box in anaconda, so better
-    # hardcode this bit.
-    # sr.ImportFromEPSG(4326)
-    sr.ImportFromWkt(WGS84_WKT)
 
+    sr = _get_WGS84_spatial_reference()
     layer = data_source.CreateLayer(native_str("earthquakes"), sr,
                                     ogr.wkbPoint)
 
@@ -180,6 +158,31 @@ def _add_catalog_layer(data_source, catalog):
 
     # Destroy the data source to free resources
     data_source.Destroy()
+
+
+def _get_WGS84_spatial_reference():
+    # create the spatial reference
+    sr = osr.SpatialReference()
+    # Simpler and feels cleaner to initialize by EPSG code but that depends on
+    # a csv file shipping with GDAL and some GDAL environment paths being set
+    # correctly which was not the case out of the box in anaconda, so better
+    # hardcode this bit.
+    # sr.ImportFromEPSG(4326)
+    wgs84_wkt = \
+        """
+        GEOGCS["WGS 84",
+            DATUM["WGS_1984",
+                SPHEROID["WGS 84",6378137,298.257223563,
+                    AUTHORITY["EPSG","7030"]],
+                AUTHORITY["EPSG","6326"]],
+            PRIMEM["Greenwich",0,
+                AUTHORITY["EPSG","8901"]],
+            UNIT["degree",0.0174532925199433,
+                AUTHORITY["EPSG","9122"]],
+            AUTHORITY["EPSG","4326"]]
+        """
+    sr.ImportFromWkt(wgs84_wkt)
+    return sr
 
 
 if __name__ == '__main__':
