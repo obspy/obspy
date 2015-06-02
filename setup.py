@@ -84,17 +84,18 @@ KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
-    'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
-    'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED',
-    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
-    'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
-    'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
-    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
-    'seismology', 'seismogram', 'seismograms', 'signal', 'slink',
-    'spectrogram', 'StationXML', 'taper', 'taup', 'travel time', 'trigger',
-    'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC',
-    'web service', 'Winston', 'XML-SEED', 'XSEED']
+    'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
+    'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
+    'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
+    'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
+    'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
+    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
+    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
+    'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
+    'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
+    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED',
+    'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -105,7 +106,9 @@ INSTALL_REQUIRES = [
     'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
-    'arclink': ['m2crypto']}
+    'arclink': ['m2crypto'],
+    'io.shapefile': ['gdal'],
+    }
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
@@ -257,7 +260,8 @@ ENTRY_POINTS = {
         'NLLOC_HYP = obspy.io.nlloc.core',
         'NLLOC_OBS = obspy.io.nlloc.core',
         'CNV = obspy.io.cnv.core',
-        'CMTSOLUTION = obspy.io.cmtsolution.core'
+        'CMTSOLUTION = obspy.io.cmtsolution.core',
+        'SHAPEFILE = obspy.io.shapefile.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -294,6 +298,9 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
+        ],
+    'obspy.plugin.event.SHAPEFILE': [
+        'writeFormat = obspy.io.shapefile.core:_write_shapefile',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',

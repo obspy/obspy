@@ -62,6 +62,7 @@ The functionality is provided through the following packages:
    obspy.io.ndk
    obspy.io.nlloc
    obspy.io.pde
+   obspy.io.shapefile
    obspy.io.quakeml
    obspy.io.zmap
 
@@ -71,6 +72,9 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.io.css
+   obspy.io.sac.sacpz
+   obspy.io.shapefile
    obspy.io.stationxml
 
 .. rubric:: Database or Web Service Access Clients
