@@ -594,15 +594,6 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         else:
             trace_attr['timing_quality'] = timing_quality = 0
 
-        # Determine if a blockette 100 will be needed to represent the input
-        # sample rate or if the sample rate in the fixed section of the data
-        # header will suffice (see ms_genfactmult in libmseed/genutils.c)
-        if trace.stats.sampling_rate >= 32727.0 or \
-           trace.stats.sampling_rate <= (1.0 / 32727.0):
-            use_blkt_100 = True
-        else:
-            use_blkt_100 = False
-
         if sequence_number is not None:
             trace_attr['sequence_number'] = sequence_number
         elif hasattr(trace.stats, 'mseed') and \
@@ -828,7 +819,11 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 del msr
                 raise Exception('Error in msr_addblockette')
         # Only use Blockette 100 if necessary.
-        if use_blkt_100:
+        # Determine if a blockette 100 will be needed to represent the input
+        # sample rate or if the sample rate in the fixed section of the data
+        # header will suffice (see ms_genfactmult in libmseed/genutils.c)
+        if trace.stats.sampling_rate >= 32727.0 or \
+                        trace.stats.sampling_rate <= (1.0 / 32727.0):
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(b' ')
             C.memset(C.pointer(blkt100), 0, size)
