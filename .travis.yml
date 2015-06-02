@@ -16,19 +16,21 @@ before_install:
   ### wheel building/upload start
   - cd /tmp
   - mkdir wheelhouse-build
-  - sudo apt-get build-dep --ignore-missing -qq -y python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
+  - sudo apt-get build-dep --ignore-missing -qq -y python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-gdal
   - pip wheel ${WHEEL_BUILD_ARGS} numpy==$NUMPY_VERSION scipy==$SCIPY_VERSION matplotlib==$MATPLOTLIB_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy==$NUMPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build scipy==$SCIPY_VERSION
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build matplotlib==$MATPLOTLIB_VERSION
   - pip wheel ${WHEEL_BUILD_ARGS} lxml sqlalchemy m2crypto PyYAML pyproj
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build lxml sqlalchemy m2crypto PyYAML
+  - pip wheel ${WHEEL_BUILD_ARGS} gdal
+  - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build gdal
   # build modified basemap package with the large data files stripped (which we dont use in testing anyway)
   # geos link fix is included in basemap master now
-  - pip wheel ${WHEEL_BUILD_ARGS} https://github.com/megies/basemap/archive/v1.0.7_geos_link_fix__no_high_res.zip
-  - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build basemap
-  - pip wheel ${WHEEL_BUILD_ARGS} suds-jurko
-  - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build suds-jurko
+  ### - pip wheel ${WHEEL_BUILD_ARGS} https://github.com/megies/basemap/archive/v1.0.7_geos_link_fix__no_high_res.zip
+  ### - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build basemap
+  ### - pip wheel ${WHEEL_BUILD_ARGS} suds-jurko
+  ### - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build suds-jurko
   - if [ "${TRAVIS_PYTHON_VERSION:0:1}" == '2' ]; then pip wheel ${WHEEL_BUILD_ARGS} suds; fi
   - if [ "${TRAVIS_PYTHON_VERSION:0:1}" == '2' ]; then pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build suds; fi
   - pip wheel ${WHEEL_BUILD_ARGS} --no-deps obspy || echo "skipping obspy"
