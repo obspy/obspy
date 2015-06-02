@@ -1,4 +1,8 @@
 0.10.x:
+  - obspy.mseed:
+    * Blockette 100 is now only written for Traces that need it. Previously
+      it was written or not for all Traces, depending on whether the last
+      Trace needed it or not. (see #1069)
   - obspy.station:
     * ObsPy no longer assumes that the StationXML namespace is the default
       namespace (see #1060).

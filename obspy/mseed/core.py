@@ -823,7 +823,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
         if trace.stats.sampling_rate >= 32727.0 or \
-                        trace.stats.sampling_rate <= (1.0 / 32727.0):
+                trace.stats.sampling_rate <= (1.0 / 32727.0):
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(b' ')
             C.memset(C.pointer(blkt100), 0, size)
