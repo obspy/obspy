@@ -7,7 +7,7 @@ import filecmp
 import os
 import unittest
 
-from obspy import read_events
+from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.io.shapefile.core import _write_shapefile
 
@@ -27,6 +27,7 @@ class ShapefileTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  'data')
         self.catalog_shape_basename = os.path.join(self.path, 'catalog')
+        self.inventory_shape_basename = os.path.join(self.path, 'inventory')
 
     @unittest.skipIf(not has_GDAL, "GDAL not installed")
     def test_write_catalog_shapefile(self):
@@ -51,6 +52,30 @@ class ShapefileTestCase(unittest.TestCase):
                     filecmp.cmp("catalog" + suffix,
                                 self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
+
+    @unittest.skipIf(not has_GDAL, "GDAL not installed")
+    def test_write_inventory_shapefile(self):
+        inv = read_inventory()
+        with TemporaryWorkingDirectory():
+            _write_shapefile(inv, "inventory.shp")
+            for suffix in SHAPEFILE_SUFFIXES:
+                self.assertTrue(os.path.isfile("inventory" + suffix))
+                self.assertTrue(
+                    filecmp.cmp("inventory" + suffix,
+                                self.inventory_shape_basename + suffix),
+                    msg="%s not binary equal." % ("inventory" + suffix))
+
+    @unittest.skipIf(not has_GDAL, "GDAL not installed")
+    def test_write_inventory_shapefile_via_plugin(self):
+        inv = read_inventory()
+        with TemporaryWorkingDirectory():
+            inv.write("inventory.shp", "SHAPEFILE")
+            for suffix in SHAPEFILE_SUFFIXES:
+                self.assertTrue(os.path.isfile("inventory" + suffix))
+                self.assertTrue(
+                    filecmp.cmp("inventory" + suffix,
+                                self.inventory_shape_basename + suffix),
+                    msg="%s not binary equal." % ("inventory" + suffix))
 
 
 def suite():

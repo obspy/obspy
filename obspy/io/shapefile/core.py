@@ -160,6 +160,102 @@ def _add_catalog_layer(data_source, catalog):
     data_source.Destroy()
 
 
+def _add_inventory_layer(data_source, inventory):
+    """
+    :type data_source: :class:`osgeo.ogr.DataSource`.
+    :param data_source: OGR data source the layer is added to.
+    :type inventory: :class:`~obspy.core.inventory.Inventory`
+    :param inventory: Inventory data to add as a new layer.
+    """
+    if not has_GDAL:
+        raise ImportError(IMPORTERROR_MSG)
+
+    sr = _get_WGS84_spatial_reference()
+    layer = data_source.CreateLayer(native_str("stations"), sr,
+                                    ogr.wkbPoint)
+
+    # Add the fields we're interested in (10 char max)
+    for name in ["Network", "Station"]:
+        field = ogr.FieldDefn(native_str(name), ogr.OFTString)
+        field.SetWidth(20)
+        layer.CreateField(field)
+    for name in ["Latitude", "Longitude"]:
+        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
+        field.SetWidth(16)
+        field.SetPrecision(10)
+        layer.CreateField(field)
+    for name in ["Elevation"]:
+        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
+        field.SetWidth(9)
+        field.SetPrecision(3)
+        layer.CreateField(field)
+    # ESRI shapefile attributes are stored in dbf files, which can not
+    # store datetimes, only dates, see:
+    # http://www.gdal.org/drv_shapefile.html
+    for name in ["StartDate", "EndDate"]:
+        field = ogr.FieldDefn(native_str(name), ogr.OFTDate)
+        layer.CreateField(field)
+    field = ogr.FieldDefn(native_str("Channels"), ogr.OFTString)
+    field.SetWidth(254)
+    layer.CreateField(field)
+
+    layer_definition = layer.GetLayerDefn()
+    for net in inventory:
+        for sta in net:
+            channel_list = ",".join(["%s.%s" % (cha.location_code, cha.code)
+                                     for cha in sta])
+
+            feature = ogr.Feature(layer_definition)
+
+            # setting fields with `None` results in values of `0.000`
+            # need to really omit setting values if they are `None`
+            if net.code is not None:
+                feature.SetField(native_str("Network"),
+                                 native_str(net.code))
+            if sta.code is not None:
+                feature.SetField(native_str("Station"),
+                                 native_str(sta.code))
+            if sta.latitude is not None:
+                feature.SetField(native_str("Latitude"), sta.latitude)
+            if sta.longitude is not None:
+                feature.SetField(native_str("Longitude"), sta.longitude)
+            if sta.elevation is not None:
+                feature.SetField(native_str("Elevation"), sta.elevation)
+            if sta.start_date is not None:
+                date = sta.start_date
+                # ESRI shapefile attributes are stored in dbf files, which can
+                # not store datetimes, only dates. We still need to use the
+                # GDAL API with precision up to seconds (aiming at other output
+                # drivers of GDAL; `100` stands for GMT)
+                feature.SetField(native_str("StartDate"), date.year,
+                                 date.month, date.day, date.hour, date.minute,
+                                 date.second, 100)
+            if sta.end_date is not None:
+                date = sta.end_date
+                # ESRI shapefile attributes are stored in dbf files, which can
+                # not store datetimes, only dates. We still need to use the
+                # GDAL API with precision up to seconds (aiming at other output
+                # drivers of GDAL; `100` stands for GMT)
+                feature.SetField(native_str("StartDate"), date.year,
+                                 date.month, date.day, date.hour, date.minute,
+                                 date.second, 100)
+            if channel_list:
+                feature.SetField(native_str("Channels"),
+                                 native_str(channel_list))
+
+            if sta.latitude is not None and sta.longitude is not None:
+                point = ogr.Geometry(ogr.wkbPoint)
+                point.AddPoint(sta.longitude, sta.latitude)
+                feature.SetGeometry(point)
+
+        layer.CreateFeature(feature)
+        # Destroy the feature to free resources
+        feature.Destroy()
+
+    # Destroy the data source to free resources
+    data_source.Destroy()
+
+
 def _get_WGS84_spatial_reference():
     # create the spatial reference
     sr = osr.SpatialReference()

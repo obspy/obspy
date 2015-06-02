@@ -306,6 +306,7 @@ ENTRY_POINTS = {
         'STATIONXML = obspy.io.stationxml.core',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
+        'SHAPEFILE = obspy.io.shapefile.core',
     ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -318,6 +319,9 @@ ENTRY_POINTS = {
     'obspy.plugin.inventory.CSS': [
         'writeFormat = obspy.io.css.station:_write_css',
     ],
+    'obspy.plugin.inventory.SHAPEFILE': [
+        'writeFormat = obspy.io.shapefile.core:_write_shapefile',
+        ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
