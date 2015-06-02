@@ -63,37 +63,27 @@ def _add_catalog_layer(data_source, catalog):
     if not has_GDAL:
         raise ImportError(IMPORTERROR_MSG)
 
-    sr = _get_WGS84_spatial_reference()
-    layer = data_source.CreateLayer(native_str("earthquakes"), sr,
-                                    ogr.wkbPoint)
-
-    # Add the fields we're interested in (10 char max)
-    for name in ["EventID", "OriginID", "Magnitu_ID"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTString)
-        field.SetWidth(100)
-        layer.CreateField(field)
+    # [name, type, width, precision]
+    # field name is 10 chars max
     # ESRI shapefile attributes are stored in dbf files, which can not
     # store datetimes, only dates, see:
     # http://www.gdal.org/drv_shapefile.html
-    field = ogr.FieldDefn(native_str("Date"), ogr.OFTDate)
-    layer.CreateField(field)
     # use POSIX timestamp for exact origin time, set time of first pick
     # for events with no origin
-    for name in ["OriginTime", "FirstPick"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
-        field.SetWidth(20)
-        field.SetPrecision(6)
-        layer.CreateField(field)
-    for name in ["Latitude", "Longitude"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
-        field.SetWidth(16)
-        field.SetPrecision(10)
-        layer.CreateField(field)
-    for name in ["Depth", "Magnitude"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
-        field.SetWidth(8)
-        field.SetPrecision(3)
-        layer.CreateField(field)
+    field_definitions = [
+        ["EventID", ogr.OFTString, 100, None],
+        ["OriginID", ogr.OFTString, 100, None],
+        ["Magnitu_ID", ogr.OFTString, 100, None],
+        ["Date", ogr.OFTDate, None, None],
+        ["OriginTime", ogr.OFTReal, 20, 6],
+        ["FirstPick", ogr.OFTReal, 20, 6],
+        ["Longitude", ogr.OFTReal, 16, 10],
+        ["Latitude", ogr.OFTReal, 16, 10],
+        ["Depth", ogr.OFTReal, 8, 3],
+        ["Magnitude", ogr.OFTReal, 8, 3],
+        ]
+
+    layer = _create_layer(data_source, "earthquakes", field_definitions)
 
     layer_definition = layer.GetLayerDefn()
     for event in catalog:
@@ -170,34 +160,25 @@ def _add_inventory_layer(data_source, inventory):
     if not has_GDAL:
         raise ImportError(IMPORTERROR_MSG)
 
-    sr = _get_WGS84_spatial_reference()
-    layer = data_source.CreateLayer(native_str("stations"), sr,
-                                    ogr.wkbPoint)
-
-    # Add the fields we're interested in (10 char max)
-    for name in ["Network", "Station"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTString)
-        field.SetWidth(20)
-        layer.CreateField(field)
-    for name in ["Latitude", "Longitude"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
-        field.SetWidth(16)
-        field.SetPrecision(10)
-        layer.CreateField(field)
-    for name in ["Elevation"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTReal)
-        field.SetWidth(9)
-        field.SetPrecision(3)
-        layer.CreateField(field)
+    # [name, type, width, precision]
+    # field name is 10 chars max
     # ESRI shapefile attributes are stored in dbf files, which can not
     # store datetimes, only dates, see:
     # http://www.gdal.org/drv_shapefile.html
-    for name in ["StartDate", "EndDate"]:
-        field = ogr.FieldDefn(native_str(name), ogr.OFTDate)
-        layer.CreateField(field)
-    field = ogr.FieldDefn(native_str("Channels"), ogr.OFTString)
-    field.SetWidth(254)
-    layer.CreateField(field)
+    # use POSIX timestamp for exact origin time, set time of first pick
+    # for events with no origin
+    field_definitions = [
+        ["Network", ogr.OFTString, 20, None],
+        ["Station", ogr.OFTString, 20, None],
+        ["Longitude", ogr.OFTReal, 16, 10],
+        ["Latitude", ogr.OFTReal, 16, 10],
+        ["Elevation", ogr.OFTReal, 9, 3],
+        ["StartDate", ogr.OFTDate, None, None],
+        ["EndDate", ogr.OFTDate, None, None],
+        ["Channels", ogr.OFTString, 254, None],
+        ]
+
+    layer = _create_layer(data_source, "stations", field_definitions)
 
     layer_definition = layer.GetLayerDefn()
     for net in inventory:
@@ -279,6 +260,21 @@ def _get_WGS84_spatial_reference():
         """
     sr.ImportFromWkt(wgs84_wkt)
     return sr
+
+
+def _create_layer(data_source, layer_name, field_definitions):
+    sr = _get_WGS84_spatial_reference()
+    layer = data_source.CreateLayer(native_str(layer_name), sr,
+                                    ogr.wkbPoint)
+    # Add the fields we're interested in
+    for name, type_, width, precision in field_definitions:
+        field = ogr.FieldDefn(native_str(name), type_)
+        if width is not None:
+            field.SetWidth(width)
+        if precision is not None:
+            field.SetPrecision(precision)
+        layer.CreateField(field)
+    return layer
 
 
 if __name__ == '__main__':
