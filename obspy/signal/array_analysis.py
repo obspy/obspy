@@ -817,7 +817,8 @@ class SeismicArray(object):
                     # restrict output
                     store=dump,
                     semb_thres=-1e9, vel_thres=-1e9, verbose=False,
-                    timestamp='julsec', stime=starttime, etime=endtime,
+                    # use mlabday to be compatible with matplotlib
+                    timestamp='mlabday', stime=starttime, etime=endtime,
                     method=0, correct_3dplane=False, vel_cor=vel_corr,
                     static_3D=static3D)
 
@@ -842,7 +843,7 @@ class SeismicArray(object):
                     store=dump,
                     win_len=wlen, win_frac=0.5,
                     nthroot=4, method=method,
-                    verbose=False, timestamp='julsec',
+                    verbose=False, timestamp='mlabday',
                     stime=starttime, etime=endtime, vel_cor=vel_corr,
                     static_3D=False)
 
@@ -859,21 +860,17 @@ class SeismicArray(object):
             # now let's do the plotting
             plot_objects = []
             if "baz_slow_map" in plots:
-                plt = _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                           filename_patterns, True, method,
-                                           st_workon, starttime, wlen, endtime)
-                plt.show() if show_plots else plot_objects.append(plt)
+                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                                     filename_patterns, True, method,
+                                     st_workon, starttime, wlen, endtime)
             if "slowness_xy" in plots:
-                plt = _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                           filename_patterns, False, method,
-                                           st_workon, starttime, wlen, endtime)
-                plt.show() if show_plots else plot_objects.append(plt)
+                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                                     filename_patterns, False, method,
+                                     st_workon, starttime, wlen, endtime)
             if "baz_hist" in plots:
-                plt = plot_baz_hist(out, starttime, endtime)
-                plt.show() if show_plots else plot_objects.append(plt)
+                plot_baz_hist(out, starttime, endtime)
             if "bf_time_dep" in plots:
-                plt = plot_bf_results_over_time(out, starttime, endtime)
-                plt.show() if show_plots else plot_objects.append(plt)
+                plot_bf_results_over_time(out, starttime, endtime)
 
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
@@ -1884,8 +1881,7 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
         result = "BAZ: %.2f, Slow: %.2f s/deg, Time %s" % (
             baz[i], slow[i], UTCDateTime(new_time))
         ax.set_title(result)
-
-        return plt
+        plt.show()
 
 
 def plot_baz_hist(out, t_start=None, t_end=None):
@@ -1939,7 +1935,7 @@ def plot_baz_hist(out, t_start=None, t_end=None):
                  norm=Normalize(vmin=hist.min(), vmax=hist.max()))
     if t_start is not None and t_end is not None:
         plt.suptitle('Time: {} - {}'.format(t_start, t_end))
-    return plt
+    plt.show()
 
 
 def plot_bf_results_over_time(out, t_start, t_end):
@@ -1963,7 +1959,7 @@ def plot_bf_results_over_time(out, t_start, t_end):
         t_start.strftime('%Y-%m-%d'), ))
     #fig.autofmt_xdate()
     fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
-    return plt
+    plt.show()
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
