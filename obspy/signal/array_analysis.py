@@ -68,7 +68,7 @@ class SeismicArray(object):
         applications where self.geometry would return geometry for more
         stations than are actually present in the data.
         """
-        inv = copy.deepcopy(self.inventory)
+        inv = self.inventory
         # check what station/channel IDs are in the data
         stations_present = [tr.getId() for tr in st]
         # delete all channels that are not represented
@@ -89,9 +89,9 @@ class SeismicArray(object):
         # check total number of channels now:
         contents = inv.get_contents()
         if len(contents['channels']) < len(stations_present):
-            # Inventory remains unchanged in this case.
-            raise ValueError('Inventory does not contain information for all '
-                             'traces in stream.')
+            # Inventory is altered anyway in this case.
+            warnings.warn('Inventory does not contain information for all '
+                          'traces in stream.')
         self.inventory = inv
 
         # todo: if traces and/or inventory use station rather than channel
@@ -689,8 +689,8 @@ class SeismicArray(object):
         :type sls: float
         :param plots: List or tuple of desired output plots, e.g.
          ("baz_slow_map"). Supported options:
-         "baz_slow_map" for a backazimuth-slowness map,
-         "slowness_xy" for a slowness_xy map,
+         "baz_slow_map" for backazimuth-slowness maps for each window,
+         "slowness_xy" for slowness_xy maps for each window,
          "baz_hist" for a backazimuth-slowness polar histogram as in
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
@@ -790,12 +790,9 @@ class SeismicArray(object):
                              os.path.join(tmpdir, 'apow_map_%03d.npy'))
         if make_slow_map or make_slowness_xy:
             def dump(pow_map, apow_map, i):
-                """
-                Example function to use with `store` kwarg in
-                :func:`~obspy.signal.array_analysis.SeismicArray.array_processing`.
-                """
-                np.save('pow_map_%d' % i, pow_map)
-                np.save('apow_map_%d' % i, apow_map)
+                np.save(filename_patterns[0] % i, pow_map)
+                np.save(filename_patterns[1] % i, apow_map)
+
         else:
             dump = None
 
@@ -858,7 +855,6 @@ class SeismicArray(object):
                 baz[baz < 0.0] += 360
 
             # now let's do the plotting
-            plot_objects = []
             if "baz_slow_map" in plots:
                 _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
                                      filename_patterns, True, method,
@@ -874,8 +870,6 @@ class SeismicArray(object):
 
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
-            if len(plot_objects) > 0:
-                return out, plot_objects
             return out
         finally:
             self.inventory = invbkp
@@ -1486,7 +1480,7 @@ class SeismicArray(object):
 
                 if polarisation > 0:
                     i, j, k = np.unravel_index(np.argmax(res[:, uindex, :]),
-                                            res.shape)
+                                               res.shape)
                     beamres[:, :, win / win_average, f] = res[:, :, k]
                     incidence[win / win_average, f] = incs[k] * 180. / math.pi
 
