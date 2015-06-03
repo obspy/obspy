@@ -36,8 +36,8 @@ DEFAULT_MODULES = ['core', 'db', 'geodetics', 'imaging',
                    'io.datamark', 'io.gse2', 'io.json', 'io.kinemetrics',
                    'io.mseed', 'io.ndk', 'io.nlloc', 'io.pdas', 'io.pde',
                    'io.quakeml', 'io.sac', 'io.seg2', 'io.segy', 'io.seisan',
-                   'io.sh', 'io.stationxml', 'io.wav', 'io.xseed', 'io.y',
-                   'io.zmap', 'realtime', 'signal', 'taup']
+                   'io.sh', 'io.shapefile', 'io.stationxml', 'io.wav',
+                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.seedlink',
                    'clients.seishub']
@@ -477,6 +477,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SHAPEFILE :mod:`obspy.io.shapefile`
+                             :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
     ======... ===============... ========================================...
 

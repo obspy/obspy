@@ -13,6 +13,7 @@ master:
      version they will fail. Pay attention to the deprecation warnings.
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
+     - ESRI shapefile write support, useful in GIS applications (see #1066)
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
@@ -21,6 +22,8 @@ master:
      argument to functions that plot maps to select between Basemap or Cartopy.
  - obspy.io.mseed:
    * Upgrade to libmseed 2.16
+ - obspy.io.shapefile:
+   * New module for ESRI shapefile write support (see #1066)
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
