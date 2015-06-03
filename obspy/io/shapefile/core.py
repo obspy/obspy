@@ -28,10 +28,12 @@ def _write_shapefile(obj, filename, **kwargs):
     :type obj: :class:`~obspy.core.event.Catalog` or
         :class:`~obspy.core.inventory.Inventory`
     :param obj: ObsPy object for shapefile output
-    :type filename: str or file
+    :type filename: str
     :param filename: Filename to write to. According to ESRI shapefile
         definition, multiple files with the following suffixes will be written:
-        ".shp", ".shx", ".dbj", ".prj".
+        ".shp", ".shx", ".dbj", ".prj". If filename does not end with ".shp",
+        it will be appended. Other files will be created with respective
+        suffixes accordingly.
     """
     if not has_GDAL:
         raise ImportError(IMPORTERROR_MSG)
@@ -43,14 +45,19 @@ def _write_shapefile(obj, filename, **kwargs):
     driver.DeleteDataSource(filename)
     data_source = driver.CreateDataSource(filename)
 
-    # create the layer
-    if isinstance(obj, Catalog):
-        _add_catalog_layer(data_source, obj)
-    elif isinstance(obj, Inventory):
-        _add_inventory_layer(data_source, obj)
-    else:
-        msg = ("Object for shapefile output must be a Catalog or Inventory.")
-        raise TypeError(msg)
+    try:
+        # create the layer
+        if isinstance(obj, Catalog):
+            _add_catalog_layer(data_source, obj)
+        elif isinstance(obj, Inventory):
+            _add_inventory_layer(data_source, obj)
+        else:
+            msg = ("Object for shapefile output must be "
+                   "a Catalog or Inventory.")
+            raise TypeError(msg)
+    finally:
+        # Destroy the data source to free resources
+        data_source.Destroy()
 
 
 def _add_catalog_layer(data_source, catalog):
@@ -73,7 +80,7 @@ def _add_catalog_layer(data_source, catalog):
     field_definitions = [
         ["EventID", ogr.OFTString, 100, None],
         ["OriginID", ogr.OFTString, 100, None],
-        ["Magnitu_ID", ogr.OFTString, 100, None],
+        ["MagID", ogr.OFTString, 100, None],
         ["Date", ogr.OFTDate, None, None],
         ["OriginTime", ogr.OFTReal, 20, 6],
         ["FirstPick", ogr.OFTReal, 20, 6],
@@ -103,51 +110,51 @@ def _add_catalog_layer(data_source, catalog):
 
         feature = ogr.Feature(layer_definition)
 
-        # setting fields with `None` results in values of `0.000`
-        # need to really omit setting values if they are `None`
-        if event.resource_id is not None:
-            feature.SetField(native_str("EventID"),
-                             native_str(event.resource_id))
-        if origin.resource_id is not None:
-            feature.SetField(native_str("OriginID"),
-                             native_str(origin.resource_id))
-        if t_origin is not None:
-            # Use timestamp for exact timing
-            feature.SetField(native_str("OriginTime"), t_origin.timestamp)
-        if t_pick is not None:
-            # Use timestamp for exact timing
-            feature.SetField(native_str("FirstPick"), t_pick.timestamp)
-        if date is not None:
-            # ESRI shapefile attributes are stored in dbf files, which can not
-            # store datetimes, only dates.
-            # We still need to use the GDAL API with precision up to seconds
-            # (aiming at other output drivers of GDAL; `100` stands for GMT)
-            feature.SetField(native_str("Date"), date.year, date.month,
-                             date.day, date.hour, date.minute, date.second,
-                             100)
-        if origin.latitude is not None:
-            feature.SetField(native_str("Latitude"), origin.latitude)
-        if origin.longitude is not None:
-            feature.SetField(native_str("Longitude"), origin.longitude)
-        if origin.depth is not None:
-            feature.SetField(native_str("Depth"), origin.depth / 1e3)
-        if magnitude.mag is not None:
-            feature.SetField(native_str("Magnitude"), magnitude.mag)
-        if magnitude.resource_id is not None:
-            feature.SetField(native_str("Magnitu_ID"),
-                             native_str(magnitude.resource_id))
+        try:
+            # setting fields with `None` results in values of `0.000`
+            # need to really omit setting values if they are `None`
+            if event.resource_id is not None:
+                feature.SetField(native_str("EventID"),
+                                 native_str(event.resource_id))
+            if origin.resource_id is not None:
+                feature.SetField(native_str("OriginID"),
+                                 native_str(origin.resource_id))
+            if t_origin is not None:
+                # Use timestamp for exact timing
+                feature.SetField(native_str("OriginTime"), t_origin.timestamp)
+            if t_pick is not None:
+                # Use timestamp for exact timing
+                feature.SetField(native_str("FirstPick"), t_pick.timestamp)
+            if date is not None:
+                # ESRI shapefile attributes are stored in dbf files, which can
+                # not store datetimes, only dates. We still need to use the
+                # GDAL API with precision up to seconds (aiming at other output
+                # drivers of GDAL; `100` stands for GMT)
+                feature.SetField(native_str("Date"), date.year, date.month,
+                                 date.day, date.hour, date.minute, date.second,
+                                 100)
+            if origin.latitude is not None:
+                feature.SetField(native_str("Latitude"), origin.latitude)
+            if origin.longitude is not None:
+                feature.SetField(native_str("Longitude"), origin.longitude)
+            if origin.depth is not None:
+                feature.SetField(native_str("Depth"), origin.depth / 1e3)
+            if magnitude.mag is not None:
+                feature.SetField(native_str("Magnitude"), magnitude.mag)
+            if magnitude.resource_id is not None:
+                feature.SetField(native_str("MagID"),
+                                 native_str(magnitude.resource_id))
 
-        if origin.latitude is not None and origin.longitude is not None:
-            point = ogr.Geometry(ogr.wkbPoint)
-            point.AddPoint(origin.longitude, origin.latitude)
-            feature.SetGeometry(point)
+            if origin.latitude is not None and origin.longitude is not None:
+                point = ogr.Geometry(ogr.wkbPoint)
+                point.AddPoint(origin.longitude, origin.latitude)
+                feature.SetGeometry(point)
 
-        layer.CreateFeature(feature)
-        # Destroy the feature to free resources
-        feature.Destroy()
+            layer.CreateFeature(feature)
 
-    # Destroy the data source to free resources
-    data_source.Destroy()
+        finally:
+            # Destroy the feature to free resources
+            feature.Destroy()
 
 
 def _add_inventory_layer(data_source, inventory):
@@ -188,53 +195,53 @@ def _add_inventory_layer(data_source, inventory):
 
             feature = ogr.Feature(layer_definition)
 
-            # setting fields with `None` results in values of `0.000`
-            # need to really omit setting values if they are `None`
-            if net.code is not None:
-                feature.SetField(native_str("Network"),
-                                 native_str(net.code))
-            if sta.code is not None:
-                feature.SetField(native_str("Station"),
-                                 native_str(sta.code))
-            if sta.latitude is not None:
-                feature.SetField(native_str("Latitude"), sta.latitude)
-            if sta.longitude is not None:
-                feature.SetField(native_str("Longitude"), sta.longitude)
-            if sta.elevation is not None:
-                feature.SetField(native_str("Elevation"), sta.elevation)
-            if sta.start_date is not None:
-                date = sta.start_date
-                # ESRI shapefile attributes are stored in dbf files, which can
-                # not store datetimes, only dates. We still need to use the
-                # GDAL API with precision up to seconds (aiming at other output
-                # drivers of GDAL; `100` stands for GMT)
-                feature.SetField(native_str("StartDate"), date.year,
-                                 date.month, date.day, date.hour, date.minute,
-                                 date.second, 100)
-            if sta.end_date is not None:
-                date = sta.end_date
-                # ESRI shapefile attributes are stored in dbf files, which can
-                # not store datetimes, only dates. We still need to use the
-                # GDAL API with precision up to seconds (aiming at other output
-                # drivers of GDAL; `100` stands for GMT)
-                feature.SetField(native_str("StartDate"), date.year,
-                                 date.month, date.day, date.hour, date.minute,
-                                 date.second, 100)
-            if channel_list:
-                feature.SetField(native_str("Channels"),
-                                 native_str(channel_list))
+            try:
+                # setting fields with `None` results in values of `0.000`
+                # need to really omit setting values if they are `None`
+                if net.code is not None:
+                    feature.SetField(native_str("Network"),
+                                     native_str(net.code))
+                if sta.code is not None:
+                    feature.SetField(native_str("Station"),
+                                     native_str(sta.code))
+                if sta.latitude is not None:
+                    feature.SetField(native_str("Latitude"), sta.latitude)
+                if sta.longitude is not None:
+                    feature.SetField(native_str("Longitude"), sta.longitude)
+                if sta.elevation is not None:
+                    feature.SetField(native_str("Elevation"), sta.elevation)
+                if sta.start_date is not None:
+                    date = sta.start_date
+                    # ESRI shapefile attributes are stored in dbf files, which
+                    # can not store datetimes, only dates. We still need to use
+                    # the GDAL API with precision up to seconds (aiming at
+                    # other output drivers of GDAL; `100` stands for GMT)
+                    feature.SetField(native_str("StartDate"), date.year,
+                                     date.month, date.day, date.hour,
+                                     date.minute, date.second, 100)
+                if sta.end_date is not None:
+                    date = sta.end_date
+                    # ESRI shapefile attributes are stored in dbf files, which
+                    # can not store datetimes, only dates. We still need to use
+                    # the GDAL API with precision up to seconds (aiming at
+                    # other output drivers of GDAL; `100` stands for GMT)
+                    feature.SetField(native_str("StartDate"), date.year,
+                                     date.month, date.day, date.hour,
+                                     date.minute, date.second, 100)
+                if channel_list:
+                    feature.SetField(native_str("Channels"),
+                                     native_str(channel_list))
 
-            if sta.latitude is not None and sta.longitude is not None:
-                point = ogr.Geometry(ogr.wkbPoint)
-                point.AddPoint(sta.longitude, sta.latitude)
-                feature.SetGeometry(point)
+                if sta.latitude is not None and sta.longitude is not None:
+                    point = ogr.Geometry(ogr.wkbPoint)
+                    point.AddPoint(sta.longitude, sta.latitude)
+                    feature.SetGeometry(point)
 
-        layer.CreateFeature(feature)
-        # Destroy the feature to free resources
-        feature.Destroy()
+                layer.CreateFeature(feature)
 
-    # Destroy the data source to free resources
-    data_source.Destroy()
+            finally:
+                # Destroy the feature to free resources
+                feature.Destroy()
 
 
 def _get_WGS84_spatial_reference():

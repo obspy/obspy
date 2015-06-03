@@ -128,10 +128,10 @@ ENTRY_POINTS = {
         'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
-    ],
+        ],
     'distutils.commands': [
         'build_man = Help2Man'
-    ],
+        ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
         'SLIST = obspy.io.ascii.core',
@@ -154,103 +154,103 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
-    ],
+        ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
         'readFormat = obspy.io.ascii.core:_read_tspair',
         'writeFormat = obspy.io.ascii.core:_write_tspair',
-    ],
+        ],
     'obspy.plugin.waveform.SLIST': [
         'isFormat = obspy.io.ascii.core:_is_slist',
         'readFormat = obspy.io.ascii.core:_read_slist',
         'writeFormat = obspy.io.ascii.core:_write_slist',
-    ],
+        ],
     'obspy.plugin.waveform.PICKLE': [
         'isFormat = obspy.core.stream:_is_pickle',
         'readFormat = obspy.core.stream:_read_pickle',
         'writeFormat = obspy.core.stream:_write_pickle',
-    ],
+        ],
     'obspy.plugin.waveform.CSS': [
         'isFormat = obspy.io.css.core:_is_css',
         'readFormat = obspy.io.css.core:_read_css',
-    ],
+        ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.io.datamark.core:_is_datamark',
         'readFormat = obspy.io.datamark.core:_read_datamark',
-    ],
+        ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',
         'readFormat = obspy.io.kinemetrics.core:read_evt',
-    ],
+        ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.io.gse2.core:_is_gse1',
         'readFormat = obspy.io.gse2.core:_read_gse1',
-    ],
+        ],
     'obspy.plugin.waveform.GSE2': [
         'isFormat = obspy.io.gse2.core:_is_gse2',
         'readFormat = obspy.io.gse2.core:_read_gse2',
         'writeFormat = obspy.io.gse2.core:_write_gse2',
-    ],
+        ],
     'obspy.plugin.waveform.MSEED': [
         'isFormat = obspy.io.mseed.core:_is_mseed',
         'readFormat = obspy.io.mseed.core:_read_mseed',
         'writeFormat = obspy.io.mseed.core:_write_mseed',
-    ],
+        ],
     'obspy.plugin.waveform.PDAS': [
         'isFormat = obspy.io.pdas.core:_is_pdas',
         'readFormat = obspy.io.pdas.core:_read_pdas',
-    ],
+        ],
     'obspy.plugin.waveform.SAC': [
         'isFormat = obspy.io.sac.core:_is_sac',
         'readFormat = obspy.io.sac.core:_read_sac',
         'writeFormat = obspy.io.sac.core:_write_sac',
-    ],
+        ],
     'obspy.plugin.waveform.SACXY': [
         'isFormat = obspy.io.sac.core:_is_sacXY',
         'readFormat = obspy.io.sac.core:_read_sacXY',
         'writeFormat = obspy.io.sac.core:_write_sacXY',
-    ],
+        ],
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.io.seg2.seg2:_is_seg2',
         'readFormat = obspy.io.seg2.seg2:_read_seg2',
-    ],
+        ],
     'obspy.plugin.waveform.SEGY': [
         'isFormat = obspy.io.segy.core:_is_segy',
         'readFormat = obspy.io.segy.core:_read_segy',
         'writeFormat = obspy.io.segy.core:_write_segy',
-    ],
+        ],
     'obspy.plugin.waveform.SU': [
         'isFormat = obspy.io.segy.core:_is_su',
         'readFormat = obspy.io.segy.core:_read_su',
         'writeFormat = obspy.io.segy.core:_write_su',
-    ],
+        ],
     'obspy.plugin.waveform.SEISAN': [
         'isFormat = obspy.io.seisan.core:_is_seisan',
         'readFormat = obspy.io.seisan.core:_read_seisan',
-    ],
+        ],
     'obspy.plugin.waveform.Q': [
         'isFormat = obspy.io.sh.core:_is_q',
         'readFormat = obspy.io.sh.core:_read_q',
         'writeFormat = obspy.io.sh.core:_write_q',
-    ],
+        ],
     'obspy.plugin.waveform.SH_ASC': [
         'isFormat = obspy.io.sh.core:_is_asc',
         'readFormat = obspy.io.sh.core:_read_asc',
         'writeFormat = obspy.io.sh.core:_write_asc',
-    ],
+        ],
     'obspy.plugin.waveform.WAV': [
         'isFormat = obspy.io.wav.core:_is_wav',
         'readFormat = obspy.io.wav.core:_read_wav',
         'writeFormat = obspy.io.wav.core:_write_wav',
-    ],
+        ],
     'obspy.plugin.waveform.Y': [
         'isFormat = obspy.io.y.core:_is_y',
         'readFormat = obspy.io.y.core:_read_y',
-    ],
+        ],
     'obspy.plugin.waveform.AH': [
         'isFormat = obspy.io.ah.core:_is_ah',
         'readFormat = obspy.io.ah.core:_read_ah',
-    ],
+        ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
         'ZMAP = obspy.io.zmap.core',
@@ -262,27 +262,27 @@ ENTRY_POINTS = {
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
-    ],
+        ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
         'readFormat = obspy.io.quakeml.core:_read_quakeml',
         'writeFormat = obspy.io.quakeml.core:_write_quakeml',
-    ],
+        ],
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.io.pde.mchedr:_is_mchedr',
         'readFormat = obspy.io.pde.mchedr:_read_mchedr',
-    ],
+        ],
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.io.json.core:_write_json',
-    ],
+        ],
     'obspy.plugin.event.ZMAP': [
         'isFormat = obspy.io.zmap.core:_is_zmap',
         'readFormat = obspy.io.zmap.core:_read_zmap',
         'writeFormat = obspy.io.zmap.core:_write_zmap',
-    ],
+        ],
     'obspy.plugin.event.CNV': [
         'writeFormat = obspy.io.cnv.core:_write_cnv',
-    ],
+        ],
     'obspy.plugin.event.NDK': [
         'isFormat = obspy.io.ndk.core:_is_ndk',
         'readFormat = obspy.io.ndk.core:_read_ndk',
@@ -307,18 +307,18 @@ ENTRY_POINTS = {
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
-    ],
+        ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
         'readFormat = obspy.io.stationxml.core:_read_stationxml',
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
-    ],
+        ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',
-    ],
+        ],
     'obspy.plugin.inventory.CSS': [
         'writeFormat = obspy.io.css.station:_write_css',
-    ],
+        ],
     'obspy.plugin.inventory.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
         ],
@@ -327,16 +327,16 @@ ENTRY_POINTS = {
         'constant = scipy.signal:detrend',
         'demean = scipy.signal:detrend',
         'simple = obspy.signal.detrend:simple',
-    ],
+        ],
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
-    ],
+        ],
     'obspy.plugin.integrate': [
         'cumtrapz = '
         'obspy.signal.differentiate_and_integrate:integrate_cumtrapz',
         'spline = '
         'obspy.signal.differentiate_and_integrate:integrate_spline',
-    ],
+        ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
         'bandstop = obspy.signal.filter:bandstop',
@@ -345,18 +345,18 @@ ENTRY_POINTS = {
         'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
         'lowpassFIR = obspy.signal.filter:lowpass_FIR',
         'remezFIR = obspy.signal.filter:remez_FIR',
-    ],
+        ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
         'weighted_average_slopes = '
         'obspy.signal.interpolation:weighted_average_slopes',
-    ],
+        ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
         'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
         'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
         'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
-    ],
+        ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
         'barthann = scipy.signal:barthann',
@@ -376,7 +376,7 @@ ENTRY_POINTS = {
         'parzen = scipy.signal:parzen',
         'slepian = scipy.signal:slepian',
         'triang = scipy.signal:triang',
-    ],
+        ],
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recursive_STALTA',
         'carlstatrig = obspy.signal.trigger:carl_STA_trig',
@@ -385,12 +385,12 @@ ENTRY_POINTS = {
         'zdetect = obspy.signal.trigger:z_detect',
         'recstaltapy = obspy.signal.trigger:recursive_STALTA_py',
         'classicstaltapy = obspy.signal.trigger:classic_STALTA_py',
-    ],
+        ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
-    ],
-}
+        ],
+    }
 
 
 def find_packages():

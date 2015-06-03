@@ -13,7 +13,7 @@ master:
      version they will fail. Pay attention to the deprecation warnings.
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
-     - ESRI shapefile write support, useful in GSI applications (see #1066)
+     - ESRI shapefile write support, useful in GIS applications (see #1066)
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
