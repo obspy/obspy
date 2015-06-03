@@ -176,6 +176,34 @@ class RotateTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1e-7))
         self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1e-7))
 
+    def test_galperin_configuration(self):
+        """
+        Equal arrays on a Galperin configuration should result in only the
+        vertical component remaining.
+        """
+        dip = - (90.0 - np.rad2deg(np.arctan(np.sqrt(2.0))))
+
+        u = np.array([1.0, 0.0, 1.0])
+        v = np.array([1.0, 1.0, -1.0])
+        w = np.array([1.0, -1.0, -1.0])
+
+        z, n, e = rotate2ZNE(
+            u, -90, dip,
+            v, 30, dip,
+            w, 150, dip)
+
+        fac = 1.0 / np.sqrt(6.0)
+
+        z_ref = np.array([fac * 3.0 * np.sqrt(2.0), 0.0, -fac * np.sqrt(2.0)])
+        n_ref = np.array([0.0, fac * 2.0 * np.sqrt(3.0), 0.0])
+        e_ref = np.array([0.0, 0.0, -4.0 * fac])
+
+        np.testing.assert_allclose(e, e_ref)
+
+        self.assertTrue(np.allclose(z, z_ref))
+        self.assertTrue(np.allclose(n, n_ref))
+        self.assertTrue(np.allclose(e, e_ref))
+
 
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')

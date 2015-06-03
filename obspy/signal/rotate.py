@@ -197,15 +197,20 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
         `inverse` is `False`. Otherwise they will be oriented as specified
         by the dips and azimuths.
 
-    >>> # An input of ZNE yields an output of ZNE
+    An input of ZNE yields an output of ZNE
+
     >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 0, 0, \
             np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 1., 2.]), array([ 0., 2., 4.]), array([ 0., 3., 6.]))
-    >>> # An input of ZSE yields an output of ZNE
+
+    An input of ZSE yields an output of ZNE
+
     >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 180, 0, \
             np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 1., 2.]), array([ 0., -2., -4.]), array([ 0., 3., 6.]))
-    >>> # Mixed up components should get rotated to ZNE.
+
+    Mixed up components should get rotated to ZNE.
+
     >>> rotate2ZNE(np.arange(3), 0, 0, np.arange(3) * 2, 90, 0, \
             np.arange(3) * 3, 0, -90) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 3., 6.]), array([ 0., 1., 2.]), array([ 0., 2., 4.]))
