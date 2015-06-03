@@ -687,6 +687,50 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 os.kill(process.pid, signal.SIGKILL)
         self.assertFalse(fail)
 
+    def test_writing_blockette_100(self):
+        """
+        Tests that blockette 100 is written correctly. It is only used if
+        the sampling rate is higher than 32727 Hz or smaller than 1.0 /
+        32727.0 Hz.
+        """
+        # Three traces, only the middle one needs it.
+        tr = Trace(data=np.linspace(0, 100, 101))
+        st = Stream(traces=[tr.copy(), tr.copy(), tr.copy()])
+
+        st[1].stats.sampling_rate = 60000.0
+
+        with io.BytesIO() as buf:
+            st.write(buf, format="mseed")
+            buf.seek(0, 0)
+            st2 = read(buf)
+
+        self.assertTrue(np.allclose(
+            st[0].stats.sampling_rate,
+            st2[0].stats.sampling_rate))
+        self.assertTrue(np.allclose(
+            st[1].stats.sampling_rate,
+            st2[1].stats.sampling_rate))
+        self.assertTrue(np.allclose(
+            st[2].stats.sampling_rate,
+            st2[2].stats.sampling_rate))
+
+        st[1].stats.sampling_rate = 1.0 / 60000.0
+
+        with io.BytesIO() as buf:
+            st.write(buf, format="mseed")
+            buf.seek(0, 0)
+            st2 = read(buf)
+
+        self.assertTrue(np.allclose(
+            st[0].stats.sampling_rate,
+            st2[0].stats.sampling_rate))
+        self.assertTrue(np.allclose(
+            st[1].stats.sampling_rate,
+            st2[1].stats.sampling_rate))
+        self.assertTrue(np.allclose(
+            st[2].stats.sampling_rate,
+            st2[2].stats.sampling_rate))
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
