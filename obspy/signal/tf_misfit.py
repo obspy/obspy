@@ -1567,6 +1567,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         img_TFR.set_rasterized(True)
         ax_TFR.set_yscale("log")
         ax_TFR.set_ylim(fmin, fmax)
+        ax_TFR.set_xlim(t[0], t[-1])
 
         # plot spectrum
         ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
