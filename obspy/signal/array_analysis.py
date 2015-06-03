@@ -115,17 +115,19 @@ class SeismicArray(object):
             plt.show()
 
     def _get_geometry(self):
-        # Return a dictionary of lat, lon, height values for each item in
-        # the array inventory.
+        """
+        Return a dictionary of lat, lon, height values for each item (station
+        or channel level, if available) in the array inventory.
+        """
         if not self.inventory:
             return {}
 
         geo = {}
         for network in self.inventory:
             for station in network:
-                station_code = "{n}.{s}".format(n=network.code,
-                                                s=station.code)
                 if len(station.channels) == 0:
+                    location_code = "{n}.{s}".format(n=network.code,
+                                                     s=station.code)
                     # E.g. if using the array class for inventory of sources,
                     # there won't be channels.
                     this_coordinates = \
@@ -133,23 +135,18 @@ class SeismicArray(object):
                          "longitude": float(station.longitude),
                          "absolute_height_in_km":
                          float(station.elevation) / 1000.0}
-                    geo[station_code] = this_coordinates
+                    geo[location_code] = this_coordinates
                 else:
                     for channel in station:
+                        location_code = "{}.{}.{}".format(network.code,
+                                                          station.code,
+                                                          channel.code)
                         this_coordinates = \
                             {"latitude": float(channel.latitude),
                              "longitude": float(channel.longitude),
                              "absolute_height_in_km":
                              float(channel.elevation - channel.depth) / 1000.0}
-                        if station_code in geo \
-                                and this_coordinates not in list(geo.values()):
-                            msg = ("Different coordinates for station "
-                                   "'{n}.{s}' in the inventory. The first ones"
-                                   " encountered will be chosen.".format(
-                                   n=network.code, s=station.code))
-                            warnings.warn(msg)
-                            continue
-                        geo[station_code] = this_coordinates
+                        geo[location_code] = this_coordinates
         return geo
 
     @property
@@ -807,7 +804,7 @@ class SeismicArray(object):
         # Otherwise self.geometry and the xyz geometry arrays will have more
         # entries than the stream.
         invbkp = copy.deepcopy(self.inventory)
-        self._inventory_cull(st_workon)
+        self.inventory_cull(st_workon)
         try:
             if method == 'FK':
                 kwargs = dict(
@@ -957,20 +954,28 @@ class SeismicArray(object):
     def _attach_coords_to_stream(self, stream):
         """
         Attaches dictionary with latitude, longitude and elevation to each
-        trace in stream as `trace.stats.coords`. Takes into account local depth of sensor.
+        trace in stream as `trace.stats.coords`. Takes into account local
+        depth of sensor.
         """
         geo = self.geometry
 
         for tr in stream:
-            station_code = "{n}.{s}".format(n=tr.stats.network,
-                                            s=tr.stats.station)
-            coords = geo[station_code]
-            # todo: should really take account of channels
-            z = coords["absolute_height_in_km"]
+            if tr.stats.channel:
+                location_code = "{}.{}.{}".format(tr.stats.network,
+                                                  tr.stats.station,
+                                                  tr.stats.channel)
+                try:
+                    coords = geo[location_code]
+                except KeyError:
+                    # I.e. the inventory does not have information at channel.
+                    # only at station level:
+                    station_code = "{}.{}.{}".format(tr.stats.network,
+                                                     tr.stats.station)
+                    coords = geo[station_code]
             tr.stats.coordinates = \
                 AttribDict(dict(latitude=coords["latitude"],
                                 longitude=coords["longitude"],
-                                elevation=z))
+                                elevation=coords["absolute_height_in_km"]))
 
     def array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y,
                          slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
@@ -1280,7 +1285,8 @@ class SeismicArray(object):
         _alldataN = _alldataZ.copy()
         # array used for sorting if needed
         ans = []
-        for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E, stream_Z)):
+        for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E,
+                                                   stream_Z)):
             ans.append(np.where(station_names == '{}.{}'.
                                 format(tr_N.stats.network,
                                        tr_N.stats.station))[0][0])
@@ -1288,35 +1294,37 @@ class SeismicArray(object):
             _alldataE[i, :] = tr_E.data
             _alldataZ[i, :] = tr_Z.data
 
-        win_samples = int(win_len * stream_N.traces[0].stats.sampling_rate)
+        fs = stream_N.traces[0].stats.sampling_rate
+        nsamp = int(win_len * fs)
         num_win = int(np.floor(datalen_sec / win_len))
-        alldataZ = np.zeros((n_stats, num_win, win_samples))
+        alldataZ = np.zeros((n_stats, num_win, nsamp))
         alldataN, alldataE = alldataZ.copy(), alldataZ.copy()
         nst = np.zeros(num_win)
 
         # Iterate over the beamfoming windows:
         for i in range(num_win):
             for n in range(n_stats):
-                if not np.isnan(_alldataZ[n, i * win_samples:(
-                            i + 1) * win_samples]).any() and not np.isnan(
-                        _alldataN[n, i * win_samples:(
-                                    i + 1) * win_samples]).any() and not np.isnan(
-                        _alldataE[n, i * win_samples:(i + 1) * win_samples]).any():
-                    alldataZ[n, i, :] = _alldataZ[n, i * win_samples:(
-                                                                         i + 1) * win_samples] * cosTaper(
-                        win_samples)
-                    alldataN[n, i, :] = _alldataN[n, i * win_samples:(
-                                                                         i + 1) * win_samples] * cosTaper(
-                        win_samples)
-                    alldataE[n, i, :] = _alldataE[n, i * win_samples:(
-                                                                         i + 1) * win_samples] * cosTaper(
-                        win_samples)
+                if not np.isnan(_alldataZ[n, i * nsamp:(
+                            i + 1) * nsamp]).any() and not np.isnan(
+                        _alldataN[n, i * nsamp:(
+                                    i + 1) * nsamp]).any() and not np.isnan(
+                        _alldataE[n, i * nsamp:(i + 1) * nsamp]).any():
+                    alldataZ[n, i, :] = _alldataZ[n, i * nsamp:(
+                                                                         i + 1) * nsamp] * cosTaper(
+                        nsamp)
+                    alldataN[n, i, :] = _alldataN[n, i * nsamp:(
+                                                                         i + 1) * nsamp] * cosTaper(
+                        nsamp)
+                    alldataE[n, i, :] = _alldataE[n, i * nsamp:(
+                                                                         i + 1) * nsamp] * cosTaper(
+                        nsamp)
                     nst[i] += 1
 
         print(nst, ' stations/window; average over ', win_average)
 
+        # Do Fourier transform.
         deltat = stream_N.traces[0].stats.delta
-        freq_range = np.fft.fftfreq(win_samples, deltat)
+        freq_range = np.fft.fftfreq(nsamp, deltat)
         # Use a narrower 'frequency range' of interest for evaluating incidence
         # angle.
         lowcorner = sub_freq_range[0]
@@ -1324,13 +1332,13 @@ class SeismicArray(object):
         index = np.where((freq_range > lowcorner)
                          & (freq_range < highcorner))[0]
         fr = freq_range[index]
-        fcoeffZ = np.fft.fft(alldataZ, n=win_samples, axis=-1) / win_samples
-        fcoeffN = np.fft.fft(alldataN, n=win_samples, axis=-1) / win_samples
-        fcoeffE = np.fft.fft(alldataE, n=win_samples, axis=-1) / win_samples
+        fcoeffZ = np.fft.fft(alldataZ, n=nsamp, axis=-1) / nsamp
+        fcoeffN = np.fft.fft(alldataN, n=nsamp, axis=-1) / nsamp
+        fcoeffE = np.fft.fft(alldataE, n=nsamp, axis=-1) / nsamp
         fcoeffZ = fcoeffZ[:, :, index]
         fcoeffN = fcoeffN[:, :, index]
         fcoeffE = fcoeffE[:, :, index]
-        deltaf = 1. / (win_samples * deltat)
+        deltaf = 1. / (nsamp * deltat)
 
         if whiten:
             fcoeffZ, fcoeffN, fcoeffE = self._three_c_dowhiten(fcoeffZ,
@@ -1382,7 +1390,7 @@ class SeismicArray(object):
             return polE, polN
 
         Cz = [0., 1j, 1j, 1., 1.]
-        Ch = [pol_love, pol_rayleigh_retro, pol_rayleigh_prog, pol_P, pol_SV]
+        Ch = (pol_love, pol_rayleigh_retro, pol_rayleigh_prog, pol_P, pol_SV)
 
         nfreq = len(fr)
         out_wins = int(np.floor(num_win / win_average))
@@ -1421,12 +1429,10 @@ class SeismicArray(object):
                     e_steer = np.exp(-1j * steering * omega * u[vel])
                     e_steerE = e_steer.copy()
                     e_steerN = e_steer.copy()
-                    e_steerE = (e_steerE.T * np.array(
-                        [Ch[polarisation](azi)[0]
-                         for azi in range(len(theo_backazi))])).T
-                    e_steerN = (e_steerN.T * np.array(
-                        [Ch[polarisation](azi)[1]
-                         for azi in range(len(theo_backazi))])).T
+                    e_steerE = (e_steerE.T * np.array([Ch[polarisation](azi)[0]
+                                for azi in range(len(theo_backazi))])).T
+                    e_steerN = (e_steerN.T * np.array([Ch[polarisation](azi)[1]
+                                for azi in range(len(theo_backazi))])).T
 
                     if polarisation == 0:
                         w = np.concatenate(
@@ -1546,7 +1552,7 @@ class SeismicArray(object):
 
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
-                                    freq_range=(0.05, 1), plot_periods=(7, 14),
+                                    freq_range, plot_periods=(7, 14),
                                     n_min_stns=7, win_average=1,
                                     plot_transff=False):
         """
@@ -1565,15 +1571,17 @@ class SeismicArray(object):
 
         :param stream_N: Stream of all traces for the North component.
         :param stream_E: stream of East components
-        :param stream_Z: stream of Up components
+        :param stream_Z: stream of Up components. Will be ignored for Love
+         waves.
         :param wlen: window length in seconds
         :param smin: minimum slowness of the slowness grid [km/s]
         :param smax: maximum slowness [km/s]
         :param sstep: slowness step [km/s]
         :param wavetype: 'love', 'rayleigh_prograde', 'rayleigh_retrograde',
          'P', or 'SV'
-        :param freq_range: list of frequencies to be beamformed and returned.
-         Data should be pre-filtered to this frequency band (or narrower)!
+        :param freq_range: Frequency band (min, max) that is used for
+         beamforming and returned. Ideally, use the frequency band of the
+         pre-filter.
         :param plot_periods: periods to plot [s]
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
@@ -1584,10 +1592,12 @@ class SeismicArray(object):
          of windows and number of discrete frequencies; as well as frequency
          and incidence angle arrays (the latter will be zero for Love waves).
         """
-        pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde': 2,
-                    'P': 3, 'SV': 4}
+        pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde':
+                    2, 'P': 3, 'SV': 4}
+        wavetype = wavetype.lower()
         if wavetype not in pol_dict:
-            raise ValueError('Invalid option for wavetype: {}'.format(wavetype))
+            raise ValueError('Invalid option for wavetype: {}'
+                             .format(wavetype))
 
         # from _array_analysis_helper:
         starttime = max(max([tr.stats.starttime for tr in st]) for st in
