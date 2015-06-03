@@ -477,6 +477,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     JSON      :mod:`...io.json`  :func:`obspy.io.json.core._write_json`
     NLLOC_OBS :mod:`...io.nlloc` :func:`obspy.io.nlloc.core.write_nlloc_obs`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
+    SHAPEFILE :mod:`obspy.io.shapefile`
+                             :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
     ======... ===============... ========================================...
 
