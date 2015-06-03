@@ -13,7 +13,7 @@ filter settings) and to validate and check the results the options `plot` and
 `filename` can be used to open plot windows or save the figure to a file.
 
 See the documentation of
-:func:`~obspy.signal.cross_correlation.xcorrPickCorrection` for more details.
+:func:`~obspy.signal.cross_correlation.xcorr_pick_correction` for more details.
 
 The example will print the time correction for pick 2 and the respective
 correlation coefficient and open a plot window for correlations on both the

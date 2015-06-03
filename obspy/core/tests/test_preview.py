@@ -3,10 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core.preview import createPreview, mergePreviews, resamplePreview
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.preview import create_preview, merge_previews, resample_preview
 
 
 class UtilTestCase(unittest.TestCase):
@@ -19,35 +21,35 @@ class UtilTestCase(unittest.TestCase):
         Test for creating preview.
         """
         # Wrong delta should raise.
-        self.assertRaises(TypeError, createPreview,
+        self.assertRaises(TypeError, create_preview,
                           Trace(data=np.arange(10)), 60.0)
-        self.assertRaises(TypeError, createPreview,
+        self.assertRaises(TypeError, create_preview,
                           Trace(data=np.arange(10)), 0)
         # 1
         trace = Trace(data=np.array([0] * 28 + [0, 1] * 30 + [-1, 1] * 29))
         trace.stats.starttime = UTCDateTime(32)
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(60))
         self.assertEqual(preview.stats.endtime, UTCDateTime(120))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([1, 2]))
         # 2
         trace = Trace(data=np.arange(0, 30))
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(0))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([29]))
         # 3
         trace = Trace(data=np.arange(0, 60))
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(0))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([59]))
         # 4
         trace = Trace(data=np.arange(0, 90))
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(60))
         self.assertEqual(preview.stats.delta, 60)
@@ -59,14 +61,14 @@ class UtilTestCase(unittest.TestCase):
         """
         # 1 - masked arrays without masked values
         trace = Trace(data=np.ma.ones(600))
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         # only masked values get replaced with an -1
         np.testing.assert_array_equal(preview.data, np.array(10 * [0]))
         # 2 - masked arrays with masked values
         trace = Trace(data=np.ma.ones(600))
         trace.data.mask = [False] * 600
         trace.data.mask[200:400] = True
-        preview = createPreview(trace, delta=60)
+        preview = create_preview(trace, delta=60)
         # masked values get replaced with an -1
         np.testing.assert_array_equal(preview.data,
                                       np.array(4 * [0] + 2 * [-1] + 4 * [0]))
@@ -78,11 +80,11 @@ class UtilTestCase(unittest.TestCase):
         # Merging non-preview traces in one Stream object should raise.
         st = Stream(traces=[Trace(data=np.empty(2)),
                             Trace(data=np.empty(2))])
-        self.assertRaises(Exception, mergePreviews, st)
+        self.assertRaises(Exception, merge_previews, st)
         # Merging empty traces should return an new empty Stream object.
         st = Stream()
         stream_id = id(st)
-        st2 = mergePreviews(st)
+        st2 = merge_previews(st)
         self.assertNotEqual(stream_id, id(st2))
         self.assertEqual(len(st.traces), 0)
         # Different sampling rates in one Stream object causes problems.
@@ -92,14 +94,14 @@ class UtilTestCase(unittest.TestCase):
         tr2 = Trace(data=np.empty(10))
         tr2.stats.preview = True
         st = Stream(traces=[tr1, tr2])
-        self.assertRaises(Exception, mergePreviews, st)
+        self.assertRaises(Exception, merge_previews, st)
         # Different data types should raise.
         tr1 = Trace(data=np.empty(10, dtype=np.int32))
         tr1.stats.preview = True
         tr2 = Trace(data=np.empty(10, dtype=np.float64))
         tr2.stats.preview = True
         st = Stream(traces=[tr1, tr2])
-        self.assertRaises(Exception, mergePreviews, st)
+        self.assertRaises(Exception, merge_previews, st)
         # Now some real tests.
         # 1
         tr1 = Trace(data=np.array([1, 2] * 100))
@@ -109,7 +111,7 @@ class UtilTestCase(unittest.TestCase):
         tr2.stats.preview = True
         tr2.stats.starttime = UTCDateTime(500)
         st = Stream(traces=[tr1, tr2])
-        st2 = mergePreviews(st)
+        st2 = merge_previews(st)
         self.assertEqual(len(st2.traces), 1)
         self.assertEqual(st2[0].stats.starttime, UTCDateTime(500))
         np.testing.assert_array_equal(st2[0].data, np.array([3, 2] * 100))
@@ -120,7 +122,7 @@ class UtilTestCase(unittest.TestCase):
         tr2.stats.starttime = tr2.stats.starttime + 20
         tr2.stats.preview = True
         st = Stream(traces=[tr1, tr2])
-        st2 = mergePreviews(st)
+        st2 = merge_previews(st)
         self.assertEqual(len(st2.traces), 1)
         self.assertEqual(st2[0].stats.starttime, tr1.stats.starttime)
         np.testing.assert_array_equal(st2[0].data,
@@ -132,16 +134,16 @@ class UtilTestCase(unittest.TestCase):
         """
         # Trying to resample non-preview Traces should raise.
         tr = Trace(data=np.empty(100))
-        self.assertRaises(Exception, resamplePreview, tr, 5)
+        self.assertRaises(Exception, resample_preview, tr, 5)
         # Currently only downsampling is supported.
         tr = Trace(data=np.empty(20))
         tr.stats.preview = True
-        self.assertRaises(NotImplementedError, resamplePreview, tr, 100)
+        self.assertRaises(NotImplementedError, resample_preview, tr, 100)
         # Fast method.
         tr = Trace(data=np.array([1, 2, 3, 4] * 53 + [-1, 0, 1, 2] * 53))
         endtime = tr.stats.endtime
         tr.stats.preview = True
-        omitted_samples = resamplePreview(tr, 100, method='fast')
+        omitted_samples = resample_preview(tr, 100, method='fast')
         # Assert things for this easy case.
         self.assertEqual(tr.stats.endtime, endtime)
         self.assertEqual(tr.stats.npts, 100)
@@ -152,7 +154,7 @@ class UtilTestCase(unittest.TestCase):
         tr = Trace(data=np.array([1, 2, 3, 4] * 53 + [-1, 0, 1, 2] * 53))
         endtime = tr.stats.endtime
         tr.stats.preview = True
-        omitted_samples = resamplePreview(tr, 100, method='accurate')
+        omitted_samples = resample_preview(tr, 100, method='accurate')
         # Assert things for this easy case.
         self.assertEqual(tr.stats.endtime, endtime)
         self.assertEqual(tr.stats.npts, 100)
@@ -179,7 +181,7 @@ class UtilTestCase(unittest.TestCase):
         st1 = Stream([tr1, tr2])
         st1.verify()
         # merge
-        st2 = mergePreviews(st1)
+        st2 = merge_previews(st1)
         st2.verify()
         # check
         self.assertTrue(st2[0].stats.preview)
@@ -195,7 +197,7 @@ class UtilTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(4000))
         tr.stats.sampling_rate = 124.999992371
         tr.stats.starttime = UTCDateTime("1989-10-06T14:31:14.000000Z")
-        createPreview(tr, delta=30)
+        create_preview(tr, delta=30)
 
     def test_createPreviewWithVerySmallSampleRate(self):
         """
@@ -204,10 +206,10 @@ class UtilTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(4000))
         # 1 - should raise
         tr.stats.sampling_rate = 0.1
-        self.assertRaises(ValueError, createPreview, tr)
+        self.assertRaises(ValueError, create_preview, tr)
         # 2 - should work
         tr.stats.sampling_rate = 1
-        createPreview(tr)
+        create_preview(tr)
 
 
 def suite():

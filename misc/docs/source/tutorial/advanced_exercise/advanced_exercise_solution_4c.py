@@ -1,9 +1,13 @@
 from __future__ import print_function
-from obspy.core import UTCDateTime
-from obspy.core.util.geodetics import gps2DistAzimuth
-from obspy.arclink import Client
+
 from math import log10
-from numpy import median
+
+import numpy as np
+
+from obspy.clients.arclink import Client
+from obspy import UTCDateTime
+from obspy.geodetics import gps2dist_azimuth
+
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
           'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
@@ -11,14 +15,14 @@ paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
 client = Client(user="sed-workshop@obspy.org")
 t = UTCDateTime("2012-04-03T02:45:03")
 
-stations = client.getStations(t, t + 300, "CH")
+stations = client.get_stations(t, t + 300, "CH")
 mags = []
 
 for station in stations:
     station = station['code']
     try:
-        st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300,
-                                t + 300, metadata=True)
+        st = client.get_waveforms("CH", station, "", "[EH]H[ZNE]", t - 300,
+                                  t + 300, metadata=True)
         assert(len(st) == 3)
     except:
         print(station, "---")
@@ -38,7 +42,8 @@ for station in stations:
     event_lat = 46.218
     event_lon = 7.706
 
-    epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat, sta_lon)
+    epi_dist, az, baz = gps2dist_azimuth(event_lat, event_lon, sta_lat,
+                                         sta_lon)
     epi_dist = epi_dist / 1000
 
     if epi_dist < 60:
@@ -51,5 +56,5 @@ for station in stations:
     print(station, ml)
     mags.append(ml)
 
-net_mag = median(mags)
+net_mag = np.median(mags)
 print("Network magnitude:", net_mag)

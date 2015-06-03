@@ -6,50 +6,13 @@
 # See http://scipy-user.10969.n7.nabble.com/SciPy-User-setuptools-messing-with-sdists-using-numpy-distutils-and-Fortran-libraries-td19023.html
 # for more details.
 
-# Include the release-version file.
-include obspy/RELEASE-VERSION
+# Include all files in top-level and obspy-top-level directories (e.g. CHANGELOG, RELEASE-VERSION, ...)
+include *  # seem to catch only files, so ./misc and ./debian are not catched.. good!
+recursive-include obspy *  # includes all files in any subdirs, so it also catches *all* subdirs
 
-# Include source files, XML schemas files and some documentation files.
-global-include *.c *.h *.f *.pyf *.inc *.xsd *.rng LICENSE.txt README.txt
-
-# Exclude the misc directory
-prune misc
-prune doc
-
-# All tests/data directories
-graft obspy/core/tests/data
-graft obspy/core/util/geodetics/data
-graft obspy/css/tests/data
-graft obspy/datamark/tests/data
-graft obspy/fdsn/tests/data
-graft obspy/gse2/tests/data
-graft obspy/iris/tests/data
-graft obspy/imaging/tests/images
-graft obspy/mseed/tests/data
-graft obspy/pde/tests/data
-graft obspy/realtime/tests/data
-graft obspy/sac/tests/data
-graft obspy/seg2/tests/data
-graft obspy/segy/tests/data
-graft obspy/segy/tests/images
-graft obspy/seisan/tests/data
-graft obspy/sh/tests/data
-graft obspy/signal/data
-graft obspy/signal/tests/data
-graft obspy/station/tests/data
-graft obspy/taup/tests/data
-graft obspy/wav/tests/data
-graft obspy/xseed/tests/data
-graft obspy/xseed/tests/blockette-tests
-graft obspy/y/tests/data
-
-recursive-include obspy/core/tests/images *.png
-
-# Geodetics data
-graft obspy/core/util/geodetics/data
-
-# Taup tables
-graft obspy/taup/tables
-
-# Needed for the XSD validation
-include obspy/station/docs/Variations-FDSNSXML-SEED.txt
+# exclude rules
+global-exclude *.pyc
+exclude .* appveyor.yml
+prune obspy/*/docs  # manual pdfs amount to approx. 10MB, leave them out
+# Exclude the misc directory (not necessary it seems, seems directories in top-level gett left out on default)
+#prune misc

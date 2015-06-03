@@ -21,21 +21,33 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-from obspy import UTCDateTime, Stream, Trace
-from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    locations2degrees
-from obspy.core.util.decorator import deprecated_keywords
-
+import io
+import warnings
 from copy import copy
 from datetime import datetime
-import io
-import matplotlib.pyplot as plt
-from matplotlib.path import Path
-import matplotlib.patches as patches
+from dateutil.rrule import MINUTELY, SECONDLY
+
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib.dates import AutoDateLocator, date2num
+from matplotlib.path import Path
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
-import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import create_empty_data_chunk
+from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
+from obspy.core.util.decorator import deprecated_keywords
+from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
+
+
+MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
+SECONDS_PER_DAY = 3600.0 * 24.0
+DATELOCATOR_WARNING_MSG = (
+    "AutoDateLocator was unable to pick an appropriate interval for this date "
+    "range. It may be necessary to add an interval value to the "
+    "AutoDateLocator's intervald dictionary.")
 
 
 class WaveformPlotting(object):
@@ -82,7 +94,6 @@ class WaveformPlotting(object):
                                   self.stream])
         if not self.endtime:
             self.endtime = max([trace.stats.endtime for trace in self.stream])
-        # Map stream object and slice just in case.
         self.stream.trim(self.starttime, self.endtime)
         # Assigning values for type 'section'
         self.sect_offset_min = kwargs.get('offset_min', None)
@@ -98,15 +109,10 @@ class WaveformPlotting(object):
         self.sect_norm_method = kwargs.get('norm_method', 'trace')
         self.sect_user_scale = kwargs.get('scale', 1.0)
         self.sect_vred = kwargs.get('vred', None)
-        # normalize times
+        if self.sect_vred and self.sect_dist_degree:
+            self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
         if self.type == 'relative':
-            dt = kwargs.get('reftime', self.starttime)
-            # fix plotting boundaries
-            self.endtime = UTCDateTime(self.endtime - dt)
-            self.starttime = UTCDateTime(self.starttime - dt)
-            # fix stream times
-            for tr in self.stream:
-                tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
+            self.reftime = kwargs.get('reftime', self.starttime)
         elif self.type == 'section':
             self.sect_reftime = kwargs.get('reftime', None)
         # Whether to use straight plotting or the fast minmax method. If not
@@ -144,7 +150,7 @@ class WaveformPlotting(object):
             else:
                 # One plot for each trace.
                 if self.automerge:
-                    count = self.__getMergablesIds()
+                    count = self.__get_mergable_ids()
                     count = len(count)
                 else:
                     count = len(self.stream)
@@ -213,10 +219,11 @@ class WaveformPlotting(object):
         Destructor closes the figure instance if it has been created by the
         class.
         """
-        if self.kwargs.get("fig", None) is None:
+        if self.kwargs.get('fig', None) is None and \
+                not self.kwargs.get('handle'):
             plt.close()
 
-    def __getMergeId(self, tr):
+    def __get_merge_id(self, tr):
         tr_id = tr.id
         # don't merge normal traces with previews
         try:
@@ -232,15 +239,13 @@ class WaveformPlotting(object):
             pass
         return tr_id
 
-    def __getMergablesIds(self):
-        ids = []
+    def __get_mergable_ids(self):
+        ids = set()
         for tr in self.stream:
-            tr_id = self.__getMergeId(tr)
-            if tr_id not in ids:
-                ids.append(tr_id)
-        return ids
+            ids.add(self.__get_merge_id(tr))
+        return sorted(ids, key=_id_key)
 
-    def plotWaveform(self, *args, **kwargs):
+    def plot_waveform(self, *args, **kwargs):
         """
         Creates a graph of any given ObsPy Stream object. It either saves the
         image directly to the file system or returns a binary image string.
@@ -254,14 +259,14 @@ class WaveformPlotting(object):
         """
         # Setup the figure if not passed explicitly.
         if not self.fig_obj:
-            self.__setupFigure()
+            self.__setup_figure()
         else:
             self.fig = self.fig_obj
         # Determine kind of plot and do the actual plotting.
         if self.type == 'dayplot':
-            self.plotDay(*args, **kwargs)
+            self.plot_day(*args, **kwargs)
         elif self.type == 'section':
-            self.plotSection(*args, **kwargs)
+            self.plot_section(*args, **kwargs)
         else:
             self.plot(*args, **kwargs)
         # Adjust the subplot so there is always a fixed margin on every side
@@ -271,42 +276,46 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
-        if self.draw:
-            self.fig.canvas.draw()
-        # The following just serves as a unified way of saving and displaying
-        # the plots.
-        if not self.transparent:
-            extra_args = {'dpi': self.dpi,
-                          'facecolor': self.face_color,
-                          'edgecolor': self.face_color}
-        else:
-            extra_args = {'dpi': self.dpi,
-                          'transparent': self.transparent,
-                          'facecolor': 'k'}
-        if self.outfile:
-            # If format is set use it.
-            if self.format:
-                self.fig.savefig(self.outfile, format=self.format,
-                                 **extra_args)
-            # Otherwise use format from self.outfile or default to PNG.
+        with warnings.catch_warnings(record=True):
+            warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
+                                    UserWarning, "matplotlib.dates")
+            if self.draw:
+                self.fig.canvas.draw()
+            # The following just serves as a unified way of saving and
+            # displaying the plots.
+            if not self.transparent:
+                extra_args = {'dpi': self.dpi,
+                              'facecolor': self.face_color,
+                              'edgecolor': self.face_color}
             else:
-                self.fig.savefig(self.outfile, **extra_args)
-        else:
-            # Return a binary image string if not self.outfile but self.format.
-            if self.format:
-                imgdata = io.BytesIO()
-                self.fig.savefig(imgdata, format=self.format,
-                                 **extra_args)
-                imgdata.seek(0)
-                return imgdata.read()
-            elif self.handle:
-                return self.fig
+                extra_args = {'dpi': self.dpi,
+                              'transparent': self.transparent,
+                              'facecolor': 'k'}
+            if self.outfile:
+                # If format is set use it.
+                if self.format:
+                    self.fig.savefig(self.outfile, format=self.format,
+                                     **extra_args)
+                # Otherwise use format from self.outfile or default to PNG.
+                else:
+                    self.fig.savefig(self.outfile, **extra_args)
             else:
-                if not self.fig_obj and self.show:
-                    try:
-                        plt.show(block=self.block)
-                    except:
-                        plt.show()
+                # Return a binary image string if not self.outfile but
+                # self.format.
+                if self.format:
+                    imgdata = io.BytesIO()
+                    self.fig.savefig(imgdata, format=self.format,
+                                     **extra_args)
+                    imgdata.seek(0)
+                    return imgdata.read()
+                elif self.handle:
+                    return self.fig
+                else:
+                    if not self.fig_obj and self.show:
+                        try:
+                            plt.show(block=self.block)
+                        except:
+                            plt.show()
 
     def plot(self, *args, **kwargs):
         """
@@ -325,68 +334,69 @@ class WaveformPlotting(object):
         else:
             # Generate sorted list of traces (no copy)
             # Sort order: id, starttime, endtime
-            ids = self.__getMergablesIds()
+            ids = self.__get_mergable_ids()
             for id in ids:
                 stream_new.append([])
                 for tr in self.stream:
-                    tr_id = self.__getMergeId(tr)
+                    tr_id = self.__get_merge_id(tr)
                     if tr_id == id:
                         # does not copy the elements of the data array
                         tr_ref = copy(tr)
-                        # Trim does nothing if times are outside
-                        if self.starttime >= tr_ref.stats.endtime or \
-                                self.endtime <= tr_ref.stats.starttime:
-                            continue
                         if tr_ref.data.size:
                             stream_new[-1].append(tr_ref)
                 # delete if empty list
                 if not len(stream_new[-1]):
                     stream_new.pop()
                     continue
-                stream_new[-1].sort(key=lambda x: x.stats.endtime)
-                stream_new[-1].sort(key=lambda x: x.stats.starttime)
         # If everything is lost in the process raise an Exception.
         if not len(stream_new):
             raise Exception("Nothing to plot")
         # Create helper variable to track ids and min/max/mean values.
-        self.stats = []
+        self.ids = []
         # Loop over each Trace and call the appropriate plotting method.
         self.axis = []
         for _i, tr in enumerate(stream_new):
             # Each trace needs to have the same sampling rate.
-            sampling_rates = set([_tr.stats.sampling_rate for _tr in tr])
+            sampling_rates = {_tr.stats.sampling_rate for _tr in tr}
             if len(sampling_rates) > 1:
                 msg = "All traces with the same id need to have the same " + \
                       "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
-            if self.background_color:
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                          axisbg=self.background_color)
+            if _i == 0:
+                sharex = None
             else:
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1)
+                sharex = self.axis[0]
+            ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
+                                      axisbg=self.background_color,
+                                      sharex=sharex)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
-            if self.plotting_method is None:
+            method_ = self.plotting_method
+            if method_ is None:
                 if ((self.endtime - self.starttime) * sampling_rate >
                         self.max_npts):
-                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+                    method_ = "fast"
                 else:
-                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
+                    method_ = "full"
+            method_ = method_.lower()
+            if method_ == 'full':
+                self.__plot_straight(stream_new[_i], ax, *args, **kwargs)
+            elif method_ == 'fast':
+                self.__plot_min_max(stream_new[_i], ax, *args, **kwargs)
             else:
-                if self.plotting_method.lower() == 'full':
-                    self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
-                elif self.plotting_method.lower() == 'fast':
-                    self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
-                else:
-                    msg = ("Invalid plot method: '%s'") % self.plotting_method
-                    raise ValueError(msg)
+                msg = "Invalid plot method: '%s'" % method_
+                raise ValueError(msg)
         # Set ticks.
-        self.__plotSetXTicks()
-        self.__plotSetYTicks()
+        self.__plot_set_x_ticks()
+        self.__plot_set_y_ticks()
+        xmin = self._time_to_xvalue(self.starttime)
+        xmax = self._time_to_xvalue(self.endtime)
+        ax.set_xlim(xmin, xmax)
+        self._draw_overlap_axvspan_legend()
 
     @deprecated_keywords({'swap_time_axis': None})
-    def plotDay(self, *args, **kwargs):
+    def plot_day(self, *args, **kwargs):
         """
         Extend the seismogram.
         """
@@ -397,9 +407,9 @@ class WaveformPlotting(object):
             raise ValueError(msg)
         self.stream.trim(self.starttime, self.endtime, pad=True)
         # Get minmax array.
-        self.__dayplotGetMinMaxValues(self, *args, **kwargs)
+        self.__dayplot_get_min_max_values(self, *args, **kwargs)
         # Normalize array
-        self.__dayplotNormalizeValues(self, *args, **kwargs)
+        self.__dayplot_normalize_values(self, *args, **kwargs)
         # Get timezone information. If none is given, use local time.
         self.time_offset = kwargs.get(
             'time_offset',
@@ -446,14 +456,14 @@ class WaveformPlotting(object):
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
-            self._plotDayplotScale(unit=scale_unit)
+            self._plot_dayplot_scale(unit=scale_unit)
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
         ax.set_ylim(-0.3, intervals + 0.3)
         self.axis = [ax]
         # Set ticks.
-        self.__dayplotSetYTicks(*args, **kwargs)
-        self.__dayplotSetXTicks(*args, **kwargs)
+        self.__dayplot_set_y_ticks(*args, **kwargs)
+        self.__dayplot_set_x_ticks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid(color=self.grid_color,
                               linestyle=self.grid_linestyle,
@@ -464,10 +474,10 @@ class WaveformPlotting(object):
             self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
-        # Potentially download some events with the help of obspy.fdsn.
+        # Potentially download some events with the help of obspy.clients.fdsn.
         if "min_magnitude" in events:
             try:
-                from obspy.fdsn import Client
+                from obspy.clients.fdsn import Client
                 c = Client("NERIES")
                 events = c.get_events(starttime=self.starttime,
                                       endtime=self.endtime,
@@ -479,9 +489,9 @@ class WaveformPlotting(object):
                 warnings.warn(msg)
         if events:
             for event in events:
-                self._plotEvent(event)
+                self._plot_event(event)
 
-    def _plotEvent(self, event):
+    def _plot_event(self, event):
         """
         Helper function to plot an event into the dayplot.
         """
@@ -596,7 +606,7 @@ class WaveformPlotting(object):
             ax.plot(x_pos, y_pos, "|", color="red",
                     markersize=50, markeredgewidth=self.linewidth * 4)
 
-    def _plotDayplotScale(self, unit):
+    def _plot_dayplot_scale(self, unit):
         """
         Plots the dayplot scale if requested.
         """
@@ -642,7 +652,7 @@ class WaveformPlotting(object):
             fmt_string % (self._normalization_factor, unit), ha="left",
             va="center", fontsize="small")
 
-    def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
+    def __plot_straight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Just plots the data samples in the self.stream. Useful for smaller
         datasets up to around 1000000 samples (depending on the machine on
@@ -650,242 +660,169 @@ class WaveformPlotting(object):
 
         Slow and high memory consumption for large datasets.
         """
-        if len(trace) > 1:
-            stream = Stream(traces=trace)
-            # Merge with 'interpolation'. In case of overlaps this method will
-            # always use the longest available trace.
-            if hasattr(trace[0].stats, 'preview') and trace[0].stats.preview:
-                stream = Stream(traces=stream)
-                stream = mergePreviews(stream)
+        # trace argument seems to actually be a list of traces..
+        st = Stream(trace)
+        self._draw_overlap_axvspans(st, ax)
+        for trace in st:
+            # Check if it is a preview file and adjust accordingly.
+            # XXX: Will look weird if the preview file is too small.
+            if trace.stats.get('preview'):
+                # Mask the gaps.
+                trace.data = np.ma.masked_array(trace.data)
+                trace.data[trace.data == -1] = np.ma.masked
+                # Recreate the min_max scene.
+                dtype = trace.data.dtype
+                old_time_range = trace.stats.endtime - trace.stats.starttime
+                data = np.empty(2 * trace.stats.npts, dtype=dtype)
+                data[0::2] = trace.data / 2.0
+                data[1::2] = -trace.data / 2.0
+                trace.data = data
+                # The times are not supposed to change.
+                trace.stats.delta = (
+                    old_time_range / float(trace.stats.npts - 1))
+            trace.data = np.require(trace.data, np.float64) * trace.stats.calib
+            if self.type == 'relative':
+                # use seconds of relative sample times and shift by trace's
+                # start time, which was set relative to `reftime`.
+                x_values = (
+                    trace.times() + (trace.stats.starttime - self.reftime))
             else:
-                stream.merge(method=1)
-            trace = stream[0]
-        else:
-            trace = trace[0]
-        # Check if it is a preview file and adjust accordingly.
-        # XXX: Will look weird if the preview file is too small.
-        if hasattr(trace.stats, 'preview') and trace.stats.preview:
-            # Mask the gaps.
-            trace.data = np.ma.masked_array(trace.data)
-            trace.data[trace.data == -1] = np.ma.masked
-            # Recreate the min_max scene.
-            dtype = trace.data.dtype
-            old_time_range = trace.stats.endtime - trace.stats.starttime
-            data = np.empty(2 * trace.stats.npts, dtype=dtype)
-            data[0::2] = trace.data / 2.0
-            data[1::2] = -trace.data / 2.0
-            trace.data = data
-            # The times are not supposed to change.
-            trace.stats.delta = old_time_range / float(trace.stats.npts - 1)
-        # Write to self.stats.
-        calib = trace.stats.calib
-        max = trace.data.max()
-        min = trace.data.min()
-        # set label
-        if hasattr(trace.stats, 'preview') and trace.stats.preview:
+                # convert seconds of relative sample times to days and add
+                # start time of trace.
+                x_values = ((trace.times() / SECONDS_PER_DAY) +
+                            date2num(trace.stats.starttime))
+            ax.plot(x_values, trace.data, color=self.color,
+                    linewidth=self.linewidth, linestyle=self.linestyle)
+        # Write to self.ids
+        trace = st[0]
+        if trace.stats.get('preview'):
             tr_id = trace.id + ' [preview]'
         elif hasattr(trace, 'label'):
             tr_id = trace.label
         else:
             tr_id = trace.id
-        self.stats.append([tr_id, calib * trace.data.mean(),
-                           calib * min, calib * max])
-        # Pad the beginning and the end with masked values if necessary. Might
-        # seem like overkill but it works really fast and is a clean solution
-        # to gaps at the beginning/end.
-        concat = [trace]
-        if self.starttime != trace.stats.starttime:
-            samples = (trace.stats.starttime - self.starttime) * \
-                trace.stats.sampling_rate
-            temp = [np.ma.masked_all(int(samples))]
-            concat = temp.extend(concat)
-            concat = temp
-        if self.endtime != trace.stats.endtime:
-            samples = (self.endtime - trace.stats.endtime) * \
-                trace.stats.sampling_rate
-            concat.append(np.ma.masked_all(int(samples)))
-        if len(concat) > 1:
-            # Use the masked array concatenate, otherwise it will result in a
-            # not masked array.
-            trace.data = np.ma.concatenate(concat)
-            # set starttime and calculate endtime
-            trace.stats.starttime = self.starttime
-        trace.data = np.require(trace.data, np.float64) * calib
-        ax.plot(
-            trace.data, color=self.color, linewidth=self.linewidth,
-            linestyle=self.linestyle)
-        # Set the x limit for the graph to also show the masked values at the
-        # beginning/end.
-        ax.set_xlim(0, len(trace.data) - 1)
+        self.ids.append(tr_id)
 
-    def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
+    def __plot_min_max(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Plots the data using a min/max approach that calculated the minimum and
         maximum values of each "pixel" and then plots only these values. Works
         much faster with large data sets.
         """
+        self._draw_overlap_axvspans(Stream(trace), ax)
         # Some variables to help calculate the values.
-        starttime = self.starttime.timestamp
-        endtime = self.endtime.timestamp
+        starttime = self._time_to_xvalue(self.starttime)
+        endtime = self._time_to_xvalue(self.endtime)
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel. The end time is defined as the time
-        # of the last sample.
+        # width of x axis in seconds
+        x_width = endtime - starttime
+        # normal plots have x-axis in days, so convert x_width to seconds
+        if self.type != "relative":
+            x_width = x_width * SECONDS_PER_DAY
+        # number of samples that get represented by one min-max pair
         pixel_length = int(
-            np.ceil(((endtime - starttime) * sampling_rate + 1) / self.width))
+            np.ceil((x_width * sampling_rate + 1) / self.width))
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
         for _i, tr in enumerate(trace):
-            # Get the start of the next pixel in case the starttime of the
-            # trace does not match the starttime of the plot.
-            if tr.stats.starttime > self.starttime:
-                offset = int(
-                    np.ceil(((tr.stats.starttime - self.starttime) *
-                             sampling_rate) / pixel_length))
-            else:
-                offset = 0
-            # Figure out the number of pixels in the current trace.
-            trace_length = len(tr.data) - offset
+            trace_length = len(tr.data)
             pixel_count = int(trace_length // pixel_length)
             remaining_samples = int(trace_length % pixel_length)
+            remaining_seconds = remaining_samples / sampling_rate
+            if self.type != "relative":
+                remaining_seconds /= SECONDS_PER_DAY
             # Reference to new data array which does not copy data but can be
             # reshaped.
-            data = tr.data[offset: offset + pixel_count * pixel_length]
-            data = data.reshape(pixel_count, pixel_length)
-            # Calculate extreme_values and put them into new array.
-            extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
-            min = data.min(axis=1) * tr.stats.calib
-            max = data.max(axis=1) * tr.stats.calib
-            extreme_values[offset: offset + pixel_count, 0] = min
-            extreme_values[offset: offset + pixel_count, 1] = max
-            # First and last pixel need separate treatment.
-            if offset:
-                extreme_values[offset - 1, 0] = \
-                    tr.data[:offset].min() * tr.stats.calib
-                extreme_values[offset - 1, 1] = \
-                    tr.data[:offset].max() * tr.stats.calib
             if remaining_samples:
-                if offset + pixel_count == self.width:
-                    index = self.width - 1
-                else:
-                    index = offset + pixel_count
-                extreme_values[index, 0] = \
-                    tr.data[-remaining_samples:].min() * tr.stats.calib
-                extreme_values[index, 1] = \
-                    tr.data[-remaining_samples:].max() * tr.stats.calib
-            # Use the first array as a reference and merge all following
-            # extreme_values into it.
-            if _i == 0:
-                minmax = extreme_values
+                data = tr.data[:-remaining_samples]
             else:
-                # Merge minmax and extreme_values.
-                min = np.ma.empty((self.width, 2))
-                max = np.ma.empty((self.width, 2))
-                # Fill both with the values.
-                min[:, 0] = minmax[:, 0]
-                min[:, 1] = extreme_values[:, 0]
-                max[:, 0] = minmax[:, 1]
-                max[:, 1] = extreme_values[:, 1]
-                # Find the minimum and maximum values.
-                min = min.min(axis=1)
-                max = max.max(axis=1)
-                # Write again to minmax.
-                minmax[:, 0] = min
-                minmax[:, 1] = max
-        # set label
+                data = tr.data
+            data = data.reshape(pixel_count, pixel_length)
+            min_ = data.min(axis=1) * tr.stats.calib
+            max_ = data.max(axis=1) * tr.stats.calib
+            # Calculate extreme_values and put them into new array.
+            if remaining_samples:
+                extreme_values = np.empty((pixel_count + 1, 2), dtype=np.float)
+                extreme_values[:-1, 0] = min_
+                extreme_values[:-1, 1] = max_
+                extreme_values[-1, 0] = \
+                    tr.data[-remaining_samples:].min() * tr.stats.calib
+                extreme_values[-1, 1] = \
+                    tr.data[-remaining_samples:].max() * tr.stats.calib
+            else:
+                extreme_values = np.empty((pixel_count, 2), dtype=np.float)
+                extreme_values[:, 0] = min_
+                extreme_values[:, 1] = max_
+            # Finally plot the data.
+            start = self._time_to_xvalue(tr.stats.starttime)
+            end = self._time_to_xvalue(tr.stats.endtime)
+            if remaining_samples:
+                # the last minmax pair is inconsistent regarding x-spacing
+                x_values = np.linspace(start, end - remaining_seconds,
+                                       num=extreme_values.shape[0] - 1)
+                x_values = np.concatenate([x_values, [end]])
+            else:
+                x_values = np.linspace(start, end, num=extreme_values.shape[0])
+            x_values = np.repeat(x_values, 2)
+            y_values = extreme_values.flatten()
+            ax.plot(x_values, y_values, color=self.color)
+        # remember xlim state and add callback to warn when zooming in
+        self._initial_xrange = (self._time_to_xvalue(self.endtime) -
+                                self._time_to_xvalue(self.starttime))
+        self._minmax_plot_xrange_dangerous = False
+        ax.callbacks.connect("xlim_changed", self._warn_on_xaxis_zoom)
+        # set label, write to self.ids
         if hasattr(trace[0], 'label'):
             tr_id = trace[0].label
         else:
             tr_id = trace[0].id
-        # Write to self.stats.
-        self.stats.append([tr_id, minmax.mean(),
-                           minmax[:, 0].min(),
-                           minmax[:, 1].max()])
-        # Finally plot the data.
-        x_values = np.repeat(np.arange(self.width), 2)
-        # Initialize completely masked array. This version is a little bit
-        # slower than first creating an empty array and then setting the mask
-        # to True. But on NumPy 1.1 this results in a 0-D array which can not
-        # be indexed.
-        y_values = np.ma.masked_all(2 * self.width)
-        y_values[0::2] = minmax[:, 0]
-        y_values[1::2] = minmax[:, 1]
-        ax.plot(x_values, y_values, color=self.color)
-        # Set the x-limit to avoid clipping of masked values.
-        ax.set_xlim(0, self.width - 1)
+        self.ids.append(tr_id)
 
-    def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __plot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
-        for ax in self.axis:
-            start, end = ax.get_xlim()
-            # Set the location of the ticks.
-            ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
-            # Figure out times.
-            interval = float(self.endtime - self.starttime) / \
-                (self.number_of_ticks - 1)
-            # Set the actual labels.
-            if self.type == 'relative':
-                labels = [self.tick_format % (self.starttime
-                                              + _i * interval).timestamp
-                          for _i in range(self.number_of_ticks)]
-            else:
-                labels = [(self.starttime + _i *
-                          interval).strftime(self.tick_format) for _i in
-                          range(self.number_of_ticks)]
+        self.fig.subplots_adjust(hspace=0)
+        # Loop over all but last axes.
+        for ax in self.axis[:-1]:
+            plt.setp(ax.get_xticklabels(), visible=False)
+        # set bottom most axes:
+        ax = self.axis[-1]
+        if self.type == "relative":
+            locator = MaxNLocator(5)
+        else:
+            ax.xaxis_date()
+            locator = AutoDateLocator(minticks=3, maxticks=6)
+            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+            ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+        ax.xaxis.set_major_locator(locator)
+        plt.setp(ax.get_xticklabels(), fontsize='small',
+                 rotation=self.tick_rotation)
 
-            ax.set_xticklabels(labels, fontsize='small',
-                               rotation=self.tick_rotation)
-
-    def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __plot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
-        Goes through all axes in pyplot, reads self.stats and sets all ticks on
-        the y axis.
-
-        This method also adjusts the y limits so that the mean value is always
-        in the middle of the graph and all graphs are equally scaled.
         """
-        # Figure out the maximum distance from the mean value to either end.
-        # Add 10 percent for better looking graphs.
-        max_distance = max([max(trace[1] - trace[2], trace[3] - trace[1])
-                            for trace in self.stats]) * 1.1
-
+        if self.equal_scale:
+            ylims = np.vstack([ax.get_ylim() for ax in self.axis])
+            yranges = np.diff(ylims).flatten()
+            yrange_max = yranges.max()
+            yrange_paddings = -yranges + yrange_max
+            ylims[:, 0] -= yrange_paddings[:] / 2
+            ylims[:, 1] += yrange_paddings[:] / 2
+            for ax, ylims_ in zip(self.axis, ylims):
+                ax.set_ylim(*ylims_)
         for _i, ax in enumerate(self.axis):
-            mean = self.stats[_i][1]
-            if not self.equal_scale:
-                trace = self.stats[_i]
-                max_distance = max(trace[1] - trace[2],
-                                   trace[3] - trace[1]) * 1.1
-            # Set the ylimit.
-            min_range = mean - max_distance
-            max_range = mean + max_distance
-            # Set the location of the ticks.
-            ticks = [mean - 0.75 * max_distance,
-                     mean - 0.5 * max_distance,
-                     mean - 0.25 * max_distance,
-                     mean,
-                     mean + 0.25 * max_distance,
-                     mean + 0.5 * max_distance,
-                     mean + 0.75 * max_distance]
-            ax.set_yticks(ticks)
-            # Setup format of the major ticks
-            if abs(max(ticks) - min(ticks)) > 10:
-                # integer numbers
-                fmt = '%d'
-                if abs(min(ticks)) > 10e6:
-                    # but switch back to exponential for huge numbers
-                    fmt = '%.2g'
-            else:
-                fmt = '%.2g'
-            ax.set_yticklabels([fmt % t for t in ax.get_yticks()],
-                               fontsize='small')
             # Set the title of each plot.
-            ax.set_title(self.stats[_i][0], horizontalalignment='center',
-                         fontsize='small', verticalalignment='center')
-            ax.set_ylim(min_range, max_range)
+            ax.text(0.02, 0.95, self.ids[_i], transform=ax.transAxes,
+                    fontdict=dict(fontsize="small", ha='left', va='top'),
+                    bbox=dict(boxstyle="round", fc="w", alpha=0.8))
+            plt.setp(ax.get_yticklabels(), fontsize='small')
+            ax.yaxis.set_major_locator(MaxNLocator(7, prune="both"))
+            ax.yaxis.set_major_formatter(ScalarFormatter())
 
-    def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_get_min_max_values(self, *args, **kwargs):  # @UnusedVariable
         """
         Takes a Stream object and calculates the min and max values for each
         pixel in the dayplot.
@@ -928,7 +865,7 @@ class WaveformPlotting(object):
             trace.data = trace.data[:number_of_samples]
         elif delta > 0:
             trace.data = np.ma.concatenate(
-                [trace.data, createEmptyDataChunk(delta, trace.data.dtype)])
+                [trace.data, create_empty_data_chunk(delta, trace.data.dtype)])
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))
@@ -960,7 +897,7 @@ class WaveformPlotting(object):
         # Set class variable.
         self.extreme_values = extreme_values
 
-    def __dayplotNormalizeValues(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_normalize_values(self, *args, **kwargs):  # @UnusedVariable
         """
         Normalizes all values in the 3 dimensional array, so that the minimum
         value will be 0 and the maximum value will be 1.
@@ -971,7 +908,11 @@ class WaveformPlotting(object):
         self.extreme_values = self.extreme_values.astype(np.float) * \
             self.stream[0].stats.calib
         # Make sure that the mean value is at 0
-        self.extreme_values -= self.extreme_values.mean()
+        # raises underflow warning / error for numpy 1.9
+        # even though mean is 0.09
+        # self.extreme_values -= self.extreme_values.mean()
+        self.extreme_values -= self.extreme_values.sum() / \
+            self.extreme_values.size
 
         # Scale so that 99.5 % of the data will fit the given range.
         if self.vertical_scaling_range is None:
@@ -998,10 +939,15 @@ class WaveformPlotting(object):
         self._normalization_factor = max(abs(max_val), abs(min_val)) * 2
 
         # Scale from 0 to 1.
-        self.extreme_values = self.extreme_values / self._normalization_factor
+        # raises underflow warning / error for numpy 1.9
+        # even though normalization_factor is 2.5
+        # self.extreme_values = self.extreme_values / \
+        #     self._normalization_factor
+        self.extreme_values = self.extreme_values * \
+            (1. / self._normalization_factor)
         self.extreme_values += 0.5
 
-    def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_set_x_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the xticks for the dayplot.
         """
@@ -1074,7 +1020,7 @@ class WaveformPlotting(object):
         self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
                                            time_type), size=self.x_labels_size)
 
-    def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
+    def __dayplot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the yticks for the dayplot.
         """
@@ -1116,26 +1062,26 @@ class WaveformPlotting(object):
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
 
-    def plotSection(self, *args, **kwargs):  # @UnusedVariable
+    def plot_section(self, *args, **kwargs):  # @UnusedVariable
         """
         Plots multiple waveforms as a record section on a single plot.
         """
         # Initialise data and plot
-        self.__sectInitTraces()
-        ax = self.__sectInitPlot()
+        self.__sect_init_traces()
+        ax, lines = self.__sect_init_plot()
         # Setting up line properties
-        for line in ax.lines:
+        for line in lines:
             line.set_alpha(self.alpha)
             line.set_linewidth(self.linewidth)
             line.set_color(self.color)
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            ax.set_xlim(left=self.__sectOffsetToFraction(self._offset_min))
+            ax.set_xlim(left=self.__sect_offset_to_fraction(self._offset_min))
         if self.sect_offset_max is not None:
-            ax.set_xlim(right=self.__sectOffsetToFraction(self._offset_max))
+            ax.set_xlim(right=self.__sect_offset_to_fraction(self._offset_max))
         # Set up offset ticks
         tick_min, tick_max = \
-            self.__sectFractionToOffset(np.array(ax.get_xlim()))
+            self.__sect_fraction_to_offset(np.array(ax.get_xlim()))
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
@@ -1147,7 +1093,7 @@ class WaveformPlotting(object):
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        ax.set_xticks(self.__sectOffsetToFraction(ticks))
+        ax.set_xticks(self.__sect_offset_to_fraction(ticks))
         # Setting up tick labels
         ax.set_ylabel('Time [s]')
         if not self.sect_dist_degree:
@@ -1173,7 +1119,7 @@ class WaveformPlotting(object):
             linewidth=self.grid_linewidth)
         ax.xaxis.grid(False)
 
-    def __sectInitTraces(self):
+    def __sect_init_traces(self):
         """
         Arrange the trace data used for plotting.
 
@@ -1244,18 +1190,16 @@ class WaveformPlotting(object):
                 tr.stats.endtime -
                 tr.stats.starttime) / self._tr_npts[_i]
         # Init time vectors
-        self.__sectInitTime()
+        self.__sect_init_time()
 
-    def __sectScaleTraces(self, scale=None):
+    def __sect_scale_traces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
         gets 1./num_traces space. adjustable by scale=1.0.
         """
-        if scale:
-            self.sect_user_scale = scale
-        self._sect_scale = self._tr_num * 1.5 * (1. / self.sect_user_scale)
+        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
 
-    def __sectInitTime(self):
+    def __sect_init_time(self):
         """
         Define the time vector for each trace
         """
@@ -1271,39 +1215,40 @@ class WaveformPlotting(object):
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
 
-    def __sectOffsetToFraction(self, offset):
+    def __sect_offset_to_fraction(self, offset):
         """
         Helper function to return offsets from fractions
         """
         return offset / self._tr_offsets.max()
 
-    def __sectFractionToOffset(self, fraction):
+    def __sect_fraction_to_offset(self, fraction):
         """
         Helper function to return fractions from offsets
         """
         return fraction * self._tr_offsets.max()
 
-    def __sectInitPlot(self):
+    def __sect_init_plot(self):
         """
         Function initialises plot all the illustration is done by
-        self.plotSection()
+        self.plot_section()
         """
         ax = self.fig.gca()
         # Calculate normalizing factor
-        self.__sectNormalizeTraces()
+        self.__sect_normalize_traces()
         # Calculate scaling factor
-        self.__sectScaleTraces()
+        self.__sect_scale_traces()
+        lines = []
         # ax.plot() preferred over containers
         for _tr in range(self._tr_num):
-            # Scale, normalize and shift traces by offset
-            # for plotting
-            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr]
-                    * (1. / self._sect_scale)
-                    + self._tr_offsets_norm[_tr],
-                    self._tr_times[_tr])
-        return ax
+            # Scale, normalize and shift traces by offset for plotting
+            data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
+                     self._sect_scale) +
+                    self._tr_offsets_norm[_tr])
+            time = self._tr_times[_tr]
+            lines += ax.plot(data, time)
+        return ax, lines
 
-    def __sectNormalizeTraces(self):
+    def __sect_normalize_traces(self):
         """
         This helper function normalizes the traces
         """
@@ -1321,7 +1266,7 @@ class WaveformPlotting(object):
                 'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 
-    def __setupFigure(self):
+    def __setup_figure(self):
         """
         The design and look of the whole plot to be produced.
         """
@@ -1334,33 +1279,77 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
-        x = self.__getX(10)
-        y = self.__getY(15)
-        # Default timestamp pattern
-        pattern = '%Y-%m-%dT%H:%M:%SZ'
 
         if hasattr(self.stream, 'label'):
             suptitle = self.stream.label
         elif self.type == 'relative':
-            # hide time information for relative plots
-            return
+            suptitle = ("Time in seconds relative to %s" %
+                        _timestring(self.reftime))
         elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
-            x = self.fig.subplotpars.left
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
                 (self.stream[-1].stats.network, self.stream[-1].stats.channel,
-                 len(self.stream),
-                 self.starttime.strftime(pattern))
+                 len(self.stream), _timestring(self.starttime))
         else:
-            suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
-                                      self.endtime.strftime(pattern))
-        self.fig.suptitle(suptitle, x=x, y=y, fontsize='small',
-                          horizontalalignment='left')
+            suptitle = '%s  -  %s' % (_timestring(self.starttime),
+                                      _timestring(self.endtime))
+        # add suptitle
+        y = (self.height - 15.0) / self.height
+        self.fig.suptitle(suptitle, y=y, fontsize='small',
+                          horizontalalignment='center')
 
-    def __getY(self, dy):
-        return (self.height - dy) * 1.0 / self.height
+    def _warn_on_xaxis_zoom(self, ax):
+        """
+        Method to be used as a callback on `method=fast`, "minmax"-type plots
+        to warn the user when zooming into the plot.
+        """
+        xlim = ax.get_xlim()
+        if xlim[1] - xlim[0] < 0.9 * self._initial_xrange:
+            dangerous = True
+        else:
+            dangerous = False
+        if dangerous and not self._minmax_plot_xrange_dangerous:
+            self._add_zoomlevel_warning_text()
+        elif self._minmax_plot_xrange_dangerous and not dangerous:
+            self._remove_zoomlevel_warning_text()
+        self._minmax_plot_xrange_dangerous = dangerous
 
-    def __getX(self, dx):
-        return dx * 1.0 / self.width
+    def _add_zoomlevel_warning_text(self):
+        ax = self.fig.axes[0]
+        self._minmax_warning_text = ax.text(
+            0.95, 0.9, MINMAX_ZOOMLEVEL_WARNING_TEXT, color="r",
+            ha="right", va="top", transform=ax.transAxes)
+
+    def _remove_zoomlevel_warning_text(self):
+        ax = self.fig.axes[0]
+        if self._minmax_warning_text in ax.texts:
+            ax.texts.remove(self._minmax_warning_text)
+        self._minmax_warning_text = None
+
+    def _draw_overlap_axvspans(self, st, ax):
+        for _, _, _, _, start, end, delta, _ in st.getGaps():
+            if delta > 0:
+                continue
+            start = self._time_to_xvalue(start)
+            end = self._time_to_xvalue(end)
+            self._overlap_axvspan = \
+                ax.axvspan(start, end, color="r", zorder=-10, alpha=0.5)
+
+    def _draw_overlap_axvspan_legend(self):
+        if hasattr(self, "_overlap_axvspan"):
+            self.fig.axes[-1].legend(
+                [self._overlap_axvspan], ["Overlaps"],
+                loc="lower right", prop=dict(size="small"))
+
+    def _time_to_xvalue(self, t):
+            if self.type == 'relative':
+                return t - self.reftime
+            else:
+                return date2num(t)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

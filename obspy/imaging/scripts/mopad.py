@@ -69,11 +69,13 @@ from future.builtins import *  # NOQA
 
 import io
 import math
-import numpy as np
 import os
 import os.path
 import sys
 import warnings
+
+import numpy as np
+
 from obspy import __version__
 
 
@@ -1918,9 +1920,9 @@ class BeachBall:
                     if mp_out2:
                         matplotlib.use('GDK')
 
-        import pylab as P
+        import matplotlib.pyplot as plt
 
-        plotfig = self._setup_plot_US(P)
+        plotfig = self._setup_plot_US(plt)
 
         outfile_format = self._plot_outfile_format
         outfile_name = self._plot_outfile
@@ -1935,9 +1937,8 @@ class BeachBall:
         except:
             print('ERROR!! -- Saving of plot not possible')
             return
-        P.close(667)
-        del P
-        del matplotlib
+        plt.close(667)
+        del plt
 
     def get_psxy(self, kwargs):
         """
@@ -2118,16 +2119,15 @@ class BeachBall:
         Generates the final plot of the total sphere (according to the chosen
         2D-projection.
         """
-        from matplotlib import interactive
-        import pylab as P
+        import matplotlib.pyplot as plt
 
-        P.close('all')
-        plotfig = P.figure(665, figsize=(self._plot_aux_plot_size,
-                                         self._plot_aux_plot_size))
+        plt.close('all')
+        plotfig = plt.figure(665, figsize=(self._plot_aux_plot_size,
+                                           self._plot_aux_plot_size))
 
         plotfig.subplots_adjust(left=0, bottom=0, right=1, top=1)
         ax = plotfig.add_subplot(111, aspect='equal')
-        # P.axis([-1.1,1.1,-1.1,1.1],'equal')
+        # plt.axis([-1.1, 1.1, -1.1, 1.1], 'equal')
         ax.axison = False
 
         EV_2_plot = getattr(self, '_all_EV' + '_final')
@@ -2338,7 +2338,6 @@ class BeachBall:
         ax.plot([0, 2.1, 0, -2.1], [2.1, 0, -2.1, 0], ',', alpha=0.)
 
         ax.autoscale_view(tight=True, scalex=True, scaley=True)
-        interactive(True)
 
         if self._plot_save_plot:
             try:
@@ -2349,28 +2348,27 @@ class BeachBall:
             except:
                 print('saving of plot not possible')
 
-        P.show()
+        plt.show()
 
     def pa_plot(self, kwargs):
         """
         Plot of the solution in the principal axes system.
         """
-        import pylab as P
+        import matplotlib.pyplot as plt
 
         self._update_attributes(kwargs)
 
         r_hor = self._r_hor_for_pa_plot
         r_hor_FP = self._r_hor_FP_for_pa_plot
 
-        P.rc('grid', color='#316931', linewidth=0.5, linestyle='-.')
-        P.rc('xtick', labelsize=12)
-        P.rc('ytick', labelsize=10)
+        plt.rc('grid', color='#316931', linewidth=0.5, linestyle='-.')
+        plt.rc('xtick', labelsize=12)
+        plt.rc('ytick', labelsize=10)
 
-        width, height = P.rcParams['figure.figsize']
+        width, height = plt.rcParams['figure.figsize']
         size = min(width, height)
 
-        fig = P.figure(34, figsize=(size, size))
-        P.clf()
+        fig = plt.figure(34, figsize=(size, size))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True, axisbg='#d5de9c')
 
         r_steps = [0.000001]
@@ -2386,14 +2384,14 @@ class BeachBall:
         t_angles = np.arange(0., 360., 90)
         t_labels = [' N ', ' H ', ' - N', ' - H']
 
-        P.thetagrids(t_angles, labels=t_labels)
+        plt.thetagrids(t_angles, labels=t_labels)
 
         ax.plot(self._phi_curve, r_hor, color='r', lw=3)
         ax.plot(self._phi_curve, r_hor_FP, color='b', lw=1.5)
         ax.set_rmax(1.0)
-        P.grid(True)
+        plt.grid(True)
 
-        P.rgrids((r_steps), labels=r_labels)
+        plt.rgrids((r_steps), labels=r_labels)
 
         ax.set_title("beachball in eigenvector system", fontsize=15)
 
@@ -2405,7 +2403,7 @@ class BeachBall:
                             format=self._plot_outfile_format)
             except:
                 print('saving of plot not possible')
-        P.show()
+        plt.show()
 
     def _set_standard_attributes(self):
         """
@@ -3662,9 +3660,9 @@ class BeachBall:
 
         Additionally, the plot can be saved in a file on the fly.
         """
-        import pylab as P
+        import matplotlib.pyplot as plt
 
-        plotfig = self._setup_plot_US(P, ax=ax)
+        plotfig = self._setup_plot_US(plt, ax=ax)
 
         if self._plot_save_plot:
             try:
@@ -3674,18 +3672,19 @@ class BeachBall:
                                 format=self._plot_outfile_format)
             except:
                 print('saving of plot not possible')
-        P.show()
-        P.close('all')
+        plt.show()
+        plt.close('all')
 
-    def _setup_plot_US(self, P, ax=None):
+    def _setup_plot_US(self, plt, ax=None):
         """
         Setting up the figure with the final plot of the unit sphere.
 
         Either called by _plot_US or by _just_save_bb
         """
-        P.close(667)
+        plt.close(667)
         if ax is None:
-            plotfig = P.figure(667, figsize=(self._plot_size, self._plot_size))
+            plotfig = plt.figure(667,
+                                 figsize=(self._plot_size, self._plot_size))
             plotfig.subplots_adjust(left=0, bottom=0, right=1, top=1)
             ax = plotfig.add_subplot(111, aspect='equal')
 
@@ -4088,10 +4087,11 @@ def main(argv=None):
         # if total decomposition:
         if kwargs_dict['decomp_out_complete']:
             if kwargs_dict['decomp_out_fancy']:
+                decomp = MT.get_full_decomposition()
                 try:
-                    print(MT.get_full_decomposition())
+                    print(decomp)
                 except:
-                    print(MT.get_full_decomposition().encode("utf-8"))
+                    print(decomp.replace('°', ' deg'))
                 return
             else:
                 return MT.get_decomposition(in_system=kwargs_dict['in_system'],
@@ -4206,8 +4206,8 @@ def main(argv=None):
 
         if args.GMT_projection:
             lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
-            do_allowed_projections = dict((x[0], x.lower()) for x in
-                                          lo_allowed_projections)
+            do_allowed_projections = {x[0]: x.lower()
+                                      for x in lo_allowed_projections}
             try:
                 gmtp = args.GMT_projection
                 if gmtp in lo_allowed_projections:
@@ -4427,8 +4427,8 @@ def main(argv=None):
 
         if args.plot_projection:
             lo_allowed_projections = ['STEREO', 'ORTHO', 'LAMBERT']  # ,'GNOM']
-            do_allowed_projections = dict((x[0], x.lower()) for x in
-                                          lo_allowed_projections)
+            do_allowed_projections = {x[0]: x.lower()
+                                      for x in lo_allowed_projections}
             try:
                 ppl = args.plot_projection
                 if ppl in lo_allowed_projections:
@@ -4694,7 +4694,7 @@ def main(argv=None):
                               RawDescriptionHelpFormatter,
                               RawTextHelpFormatter,
                               SUPPRESS)
-        from obspy.core.util.base import _DeprecatedArgumentAction
+        from obspy.core.util.base import _get_deprecated_argument_action
 
         parser = ArgumentParser(prog='obspy-mopad',
                                 formatter_class=RawDescriptionHelpFormatter,
@@ -4816,13 +4816,13 @@ The 'source mechanism' as a comma-separated list of length:
 
         # Deprecated arguments
 
-        action = _DeprecatedArgumentAction('--show_1fp', '--show-1fp')
+        action = _get_deprecated_argument_action('--show_1fp', '--show-1fp')
         group_show.add_argument(
             '--show_1fp', dest='GMT_show_1FP', action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--show_isotropic_part',
-                                           '--show-isotropic-part',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--show_isotropic_part', '--show-isotropic-part',
+            real_action='store_true')
         group_show.add_argument(
             '--show_isotropic_part', dest='GMT_plot_isotropic_part', nargs=0,
             action=action, help=SUPPRESS)
@@ -4983,62 +4983,63 @@ The 'source mechanism' as a comma-separated list of length:
                  '[%(default)s]')
 
         # Deprecated arguments
-        action = _DeprecatedArgumentAction('--basis_vectors',
-                                           '--basis-vectors',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--basis_vectors', '--basis-vectors', real_action='store_true')
         group_misc.add_argument(
             '--basis_vectors', dest='plot_show_basis_axes', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--full_sphere', '--full-sphere',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--full_sphere', '--full-sphere', real_action='store_true')
         group_misc.add_argument(
             '--full_sphere', dest='plot_full_sphere', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--input_system', '--input-system')
+        action = _get_deprecated_argument_action(
+            '--input_system', '--input-system')
         group_misc.add_argument(
             '--input_system', dest='plot_input_system',
             type=caps, choices=ALLOWED_BASES, default='NED',
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--lines_only', '--lines-only',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--lines_only', '--lines-only', real_action='store_true')
         group_misc.add_argument(
             '--lines_only', dest='plot_only_lines', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--output_file', '--output-file')
+        action = _get_deprecated_argument_action('--output_file',
+                                                 '--output-file')
         group_misc.add_argument(
             '--output_file', dest='plot_outfile', action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--pa_system', '--pa-system',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--pa_system', '--pa-system', real_action='store_true')
         group_misc.add_argument(
             '--pa_system', dest='plot_pa_plot', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--pressure_colour',
-                                           '--pressure-colour')
+        action = _get_deprecated_argument_action(
+            '--pressure_colour', '--pressure-colour')
         group_misc.add_argument(
             '--pressure_colour', dest='plot_pressure_colour',
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--show1fp', '--show-1fp',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--show1fp', '--show-1fp', real_action='store_true')
         group_misc.add_argument(
             '--show1fp', dest='plot_show_1faultplane', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--show_isotropic_part',
-                                           '--show-isotropic-part',
-                                           real_action='store_true')
+        action = _get_deprecated_argument_action(
+            '--show_isotropic_part', '--show-isotropic-part',
+            real_action='store_true')
         group_misc.add_argument(
             '--show_isotropic_part', dest='plot_isotropic_part', nargs=0,
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--tension_colour',
-                                           '--tension-colour')
+        action = _get_deprecated_argument_action('--tension_colour',
+                                                 '--tension-colour')
         group_misc.add_argument(
             '--tension_colour', dest='plot_tension_colour',
             action=action, help=SUPPRESS)
@@ -5158,14 +5159,15 @@ The 'source mechanism' as a comma-separated list of length:
                  'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs')
 
         # Deprecated arguments
-        action = _DeprecatedArgumentAction('--input_system', '--input-system')
+        action = _get_deprecated_argument_action('--input_system',
+                                                 '--input-system')
         group_system.add_argument(
             '--input_system', dest='decomp_in_system',
             type=caps, choices=ALLOWED_BASES, default='NED',
             action=action, help=SUPPRESS)
 
-        action = _DeprecatedArgumentAction('--output_system',
-                                           '--output-system')
+        action = _get_deprecated_argument_action('--output_system',
+                                                 '--output-system')
         group_system.add_argument(
             '--output_system', dest='decomp_out_system',
             type=caps, choices=ALLOWED_BASES, default='NED',
@@ -5194,7 +5196,7 @@ The 'source mechanism' as a comma-separated list of length:
         try:
             print(aa)
         except:
-            print(aa.encode("utf-8"))
+            print(aa.replace('°', ' deg'))
 
 
 if __name__ == '__main__':

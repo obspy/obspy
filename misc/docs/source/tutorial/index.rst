@@ -11,10 +11,12 @@ A pdf version of the Tutorial is available :download:`here <ObsPyTutorial.pdf>`.
 
 There are also IPython notebooks available online with an
 `introduction to Python <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction_with_solutions.ipynb>`__)
-and an
+(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/python_introduction_with_solutions.ipynb>`__),
+an
 `introduction to ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction.ipynb>`__
-(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction_with_solutions.ipynb>`__).
+(`with solutions/output <http://nbviewer.ipython.org/github/obspy/docs/blob/master/workshops/2014_mess/obspy_introduction_with_solutions.ipynb>`__)
+and an
+`brief primer on data center access and visualization with ObsPy <http://nbviewer.ipython.org/github/obspy/docs/blob/master/notebooks/Direct_Access_to_Seismological_Data_using_Python_and_ObsPy.ipynb>`.
 
 Introduction to ObsPy
 ---------------------
@@ -51,7 +53,7 @@ Introduction to ObsPy
    code_snippets/continuous_wavelet_transform
    code_snippets/time_frequency_misfit
    code_snippets/visualize_data_availability_of_local_waveform_archive
-   code_snippets/travel_time_plot
+   code_snippets/travel_time
    code_snippets/xcorr_pick_correction
    code_snippets/quakeml_custom_tags
    code_snippets/easyseedlink

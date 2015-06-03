@@ -3,19 +3,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, read
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
-
 import io
-from pkg_resources import load_entry_point
-import numpy as np
 import os
 import threading
 import time
 import unittest
 import warnings
 from copy import deepcopy
+
+from pkg_resources import load_entry_point
+import numpy as np
+
+from obspy import Trace, read
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -32,13 +33,14 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tmpfile = tf.name
             # create empty file
             open(tmpfile, 'wb').close()
-            formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
+            formats_ep = _get_entry_points('obspy.plugin.waveform',
+                                           'readFormat')
             # using format keyword
             for ep in formats_ep.values():
-                isFormat = load_entry_point(ep.dist.key,
-                                            'obspy.plugin.waveform.' + ep.name,
-                                            'isFormat')
-                self.assertFalse(False, isFormat(tmpfile))
+                is_format = load_entry_point(
+                    ep.dist.key, 'obspy.plugin.waveform.' + ep.name,
+                    'isFormat')
+                self.assertFalse(False, is_format(tmpfile))
 
     def test_readAndWrite(self):
         """
@@ -46,7 +48,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _getEntryPoints('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -145,16 +147,20 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
-        formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
+        KNOWN_FALSE = [
+            os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
+                         '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+        ]
+        formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
         for format in formats:
             # search isFormat for given entry point
-            isFormat = load_entry_point(format.dist.key,
-                                        'obspy.plugin.waveform.' + format.name,
-                                        'isFormat')
+            is_format = load_entry_point(
+                format.dist.key, 'obspy.plugin.waveform.' + format.name,
+                'isFormat')
             # get all the test directories.
             paths = [os.path.join(f.dist.location, 'obspy',
                                   f.module_name.split('.')[1], 'tests', 'data')
@@ -173,7 +179,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if isFormat(file) is True:  # pragma: no cover
+                    if any([n in file for n in KNOWN_FALSE]):
+                        continue
+                    if is_format(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
@@ -192,7 +200,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 500)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _getEntryPoints('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -266,9 +274,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
         formats_write = \
-            set(_getEntryPoints('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
+            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
         data = np.arange(10, dtype=np.int32)
@@ -296,49 +304,57 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests reading gzip compressed waveforms.
         """
         path = os.path.dirname(__file__)
-        st1 = read(os.path.join(path, 'data', 'tspair.ascii.gz'))
-        st2 = read(os.path.join(path, 'data', 'tspair.ascii'))
-        self.assertTrue(st1 == st2)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'tspair.ascii.gz'))
+        st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
+        self.assertEqual(st1, st2)
 
     def test_readBzip2File(self):
         """
         Tests reading bzip2 compressed waveforms.
         """
         path = os.path.dirname(__file__)
-        st1 = read(os.path.join(path, 'data', 'slist.ascii.bz2'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
+        st1 = read(os.path.join(ascii_path, 'slist.ascii.bz2'))
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
+        self.assertEqual(st1, st2)
 
     def test_readTarArchive(self):
         """
         Tests reading tar compressed waveforms.
         """
         path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
         # tar
-        st1 = read(os.path.join(path, 'data', 'test.tar'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        st1 = read(os.path.join(path, "data", "test.tar"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
+        self.assertEqual(st1, st2)
         # tar.gz
-        st1 = read(os.path.join(path, 'data', 'test.tar.gz'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        st1 = read(os.path.join(path, "data", "test.tar.gz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
+        self.assertEqual(st1, st2)
         # tar.bz2
-        st1 = read(os.path.join(path, 'data', 'test.tar.bz2'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        st1 = read(os.path.join(path, "data", "test.tar.bz2"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
+        self.assertEqual(st1, st2)
         # tgz
-        st1 = read(os.path.join(path, 'data', 'test.tgz'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        st1 = read(os.path.join(path, "data", "test.tgz"))
+        st2 = read(os.path.join(ascii_path, "slist.ascii"))
+        self.assertEqual(st1, st2)
 
     def test_readZipArchive(self):
         """
         Tests reading zip compressed waveforms.
         """
         path = os.path.dirname(__file__)
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii",
+                                  "tests", "data")
         st1 = read(os.path.join(path, 'data', 'test.zip'))
-        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
-        self.assertTrue(st1 == st2)
+        st2 = read(os.path.join(ascii_path, 'slist.ascii'))
+        self.assertEqual(st1, st2)
 
     def test_raiseOnUnknownFormat(self):
         """
@@ -361,9 +377,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         # find all plugins with both read and write method
         formats_write = \
-            set(_getEntryPoints('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
+            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         stream_orig = read()
         for format in formats:

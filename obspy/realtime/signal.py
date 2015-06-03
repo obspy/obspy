@@ -26,9 +26,12 @@ from future.builtins import *  # NOQA
 
 import math
 import sys
+
 import numpy as np
+
 from obspy.core.trace import Trace, UTCDateTime
 from obspy.realtime.rtmemory import RtMemory
+
 
 _PI = math.pi
 _TWO_PI = 2.0 * math.pi
@@ -256,7 +259,7 @@ def boxcar(trace, width, rtmemory_list=None):
         i1 = i1 + 1
         i2 = i2 + 1
 
-    rtmemory.updateInput(sample)
+    rtmemory.update_input(sample)
 
     return new_sample
 
@@ -354,9 +357,9 @@ def tauc(trace, width, rtmemory_list=None):
 
     # update memory
     rtmemory.output[0] = xval
-    rtmemory.updateInput(sample)
+    rtmemory.update_input(sample)
     rtmemory_dval.output[0] = dval
-    rtmemory_dval.updateInput(deriv)
+    rtmemory_dval.update_input(deriv)
 
     return new_sample
 
@@ -429,8 +432,8 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
     new_sample = np.zeros(np.size(sample), sample.dtype)
 
     ioffset_pick = int(round(
-                       (ref_time - trace.stats.starttime)
-                       * trace.stats.sampling_rate))
+                       (ref_time - trace.stats.starttime) *
+                       trace.stats.sampling_rate))
     ioffset_mwp_min = ioffset_pick
 
     # set reference amplitude
@@ -494,7 +497,7 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
     rtmemory.output[_POLARITY] = polarity
 
     # update memory
-    rtmemory.updateInput(sample)
+    rtmemory.update_input(sample)
 
     return new_sample
 

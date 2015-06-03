@@ -5,23 +5,25 @@ The InvSim test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import native_str
 from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import ctypes as C
+import gzip
+import io
+import os
+import unittest
+
+import numpy as np
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
-from obspy.sac import attach_paz
-from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
-from obspy.signal.invsim import cosTaper
+from obspy.io.sac import attach_paz
 from obspy.signal.headers import clibevresp
+from obspy.signal.invsim import (cosine_taper, estimate_magnitude, evalresp,
+                                 simulate_seismometer)
 
-import io
-import gzip
-import numpy as np
-import os
-import unittest
-import ctypes as C
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
@@ -73,15 +75,13 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa1(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation
-        of Pitsa - LE3D seismometer.
+        Test simulate_seismometer seismometer simulation against seismometer
+        simulation of Pitsa - LE3D seismometer.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        # no with due to py 2.6
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -94,15 +94,13 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.items():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_LE3D,
-                              paz_simulate=paz, water_level=600.0,
-                              zero_mean=False, nfft_pow2=True)
+            datcorr = simulate_seismometer(
+                data, samp_rate, paz_remove=PAZ_LE3D, paz_simulate=paz,
+                water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
-            # no with due to py 2.6
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            filename = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
+            with gzip.open(filename) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -110,14 +108,13 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa2(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation of
-        Pitsa - STS-2 seismometer.
+        Test simulate_seismometer seismometer simulation against seismometer
+        simulation of Pitsa - STS-2 seismometer.
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(file) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -129,15 +126,13 @@ class InvSimTestCase(unittest.TestCase):
 
         for id, paz in INSTRUMENTS.items():
             # simulate instrument
-            datcorr = seisSim(data, samp_rate, paz_remove=PAZ_STS2,
-                              paz_simulate=paz, water_level=600.0,
-                              zero_mean=False, nfft_pow2=True)
+            datcorr = simulate_seismometer(
+                data, samp_rate, paz_remove=PAZ_STS2, paz_simulate=paz,
+                water_level=600.0, zero_mean=False, nfft_pow2=True)
             # load pitsa file
-            file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
-            # no with due to py 2.6
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            filename = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
+            with gzip.open(filename) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -159,17 +154,17 @@ class InvSimTestCase(unittest.TestCase):
                'zeros': [0 + 0j, 0 + 0j, 0 + 0j],
                'gain': 1.0,
                'sensitivity': 671140000.0}
-        mag_RTSH = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
+        mag_RTSH = estimate_magnitude(paz, 3.34e6, 0.065, 0.255)
         self.assertAlmostEqual(mag_RTSH, 2.1328727151723488)
-        mag_RTBE = estimateMagnitude(paz, 3.61e4, 0.08, 2.197)
+        mag_RTBE = estimate_magnitude(paz, 3.61e4, 0.08, 2.197)
         self.assertAlmostEqual(mag_RTBE, 1.1962687721890191)
-        mag_RNON = estimateMagnitude(paz, 6.78e4, 0.125, 1.538)
+        mag_RNON = estimate_magnitude(paz, 6.78e4, 0.125, 1.538)
         self.assertAlmostEqual(mag_RNON, 1.4995311686507182)
 
     # XXX: Test for really big signal is missing, where the water level is
     # actually acting
     # def test_seisSimVsPitsa2(self):
-    #    from obspy.mseed import test as tests_
+    #    from obspy.io.mseed import tests as tests_
     #    path = os.path.dirname(__file__)
     #    file = os.path.join(path, 'data', 'BW.BGLD..EHE.D.2008.001')
     #    g = Trace()
@@ -218,18 +213,16 @@ class InvSimTestCase(unittest.TestCase):
                  'station': 'KARC', 'location': 'S1',
                  'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
                  'calib': 1.00868e+09, 'channel': 'BHZ'}
-        f = gzip.open(sacf)
-        tr = Trace(np.loadtxt(f), stats)
-        f.close()
+        with gzip.open(sacf) as f:
+            tr = Trace(np.loadtxt(f), stats)
 
         attach_paz(tr, pzf, tovel=False)
-        tr.data = seisSim(tr.data, tr.stats.sampling_rate,
-                          paz_remove=tr.stats.paz, remove_sensitivity=False,
-                          pre_filt=(fl1, fl2, fl3, fl4))
+        tr.data = simulate_seismometer(
+            tr.data, tr.stats.sampling_rate, paz_remove=tr.stats.paz,
+            remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4))
 
-        f = gzip.open(testsacf)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(testsacf) as f:
+            data = np.loadtxt(f)
 
         # import matplotlib.pyplot as plt
         # plt.plot(tr.data)
@@ -276,10 +269,10 @@ class InvSimTestCase(unittest.TestCase):
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
                     'network': 'NZ', 'station': 'CRLZ', 'location': '10',
                     'channel': 'HHZ'}
-        tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
-                          pre_filt=(fl1, fl2, fl3, fl4),
-                          seedresp=seedresp, taper_fraction=0.1,
-                          pitsasim=False, sacsim=True)
+        tr.data = simulate_seismometer(
+            tr.data, tr.stats.sampling_rate, paz_remove=None,
+            pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp,
+            taper_fraction=0.1, pitsasim=False, sacsim=True)
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
@@ -300,10 +293,10 @@ class InvSimTestCase(unittest.TestCase):
             sac_taper = os.path.join(self.path,
                                      'ones_trace_%d_tapered.sac' % i)
             tr = read(sac_taper)[0]
-            tap = cosTaper(i, p=0.1, halfcosine=False, sactaper=True)
+            tap = cosine_taper(i, p=0.1, halfcosine=False, sactaper=True)
             np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
 
-        # The following lines compare the cosTaper result with
+        # The following lines compare the cosine_taper result with
         # the result of the algorithm used by SAC in its taper routine
         # (taper.c)
         # freqs = np.fft.fftfreq(2**15,0.01)
@@ -312,8 +305,9 @@ class InvSimTestCase(unittest.TestCase):
         # fl3 = 30.0
         # fl4 = 35.0
         # npts = freqs.size
-        # tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        # tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
+        # tap = cosine_taper(freqs.size, freqs=freqs, flimit=(fl1, fl2,
+        #                                                     fl3, fl4))
+        # tap2 = cosine_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
         # import matplotlib.pyplot as plt
         # plt.plot(tap,'b')
         # plt.plot(tap2,'g--')
@@ -348,10 +342,8 @@ class InvSimTestCase(unittest.TestCase):
         resp = os.path.join(self.path, 'RESP.CH._.HHZ.gz')
         with NamedTemporaryFile() as fh:
             tmpfile = fh.name
-            # no with due to py 2.6
-            f = gzip.open(resp)
-            fh.write(f.read())
-            f.close()
+            with gzip.open(resp) as f:
+                fh.write(f.read())
             samprate = 120.0
             nfft = 56328
             args = [1.0 / samprate, nfft, tmpfile,
@@ -374,14 +366,14 @@ class InvSimTestCase(unittest.TestCase):
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
                     'network': 'NZ', 'station': 'CRLZ', 'location': '10',
                     'channel': 'HHZ'}
-        tr1.data = seisSim(tr1.data, tr1.stats.sampling_rate,
-                           seedresp=seedresp)
+        tr1.data = simulate_seismometer(
+            tr1.data, tr1.stats.sampling_rate, seedresp=seedresp)
 
         with open(respf, 'rb') as fh:
             stringio = io.BytesIO(fh.read())
         seedresp['filename'] = stringio
-        tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
-                           seedresp=seedresp)
+        tr2.data = simulate_seismometer(tr2.data, tr2.stats.sampling_rate,
+                                        seedresp=seedresp)
 
         self.assertEqual(tr1, tr2)
 
@@ -423,13 +415,13 @@ class InvSimTestCase(unittest.TestCase):
         # the response.
         rel_diff = np.abs(response_2 - response_1).ptp() / \
             max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
-        self.assertTrue(rel_diff > 1E-3)
+        self.assertGreater(rel_diff, 1E-3)
 
         # The RESP file only contains two channels.
         kwargs["channel"] = "BHZ"
         with CatchOutput() as out:
             self.assertRaises(ValueError, evalresp, **kwargs)
-        self.assertTrue(b"no response found for" in out.stderr.lower())
+        self.assertIn(b"no response found for", out.stderr.lower())
 
     def test_evalresp_spline(self):
         """

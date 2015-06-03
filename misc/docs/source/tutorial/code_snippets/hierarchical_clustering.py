@@ -3,14 +3,13 @@ import urllib
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 from scipy.cluster import hierarchy
 from scipy.spatial import distance
 
+
 url = "http://examples.obspy.org/dissimilarities.npz"
-with io.BytesIO(urllib.urlopen(url).read()) as fh:
-    with np.load(fh) as data:
-        dissimilarity = data['dissimilarity']
+with io.BytesIO(urllib.urlopen(url).read()) as fh, np.load(fh) as data:
+    dissimilarity = data['dissimilarity']
 
 plt.subplot(121)
 plt.imshow(1 - dissimilarity, interpolation="nearest")

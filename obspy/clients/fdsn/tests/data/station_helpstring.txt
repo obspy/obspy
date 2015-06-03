@@ -1,0 +1,30 @@
+Parameter description for the 'station' service (v1.1.12) of 'http://service.iris.edu':
+The service offers the following optional standard parameters:
+    startbefore (UTCDateTime)
+        limit to stations starting before the specified time
+    startafter (UTCDateTime)
+        limit to stations starting after the specified time
+    endbefore (UTCDateTime)
+        limit to stations ending before the specified time
+    endafter (UTCDateTime)
+        limit to stations ending after the specified time
+    latitude (float)
+        Specify the central latitude point for a radial search
+    longitude (float)
+        Specify the central longitude point for a radial search
+    minradius (float)
+        Specify maximum distance from the geographic point defined by latitude
+        and longitude
+    maxradius (float), Default value: 180.0
+        Specify minimum distance from the geographic point defined by latitude
+        and longitude
+    includerestricted (bool), Default value: True
+    includeavailability (bool)
+        Specify if results should include information about time series data
+        availability.
+    updatedafter (UTCDateTime)
+        Limit to metadata updated after specified date; updates are data center
+        specific
+    matchtimeseries (bool)
+        Specify that the availabilities line up with available data. This is an
+        IRIS extension to the FDSN specification

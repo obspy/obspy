@@ -11,12 +11,22 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.core
+   obspy.geodetics
    obspy.imaging
    obspy.realtime
    obspy.signal
-   obspy.station
    obspy.taup
-   obspy.xseed
+   obspy.io.xseed
+
+.. rubric:: Scripts
+
+.. autosummary::
+   :template: script.rst
+   :toctree: autogen
+   :nosignatures:
+
+   obspy.scripts.runtests
+   obspy.scripts.reftekrescue
 
 .. rubric:: Waveform Import/Export Plug-ins
 
@@ -24,20 +34,21 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
-   obspy.ah
-   obspy.css
-   obspy.datamark
-   obspy.gse2
-   obspy.kinemetrics
-   obspy.mseed
-   obspy.pdas
-   obspy.sac
-   obspy.seisan
-   obspy.seg2
-   obspy.segy
-   obspy.sh
-   obspy.wav
-   obspy.y
+   obspy.io.ah
+   obspy.io.ascii
+   obspy.io.css
+   obspy.io.datamark
+   obspy.io.gse2
+   obspy.io.kinemetrics
+   obspy.io.mseed
+   obspy.io.pdas
+   obspy.io.sac
+   obspy.io.seisan
+   obspy.io.seg2
+   obspy.io.segy
+   obspy.io.sh
+   obspy.io.wav
+   obspy.io.y
 
 .. rubric:: Event Data Import/Export Plug-ins
 
@@ -45,12 +56,22 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
-   obspy.core.quakeml
-   obspy.cnv
-   obspy.ndk
-   obspy.nlloc
-   obspy.pde
-   obspy.zmap
+   obspy.io.cmtsolution
+   obspy.io.cnv
+   obspy.io.json
+   obspy.io.ndk
+   obspy.io.nlloc
+   obspy.io.pde
+   obspy.io.quakeml
+   obspy.io.zmap
+
+.. rubric:: Inventory Data Import/Export Plug-ins
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
+
+   obspy.io.stationxml
 
 .. rubric:: Database or Web Service Access Clients
 
@@ -58,12 +79,11 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
-   obspy.arclink
+   obspy.clients.arclink
+   obspy.clients.earthworm
+   obspy.clients.fdsn
+   obspy.clients.iris
+   obspy.clients.neic
+   obspy.clients.seedlink
+   obspy.clients.seishub
    obspy.db
-   obspy.earthworm
-   obspy.fdsn
-   obspy.iris
-   obspy.neic
-   obspy.neries
-   obspy.seedlink
-   obspy.seishub

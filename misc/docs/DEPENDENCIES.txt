@@ -3,27 +3,31 @@
 
 # General
 sphinx>=1.1
+
+sphinx-bootstrap-theme
+
 ## for 'make coverage' only:
 coverage==3.5
 ## for 'make pep8' only:
 pep8==0.6.1
 ## for 'make citations' only:
 pybtex>=0.16
+## for 'make docset' only:
+doc2dash
 
 # ObsPy Library
 ## obspy.*
+future
+
 lxml
 numpy
 scipy
 matplotlib
-## for obspy.neries:
-suds
 ## for obspy.db:
 sqlalchemy
 
 # Tutorial
-basemap
-mlpy
+https://github.com/obspy/wheelhouse/raw/master/basemap-1.0.7-cp27-none-linux_x86_64.whl
+https://github.com/obspy/wheelhouse/raw/master/mlpy-3.5.0-cp27-none-linux_x86_64.whl
 ## doctests only:
 pyproj
-r2py

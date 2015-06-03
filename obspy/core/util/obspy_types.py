@@ -12,6 +12,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future import standard_library
+
 with standard_library.hooks():
     from collections import OrderedDict
 
@@ -151,20 +152,10 @@ class CustomComplex(complex):
     def __init__(self, *args):
         pass
 
-    def __add__(self, other):
-        new = self.__class__(complex(self) + other)
-        new.__dict__.update(**self.__dict__)
-        return new
-
     def __iadd__(self, other):
         new = self.__class__(complex(self) + other)
         new.__dict__.update(**self.__dict__)
         self = new
-
-    def __mul__(self, other):
-        new = self.__class__(complex(self) * other)
-        new.__dict__.update(**self.__dict__)
-        return new
 
     def __imul__(self, other):
         new = self.__class__(complex(self) * other)
@@ -183,20 +174,10 @@ class CustomFloat(float):
     def __init__(self, *args):
         pass
 
-    def __add__(self, other):
-        new = self.__class__(float(self) + other)
-        new.__dict__.update(**self.__dict__)
-        return new
-
     def __iadd__(self, other):
         new = self.__class__(float(self) + other)
         new.__dict__.update(**self.__dict__)
         self = new
-
-    def __mul__(self, other):
-        new = self.__class__(float(self) * other)
-        new.__dict__.update(**self.__dict__)
-        return new
 
     def __imul__(self, other):
         new = self.__class__(float(self) * other)

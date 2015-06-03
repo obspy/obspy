@@ -28,12 +28,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-from matplotlib import patches, transforms
 import matplotlib.collections as mpl_collections
+from matplotlib import patches, transforms
+
+from obspy.core.util.decorator import deprecated
+from obspy.imaging.beachball import xy2patch
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
-from obspy.imaging.beachball import xy2patch
 
 
 # seems the base system we (gmt) are using is called "USE" in mopad
@@ -51,7 +53,12 @@ KWARG_MAP = {
 }
 
 
-def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
+def Beach(*args, **kwargs):
+    return beach(*args, **kwargs)
+
+
+def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, mopad_basis='USE', axes=None):
     """
@@ -64,8 +71,11 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
         (strike, dip, and rake) or NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
-        system is 1,2,3 = Up,South,East which equals r,theta,phi). The strike
-        is of the first plane, clockwise relative to north.
+        system is 1,2,3 = Up,South,East which equals r,theta,phi -
+        Harvard/Global CMT convention). The relation to Aki and Richards
+        x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
+        Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+        The strike is of the first plane, clockwise relative to north.
         The dip is of the first plane, defined clockwise and perpendicular to
         strike, relative to horizontal such that 0 is horizontal and 90 is
         vertical. The rake is of the first focal plane solution. 90 moves the
@@ -194,7 +204,13 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return collection
 
 
-def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
+            "instead.")
+def Beachball(*args, **kwargs):
+    return beachball(*args, **kwargs)
+
+
+def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
               zorder=100, mopad_basis='USE', outfile=None, format=None,
               fig=None):
@@ -265,15 +281,15 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     (1) Using basis system ``'NED'``.
 
-        >>> from obspy.imaging.mopad_wrapper import Beachball
+        >>> from obspy.imaging.mopad_wrapper import beachball
         >>> mt = [1, 2, 3, -4, -5, -10]
-        >>> Beachball(mt, mopad_basis='NED') #doctest: +SKIP
+        >>> beachball(mt, mopad_basis='NED') #doctest: +SKIP
 
         .. plot::
 
-            from obspy.imaging.mopad_wrapper import Beachball
+            from obspy.imaging.mopad_wrapper import beachball
             mt = [1, 2, 3, -4, -5, -10]
-            Beachball(mt, mopad_basis='NED')
+            beachball(mt, mopad_basis='NED')
     """
     mopad_kwargs = {}
     loc = locals()

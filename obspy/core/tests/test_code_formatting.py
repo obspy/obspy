@@ -6,11 +6,11 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import codecs
 import fnmatch
 import inspect
-from obspy.core.util.decorator import skipIf
-from obspy.core.util.testing import check_flake8
 import os
 import re
 import unittest
+
+from obspy.core.util.testing import check_flake8
 
 
 class CodeFormattingTestCase(unittest.TestCase):
@@ -18,7 +18,7 @@ class CodeFormattingTestCase(unittest.TestCase):
     Test codebase for compliance with the flake8 tool.
     """
 
-    @skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
+    @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.
@@ -26,8 +26,8 @@ class CodeFormattingTestCase(unittest.TestCase):
         report, message = check_flake8()
         file_count = report.counters["files"]
         error_count = report.get_count()
-        self.assertTrue(file_count > 10)
-        self.assertEqual(error_count, 0, message)
+        self.assertGreater(file_count, 10)
+        self.assertEqual(error_count, 0, "\n" + message.decode())
 
 
 class FutureUsageTestCase(unittest.TestCase):

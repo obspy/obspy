@@ -14,8 +14,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import datetime
-import time
 import math
+import time
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
@@ -232,12 +232,12 @@ class UTCDateTime(object):
                 pass
             if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
-                self._fromDateTime(value)
+                self._from_datetime(value)
                 return
             elif isinstance(value, datetime.date):
                 # got a Python datetime.date object
                 dt = datetime.datetime(value.year, value.month, value.day)
-                self._fromDateTime(dt)
+                self._from_datetime(dt)
                 return
             elif isinstance(value, (bytes, str)):
                 if not isinstance(value, (str, native_str)):
@@ -247,7 +247,7 @@ class UTCDateTime(object):
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
-                        self.timestamp = self._parseISO8601(value).timestamp
+                        self.timestamp = self._parse_ISO_8601(value).timestamp
                         return
                     except:
                         if iso8601:
@@ -297,10 +297,10 @@ class UTCDateTime(object):
                 # patterns and pass it directly to Python's  datetime.datetime
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
-                    self._fromDateTime(dt)
+                    self._from_datetime(dt)
                     return
                 dt = datetime.datetime.strptime(value, pattern)
-                self._fromDateTime(dt, ms)
+                self._from_datetime(dt, ms)
                 return
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs:
@@ -328,7 +328,7 @@ class UTCDateTime(object):
             kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)
-        self._fromDateTime(dt)
+        self._from_datetime(dt)
 
     def _set(self, **kwargs):
         """
@@ -350,7 +350,7 @@ class UTCDateTime(object):
             self.timestamp = UTCDateTime(year, month, day, hour, minute,
                                          second, microsecond).timestamp
 
-    def _fromDateTime(self, dt, ms=0):
+    def _from_datetime(self, dt, ms=0):
         """
         Use Python datetime object to set current time.
 
@@ -368,7 +368,7 @@ class UTCDateTime(object):
                           1000000) / 1000000.0 + ms
 
     @staticmethod
-    def _parseISO8601(value):
+    def _parse_ISO_8601(value):
         """
         Parses an ISO8601:2004 date time string.
         """
@@ -451,7 +451,7 @@ class UTCDateTime(object):
         # add microseconds and eventually correct time zone
         return UTCDateTime(dt) + (float(delta) + ms)
 
-    def _getTimeStamp(self):
+    def _get_timestamp(self):
         """
         Returns UTC timestamp in seconds.
 
@@ -481,7 +481,7 @@ class UTCDateTime(object):
         """
         return self.timestamp
 
-    def _getDateTime(self):
+    def _get_datetime(self):
         """
         Returns a Python datetime object.
 
@@ -498,9 +498,9 @@ class UTCDateTime(object):
         # avoid through adding timedelta - also avoids the year 2038 problem
         return TIMESTAMP0 + datetime.timedelta(seconds=self.timestamp)
 
-    datetime = property(_getDateTime)
+    datetime = property(_get_datetime)
 
-    def _getDate(self):
+    def _get_date(self):
         """
         Returns a Python date object..
 
@@ -513,11 +513,11 @@ class UTCDateTime(object):
         >>> dt.date
         datetime.date(2008, 10, 1)
         """
-        return self._getDateTime().date()
+        return self._get_datetime().date()
 
-    date = property(_getDate)
+    date = property(_get_date)
 
-    def _getYear(self):
+    def _get_year(self):
         """
         Returns year of the current UTCDateTime object.
 
@@ -530,9 +530,9 @@ class UTCDateTime(object):
         >>> dt.year
         2012
         """
-        return self._getDateTime().year
+        return self._get_datetime().year
 
-    def _setYear(self, value):
+    def _set_year(self, value):
         """
         Sets year of current UTCDateTime object.
 
@@ -548,9 +548,9 @@ class UTCDateTime(object):
         """
         self._set(year=value)
 
-    year = property(_getYear, _setYear)
+    year = property(_get_year, _set_year)
 
-    def _getMonth(self):
+    def _get_month(self):
         """
         Returns month as an integer (January is 1, December is 12).
 
@@ -564,9 +564,9 @@ class UTCDateTime(object):
         >>> dt.month
         2
         """
-        return self._getDateTime().month
+        return self._get_datetime().month
 
-    def _setMonth(self, value):
+    def _set_month(self, value):
         """
         Sets month of current UTCDateTime object.
 
@@ -582,9 +582,9 @@ class UTCDateTime(object):
         """
         self._set(month=value)
 
-    month = property(_getMonth, _setMonth)
+    month = property(_get_month, _set_month)
 
-    def _getDay(self):
+    def _get_day(self):
         """
         Returns day as an integer.
 
@@ -597,9 +597,9 @@ class UTCDateTime(object):
         >>> dt.day
         11
         """
-        return self._getDateTime().day
+        return self._get_datetime().day
 
-    def _setDay(self, value):
+    def _set_day(self, value):
         """
         Sets day of current UTCDateTime object.
 
@@ -615,9 +615,9 @@ class UTCDateTime(object):
         """
         self._set(day=value)
 
-    day = property(_getDay, _setDay)
+    day = property(_get_day, _set_day)
 
-    def _getWeekday(self):
+    def _get_weekday(self):
         """
         Return the day of the week as an integer (Monday is 0, Sunday is 6).
 
@@ -631,11 +631,11 @@ class UTCDateTime(object):
         >>> dt.weekday
         2
         """
-        return self._getDateTime().weekday()
+        return self._get_datetime().weekday()
 
-    weekday = property(_getWeekday)
+    weekday = property(_get_weekday)
 
-    def _getTime(self):
+    def _get_time(self):
         """
         Returns a Python time object.
 
@@ -648,11 +648,11 @@ class UTCDateTime(object):
         >>> dt.time
         datetime.time(12, 30, 35, 45020)
         """
-        return self._getDateTime().time()
+        return self._get_datetime().time()
 
-    time = property(_getTime)
+    time = property(_get_time)
 
-    def _getHour(self):
+    def _get_hour(self):
         """
         Returns hour as an integer.
 
@@ -665,9 +665,9 @@ class UTCDateTime(object):
         >>> dt.hour
         10
         """
-        return self._getDateTime().hour
+        return self._get_datetime().hour
 
-    def _setHour(self, value):
+    def _set_hour(self, value):
         """
         Sets hours of current UTCDateTime object.
 
@@ -683,9 +683,9 @@ class UTCDateTime(object):
         """
         self._set(hour=value)
 
-    hour = property(_getHour, _setHour)
+    hour = property(_get_hour, _set_hour)
 
-    def _getMinute(self):
+    def _get_minute(self):
         """
         Returns minute as an integer.
 
@@ -698,9 +698,9 @@ class UTCDateTime(object):
         >>> dt.minute
         11
         """
-        return self._getDateTime().minute
+        return self._get_datetime().minute
 
-    def _setMinute(self, value):
+    def _set_minute(self, value):
         """
         Sets minutes of current UTCDateTime object.
 
@@ -716,9 +716,9 @@ class UTCDateTime(object):
         """
         self._set(minute=value)
 
-    minute = property(_getMinute, _setMinute)
+    minute = property(_get_minute, _set_minute)
 
-    def _getSecond(self):
+    def _get_second(self):
         """
         Returns seconds as an integer.
 
@@ -731,9 +731,9 @@ class UTCDateTime(object):
         >>> dt.second
         12
         """
-        return self._getDateTime().second
+        return self._get_datetime().second
 
-    def _setSecond(self, value):
+    def _set_second(self, value):
         """
         Sets seconds of current UTCDateTime object.
 
@@ -749,9 +749,9 @@ class UTCDateTime(object):
         """
         self.timestamp += value - self.second
 
-    second = property(_getSecond, _setSecond)
+    second = property(_get_second, _set_second)
 
-    def _getMicrosecond(self):
+    def _get_microsecond(self):
         """
         Returns microseconds as an integer.
 
@@ -764,9 +764,9 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return self._getDateTime().microsecond
+        return self._get_datetime().microsecond
 
-    def _setMicrosecond(self, value):
+    def _set_microsecond(self, value):
         """
         Sets microseconds of current UTCDateTime object.
 
@@ -782,9 +782,9 @@ class UTCDateTime(object):
         """
         self._set(microsecond=value)
 
-    microsecond = property(_getMicrosecond, _setMicrosecond)
+    microsecond = property(_get_microsecond, _set_microsecond)
 
-    def _getJulday(self):
+    def _get_julday(self):
         """
         Returns Julian day as an integer.
 
@@ -799,7 +799,7 @@ class UTCDateTime(object):
         """
         return self.utctimetuple().tm_yday
 
-    def _setJulday(self, value):
+    def _set_julday(self, value):
         """
         Sets Julian day of current UTCDateTime object.
 
@@ -815,7 +815,7 @@ class UTCDateTime(object):
         """
         self._set(julday=value)
 
-    julday = property(_getJulday, _setJulday)
+    julday = property(_get_julday, _set_julday)
 
     def timetuple(self):
         """
@@ -823,7 +823,7 @@ class UTCDateTime(object):
 
         :rtype: time.struct_time
         """
-        return self._getDateTime().timetuple()
+        return self._get_datetime().timetuple()
 
     def utctimetuple(self):
         """
@@ -831,7 +831,7 @@ class UTCDateTime(object):
 
         :rtype: time.struct_time
         """
-        return self._getDateTime().utctimetuple()
+        return self._get_datetime().utctimetuple()
 
     def __add__(self, value):
         """
@@ -1100,7 +1100,7 @@ class UTCDateTime(object):
         """
         Returns a representation of UTCDatetime object.
         """
-        return 'UTCDateTime' + self._getDateTime().__repr__()[17:]
+        return 'UTCDateTime' + self._get_datetime().__repr__()[17:]
 
     def __abs__(self):
         """
@@ -1133,7 +1133,7 @@ class UTCDateTime(object):
         See methods :meth:`~datetime.datetime.strftime()` and
         :meth:`~datetime.datetime.strptime()` for more information.
         """
-        return self._getDateTime().strftime(format)
+        return self._get_datetime().strftime(format)
 
     def strptime(self, date_string, format):
         """
@@ -1162,7 +1162,7 @@ class UTCDateTime(object):
         >>> dt.timetz()
         datetime.time(12, 30, 35, 45020)
         """
-        return self._getDateTime().timetz()
+        return self._get_datetime().timetz()
 
     def utcoffset(self):
         """
@@ -1173,7 +1173,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.utcoffset()
         """
-        return self._getDateTime().utcoffset()
+        return self._get_datetime().utcoffset()
 
     def dst(self):
         """
@@ -1184,7 +1184,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.dst()
         """
-        return self._getDateTime().dst()
+        return self._get_datetime().dst()
 
     def tzname(self):
         """
@@ -1195,7 +1195,7 @@ class UTCDateTime(object):
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.tzname()
         """
-        return self._getDateTime().tzname()
+        return self._get_datetime().tzname()
 
     def ctime(self):
         """
@@ -1206,7 +1206,7 @@ class UTCDateTime(object):
         >>> UTCDateTime(2002, 12, 4, 20, 30, 40).ctime()
         'Wed Dec  4 20:30:40 2002'
         """
-        return self._getDateTime().ctime()
+        return self._get_datetime().ctime()
 
     def isoweekday(self):
         """
@@ -1222,7 +1222,7 @@ class UTCDateTime(object):
         >>> dt.isoweekday()
         3
         """
-        return self._getDateTime().isoweekday()
+        return self._get_datetime().isoweekday()
 
     def isocalendar(self):
         """
@@ -1238,7 +1238,7 @@ class UTCDateTime(object):
         >>> dt.isocalendar()
         (2008, 40, 3)
         """
-        return self._getDateTime().isocalendar()
+        return self._get_datetime().isocalendar()
 
     def isoformat(self, sep="T"):
         """
@@ -1259,9 +1259,9 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self._getDateTime().isoformat(sep=native_str(sep))
+        return self._get_datetime().isoformat(sep=native_str(sep))
 
-    def formatFissures(self):
+    def format_fissures(self):
         """
         Returns string representation for the IRIS Fissures protocol.
 
@@ -1270,14 +1270,14 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> print(dt.formatFissures())
+        >>> print(dt.format_fissures())
         2008275T123035.0450Z
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
             (self.year, self.julday, self.hour, self.minute, self.second,
              self.microsecond // 100)
 
-    def formatArcLink(self):
+    def format_arclink(self):
         """
         Returns string representation for the ArcLink protocol.
 
@@ -1286,14 +1286,14 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> print(dt.formatArcLink())
+        >>> print(dt.format_arclink())
         2008,10,1,12,30,35,45020
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
                                          self.hour, self.minute, self.second,
                                          self.microsecond)
 
-    def formatSeedLink(self):
+    def format_seedlink(self):
         """
         Returns string representation for the SeedLink protocol.
 
@@ -1302,7 +1302,7 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35.45020)
-        >>> print(dt.formatSeedLink())
+        >>> print(dt.format_seedlink())
         2008,10,1,12,30,35
         """
         # round seconds down to integer
@@ -1310,7 +1310,7 @@ class UTCDateTime(object):
         return "%d,%d,%d,%d,%d,%g" % (self.year, self.month, self.day,
                                       self.hour, self.minute, seconds)
 
-    def formatSEED(self, compact=False):
+    def format_seed(self, compact=False):
         """
         Returns string representation for a SEED volume.
 
@@ -1323,11 +1323,11 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> print(dt.formatSEED())
+        >>> print(dt.format_seed())
         2008,275,12:30:35.0450
 
         >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
-        >>> print(dt.formatSEED(compact=True))
+        >>> print(dt.format_seed(compact=True))
         2008,275,00:30
         """
         if not compact:
@@ -1350,7 +1350,7 @@ class UTCDateTime(object):
             return temp + ":%02d" % (self.minute)
         return temp
 
-    def formatIRISWebService(self):
+    def format_IRIS_web_service(self):
         """
         Returns string representation usable for the IRIS Web services.
 
@@ -1359,14 +1359,14 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
-        >>> print(dt.formatIRISWebService())
+        >>> print(dt.format_IRIS_web_service())
         2008-05-27T12:30:35.045
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
             (self.year, self.month, self.day, self.hour, self.minute,
              self.second, self.microsecond // 1000)
 
-    def _getPrecision(self):
+    def _get_precision(self):
         """
         Returns precision of current UTCDateTime object.
 
@@ -1380,7 +1380,7 @@ class UTCDateTime(object):
         """
         return self.__precision
 
-    def _setPrecision(self, value=6):
+    def _set_precision(self, value=6):
         """
         Set precision of current UTCDateTime object.
 
@@ -1412,7 +1412,7 @@ class UTCDateTime(object):
         self.__precision = int(value)
         self.__ms_pattern = "%%0.%df" % (self.__precision)
 
-    precision = property(_getPrecision, _setPrecision)
+    precision = property(_get_precision, _set_precision)
 
     def toordinal(self):
         """
@@ -1428,7 +1428,7 @@ class UTCDateTime(object):
         >>> dt.toordinal()
         734503
         """
-        return self._getDateTime().toordinal()
+        return self._get_datetime().toordinal()
 
     @staticmethod
     def now():

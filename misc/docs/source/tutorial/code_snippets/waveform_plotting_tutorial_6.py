@@ -1,5 +1,6 @@
-from obspy.core.stream import read, Stream
-from obspy.core.util import gps2DistAzimuth
+import obspy
+from obspy.geodetics import gps2dist_azimuth
+
 
 host = 'http://examples.obspy.org/'
 # Files (fmt: SAC)
@@ -18,15 +19,15 @@ eq_lat = 35.565
 eq_lon = -96.792
 
 # Reading the waveforms
-st = Stream()
+st = obspy.Stream()
 for waveform in files:
-    st += read(host + waveform)
+    st += obspy.read(host + waveform)
 
 # Calculating distance from SAC headers lat/lon
 # (trace.stats.sac.stla and trace.stats.sac.stlo)
 for tr in st:
-    tr.stats.distance = gps2DistAzimuth(tr.stats.sac.stla, tr.stats.sac.stlo,
-                                        eq_lat, eq_lon)[0]
+    tr.stats.distance = gps2dist_azimuth(tr.stats.sac.stla, tr.stats.sac.stlo,
+                                         eq_lat, eq_lon)[0]
     # Setting Network name for plot title
     tr.stats.network = 'TOK'
 

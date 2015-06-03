@@ -1,12 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from obspy.signal import pazToFreqResp
+
+from obspy.signal.invsim import paz_to_freq_resp
+
 
 poles = [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j]
 zeros = [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j]
 scale_fac = 0.4
 
-h, f = pazToFreqResp(poles, zeros, scale_fac, 0.005, 16384, freq=True)
+h, f = paz_to_freq_resp(poles, zeros, scale_fac, 0.005, 16384, freq=True)
 
 plt.figure()
 plt.subplot(121)

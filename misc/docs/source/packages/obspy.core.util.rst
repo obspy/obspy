@@ -11,18 +11,13 @@
 
        ~attribdict.AttribDict
        ~base.NamedTemporaryFile
-       ~base.createEmptyDataChunk
-       ~base.getExampleFile
-       ~geodetics.calcVincentyInverse
-       ~geodetics.gps2DistAzimuth
-       ~geodetics.kilometer2degrees
-       ~geodetics.locations2degrees
-       ~geodetics.FlinnEngdahl
+       ~base.create_empty_data_chunk
+       ~base.get_example_file
        ~misc.BAND_CODE
-       ~misc.complexifyString
-       ~misc.guessDelta
-       ~misc.scoreatpercentile
-       ~misc.toIntOrZero
+       ~misc.complexify_string
+       ~misc.guess_delta
+       ~misc.score_at_percentile
+       ~misc.to_int_or_zero
        ~obspy_types.Enum
 
 
@@ -37,7 +32,6 @@
        attribdict
        base
        decorator
-       geodetics
        misc
        obspy_types
        testing

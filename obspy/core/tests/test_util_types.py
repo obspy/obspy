@@ -3,9 +3,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util import Enum, ComplexWithUncertainties, \
-    FloatWithUncertainties
 import unittest
+
+from obspy.core.util import (ComplexWithUncertainties, Enum,
+                             FloatWithUncertainties)
 
 
 class UtilTypesTestCase(unittest.TestCase):
@@ -32,8 +33,8 @@ class UtilTypesTestCase(unittest.TestCase):
         self.assertRaises(Exception, units.__getitem__, 99)
         self.assertRaises(Exception, units.__getitem__, -99)
         # test in operator
-        self.assertTrue("other" in units)
-        self.assertTrue("ot21her" not in units)
+        self.assertIn("other", units)
+        self.assertNotIn("ot21her", units)
         # test typical dict methods
         self.assertEqual(units.values(), items)
         self.assertEqual(units.items(), list(zip(items, items)))

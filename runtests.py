@@ -10,7 +10,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import sys
-from obspy.core.scripts.runtests import main
+
+from obspy.scripts.runtests import main
 
 
 if __name__ == "__main__":

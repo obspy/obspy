@@ -8,8 +8,9 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
-from obspy import read, UTCDateTime
-from obspy.signal.cross_correlation import xcorrPickCorrection
+
+from obspy import UTCDateTime, read
+from obspy.signal.cross_correlation import xcorr_pick_correction
 
 
 class CrossCorrelationTestCase(unittest.TestCase):
@@ -37,13 +38,13 @@ class CrossCorrelationTestCase(unittest.TestCase):
         t1 = UTCDateTime("2010-05-27T16:24:33.315000Z")
         t2 = UTCDateTime("2010-05-27T16:27:30.585000Z")
 
-        dt, coeff = xcorrPickCorrection(t1, tr1, t2, tr2, 0.05, 0.2, 0.1)
+        dt, coeff = xcorr_pick_correction(t1, tr1, t2, tr2, 0.05, 0.2, 0.1)
         self.assertAlmostEqual(dt, -0.014459080288833711)
         self.assertAlmostEqual(coeff, 0.91542878457939791)
-        dt, coeff = xcorrPickCorrection(t2, tr2, t1, tr1, 0.05, 0.2, 0.1)
+        dt, coeff = xcorr_pick_correction(t2, tr2, t1, tr1, 0.05, 0.2, 0.1)
         self.assertAlmostEqual(dt, 0.014459080288833711)
         self.assertAlmostEqual(coeff, 0.91542878457939791)
-        dt, coeff = xcorrPickCorrection(
+        dt, coeff = xcorr_pick_correction(
             t1, tr1, t2, tr2, 0.05, 0.2, 0.1, filter="bandpass",
             filter_options={'freqmin': 1, 'freqmax': 10})
         self.assertAlmostEqual(dt, -0.013025086360067755)

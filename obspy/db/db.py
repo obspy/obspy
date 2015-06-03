@@ -12,14 +12,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
-    PickleType, Boolean
+import pickle
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, ForeignKey, Integer,
+                        PickleType, String)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
-from obspy import Trace, UTCDateTime
-import numpy as np
 from sqlalchemy.schema import UniqueConstraint
-import pickle
+import numpy as np
+
+from obspy import Trace, UTCDateTime
+from obspy.core.util.decorator import deprecated
 
 
 Base = declarative_base()
@@ -120,7 +123,12 @@ class WaveformChannel(Base):
     def __repr__(self):
         return "<WaveformChannel('%s')>" % (self.id)
 
+    @deprecated("'get_preview' has been renamed to 'get_preview'. Use that "
+                "instead.")
     def getPreview(self, apply_calibration=False):
+        return self.get_preview(apply_calibration)
+
+    def get_preview(self, apply_calibration=False):
         try:
             data = np.loads(self.preview)
         except:

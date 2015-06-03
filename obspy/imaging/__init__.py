@@ -104,9 +104,9 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     0 moves it in the strike direction (left-lateral), -90 moves it down-dip
     (normal), and 180 moves it opposite to strike (right-lateral).
 
-    >>> from obspy.imaging.beachball import Beachball
+    >>> from obspy.imaging.beachball import beachball
     >>> np1 = [150, 87, 1]
-    >>> Beachball(np1) #doctest: +ELLIPSIS
+    >>> beachball(np1) #doctest: +ELLIPSIS
     <matplotlib.figure.Figure object at 0x...>
 
     .. plot::
@@ -123,9 +123,9 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     chosen and includes the choices 'NED' (North, East, Down), 'USE' (Up,
     South, East), 'NWU' (North, West, Up) or 'XYZ'.
 
-    >>> from obspy.imaging.beachball import Beachball
+    >>> from obspy.imaging.beachball import beachball
     >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-    >>> Beachball(mt) #doctest: +ELLIPSIS
+    >>> beachball(mt) #doctest: +ELLIPSIS
     <matplotlib.figure.Figure object at 0x...>
 
     .. plot::
@@ -140,12 +140,12 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 (3) Plot the beach ball as matplotlib collection into an existing plot.
 
     >>> import matplotlib.pyplot as plt
-    >>> from obspy.imaging.beachball import Beach
+    >>> from obspy.imaging.beachball import beach
     >>>
     >>> np1 = [150, 87, 1]
     >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-    >>> beach1 = Beach(np1, xy=(-70, 80), width=30)
-    >>> beach2 = Beach(mt, xy=(50, 50), width=50)
+    >>> beach1 = beach(np1, xy=(-70, 80), width=30)
+    >>> beach2 = beach(mt, xy=(50, 50), width=50)
     >>>
     >>> plt.plot([-100, 100], [0, 100], "rv", ms=20) #doctest: +ELLIPSIS
     [<matplotlib.lines.Line2D object at 0x...>]

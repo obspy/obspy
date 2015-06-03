@@ -6,14 +6,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import shutil
+import unittest
+from os.path import abspath, dirname, join, pardir
+
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.scan import main as obspy_scan
-from os.path import dirname, abspath, join, pardir
-import shutil
-import os
-import unittest
 
 
 class ScanTestCase(unittest.TestCase):
@@ -32,9 +33,9 @@ class ScanTestCase(unittest.TestCase):
                       'loc_RJOB20050831023349_first100_dos.z',
                       'loc_RNON20040609200559.z', 'loc_STAU20031119011659.z',
                       'sta2.gse2', 'twiceCHK2.gse2', 'y2000.gse']
-        all_files = [join(self.root, 'sac', 'tests', 'data', i)
+        all_files = [join(self.root, 'io', 'sac', 'tests', 'data', i)
                      for i in sac_files]
-        all_files.extend([join(self.root, 'gse2', 'tests', 'data', i)
+        all_files.extend([join(self.root, 'io', 'gse2', 'tests', 'data', i)
                           for i in gse2_files])
         self.all_files = all_files
 
@@ -81,18 +82,17 @@ class ScanTestCase(unittest.TestCase):
         ]
 
         files = []
-        with NamedTemporaryFile() as f1:
-            with NamedTemporaryFile() as f2:
-                with NamedTemporaryFile() as f3:
-                    for i, fp in enumerate([f1, f2, f3]):
-                        fp.write(("%s\n" % lines[i]).encode('ascii',
-                                                            'strict'))
-                        fp.flush()
-                        fp.seek(0)
-                        files.append(fp.name)
-                    with ImageComparison(self.path, 'scan_mult_sampl.png')\
-                            as ic:
-                        obspy_scan(files + ['--output', ic.name, '--quiet'])
+        with NamedTemporaryFile() as f1, NamedTemporaryFile() as f2, \
+                NamedTemporaryFile() as f3:
+            for i, fp in enumerate([f1, f2, f3]):
+                fp.write(("%s\n" % lines[i]).encode('ascii',
+                                                    'strict'))
+                fp.flush()
+                fp.seek(0)
+                files.append(fp.name)
+            with ImageComparison(self.path, 'scan_mult_sampl.png')\
+                    as ic:
+                obspy_scan(files + ['--output', ic.name, '--quiet'])
 
 
 def suite():

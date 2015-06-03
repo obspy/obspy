@@ -28,8 +28,8 @@ addition of the following:
 """
 from __future__ import print_function
 
-from docutils.parsers.rst import directives, Directive, DirectiveError
 from docutils import nodes
+from docutils.parsers.rst import Directive, DirectiveError, directives
 
 
 class Gallery(Directive):
@@ -72,8 +72,10 @@ class Gallery(Directive):
 {{ only_latex }}
 
    {% for img in images %}
+   {% if 'pdf' in img.formats -%}
    .. image:: {{ build_dir }}/{{ img.basename }}.pdf
       ''' + target + '''
+   {% endif -%}
    {% endfor %}
 
 {{ only_texinfo }}

@@ -14,21 +14,29 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native
 
-from scipy import signal, fix, fftpack
 import ctypes as C
 import math as M
+
 import numpy as np
-from obspy.signal.headers import clibsignal
+from scipy import fftpack, fix, signal
+
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import factorize_int
+from obspy.signal.headers import clibsignal
 
 
-def utlGeoKm(orig_lon, orig_lat, lon, lat):
+@deprecated("'utlGeoKm' has been renamed to 'util_geo_km'. Use that instead.")
+def utlGeoKm(*args, **kwargs):
+    return util_geo_km(*args, **kwargs)
+
+
+def util_geo_km(orig_lon, orig_lat, lon, lat):
     """
     Transform lon, lat to km in reference to orig_lon and orig_lat
 
-    >>> utlGeoKm(12.0, 48.0, 12.0, 48.0)
+    >>> util_geo_km(12.0, 48.0, 12.0, 48.0)
     (0.0, 0.0)
-    >>> x, y = utlGeoKm(12.0, 48.0, 13.0, 49.0)
+    >>> x, y = util_geo_km(12.0, 48.0, 13.0, 49.0)
     >>> print(round(x,7))
     73.9041417
     >>> print(round(y,7))
@@ -48,13 +56,19 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     return x.value, y.value
 
 
-def utlLonLat(orig_lon, orig_lat, x, y):
+@deprecated("'utlLonLat' has been renamed to 'util_lon_lat'."
+            "Use that instead.")
+def utlLonLat(*args, **kwargs):
+    return util_lon_lat(*args, **kwargs)
+
+
+def util_lon_lat(orig_lon, orig_lat, x, y):
     """
     Transform x, y [km] to decimal degree in reference to orig_lon and orig_lat
 
-    >>> utlLonLat(12.0, 48.0, 0.0, 0.0)
+    >>> util_lon_lat(12.0, 48.0, 0.0, 0.0)
     (12.0, 48.0)
-    >>> lon, lat = utlLonLat(12.0, 48.0, 73.9041, 111.1908)
+    >>> lon, lat = util_lon_lat(12.0, 48.0, 73.9041, 111.1908)
     >>> print("%.4f, %.4f" % (lon, lat))
     13.0000, 49.0000
 
@@ -78,13 +92,18 @@ def utlLonLat(orig_lon, orig_lat, x, y):
     return lon.value, lat.value
 
 
+@deprecated("'nextpow2' has been renamed to 'next_pow_2'. Use that instead.")
 def nextpow2(i):
+    return next_pow_2(i)
+
+
+def next_pow_2(i):
     """
     Find the next power of two
 
-    >>> int(nextpow2(5))
+    >>> int(next_pow_2(5))
     8
-    >>> int(nextpow2(250))
+    >>> int(next_pow_2(250))
     256
     """
     # do not use NumPy here, math is much faster for single values
@@ -92,24 +111,25 @@ def nextpow2(i):
     return native(int(M.pow(2, buf)))
 
 
-def prevpow2(i):
+def prev_pow_2(i):
     """
     Find the previous power of two
 
-    >>> prevpow2(5)
+    >>> prev_pow_2(5)
     4
-    >>> prevpow2(250)
+    >>> prev_pow_2(250)
     128
     """
     # do not use NumPy here, math is much faster for single values
     return int(M.pow(2, M.floor(M.log(i, 2))))
 
 
-def nearestPow2(x):
+def nearest_pow_2(x):
     """
     Finds the nearest integer that is a power of 2.
-    In contrast to :func:`nextpow2` also searches for numbers smaller than the
-    input and returns them if they are closer than the next bigger power of 2.
+    In contrast to :func:`next_pow_2` also searches for numbers smaller than
+    the input and returns them if they are closer than the next bigger power
+    of 2.
     """
     a = M.pow(2, M.ceil(M.log(x, 2)))
     b = M.pow(2, M.floor(M.log(x, 2)))
@@ -137,7 +157,7 @@ def enframe(x, win, inc):
     if (nwin == 1):
         length = win
     else:
-        # length = nextpow2(nwin)
+        # length = next_pow_2(nwin)
         length = nwin
     nf = int(fix((nx - length + inc) // inc))
     # f = np.zeros((nf, length))
@@ -288,7 +308,7 @@ def _npts2nfft(npts, smart=True):
                 nfft = trial
                 break
         else:
-            nfft = nextpow2(nfft)
+            nfft = next_pow_2(nfft)
 
     return nfft
 

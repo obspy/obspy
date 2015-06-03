@@ -127,8 +127,20 @@ Gallery
     :alt: Time Frequency Misfit
 
 .. gallery-plot:: tutorial/code_snippets/travel_time_plot.py
-    :target: tutorial/code_snippets/travel_time_plot.html
+    :target: tutorial/code_snippets/travel_time.html#travel-time-plot
     :alt: Travel Time Plot
+
+.. gallery-plot:: tutorial/code_snippets/travel_time_cartesian_raypath.py
+    :target: tutorial/code_snippets/travel_time.html#cartesian-ray-paths
+    :alt: Cartesian Ray Paths
+
+.. gallery-plot:: tutorial/code_snippets/travel_time_spherical_raypath.py
+    :target: tutorial/code_snippets/travel_time.html#spherical-ray-paths
+    :alt: Spherical Ray Paths
+
+.. gallery-plot:: tutorial/code_snippets/travel_time_body_waves.py
+    :target: tutorial/code_snippets/travel_time.html#body-wave-ray-paths
+    :alt: Body Wave Ray Paths
 
 .. gallery-plot:: tutorial/code_snippets/xcorr_pick_correction.py
     :target: tutorial/code_snippets/xcorr_pick_correction.html
@@ -154,8 +166,8 @@ Gallery
     :target: packages/autogen/obspy.core.event.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
-    from obspy import readEvents
-    cat = readEvents()
+    from obspy import read_events
+    cat = read_events()
     cat.plot()
 
 .. gallery-plot::

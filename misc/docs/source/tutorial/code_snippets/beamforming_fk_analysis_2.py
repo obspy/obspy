@@ -1,9 +1,17 @@
-from obspy.core import read, UTCDateTime, AttribDict
-from obspy.signal import cornFreq2Paz
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from matplotlib.colorbar import ColorbarBase
+from matplotlib.colors import Normalize
+
+import obspy
+from obspy.core import AttribDict
+from obspy.signal.invsim import corn_freq_2_paz
 from obspy.signal.array_analysis import array_processing
 
+
 # Load data
-st = read("http://examples.obspy.org/agfa.mseed")
+st = obspy.read("http://examples.obspy.org/agfa.mseed")
 
 # Set PAZ and coordinates for all 5 channels
 st[0].stats.paz = AttribDict({
@@ -58,7 +66,7 @@ st[4].stats.coordinates = AttribDict({
 
 
 # Instrument correction to 1Hz corner frequency
-paz1hz = cornFreq2Paz(1.0, damp=0.707)
+paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
 # Execute sonic
@@ -70,17 +78,13 @@ kwargs = dict(
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres=-1e9, vel_thres=-1e9, timestamp='mlabday',
-    stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
+    semb_thres=-1e9, vel_thres=-1e9,
+    stime=obspy.UTCDateTime("20080217110515"),
+    etime=obspy.UTCDateTime("20080217110545")
 )
 out = array_processing(st, **kwargs)
 
 # Plot
-from matplotlib.colorbar import ColorbarBase
-from matplotlib.colors import Normalize
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
-import numpy as np
 
 cmap = cm.hot_r
 

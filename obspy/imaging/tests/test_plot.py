@@ -6,13 +6,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
+import shutil
+import unittest
+from os.path import abspath, basename, dirname, join, pardir
+
 from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.core.util.testing import ImageComparison
 from obspy.imaging.scripts.plot import main as obspy_plot
-from os.path import dirname, abspath, join, pardir, basename
-import shutil
-import os
-import unittest
 
 
 class PlotTestCase(unittest.TestCase):
@@ -23,7 +24,7 @@ class PlotTestCase(unittest.TestCase):
         # directory where the test files are located
         self.root = abspath(join(dirname(__file__), pardir, pardir))
         self.path = join(self.root, 'imaging', 'tests', 'images')
-        all_files = [join(self.root, 'core', 'tests', 'data', i)
+        all_files = [join(self.root, 'io', 'ascii', 'tests', 'data', i)
                      for i in ['slist.ascii', 'slist_2_traces.ascii']]
         self.all_files = all_files
 

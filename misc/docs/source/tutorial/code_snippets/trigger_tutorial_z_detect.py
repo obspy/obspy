@@ -1,8 +1,9 @@
-from obspy.core import read
-from obspy.signal.trigger import zDetect, plotTrigger
+import obspy
+from obspy.signal.trigger import plot_trigger, z_detect
 
-trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
+
+trace = obspy.read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
 df = trace.stats.sampling_rate
 
-cft = zDetect(trace.data, int(10. * df))
-plotTrigger(trace, cft, -0.4, -0.3)
+cft = z_detect(trace.data, int(10. * df))
+plot_trigger(trace, cft, -0.4, -0.3)

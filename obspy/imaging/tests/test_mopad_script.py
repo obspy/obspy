@@ -5,18 +5,21 @@ The obspy-mopad script test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
 
-from obspy.core.util.misc import CatchOutput
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
-from obspy.core.util.decorator import skip
-from obspy.imaging.scripts.mopad import main as obspy_mopad
+import io
+import os
+import sys
+import unittest
+from itertools import product
+with standard_library.hooks():
+    from itertools import zip_longest
 
 import numpy as np
 
-import io
-from itertools import product, zip_longest
-import os
-import unittest
+from obspy.core.util.misc import CatchOutput
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.imaging.scripts.mopad import main as obspy_mopad
 
 
 class MopadTestCase(unittest.TestCase):
@@ -41,11 +44,22 @@ class MopadTestCase(unittest.TestCase):
         expected = '''
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
-
 '''
 
-        self.assertEqual(expected.encode("utf-8"),
-                         out.stdout.replace(b'\r', b''))
+        result = out.stdout[:-1]
+        try:
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
+        except:
+            expected = expected.replace('°', ' deg')
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
+
+        self.assertEqual(expected, result)
 
     def test_script_convert_type_tensor(self):
         with CatchOutput() as out:
@@ -62,7 +76,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
 
         self.assertEqual(expected.encode("utf-8"),
-                         out.stdout.replace(b'\r', b''))
+                         out.stdout)
 
     def test_script_convert_type_tensor_large(self):
         with CatchOutput() as out:
@@ -79,7 +93,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
 '''
 
         self.assertEqual(expected.encode("utf-8"),
-                         out.stdout.replace(b'\r', b''))
+                         out.stdout)
 
     def test_script_convert_basis(self):
         expected = [
@@ -124,7 +138,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         expected = str(self.mt) + '\n'
 
         self.assertEqual(expected.encode("utf-8"),
-                         out.stdout.replace(b'\r', b''))
+                         out.stdout)
 
     #
     # obspy-mopad decompose
@@ -142,11 +156,22 @@ Moment Tensor: Mnn =  0.091,  Mee = -0.089, Mdd = -0.002,
 
 Fault plane 1: strike =  77°, dip =  89°, slip-rake = -141°
 Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
-
 '''
 
-        self.assertEqual(expected.encode("utf-8"),
-                         out.stdout.replace(b'\r', b''))
+        result = out.stdout[:-1]
+        try:
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
+        except:
+            expected = expected.replace('°', ' deg')
+            if sys.stdout.encoding is not None:
+                expected = expected.encode(sys.stdout.encoding)
+            else:
+                expected = expected.encode()
+
+        self.assertEqual(expected, result)
 
     #
     # obspy-mopad gmt
@@ -219,7 +244,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     # obspy-mopad plot
     #
 
-    @skip('Currently broken until further review.')
+    @unittest.skip('Currently broken until further review.')
     def test_script_plot(self):
         # See test_Beachball:
         data = [

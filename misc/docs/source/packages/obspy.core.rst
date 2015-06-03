@@ -14,7 +14,10 @@
        ~trace.Stats
        ~stream.Stream
        ~utcdatetime.UTCDateTime
-       ~event.readEvents
+       ~event.read_events
+       ~event.Catalog
+       ~inventory.inventory.read_inventory
+       ~inventory.inventory.Inventory
 
     .. comment to end block
 
@@ -28,23 +31,8 @@
        stream
        utcdatetime
        event
-       ascii
-       quakeml
+       inventory
        util
        preview
-       json
-       zmap
-
-    .. comment to end block
-
-    Scripts
-    -------
-    .. autosummary::
-      :template: script.rst
-      :toctree: autogen
-      :nosignatures:
-
-        scripts.runtests
-        scripts.reftekrescue
 
     .. comment to end block

@@ -36,21 +36,20 @@ except:
            "Please install numpy first, it is needed before installing ObsPy.")
     raise ImportError(msg)
 
+import fnmatch
+import glob
+import inspect
+import os
+import sys
+import platform
 from distutils.util import change_root
 
-from numpy.distutils.core import setup, DistutilsSetupError
+from numpy.distutils.core import DistutilsSetupError, setup
+from numpy.distutils.ccompiler import get_default_compiler
 from numpy.distutils.command.build import build
 from numpy.distutils.command.install import install
 from numpy.distutils.exec_command import exec_command, find_executable
 from numpy.distutils.misc_util import Configuration
-from numpy.distutils.ccompiler import get_default_compiler
-
-import glob
-import inspect
-import fnmatch
-import os
-import platform
-import sys
 
 
 # Directory of the current file in the (hopefully) most reliable way
@@ -70,8 +69,9 @@ DOCSTRING = __doc__.split("\n")
 
 # check for MSVC
 if platform.system() == "Windows" and (
-        'msvc' in sys.argv or '-c' not in sys.argv and get_default_compiler()
-        == 'msvc'):
+        'msvc' in sys.argv or
+        '-c' not in sys.argv and
+        get_default_compiler() == 'msvc'):
     IS_MSVC = True
 else:
     IS_MSVC = False
@@ -85,8 +85,8 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
-    'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED', 
+    'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging', 'instrument correction',
+    'instrument simulation', 'IRIS', 'kinemetrics', 'magnitude', 'MiniSEED',
     'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC',
     'observatory', 'ORFEUS', 'PDAS', 'picker', 'processing', 'PQLX', 'Q',
     'real time', 'realtime', 'RESP', 'response file', 'RT', 'SAC', 'SEED',
@@ -98,215 +98,218 @@ KEYWORDS = [
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
-    'numpy>1.4.0',
-    'scipy>=0.7.2',
-    'matplotlib',
+    'numpy>=1.6.1',
+    'scipy>=0.9.0',
+    'matplotlib>=1.1.0',
     'lxml',
     'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
-    'arclink': ['m2crypto'],
-    'neries': ['suds-jurko']}
+    'arclink': ['m2crypto']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
-# Add argparse for Python 2.6. stdlib package for Python >= 2.7
-if sys.version_info[:2] == (2, 6):
-    INSTALL_REQUIRES.append('argparse')
 
 ENTRY_POINTS = {
     'console_scripts': [
-        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
-        'obspy-runtests = obspy.core.scripts.runtests:main',
-        'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
-        'obspy-print = obspy.core.scripts.print:main',
+        'obspy-flinn-engdahl = obspy.scripts.flinnengdahl:main',
+        'obspy-runtests = obspy.scripts.runtests:main',
+        'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
+        'obspy-print = obspy.scripts.print:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
         'obspy-mopad = obspy.imaging.scripts.mopad:main',
-        'obspy-mseed-recordanalyzer = obspy.mseed.scripts.recordanalyzer:main',
-        'obspy-dataless2xseed = obspy.xseed.scripts.dataless2xseed:main',
-        'obspy-xseed2dataless = obspy.xseed.scripts.xseed2dataless:main',
-        'obspy-dataless2resp = obspy.xseed.scripts.dataless2resp:main',
+        'obspy-mseed-recordanalyzer = '
+        'obspy.io.mseed.scripts.recordanalyzer:main',
+        'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
+        'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
+        'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
     ],
     'distutils.commands': [
         'build_man = Help2Man'
     ],
     'obspy.plugin.waveform': [
-        'TSPAIR = obspy.core.ascii',
-        'SLIST = obspy.core.ascii',
+        'TSPAIR = obspy.io.ascii.core',
+        'SLIST = obspy.io.ascii.core',
         'PICKLE = obspy.core.stream',
-        'CSS = obspy.css.core',
-        'DATAMARK = obspy.datamark.core',
-        'KINEMETRICS_EVT = obspy.kinemetrics.core',
-        'GSE1 = obspy.gse2.core',
-        'GSE2 = obspy.gse2.core',
-        'MSEED = obspy.mseed.core',
-        'PDAS = obspy.pdas.core',
-        'SAC = obspy.sac.core',
-        'SACXY = obspy.sac.core',
-        'Y = obspy.y.core',
-        'SEG2 = obspy.seg2.seg2',
-        'SEGY = obspy.segy.core',
-        'SU = obspy.segy.core',
-        'SEISAN = obspy.seisan.core',
-        'Q = obspy.sh.core',
-        'SH_ASC = obspy.sh.core',
-        'WAV = obspy.wav.core',
-        'AH = obspy.ah.core',
+        'CSS = obspy.io.css.core',
+        'DATAMARK = obspy.io.datamark.core',
+        'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
+        'GSE1 = obspy.io.gse2.core',
+        'GSE2 = obspy.io.gse2.core',
+        'MSEED = obspy.io.mseed.core',
+        'PDAS = obspy.io.pdas.core',
+        'SAC = obspy.io.sac.core',
+        'SACXY = obspy.io.sac.core',
+        'Y = obspy.io.y.core',
+        'SEG2 = obspy.io.seg2.seg2',
+        'SEGY = obspy.io.segy.core',
+        'SU = obspy.io.segy.core',
+        'SEISAN = obspy.io.seisan.core',
+        'Q = obspy.io.sh.core',
+        'SH_ASC = obspy.io.sh.core',
+        'WAV = obspy.io.wav.core',
+        'AH = obspy.io.ah.core',
     ],
     'obspy.plugin.waveform.TSPAIR': [
-        'isFormat = obspy.core.ascii:isTSPAIR',
-        'readFormat = obspy.core.ascii:readTSPAIR',
-        'writeFormat = obspy.core.ascii:writeTSPAIR',
+        'isFormat = obspy.io.ascii.core:_is_tspair',
+        'readFormat = obspy.io.ascii.core:_read_tspair',
+        'writeFormat = obspy.io.ascii.core:_write_tspair',
     ],
     'obspy.plugin.waveform.SLIST': [
-        'isFormat = obspy.core.ascii:isSLIST',
-        'readFormat = obspy.core.ascii:readSLIST',
-        'writeFormat = obspy.core.ascii:writeSLIST',
+        'isFormat = obspy.io.ascii.core:_is_slist',
+        'readFormat = obspy.io.ascii.core:_read_slist',
+        'writeFormat = obspy.io.ascii.core:_write_slist',
     ],
     'obspy.plugin.waveform.PICKLE': [
-        'isFormat = obspy.core.stream:isPickle',
-        'readFormat = obspy.core.stream:readPickle',
-        'writeFormat = obspy.core.stream:writePickle',
+        'isFormat = obspy.core.stream:_is_pickle',
+        'readFormat = obspy.core.stream:_read_pickle',
+        'writeFormat = obspy.core.stream:_write_pickle',
     ],
     'obspy.plugin.waveform.CSS': [
-        'isFormat = obspy.css.core:isCSS',
-        'readFormat = obspy.css.core:readCSS',
+        'isFormat = obspy.io.css.core:_is_css',
+        'readFormat = obspy.io.css.core:_read_css',
     ],
     'obspy.plugin.waveform.DATAMARK': [
-        'isFormat = obspy.datamark.core:isDATAMARK',
-        'readFormat = obspy.datamark.core:readDATAMARK',
+        'isFormat = obspy.io.datamark.core:_is_datamark',
+        'readFormat = obspy.io.datamark.core:_read_datamark',
     ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
-        'isFormat = obspy.kinemetrics.core:is_evt',
-        'readFormat = obspy.kinemetrics.core:read_evt',
+        'isFormat = obspy.io.kinemetrics.core:is_evt',
+        'readFormat = obspy.io.kinemetrics.core:read_evt',
     ],
     'obspy.plugin.waveform.GSE1': [
-        'isFormat = obspy.gse2.core:isGSE1',
-        'readFormat = obspy.gse2.core:readGSE1',
+        'isFormat = obspy.io.gse2.core:_is_gse1',
+        'readFormat = obspy.io.gse2.core:_read_gse1',
     ],
     'obspy.plugin.waveform.GSE2': [
-        'isFormat = obspy.gse2.core:isGSE2',
-        'readFormat = obspy.gse2.core:readGSE2',
-        'writeFormat = obspy.gse2.core:writeGSE2',
+        'isFormat = obspy.io.gse2.core:_is_gse2',
+        'readFormat = obspy.io.gse2.core:_read_gse2',
+        'writeFormat = obspy.io.gse2.core:_write_gse2',
     ],
     'obspy.plugin.waveform.MSEED': [
-        'isFormat = obspy.mseed.core:isMSEED',
-        'readFormat = obspy.mseed.core:readMSEED',
-        'writeFormat = obspy.mseed.core:writeMSEED',
+        'isFormat = obspy.io.mseed.core:_is_mseed',
+        'readFormat = obspy.io.mseed.core:_read_mseed',
+        'writeFormat = obspy.io.mseed.core:_write_mseed',
     ],
     'obspy.plugin.waveform.PDAS': [
-        'isFormat = obspy.pdas.core:isPDAS',
-        'readFormat = obspy.pdas.core:readPDAS',
+        'isFormat = obspy.io.pdas.core:_is_pdas',
+        'readFormat = obspy.io.pdas.core:_read_pdas',
     ],
     'obspy.plugin.waveform.SAC': [
-        'isFormat = obspy.sac.core:isSAC',
-        'readFormat = obspy.sac.core:readSAC',
-        'writeFormat = obspy.sac.core:writeSAC',
+        'isFormat = obspy.io.sac.core:_is_sac',
+        'readFormat = obspy.io.sac.core:_read_sac',
+        'writeFormat = obspy.io.sac.core:_write_sac',
     ],
     'obspy.plugin.waveform.SACXY': [
-        'isFormat = obspy.sac.core:isSACXY',
-        'readFormat = obspy.sac.core:readSACXY',
-        'writeFormat = obspy.sac.core:writeSACXY',
+        'isFormat = obspy.io.sac.core:_is_sacXY',
+        'readFormat = obspy.io.sac.core:_read_sacXY',
+        'writeFormat = obspy.io.sac.core:_write_sacXY',
     ],
     'obspy.plugin.waveform.SEG2': [
-        'isFormat = obspy.seg2.seg2:isSEG2',
-        'readFormat = obspy.seg2.seg2:readSEG2',
+        'isFormat = obspy.io.seg2.seg2:_is_seg2',
+        'readFormat = obspy.io.seg2.seg2:_read_seg2',
     ],
     'obspy.plugin.waveform.SEGY': [
-        'isFormat = obspy.segy.core:isSEGY',
-        'readFormat = obspy.segy.core:readSEGY',
-        'writeFormat = obspy.segy.core:writeSEGY',
+        'isFormat = obspy.io.segy.core:_is_segy',
+        'readFormat = obspy.io.segy.core:_read_segy',
+        'writeFormat = obspy.io.segy.core:_write_segy',
     ],
     'obspy.plugin.waveform.SU': [
-        'isFormat = obspy.segy.core:isSU',
-        'readFormat = obspy.segy.core:readSU',
-        'writeFormat = obspy.segy.core:writeSU',
+        'isFormat = obspy.io.segy.core:_is_su',
+        'readFormat = obspy.io.segy.core:_read_su',
+        'writeFormat = obspy.io.segy.core:_write_su',
     ],
     'obspy.plugin.waveform.SEISAN': [
-        'isFormat = obspy.seisan.core:isSEISAN',
-        'readFormat = obspy.seisan.core:readSEISAN',
+        'isFormat = obspy.io.seisan.core:_is_seisan',
+        'readFormat = obspy.io.seisan.core:_read_seisan',
     ],
     'obspy.plugin.waveform.Q': [
-        'isFormat = obspy.sh.core:isQ',
-        'readFormat = obspy.sh.core:readQ',
-        'writeFormat = obspy.sh.core:writeQ',
+        'isFormat = obspy.io.sh.core:_is_q',
+        'readFormat = obspy.io.sh.core:_read_q',
+        'writeFormat = obspy.io.sh.core:_write_q',
     ],
     'obspy.plugin.waveform.SH_ASC': [
-        'isFormat = obspy.sh.core:isASC',
-        'readFormat = obspy.sh.core:readASC',
-        'writeFormat = obspy.sh.core:writeASC',
+        'isFormat = obspy.io.sh.core:_is_asc',
+        'readFormat = obspy.io.sh.core:_read_asc',
+        'writeFormat = obspy.io.sh.core:_write_asc',
     ],
     'obspy.plugin.waveform.WAV': [
-        'isFormat = obspy.wav.core:isWAV',
-        'readFormat = obspy.wav.core:readWAV',
-        'writeFormat = obspy.wav.core:writeWAV',
+        'isFormat = obspy.io.wav.core:_is_wav',
+        'readFormat = obspy.io.wav.core:_read_wav',
+        'writeFormat = obspy.io.wav.core:_write_wav',
     ],
     'obspy.plugin.waveform.Y': [
-        'isFormat = obspy.y.core:isY',
-        'readFormat = obspy.y.core:readY',
+        'isFormat = obspy.io.y.core:_is_y',
+        'readFormat = obspy.io.y.core:_read_y',
     ],
     'obspy.plugin.waveform.AH': [
-        'isFormat = obspy.ah.core:is_AH',
-        'readFormat = obspy.ah.core:read_AH',
+        'isFormat = obspy.io.ah.core:_is_ah',
+        'readFormat = obspy.io.ah.core:_read_ah',
     ],
     'obspy.plugin.event': [
-        'QUAKEML = obspy.core.quakeml',
-        'ZMAP = obspy.zmap.core',
-        'MCHEDR = obspy.pde.mchedr',
-        'JSON = obspy.core.json.core',
-        'NDK = obspy.ndk.core',
-        'NLLOC_HYP = obspy.nlloc.core',
-        'NLLOC_OBS = obspy.nlloc.core',
-        'CNV = obspy.cnv.core',
+        'QUAKEML = obspy.io.quakeml.core',
+        'ZMAP = obspy.io.zmap.core',
+        'MCHEDR = obspy.io.pde.mchedr',
+        'JSON = obspy.io.json.core',
+        'NDK = obspy.io.ndk.core',
+        'NLLOC_HYP = obspy.io.nlloc.core',
+        'NLLOC_OBS = obspy.io.nlloc.core',
+        'CNV = obspy.io.cnv.core',
+        'CMTSOLUTION = obspy.io.cmtsolution.core'
     ],
     'obspy.plugin.event.QUAKEML': [
-        'isFormat = obspy.core.quakeml:isQuakeML',
-        'readFormat = obspy.core.quakeml:readQuakeML',
-        'writeFormat = obspy.core.quakeml:writeQuakeML',
+        'isFormat = obspy.io.quakeml.core:_is_quakeml',
+        'readFormat = obspy.io.quakeml.core:_read_quakeml',
+        'writeFormat = obspy.io.quakeml.core:_write_quakeml',
     ],
     'obspy.plugin.event.MCHEDR': [
-        'isFormat = obspy.pde.mchedr:isMchedr',
-        'readFormat = obspy.pde.mchedr:readMchedr',
+        'isFormat = obspy.io.pde.mchedr:_is_mchedr',
+        'readFormat = obspy.io.pde.mchedr:_read_mchedr',
     ],
     'obspy.plugin.event.JSON': [
-        'writeFormat = obspy.core.json.core:writeJSON',
+        'writeFormat = obspy.io.json.core:_write_json',
     ],
     'obspy.plugin.event.ZMAP': [
-        'isFormat = obspy.zmap.core:isZmap',
-        'readFormat = obspy.zmap.core:readZmap',
-        'writeFormat = obspy.zmap.core:writeZmap',
+        'isFormat = obspy.io.zmap.core:_is_zmap',
+        'readFormat = obspy.io.zmap.core:_read_zmap',
+        'writeFormat = obspy.io.zmap.core:_write_zmap',
     ],
     'obspy.plugin.event.CNV': [
-        'writeFormat = obspy.cnv.core:write_CNV',
+        'writeFormat = obspy.io.cnv.core:_write_cnv',
     ],
     'obspy.plugin.event.NDK': [
-        'isFormat = obspy.ndk.core:is_ndk',
-        'readFormat = obspy.ndk.core:read_ndk',
+        'isFormat = obspy.io.ndk.core:_is_ndk',
+        'readFormat = obspy.io.ndk.core:_read_ndk',
         ],
     'obspy.plugin.event.NLLOC_HYP': [
-        'isFormat = obspy.nlloc.core:is_nlloc_hyp',
-        'readFormat = obspy.nlloc.core:read_nlloc_hyp',
+        'isFormat = obspy.io.nlloc.core:is_nlloc_hyp',
+        'readFormat = obspy.io.nlloc.core:read_nlloc_hyp',
         ],
     'obspy.plugin.event.NLLOC_OBS': [
-        'writeFormat = obspy.nlloc.core:write_nlloc_obs',
+        'writeFormat = obspy.io.nlloc.core:write_nlloc_obs',
+        ],
+    'obspy.plugin.event.CMTSOLUTION': [
+        'isFormat = obspy.io.cmtsolution.core:_is_cmtsolution',
+        'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
+        'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
     'obspy.plugin.inventory': [
-        'STATIONXML = obspy.station.stationxml',
-        'SACPZ = obspy.sac.sacpz',
-        'CSS = obspy.css.station',
+        'STATIONXML = obspy.io.stationxml.core',
+        'SACPZ = obspy.io.sac.sacpz',
+        'CSS = obspy.io.css.station',
     ],
     'obspy.plugin.inventory.STATIONXML': [
-        'isFormat = obspy.station.stationxml:is_StationXML',
-        'readFormat = obspy.station.stationxml:read_StationXML',
-        'writeFormat = obspy.station.stationxml:write_StationXML',
+        'isFormat = obspy.io.stationxml.core:_is_stationxml',
+        'readFormat = obspy.io.stationxml.core:_read_stationxml',
+        'writeFormat = obspy.io.stationxml.core:_write_stationxml',
     ],
     'obspy.plugin.inventory.SACPZ': [
-        'writeFormat = obspy.sac.sacpz:write_SACPZ',
+        'writeFormat = obspy.io.sac.sacpz:_write_sacpz',
     ],
     'obspy.plugin.inventory.CSS': [
-        'writeFormat = obspy.css.station:writeCSS',
+        'writeFormat = obspy.io.css.station:_write_css',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
@@ -328,9 +331,9 @@ ENTRY_POINTS = {
         'bandstop = obspy.signal.filter:bandstop',
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
-        'lowpassCheby2 = obspy.signal.filter:lowpassCheby2',
-        'lowpassFIR = obspy.signal.filter:lowpassFIR',
-        'remezFIR = obspy.signal.filter:remezFIR',
+        'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
+        'lowpassFIR = obspy.signal.filter:lowpass_FIR',
+        'remezFIR = obspy.signal.filter:remez_FIR',
     ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
@@ -338,13 +341,13 @@ ENTRY_POINTS = {
         'obspy.signal.interpolation:weighted_average_slopes',
     ],
     'obspy.plugin.rotate': [
-        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
-        'rotate_RT_NE = obspy.signal:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signal:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
+        'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
+        'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
+        'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
     ],
     'obspy.plugin.taper': [
-        'cosine = obspy.signal.invsim:cosTaper',
+        'cosine = obspy.signal.invsim:cosine_taper',
         'barthann = scipy.signal:barthann',
         'bartlett = scipy.signal:bartlett',
         'blackman = scipy.signal:blackman',
@@ -364,24 +367,19 @@ ENTRY_POINTS = {
         'triang = scipy.signal:triang',
     ],
     'obspy.plugin.trigger': [
-        'recstalta = obspy.signal.trigger:recSTALTA',
-        'carlstatrig = obspy.signal.trigger:carlSTATrig',
-        'classicstalta = obspy.signal.trigger:classicSTALTA',
-        'delayedstalta = obspy.signal.trigger:delayedSTALTA',
-        'zdetect = obspy.signal.trigger:zDetect',
-        'recstaltapy = obspy.signal.trigger:recSTALTAPy',
-        'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
+        'recstalta = obspy.signal.trigger:recursive_STALTA',
+        'carlstatrig = obspy.signal.trigger:carl_STA_trig',
+        'classicstalta = obspy.signal.trigger:classic_STALTA',
+        'delayedstalta = obspy.signal.trigger:delayed_STALTA',
+        'zdetect = obspy.signal.trigger:z_detect',
+        'recstaltapy = obspy.signal.trigger:recursive_STALTA_py',
+        'classicstaltapy = obspy.signal.trigger:classic_STALTA_py',
     ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
         'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
-# PY3: rename entry points for executable scripts to "obspy3-..."
-if sys.version_info[0] == 3:
-    ENTRY_POINTS['console_scripts'] = [
-        string.replace("obspy", "obspy3", 1)
-        for string in ENTRY_POINTS['console_scripts']]
 
 
 def find_packages():
@@ -413,27 +411,6 @@ if IS_MSVC:
         return ext.export_symbols
     from distutils.command.build_ext import build_ext
     build_ext.get_export_symbols = _get_export_symbols
-
-    # tau shared library has to be compiled with gfortran directly
-    def link(self, _target_desc, objects, output_filename,
-             *args, **kwargs):  # @UnusedVariable
-        # check if 'tau' library is linked
-        if 'tau' not in output_filename:
-            # otherwise just use the original link method
-            return self.original_link(_target_desc, objects, output_filename,
-                                      *args, **kwargs)
-        if '32' in platform.architecture()[0]:
-            taupargs = ["-m32"]
-        else:
-            taupargs = ["-m64"]
-        # ignoring all f2py objects
-        objects = objects[2:]
-        self.spawn(['gfortran.exe'] +
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
-                   taupargs + objects + ["-o", output_filename])
-
-    MSVCCompiler.original_link = MSVCCompiler.link
-    MSVCCompiler.link = link
 
 
 # helper function for collecting export symbols from .def files
@@ -467,12 +444,12 @@ def add_features():
 
 def configuration(parent_package="", top_path=None):
     """
-    Config function mainly used to compile C and Fortran code.
+    Config function mainly used to compile C code.
     """
     config = Configuration("", parent_package, top_path)
 
     # GSE2
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src", "GSE_UTI")
+    path = os.path.join("obspy", "io", "gse2", "src", "GSE_UTI")
     files = [os.path.join(path, "gse_functions.c")]
     # compiler specific options
     kwargs = {}
@@ -483,7 +460,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # LIBMSEED
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
+    path = os.path.join("obspy", "io", "mseed", "src")
     files = [os.path.join(path, "obspy-readbuffer.c")]
     if not EXTERNAL_LIBS:
         files += glob.glob(os.path.join(path, "libmseed", "*.c"))
@@ -506,7 +483,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SEGY
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
+    path = os.path.join("obspy", "io", "segy", "src")
     files = [os.path.join(path, "ibm2ieee.c")]
     # compiler specific options
     kwargs = {}
@@ -517,7 +494,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # SIGNAL
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    path = os.path.join("obspy", "signal", "src")
     files = glob.glob(os.path.join(path, "*.c"))
     # compiler specific options
     kwargs = {}
@@ -528,7 +505,7 @@ def configuration(parent_package="", top_path=None):
                          files, **kwargs)
 
     # EVALRESP
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    path = os.path.join("obspy", "signal", "src")
     if EXTERNAL_LIBS:
         files = glob.glob(os.path.join(path, "evalresp", "_obspy*.c"))
     else:
@@ -545,30 +522,16 @@ def configuration(parent_package="", top_path=None):
     config.add_extension(_get_lib_name("evresp", add_extension_suffix=False),
                          files, **kwargs)
 
-    # TAUP
-    path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
-    libname = _get_lib_name("tau", add_extension_suffix=False)
-    files = glob.glob(os.path.join(path, "*.f"))
+    # TAU
+    path = os.path.join("obspy", "taup", "src")
+    files = [os.path.join(path, "inner_tau_loops.c")]
     # compiler specific options
-    kwargs = {'libraries': []}
-    # XXX: The build subdirectory is difficult to determine if installed
-    # via pypi or other means. I could not find a reliable way of doing it.
-    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-    interface_file = os.path.join(path, "_libtau.pyf")
-    with open(interface_file, "r") as open_file:
-        interface_file = open_file.read()
-    # In the original .pyf file the library is called _libtau.
-    interface_file = interface_file.replace("_libtau", libname)
-    if not os.path.exists("build"):
-        os.mkdir("build")
-    with open(new_interface_path, "w") as open_file:
-        open_file.write(interface_file)
-    files.insert(0, new_interface_path)
-    # we do not need this when linking with gcc, only when linking with
-    # gfortran the option -lgcov is required
-    if os.environ.get('OBSPY_C_COVERAGE', ""):
-        kwargs['libraries'].append('gcov')
-    config.add_extension(libname, files, **kwargs)
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libtau.def')
+    config.add_extension(_get_lib_name("tau", add_extension_suffix=False),
+                         files, **kwargs)
 
     add_data_files(config)
 
@@ -609,18 +572,19 @@ class Help2ManBuild(build):
         mandir = os.path.join(self.build_base, 'man')
         self.mkpath(mandir)
 
-        from pkg_resources import iter_entry_points
-        for entrypoint in iter_entry_points(group='console_scripts'):
-            if not entrypoint.module_name.startswith('obspy'):
+        from pkg_resources import EntryPoint
+        for entrypoint in ENTRY_POINTS['console_scripts']:
+            ep = EntryPoint.parse(entrypoint)
+            if not ep.module_name.startswith('obspy'):
                 continue
 
-            output = os.path.join(mandir, entrypoint.name + '.1')
+            output = os.path.join(mandir, ep.name + '.1')
             print('Generating %s ...' % (output))
             exec_command([self.help2man,
                           '--no-info', '--no-discard-stderr',
                           '--output', output,
                           '"%s -m %s"' % (sys.executable,
-                                          entrypoint.module_name)])
+                                          ep.module_name)])
 
 
 class Help2ManInstall(install):
@@ -672,7 +636,6 @@ def setupPackage():
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
             'Programming Language :: Python :: 3.3',
@@ -692,7 +655,10 @@ def setupPackage():
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
-        cmdclass={'build_man': Help2ManBuild, 'install_man': Help2ManInstall},
+        cmdclass={
+            'build_man': Help2ManBuild,
+            'install_man': Help2ManInstall
+        },
         configuration=configuration)
 
 
@@ -718,4 +684,10 @@ if __name__ == '__main__':
                 os.remove(filename)
             except:
                 pass
-    setupPackage()
+        path = os.path.join(SETUP_DIRECTORY, 'obspy', 'taup', 'data', 'models')
+        try:
+            shutil.rmtree(path)
+        except:
+            pass
+    else:
+        setupPackage()

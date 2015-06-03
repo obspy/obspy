@@ -18,18 +18,18 @@
     :license: BSD, see LICENSE for details.
 """
 
+import optparse
 import os
+import pydoc
 import re
 import sys
-import pydoc
-import optparse
 
 from jinja2 import FileSystemLoader, TemplateNotFound
 from jinja2.sandbox import SandboxedEnvironment
-
-from autosummary import import_by_name, get_documenter
 from sphinx.jinja2glue import BuiltinTemplateLoader
 from sphinx.util.osutil import ensuredir
+
+from autosummary import get_documenter, import_by_name
 
 
 def main(argv=sys.argv):
@@ -147,16 +147,15 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                     # modules seem to work
                     items = [name for name in dir(obj)
                              if get_documenter(getattr(obj, name),
-                                                       obj).objtype == typ
-                    ]
+                                               obj).objtype == typ]
                     items = [name for name in items
                              if getattr(obj, name).__module__ == obj.__name__]
                 elif typ == 'method':
                     # filter methods (__call__) which are defined within this
                     # class (im_class)
                     items = [name for name in dir(obj)
-                             if hasattr(getattr(obj, name), '__call__')
-                             and hasattr(getattr(obj, name), 'im_class')]
+                             if hasattr(getattr(obj, name), '__call__') and
+                             hasattr(getattr(obj, name), 'im_class')]
                 elif typ == 'attribute':
                     # attribute
                     items = [name for name in dir(obj)

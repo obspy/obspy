@@ -84,8 +84,8 @@ def process_autosummary_toc(app, doctree):
         crawled[node] = True
         for j, subnode in enumerate(node):
             try:
-                if (isinstance(subnode, autosummary_toc)
-                    and isinstance(subnode[0], addnodes.toctree)):
+                if (isinstance(subnode, autosummary_toc) and
+                        isinstance(subnode[0], addnodes.toctree)):
                     env.note_toctree(env.docname, subnode[0])
                     continue
             except IndexError:
@@ -512,6 +512,9 @@ def process_generate_options(app):
     genfiles = app.config.autosummary_generate
 
     ext = app.config.source_suffix
+    # Sometimes readthedocs messes with this setting.
+    if isinstance(ext, list):
+        ext = ext[0]
 
     if genfiles and not hasattr(genfiles, '__len__'):
         env = app.builder.env

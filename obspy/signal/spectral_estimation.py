@@ -21,31 +21,30 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import os
-import warnings
-import pickle
-import math
 import bisect
 import bz2
+import math
+import os
+import pickle
+import warnings
+
 import numpy as np
-from obspy import Trace, Stream
-from obspy.core.util import getMatplotlibVersion
-from obspy.signal import cosTaper
-from obspy.signal.util import prevpow2
+import matplotlib.pyplot as plt
+from matplotlib import mlab
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.dates import date2num
+from matplotlib.mlab import detrend_none, window_hanning
+from matplotlib.ticker import FormatStrFormatter
+
+from obspy import Stream, Trace
+from obspy.core.util import get_matplotlib_version
+from obspy.signal.invsim import cosine_taper
+from obspy.signal.util import prev_pow_2
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
-
-
-from matplotlib import mlab
-import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.mlab import detrend_none, window_hanning
-
 
 # build colormap as done in paper by mcnamara
 CDICT = {'red': ((0.0, 1.0, 1.0),
@@ -82,16 +81,11 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
     by dividing with sampling rate.
 
-    This wrapper is intended to intercept changes in
-    :func:`matplotlib.mlab.psd` default behavior which changes with
-    matplotlib version 0.98.4:
+    .. deprecated:: 0.11.0
 
-    * http://matplotlib.org/users/whats_new.html#psd-amplitude-scaling
-    * http://matplotlib.org/_static/CHANGELOG
-      (entries on 2009-05-18 and 2008-11-11)
-    * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
-?view=revision&revision=6518
-    * http://matplotlib.org/api/api_changes.html#changes-for-0-98-x
+        This wrapper is no longer necessary. Please use the
+        :func:`matplotlib.mlab.psd` function directly, specifying
+        `sides="onesided"` and `scale_by_freq=True`.
 
     .. note::
         For details on all arguments see :func:`matplotlib.mlab.psd`.
@@ -105,31 +99,25 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    # check matplotlib version
-    if MATPLOTLIB_VERSION >= [0, 98, 4]:
-        new_matplotlib = True
-    else:
-        new_matplotlib = False
-    # build up kwargs that do not change with version 0.98.4
+    msg = ('This wrapper is no longer necessary. Please use the '
+           'matplotlib.mlab.psd function directly, specifying '
+           '`sides="onesided"` and `scale_by_freq=True`.')
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
+    # build up kwargs
     kwargs = {}
     kwargs['NFFT'] = NFFT
     kwargs['Fs'] = Fs
     kwargs['detrend'] = detrend
     kwargs['window'] = window
     kwargs['noverlap'] = noverlap
-    # add additional kwargs to control behavior for matplotlib versions higher
-    # than 0.98.4. These settings make sure that the scaling is already done
-    # during the following psd call for newer matplotlib versions.
-    if new_matplotlib:
-        kwargs['pad_to'] = None
-        kwargs['sides'] = 'onesided'
-        kwargs['scale_by_freq'] = True
+    # These settings make sure that the scaling is already done during the
+    # following psd call for matplotlib versions newer than 0.98.4.
+    kwargs['pad_to'] = None
+    kwargs['sides'] = 'onesided'
+    kwargs['scale_by_freq'] = True
     # do the actual call to mlab.psd
     Pxx, freqs = mlab.psd(x, **kwargs)
-    # do scaling manually for old matplotlib versions
-    if not new_matplotlib:
-        Pxx = Pxx / Fs
-        Pxx[1:-1] = Pxx[1:-1] * 2.0
     return Pxx, freqs
 
 
@@ -140,7 +128,7 @@ def fft_taper(data):
     .. warning::
         Inplace operation, so data should be float.
     """
-    data *= cosTaper(len(data), 0.2)
+    data *= cosine_taper(len(data), 0.2)
     return data
 
 
@@ -262,7 +250,7 @@ class PPSD():
     .. note::
 
         It is safer (but a bit slower) to provide a
-        :class:`~obspy.xseed.parser.Parser` instance with information from
+        :class:`~obspy.io.xseed.parser.Parser` instance with information from
         e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
@@ -277,7 +265,7 @@ class PPSD():
         The necessary instrument response information can be provided in two
         ways:
 
-        * Providing an `obspy.xseed` :class:`~obspy.xseed.parser.Parser`,
+        * Providing an `obspy.io.xseed` :class:`~obspy.io.xseed.parser.Parser`,
           e.g. containing metadata from a Dataless SEED file. This is the safer
           way but it might a bit slower because for every processed time
           segment the response information is extracted from the parser.
@@ -299,7 +287,7 @@ class PPSD():
         :type paz: dict, optional
         :param paz: Response information of instrument. If not specified the
                 information is supposed to be present as stats.paz.
-        :type parser: :class:`obspy.xseed.parser.Parser`, optional
+        :type parser: :class:`obspy.io.xseed.parser.Parser`, optional
         :param parser: Parser instance with response information (e.g. read
                 from a Dataless SEED volume)
         :type skip_on_gaps: bool, optional
@@ -364,7 +352,7 @@ class PPSD():
         #    (1 full segment length + 25% * 12 full segment lengths)
         self.nfft = self.nfft / 4.0
         #  - go to next smaller power of 2 for nfft
-        self.nfft = prevpow2(self.nfft)
+        self.nfft = prev_pow_2(self.nfft)
         #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
         self.times_used = []
@@ -618,11 +606,10 @@ class PPSD():
         else:
             tr.data = np.gradient(tr.data, self.delta)
 
-        # use our own wrapper for mlab.psd to have consistent results on all
-        # matplotlib versions
-        spec, _freq = psd(tr.data, self.nfft, self.sampling_rate,
-                          detrend=mlab.detrend_linear, window=fft_taper,
-                          noverlap=self.nlap)
+        spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
+                               detrend=mlab.detrend_linear, window=fft_taper,
+                               noverlap=self.nlap, sides='onesided',
+                               scale_by_freq=True)
 
         # leave out first entry (offset)
         spec = spec[1:]

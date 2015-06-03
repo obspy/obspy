@@ -3,14 +3,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison, \
-    ImageComparisonException
-from obspy.core.util.decorator import skipIf
 import os
-import unittest
 import shutil
+import unittest
 
+from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
 
 # checking for matplotlib
 try:
@@ -32,35 +30,35 @@ class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
-    @skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
+    @unittest.skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
-        Tests for the getMatplotlibVersion() function as it continues to cause
-        problems.
+        Tests for the get_matplotlib_version() function as it continues to
+        cause problems.
         """
         original_version = matplotlib.__version__
 
         matplotlib.__version__ = "1.2.3"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [1, 2, 3])
         matplotlib.__version__ = "0.9.11"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [0, 9, 11])
 
         matplotlib.__version__ = "0.9.svn"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [0, 9, 0])
 
         matplotlib.__version__ = "1.1.1~rc1-1"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [1, 1, 1])
 
         matplotlib.__version__ = "1.2.x"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [1, 2, 0])
 
         matplotlib.__version__ = "1.3.1rc2"
-        version = getMatplotlibVersion()
+        version = get_matplotlib_version()
         self.assertEqual(version, [1, 3, 1])
 
         # Set it to the original version str just in case.

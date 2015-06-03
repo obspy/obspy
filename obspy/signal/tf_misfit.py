@@ -23,6 +23,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import numpy as np
+
+from obspy.core.util.decorator import deprecated
 from obspy.signal import util
 
 
@@ -53,13 +55,17 @@ def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     cwt = np.zeros((npts // 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
-        psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
-            np.exp(-t ** 2 / 2.)
-        scale = lambda f: w0 / (2 * np.pi * f)
+
+        def psi(t):
+            return np.pi ** (-.25) * np.exp(1j * w0 * t) * \
+                np.exp(-t ** 2 / 2.)
+
+        def scale(f):
+            return w0 / (2 * np.pi * f)
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
 
-    nfft = util.nextpow2(npts) * 2
+    nfft = util.next_pow_2(npts) * 2
     sf = np.fft.fft(st, n=nfft)
 
     for n, _f in enumerate(f):
@@ -846,11 +852,11 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(PM) ** k)
 
 
-def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
-                  norm='global', st2_isref=True, left=0.1, bottom=0.1,
-                  h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
-                  d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
-                  clim=0., cmap=None):
+def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
+                    norm='global', st2_isref=True, left=0.1, bottom=0.1,
+                    h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
+                    d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
+                    clim=0., cmap=None):
     """
     Plot all time frequency misfits and the time series in one plot (per
     component).
@@ -918,13 +924,13 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     >>> st1 = hilbert(st1)
     >>> st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) +
     ...                                     phase_shift * np.pi) * 1j))
-    >>> plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
+    >>> plot_tf_misfits(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
 
     .. plot::
 
         import numpy as np
         from scipy.signal import hilbert
-        from obspy.signal.tf_misfit import plotTfMisfits
+        from obspy.signal.tf_misfit import plot_tf_misfits
         tmax = 6.
         dt = 0.01
         npts = int(tmax / dt + 1)
@@ -944,7 +950,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         st1 = hilbert(st1)
         st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) +
                                             phase_shift * np.pi) * 1j))
-        plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.)
+        plot_tf_misfits(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
@@ -1140,11 +1146,11 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
-               norm='global', st2_isref=True, A=10., k=1., left=0.1,
-               bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
-               w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
-               ylim=0., clim=0., cmap=None):
+def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
+                 norm='global', st2_isref=True, A=10., k=1., left=0.1,
+                 bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
+                 w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
+                 ylim=0., clim=0., cmap=None):
     """
     Plot all time frequency Goodness-of-Fits and the time series in one plot
     (per component).
@@ -1208,12 +1214,12 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     >>> st2 = st1.copy()
     >>> # Distorted signal:
     >>> st1 = st1 * 3.
-    >>> plotTfGofs(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
+    >>> plot_tf_gofs(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
 
     .. plot::
 
         import numpy as np
-        from obspy.signal.tf_misfit import plotTfGofs
+        from obspy.signal.tf_misfit import plot_tf_gofs
         tmax = 6.
         dt = 0.01
         npts = int(tmax / dt + 1)
@@ -1230,7 +1236,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         st2 = st1.copy()
         # Distorted signal:
         st1 = st1 * 3.
-        plotTfGofs(st1, st2, dt=dt, fmin=1., fmax=10.)
+        plot_tf_gofs(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
     import matplotlib.pyplot as plt
     from matplotlib.ticker import NullFormatter
@@ -1420,10 +1426,10 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
-            bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
-            d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
-            mode='absolute', fft_zero_pad_fac=0):
+def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
+             bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
+             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
+             mode='absolute', fft_zero_pad_fac=0):
     """
     Plot time frequency representation, spectrum and time series of the signal.
 
@@ -1453,7 +1459,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         matplotlib.cm.Colormap instance
     :param mode: 'absolute' for absolute value of TFR, 'power' for ``|TFR|^2``
     :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to
-        ``nfft = nextpow2(len(st)) * fft_zero_pad_fac`` to get smoother
+        ``nfft = next_pow_2(len(st)) * fft_zero_pad_fac`` to get smoother
         spectrum in the low frequencies (has no effect on the TFR and might
         make demeaning/tapering necessary to avoid artifacts)
 
@@ -1465,15 +1471,15 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
     >>> from obspy import read
     >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
-    >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
+    >>> plot_tfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
     ...         fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
 
     .. plot::
 
-        from obspy.signal.tf_misfit import plotTfr
+        from obspy.signal.tf_misfit import plot_tfr
         from obspy import read
         tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
-        plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
+        plot_tfr(tr.data, dt=tr.stats.delta, fmin=.01,
                 fmax=50., w0=8., nf=64, fft_zero_pad_fac=4)
     """
     import matplotlib.pyplot as plt
@@ -1486,7 +1492,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     if fft_zero_pad_fac == 0:
         nfft = npts
     else:
-        nfft = util.nextpow2(npts) * fft_zero_pad_fac
+        nfft = util.next_pow_2(npts) * fft_zero_pad_fac
 
     f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
@@ -1602,6 +1608,24 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             return figs[0]
         else:
             return figs
+
+
+@deprecated("'plotTfGofs' has been renamed to 'plot_tf_gofs'. "
+            "Use that instead.")
+def plotTfGofs(*args, **kwargs):
+    return plot_tf_gofs(*args, **kwargs)
+
+
+@deprecated("'plotTfMisfits' has been renamed to 'plot_tf_misfits'. "
+            "Use that instead.")
+def plotTfMisfits(*args, **kwargs):
+    return plot_tf_misfits(*args, **kwargs)
+
+
+@deprecated("'plotTfr' has been renamed to 'plot_tfr'. "
+            "Use that instead.")
+def plotTfr(*args, **kwargs):
+    return plot_tfr(*args, **kwargs)
 
 
 if __name__ == '__main__':

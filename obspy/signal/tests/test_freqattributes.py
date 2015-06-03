@@ -7,12 +7,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import freqattributes, util
-from scipy import signal
-from math import pi
-import numpy as np
 import os
 import unittest
+from math import pi
+
+import numpy as np
+from scipy import signal
+
+from obspy.signal import freqattributes, util
 
 
 # only tests for windowed data are implemented currently
@@ -53,12 +55,12 @@ class FreqTraceTestCase(unittest.TestCase):
         # [8] domega
         # [9] sigma
         # [10] dsigma
-        # [11] logcep
-        # [12] logcep
-        # [13] logcep
+        # [11] log_cepstrum
+        # [12] log_cepstrum
+        # [13] log_cepstrum
         # [14] dperiod
         # [15] ddperiod
-        # [16] bwith
+        # [16] bandwidth
         # [17] dbwith
         # [18] cfreq
         # [19] dcfreq
@@ -95,8 +97,8 @@ class FreqTraceTestCase(unittest.TestCase):
     def test_cfrequency(self):
         """
         """
-        cfreq = freqattributes.cfrequency(self.data_win_bc, self.fs,
-                                          self.smoothie, self.fk)
+        cfreq = freqattributes.central_frequency(self.data_win_bc, self.fs,
+                                                 self.smoothie, self.fk)
         rms = np.sqrt(np.sum((cfreq[0] - self.res[:, 18]) ** 2) /
                       np.sum(self.res[:, 18] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -105,16 +107,16 @@ class FreqTraceTestCase(unittest.TestCase):
         self.assertEqual(rms < 1.0e-5, True)
 
     def test_cfrequency_no_win(self):
-        cfreq = freqattributes.cfrequency(self.data_win_bc[0], self.fs,
-                                          self.smoothie, self.fk)
+        cfreq = freqattributes.central_frequency(self.data_win_bc[0], self.fs,
+                                                 self.smoothie, self.fk)
         rms = (cfreq - self.res[0, 18]) / self.res[0, 18]
         self.assertTrue(rms < 1.0e-5)
 
     def test_bwith(self):
         """
         """
-        bwith = freqattributes.bwith(self.data_win, self.fs, self.smoothie,
-                                     self.fk)
+        bwith = freqattributes.bandwidth(self.data_win, self.fs, self.smoothie,
+                                         self.fk)
         rms = np.sqrt(np.sum((bwith[0] - self.res[:, 16]) ** 2) /
                       np.sum(self.res[:, 16] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -125,8 +127,8 @@ class FreqTraceTestCase(unittest.TestCase):
     def test_domper(self):
         """
         """
-        dperiod = freqattributes.domperiod(self.data_win, self.fs,
-                                           self.smoothie, self.fk)
+        dperiod = freqattributes.dominant_period(self.data_win, self.fs,
+                                                 self.smoothie, self.fk)
         rms = np.sqrt(np.sum((dperiod[0] - self.res[:, 14]) ** 2) /
                       np.sum(self.res[:, 14] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -137,8 +139,8 @@ class FreqTraceTestCase(unittest.TestCase):
     def test_logcep(self):
         """
         """
-        cep = freqattributes.logcep(self.data_win, self.fs, self.nc, self.p,
-                                    self.n, 'Hamming')
+        cep = freqattributes.log_cepstrum(self.data_win, self.fs, self.nc,
+                                          self.p, self.n, 'Hamming')
         rms = np.sqrt(np.sum((cep[0] - self.res[:, 11]) ** 2) /
                       np.sum(self.res[:, 11] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -154,11 +156,12 @@ class FreqTraceTestCase(unittest.TestCase):
         """
         # flat array of zeros
         data = np.zeros(100)
-        pgm = freqattributes.pgm(data, 1.0, 1.0)
+        pgm = freqattributes.peak_ground_motion(data, 1.0, 1.0)
         self.assertEqual(pgm, (0.0, 0.0, 0.0, 0.0))
         # spike in middle of signal
         data[50] = 1.0
-        (pg, m_dis, m_vel, m_acc) = freqattributes.pgm(data, 1.0, 1.0)
+        (pg, m_dis, m_vel, m_acc) = freqattributes.peak_ground_motion(
+            data, 1.0, 1.0)
         self.assertAlmostEqual(pg, 0.537443503597, 6)
         self.assertEqual(m_dis, 1.0)
         self.assertEqual(m_vel, 0.5)
@@ -167,7 +170,8 @@ class FreqTraceTestCase(unittest.TestCase):
         data = np.zeros(400)
         for i in range(360):
             data[i + 20] = np.sin(i * pi / 180)
-        (pg, m_dis, m_vel, m_acc) = freqattributes.pgm(data, 1.0, 1.0)
+        (pg, m_dis, m_vel, m_acc) = freqattributes.peak_ground_motion(
+            data, 1.0, 1.0)
         self.assertAlmostEqual(pg, 0.00902065171505, 6)
         self.assertEqual(m_dis, 1.0)
         self.assertAlmostEqual(m_vel, 0.0174524064373, 6)

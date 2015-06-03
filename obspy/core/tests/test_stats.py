@@ -3,13 +3,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
-from obspy.core.util import AttribDict
 import copy
 import pickle
 import unittest
 import warnings
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
+from obspy.core.util import AttribDict
 
 
 class StatsTestCase(unittest.TestCase):
@@ -34,8 +35,8 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.other2.__class__, AttribDict)
         self.assertEqual(len(stats.other2), 1)
         self.assertEqual(stats.other3, 'test3')
-        self.assertTrue('test' in stats)
-        self.assertTrue('test' in stats.__dict__)
+        self.assertIn('test', stats)
+        self.assertIn('test', stats.__dict__)
 
     def test_deepcopy(self):
         """
@@ -68,13 +69,13 @@ class StatsTestCase(unittest.TestCase):
         Tests update method of Stats object.
         """
         x = Stats({'a': 5})
-        self.assertTrue('a' in dir(x))
+        self.assertIn('a', dir(x))
         x.update({'b': 5})
-        self.assertTrue('b' in dir(x))
+        self.assertIn('b', dir(x))
         y = {'a': 5}
         y.update({'b': 5})
         x = Stats(y)
-        self.assertTrue('b' in dir(x))
+        self.assertIn('b', dir(x))
 
     def test_simpleStats(self):
         """
@@ -170,11 +171,11 @@ class StatsTestCase(unittest.TestCase):
         # therefore all traces in the test stream are identical
         # (python list behavior)
         for tr in st:
-            self.assertTrue(tr == st[0])
+            self.assertEqual(tr, st[0])
             self.assertEqual(tr.stats.station, 'BBB')
             self.assertEqual(tr.stats['station'], 'BBB')
             self.assertEqual(tr.stats.get('station'), 'BBB')
-            self.assertTrue('BBB' in tr.stats.values())
+            self.assertIn('BBB', tr.stats.values())
 
     def test_pickleStats(self):
         """

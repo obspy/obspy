@@ -7,11 +7,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import cpxtrace, util
-from scipy import signal
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+from scipy import signal
+
+from obspy.signal import cpxtrace, util
 
 
 # only tests for windowed data are implemented currently
@@ -50,12 +52,12 @@ class CpxTraceTestCase(unittest.TestCase):
         # [8] domega
         # [9] sigma
         # [10] dsigma
-        # [11] logcep
-        # [12] logcep
-        # [13] logcep
+        # [11] log_cepstrum
+        # [12] log_cepstrum
+        # [13] log_cepstrum
         # [14] dperiod
         # [15] ddperiod
-        # [16] bwith
+        # [16] bandwidth
         # [17] dbwith
         # [18] cfreq
         # [19] dcfreq
@@ -94,8 +96,8 @@ class CpxTraceTestCase(unittest.TestCase):
         """
         """
         # A_cpx,A_real = cpxtrace.envelope(self.data_win)
-        Anorm = cpxtrace.normEnvelope(self.data_win, self.fs,
-                                      self.smoothie, self.fk)
+        Anorm = cpxtrace.normalized_envelope(self.data_win, self.fs,
+                                             self.smoothie, self.fk)
         rms = np.sqrt(np.sum((Anorm[0] - self.res[:, 1]) ** 2) /
                       np.sum(self.res[:, 1] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -117,7 +119,8 @@ class CpxTraceTestCase(unittest.TestCase):
     def test_instFreq(self):
         """
         """
-        omega = cpxtrace.instFreq(self.data_win, self.fs, self.fk)
+        omega = cpxtrace.instantaneous_frequency(self.data_win, self.fs,
+                                                 self.fk)
         rms = np.sqrt(np.sum((omega[0] - self.res[:, 7]) ** 2) /
                       np.sum(self.res[:, 7] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -128,7 +131,8 @@ class CpxTraceTestCase(unittest.TestCase):
     def test_instBwith(self):
         """
         """
-        sigma = cpxtrace.instBwith(self.data_win, self.fs, self.fk)
+        sigma = cpxtrace.instantaneous_bandwidth(self.data_win, self.fs,
+                                                 self.fk)
         rms = np.sqrt(np.sum((sigma[0] - self.res[:, 9]) ** 2) /
                       np.sum(self.res[:, 9] ** 2))
         self.assertEqual(rms < 1.0e-5, True)

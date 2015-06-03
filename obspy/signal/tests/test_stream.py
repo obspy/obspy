@@ -3,11 +3,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-from obspy import UTCDateTime, Stream, Trace, read
-import numpy as np
 import unittest
-from obspy.signal import bandpass, bandstop, lowpass, highpass
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.signal.filter import bandpass, bandstop, highpass, lowpass
 
 
 class StreamTestCase(unittest.TestCase):
@@ -81,20 +83,20 @@ class StreamTestCase(unittest.TestCase):
                         st_bkp[i].data,
                         df=st_bkp[i].stats.sampling_rate, **filt_ops)
                     np.testing.assert_array_equal(tr.data, data_filt)
-                    self.assertTrue('processing' in tr.stats)
+                    self.assertIn('processing', tr.stats)
                     self.assertEqual(len(tr.stats.processing), 1)
-                    self.assertTrue("filter" in tr.stats.processing[0])
-                    self.assertTrue(filt_type in tr.stats.processing[0])
+                    self.assertIn("filter", tr.stats.processing[0])
+                    self.assertIn(filt_type, tr.stats.processing[0])
                     for key, value in filt_ops.items():
                         self.assertTrue("'%s': %s" % (key, value)
                                         in tr.stats.processing[0])
                 st.filter(filt_type, **filt_ops)
                 for i, tr in enumerate(st):
-                    self.assertTrue('processing' in tr.stats)
+                    self.assertIn('processing', tr.stats)
                     self.assertEqual(len(tr.stats.processing), 2)
                     for proc_info in tr.stats.processing:
-                        self.assertTrue("filter" in proc_info)
-                        self.assertTrue(filt_type in proc_info)
+                        self.assertIn("filter", proc_info)
+                        self.assertIn(filt_type, proc_info)
                         for key, value in filt_ops.items():
                             self.assertTrue("'%s': %s" % (key, value)
                                             in proc_info)

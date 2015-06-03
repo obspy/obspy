@@ -3,12 +3,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-import numpy as np
-from obspy import UTCDateTime, Trace, read
-from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
-from obspy.signal.filter import lowpassCheby2
 import unittest
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Trace, UTCDateTime, read
+from obspy.signal.filter import (bandpass, bandstop, highpass, lowpass,
+                                 lowpass_cheby_2)
+from obspy.signal.invsim import simulate_seismometer
 
 
 class TraceTestCase(unittest.TestCase):
@@ -18,7 +21,7 @@ class TraceTestCase(unittest.TestCase):
     def test_simulate(self):
         """
         Tests if calling simulate of trace gives the same result as using
-        seisSim manually.
+        simulate_seismometer manually.
         """
         tr = read()[0]
         paz_sts2 = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
@@ -32,9 +35,10 @@ class TraceTestCase(unittest.TestCase):
                       'zeros': [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
                       'gain': 0.4,
                       'sensitivity': 1.0}
-        data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=paz_sts2,
-                       paz_simulate=paz_le3d1s,
-                       remove_sensitivity=True, simulate_sensitivity=True)
+        data = simulate_seismometer(
+            tr.data, tr.stats.sampling_rate, paz_remove=paz_sts2,
+            paz_simulate=paz_le3d1s, remove_sensitivity=True,
+            simulate_sensitivity=True)
         tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
         np.testing.assert_array_equal(tr.data, data)
 
@@ -86,10 +90,10 @@ class TraceTestCase(unittest.TestCase):
                     traces_bkp[i].data,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                self.assertTrue('processing' in tr.stats)
+                self.assertIn('processing', tr.stats)
                 self.assertEqual(len(tr.stats.processing), 1)
-                self.assertTrue("filter" in tr.stats.processing[0])
-                self.assertTrue(filt_type in tr.stats.processing[0])
+                self.assertIn("filter", tr.stats.processing[0])
+                self.assertIn(filt_type, tr.stats.processing[0])
                 for key, value in filt_ops.items():
                     self.assertTrue("'%s': %s" % (key, value)
                                     in tr.stats.processing[0])
@@ -99,11 +103,11 @@ class TraceTestCase(unittest.TestCase):
                     data_filt,
                     df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
-                self.assertTrue('processing' in tr.stats)
+                self.assertIn('processing', tr.stats)
                 self.assertEqual(len(tr.stats.processing), 2)
                 for proc_info in tr.stats.processing:
-                    self.assertTrue("filter" in proc_info)
-                    self.assertTrue(filt_type in proc_info)
+                    self.assertIn("filter", proc_info)
+                    self.assertIn(filt_type, proc_info)
                     for key, value in filt_ops.items():
                         self.assertTrue("'%s': %s" % (key, value)
                                         in proc_info)
@@ -145,23 +149,23 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.sampling_rate, 0.25)
-        self.assertTrue("decimate" in tr.stats.processing[0])
-        self.assertTrue("factor=4" in tr.stats.processing[0])
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=4", tr.stats.processing[0])
         tr = tr_bkp.copy()
         tr.decimate(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
         self.assertEqual(tr.stats.npts, 2)
         self.assertEqual(tr.stats.sampling_rate, 0.1)
-        self.assertTrue("decimate" in tr.stats.processing[0])
-        self.assertTrue("factor=10" in tr.stats.processing[0])
+        self.assertIn("decimate", tr.stats.processing[0])
+        self.assertIn("factor=10", tr.stats.processing[0])
         # some tests with automatic prefiltering
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()
         tr.decimate(4)
         df = tr2.stats.sampling_rate
-        tr2.data, fp = lowpassCheby2(data=tr2.data, freq=df * 0.5 / 4.0,
-                                     df=df, maxorder=12, ba=False,
-                                     freq_passband=True)
+        tr2.data, fp = lowpass_cheby_2(data=tr2.data, freq=df * 0.5 / 4.0,
+                                       df=df, maxorder=12, ba=False,
+                                       freq_passband=True)
         # check that iteratively determined pass band frequency is correct
         self.assertAlmostEqual(0.0811378285461, fp, places=7)
         tr2.decimate(4, no_filter=True)

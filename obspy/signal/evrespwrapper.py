@@ -4,8 +4,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import numpy as np
 import ctypes as C
+
+import numpy as np
+
 from obspy.signal.headers import clibevresp
 
 

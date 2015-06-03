@@ -1,12 +1,14 @@
-from obspy.fdsn import Client as FDSN_Client
-from obspy.iris import Client as OldIris_Client
-from obspy.core import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
 
+import obspy
+from obspy.core.util import NamedTemporaryFile
+from obspy.clients.fdsn import Client as FDSN_Client
+from obspy.clients.iris import Client as OldIris_Client
+
+
 # MW 7.1 Darfield earthquake, New Zealand
-t1 = UTCDateTime("2010-09-3T16:30:00.000")
-t2 = UTCDateTime("2010-09-3T17:00:00.000")
+t1 = obspy.UTCDateTime("2010-09-3T16:30:00.000")
+t2 = obspy.UTCDateTime("2010-09-3T17:00:00.000")
 
 # Fetch waveform from IRIS FDSN web service into a ObsPy stream object
 fdsn_client = FDSN_Client("IRIS")

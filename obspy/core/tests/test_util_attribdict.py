@@ -24,9 +24,9 @@ class AttribDictTestCase(unittest.TestCase):
         temp = ad.pop('test')
         self.assertEqual(temp, 1)
         self.assertFalse('test' in ad)
-        self.assertTrue('test2' in ad)
+        self.assertIn('test2', ad)
         self.assertFalse('test' in ad.__dict__)
-        self.assertTrue('test2' in ad.__dict__)
+        self.assertIn('test2', ad.__dict__)
         self.assertFalse(hasattr(ad, 'test'))
         self.assertTrue(hasattr(ad, 'test2'))
         # using pop() for not existing element raises a KeyError
@@ -57,9 +57,9 @@ class AttribDictTestCase(unittest.TestCase):
         # deleting test using dictionary
         del ad['test']
         self.assertFalse('test' in ad)
-        self.assertTrue('test2' in ad)
+        self.assertIn('test2', ad)
         self.assertFalse('test' in ad.__dict__)
-        self.assertTrue('test2' in ad.__dict__)
+        self.assertIn('test2', ad.__dict__)
         self.assertFalse(hasattr(ad, 'test'))
         self.assertTrue(hasattr(ad, 'test2'))
         # deleting test2 using attribute
@@ -80,8 +80,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
 
     def test_setitem(self):
         """
@@ -97,8 +97,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
         # 2
         ad = AttribDict()
         ad.__setitem__('test', 'NEW')
@@ -109,8 +109,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
 
     def test_setattr(self):
         """
@@ -126,8 +126,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
         # 2
         ad = AttribDict()
         ad.__setattr__('test', 'NEW')
@@ -138,8 +138,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
 
     def test_setdefault(self):
         """
@@ -156,8 +156,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
         # 2 - existing key should not be overwritten
         default = ad.setdefault('test', 'SOMETHINGDIFFERENT')
         self.assertEqual(default, 'NEW')
@@ -168,8 +168,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), 'NEW')
         self.assertEqual(ad.__dict__['test'], 'NEW')
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
         # 3 - default value isNone
         ad = AttribDict()
         default = ad.setdefault('test')
@@ -181,8 +181,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getitem__('test'), None)
         self.assertEqual(ad.__dict__['test'], None)
         self.assertEqual(ad.__dict__.get('test'), None)
-        self.assertTrue('test' in ad)
-        self.assertTrue('test' in ad.__dict__)
+        self.assertIn('test', ad)
+        self.assertIn('test', ad.__dict__)
 
     def test_clear(self):
         """

@@ -96,18 +96,43 @@ more detailed usage examples.
 
 .. figure:: /_images/Event.png
 
+Station Metadata
+----------------
+
+Station metadata are handled in a hierarchy of classes closely modelled after
+the de-facto standard format
+`FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was developed as a
+human readable XML replacement for Dataless SEED.
+See :mod:`obspy.core.inventory` for more details.
+
+.. figure:: /_images/Inventory.png
+
 .. _NumPy: http://www.numpy.org
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import sys
+
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import DynamicAttributeImportRerouteModule
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
-from obspy.core.scripts.runtests import runTests
+from obspy.scripts.runtests import run_tests
+
+
+# Remove once 0.11 has been released!
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    # Remap everything but ascii. On Python 2, ascii is a built-in function
+    # so it would require significant additional logic to implement and this
+    # is probably not worth it here.
+    import_map={"stationxml": "obspy.io.stationxml.core",
+                "quakeml": "obspy.io.quakeml.core",
+                "json": "obspy.io.json.core"})
 
 
 if __name__ == '__main__':

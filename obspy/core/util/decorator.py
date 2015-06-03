@@ -13,15 +13,17 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util import getExampleFile
-import numpy as np
 import functools
+import inspect
 import os
+import socket
 import unittest
 import warnings
-import inspect
-import socket
+
+import numpy as np
+
+from obspy.core.util import get_example_file
+from obspy.core.util.base import NamedTemporaryFile
 
 
 def deprecated(warning_msg=None):
@@ -80,38 +82,6 @@ def deprecated_keywords(keywords):
     return fdec
 
 
-def skip(reason):
-    """
-    Unconditionally skip a test.
-    """
-    def decorator(test_item):
-        if not (isinstance(test_item, type) and issubclass(test_item,
-                                                           unittest.TestCase)):
-            @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):  # @UnusedVariable
-                return
-
-            test_item = skip_wrapper
-
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = reason
-        return test_item
-    return decorator
-
-
-def skipIf(condition, reason):
-    """
-    Skip a test if the condition is true.
-    """
-    if condition:
-        return skip(reason)
-
-    def _id(obj):
-        return obj
-
-    return _id
-
-
 def skip_on_network_error(func):
     """
     Decorator for unittest to mark test routines that fail with certain network
@@ -133,12 +103,11 @@ def skip_on_network_error(func):
                 raise unittest.SkipTest(str(e))
         # general except to be able to generally reraise
         except Exception as e:
-            pass
-        raise
+            raise
     return new_func
 
 
-def uncompressFile(func):
+def uncompress_file(func):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
@@ -190,10 +159,8 @@ def uncompressFile(func):
             # gzip module
             try:
                 import gzip
-                # no with due to py 2.6
-                fp = gzip.open(filename, 'rb')
-                obj_list.append(fp.read())
-                fp.close()
+                with gzip.open(filename, 'rb') as fp:
+                    obj_list.append(fp.read())
             except:
                 pass
         # handle results
@@ -216,7 +183,7 @@ def uncompressFile(func):
     return wrapped_func
 
 
-def raiseIfMasked(func):
+def raise_if_masked(func):
     """
     Raises if the first argument (self in case of methods) is a Trace with
     masked values or a Stream containing a Trace with masked values.
@@ -245,7 +212,7 @@ def raiseIfMasked(func):
     return new_func
 
 
-def skipIfNoData(func):
+def skip_if_no_data(func):
     """
     Does nothing if the first argument (self in case of methods) is a Trace
     with no data in it.
@@ -260,81 +227,6 @@ def skipIfNoData(func):
     new_func.__doc__ = func.__doc__
     new_func.__dict__.update(func.__dict__)
     return new_func
-
-
-def taper_API_change():
-    """
-    Decorator for Trace.taper() API change.
-
-    :type keywords: dict
-    :param keywords: old/new keyword names as key/value pairs.
-    """
-    def deprecated_(func):
-        # always show the following warnings!
-        warnings.simplefilter("always", DeprecationWarning)
-
-        @functools.wraps(func)
-        def new_func(*args, **kwargs):
-            # fetch "self" from args, i.e the trace itself
-            self, args = args[0], args[1:]
-            # empty call
-            if not args and not kwargs:
-                # emulate old behavior with cosine taper and default p value
-                msg = ("The call 'Trace.taper()' is deprecated. Please use "
-                       "'Trace.taper(max_percentage=0.05, type='cosine')' "
-                       "instead.")
-                warnings.warn(msg, DeprecationWarning)
-                return func(self, max_percentage=0.05, type="cosine")
-            # adjusted cosine taper was used
-            elif "p" in kwargs:
-                if "cosine" not in args and \
-                        kwargs.get("type", None) != "cosine":
-                    # should not happen!
-                    msg = ("kwarg 'p' was only supported for 'cosine' taper "
-                           "and has been deprecated anyway. Please use "
-                           "'max_percentage' instead. Please contact the "
-                           "developers if you think your call syntax was "
-                           "correct!")
-                    raise NotImplementedError(msg)
-                # emulate old behavior with cosine taper and old p parameter
-                # behavior
-                p = kwargs.pop('p')
-                msg = ("Calls like 'Trace.taper('cosine', p=%f)' are "
-                       "deprecated. Please use "
-                       "'Trace.taper(max_percentage=%f / 2.0, type='cosine')' "
-                       "instead.") % (p, p)
-                warnings.warn(msg, DeprecationWarning)
-                kwargs.pop("type", None)
-                return func(self, max_percentage=p / 2.0, type="cosine",
-                            **kwargs)
-            # some other taper type was specified so use it over the full trace
-            else:
-                if 'max_percentage' in kwargs:
-                    # normal new usage, so do nothing
-                    pass
-                elif (args and isinstance(args[0], (str, native_str))) \
-                        or "type" in kwargs:
-                    # emulate old behavior with corresponding taper and
-                    # tapering over the full trace
-                    msg = ("The call 'Trace.taper(type='mytype')' is "
-                           "deprecated. Please use "
-                           "'Trace.taper(max_percentage=0.5, type='mytype')' "
-                           "instead to taper over the full trace with the "
-                           "given type.")
-                    warnings.warn(msg, DeprecationWarning)
-                    type_ = kwargs.pop("type", None) or args[0]
-                    return func(self, type=type_, max_percentage=None,
-                                **kwargs)
-            # normal new usage, so do nothing
-            return func(self, *args, **kwargs)
-
-        new_func.__name__ = func.__name__
-        new_func.__doc__ = func.__doc__
-        new_func.__dict__.update(func.__dict__)
-        return new_func
-        # reset warning filter settings
-        warnings.filters.pop(0)
-    return deprecated_
 
 
 def map_example_filename(arg_kwarg_name):
@@ -356,8 +248,8 @@ def map_example_filename(arg_kwarg_name):
                     if kwargs[arg_kwarg_name].startswith(prefix):
                         try:
                             kwargs[arg_kwarg_name] = \
-                                getExampleFile(kwargs[arg_kwarg_name][9:])
-                        # file not found by getExampleFile:
+                                get_example_file(kwargs[arg_kwarg_name][9:])
+                        # file not found by get_example_file:
                         except IOError:
                             pass
             # check args
@@ -373,9 +265,9 @@ def map_example_filename(arg_kwarg_name):
                         if args[ind].startswith(prefix):
                             try:
                                 args = list(args)
-                                args[ind] = getExampleFile(args[ind][9:])
+                                args[ind] = get_example_file(args[ind][9:])
                                 args = tuple(args)
-                            # file not found by getExampleFile:
+                            # file not found by get_example_file:
                             except IOError:
                                 pass
             return func(*args, **kwargs)

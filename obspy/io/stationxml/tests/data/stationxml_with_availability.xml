@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station+availability-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.4</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=channel&amp;nodata=404&amp;channel=BH1&amp;location=00&amp;includeavailability=true</ModuleURI>
+ <Created>2014-07-22T09:51:56+00:00</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00+00:00" endDate="2500-12-12T23:59:59+00:00" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+  <TotalNumberStations>260</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="ANMO" startDate="2008-06-30T20:00:00+00:00" endDate="2599-12-31T23:59:59+00:00" restrictedStatus="open">
+   <Latitude unit="DEGREES">34.94591</Latitude>
+   <Longitude unit="DEGREES">-106.4572</Longitude>
+   <Elevation>1820.0</Elevation>
+   <Site>
+    <Name>Albuquerque, New Mexico, USA</Name>
+   </Site>
+   <CreationDate>1989-08-29T00:00:00+00:00</CreationDate>
+   <TotalNumberChannels>126</TotalNumberChannels>
+   <SelectedNumberChannels>1</SelectedNumberChannels>
+   <Channel locationCode="00" startDate="2012-03-12T20:28:00+00:00" restrictedStatus="open" endDate="2599-12-31T23:59:59+00:00" code="BH1">
+    <DataAvailability>
+     <Extent end="2014-07-21T12:00:00+00:00" start="1998-10-26T20:35:58+00:00"/>
+    </DataAvailability>
+    <Latitude unit="DEGREES">34.945981</Latitude>
+    <Longitude unit="DEGREES">-106.457133</Longitude>
+    <Elevation>1671.0</Elevation>
+    <Depth>145.0</Depth>
+    <Azimuth unit="DEGREES">328.0</Azimuth>
+    <Dip unit="DEGREES">0.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate unit="SAMPLES/S">20.0</SampleRate>
+    <ClockDrift unit="SECONDS/SAMPLE">0.0</ClockDrift>
+    <Sensor>
+     <Type>Geotech KS-54000 Borehole Seismometer</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>345661000.0</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

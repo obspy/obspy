@@ -12,17 +12,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from contextlib import contextmanager
-import os
-import sys
 import inspect
-from subprocess import Popen, PIPE
-import warnings
 import itertools
-import tempfile
-import shutil
-import numpy as np
 import math
+import os
+import platform
+import shutil
+import sys
+import tempfile
+import warnings
+from contextlib import contextmanager
+from subprocess import STDOUT, CalledProcessError, check_output
+
+import numpy as np
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -50,7 +52,7 @@ BAND_CODE = {'F': 1000.0,
              'Q': 0.00000001}
 
 
-def guessDelta(channel):
+def guess_delta(channel):
     """
     Estimate time delta in seconds between each sample from given channel name.
 
@@ -61,13 +63,13 @@ def guessDelta(channel):
 
     .. rubric:: Example
 
-    >>> print(guessDelta('BHZ'))
+    >>> print(guess_delta('BHZ'))
     0.1
 
-    >>> print(guessDelta('H'))
+    >>> print(guess_delta('H'))
     0.0125
 
-    >>> print(guessDelta('XZY'))  # doctest: +SKIP
+    >>> print(guess_delta('XZY'))  # doctest: +SKIP
     0
     """
     try:
@@ -80,7 +82,7 @@ def guessDelta(channel):
     return 0
 
 
-def scoreatpercentile(values, per, limit=(), issorted=True):
+def score_at_percentile(values, per, limit=(), issorted=True):
     """
     Calculates the score at the given per percentile of the sequence a.
 
@@ -96,22 +98,22 @@ def scoreatpercentile(values, per, limit=(), issorted=True):
     .. rubric:: Examples
 
     >>> a = [1, 2, 3, 4]
-    >>> scoreatpercentile(a, 25)
+    >>> score_at_percentile(a, 25)
     1.75
-    >>> scoreatpercentile(a, 50)
+    >>> score_at_percentile(a, 50)
     2.5
-    >>> scoreatpercentile(a, 75)
+    >>> score_at_percentile(a, 75)
     3.25
 
     >>> a = [6, 47, 49, 15, 42, 41, 7, 255, 39, 43, 40, 36, 500]
-    >>> scoreatpercentile(a, 25, limit=(0, 100))
+    >>> score_at_percentile(a, 25, limit=(0, 100))
     25.5
-    >>> scoreatpercentile(a, 50, limit=(0, 100))
+    >>> score_at_percentile(a, 50, limit=(0, 100))
     40
-    >>> scoreatpercentile(a, 75, limit=(0, 100))
+    >>> score_at_percentile(a, 75, limit=(0, 100))
     42.5
 
-    This function is taken from :func:`scipy.stats.scoreatpercentile`.
+    This function is taken from :func:`scipy.stats.score_at_percentile`.
 
     Copyright (c) Gary Strangman
     """
@@ -131,7 +133,7 @@ def scoreatpercentile(values, per, limit=(), issorted=True):
         return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
 
 
-def flatnotmaskedContiguous(a):
+def flat_not_masked_contiguous(a):
     """
     Find contiguous unmasked data in a masked array along the given axis.
 
@@ -154,7 +156,7 @@ def flatnotmaskedContiguous(a):
     return result or None
 
 
-def complexifyString(line):
+def complexify_string(line):
     """
     Converts a string in the form "(real, imag)" into a complex type.
 
@@ -165,17 +167,17 @@ def complexifyString(line):
 
     .. rubric:: Example
 
-    >>> complexifyString("(1,2)")
+    >>> complexify_string("(1,2)")
     (1+2j)
 
-    >>> complexifyString(" ( 1 , 2 ) ")
+    >>> complexify_string(" ( 1 , 2 ) ")
     (1+2j)
     """
     temp = line.split(',')
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
 
 
-def toIntOrZero(value):
+def to_int_or_zero(value):
     """
     Converts given value to an integer or returns 0 if it fails.
 
@@ -184,10 +186,10 @@ def toIntOrZero(value):
 
     .. rubric:: Example
 
-    >>> toIntOrZero("12")
+    >>> to_int_or_zero("12")
     12
 
-    >>> toIntOrZero("x")
+    >>> to_int_or_zero("x")
     0
     """
     try:
@@ -241,22 +243,21 @@ def get_untracked_files_from_git():
     dir_ = os.path.dirname(os.path.dirname(os.path.dirname(dir_)))
     try:
         # Check that the git root directory is actually the ObsPy directory.
-        p = Popen(['git', 'rev-parse', '--show-toplevel'],
-                  cwd=dir_, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        git_root_dir = p.stdout.readlines()[0].strip()
-        p.stdout.close()
+        p = check_output(['git', 'rev-parse', '--show-toplevel'],
+                         cwd=dir_, stderr=STDOUT)
+        git_root_dir = p.decode().strip()
+        if git_root_dir:
+            git_root_dir = os.path.abspath(git_root_dir)
         if git_root_dir != dir_:
-            raise Exception
-        p = Popen(['git', 'status', '-u', '--porcelain'],
-                  cwd=dir_, stdout=PIPE, stderr=PIPE)
-        p.stderr.close()
-        stdout = p.stdout.readlines()
-        p.stdout.close()
+            raise ValueError('Git root directory (%s) does not match expected '
+                             'path (%s).' % (git_root_dir, dir_))
+        p = check_output(['git', 'status', '-u', '--porcelain'],
+                         cwd=dir_, stderr=STDOUT)
+        stdout = p.decode().splitlines()
         files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
                  for line in stdout
                  if line.startswith("??")]
-    except:
+    except (OSError, CalledProcessError):
         return None
     return files
 
@@ -433,6 +434,10 @@ def CatchOutput():
                 os.close(stderr_copy)
                 tmp_stderr.seek(0)
                 out.stderr = tmp_stderr.read()
+
+                if platform.system() == "Windows":
+                    out.stdout = out.stdout.replace(b'\r', b'')
+                    out.stderr = out.stderr.replace(b'\r', b'')
 
                 if raised:
                     raise SystemExit(out.stderr)

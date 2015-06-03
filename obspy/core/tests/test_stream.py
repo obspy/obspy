@@ -3,21 +3,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from copy import deepcopy
-from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core.compatibility import mock
-from obspy.core.stream import writePickle, readPickle, isPickle
-from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import (NamedTemporaryFile, getSciPyVersion)
-from obspy.xseed import Parser
-import numpy as np
 import os
 import pickle
 import unittest
 import warnings
+from copy import deepcopy
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime, read
+from obspy.core.compatibility import mock
+from obspy.core.stream import _is_pickle, _read_pickle, _write_pickle
+from obspy.core.util.attribdict import AttribDict
+from obspy.core.util.base import NamedTemporaryFile, get_scipy_version
+from obspy.io.xseed import Parser
 
 
-SCIPY_VERSION = getSciPyVersion()
+SCIPY_VERSION = get_scipy_version()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -242,8 +244,8 @@ class StreamTestCase(unittest.TestCase):
         # Traces compare equal and are identical.
         self.assertEqual(stream[0], stream[-2])
         self.assertEqual(stream[1], stream[-1])
-        self.assertTrue(stream[0] is stream[-2])
-        self.assertTrue(stream[1] is stream[-1])
+        self.assertIs(stream[0], stream[-2])
+        self.assertIs(stream[1], stream[-1])
         # Using extend with a single Traces, or a wrong list, or ...
         # should fail.
         self.assertRaises(TypeError, stream.extend, stream[0])
@@ -299,12 +301,12 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the getGaps method of the Stream objects.
 
-        It is compared directly to the obspy.mseed method getGapsList which is
-        assumed to be correct.
+        It is compared directly to the obspy.io.mseed method getGapsList which
+        is assumed to be correct.
         """
         stream = self.mseed_stream
         gap_list = stream.getGaps()
-        # Gaps list created with obspy.mseed
+        # Gaps list created with obspy.io.mseed
         mseed_gap_list = [
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
@@ -502,7 +504,7 @@ class StreamTestCase(unittest.TestCase):
         stream.remove(stream[-1])
         del(stream2[-1])
         # Compare remaining Streams.
-        self.assertTrue(stream == stream2)
+        self.assertEqual(stream, stream2)
 
     def test_reverse(self):
         """
@@ -557,71 +559,71 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream2), 0)
         stream2 = stream.select(channel='EHZ')
         self.assertEqual(len(stream2), 2)
-        self.assertTrue(stream[0] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[0], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(component='Z')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[0] in stream2)
-        self.assertTrue(stream[2] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[0], stream2)
+        self.assertIn(stream[2], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(component='n')
         self.assertEqual(len(stream2), 2)
-        self.assertTrue(stream[1] in stream2)
-        self.assertTrue(stream[3] in stream2)
+        self.assertIn(stream[1], stream2)
+        self.assertIn(stream[3], stream2)
         stream2 = stream.select(channel='BHZ', npts=100, sampling_rate='20.0',
                                 network='AA', component='Z', station='ZZZZ')
         self.assertEqual(len(stream2), 1)
-        self.assertTrue(stream[2] in stream2)
+        self.assertIn(stream[2], stream2)
         stream2 = stream.select(channel='EHZ', station="XXXX")
         self.assertEqual(len(stream2), 1)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(network='AA')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[0] in stream2)
-        self.assertTrue(stream[2] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[0], stream2)
+        self.assertIn(stream[2], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(sampling_rate=20.0)
         self.assertEqual(len(stream2), 2)
-        self.assertTrue(stream[2] in stream2)
-        self.assertTrue(stream[3] in stream2)
+        self.assertIn(stream[2], stream2)
+        self.assertIn(stream[3], stream2)
         # tests for wildcarded channel:
         stream2 = stream.select(channel='B*')
         self.assertEqual(len(stream2), 2)
-        self.assertTrue(stream[2] in stream2)
-        self.assertTrue(stream[3] in stream2)
+        self.assertIn(stream[2], stream2)
+        self.assertIn(stream[3], stream2)
         stream2 = stream.select(channel='EH*')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[0] in stream2)
-        self.assertTrue(stream[1] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[0], stream2)
+        self.assertIn(stream[1], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(channel='*Z')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[0] in stream2)
-        self.assertTrue(stream[2] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[0], stream2)
+        self.assertIn(stream[2], stream2)
+        self.assertIn(stream[4], stream2)
         # tests for other wildcard operations:
         stream2 = stream.select(station='[XY]*')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[1] in stream2)
-        self.assertTrue(stream[3] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[1], stream2)
+        self.assertIn(stream[3], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(station='[A-Y]*')
         self.assertEqual(len(stream2), 3)
-        self.assertTrue(stream[1] in stream2)
-        self.assertTrue(stream[3] in stream2)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[1], stream2)
+        self.assertIn(stream[3], stream2)
+        self.assertIn(stream[4], stream2)
         stream2 = stream.select(station='[A-Y]??*', network='A?')
         self.assertEqual(len(stream2), 1)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[4], stream2)
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
                                 network='aA', station='ZzZz',)
         self.assertEqual(len(stream2), 1)
-        self.assertTrue(stream[2] in stream2)
+        self.assertIn(stream[2], stream2)
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
                                 location='00', component='z')
         self.assertEqual(len(stream2), 1)
-        self.assertTrue(stream[4] in stream2)
+        self.assertIn(stream[4], stream2)
 
     def test_sort(self):
         """
@@ -983,13 +985,13 @@ class StreamTestCase(unittest.TestCase):
         Test tab completion of Trace object.
         """
         tr = Trace()
-        self.assertTrue('sampling_rate' in dir(tr.stats))
-        self.assertTrue('npts' in dir(tr.stats))
-        self.assertTrue('station' in dir(tr.stats))
-        self.assertTrue('starttime' in dir(tr.stats))
-        self.assertTrue('endtime' in dir(tr.stats))
-        self.assertTrue('calib' in dir(tr.stats))
-        self.assertTrue('delta' in dir(tr.stats))
+        self.assertIn('sampling_rate', dir(tr.stats))
+        self.assertIn('npts', dir(tr.stats))
+        self.assertIn('station', dir(tr.stats))
+        self.assertIn('starttime', dir(tr.stats))
+        self.assertIn('endtime', dir(tr.stats))
+        self.assertIn('calib', dir(tr.stats))
+        self.assertIn('delta', dir(tr.stats))
 
     def test_bugfixMergeDropTraceIfAlreadyContained(self):
         """
@@ -1244,40 +1246,40 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
 
-    def test_isPickle(self):
+    def test_is_pickle(self):
         """
-        Testing isPickle function.
+        Testing _is_pickle function.
         """
         # existing file
         st = read()
         with NamedTemporaryFile() as tf:
             st.write(tf.name, format='PICKLE')
             # check using file name
-            self.assertTrue(isPickle(tf.name))
+            self.assertTrue(_is_pickle(tf.name))
             # check using file handler
-            self.assertTrue(isPickle(tf))
+            self.assertTrue(_is_pickle(tf))
         # not existing files
-        self.assertFalse(isPickle('/path/to/pickle.file'))
-        self.assertFalse(isPickle(12345))
+        self.assertFalse(_is_pickle('/path/to/pickle.file'))
+        self.assertFalse(_is_pickle(12345))
 
     def test_readWritePickle(self):
         """
-        Testing readPickle and writePickle functions.
+        Testing _read_pickle and _write_pickle functions.
         """
         st = read()
         # write
         with NamedTemporaryFile() as tf:
             # write using file name
-            writePickle(st, tf.name)
-            self.assertTrue(isPickle(tf.name))
+            _write_pickle(st, tf.name)
+            self.assertTrue(_is_pickle(tf.name))
             # write using file handler
-            writePickle(st, tf)
+            _write_pickle(st, tf)
             tf.seek(0)
-            self.assertTrue(isPickle(tf))
+            self.assertTrue(_is_pickle(tf))
             # write using stream write method
             st.write(tf.name, format='PICKLE')
             # check and read directly
-            st2 = readPickle(tf.name)
+            st2 = _read_pickle(tf.name)
             self.assertEqual(len(st2), 3)
             np.testing.assert_array_equal(st2[0].data, st[0].data)
             # use read() with given format
@@ -1551,8 +1553,8 @@ class StreamTestCase(unittest.TestCase):
         # streams containing more than 20 lines will be compressed
         st2 = Stream([tr1]) * 40
         result = st2.__str__()
-        self.assertTrue('40 Trace(s) in Stream:' in result)
-        self.assertTrue('other traces' in result)
+        self.assertIn('40 Trace(s) in Stream:', result)
+        self.assertIn('other traces', result)
 
     def test_cleanup(self):
         """
@@ -1592,28 +1594,28 @@ class StreamTestCase(unittest.TestCase):
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(st == Stream([tr1]))
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(st, Stream([tr1]))
+            self.assertEqual(type(st[0].data), np.ndarray)
         # test mergeable traces (adjacent ones)
         for trB in [tr5, tr6]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
         # test mergeable traces (overlapping ones)
         for trB in [trO1, trO2]:
             trA = tr1.copy()
             st = Stream([trA, trB])
             st._cleanup()
-            self.assertTrue(len(st) == 1)
-            self.assertTrue(type(st[0].data) == np.ndarray)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(type(st[0].data), np.ndarray)
             st_result = Stream([tr1, trB])
             st_result.merge()
-            self.assertTrue(st == st_result)
+            self.assertEqual(st, st_result)
 
         # test traces that should not be merged
         tr7 = tr1.copy()
@@ -1639,7 +1641,7 @@ class StreamTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True):
                 warnings.simplefilter('ignore', UserWarning)
                 st._cleanup()
-            self.assertTrue(st == Stream([trA, trB]))
+            self.assertEqual(st, Stream([trA, trB]))
 
     def test_integrateAndDifferentiate(self):
         """
@@ -1658,29 +1660,6 @@ class StreamTestCase(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(
             st1[0].data[:-1], st2[0].data[:-1], decimal=5)
-
-    def test_cleanupNonDefaultPrecisionUTCDateTime(self):
-        """
-        Testing cleanup with a non-default precision of UTCDateTime.
-        """
-        # default precision of 6 decimals
-        tr1 = Trace(data=np.ones(1000))
-        tr2 = Trace(data=np.ones(1000))
-        tr1.stats.starttime = UTCDateTime(0)
-        tr2.stats.starttime = UTCDateTime(0) + 1000.000001
-        st = Stream([tr1, tr2])
-        st._cleanup()
-        self.assertEqual(len(st), 2)
-        # precision of 4 decimals
-        UTCDateTime.DEFAULT_PRECISION = 4
-        tr1 = Trace(data=np.ones(1000))
-        tr2 = Trace(data=np.ones(1000))
-        tr1.stats.starttime = UTCDateTime(0)
-        tr2.stats.starttime = UTCDateTime(0) + 1000.000001
-        st = Stream([tr1, tr2])
-        st._cleanup()
-        self.assertEqual(len(st), 1)
-        UTCDateTime.DEFAULT_PRECISION = 6
 
     def test_read(self):
         """
@@ -1735,7 +1714,9 @@ class StreamTestCase(unittest.TestCase):
 
         # 4 - file patterns
         path = os.path.dirname(__file__)
-        filename = os.path.join(path, 'data', 'slist.*')
+        ascii_path = os.path.join(path, "..", "..", "io", "ascii", "tests",
+                                  "data")
+        filename = os.path.join(ascii_path, 'slist.*')
         st = read(filename)
         self.assertEqual(len(st), 2)
         # exception if no file matches file pattern
@@ -1755,11 +1736,11 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         st2 = st.copy()
-        self.assertTrue(st == st2)
-        self.assertTrue(st2 == st)
+        self.assertEqual(st, st2)
+        self.assertEqual(st2, st)
         self.assertFalse(st is st2)
         self.assertFalse(st2 is st)
-        self.assertTrue(st.traces[0] == st2.traces[0])
+        self.assertEqual(st.traces[0], st2.traces[0])
         self.assertFalse(st.traces[0] is st2.traces[0])
 
     def test_merge_with_empty_trace(self):
@@ -1934,10 +1915,10 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr, tr])
         st.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
-            self.assertTrue(st[0].data[i] <= 1.)
-            self.assertTrue(st[0].data[i] >= 0.)
-            self.assertTrue(st[1].data[i] <= 1.)
-            self.assertTrue(st[1].data[i] >= 0.)
+            self.assertLessEqual(st[0].data[i], 1.)
+            self.assertGreaterEqual(st[0].data[i], 0.)
+            self.assertLessEqual(st[1].data[i], 1.)
+            self.assertGreaterEqual(st[1].data[i], 0.)
 
     def test_issue540(self):
         """
@@ -1951,10 +1932,10 @@ class StreamTestCase(unittest.TestCase):
                 endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
         self.assertEqual(len(st[0]), 3002)
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
-        self.assertTrue(st[0].data[0] is np.ma.masked)
+        self.assertIs(st[0].data[0], np.ma.masked)
         self.assertTrue(st[0].data[1] is not np.ma.masked)
         self.assertTrue(st[0].data[-2] is not np.ma.masked)
-        self.assertTrue(st[0].data[-1] is np.ma.masked)
+        self.assertIs(st[0].data[-1], np.ma.masked)
         # fill_value = 999
         st = read()
         self.assertEqual(len(st[1]), 3000)
@@ -1988,7 +1969,7 @@ class StreamTestCase(unittest.TestCase):
             .extend(st2)\
             .insert(0, st1[0].copy())\
             .remove(st1[0])
-        self.assertTrue(temp_st is st1)
+        self.assertIs(temp_st, st1)
         self.assertEqual(len(st1), 5)
         self.assertEqual(st1[0], st1[1])
         self.assertEqual(st1[2], st2[0])
@@ -2001,8 +1982,8 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.channel = "C"
         st[2].stats.channel = "A"
         temp_st = st.sort(keys=["channel"]).reverse()
-        self.assertTrue(temp_st is st)
-        self.assertTrue([tr.stats.channel for tr in st], ["C", "B", "A"])
+        self.assertIs(temp_st, st)
+        self.assertEqual([tr.stats.channel for tr in st], ["C", "B", "A"])
 
         # The others are pretty hard to properly test and probably not worth
         # the effort. A simple demonstrating that they can be chained should be
@@ -2033,19 +2014,19 @@ class StreamTestCase(unittest.TestCase):
         # processing chain.
         pr = st[0].stats.processing
 
-        self.assertTrue("decimate" in pr[1])
-        self.assertTrue("resample" in pr[2])
-        self.assertTrue("simulate" in pr[3])
+        self.assertIn("decimate", pr[1])
+        self.assertIn("resample", pr[2])
+        self.assertIn("simulate", pr[3])
         self.assertTrue("filter" in pr[4] and "lowpass" in pr[4])
-        self.assertTrue("differentiate" in pr[5])
-        self.assertTrue("integrate" in pr[6])
-        self.assertTrue("trim" in pr[7])
-        self.assertTrue("detrend" in pr[8])
-        self.assertTrue("taper" in pr[9])
-        self.assertTrue("normalize" in pr[10])
-        self.assertTrue("trigger" in pr[11])
+        self.assertIn("differentiate", pr[5])
+        self.assertIn("integrate", pr[6])
+        self.assertIn("trim", pr[7])
+        self.assertIn("detrend", pr[8])
+        self.assertIn("taper", pr[9])
+        self.assertIn("normalize", pr[10])
+        self.assertIn("trigger", pr[11])
 
-        self.assertTrue(temp is st)
+        self.assertIs(temp, st)
         # Cutout duplicates the number of traces.
         self.assertTrue(len(st), 6)
         # Clearing also works for method chaining.
@@ -2066,7 +2047,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st:
             tr.stats.processing.pop()
 
-        for resp_string, stringio in p.getRESP():
+        for resp_string, stringio in p.get_RESP():
             stringio.seek(0, 0)
             component = resp_string[-1]
             with NamedTemporaryFile() as tf:
@@ -2164,6 +2145,88 @@ class StreamTestCase(unittest.TestCase):
             tr.integrate(method='cumtrapz')
         st2.integrate(method='cumtrapz')
         self.assertEqual(st1, st2)
+
+    def test_misaligned_traces(self):
+        """
+        Tests the option to correct misaligned traces in `Stream._cleanup()`,
+        which is the first thing done in any `Stream.merge()` operation.
+
+        We create a simple trace and then prepare other traces that are shifted
+        on sub-sample scale. With these shifted traces create different traces
+        that are a) contained, b) overlapping, c) directly adjacent and d)
+        separated by a "real" gap. In two loops we test a wide variety of
+        combinations of actual misalignment ratio (percentage of sampling
+        interval) and to-be-fixed misalignment threshold in cleanup().
+        """
+        samp_rate = 1.23
+        delta = 1.0 / samp_rate
+        tr = Trace(data=np.arange(10), header=dict(sampling_rate=samp_rate))
+        t1 = tr.stats.starttime
+        t2 = tr.stats.endtime
+
+        def _gets_merged(tr_, ratio):
+            st = Stream([tr.copy(), tr_.copy()])
+            st._cleanup(misalignment_threshold=ratio)
+            if len(st) == 1:
+                return True
+            elif len(st) == 2:
+                return False
+            raise Exception()
+
+        for actual_misalign_percentage in np.linspace(0.01, 0.5, 6):
+            # prepare two identical traces, misaligned
+            tr_early = tr.copy()
+            tr_early.stats.starttime -= actual_misalign_percentage * delta
+            tr_late = tr.copy()
+            tr_late.stats.starttime += actual_misalign_percentage * delta
+            # prepare contained traces
+            tr_contained1 = tr_early.copy()
+            tr_contained1.trim(t1 + 2 * delta, t2 - delta)
+            tr_contained2 = tr_late.copy()
+            tr_contained2.trim(t1 + delta, t2 - 3 * delta)
+            traces_contained = [tr_contained1, tr_contained2]
+            # prepare overlapping traces
+            tr_overlap1 = tr_early.copy()
+            tr_overlap1.trim(t1 + 4 * delta, t2 + 4 * delta,
+                             pad=True, fill_value=99)
+            tr_overlap2 = tr_late.copy()
+            tr_overlap2.trim(t1 - 5 * delta, t2 - 5 * delta,
+                             pad=True, fill_value=99)
+            traces_overlap = [tr_overlap1, tr_overlap2]
+            # prepare directly adjacent traces
+            tr_adjacent1 = tr_early.copy()
+            tr_adjacent1.stats.starttime -= len(tr_adjacent1) * delta
+            tr_adjacent2 = tr_late.copy()
+            tr_adjacent2.stats.starttime -= len(tr_adjacent2) * delta
+            tr_adjacent3 = tr_early.copy()
+            tr_adjacent3.stats.starttime += len(tr) * delta
+            tr_adjacent4 = tr_late.copy()
+            tr_adjacent4.stats.starttime += len(tr) * delta
+            traces_adjacent = [tr_adjacent1, tr_adjacent2, tr_adjacent3,
+                               tr_adjacent4]
+            # prepare traces with normal gap
+            tr_gap1 = tr_adjacent1.copy()
+            tr_gap1.stats.starttime -= delta
+            tr_gap2 = tr_adjacent2.copy()
+            tr_gap2.stats.starttime -= delta
+            tr_gap3 = tr_adjacent3.copy()
+            tr_gap3.stats.starttime += delta
+            tr_gap4 = tr_adjacent4.copy()
+            tr_gap4.stats.starttime += delta
+            traces_gap = [tr_gap1, tr_gap2, tr_gap3, tr_gap4]
+            for to_be_fixed_misalignmnt_ratio in np.linspace(0.011, 0.49, 5):
+                # first test traces with normal gap, these should never change
+                for trx in traces_gap:
+                    self.assertFalse(_gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio))
+                # now lets check the cases for which depending on
+                # the combination of actual/to-be-fixed misalignment ratios
+                # there should be a change/merge or not
+                should_change = (to_be_fixed_misalignmnt_ratio >=
+                                 actual_misalign_percentage)
+                for trx in traces_contained + traces_overlap + traces_adjacent:
+                    self.assertEqual(should_change, _gets_merged(
+                        trx, to_be_fixed_misalignmnt_ratio))
 
 
 def suite():

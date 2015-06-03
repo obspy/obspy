@@ -22,10 +22,18 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import warnings
-from numpy import array, where, fft
+
+import numpy as np
 from scipy.fftpack import hilbert
-from scipy.signal import iirfilter, lfilter, remez, convolve, get_window, \
-    cheby2, cheb2ord
+from scipy.signal import (cheb2ord, cheby2, convolve, get_window, iirfilter,
+                          remez)
+
+try:
+    from scipy.signal import sosfilt
+    from scipy.signal import zpk2sos
+except ImportError:
+    from ._sosfilt import _sosfilt as sosfilt
+    from ._sosfilt import _zpk2sos as zpk2sos
 
 
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
@@ -35,8 +43,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     Filter data from ``freqmin`` to ``freqmax`` using ``corners``
     corners.
     The filter uses :func:`scipy.signal.iirfilter` (for design)
-    and :func:`scipy.signal.lfilter` (for applying the filter).
-
+    and :func:`scipy.signal.sosfilt` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -61,13 +68,14 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    [b, a] = iirfilter(corners, [low, high], btype='band',
-                       ftype='butter', output='ba')
+    z, p, k = iirfilter(corners, [low, high], btype='band',
+                        ftype='butter', output='zpk')
+    sos = zpk2sos(z, p, k)
     if zerophase:
-        firstpass = lfilter(b, a, data)
-        return lfilter(b, a, firstpass[::-1])[::-1]
+        firstpass = sosfilt(sos, data)
+        return sosfilt(sos, firstpass[::-1])[::-1]
     else:
-        return lfilter(b, a, data)
+        return sosfilt(sos, data)
 
 
 def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
@@ -77,7 +85,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     Filter data removing data between frequencies ``freqmin`` and ``freqmax``
     using ``corners`` corners.
     The filter uses :func:`scipy.signal.iirfilter` (for design)
-    and :func:`scipy.signal.lfilter` (for applying the filter).
+    and :func:`scipy.signal.sosfilt` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -102,13 +110,14 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
-    [b, a] = iirfilter(corners, [low, high],
-                       btype='bandstop', ftype='butter', output='ba')
+    z, p, k = iirfilter(corners, [low, high],
+                        btype='bandstop', ftype='butter', output='zpk')
+    sos = zpk2sos(z, p, k)
     if zerophase:
-        firstpass = lfilter(b, a, data)
-        return lfilter(b, a, firstpass[::-1])[::-1]
+        firstpass = sosfilt(sos, data)
+        return sosfilt(sos, firstpass[::-1])[::-1]
     else:
-        return lfilter(b, a, data)
+        return sosfilt(sos, data)
 
 
 def lowpass(data, freq, df, corners=4, zerophase=False):
@@ -118,7 +127,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
     The filter uses :func:`scipy.signal.iirfilter` (for design)
-    and :func:`scipy.signal.lfilter` (for applying the filter).
+    and :func:`scipy.signal.sosfilt` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -138,13 +147,14 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
         msg = "Selected corner frequency is above Nyquist. " + \
               "Setting Nyquist as high corner."
         warnings.warn(msg)
-    [b, a] = iirfilter(corners, f, btype='lowpass', ftype='butter',
-                       output='ba')
+    z, p, k = iirfilter(corners, f, btype='lowpass', ftype='butter',
+                        output='zpk')
+    sos = zpk2sos(z, p, k)
     if zerophase:
-        firstpass = lfilter(b, a, data)
-        return lfilter(b, a, firstpass[::-1])[::-1]
+        firstpass = sosfilt(sos, data)
+        return sosfilt(sos, firstpass[::-1])[::-1]
     else:
-        return lfilter(b, a, data)
+        return sosfilt(sos, data)
 
 
 def highpass(data, freq, df, corners=4, zerophase=False):
@@ -154,7 +164,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     Filter data removing data below certain frequency ``freq`` using
     ``corners`` corners.
     The filter uses :func:`scipy.signal.iirfilter` (for design)
-    and :func:`scipy.signal.lfilter` (for applying the filter).
+    and :func:`scipy.signal.sosfilt` (for applying the filter).
 
     :type data: numpy.ndarray
     :param data: Data to filter.
@@ -172,13 +182,14 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     if f > 1:
         msg = "Selected corner frequency is above Nyquist."
         raise ValueError(msg)
-    [b, a] = iirfilter(corners, f, btype='highpass', ftype='butter',
-                       output='ba')
+    z, p, k = iirfilter(corners, f, btype='highpass', ftype='butter',
+                        output='zpk')
+    sos = zpk2sos(z, p, k)
     if zerophase:
-        firstpass = lfilter(b, a, data)
-        return lfilter(b, a, firstpass[::-1])[::-1]
+        firstpass = sosfilt(sos, data)
+        return sosfilt(sos, firstpass[::-1])[::-1]
     else:
-        return lfilter(b, a, data)
+        return sosfilt(sos, data)
 
 
 def envelope(data):
@@ -267,8 +278,8 @@ def remezFIR(data, freqmin, freqmax, df):
     flt = freqmin - 0.1 * freqmin
     fut = freqmax + 0.1 * freqmax
     # bandpass between freqmin and freqmax
-    filt = remez(50, array([0, flt, freqmin, freqmax, fut, df / 2 - 1]),
-                 array([0, 1, 0]), Hz=df)
+    filt = remez(50, np.array([0, flt, freqmin, freqmax, fut, df / 2 - 1]),
+                 np.array([0, 1, 0]), Hz=df)
     return convolve(filt, data)
 
 
@@ -303,18 +314,18 @@ def lowpassFIR(data, freq, df, winlen=2048):
     #
     # winlen = 2**11 #2**10 = 1024; 2**11 = 2048; 2**12 = 4096
     # give frequency bins in Hz and sample spacing
-    w = fft.fftfreq(winlen, 1 / float(df))
+    w = np.fft.fftfreq(winlen, 1 / float(df))
     # cutoff is low-pass filter
-    myfilter = where((abs(w) < freq), 1., 0.)
+    myfilter = np.where((abs(w) < freq), 1., 0.)
     # ideal filter
-    h = fft.ifft(myfilter)
+    h = np.fft.ifft(myfilter)
     beta = 11.7
     # beta implies Kaiser
-    myh = fft.fftshift(h) * get_window(beta, winlen)
+    myh = np.fft.fftshift(h) * get_window(beta, winlen)
     return convolve(abs(myh), data)[winlen / 2:-winlen / 2]
 
 
-def integerDecimation(data, decimation_factor):
+def integer_decimation(data, decimation_factor):
     """
     Downsampling by applying a simple integer decimation.
 
@@ -333,12 +344,12 @@ def integerDecimation(data, decimation_factor):
         raise TypeError(msg)
 
     # reshape and only use every decimation_factor-th sample
-    data = array(data[::decimation_factor])
+    data = np.array(data[::decimation_factor])
     return data
 
 
-def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
-                  freq_passband=False):
+def lowpass_cheby_2(data, freq, df, maxorder=12, ba=False,
+                    freq_passband=False):
     """
     Cheby2-Lowpass Filter
 
@@ -378,12 +389,13 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
             break
         wp = wp * 0.99
         order, wn = cheb2ord(wp, ws, rp, rs, analog=0)
-    b, a = cheby2(order, rs, wn, btype='low', analog=0, output='ba')
     if ba:
-        return b, a
+        return cheby2(order, rs, wn, btype='low', analog=0, output='ba')
+    z, p, k = cheby2(order, rs, wn, btype='low', analog=0, output='zpk')
+    sos = zpk2sos(z, p, k)
     if freq_passband:
-        return lfilter(b, a, data), wp * nyquist
-    return lfilter(b, a, data)
+        return sosfilt(sos, data), wp * nyquist
+    return sosfilt(sos, data)
 
 
 if __name__ == '__main__':

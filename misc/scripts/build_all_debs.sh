@@ -36,6 +36,7 @@ then
     git fetch upstream
 fi
 git clean -fxd
+git fetch --all
 git checkout -- .
 if [ "$GITTARGET" != "master" ]
 then
@@ -43,7 +44,7 @@ then
 fi
 git clean -fxd
 
-for DIST in squeeze wheezy jessie precise trusty utopic; do
+for DIST in wheezy jessie precise trusty utopic; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
         echo "#### $DISTARCH"

@@ -7,13 +7,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.signal import bandpass, lowpass, highpass
-from obspy.signal.filter import envelope, lowpassCheby2
+import gzip
 import os
 import unittest
-import gzip
+
 import numpy as np
 import scipy.signal as sg
+
+from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
+                                 lowpass_cheby_2)
 
 
 class FilterTestCase(unittest.TestCase):
@@ -33,9 +35,8 @@ class FilterTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(file) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq1 = 5
@@ -44,10 +45,9 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = bandpass(data, freq1, freq2, df=samp_rate, corners=corners)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_bandpass.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_bandpass.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
@@ -66,10 +66,9 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq1 = 5
@@ -79,10 +78,9 @@ class FilterTestCase(unittest.TestCase):
         datcorr = bandpass(data, freq1, freq2, df=samp_rate,
                            corners=corners, zerophase=True)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_bandpassZPHSH.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
@@ -96,10 +94,9 @@ class FilterTestCase(unittest.TestCase):
         tends to get bigger with higher order filtering.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq = 5
@@ -107,10 +104,9 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_lowpass.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
@@ -129,10 +125,9 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq = 5
@@ -141,10 +136,9 @@ class FilterTestCase(unittest.TestCase):
         datcorr = lowpass(data, freq, df=samp_rate, corners=corners,
                           zerophase=True)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_lowpassZPHSH.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
@@ -158,10 +152,9 @@ class FilterTestCase(unittest.TestCase):
         tends to get bigger with higher order filtering.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq = 10
@@ -169,10 +162,9 @@ class FilterTestCase(unittest.TestCase):
         # filter trace
         datcorr = highpass(data, freq, df=samp_rate, corners=corners)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_highpass.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_highpass.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
@@ -191,10 +183,9 @@ class FilterTestCase(unittest.TestCase):
         generally be of low interest/importance.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # parameters for the test
         samp_rate = 200.0
         freq = 10
@@ -203,10 +194,9 @@ class FilterTestCase(unittest.TestCase):
         datcorr = highpass(data, freq, df=samp_rate, corners=corners,
                            zerophase=True)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_highpassZPHSH.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
@@ -218,17 +208,15 @@ class FilterTestCase(unittest.TestCase):
         The rms is not so good, but the fit is still good in most parts.
         """
         # load test file
-        file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006.gz')
+        with gzip.open(filename) as f:
+            data = np.loadtxt(f)
         # filter trace
         datcorr = envelope(data)
         # load pitsa file
-        file = os.path.join(self.path, 'rjob_20051006_envelope.gz')
-        f = gzip.open(file)
-        data_pitsa = np.loadtxt(f)
-        f.close()
+        filename = os.path.join(self.path, 'rjob_20051006_envelope.gz')
+        with gzip.open(filename) as f:
+            data_pitsa = np.loadtxt(f)
         # calculate normalized rms
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
@@ -239,17 +227,17 @@ class FilterTestCase(unittest.TestCase):
         Check magnitudes of basic lowpass cheby2
         """
         df = 200  # Hz
-        b, a = lowpassCheby2(data=None, freq=50,
-                             df=df, maxorder=12, ba=True)
+        b, a = lowpass_cheby_2(data=None, freq=50,
+                               df=df, maxorder=12, ba=True)
         nyquist = 100
         # calculate frequency response
         w, h = sg.freqz(b, a, nyquist)
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
         # be smaller than -96dB above lowpass frequency
-        self.assertTrue(h_db[freq > 50].max() < -96)
+        self.assertGreater(-96, h_db[freq > 50].max())
         # be 0 (1dB ripple) before filter ramp
-        self.assertTrue(h_db[freq < 25].min() > -1)
+        self.assertGreater(h_db[freq < 25].min(), -1)
 
 
 def suite():

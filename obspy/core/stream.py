@@ -11,29 +11,32 @@ Module for handling ObsPy Stream objects.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 from future import standard_library
+from future.utils import native_str
+
+import copy
+import fnmatch
+import math
+import os
+import pickle
+import warnings
+from glob import glob, has_magic
+
 with standard_library.hooks():
     import urllib.request
 
-from glob import glob, has_magic
+from pkg_resources import load_entry_point
+import numpy as np
+
 from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated_keywords, \
-    map_example_filename
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
-    _getFunctionFromEntryPoint
-from obspy.core.util.decorator import uncompressFile, raiseIfMasked
-from pkg_resources import load_entry_point
-import pickle
-import copy
-import fnmatch
-import math
-import numpy as np
-import os
-import warnings
+from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
+                                  _read_from_plugin)
+from obspy.core.util.decorator import (deprecated_keywords,
+                                       map_example_filename, raise_if_masked,
+                                       uncompress_file)
 
 
 @map_example_filename("pathname_or_url")
@@ -263,13 +266,13 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     return st
 
 
-@uncompressFile
+@uncompress_file
 def _read(filename, format=None, headonly=False, **kwargs):
     """
     Read a single file into a ObsPy Stream object.
     """
-    stream, format = _readFromPlugin('waveform', filename, format=format,
-                                     headonly=headonly, **kwargs)
+    stream, format = _read_from_plugin('waveform', filename, format=format,
+                                       headonly=headonly, **kwargs)
     # set _format identifier for each element
     for trace in stream:
         trace.stats._format = format
@@ -283,16 +286,17 @@ def _createExampleStream(headonly=False):
     Data arrays are stored in NumPy's NPZ format. The header information are
     fixed values.
 
-    PAZ of the used instrument, needed to demonstrate seisSim() etc.:
+    PAZ of the used instrument, needed to demonstrate simulate_seismometer()
+    etc.:
     paz = {'gain': 60077000.0,
            'poles': [-0.037004+0.037016j, -0.037004-0.037016j, -251.33+0j,
                      -131.04-467.29j, -131.04+467.29j],
            'sensitivity': 2516778400.0,
            'zeros': [0j, 0j]}}
     """
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
     if not headonly:
-        path = os.path.dirname(__file__)
-        path = os.path.join(path, "tests", "data", "example.npz")
+        path = os.path.join(data_dir, "example.npz")
         data = np.load(path)
     st = Stream()
     for channel in ["EHZ", "EHN", "EHE"]:
@@ -310,8 +314,9 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
-    from obspy.station import read_inventory
-    st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
+    from obspy import read_inventory
+    inv = read_inventory(os.path.join(data_dir, "BW_RJOB.xml"))
+    st.attach_response(inv)
     return st
 
 
@@ -1016,8 +1021,8 @@ class Stream(object):
             case each event will be annotated with its corresponding
             Flinn-Engdahl region and the magnitude.
             Events can also be automatically downloaded with the help of
-            obspy.neries. Just pass a dictionary with a "min_magnitude" key,
-            e.g. ::
+            obspy.clients.fdsn. Just pass a dictionary with a "min_magnitude"
+            key, e.g. ::
 
                 events={"min_magnitude": 5.5}
 
@@ -1138,7 +1143,7 @@ class Stream(object):
         """
         from obspy.imaging.waveform import WaveformPlotting
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        return waveform.plotWaveform(*args, **kwargs)
+        return waveform.plot_waveform(*args, **kwargs)
 
     def spectrogram(self, **kwargs):
         """
@@ -1418,14 +1423,14 @@ class Stream(object):
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
-            writeFormat = load_entry_point(
+            write_format = load_entry_point(
                 format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format,
                                    ', '.join(ENTRY_POINTS['waveform_write'])))
-        writeFormat(self, filename, **kwargs)
+        write_format(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
@@ -1749,17 +1754,19 @@ class Stream(object):
                       "calibration factors.!"
                 raise Exception(msg)
 
-    def merge(self, method=0, fill_value=None, interpolation_samples=0):
+    def merge(self, method=0, fill_value=None, interpolation_samples=0,
+              **kwargs):
         """
         Merge ObsPy Trace objects with same IDs.
 
         :type method: int, optional
-        :param method: Methodology to handle overlaps of traces. Defaults
+        :param method: Methodology to handle overlaps/gaps of traces. Defaults
             to ``0``.
             See :meth:`obspy.core.trace.Trace.__add__` for details on
             methods ``0`` and ``1``,
             see :meth:`obspy.core.stream.Stream._cleanup` for details on
-            method ``-1``.
+            method ``-1``. Any merge operation performs a cleanup merge as
+            a first step (method ``-1``).
         :type fill_value: int, float, str or ``None``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
@@ -1791,8 +1798,8 @@ class Stream(object):
             except ValueError:
                 return -1
 
+        self._cleanup(**kwargs)
         if method == -1:
-            self._cleanup()
             return
         # check sampling rates and dtypes
         self._mergeChecks()
@@ -1871,7 +1878,7 @@ class Stream(object):
 
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
-        :func:`~obspy.signal.invsim.seisSim`.
+        :func:`~obspy.signal.invsim.simulate_seismometer`.
 
         The keywords `paz_remove` and `paz_simulate` are expected to be
         dictionaries containing information on poles, zeros and gain (and
@@ -1886,7 +1893,8 @@ class Stream(object):
             Instead of the builtin deconvolution based on Poles and Zeros
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
-            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            :func:`~obspy.signal.invsim.simulate_seismometer` and the
+            `ObsPy Tutorial
             <http://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
@@ -1902,7 +1910,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. rubric:: Example
 
         >>> from obspy import read
-        >>> from obspy.signal import cornFreq2Paz
+        >>> from obspy.signal.invsim import corn_freq_2_paz
         >>> st = read()
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
@@ -1910,7 +1918,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ...             'zeros': [0j, 0j],
         ...             'gain': 60077000.0,
         ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
         ... # doctest: +ELLIPSIS
         <...Stream object at 0x...>
@@ -1919,7 +1927,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read
-            from obspy.signal import cornFreq2Paz
+            from obspy.signal.invsim import corn_freq_2_paz
             st = read()
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
@@ -1927,7 +1935,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         'zeros': [0j, 0j],
                         'gain': 60077000.0,
                         'sensitivity': 2516778400.0}
-            paz_1hz = cornFreq2Paz(1.0, damp=0.707)
+            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
             paz_1hz['sensitivity'] = 1.0
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
@@ -1973,8 +1981,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'highpass'``
             Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
 
-        ``'lowpassCheby2'``
-            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+        ``'lowpass_cheby_2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
         ``'lowpassFIR'`` (experimental)
             FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
@@ -2029,24 +2037,26 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classicSTALTA`).
+            :func:`obspy.signal.trigger.classic_STALTA`).
 
         ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+            Recursive STA/LTA
+            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recSTALTAPy`).
+            :func:`obspy.signal.trigger.recursive_STALTA_py`).
 
         ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+            Delayed STA/LTA.
+            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
 
         ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
-            :func:`obspy.signal.trigger.carlSTATrig`).
+            Computes the carl_STA_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_STA_trig`).
 
         ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
 
         .. rubric:: Example
 
@@ -2277,7 +2287,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.integrate(method=method, **options)
         return self
 
-    @raiseIfMasked
+    @raise_if_masked
     def detrend(self, type='simple'):
         """
         Remove a linear trend from all traces.
@@ -2482,7 +2492,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 seismogram to North- and East-components.
             ``'ZNE->LQT'``: Rotates from left-handed Z, North, and  East system
                 to LQT, e.g. right-handed ray coordinate system.
-            ``'LQR->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
+            ``'LQT->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
                 system to left handed Z, North, and East system.
 
         :type back_azimuth: float, optional
@@ -2508,7 +2518,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
                              "'ZNE->LQT', or 'LQT->ZNE').")
         # Retrieve function call from entry points
-        func = _getFunctionFromEntryPoint("rotate", func)
+        func = _get_function_from_entry_point("rotate", func)
         # Split to get the components. No need for further checks for the
         # method as invalid methods will be caught by previous conditional.
         input_components, output_components = method.split("->")
@@ -2645,13 +2655,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.traces = []
         return self
 
-    def _cleanup(self):
+    def _cleanup(self, misalignment_threshold=1e-2):
         """
         Merge consistent trace objects but leave everything else alone.
 
         This can mean traces with matching header that are directly adjacent or
         are contained/equal/overlapping traces with exactly the same waveform
         data in the overlapping part.
+        If option `misalignment_threshold` is non-zero then
+        contained/overlapping/directly adjacent traces with the sampling points
+        misaligned by less than `misalignment_threshold` times the sampling
+        interval are aligned on the same sampling points (see example below).
 
         .. rubric:: Notes
 
@@ -2702,7 +2716,28 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             after:
             Trace 1: AAAAAAABBBBB
+
+        Misaligned traces are aligned, depending on set parameters, e.g. for a
+        directly adjacent trace with slight misalignment (with two common
+        samples at start of Trace 2 for better visualization)::
+
+            before:
+            Trace 1: A---------A---------A
+            Trace 2:            A---------A---------B---------B
+
+            after:
+            Trace 1: A---------A---------A---------B---------B
+
+        :type misalignment_threshold: float
+        :param misalignment_threshold: Threshold value for sub-sample
+            misalignments of sampling points of two traces that should be
+            merged together (fraction of sampling interval, from 0 to 0.5).
+            ``0`` means traces with even just the slightest misalignment will
+            not be merged together, ``0.5`` means traces will be merged
+            together disregarding of any sub-sample shifts of sampling points.
         """
+        # first of all throw away all empty traces
+        self.traces = [_i for _i in self.traces if _i.stats.npts]
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
@@ -2731,11 +2766,66 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         for id_ in traces_dict.keys():
             trace_list = traces_dict[id_]
             cur_trace = trace_list.pop(0)
+            delta = cur_trace.stats.delta
+            allowed_micro_shift = misalignment_threshold * delta
             # work through all traces of same id
             while trace_list:
                 trace = trace_list.pop(0)
+                # `gap` is the deviation (in seconds) of the actual start
+                # time of the second trace from the expected start time
+                # (for the ideal case of directly adjacent and perfectly
+                # aligned traces).
+                gap = trace.stats.starttime - (cur_trace.stats.endtime + delta)
+                # if `gap` is larger than the designated allowed shift,
+                # we treat it as a real gap and leave as is.
+                if misalignment_threshold > 0 and gap <= allowed_micro_shift:
+                    # `gap` is smaller than allowed shift (or equal),
+                    #  the traces could be
+                    #  - overlapping without being misaligned or..
+                    #  - overlapping with misalignment or..
+                    #  - misaligned with a micro gap
+                    # check if the sampling points are misaligned:
+                    misalignment = gap % delta
+                    if misalignment != 0:
+                        # determine the position of the second trace's
+                        # sampling points in the interval between two
+                        # sampling points of first trace.
+                        # a `misalign_percentage` of close to 0.0 means a
+                        # sampling point of the first trace is just a bit
+                        # to the left of our sampling point:
+                        #
+                        #  Trace 1: --|---------|---------|---------|--
+                        #  Trace 2: ---|---------|---------|---------|-
+                        # misalign_percentage:  0.........1
+                        #
+                        # a `misalign_percentage` of close to 1.0 means a
+                        # sampling point of the first trace is just a bit
+                        # to the right of our sampling point:
+                        #
+                        #  Trace 1: --|---------|---------|---------|--
+                        #  Trace 2: -|---------|---------|---------|---
+                        # misalign_percentage:  0.........1
+                        misalign_percentage = misalignment / delta
+                        if (misalign_percentage <= misalignment_threshold or
+                                misalign_percentage >=
+                                1 - misalignment_threshold):
+                            # now we align the sampling points of both traces
+                            trace.stats.starttime = (
+                                cur_trace.stats.starttime +
+                                round((trace.stats.starttime -
+                                       cur_trace.stats.starttime) / delta) *
+                                delta)
                 # we have some common parts: check if consistent
-                if trace.stats.starttime <= cur_trace.stats.endtime:
+                # (but only if sampling points are matching to specified
+                #  accuracy, which is checked and conditionally corrected in
+                #  previous code block)
+                subsample_shift_percentage = (
+                    trace.stats.starttime.timestamp -
+                    cur_trace.stats.starttime.timestamp) % delta / delta
+                subsample_shift_percentage = min(
+                    subsample_shift_percentage, 1 - subsample_shift_percentage)
+                if (trace.stats.starttime <= cur_trace.stats.endtime and
+                        subsample_shift_percentage < misalignment_threshold):
                     # check if common time slice [t1 --> t2] is equal:
                     t1 = trace.stats.starttime
                     t2 = min(cur_trace.stats.endtime, trace.stats.endtime)
@@ -2758,6 +2848,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     cur_trace = trace
             self.traces.append(cur_trace)
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def split(self):
         """
@@ -2799,9 +2890,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
               Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
               Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
 
-        :type inventories: :class:`~obspy.station.inventory.Inventory` or
-            :class:`~obspy.station.network.Network` or a list containing
-            objects of these types.
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         :rtype: list of :class:`~obspy.core.trace.Trace`
@@ -2864,7 +2955,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
 
-def isPickle(filename):  # @UnusedVariable
+def _is_pickle(filename):  # @UnusedVariable
     """
     Check whether a file is a pickled ObsPy Stream file.
 
@@ -2875,7 +2966,7 @@ def isPickle(filename):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
+    >>> _is_pickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
     if isinstance(filename, (str, native_str)):
@@ -2892,7 +2983,7 @@ def isPickle(filename):  # @UnusedVariable
     return isinstance(st, Stream)
 
 
-def readPickle(filename, **kwargs):  # @UnusedVariable
+def _read_pickle(filename, **kwargs):  # @UnusedVariable
     """
     Read and return Stream from pickled ObsPy Stream file.
 
@@ -2912,7 +3003,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
         return pickle.load(filename)
 
 
-def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
+def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     """
     Write a Python pickle of current stream.
 

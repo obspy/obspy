@@ -32,13 +32,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import os
+import sys
 import warnings
-from obspy import __version__, read, UTCDateTime
-from obspy.core.util.base import ENTRY_POINTS, _DeprecatedArgumentAction
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, SUPPRESS
+from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
+
 import numpy as np
+
+from obspy import UTCDateTime, __version__, read
+from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action
+from obspy.imaging.util import ObsPyAutoDateFormatter, \
+    decimal_seconds_format_date_first_tick
 
 
 def compressStartend(x, stop_iteration):
@@ -201,27 +205,27 @@ def main(argv=None):
                         help='Files or directories to scan.')
 
     # Deprecated arguments
-    action = _DeprecatedArgumentAction('--endtime', '--end-time')
+    action = _get_deprecated_argument_action('--endtime', '--end-time')
     parser.add_argument('--endtime', type=UTCDateTime,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--event-times', '--event-time')
+    action = _get_deprecated_argument_action('--event-times', '--event-time')
     parser.add_argument('--event-times', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--ids', '--id')
+    action = _get_deprecated_argument_action('--ids', '--id')
     parser.add_argument('--ids', action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--nox', '--no-x',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--nox', '--no-x', real_action='store_true')
     parser.add_argument('--nox', dest='no_x', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--nogaps', '--no-gaps',
-                                       real_action='store_true')
+    action = _get_deprecated_argument_action(
+        '--nogaps', '--no-gaps', real_action='store_true')
     parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
                         action=action, help=SUPPRESS)
 
-    action = _DeprecatedArgumentAction('--starttime', '--start-time')
+    action = _get_deprecated_argument_action('--starttime', '--start-time')
     parser.add_argument('--starttime', type=UTCDateTime,
                         action=action, help=SUPPRESS)
 
@@ -240,8 +244,8 @@ def main(argv=None):
     if args.output is not None:
         import matplotlib
         matplotlib.use("agg")
-    global date2num
     from matplotlib.dates import date2num, num2date
+    from matplotlib.ticker import FuncFormatter
     from matplotlib.patches import Rectangle
     from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
@@ -326,9 +330,8 @@ def main(argv=None):
         startend_compressed = compressStartend(startend, 1000)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
-        ax.xaxis_date()
         if not args.no_x:
-            ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
+            ax.plot(startend[:, 0], offset, 'x', linewidth=2)
         ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
                   startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
         # find the gaps
@@ -360,6 +363,15 @@ def main(argv=None):
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
+    fig.autofmt_xdate()  # rotate date
+    ax.xaxis_date()
+    # set custom formatters to always show date in first tick
+    formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
+    formatter.scaled[1 / 24.] = \
+        FuncFormatter(decimal_seconds_format_date_first_tick)
+    formatter.scaled.pop(1/(24.*60.))
+    ax.xaxis.set_major_formatter(formatter)
+    plt.subplots_adjust(left=0.2)
     # set x-axis limits according to given start/end time
     if args.start_time and args.end_time:
         ax.set_xlim(left=args.start_time, right=args.end_time)
@@ -367,8 +379,10 @@ def main(argv=None):
         ax.set_xlim(left=args.start_time, auto=None)
     elif args.end_time:
         ax.set_xlim(right=args.end_time, auto=None)
-    fig.autofmt_xdate()  # rotate date
-    plt.subplots_adjust(left=0.2)
+    else:
+        left, right = ax.xaxis.get_data_interval()
+        x_axis_range = right - left
+        ax.set_xlim(left - 0.05 * x_axis_range, right + 0.05 * x_axis_range)
     if args.output is None:
         plt.show()
     else:
@@ -376,12 +390,7 @@ def main(argv=None):
         height = len(ids) * 0.5
         height = max(4, height)
         fig.set_figheight(height)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         if not args.start_time or not args.end_time:
             days = ax.get_xlim()
@@ -393,12 +402,7 @@ def main(argv=None):
         width = min(width, height * 4)
         fig.set_figwidth(width)
         plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-
-        # tight_layout() only available from matplotlib >= 1.1
-        try:
-            plt.tight_layout()
-        except:
-            pass
+        plt.tight_layout()
 
         fig.savefig(args.output)
     if args.verbose and not args.quiet:

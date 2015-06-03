@@ -1,0 +1,30 @@
+
+/* Leave newline at top! */
+/* CSS changes to make the doc more readable inside Dash/Zeal */
+/* Will only be applied to the docset docs, not the normal ones */
+
+/*Hide the footer*/
+footer {
+    display: none;
+}
+
+/*Hide the navbar*/
+nav {
+    display: none;
+}
+
+/*No more need to account for the navbar*/
+body {
+    padding-top: 0px;
+}
+
+/*Hide the navigation*/
+.breadcrumb {
+    display: none;
+}
+
+/*Make the section header a bit smaller to be viewable in small doc windows*/
+div.section > h1 {
+    font-size: 23px;
+    font-weight: 900;
+}

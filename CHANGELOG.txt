@@ -1,6 +1,74 @@
-0.10.0:
+master:
+ - General:
+   * Requirements have been increased to reflect latest distributions:
+     * Removed support for Python 2.6.
+     * matplotlib >= 1.1.0 is now required.
+     * numpy >= 1.6.1 is now required
+     * scipy >= 0.9.0 is now required
+   * Reorganized the submodule structure. We provide a deprecation path so the
+     old imports will continue to work for one ObsPy version.
+   * Consistent naming scheme across the code base. This results in some
+     functions having different names. Most things that worked with ObsPy 0.10
+     will continue to work with this version, but starting with the next
+     version they will fail. Pay attention to the deprecation warnings.
+   * Support for additional event data formats:
+     - CMTSOLUTION files used by many waveform solvers.
+ - obspy.clients.neries:
+   * Removed the dedicated client. Data can still be accessed by using the FDSN
+     client.
+ - obspy.imaging:
+   * Experimental support for Cartopy when plotting maps. Use the `method`
+     argument to functions that plot maps to select between Basemap or Cartopy.
+ - obspy.io.mseed:
+   * Upgrade to libmseed 2.16
+ - obspy.signal:
+   * Switch to second-order sections for filters; backported from SciPy 0.16.0
+     (see #1028)
+
+0.10.x:
+  - obspy.station:
+    * ObsPy no longer assumes that the StationXML namespace is the default
+      namespace (see #1060).
+  - obspy.taup:
+    * Calculating arrival times for surface waves now works (see #1055)
+
+0.10.2: (doi: 10.5281/zenodo.17641)
+ - obspy.core:
+   * Fix catalog plot with events that have no origin depth or
+     origin time (see #1021)
+ - obspy.datamark:
+   * Fix datawide=3 and datawide=0.5 block reading (see #1016)
+ - obspy.earthworm:
+   * Fix Python3 compatibility problem
+ - obspy.imaging:
+   * Fix flipped maps due to bug in Basemap
+   * Fix handling of velocity reduction in section plots with degree offsets
+     (see #1029)
+   * Allow section plots over existing figures by not modifying existing lines
+   * Don't prematurely close waveform figure if returning its handle
+ - obspy.seedlink:
+   * Fix Python3 compatibility for seedlink.easyseedlink
+   * Basic seedlink client: Properly timeout requests with valid station
+     selection but no data available in selected time window (see #1045)
+ - obspy.signal:
+   * Fix return data types/values of polarization routines (see #1026)
+ - obspy.station:
+   * Fix URL to FDSN StationXML schema in StationXML output (see #1023)
+
+0.10.1: (doi: 10.5281/zenodo.16248)
+ - minor changes for correct distribution of official release
+   tar/zipball (see #993, #994)
+ - one minor encoding-related bugfix in mopad script (see #992)
+
+0.10.0: (doi: 10.5281/zenodo.16200)
+ - Highlights:
+   * Python3 support
+   * anaconda support
+   * New formats: AH, CNV, Kinemetrics EVT, NDK, NLLOC, PDAS, ZMAP
+   * ObsPy licensed under LGPL v3.0 now as a whole.
  - General:
    * Support for Python 3.3 and 3.4 in addition to 2.6 and 2.7
+   * ObsPy licensed under LGPL v3.0 now as a whole.
    * More generic processing history for most Stream and Trace methods.
    * Now requires NumPy >= 1.4.0
    * Now requires SciPy >= 0.7.2
@@ -13,11 +81,11 @@
      * scipy < 0.10
  - obspy.ah
    * New submodule for reading the AH (Ad Hoc) waveform format
- - obspy.kinemetrics
-   * New submodule for reading the Kinemetrics EVT waveform format
  - obspy.arclink:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.core:
+   * Preview waveform plot improved: interactive updating of ticks and
+     ticklabels, correct ticklabels for sub-minute zoom level (#657)
    * fixed a problem with UTCDateTime with timestamps of far future
      dates (larger than 2038, often seen in StationXML end dates,
      see #805)
@@ -36,6 +104,8 @@
      textwrap module which provides similar functionality.
    * new plugin for CNV event format (used by VELEST) for
      Catalog/Event.write() (see obspy.cnv and #905)
+   * better customizable control during merging traces with sub-sample shift
+     of sampling points (see #980)
  - obspy.cnv:
    * new plugin to write CNV event files (used by VELEST) from
      Catalog/Event objects. (see #905)
@@ -52,7 +122,15 @@
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+   * The projections of Catalog.plot() have been modified slightly to provide
+     equal-area projections:
+     * The `"cyl"` projection is now named `"global"`. It is now the Mollweide
+       projection.
+     * The '"local"` projection now uses the Albers Equal Area projection.
+ - obspy.kinemetrics
+   * New submodule for reading the Kinemetrics EVT waveform format
  - obspy.mseed:
+   * Support for reading and writing all encodings supported by libmseed.
    * proper error reporting while reading
    * `details=True` when reading will now write to
      `Trace.stats.mseed.blkt1001.timing_quality` instead of
@@ -65,6 +143,14 @@
      MiniSEED files.
    * The sequence number of the first record of each Trace can now be
      specified when writing MiniSEED files.
+   * `obspy-mseed-recordanalyzer`:
+       - Bugfix: when specifying an out-of-bounds record number, information
+         about the last record in the file was displayed (see #957). Now a
+         proper error message is shown and the command line script exits
+         with non-zero exit code.
+       - Faster reading of a single record header
+       - Added option "-a" to print information of all records
+   * upgrade to libmseed 2.15
  - obspy.ndk:
    * New submodule able to read NDK files from the Global CMT project.
  - obspy.neries:
@@ -82,12 +168,19 @@
    * read support for PDAS waveform files
  - obspy.sac:
    * New `byteorder` option for writing sac files to disk.
+   * Can now read/write from/to file-like objects like io.BytesIO and open
+     files.
  - obspy.seedlink:
    * bugfix: INFO responses from the IRIS ringserver are now parsed
      correctly (see #807)
    * New submodule `easyseedlink` providing an easier way to create
      SeedLink clients
-   * Fix MiniSEED record leak in packet parser (see #918)
+   * New `Client` class providing a basic seedlink client for individual
+     requests of finite time windows (i.e. non-continuous programs)
+   * Fix memory leak in `SLClient` (MiniSEED record leak in packet parser,
+     see #918)
+ - obspy.seisan:
+   * bugfix the actual data were misaligned by one
  - obspy.seishub:
    * use specified timeout in all requests to server (see #786)
    * Helper method `Client.event.getEvents()` to fetch a `Catalog` object
@@ -100,12 +193,17 @@
      frequency (see #804)
    * PPSD: water level in instrument correction can now be specified by user
      on PPSD initialization
+   * New polarization analysis methods: flinn, vidale, pm
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
    * add get_coordinates method to inventory and network objects (see #740)
    * read/write support for DataAvailability tags in StationXML files.
    * write support for SACPZ ASCII representation of channel responses.
+ - obspy.taup:
+   * Replaced Fortran implementation with much more powerful Python port of
+	 Java TauP. This enabled us to drop all Fortran code, which simplifies
+     releases and builds tremendously.
  - obspy.xseed:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
  - obspy.zmap:

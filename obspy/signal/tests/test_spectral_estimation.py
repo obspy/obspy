@@ -7,15 +7,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream, UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile
-from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
-    welch_taper
-import numpy as np
-import os
 import gzip
+import os
 import unittest
 import warnings
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
+                                              welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -32,10 +34,8 @@ def _get_sample_data():
     file_data = os.path.join(
         PATH, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
     # parameters for the test
-    # no with due to py 2.6
-    f = gzip.open(file_data)
-    data = np.loadtxt(f)
-    f.close()
+    with gzip.open(file_data) as f:
+        data = np.loadtxt(f)
     stats = {'_format': 'MSEED',
              'calib': 1.0,
              'channel': 'EHZ',
@@ -105,8 +105,14 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
-                           window=welch_taper, noverlap=NOVERLAP)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
+                               window=welch_taper, noverlap=NOVERLAP)
+            self.assertEqual(len(w), 1)
+            self.assertTrue('This wrapper is no longer necessary.' in
+                            str(w[0].message))
+
         psd_pitsa = np.load(file_psd_pitsa)
 
         # mlab's psd routine returns Nyquist frequency as last entry, PITSA

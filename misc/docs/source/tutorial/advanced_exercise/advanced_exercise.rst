@@ -27,7 +27,7 @@ we rather want to focus on the general workflow here.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Fetch a list of events from EMSC for the region of Valais/SW-Switzerland on 3rd
-April of 2012. Use the Client provided in :mod:`obspy.neries`. Note down the
+April of 2012. Use the Client provided in :mod:`obspy.clients.fdsn`. Note down the
 catalog origin times, epicenters and magnitudes.
 
 2. Estimate Local Magnitude
@@ -105,13 +105,13 @@ a) Modify the existing code and fetch waveform data around the origin time given
    automatically. During instrument simulation use keyword argument
    *paz_remove='self'* to use every trace's attached PAZ information fetched from
    `WebDC <http://www.webdc.eu>`_. Calculate :math:`M_\text{lh}` like before.
-   
+
 b) Use a list of station names (e.g. *LKBD*, *SIMPL*, *DIX*) and perform the
    magnitude estimation in a loop for each station. Use a wildcarded
    *channel="[EH]H\*"* to fetch the respective streams for both short-period and
    broadband stations. Compile a list of all station magnitudes and compute the
    network magnitude as its median (available in :mod:`numpy:numpy` module).
-   
+
 c) Extend the network magnitude estimate by using all available stations in
    network *CH*. Get a list of stations using the ArcLink client and loop over
    this list. Use a wildcarded *channel="[EH]H[ZNE]"*, check if there are three

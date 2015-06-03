@@ -4,15 +4,17 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import Trace, Stream, UTCDateTime
-from obspy.core.util import AttribDict
-from obspy.signal.array_analysis import array_transff_freqslowness, \
-    array_processing, array_transff_wavenumber, get_spoint
-from obspy.signal.util import utlLonLat
-
 import io
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util import AttribDict
+from obspy.signal.array_analysis import (array_processing,
+                                         array_transff_freqslowness,
+                                         array_transff_wavenumber, get_spoint)
+from obspy.signal.util import util_lon_lat
 
 
 class SonicTestCase(unittest.TestCase):
@@ -172,8 +174,8 @@ class SonicTestCase(unittest.TestCase):
 
         coordsll = np.zeros(coords.shape)
         for i in np.arange(len(coords)):
-            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0],
-                                                       coords[i, 1])
+            coordsll[i, 0], coordsll[i, 1] = util_lon_lat(0., 0., coords[i, 0],
+                                                          coords[i, 1])
 
         slim = 40.
         fmin = 1.
@@ -209,8 +211,8 @@ class SonicTestCase(unittest.TestCase):
 
         coordsll = np.zeros(coords.shape)
         for i in np.arange(len(coords)):
-            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0],
-                                                       coords[i, 1])
+            coordsll[i, 0], coordsll[i, 1] = util_lon_lat(0., 0., coords[i, 0],
+                                                          coords[i, 1])
 
         klim = 40.
         kstep = klim / 2.

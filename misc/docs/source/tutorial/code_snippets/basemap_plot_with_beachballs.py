@@ -1,12 +1,16 @@
+import gzip
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-from obspy.imaging.beachball import Beach
-import gzip
+
+from obspy.imaging.beachball import beach
+
 
 # read in topo data (on a regular lat/lon grid)
 # (SRTM data from: http://srtm.csi.cgiar.org/)
-srtm = np.loadtxt(gzip.open("srtm_1240-1300E_4740-4750N.asc.gz"), skiprows=8)
+with gzip.open("srtm_1240-1300E_4740-4750N.asc.gz") as fp:
+    srtm = np.loadtxt(fp, skiprows=8)
 
 # origin of data grid as stated in SRTM data file header
 # create arrays with all lon/lat values from min to max and
@@ -49,7 +53,7 @@ x, y = m(lons, lats)
 focmecs = [[80, 50, 80], [85, 30, 90]]
 ax = plt.gca()
 for i in range(len(focmecs)):
-    b = Beach(focmecs[i], xy=(x[i], y[i]), width=1000, linewidth=1)
+    b = beach(focmecs[i], xy=(x[i], y[i]), width=1000, linewidth=1)
     b.set_zorder(10)
     ax.add_collection(b)
 

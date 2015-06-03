@@ -1,11 +1,15 @@
 from __future__ import print_function
-import obspy.neries
 
-client = obspy.neries.Client()
+import obspy
+import obspy.clients.fdsn
 
-events = client.getEvents(min_latitude=46.1, max_latitude=46.3,
-                          min_longitude=7.6, max_longitude=7.8,
-                          min_datetime="2012-04-03", max_datetime="2012-04-04")
+
+client = obspy.clients.fdsn.Client("neries")
+
+events = client.get_events(minlatitude=46.1, maxlatitude=46.3,
+                           minlongitude=7.6, maxlongitude=7.8,
+                           starttime=obspy.UTCDateTime("2012-04-03"),
+                           endtime=obspy.UTCDateTime("2012-04-04"))
 
 print("found %s event(s):" % len(events))
 for event in events:

@@ -80,7 +80,7 @@ credits:
 assets:
 	@python make_assets.py
 
-html: assets credits
+html: assets credits citations
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
 	if [ ! -d $(BUILDDIR)/html ]; then mkdir $(BUILDDIR)/html; fi
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
@@ -203,3 +203,15 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+docset: html docset_after_html
+
+docset_after_html:
+ifeq ($(DOCSETVERSION),)
+	$(eval DOCSETVERSION := $(shell head -3 $(BUILDDIR)/html/objects.inv | grep ' ObsPy Documentation ' | sed 's#.*(\(.*\)).*#\1#'))
+endif
+	cd $(BUILDDIR)/html && rm -rf icon.png && ln -s _static/obspy-logo_32x32.png icon.png
+	rm -rf "$(BUILDDIR)/ObsPy $(DOCSETVERSION).docset"
+	cd $(BUILDDIR) && doc2dash -n 'ObsPy $(DOCSETVERSION)' -i html/icon.png html/
+	sed 's#\(<string>[Oo]bs[Pp]y\) .*\(</string>\)#\1 ${DOCSETVERSION}\2#' --in-place "$(BUILDDIR)/ObsPy $(DOCSETVERSION).docset/Contents/Info.plist"
+	rm -f $(BUILDDIR)/html/icon.png

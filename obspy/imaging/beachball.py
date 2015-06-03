@@ -30,9 +30,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import matplotlib.pyplot as plt
-from matplotlib import patches, collections, transforms, path as mplpath
+
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import path as mplpath
+from matplotlib import collections, patches, transforms
+
+from obspy.core.util.decorator import deprecated
 
 
 D2R = np.pi / 180
@@ -40,7 +44,12 @@ R2D = 180 / np.pi
 EPSILON = 0.00001
 
 
-def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
+def Beach(*args, **kwargs):
+    return beach(*args, **kwargs)
+
+
+def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, axes=None):
     """
@@ -53,8 +62,11 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
         (strike, dip, and rake) or NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
-        system is 1,2,3 = Up,South,East which equals r,theta,phi). The strike
-        is of the first plane, clockwise relative to north.
+        system is 1,2,3 = Up,South,East which equals r,theta,phi -
+        Harvard/Global CMT convention). The relation to Aki and Richards
+        x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
+        Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+        The strike is of the first plane, clockwise relative to north.
         The dip is of the first plane, defined clockwise and perpendicular to
         strike, relative to horizontal such that 0 is horizontal and 90 is
         vertical. The rake is of the first focal plane solution. 90 moves the
@@ -92,12 +104,12 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     np1 = None
     if isinstance(fm, MomentTensor):
         mt = fm
-        np1 = MT2Plane(mt)
+        np1 = mt2plane(mt)
     elif isinstance(fm, NodalPlane):
         np1 = fm
     elif len(fm) == 6:
         mt = MomentTensor(fm[0], fm[1], fm[2], fm[3], fm[4], fm[5], 0)
-        np1 = MT2Plane(mt)
+        np1 = mt2plane(mt)
     elif len(fm) == 3:
         np1 = NodalPlane(fm[0], fm[1], fm[2])
     else:
@@ -109,17 +121,17 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     # Return as collection
     if mt:
-        (T, N, P) = MT2Axes(mt)
+        (T, N, P) = mt2axes(mt)
         if np.fabs(N.val) < EPSILON and np.fabs(T.val + P.val) < EPSILON:
-            colors, p = plotDC(np1, size, xy=xy, width=width)
+            colors, p = plot_dc(np1, size, xy=xy, width=width)
         else:
-            colors, p = plotMT(T, N, P, size,
-                               plot_zerotrace=True, xy=xy, width=width)
+            colors, p = plot_mt(T, N, P, size,
+                                plot_zerotrace=True, xy=xy, width=width)
     else:
-        colors, p = plotDC(np1, size=size, xy=xy, width=width)
+        colors, p = plot_dc(np1, size=size, xy=xy, width=width)
 
     if nofill:
-        # XXX: not tested with plotMT
+        # XXX: not tested with plot_mt
         col = collections.PatchCollection([p[1]], match_original=False)
         col.set_facecolor('none')
     else:
@@ -149,7 +161,13 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     return col
 
 
-def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
+            "instead.")
+def Beachball(*args, **kwargs):
+    return beachball(*args, **kwargs)
+
+
+def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
               alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
               zorder=100, outfile=None, format=None, fig=None):
     """
@@ -212,7 +230,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     ax.axison = False
 
     # plot the collection
-    collection = Beach(fm, linewidth=linewidth, facecolor=facecolor,
+    collection = beach(fm, linewidth=linewidth, facecolor=facecolor,
                        edgecolor=edgecolor, bgcolor=bgcolor,
                        alpha=alpha, nofill=nofill, xy=xy,
                        width=plot_width, size=size, zorder=zorder)
@@ -235,8 +253,8 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plotMT(T, N, P, size=200, plot_zerotrace=True,
-           x0=0, y0=0, xy=(0, 0), width=200):
+def plot_mt(T, N, P, size=200, plot_zerotrace=True,
+            x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
 
@@ -558,7 +576,7 @@ def plotMT(T, N, P, size=200, plot_zerotrace=True,
         return colors, collect
 
 
-def plotDC(np1, size=200, xy=(0, 0), width=200):
+def plot_dc(np1, size=200, xy=(0, 0), width=200):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
 
@@ -608,7 +626,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
             np.power(90 - D2, 2) / np.power(90, 2)))
 
     inc = 1
-    (X1, Y1) = Pol2Cart(phi + S1 * D2R, l1)
+    (X1, Y1) = pol2cart(phi + S1 * D2R, l1)
 
     if M == 1:
         lo = S1 - 180
@@ -616,8 +634,8 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         if lo > hi:
             inc = -1
         th1 = np.arange(S1 - 180, S2, inc)
-        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
+        (Xs1, Ys1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+        (X2, Y2) = pol2cart(phi + S2 * D2R, l2)
         th2 = np.arange(S2 + 180, S1, -inc)
     else:
         hi = S1 - 180
@@ -625,12 +643,12 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         if lo > hi:
             inc = -1
         th1 = np.arange(hi, lo, -inc)
-        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
+        (Xs1, Ys1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+        (X2, Y2) = pol2cart(phi + S2 * D2R, l2)
         X2 = X2[::-1]
         Y2 = Y2[::-1]
         th2 = np.arange(S2, S1, inc)
-    (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * np.ones((1, len(th2))))
+    (Xs2, Ys2) = pol2cart(th2 * D2R, 90 * np.ones((1, len(th2))))
     X = np.concatenate((X1, Xs1[0], X2, Xs2[0]))
     Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]))
 
@@ -663,7 +681,7 @@ def xy2patch(x, y, res, xy):
     return patches.PathPatch(path)
 
 
-def Pol2Cart(th, r):
+def pol2cart(th, r):
     """
     """
     x = r * np.cos(th)
@@ -671,7 +689,7 @@ def Pol2Cart(th, r):
     return (x, y)
 
 
-def StrikeDip(n, e, u):
+def strike_dip(n, e, u):
     """
     Finds strike and dip of plane given normal vector having components n, e,
     and u.
@@ -714,7 +732,7 @@ def AuxPlane(s1, d1, r1):
     sl1 = -np.cos(z3) * np.cos(z) - np.sin(z3) * np.sin(z) * np.cos(z2)
     sl2 = np.cos(z3) * np.sin(z) - np.sin(z3) * np.cos(z) * np.cos(z2)
     sl3 = np.sin(z3) * np.sin(z2)
-    (strike, dip) = StrikeDip(sl2, sl1, sl3)
+    (strike, dip) = strike_dip(sl2, sl1, sl3)
 
     n1 = np.sin(z) * np.sin(z2)  # normal vector to plane 1
     n2 = np.cos(z) * np.sin(z2)
@@ -739,7 +757,7 @@ def AuxPlane(s1, d1, r1):
     return (strike, dip, rake)
 
 
-def MT2Plane(mt):
+def mt2plane(mt):
     """
     Calculates a nodal plane of a given moment tensor.
 
@@ -772,13 +790,13 @@ def MT2Plane(mt):
     else:
         AN1 = -AN
         AE1 = -AE
-    (ft, fd, fl) = TDL(AN1, AE1)
+    (ft, fd, fl) = tdl(AN1, AE1)
     return NodalPlane(360 - ft, fd, 180 - fl)
 
 
-def TDL(AN, BN):
+def tdl(AN, BN):
     """
-    Helper function for MT2Plane.
+    Helper function for mt2plane.
 
     Adapted from MATLAB script
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
@@ -859,7 +877,7 @@ def TDL(AN, BN):
     return (FT, FD, FL)
 
 
-def MT2Axes(mt):
+def mt2axes(mt):
     """
     Calculates the principal axes of a given moment tensor.
 

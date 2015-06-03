@@ -1,0 +1,22 @@
+Description: Remove basemap<1.0.4 warning
+ Removes the warning when encountering basemap version 1.0.4 for debian
+ packages from obspy.org because we assume that the patched basemap package is
+ installed, which is available from the obspy deb repository as well.
+Author: megies@geophysik.uni-muenchen.de
+Bug: https://github.com/obspy/obspy/commit/bc7bb622bae20d2d281646ba1934ab7be27b6e25
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+--- a/obspy/imaging/maps.py
++++ b/obspy/imaging/maps.py
+@@ -41,11 +41,6 @@ BASEMAP_VERSION = getBasemapVersion()
+ if BASEMAP_VERSION:
+     from mpl_toolkits.basemap import Basemap
+     HAS_BASEMAP = True
+-    if BASEMAP_VERSION < [1, 0, 4]:
+-        warnings.warn("All basemap version < 1.0.4 contain a serious bug "
+-                      "when rendering countries and continents. ObsPy will "
+-                      "still work but the maps might be wrong. Please update "
+-                      "your basemap installation.")
+ else:
+     warnings.warn("basemap not installed.")
+     HAS_BASEMAP = False

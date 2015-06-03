@@ -11,27 +11,28 @@ Testing utilities for ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str, PY2
+from future.utils import PY2, native_str
 
-from obspy.core.util.misc import get_untracked_files_from_git, CatchOutput
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
-
-import fnmatch
-import inspect
-import os
-import io
-import numpy as np
-import re
 import difflib
-import glob
-import unittest
 import doctest
+import fnmatch
+import glob
+import inspect
+import io
+import os
+import re
 import shutil
+import unittest
 import warnings
+
 from lxml import etree
+import numpy as np
+
+from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
+from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
 
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def add_unittests(testsuite, module_name):
@@ -407,7 +408,8 @@ class ImageComparison(NamedTemporaryFile):
         # if specified move generated output to source tree
         finally:
             import matplotlib.pyplot as plt
-            self.close()
+            self.close()  # flush internal buffer
+            self._fileobj.close()
             plt.close()
             if self.keep_output:
                 if not (self.keep_only_failed and not failed):
@@ -516,6 +518,15 @@ else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
 
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+]
+
 
 def check_flake8():
     if not HAS_FLAKE8:
@@ -560,7 +571,8 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    flake8_style.options.ignore = tuple(set(flake8_style.options.ignore))
+    flake8_style.options.ignore = tuple(set(
+        flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
 
     with CatchOutput() as out:
         files = [native_str(f) for f in files]
@@ -576,7 +588,8 @@ def check_flake8():
 # be executed) or a message explaining why tests can not be executed (all
 # tests of corresponding module will be skipped).
 MODULE_TEST_SKIP_CHECKS = {
-    'seishub': 'obspy.seishub.tests.test_client._check_server_availability',
+    'seishub':
+        'obspy.clients.seishub.tests.test_client._check_server_availability',
     }
 
 

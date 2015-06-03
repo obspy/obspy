@@ -6,8 +6,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import matplotlib
 import unittest
+
+import matplotlib
 
 
 class BackendTestCase(unittest.TestCase):
@@ -17,7 +18,7 @@ class BackendTestCase(unittest.TestCase):
     Note: This test will fail when called from an interactive Python session
     where matplotlib was already imported.
     """
-    def test_Backend(self):
+    def test_backend(self):
         """
         Test to see if tests are running without any X11 or any other display
         variable set. Therefore, the AGG backend is chosen in

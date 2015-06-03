@@ -2,9 +2,12 @@
 USAGE: export_seismograms_to_ascii.py in_file out_file calibration
 """
 from __future__ import print_function
-from obspy.core import read
-import numpy as np
+
 import sys
+
+import numpy as np
+import obspy
+
 
 try:
     in_file = sys.argv[1]
@@ -14,7 +17,7 @@ except:
     print(__doc__)
     raise
 
-st = read(in_file)
+st = obspy.read(in_file)
 for i, tr in enumerate(st):
     f = open("%s_%d" % (out_file, i), "w")
     f.write("# STATION %s\n" % (tr.stats.station))

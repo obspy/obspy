@@ -6,12 +6,14 @@ The Filter test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from obspy.core.util.libnames import _load_CDLL
 
-from obspy.signal import xcorr
 import ctypes as C
-import numpy as np
 import unittest
+
+import numpy as np
+
+from obspy.core.util.libnames import _load_CDLL
+from obspy.signal.cross_correlation import xcorr
 
 
 class UtilTestCase(unittest.TestCase):
