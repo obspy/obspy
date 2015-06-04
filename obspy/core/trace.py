@@ -1133,7 +1133,7 @@ class Trace(object):
     def slide(self, window_length, step, offset=0,
               include_partial_windows=False, nearest_sample=True):
         """
-        Iterator to return equal length windows of the Trace.
+        Generator yielding equal length sliding windows of the Trace.
 
         Please keep in mind that it only returns a new view of the original
         data. Any modifications are applied to the original data as well. If
