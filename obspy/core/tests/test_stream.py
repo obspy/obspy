@@ -2271,12 +2271,12 @@ class StreamTestCase(unittest.TestCase):
         tr1.stats.sampling_rate = 5.0
 
         # 5 - 10 seconds
-        tr2= Trace(data=np.linspace(25, 75, 51))
+        tr2 = Trace(data=np.linspace(25, 75, 51))
         tr2.stats.starttime = UTCDateTime(5.0)
         tr2.stats.sampling_rate = 5.0
 
         # 15 - 20 seconds
-        tr3= Trace(data=np.linspace(75, 100, 26))
+        tr3 = Trace(data=np.linspace(75, 100, 26))
         tr3.stats.starttime = UTCDateTime(0.0)
         tr3.stats.sampling_rate = 15.0
 
