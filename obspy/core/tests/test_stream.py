@@ -431,6 +431,39 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st2.test, 1)
         self.assertEqual(st2.muh, "Muh")
 
+    def test_slice_nearest_sample(self):
+        """
+        Tests that the nearest_sample argument is correctly passed to the
+        trace function calls.
+        """
+        # It defaults to True.
+        st = read()
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = st[0]
+            st.slice(1, 2)
+
+        self.assertEqual(patch.call_count, 3)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Force True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = st[0]
+            st.slice(1, 2, nearest_sample=True)
+
+        self.assertEqual(patch.call_count, 3)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Set to False.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = st[0]
+            st.slice(1, 2, nearest_sample=False)
+
+        self.assertEqual(patch.call_count, 3)
+        for arg in patch.call_args_list:
+            self.assertFalse(arg[1]["nearest_sample"])
+
     def test_cutout(self):
         """
         Test cutout method of the Stream object. Compare against equivalent

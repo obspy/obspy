@@ -1553,7 +1553,8 @@ class Stream(object):
         self.traces = tmp.traces
         return self
 
-    def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
+    def slice(self, starttime=None, endtime=None, keep_empty_traces=False,
+              nearest_sample=True):
         """
         Return new Stream object cut to the given start and end time.
 
@@ -1564,6 +1565,18 @@ class Stream(object):
         :type keep_empty_traces: bool, optional
         :param keep_empty_traces: Empty traces will be kept if set to ``True``.
             Defaults to ``False``.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the next sample containing the time
+            is selected. Defaults to ``True``.
+
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
+
+                |        A|         |         |
+
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
         :return: :class:`~obspy.core.stream.Stream`
 
         .. note::
@@ -1593,7 +1606,8 @@ class Stream(object):
         tmp.traces = []
         new = tmp.copy()
         for trace in self:
-            sliced_trace = trace.slice(starttime=starttime, endtime=endtime)
+            sliced_trace = trace.slice(starttime=starttime, endtime=endtime,
+                                       nearest_sample=nearest_sample)
             if keep_empty_traces is False and not sliced_trace.stats.npts:
                 continue
             new.append(sliced_trace)
