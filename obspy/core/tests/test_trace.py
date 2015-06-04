@@ -1936,6 +1936,7 @@ class TraceTestCase(unittest.TestCase):
         Tests for sliding a window across a trace object.
         """
         tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
         tr.stats.sampling_rate = 5.0
 
         # First slice it in 4 pieces. Window length is in seconds.
@@ -1944,13 +1945,13 @@ class TraceTestCase(unittest.TestCase):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 4)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(0), UTCDateTime(5)))
-        self.assertEqual(slice[1],
+        self.assertEqual(slices[1],
                          tr.slice(UTCDateTime(5), UTCDateTime(10)))
-        self.assertEqual(slice[2],
+        self.assertEqual(slices[2],
                          tr.slice(UTCDateTime(10), UTCDateTime(15)))
-        self.assertEqual(slice[3],
+        self.assertEqual(slices[3],
                          tr.slice(UTCDateTime(15), UTCDateTime(20)))
 
         # Different step which is the distance between two windows measured
@@ -1960,9 +1961,9 @@ class TraceTestCase(unittest.TestCase):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 2)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(0), UTCDateTime(5)))
-        self.assertEqual(slice[1],
+        self.assertEqual(slices[1],
                          tr.slice(UTCDateTime(10), UTCDateTime(15)))
 
         # Offset determines the initial starting point. It defaults to zero.
@@ -1971,9 +1972,9 @@ class TraceTestCase(unittest.TestCase):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 2)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(8.5), UTCDateTime(13.5)))
-        self.assertEqual(slice[1],
+        self.assertEqual(slices[1],
                          tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
 
         # By default only full length windows will be returned so any
@@ -1984,7 +1985,7 @@ class TraceTestCase(unittest.TestCase):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 1)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
 
         # But it can optionally be returned.
@@ -1994,24 +1995,24 @@ class TraceTestCase(unittest.TestCase):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 2)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[1],
                          tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
 
-        # Negative step lengths work.
+        # Negative step lengths work together with an offset.
         slices = []
         for window_tr in tr.slide(window_length=5.0, step=-5.0, offset=20.0):
             slices.append(window_tr)
 
         self.assertEqual(len(slices), 4)
-        self.assertEqual(slice[0],
+        self.assertEqual(slices[0],
                          tr.slice(UTCDateTime(15), UTCDateTime(20)))
-        self.assertEqual(slice[1],
+        self.assertEqual(slices[1],
                          tr.slice(UTCDateTime(10), UTCDateTime(15)))
-        self.assertEqual(slice[2],
+        self.assertEqual(slices[2],
                          tr.slice(UTCDateTime(5), UTCDateTime(10)))
-        self.assertEqual(slice[3],
+        self.assertEqual(slices[3],
                          tr.slice(UTCDateTime(0), UTCDateTime(5)))
 
 

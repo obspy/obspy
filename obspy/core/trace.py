@@ -1116,6 +1116,50 @@ class Trace(object):
         tr.trim(starttime=starttime, endtime=endtime)
         return tr
 
+    def slide(self, window_length, step, offset=0,
+              include_partial_windows=False):
+        """
+        Iterator to return equal length windows of the trace.
+
+        Please keep in mind that it only returns a new view of the original
+        data. Any modifications are applied to the original data as well. If
+        you don't want this you have to create a copy of the yielded windows.
+
+        :param window_length: The length of each window in seconds.
+        :param step: The step between the start times of two successive
+            windows in seconds. Can be negative if an offset is given.
+        :param offset: The offset of the first window in seconds relative to
+            the first sample in the trace.
+        :param include_partial_windows: Determines if windows that are
+            shorter then 99.9 % of the desired length are returned.
+        """
+        if step > 0:
+            end = self.stats.endtime.timestamp - 0.001 * step
+        else:
+            end = self.stats.starttime.timestamp - 0.001 * abs(step)
+        # Left sides of each window.
+        indices = np.arange(start=self.stats.starttime.timestamp + offset,
+                            stop=end, step=step, dtype=np.float64)
+        # Generate all possible windows.
+        windows = [(_i, min(_i + window_length, self.stats.endtime.timestamp))
+                   for _i in indices]
+
+        # Potentially remove partial windows not fullfilling the window
+        # length criterion.
+        if not include_partial_windows:
+            windows = [_i for _i in windows
+                       if abs(_i[1] - _i[0]) > 0.999 * window_length]
+
+        if len(indices) < 1:
+            raise StopIteration
+
+        for start, stop in windows:
+            start, stop = sorted((start, stop))
+            yield self.slice(self.stats.starttime + start,
+                             self.stats.starttime + stop)
+
+        raise StopIteration
+
     def verify(self):
         """
         Verify current trace object against available meta data.
