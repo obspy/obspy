@@ -27,7 +27,7 @@ from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
 from obspy.core.util.decorator import (deprecated_keywords, raise_if_masked,
                                        skip_if_no_data)
-from obspy.core.util.misc import flat_not_masked_contiguous
+from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
 class Stats(AttribDict):
@@ -1133,28 +1133,18 @@ class Trace(object):
         :param include_partial_windows: Determines if windows that are
             shorter then 99.9 % of the desired length are returned.
         """
-        if step > 0:
-            end = self.stats.endtime.timestamp - 0.001 * step
-        else:
-            end = self.stats.starttime.timestamp - 0.001 * abs(step)
-        # Left sides of each window.
-        indices = np.arange(start=self.stats.starttime.timestamp + offset,
-                            stop=end, step=step, dtype=np.float64)
-        # Generate all possible windows.
-        windows = [(_i, min(_i + window_length, self.stats.endtime.timestamp))
-                   for _i in indices]
+        windows = get_window_times(
+            starttime=self.stats.starttime,
+            endtime=self.stats.endtime,
+            window_length=window_length,
+            step=step,
+            offset=offset,
+            include_partial_windows=include_partial_windows)
 
-        # Potentially remove partial windows not fullfilling the window
-        # length criterion.
-        if not include_partial_windows:
-            windows = [_i for _i in windows
-                       if abs(_i[1] - _i[0]) > 0.999 * window_length]
-
-        if len(indices) < 1:
+        if len(windows) < 1:
             raise StopIteration
 
         for start, stop in windows:
-            start, stop = sorted((start, stop))
             yield self.slice(self.stats.starttime + start,
                              self.stats.starttime + stop)
 
