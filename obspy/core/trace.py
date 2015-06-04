@@ -1140,13 +1140,16 @@ class Trace(object):
         you don't want this you have to create a copy of the yielded windows.
 
         :param window_length: The length of each window in seconds.
+        :type window_length: float
         :param step: The step between the start times of two successive
             windows in seconds. Can be negative if an offset is given.
+        :type step: float
         :param offset: The offset of the first window in seconds relative to
-            the first sample in the trace.
+            the start time of the whole interval.
+        :type offset: float
         :param include_partial_windows: Determines if windows that are
             shorter then 99.9 % of the desired length are returned.
-        :type nearest_sample: bool, optional
+        :type include_partial_windows: bool
         :param nearest_sample: If set to ``True``, the closest sample is
             selected, if set to ``False``, the next sample containing the time
             is selected. Defaults to ``True``.
@@ -1158,6 +1161,7 @@ class Trace(object):
 
             ``nearest_sample=True`` will select the second sample point,
             ``nearest_sample=False`` will select the first sample point.
+        :type nearest_sample: bool, optional
         """
         windows = get_window_times(
             starttime=self.stats.starttime,
