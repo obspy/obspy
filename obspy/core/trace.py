@@ -1091,7 +1091,7 @@ class Trace(object):
                 pass
         return self
 
-    def slice(self, starttime=None, endtime=None):
+    def slice(self, starttime=None, endtime=None, nearest_sample=True):
         """
         Return a new Trace object with data going from start to end time.
 
@@ -1099,6 +1099,19 @@ class Trace(object):
         :param starttime: Specify the start time of slice.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Specify the end time of slice.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the next sample containing the time
+            is selected. Defaults to ``True``.
+
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
+
+                |        A|         |         |
+
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
+
         :return: New :class:`~obspy.core.trace.Trace` object. Does not copy
             data but just passes a reference to it.
 
@@ -1113,7 +1126,8 @@ class Trace(object):
         """
         tr = copy(self)
         tr.stats = deepcopy(self.stats)
-        tr.trim(starttime=starttime, endtime=endtime)
+        tr.trim(starttime=starttime, endtime=endtime,
+                nearest_sample=nearest_sample)
         return tr
 
     def slide(self, window_length, step, offset=0,

@@ -684,6 +684,33 @@ class TraceTestCase(unittest.TestCase):
         self.__remove_processing(tr2)
         self.assertEqual(tr_trim, tr2)
 
+    def test_slice_nearest_sample(self):
+        """
+        Tests slicing with the nearest sample flag set to on or off.
+        """
+        tr = Trace(data=np.arange(6))
+        # Samples at:
+        # 0       10       20       30       40       50
+        tr.stats.sampling_rate = 0.1
+
+        # Nearest sample flag defaults to true.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(50))
+
+        # Setting it to False changes the returned values.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
     def test_trimFloatingPoint(self):
         """
         Tests the slicing of trace objects.
