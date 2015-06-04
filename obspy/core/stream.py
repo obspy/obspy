@@ -1626,6 +1626,24 @@ class Stream(object):
         algorithm will determine the maximal temporal extends by analysing
         all Traces and then create windows based on these times.
 
+        .. rubric:: Example
+
+        >>> import obspy
+        >>> st = obspy.read()
+        >>> for windowed_st in st.slide(window_length=10.0, step=10.0):
+        ...     print(windowed_st)
+        ...     print("---")  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        3 Trace(s) in Stream:
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ---
+        3 Trace(s) in Stream:
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+
+
         :param window_length: The length of each window in seconds.
         :type window_length: float
         :param step: The step between the start times of two successive
@@ -1664,8 +1682,7 @@ class Stream(object):
             raise StopIteration
 
         for start, stop in windows:
-            temp = self.slice(starttime + start,
-                              starttime + stop,
+            temp = self.slice(start, stop,
                               nearest_sample=nearest_sample)
             # It might happen that there is a time frame where there are no
             # windows, e.g. two traces seperated by a large gap.

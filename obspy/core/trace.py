@@ -1139,6 +1139,19 @@ class Trace(object):
         data. Any modifications are applied to the original data as well. If
         you don't want this you have to create a copy of the yielded windows.
 
+        .. rubric:: Example
+
+        >>> import obspy
+        >>> tr = obspy.read()[0]
+        >>> for windowed_tr in tr.slide(window_length=10.0, step=10.0):
+        ...     print("---")  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        ...     print(windowed_tr)
+        ---
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ---
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+
+
         :param window_length: The length of each window in seconds.
         :type window_length: float
         :param step: The step between the start times of two successive
@@ -1175,8 +1188,7 @@ class Trace(object):
             raise StopIteration
 
         for start, stop in windows:
-            yield self.slice(self.stats.starttime + start,
-                             self.stats.starttime + stop,
+            yield self.slice(start, stop,
                              nearest_sample=nearest_sample)
 
         raise StopIteration

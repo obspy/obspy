@@ -534,7 +534,8 @@ def get_window_times(starttime, endtime, window_length, step, offset,
         windows = [_i for _i in windows
                    if abs(_i[1] - _i[0]) > 0.999 * window_length]
 
-    return windows
+    t = type(starttime)
+    return [(t(_i[0]), t(_i[1])) for _i in windows]
 
 
 if __name__ == '__main__':
