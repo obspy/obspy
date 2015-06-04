@@ -2358,6 +2358,46 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(slices[3],
                          st.slice(UTCDateTime(0), UTCDateTime(5)))
 
+    def test_slide_nearest_sample(self):
+        """
+        Tests that the nearest_sample argument is correctly passed to the
+        slice function calls.
+        """
+        tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
+        tr.stats.sampling_rate = 5.0
+        st = Stream(traces=[tr, tr.copy()])
+
+        # It defaults to True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(st.slide(5, 5))
+
+        # Twice per window as two traces.
+        self.assertEqual(patch.call_count, 8)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Force True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(st.slide(5, 5, nearest_sample=True))
+
+        # Twice per window as two traces.
+        self.assertEqual(patch.call_count, 8)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Set to False.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(st.slide(5, 5, nearest_sample=False))
+
+        # Twice per window as two traces.
+        self.assertEqual(patch.call_count, 8)
+        for arg in patch.call_args_list:
+            self.assertFalse(arg[1]["nearest_sample"])
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

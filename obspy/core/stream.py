@@ -1614,7 +1614,7 @@ class Stream(object):
         return new
 
     def slide(self, window_length, step, offset=0,
-              include_partial_windows=False):
+              include_partial_windows=False, nearest_sample=True):
         """
         Iterator to return equal length windows of the Stream.
 
@@ -1633,6 +1633,18 @@ class Stream(object):
             the first sample in the trace.
         :param include_partial_windows: Determines if windows that are
             shorter then 99.9 % of the desired length are returned.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the next sample containing the time
+            is selected. Defaults to ``True``.
+
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
+
+                |        A|         |         |
+
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
         """
         starttime = min(tr.stats.starttime for tr in self)
         endtime = max(tr.stats.endtime for tr in self)
@@ -1649,7 +1661,8 @@ class Stream(object):
 
         for start, stop in windows:
             temp = self.slice(starttime + start,
-                              starttime + stop)
+                              starttime + stop,
+                              nearest_sample=nearest_sample)
             # It might happen that there is a time frame where there are no
             # windows, e.g. two traces seperated by a large gap.
             if not temp:
