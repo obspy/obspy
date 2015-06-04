@@ -37,6 +37,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
 from obspy.core.util.decorator import (deprecated_keywords,
                                        map_example_filename, raise_if_masked,
                                        uncompress_file)
+from obspy.core.util.misc import get_window_times
 
 
 @map_example_filename("pathname_or_url")
@@ -1597,6 +1598,51 @@ class Stream(object):
                 continue
             new.append(sliced_trace)
         return new
+
+    def slide(self, window_length, step, offset=0,
+              include_partial_windows=False):
+        """
+        Iterator to return equal length windows of the Stream.
+
+        Please keep in mind that it only returns a new view of the original
+        data. Any modifications are applied to the original data as well. If
+        you don't want this you have to create a copy of the yielded windows.
+
+        Not all yielded windows must have the same number of traces. The
+        algorithm will determine the maximal temporal extends by analysing
+        all Traces and then create windows based on these times.
+
+        :param window_length: The length of each window in seconds.
+        :param step: The step between the start times of two successive
+            windows in seconds. Can be negative if an offset is given.
+        :param offset: The offset of the first window in seconds relative to
+            the first sample in the trace.
+        :param include_partial_windows: Determines if windows that are
+            shorter then 99.9 % of the desired length are returned.
+        """
+        starttime = min(tr.stats.starttime for tr in self)
+        endtime = max(tr.stats.endtime for tr in self)
+        windows = get_window_times(
+            starttime=starttime,
+            endtime=endtime,
+            window_length=window_length,
+            step=step,
+            offset=offset,
+            include_partial_windows=include_partial_windows)
+
+        if len(windows) < 1:
+            raise StopIteration
+
+        for start, stop in windows:
+            temp = self.slice(starttime + start,
+                              starttime + stop)
+            # It might happen that there is a time frame where there are no
+            # windows, e.g. two traces seperated by a large gap.
+            if not temp:
+                continue
+            yield temp
+
+        raise StopIteration
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None):
