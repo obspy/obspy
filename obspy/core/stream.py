@@ -1685,7 +1685,7 @@ class Stream(object):
             temp = self.slice(start, stop,
                               nearest_sample=nearest_sample)
             # It might happen that there is a time frame where there are no
-            # windows, e.g. two traces seperated by a large gap.
+            # windows, e.g. two traces separated by a large gap.
             if not temp:
                 continue
             yield temp

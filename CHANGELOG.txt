@@ -14,6 +14,11 @@ master:
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
      - ESRI shapefile write support, useful in GIS applications (see #1066)
+ - obspy.core:
+   * New method for generating sliding windows from Stream/Trace windows.
+     (see #860)
+   * Stream/Trace.slice() now has the optional `nearest_sample` argument from
+     Stream/Trace.trim().
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
