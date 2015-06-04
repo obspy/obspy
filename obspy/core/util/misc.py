@@ -490,6 +490,53 @@ def factorize_int(x):
     return factors
 
 
+def get_window_times(starttime, endtime, window_length, step, offset,
+                     include_partial_windows):
+    """
+    Function calculating a list of times making up equal length windows from
+    within a given time interval.
+
+    :param starttime: The start time of the whole time interval.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: The end time of the whole time interval.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param window_length: The length of each window in seconds.
+    :type window_length: float
+    :param step: The step between the start times of two successive
+        windows in seconds. Can be negative if an offset is given.
+    :type step: float
+    :param offset: The offset of the first window in seconds relative to
+        the start time of the whole interval.
+    :type offset: float
+    :param include_partial_windows: Determines if windows that are
+        shorter then 99.9 % of the desired length are returned.
+    :type include_partial_windows: bool
+    """
+    if step > 0:
+        end = endtime.timestamp - 0.001 * step
+    else:
+        end = starttime.timestamp - 0.001 * abs(step)
+    # Left sides of each window.
+    indices = np.arange(start=starttime.timestamp + offset,
+                        stop=end, step=step, dtype=np.float64)
+    if step > 0:
+        # Generate all possible windows.
+        windows = [(_i, min(_i + window_length, endtime.timestamp))
+                   for _i in indices]
+    else:
+        # Generate all possible windows.
+        windows = [(max(_i - window_length, starttime.timestamp), _i)
+                   for _i in indices]
+
+    # Potentially remove partial windows not fulfilling the window length
+    # criterion.
+    if not include_partial_windows:
+        windows = [_i for _i in windows
+                   if abs(_i[1] - _i[0]) > 0.999 * window_length]
+
+    return windows
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
