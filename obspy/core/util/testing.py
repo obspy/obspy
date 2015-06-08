@@ -380,29 +380,27 @@ class ImageComparison(NamedTemporaryFile):
         # message back or the test passed if we get an empty message
         else:
             if msg:
-                upload_msg = self._upload_images()
+                msg = ("Image comparision failed.\n"
+                       "\tRMS:       {rms}\n"
+                       "\tTolerance: {tol}\n").format(**msg)
+                upload_links = self._upload_images()
                 failed = True
                 if self.keep_output and not (self.keep_only_failed and not
                                              failed):
                     self._copy_tempfiles()
                     ff = self._get_final_filenames()
-                    msg = ("Image comparision failed.\n"
-                           "\tExpected:  {expected}\n"
-                           "\tActual:    {actual}\n"
-                           "\tDiff:      {diff}\n"
-                           "\tRMS:       {rms}\n"
-                           "\tTolerance: {tol}").format(
-                        expected=ff["expected"],
-                        actual=ff["actual"],
-                        diff=ff["diff"],
-                        rms=msg["rms"],
-                        tol=msg["tol"])
+                    msg += ("\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(**ff)
+                if upload_links:
+                    msg += ("\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(**upload_links)
                 else:
-                    msg = ("Image comparision failed, RMS={rms}, "
-                           "tolerance={tol}. Set the "
-                           "OBSPY_KEEP_IMAGES env variable to keep "
-                           "the test images.").format(**msg)
-                raise ImageComparisonException("\n".join([msg, upload_msg]))
+                    msg += ("Set the OBSPY_KEEP_IMAGES env variable to keep "
+                            "the test images.")
+                msg = msg.rstrip()
+                raise ImageComparisonException(msg)
             failed = False
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
@@ -474,7 +472,7 @@ class ImageComparison(NamedTemporaryFile):
             msg = ("Upload to imgur not possible (python package "
                    "'pyimgur' not installed).")
             warnings.warn(msg)
-            return ""
+            return None
         # requests package should be installed since it is a dependency of
         # pyimgur
         import requests
@@ -484,26 +482,30 @@ class ImageComparison(NamedTemporaryFile):
             msg = ("Upload to imgur not possible (environment "
                    "variable OBSPY_IMGUR_CLIENTID not set).")
             warnings.warn(msg)
-            return ""
+            return None
         # upload images and return urls
         imgur = pyimgur.Imgur(imgur_clientid)
-        msg = []
+        links = {}
         try:
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
-                msg.append("Baseline image: " + up.link)
+                links['expected'] = up.link
             if os.path.exists(self.name):
                 up = imgur.upload_image(self.name, title=self.name)
-                msg.append("Failed image:   " + up.link)
+                links['actual'] = up.link
             if os.path.exists(self.diff_filename):
                 up = imgur.upload_image(self.diff_filename,
                                         title=self.diff_filename)
-                msg.append("Diff image:     " + up.link)
+                links['diff'] = up.link
         except requests.exceptions.SSLError as e:
             msg = ("Upload to imgur not possible (caught SSLError: %s).")
             warnings.warn(msg % str(e))
-            return ""
-        return "\n".join(msg)
+            return None
+        except ValueError as e:
+            msg = ("Upload to imgur failed (caught ValueError: %s).")
+            warnings.warn(msg % str(e))
+            return None
+        return links
 
 
 FLAKE8_EXCLUDE_FILES = [
