@@ -1082,11 +1082,13 @@ class WaveformPlotting(object):
                 line.set_color(color)
 
             legend_lines = []
+            legend_labels = []
             for name, color in sorted(self.sect_color.items()):
                 legend_lines.append(
                     mlines.Line2D([], [], color=color, alpha=self.alpha,
-                                  linewidth=self.linewidth, label=name))
-            plt.legend(handles=legend_lines)
+                                  linewidth=self.linewidth))
+                legend_labels.append(name)
+            plt.legend(legend_lines, legend_labels)
 
         else:
             for line in lines:
