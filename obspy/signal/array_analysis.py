@@ -94,8 +94,6 @@ class SeismicArray(object):
                           'traces in stream.')
         self.inventory = inv
 
-        # todo: if traces and/or inventory use station rather than channel
-        # based information
 
     def plot(self):
         if self.inventory:
@@ -123,6 +121,7 @@ class SeismicArray(object):
             return {}
 
         geo = {}
+        # todo: perhaps rework this with Inventory.get_coordinates method?
         for network in self.inventory:
             for station in network:
                 if len(station.channels) == 0:
@@ -508,7 +507,7 @@ class SeismicArray(object):
         return Stream(traces=[tr1, tr2, tr3]), sp
 
     def slowness_whitened_power(self, stream, frqlow, frqhigh,
-                                filter=True, plots=(), show_plots=True,
+                                filter=True, plots=(),
                                 static3D=False, vel_corr=4.8, wlen=-1,
                                 slx=(-10, 10), sly=(-10, 10), sls=0.5):
         """
@@ -545,19 +544,16 @@ class SeismicArray(object):
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
           :func:`plot_bf_results_over_time`.
-        :param show_plots: Rather than showing plots, return the plot objects
-         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="SWP",
                                            frqlow=frqlow, frqhigh=frqhigh,
                                            filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
-                                           slx=slx, sly=sly, sls=sls,
-                                           show_plots=show_plots)
+                                           slx=slx, sly=sly, sls=sls)
 
     def phase_weighted_stack(self, stream, frqlow, frqhigh,
-                             filter=True, plots=(), show_plots=True,
+                             filter=True, plots=(),
                              static3D=False,
                              vel_corr=4.8, wlen=-1, slx=(-10, 10),
                              sly=(-10, 10), sls=0.5):
@@ -595,19 +591,16 @@ class SeismicArray(object):
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
           :func:`plot_bf_results_over_time`.
-        :param show_plots: Rather than showing plots, return the plot objects
-         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="PWS",
                                            frqlow=frqlow, frqhigh=frqhigh,
                                            filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
-                                           slx=slx, sly=sly, sls=sls,
-                                           show_plots=show_plots)
+                                           slx=slx, sly=sly, sls=sls)
 
     def delay_and_sum(self, stream, frqlow, frqhigh,
-                      filter=True, plots=(), show_plots=True, static3D=False,
+                      filter=True, plots=(), static3D=False,
                       vel_corr=4.8, wlen=-1, slx=(-10, 10),
                       sly=(-10, 10), sls=0.5):
         """
@@ -644,19 +637,16 @@ class SeismicArray(object):
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
           :func:`plot_bf_results_over_time`.
-        :param show_plots: Rather than showing plots, return the plot objects
-         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="DLS",
                                            frqlow=frqlow, frqhigh=frqhigh,
                                            filter=filter, plots=plots,
                                            static3D=static3D,
                                            vel_corr=vel_corr, wlen=wlen,
-                                           slx=slx, sly=sly, sls=sls,
-                                           show_plots=show_plots)
+                                           slx=slx, sly=sly, sls=sls)
 
     def fk_analysis(self, stream, frqlow, frqhigh,
-                    filter=True, plots=(), show_plots=True,
+                    filter=True, plots=(),
                     static3D=False, vel_corr=4.8, wlen=-1, wfrac=0.8,
                     slx=(-10, 10), sly=(-10, 10), sls=0.5):
         """
@@ -695,8 +685,6 @@ class SeismicArray(object):
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
           :func:`plot_bf_results_over_time`.
-        :param show_plots: Rather than showing plots, return the plot objects
-         if set to False to allow storing or further manipulation.
         """
         return self._array_analysis_helper(stream=stream, method="FK",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -704,14 +692,13 @@ class SeismicArray(object):
                                            static3D=static3D,
                                            vel_corr=vel_corr,
                                            wlen=wlen, wfrac=wfrac,
-                                           slx=slx, sly=sly, sls=sls,
-                                           show_plots=show_plots)
+                                           slx=slx, sly=sly, sls=sls)
 
     def _array_analysis_helper(self, stream, method, frqlow, frqhigh,
                                filter=True, static3D=False,
                                vel_corr=4.8, wlen=-1, wfrac=0.8, slx=(-10, 10),
                                sly=(-10, 10), sls=0.5,
-                               plots=(), show_plots=True):
+                               plots=()):
         """
         Array analysis wrapper routine.
 
@@ -752,8 +739,6 @@ class SeismicArray(object):
           :func:`plot_baz_hist`,
          "bf_time_dep" for a plot of beamforming results over time as in
           :func:`plot_bf_results_over_time`.
-        :param show_plots: Rather than showing plots, return the plot objects
-         if set to False to allow storing or further manipulation.
         """
 
         if method not in ("FK", "DLS", "PWS", "SWP"):
@@ -864,7 +849,9 @@ class SeismicArray(object):
                                      filename_patterns, False, method,
                                      st_workon, starttime, wlen, endtime)
             if "baz_hist" in plots:
-                plot_baz_hist(out, starttime, endtime)
+                plot_baz_hist(out, starttime, endtime,
+                              slowness=(min(sllx, slly), max(slmx, slmy)),
+                              sls=sls)
             if "bf_time_dep" in plots:
                 plot_bf_results_over_time(out, starttime, endtime)
 
@@ -1264,6 +1251,7 @@ class SeismicArray(object):
         x_offsets = geo_array[:, 0]
         y_offsets = geo_array[:, 1]
         # This must be sorted the same as the entries in geo_array!
+        # (or channel names, really)
         station_names = []
         for _i, (key, value) in enumerate(sorted(list(self.geometry.items()))):
             station_names.append(key)
@@ -1278,9 +1266,11 @@ class SeismicArray(object):
         ans = []
         for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E,
                                                    stream_Z)):
-            ans.append(np.where(station_names == '{}.{}'.
-                                format(tr_N.stats.network,
-                                       tr_N.stats.station))[0][0])
+            # todo: fix for channels
+            #ans.append(np.where(station_names == '{}.{}'.
+            #                    format(tr_N.stats.network,
+            #                           tr_N.stats.station))[0][0])
+            ans.append(i)
             _alldataN[i, :] = tr_N.data
             _alldataE[i, :] = tr_E.data
             _alldataZ[i, :] = tr_Z.data
@@ -1484,34 +1474,8 @@ class SeismicArray(object):
                     beamres[:, :, win / win_average, f] = res[:, :, k]
                     incidence[win / win_average, f] = incs[k] * 180. / math.pi
 
-        idx = [int((1. / p - fr[0]) / deltaf) for p in periods]
-        theo_backazi = theo_backazi[:, 0]
-        for ind in idx:
-            for win in range(out_wins):
-                tre = beamres[:, :, win, ind]
-                fig = plt.figure(figsize=(6, 6))
-                ax = fig.add_subplot(1, 1, 1, projection='polar')
-                jetmap = cm.get_cmap('jet')
-                CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
-                                    tre.T, 100, cmap=jetmap, antialiased=True,
-                                    linstyles='dotted')
-                ax.contour((theo_backazi[::-1] + math.pi / 2.), u, tre.T, 100,
-                           cmap=jetmap)
-                ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
-                                  labels=['90', '45', '0', '315', '270', '225',
-                                          '180', '135'])
-                # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],
-                # labels=['0.1','0.2','0.3','0.4','0.5'],color='r')
-                ax.set_rmax(u[-1])
-                ax.grid(True)
-                fig.colorbar(CONTF)
-                reversed_pol_dict = dict(zip(pol_dict.values(),
-                                             pol_dict.keys()))
-                ax.set_title(
-                    'Beam {} s polarisation{}, win {}, ind {}'.
-                    format(str(int(round(1. / fr[ind]))),
-                           reversed_pol_dict[polarisation], win, ind))
-        plt.plot()
+        # Could call plot of every window here. Don't.
+
         return beamres, fr, incidence
 
     @staticmethod
@@ -1878,10 +1842,12 @@ def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
         plt.show()
 
 
-def plot_baz_hist(out, t_start=None, t_end=None):
+def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
     """
     Plot a backazimuth - slowness histogram.
     :param out: beamforming result e.g. from SeismicArray.fk_analysis.
+    :param slowness: the radial axis limits.
+    :param sls: slowness step (bin width)
     """
     from matplotlib.colorbar import ColorbarBase
     from matplotlib.colors import Normalize
@@ -1889,12 +1855,17 @@ def plot_baz_hist(out, t_start=None, t_end=None):
     # make output human readable, adjust backazimuth to values between 0 and 360
     t, rel_power, abs_power, baz, slow = out.T
     baz[baz < 0.0] += 360
+    # Can't plot negative slownesses:
+    sll = slowness[0] if slowness[0] > 0 else 0
+    slm = slowness[1]
 
-    # choose number of fractions in plot (desirably 360 degree/N is an integer!)
+    # choose number of azimuth bins in plot
+    # (desirably 360 degree/N is an integer!)
     N = 36
-    N2 = 30
+    # number of slowness bins
+    N2 = math.ceil((slowness[1] - slowness[0]) / sls)
     abins = np.arange(N + 1) * 360. / N
-    sbins = np.linspace(0, 3, N2 + 1)
+    sbins = np.linspace(sll, slm, N2 + 1)
 
     # sum rel power in bins given by abins and sbins
     hist, baz_edges, sl_edges = \
@@ -1924,7 +1895,7 @@ def plot_baz_hist(out, t_start=None, t_end=None):
     ax.set_xticklabels(['N', 'E', 'S', 'W'])
 
     # set slowness limits
-    ax.set_ylim(0, 3)
+    ax.set_ylim(sll, slm)
     ColorbarBase(cax, cmap=cmap,
                  norm=Normalize(vmin=hist.min(), vmax=hist.max()))
     if t_start is not None and t_end is not None:
