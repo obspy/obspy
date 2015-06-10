@@ -46,7 +46,6 @@ class TestSeismicArray(TestCase):
                          '5pt.ur': {'x': 111.28219117308639, 'y':
                                     110.5751633754653, 'z': 0.0}}
 
-
     def test_get_geometry_xyz(self):
         """
         Test get_geometry_xyz and, implicitly, _get_geometry (necessary because

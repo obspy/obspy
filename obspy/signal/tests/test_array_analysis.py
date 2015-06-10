@@ -11,7 +11,7 @@ import unittest
 
 import numpy as np
 
-from obspy.signal.array_analysis import array_rotation_strain, get_geometry
+from obspy.signal.array_analysis import SeismicArray
 
 
 class ArrayTestCase(unittest.TestCase):
@@ -66,8 +66,8 @@ class ArrayTestCase(unittest.TestCase):
                 ts3[t, stat] = array_coords[stat, 1] * rotx[t] - \
                     array_coords[stat, 0] * roty[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
-                                    array_coords, sigmau)
+        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp,
+                                                 Vs, array_coords, sigmau)
 
         np.testing.assert_array_almost_equal(rotx, out['ts_w1'], decimal=12)
         np.testing.assert_array_almost_equal(roty, out['ts_w2'], decimal=12)
@@ -103,7 +103,7 @@ class ArrayTestCase(unittest.TestCase):
                 ts2[t, stat] = array_coords[stat, 1] * dilation[t]
                 ts3[t, stat] = array_coords[stat, 2] * dilation[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
+        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
                                     array_coords, sigmau)
 
         # remember free surface boundary conditions!
@@ -147,8 +147,7 @@ class ArrayTestCase(unittest.TestCase):
                 ts1[t, stat] = array_coords[stat, 1] * shear_strainh[t]
                 ts2[t, stat] = array_coords[stat, 0] * shear_strainh[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
-                                    array_coords, sigmau)
+        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
 
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],
                                              decimal=12)
@@ -166,30 +165,6 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=12)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
-
-    def test_get_geometry(self):
-        """
-        test get_geometry() in array_analysis.py
-        """
-        ll = np.array([[24.5797167, 121.4842444, 385.106],
-                       [24.5797611, 121.4842333, 384.893],
-                       [24.5796694, 121.4842556, 385.106]])
-
-        la = get_geometry(ll)
-
-        np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
-
-        ll = np.array([[10., 10., 10.],
-                       [0., 5., 5.],
-                       [0., 0., 0.]])
-
-        la = get_geometry(ll, coordsys='xy')
-
-        np.testing.assert_almost_equal(la[:, 0].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:, 1].sum(), 0., decimal=8)
-        np.testing.assert_almost_equal(la[:, 2].sum(), 0., decimal=8)
 
 
 def suite():
