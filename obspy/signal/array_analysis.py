@@ -57,6 +57,7 @@ class SeismicArray(object):
         self.inventory = None
 
     def add_inventory(self, inv):
+        # todo add some commentary and type hint
         if self.inventory is not None:
             raise NotImplementedError("Already has an inventory attached.")
         self.inventory = inv
@@ -116,36 +117,42 @@ class SeismicArray(object):
         """
         Return a dictionary of lat, lon, height values for each item (station
         or channel level, if available) in the array inventory.
+        Item codes are SEED ID strings.
         """
         if not self.inventory:
             return {}
-
         geo = {}
-        # todo: perhaps rework this with Inventory.get_coordinates method?
+
+        # Using core.inventory.inventory.Inventory.get_coordinates() is not
+        # really satisfactory: It doesn't return coordinates for inventories
+        # that have stations but no channels defined.
+        # Might be the case e.g. if using the array class for inventory of
+        # sources.
         for network in self.inventory:
             for station in network:
                 if len(station.channels) == 0:
-                    location_code = "{n}.{s}".format(n=network.code,
-                                                     s=station.code)
-                    # E.g. if using the array class for inventory of sources,
-                    # there won't be channels.
+                    # Using the full Seed ID string allows retrieving
+                    # coordinates with geometry[trace.id] for other methods.
+                    item_code = "{n}.{s}..".format(n=network.code,
+                                                   s=station.code)
                     this_coordinates = \
                         {"latitude": float(station.latitude),
                          "longitude": float(station.longitude),
                          "absolute_height_in_km":
                          float(station.elevation) / 1000.0}
-                    geo[location_code] = this_coordinates
+                    geo[item_code] = this_coordinates
                 else:
                     for channel in station:
-                        location_code = "{}.{}.{}".format(network.code,
-                                                          station.code,
-                                                          channel.code)
+                        item_code = "{}.{}.{}.{}".format(network.code,
+                                                         station.code,
+                                                         channel.location_code,
+                                                         channel.code)
                         this_coordinates = \
                             {"latitude": float(channel.latitude),
                              "longitude": float(channel.longitude),
                              "absolute_height_in_km":
                              float(channel.elevation - channel.depth) / 1000.0}
-                        geo[location_code] = this_coordinates
+                        geo[item_code] = this_coordinates
         return geo
 
     @property
@@ -185,9 +192,9 @@ class SeismicArray(object):
         distances = []
         geo = self.geometry
         # todo: add a unit test and remove the list()
-        for station, coordinates in list(geo.items()):
-            for other_station, other_coordinates in list(geo.items()):
-                if station == other_station:
+        for location, coordinates in list(geo.items()):
+            for other_location, other_coordinates in list(geo.items()):
+                if location == other_location:
                     continue
                 distances.append(gps2DistAzimuth(
                     coordinates["latitude"], coordinates["longitude"],
@@ -217,7 +224,7 @@ class SeismicArray(object):
             hgt.append(coordinates["absolute_height_in_km"])
         return lats, lngs, hgt
 
-    def __unicode__(self):
+    def __str__(self):
         """
         Pretty representation of the array.
         """
@@ -226,15 +233,6 @@ class SeismicArray(object):
         ret_str += "\tAperture: {aperture:.2f} km".format(
             aperture=self.aperture)
         return ret_str
-
-    def __str__(self):
-        """
-        Stub calling the unicode method.
-
-        See here:
-        http://stackoverflow.com/questions/1307014/python-str-versus-unicode
-        """
-        return str(self).encode("utf-8")
 
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
@@ -304,8 +302,8 @@ class SeismicArray(object):
         :param longitude: longitude of reference origin
         :param absolute_height: elevation of reference origin, in km
         :param vel_cor: correction velocity (upper layer) in km/s. May be given
-            at each station as a dictionary with the station IDs as keys (as in
-            self.geometry).
+            at each station as a dictionary with the station/channel IDs as
+            keys (same as in self.geometry).
         :param static_3D: a correction of the station height is applied using
             vel_cor the correction is done according to the formula:
             t = rxy*s - rz*cos(inc)/vel_cor
@@ -938,18 +936,7 @@ class SeismicArray(object):
         geo = self.geometry
 
         for tr in stream:
-            if tr.stats.channel:
-                location_code = "{}.{}.{}".format(tr.stats.network,
-                                                  tr.stats.station,
-                                                  tr.stats.channel)
-                try:
-                    coords = geo[location_code]
-                except KeyError:
-                    # I.e. the inventory does not have information at channel.
-                    # only at station level:
-                    station_code = "{}.{}.{}".format(tr.stats.network,
-                                                     tr.stats.station)
-                    coords = geo[station_code]
+            coords = geo[tr.id]
             tr.stats.coordinates = \
                 AttribDict(dict(latitude=coords["latitude"],
                                 longitude=coords["longitude"],
@@ -1030,13 +1017,12 @@ class SeismicArray(object):
         grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
         grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
-        geometry = self.geometry
         if correct_3dplane:
-            correct_with_3dplane(geometry)
+            correct_with_3dplane(self.geometry)
 
         if verbose:
             print("geometry:")
-            print(geometry)
+            print(self.geometry)
             print("stream contains following traces:")
             print(stream)
             print("stime = " + str(stime) + ", etime = " + str(etime))
@@ -1252,11 +1238,11 @@ class SeismicArray(object):
         y_offsets = geo_array[:, 1]
         # This must be sorted the same as the entries in geo_array!
         # (or channel names, really)
-        station_names = []
+        geo_items_names = []
         for _i, (key, value) in enumerate(sorted(list(self.geometry.items()))):
-            station_names.append(key)
+            geo_items_names.append(key)
         # This is necessary to use np.where below...
-        station_names = np.array(station_names)
+        geo_items_names = np.array(geo_items_names)
 
         # Arrays to hold all traces' data in one:
         _alldataZ = np.zeros((n_stats, npts)) * np.nan
@@ -1267,7 +1253,7 @@ class SeismicArray(object):
         for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E,
                                                    stream_Z)):
             # todo: fix for channels
-            ans.append(np.where(station_names == '{}.{}'.
+            ans.append(np.where(geo_items_names == '{}.{}'.
                                 format(tr_N.stats.network,
                                        tr_N.stats.station))[0][0])
             _alldataN[i, :] = tr_N.data
