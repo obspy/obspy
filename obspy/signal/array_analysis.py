@@ -1253,9 +1253,7 @@ class SeismicArray(object):
         for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E,
                                                    stream_Z)):
             # todo: fix for channels
-            ans.append(np.where(geo_items_names == '{}.{}'.
-                                format(tr_N.stats.network,
-                                       tr_N.stats.station))[0][0])
+            ans.append(np.where(geo_items_names == tr_N.id)[0][0])
             _alldataN[i, :] = tr_N.data
             _alldataE[i, :] = tr_E.data
             _alldataZ[i, :] = tr_Z.data
