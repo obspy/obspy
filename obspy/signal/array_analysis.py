@@ -89,6 +89,7 @@ class SeismicArray(object):
                 del inv.networks[k]
         # check total number of channels now:
         contents = inv.get_contents()
+        # todo: account for duplicate channels in traces!!!
         if len(contents['channels']) < len(stations_present):
             # Inventory is altered anyway in this case.
             warnings.warn('Inventory does not contain information for all '
@@ -460,7 +461,7 @@ class SeismicArray(object):
         array_coords = np.ndarray(shape=(len(geo), 3))
         for _i, tr in enumerate(list(components.values())[0]):
             station = "%s.%s" % (tr.stats.network, tr.stats.station)
-            # todo: This is the same as self.geometry_np_array, isn't it?
+            # todo: This is the same as self.geometry_xyz, isn't it?
 
             x, y = utlGeoKm(longitude, latitude,
                             geo[station]["longitude"],
@@ -1221,8 +1222,8 @@ class SeismicArray(object):
         plt.show()
 
     def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, u,
-                       sub_freq_range, periods, n_min_stns, polarisation,
-                       whiten, coherency, pol_dict, win_average,
+                       sub_freq_range, n_min_stns, polarisation,
+                       whiten, coherency, win_average,
                        datalen_sec, uindex):
         # backazimuth range to search
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
@@ -1239,7 +1240,7 @@ class SeismicArray(object):
         # This must be sorted the same as the entries in geo_array!
         # (or channel names, really)
         geo_items_names = []
-        for _i, (key, value) in enumerate(sorted(list(self.geometry.items()))):
+        for key in sorted(self.geometry):
             geo_items_names.append(key)
         # This is necessary to use np.where below...
         geo_items_names = np.array(geo_items_names)
@@ -1461,19 +1462,30 @@ class SeismicArray(object):
         return beamres, fr, incidence
 
     @staticmethod
-    def _three_c_beamform_plotter(beamresult, periods, u, freqs):
+    def three_c_beamform_plotter(beamresult, u, freqs, plot_frequencies=(),
+                                 average_windows=True, average_freqs=True):
+        """
+        Pass in an unaveraged beamresult, i.e. with 4 axes. Dud windows should
+        (not happen or) be signified by all zeros, so np.nonzero can catch
+        them.
+        """
+        if average_freqs is True and len(plot_frequencies) > 0:
+            warnings.warn("Ignoring plot_frequencies, only plotting an average"
+                          "of all frequencies.")
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
-        deltaf = freqs[3:4] - freqs[2:3]
-        idx = [int((1. / p - freqs[0]) / deltaf) for p in periods]
-        for ind in idx:
-            tre = beamresult[:, :, ind]
+
+        def _actual_plotting(bfres, title):
+            """
+            Pass in a 2D bfres array of beamforming results with
+            averaged or selected windows and frequencies.
+            """
             fig = plt.figure(figsize=(6, 6))
             ax = fig.add_subplot(1, 1, 1, projection='polar')
             jetmap = cm.get_cmap('jet')
-            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u, tre.T,
-                                100, cmap=jetmap, antialiased=True,
+            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
+                                bfres.T, 100, cmap=jetmap, antialiased=True,
                                 linstyles='dotted')
-            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, tre.T, 100,
+            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, bfres.T, 100,
                        cmap=jetmap)
             ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
                               labels=['90', '45', '0', '315', '270', '225',
@@ -1483,15 +1495,57 @@ class SeismicArray(object):
             ax.set_rmax(u[-1])
             fig.colorbar(CONTF)
             ax.grid(True)
-            ax.set_title(
-                'Beamform average ' + str(int(round(1 / freqs[ind]))) + 's')
+            ax.set_title(title)
+
+        # Try to remove all windows where actually no beamforming happened -
+        # ought to be full of zeros; don't want to include those in the
+        # averages (although maybe the absolute values don't really matter in
+        # the end).
+        #nonzero_windows = np.nonzero(beamresult[0, 0, :, 0])[0]
+        #beamresnz = beamresult[:, :, nonzero_windows, :]
+        beamresnz = beamresult
+        if average_windows:
+            beamresnz = beamresnz.mean(axis=2)
+        if average_freqs:
+            # Always an average over the last axis, whether or not windows
+            # were averaged.
+            beamresnz = beamresnz.mean(axis=beamresnz.ndim - 1)
+
+        if average_windows and average_freqs:
+            _actual_plotting(beamresnz, 'Averaged BF result.')
+
+        if average_windows and not average_freqs:
+            for plot_freq in plot_frequencies:
+                # works because freqs is a range
+                ifreq = np.searchsorted(freqs, plot_freq)
+                _actual_plotting(beamresnz[:, :, ifreq],
+                                 'Averaged windows, frequency {}'
+                                 .format(freqs[ifreq]))
+
+        if average_freqs and not average_windows:
+            for iwin in range(len(beamresnz[0, 0, :, 0])):
+                _actual_plotting(beamresnz[:, :, iwin],
+                                 'Averaged all frequencies, window {}'
+                                 .format(iwin))
+
+        # Plotting all windows, selected frequencies.
+        if average_freqs is False and average_windows is False:
+            for plot_freq in plot_frequencies:
+                ifreq = np.searchsorted(freqs, plot_freq)
+                for iwin in range(len(beamresnz[0, 0, :, 0])):
+                    _actual_plotting(beamresnz[:, :, iwin, ifreq],
+                                     'BF result window {}, freq {}'
+                                     .format(iwin, freqs[ifreq]))
+
+        plt.plot()
         plt.show()
 
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
-                                    freq_range, plot_periods=(7, 14),
+                                    freq_range, plot_frequencies=(7, 14),
                                     n_min_stns=7, win_average=1,
-                                    plot_transff=False):
+                                    plot_transff=False,
+                                    plot_average_freqs=True):
         """
         Do three component beamforming following Esmersoy 1985...
         Three streams representing N, E, Z oriented components must be given,
@@ -1519,11 +1573,13 @@ class SeismicArray(object):
         :param freq_range: Frequency band (min, max) that is used for
          beamforming and returned. Ideally, use the frequency band of the
          pre-filter.
-        :param plot_periods: periods to plot [s]
+        :param plot_frequencies: frequencies to plot [s]
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
         :param plot_transff: whether to also plot the transfer function of the
          array
+        :param plot_average_freqs: whether to plot an average of results for
+         all frequencies
         :return: A four dimensional :class:`numpy.ndarray` of the beamforming
          results, with dimensions of backazimuth range, slowness range, number
          of windows and number of discrete frequencies; as well as frequency
@@ -1584,8 +1640,8 @@ class SeismicArray(object):
         self.inventory_cull(allstreams)
 
         if wlen < smax * self.aperture:
-            raise ValueError('Window length is smaller than max slowness times'
-                             'aperture.')
+            raise ValueError('Window length is smaller than maximum given'
+                             ' slowness times aperture.')
         try:
             # s/km  slowness range calculated
             u = np.arange(smin, smax, sstep)
@@ -1599,32 +1655,30 @@ class SeismicArray(object):
                 self._three_c_do_bf(stream_N, stream_E, stream_Z,
                                     win_len=wlen, u=u,
                                     sub_freq_range=freq_range,
-                                    periods=plot_periods,
                                     n_min_stns=n_min_stns,
                                     polarisation=pol_dict[wavetype],
                                     whiten=False,
                                     coherency=True,
-                                    pol_dict=pol_dict,
                                     win_average=win_average,
                                     datalen_sec=datalen_sec,
                                     uindex=uindex)
 
-            h = np.nonzero(bf_results[0, 0, :, 0])[0]
-            if len(h) > 0:
-                beamresult = bf_results[:, :, h, :].mean(axis=2)
-                self._three_c_beamform_plotter(beamresult, plot_periods,
-                                               u, freqs)
+            self.three_c_beamform_plotter(bf_results,
+                                          plot_frequencies=plot_frequencies,
+                                          u=u, freqs=freqs,
+                                          average_freqs=plot_average_freqs)
 
         finally:
             self.inventory = invbkp
 
+        # todo: take this out, it's better as its own method
         if plot_transff:
-            self._three_c_plot_transfer_function(u, plot_periods)
+            self._three_c_plot_transfer_function(u, plot_frequencies)
 
         return bf_results, freqs, incidence
 
     @staticmethod
-    def array_rotation_strain( subarray, ts1, ts2, ts3, vp, vs,
+    def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
                               array_coords, sigmau):
         """
         This routine calculates the best-fitting rigid body rotation and
