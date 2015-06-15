@@ -71,7 +71,7 @@ class SeismicArray(object):
         """
         inv = self.inventory
         # check what station/channel IDs are in the data
-        stations_present = [tr.getId() for tr in st]
+        stations_present = list(set(tr.getId() for tr in st))
         # delete all channels that are not represented
         for k, netw in reversed(list(enumerate(inv.networks))):
             for j, stn in reversed(list(enumerate(netw.stations))):
@@ -89,7 +89,6 @@ class SeismicArray(object):
                 del inv.networks[k]
         # check total number of channels now:
         contents = inv.get_contents()
-        # todo: account for duplicate channels in traces!!!
         if len(contents['channels']) < len(stations_present):
             # Inventory is altered anyway in this case.
             warnings.warn('Inventory does not contain information for all '
