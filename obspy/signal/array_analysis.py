@@ -1248,7 +1248,9 @@ class SeismicArray(object):
         _alldataZ = np.zeros((n_stats, npts)) * np.nan
         _alldataE = _alldataZ.copy()
         _alldataN = _alldataZ.copy()
-        # array used for sorting if needed
+        # Array used for sorting and selecting: So far, x_offsets contains
+        # offsets for all channels, but the method needs only stations offsets
+        # (i.e. a third of the length of the offset array).
         ans = []
         for i, (tr_N, tr_E, tr_Z) in enumerate(zip(stream_N, stream_E,
                                                    stream_Z)):
@@ -1470,7 +1472,7 @@ class SeismicArray(object):
         """
         if average_freqs is True and len(plot_frequencies) > 0:
             warnings.warn("Ignoring plot_frequencies, only plotting an average"
-                          "of all frequencies.")
+                          " of all frequencies.")
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
 
         def _actual_plotting(bfres, title):
@@ -1556,8 +1558,10 @@ class SeismicArray(object):
         The beamforming can distinguish Love, prograde/retrograde Rayleigh, P
         and SV waves.
         Station location information is taken from the array's inventory, so
-        that must contain station/channel location information about all traces
-        used (it may contain more than used in the traces as well).
+        that must contain station or channel location information about all
+        traces used (or more, the inventory is then non-permanently 'pruned').
+        NB all channels of a station must be located in the same location for
+        this method.
 
         :param stream_N: Stream of all traces for the North component.
         :param stream_E: stream of East components
@@ -1576,7 +1580,7 @@ class SeismicArray(object):
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
         :param plot_transff: whether to also plot the transfer function of the
-         array
+         array (only considering stations/channels for which data is present)
         :param plot_average_freqs: whether to plot an average of results for
          all frequencies
         :return: A four dimensional :class:`numpy.ndarray` of the beamforming
@@ -1667,12 +1671,13 @@ class SeismicArray(object):
                                           u=u, freqs=freqs,
                                           average_freqs=plot_average_freqs)
 
+            # More interesting perhaps to plot the tranfer function only
+            # with the actually used stations, i.e. the culled inventory
+            if plot_transff:
+                plot_periods = [1/f for f in plot_frequencies]
+                self._three_c_plot_transfer_function(u, plot_periods)
         finally:
             self.inventory = invbkp
-
-        # todo: take this out, it's better as its own method
-        if plot_transff:
-            self._three_c_plot_transfer_function(u, plot_frequencies)
 
         return bf_results, freqs, incidence
 
