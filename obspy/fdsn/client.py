@@ -1180,32 +1180,43 @@ class Client(object):
         code, data = download_url(
             url, headers=self.request_headers, debug=self.debug,
             return_string=return_string, data=data, timeout=self.timeout)
+        # get detailed server response message
+        if code != 200:
+            try:
+                server_info = "\n".join([
+                    line for line in data.read().splitlines() if line])
+            except:
+                server_info = None
+
         # No data.
         if code == 204:
-            raise FDSNException("No data available for request.")
+            raise FDSNException("No data available for request.", server_info)
         elif code == 400:
-            msg = "Bad request. Please contact the developers."
-            raise NotImplementedError(msg)
+            msg = ("Bad request. If you think your request was valid "
+                   "please contact the developers.")
+            raise FDSNException(msg, server_info)
         elif code == 401:
-            raise FDSNException("Unauthorized, authentication required.")
+            raise FDSNException("Unauthorized, authentication required.",
+                                server_info)
         elif code == 403:
-            raise FDSNException("Authentication failed.")
+            raise FDSNException("Authentication failed.", server_info)
         elif code == 413:
             raise FDSNException("Request would result in too much data. "
                                 "Denied by the datacenter. Split the request "
-                                "in smaller parts")
+                                "in smaller parts", server_info)
         # Request URI too large.
         elif code == 414:
             msg = ("The request URI is too large. Please contact the ObsPy "
-                   "developers.")
+                   "developers.", server_info)
             raise NotImplementedError(msg)
         elif code == 500:
-            raise FDSNException("Service responds: Internal server error")
+            raise FDSNException("Service responds: Internal server error",
+                                server_info)
         elif code == 503:
-            raise FDSNException("Service temporarily unavailable")
+            raise FDSNException("Service temporarily unavailable", server_info)
         # Catch any non 200 codes.
         elif code != 200:
-            raise FDSNException("Unknown HTTP code: %i" % code)
+            raise FDSNException("Unknown HTTP code: %i" % code, server_info)
         return data
 
     def _build_url(self, service, resource_type, parameters={}):
@@ -1488,11 +1499,11 @@ def download_url(url, timeout=10, headers={}, debug=False,
             msg = "HTTP error %i, reason %s, while downloading '%s': %s" % \
                   (e.code, str(e.reason), url, e.read())
             print(msg)
-        return e.code, None
+        return e.code, e
     except Exception as e:
         if debug is True:
             print("Error while downloading: %s" % url)
-        return None, None
+        return None, e
 
     code = url_obj.getcode()
     if return_string is False:
