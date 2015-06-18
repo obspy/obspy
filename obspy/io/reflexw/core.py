@@ -54,7 +54,7 @@ def _read_reflexw_datafile(filename, format_code):
                                     trace_header))
             trace_data = np.fromfile(fh, dtype=data_dtype,
                                      count=trace_header["no_of_samples"] + 1)
-            tr = Trace(data=trace_data)
+            tr = Trace(data=trace_data[1:])
             tr.stats.reflexw = trace_header
             st.append(tr)
             next_header = fh.read(DATA_TRACE_HEADER_LENGTH)
