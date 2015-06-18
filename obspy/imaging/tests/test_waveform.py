@@ -271,7 +271,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotDefaultSection(self):
         """
-        Tests plotting 10 in a section
+        Tests plotting 10 traces in a horizontal section.
         """
         start = UTCDateTime(0)
         st = Stream()
@@ -285,7 +285,7 @@ class WaveformTestCase(unittest.TestCase):
 
     def test_plotAzimSection(self):
         """
-        Tests plotting 10 in a azimuthal distant section
+        Tests plotting 10 traces in a azimuthal distant section.
         """
         start = UTCDateTime(0)
         st = Stream()
@@ -299,9 +299,22 @@ class WaveformTestCase(unittest.TestCase):
             st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
 
+    def test_plotHorizontalSection(self):
+        """
+        Tests plotting 10 traces in a horizontal section.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            st += self._createStream(start, start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_horiz_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='horizontal')
+
     def test_plotRefTimeSection(self):
         """
-        Tests plotting 10 in a section with alternate reference time
+        Tests plotting 10 traces in a section with alternate reference time.
         """
         start = UTCDateTime(0)
         reftime = start + 600
@@ -313,6 +326,21 @@ class WaveformTestCase(unittest.TestCase):
         # create and compare image
         with ImageComparison(self.path, 'waveform_reftime_section.png') as ic:
             st.plot(outfile=ic.name, type='section', reftime=reftime)
+
+    def test_plotColoredSection(self):
+        """
+        Tests plotting 10 traces in a section colored by channel.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._createStream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(self.path, 'waveform_color_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', color='channel')
 
     def test_plotDefaultRelative(self):
         """

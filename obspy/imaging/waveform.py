@@ -21,6 +21,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
+import collections
 import io
 import warnings
 from copy import copy
@@ -31,6 +32,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.dates import AutoDateLocator, date2num
+import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
@@ -111,6 +113,7 @@ class WaveformPlotting(object):
         self.sect_vred = kwargs.get('vred', None)
         if self.sect_vred and self.sect_dist_degree:
             self.sect_vred = kilometer2degrees(self.sect_vred / 1e3)
+        self.sect_orientation = kwargs.get('orientation', 'vertical')
         if self.type == 'relative':
             self.reftime = kwargs.get('reftime', self.starttime)
         elif self.type == 'section':
@@ -1069,19 +1072,40 @@ class WaveformPlotting(object):
         # Initialise data and plot
         self.__sect_init_traces()
         ax, lines = self.__sect_init_plot()
+
         # Setting up line properties
-        for line in lines:
-            line.set_alpha(self.alpha)
-            line.set_linewidth(self.linewidth)
-            line.set_color(self.color)
+        if isinstance(self.sect_color, collections.Mapping):
+            for line, tr in zip(lines, self.stream):
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                color = self.sect_color[getattr(tr.stats, self.color)]
+                line.set_color(color)
+
+            legend_lines = []
+            legend_labels = []
+            for name, color in sorted(self.sect_color.items()):
+                legend_lines.append(
+                    mlines.Line2D([], [], color=color, alpha=self.alpha,
+                                  linewidth=self.linewidth))
+                legend_labels.append(name)
+            plt.legend(legend_lines, legend_labels)
+
+        else:
+            for line in lines:
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                line.set_color(self.sect_color)
+
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            ax.set_xlim(left=self.__sect_offset_to_fraction(self._offset_min))
+            self.set_offset_lim(
+                left=self.__sect_offset_to_fraction(self._offset_min))
         if self.sect_offset_max is not None:
-            ax.set_xlim(right=self.__sect_offset_to_fraction(self._offset_max))
+            self.set_offset_lim(
+                right=self.__sect_offset_to_fraction(self._offset_max))
         # Set up offset ticks
         tick_min, tick_max = \
-            self.__sect_fraction_to_offset(np.array(ax.get_xlim()))
+            self.__sect_fraction_to_offset(np.array(self.get_offset_lim()))
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
@@ -1093,31 +1117,32 @@ class WaveformPlotting(object):
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        ax.set_xticks(self.__sect_offset_to_fraction(ticks))
+        self.set_offset_ticks(self.__sect_offset_to_fraction(ticks))
         # Setting up tick labels
-        ax.set_ylabel('Time [s]')
+        self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
-            ax.set_xlabel('Offset [km]')
-            ax.set_xticklabels(ticks / 1e3)
+            self.set_offset_label('Offset [km]')
+            self.set_offset_ticklabels(ticks / 1e3)
         else:
-            ax.set_xlabel(u'Offset [°]')
-            ax.set_xticklabels(ticks)
+            self.set_offset_label(u'Offset [°]')
+            self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
-        ax.set_ylim([self._time_min, self._time_max])
+        self.set_time_lim([self._time_min, self._time_max])
         if self.sect_recordstart is not None:
-            ax.set_ylim(bottom=self.sect_recordstart)
+            self.set_time_lim(bottom=self.sect_recordstart)
         if self.sect_recordlength is not None:
-            ax.set_ylim(top=self.sect_recordlength + ax.get_ylim()[0])
+            self.set_time_lim(
+                top=self.sect_recordlength + self.get_time_lim()[0])
         # Invert time axis if requested
-        if self.sect_timedown:
+        if self.sect_orientation == 'vertical' and self.sect_timedown:
             ax.invert_yaxis()
         # Draw grid on xaxis only
         ax.grid(
             color=self.grid_color,
             linestyle=self.grid_linestyle,
             linewidth=self.grid_linewidth)
-        ax.xaxis.grid(False)
+        self.offset_axis.grid(False)
 
     def __sect_init_traces(self):
         """
@@ -1163,7 +1188,7 @@ class WaveformPlotting(object):
         mask = ((self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
-        stream = [tr for m, tr in zip(mask, self.stream) if m]
+        self.stream = [tr for m, tr in zip(mask, self.stream) if m]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
@@ -1176,7 +1201,7 @@ class WaveformPlotting(object):
         self._tr_npts = np.empty(self._tr_num)
         self._tr_delta = np.empty(self._tr_num)
         # TODO dynamic DATA_MAXLENGTH according to dpi
-        for _i, tr in enumerate(stream):
+        for _i, tr in enumerate(self.stream):
             if len(tr.data) >= self.max_npts:
                 tmp_data = signal.resample(tr.data, self.max_npts)
             else:
@@ -1191,6 +1216,8 @@ class WaveformPlotting(object):
                 tr.stats.starttime) / self._tr_npts[_i]
         # Init time vectors
         self.__sect_init_time()
+        # Init trace colors
+        self.__sect_init_color()
 
     def __sect_scale_traces(self):
         """
@@ -1214,6 +1241,23 @@ class WaveformPlotting(object):
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
+
+    def __sect_init_color(self):
+        """
+        Define the color of each trace
+        """
+        if self.color == 'network':
+            colors = {_tr.stats.network for _tr in self.stream}
+        elif self.color == 'station':
+            colors = {_tr.stats.station for _tr in self.stream}
+        elif self.color == 'channel':
+            colors = {_tr.stats.channel for _tr in self.stream}
+        else:
+            self.sect_color = self.color
+            return
+
+        cmap = plt.get_cmap('Paired', lut=len(colors))
+        self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
 
     def __sect_offset_to_fraction(self, offset):
         """
@@ -1245,7 +1289,46 @@ class WaveformPlotting(object):
                      self._sect_scale) +
                     self._tr_offsets_norm[_tr])
             time = self._tr_times[_tr]
-            lines += ax.plot(data, time)
+            if self.sect_orientation == 'vertical':
+                lines += ax.plot(data, time)
+            elif self.sect_orientation == 'horizontal':
+                lines += ax.plot(time, data)
+            else:
+                raise NotImplementedError("sect_orientiation '%s' is not "
+                                          "valid." % self.sect_orientation)
+
+        # Set correct axes orientation
+        if self.sect_orientation == 'vertical':
+            self.set_offset_lim = ax.set_xlim
+            self.get_offset_lim = ax.get_xlim
+            self.set_offset_ticks = ax.set_xticks
+            self.set_offset_label = ax.set_xlabel
+            self.set_offset_ticklabels = ax.set_xticklabels
+            self.offset_axis = ax.xaxis
+            self.set_time_lim = ax.set_ylim
+            self.get_time_lim = ax.get_ylim
+            self.set_time_label = ax.set_ylabel
+        elif self.sect_orientation == 'horizontal':
+            def _set_xlim_from_ylim(*args, **kwargs):
+                if 'bottom' in kwargs:
+                    kwargs['left'] = kwargs.pop('bottom')
+                if 'top' in kwargs:
+                    kwargs['right'] = kwargs.pop('top')
+                ax.set_xlim(*args, **kwargs)
+
+            self.set_offset_lim = ax.set_ylim
+            self.get_offset_lim = ax.get_ylim
+            self.set_offset_ticks = ax.set_yticks
+            self.set_offset_label = ax.set_ylabel
+            self.set_offset_ticklabels = ax.set_yticklabels
+            self.offset_axis = ax.yaxis
+            self.set_time_lim = _set_xlim_from_ylim
+            self.get_time_lim = ax.get_xlim
+            self.set_time_label = ax.set_xlabel
+        else:
+            raise NotImplementedError("sect_orientiation '%s' is not "
+                                      "valid." % self.sect_orientation)
+
         return ax, lines
 
     def __sect_normalize_traces(self):
