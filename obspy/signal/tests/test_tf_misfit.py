@@ -12,14 +12,17 @@ import unittest
 
 import numpy as np
 from scipy.signal import hilbert
+import matplotlib.pyplot as plt
 
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
                                     tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
+from obspy.signal.tf_misfit import plotTfr
 
 
 class TfTestCase(unittest.TestCase):
     """
-    Test cases for array_analysis functions.
+    Test cases for tf functions.
     """
     def setUp(self):
         # path to test files
@@ -235,8 +238,30 @@ class TfTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(PG, 10., rtol=tol))
 
 
+class TfPlotTestCase(unittest.TestCase):
+    """
+    Test cases for tf plot functions.
+    """
+    def setUp(self):
+        # path to test files
+        self.path = os.path.join(os.path.dirname(__file__), 'data', 'images')
+
+    def test_plot_tfr(self):
+        n = 295
+        t, dt = np.linspace(0., 20 * np.pi, n, retstep=True)
+        sig = np.sin(t)
+
+        with ImageComparison(self.path, 'time_frequency_representation.png') \
+                as ic:
+            plotTfr(sig, dt=dt, show=False)
+            plt.savefig(ic.name)
+
+
 def suite():
-    return unittest.makeSuite(TfTestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(TfTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(TfPlotTestCase, 'test'))
+    return suite
 
 
 if __name__ == '__main__':
