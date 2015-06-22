@@ -18,7 +18,11 @@ from obspy import UTCDateTime, __version__
 
 
 class FDSNException(Exception):
-    pass
+    def __init__(self, value, server_info=None):
+        if server_info is not None:
+            value = "\n".join([value, "Detailed response of server:", "",
+                               server_info])
+        super(FDSNException, self).__init__(value)
 
 
 # A curated list collecting some implementations:
@@ -32,6 +36,7 @@ URL_MAPPINGS = {
     "INGV": "http://webservices.rm.ingv.it",
     "IPGP": "http://eida.ipgp.fr",
     "IRIS": "http://service.iris.edu",
+    "ISC": "http://isc-mirror.iris.washington.edu",
     "KOERI": "http://eida.koeri.boun.edu.tr",
     "LMU": "http://erde.geophysik.uni-muenchen.de",
     "NCEDC": "http://service.ncedc.org",

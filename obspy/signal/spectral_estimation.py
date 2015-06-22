@@ -192,7 +192,7 @@ class PPSD():
     of network/station/location/channel/sampling_rate.
 
     Calculations are based on the routine used by [McNamara2004]_.
-    For information on New High/Low Noise Model see [Peterson2003]_.
+    For information on New High/Low Noise Model see [Peterson1993]_.
 
     .. rubric:: Basic Usage
 
@@ -948,7 +948,7 @@ class PPSD():
 def get_NLNM():
     """
     Returns periods and psd values for the New Low Noise Model.
-    For information on New High/Low Noise Model see [Peterson2003]_.
+    For information on New High/Low Noise Model see [Peterson1993]_.
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
@@ -959,7 +959,7 @@ def get_NLNM():
 def get_NHNM():
     """
     Returns periods and psd values for the New High Noise Model.
-    For information on New High/Low Noise Model see [Peterson2003]_.
+    For information on New High/Low Noise Model see [Peterson1993]_.
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
