@@ -25,6 +25,7 @@ misc/docs/source/citations.rst
 misc/docs/_build/
 misc/docker_tests/logs/
 obspy/lib/*.pyd
+obspy/lib/*.so
 /obspy.pstats
 __pycache__
 debian
