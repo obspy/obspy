@@ -17,6 +17,8 @@ The goal of the ObsPy project is to facilitate **rapid application development f
 
 ObsPy is licensed under the GNU Lesser General Public License (LGPL) v3.0.
 
+A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.com/watch?v=_loO5Jp6aq0).
+
 [Read more](https://github.com/obspy/obspy/wiki)
 
 ### References
