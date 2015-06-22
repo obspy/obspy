@@ -172,9 +172,9 @@ class RotateTestCase(unittest.TestCase):
         v2_ref = np.array([np.sqrt(2.0), -np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
         v3_ref = np.array([np.sqrt(2.0), np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
 
-        self.assertTrue(np.allclose(v1, v1_ref, rtol=1E-7, atol=1e-7))
-        self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1e-7))
-        self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1e-7))
+        self.assertTrue(np.allclose(v1, v1_ref, rtol=1E-7, atol=1E-7))
+        self.assertTrue(np.allclose(v2, v2_ref, rtol=1E-7, atol=1E-7))
+        self.assertTrue(np.allclose(v3, v3_ref, rtol=1E-7, atol=1E-7))
 
     def test_galperin_configuration(self):
         """
@@ -198,11 +198,9 @@ class RotateTestCase(unittest.TestCase):
         n_ref = np.array([0.0, fac * 2.0 * np.sqrt(3.0), 0.0])
         e_ref = np.array([0.0, 0.0, -4.0 * fac])
 
-        np.testing.assert_allclose(e, e_ref)
-
-        self.assertTrue(np.allclose(z, z_ref))
-        self.assertTrue(np.allclose(n, n_ref))
-        self.assertTrue(np.allclose(e, e_ref))
+        self.assertTrue(np.allclose(z, z_ref, rtol=1E-7, atol=1E-7))
+        self.assertTrue(np.allclose(n, n_ref, rtol=1E-7, atol=1E-7))
+        self.assertTrue(np.allclose(e, e_ref, rtol=1E-7, atol=1E-7))
 
 
 def suite():
