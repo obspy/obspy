@@ -5,7 +5,7 @@ ObsPy Tutorial
 
 .. note::
     A one-hour introduction to ObsPy is
-    `available at YouTube <https://www.youtube.com/watch?v=_loO5Jp6aq0>`__.
+    `available at YouTube <https://www.youtube.com/watch?v=kFwdjfiK4gk>`__.
 
 This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
