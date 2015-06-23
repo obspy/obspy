@@ -421,7 +421,6 @@ class SeismicArray(object):
                                    longitude, absolute_height_in_km=0.0):
         geo = self.geometry
 
-        # todo: what is this and should I use it for the _geometry_dict_to_array??
         components = collections.defaultdict(list)
         for tr in stream:
             components[tr.stats.channel[-1].upper()].append(tr)
@@ -1010,8 +1009,8 @@ class SeismicArray(object):
         # check that sampling rates do not vary
         fs = stream[0].stats.sampling_rate
         if len(stream) != len(stream.select(sampling_rate=fs)):
-            msg = ('in array-processing sampling rates of traces in stream are '
-                   'not equal')
+            msg = ('in array-processing sampling rates of traces in stream are'
+                   ' not equal')
             raise ValueError(msg)
 
         grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
@@ -1234,6 +1233,10 @@ class SeismicArray(object):
 
         geo_array = _geometry_dict_to_array(
             self.get_geometry_xyz(**self.center_of_gravity))
+        # NB at this point these offset arrays will contain three times as many
+        # entries as needed because each channel is listed individually. These
+        # are cut later on by indexing with the ans array which sorts and
+        # selects only the relevant entries.
         x_offsets = geo_array[:, 0]
         y_offsets = geo_array[:, 1]
         # This must be sorted the same as the entries in geo_array!
@@ -2933,6 +2936,7 @@ def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
     # make output human readable, adjust backazimuth to values between 0 and 360
     t, rel_power, abs_power, baz, slow = out.T
     baz[baz < 0.0] += 360
+    # todo: this needs to be quite a bit more elegant really.
     # Can't plot negative slownesses:
     sll = slowness[0] if slowness[0] > 0 else 0
     slm = slowness[1]
@@ -2977,11 +2981,12 @@ def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
     ColorbarBase(cax, cmap=cmap,
                  norm=Normalize(vmin=hist.min(), vmax=hist.max()))
     if t_start is not None and t_end is not None:
-        plt.suptitle('Time: {} - {}'.format(t_start, t_end))
+        plt.suptitle('Time: {} - {}'.format(str(t_start)[:-8],
+                                            str(t_end)[:-8]))
     plt.show()
 
 
-def plot_bf_results_over_time(out, t_start, t_end):
+def plot_bf_results_over_time(out, t_start):
     import matplotlib.dates as mdates
     # Plot
     labels = ['rel.power', 'abs.power', 'baz', 'slow']
