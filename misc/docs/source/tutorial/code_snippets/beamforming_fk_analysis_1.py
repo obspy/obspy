@@ -67,9 +67,9 @@ st[4].stats.coordinates = AttribDict({
 paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
-# Execute array_processing
-stime = obspy.UTCDateTime("20080217110515")
-etime = obspy.UTCDateTime("20080217110545")
+# Execute covariance_array_processing
+stime = UTCDateTime("20080217110515")
+etime = UTCDateTime("20080217110545")
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
     sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,

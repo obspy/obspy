@@ -9,7 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       ~array_analysis.array_processing
+       ~array_analysis.covariance_array_processing
        ~array_analysis.array_rotation_strain
        ~trigger.ar_pick
        ~filter.bandpass

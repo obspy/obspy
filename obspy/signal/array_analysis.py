@@ -140,6 +140,7 @@ class SeismicArray(object):
                          "absolute_height_in_km":
                          float(station.elevation) / 1000.0}
                     geo[item_code] = this_coordinates
+                    # todo add warning
                 else:
                     for channel in station:
                         item_code = "{}.{}.{}.{}".format(network.code,
@@ -260,7 +261,7 @@ class SeismicArray(object):
                 "z": absolute_height_in_km - value["absolute_height_in_km"]
             }
         if correct_3dplane:
-            correct_with_3dplane(geometry)
+            self.correct_with_3dplane(geometry)
         return geometry
 
     def find_closest_station(self, latitude, longitude,
@@ -373,7 +374,7 @@ class SeismicArray(object):
         geom = self.get_geometry_xyz(latitude, longitude,
                                      absolute_height)
 
-        geometry = _geometry_dict_to_array(geom)
+        geometry = self._geometry_dict_to_array(geom)
 
         if static_3D:
             nstat = len(geometry)
@@ -803,7 +804,7 @@ class SeismicArray(object):
 
                 # here we do the array processing
                 start = UTCDateTime()
-                out = self.array_processing(st_workon, **kwargs)
+                out = self.covariance_array_processing(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
                 # make output human readable, adjust backazimuth to values
@@ -838,19 +839,19 @@ class SeismicArray(object):
 
             # now let's do the plotting
             if "baz_slow_map" in plots:
-                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                self._plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
                                      filename_patterns, True, method,
                                      st_workon, starttime, wlen, endtime)
             if "slowness_xy" in plots:
-                _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                self._plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
                                      filename_patterns, False, method,
                                      st_workon, starttime, wlen, endtime)
             if "baz_hist" in plots:
-                plot_baz_hist(out, starttime, endtime,
+                self.plot_baz_hist(out, starttime, endtime,
                               slowness=(min(sllx, slly), max(slmx, slmy)),
                               sls=sls)
             if "bf_time_dep" in plots:
-                plot_bf_results_over_time(out, starttime, endtime)
+                self.plot_bf_results_over_time(out, starttime, endtime)
 
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
@@ -941,7 +942,7 @@ class SeismicArray(object):
                                 longitude=coords["longitude"],
                                 elevation=coords["absolute_height_in_km"]))
 
-    def array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y,
+    def covariance_array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y,
                          slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
                          stime, etime, prewhiten, verbose=False,
                          timestamp='mlabday', method=0, correct_3dplane=False,
@@ -1017,7 +1018,7 @@ class SeismicArray(object):
         grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
         if correct_3dplane:
-            correct_with_3dplane(self.geometry)
+            self.correct_with_3dplane(self.geometry)
 
         if verbose:
             print("geometry:")
@@ -1180,7 +1181,7 @@ class SeismicArray(object):
         theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
         u_y = -np.cos(theo_backazi)
         u_x = -np.sin(theo_backazi)
-        geo_array = _geometry_dict_to_array(
+        geo_array = self._geometry_dict_to_array(
             self.get_geometry_xyz(**self.center_of_gravity))
         x_ = geo_array[:, 0]
         y_ = geo_array[:, 1]
@@ -1231,7 +1232,7 @@ class SeismicArray(object):
         n_stats = len(stream_N.traces)
         npts = stream_N[0].stats.npts
 
-        geo_array = _geometry_dict_to_array(
+        geo_array = self._geometry_dict_to_array(
             self.get_geometry_xyz(**self.center_of_gravity))
         # NB at this point these offset arrays will contain three times as many
         # entries as needed because each channel is listed individually. These
@@ -2294,7 +2295,7 @@ class SeismicArray(object):
         :param klim: either a float to use symmetric limits for wavenumber
             differences or the tuple (kxmin, kxmax, kymin, kymax)
         """
-        coords = _geometry_dict_to_array(self.get_geometry_xyz(
+        coords = self._geometry_dict_to_array(self.get_geometry_xyz(
             **self.center_of_gravity))
 
         if isinstance(klim, float):
@@ -2342,7 +2343,7 @@ class SeismicArray(object):
         :type fstep: float
         :param fmin: frequency sample distance
         """
-        geometry = _geometry_dict_to_array(self.get_geometry_xyz(
+        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
             **self.center_of_gravity))
 
         if isinstance(slim, float):
@@ -2447,7 +2448,7 @@ class SeismicArray(object):
         grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
 
         abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
-        geometry = _geometry_dict_to_array(self.get_geometry_xyz(
+        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
             correct_3dplane=correct_3dplane,
             **self.center_of_gravity))
 
@@ -2721,293 +2722,292 @@ class SeismicArray(object):
 
         return slow, beams, beam_max, max_beam
 
+    @staticmethod
+    def _geometry_dict_to_array(geometry):
+        """
+        Take a geometry dictionary (as provided by self.geometry, or by
+        get_geometry_xyz) and convert to a numpy array, as used in some
+        methods.
+        """
+        geom_array = np.empty((len(geometry), 3))
+        try:
+            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+                geom_array[_i, 0] = value["x"]
+                geom_array[_i, 1] = value["y"]
+                geom_array[_i, 2] = value["z"]
+        except KeyError:
+            for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
+                geom_array[_i, 0] = float(value["latitude"])
+                geom_array[_i, 1] = float(value["longitude"])
+                geom_array[_i, 2] = value["absolute_height_in_km"]
+        return geom_array
 
-def _geometry_dict_to_array(geometry):
-    """
-    Take a geometry dictionary (as provided by self.geometry, or by
-    get_geometry_xyz) and convert to a numpy array, as used in some
-    methods.
-    """
-    geom_array = np.empty((len(geometry), 3))
-    try:
-        for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
-            geom_array[_i, 0] = value["x"]
-            geom_array[_i, 1] = value["y"]
-            geom_array[_i, 2] = value["z"]
-    except KeyError:
-        for _i, (key, value) in enumerate(sorted(list(geometry.items()))):
-            geom_array[_i, 0] = float(value["latitude"])
-            geom_array[_i, 1] = float(value["longitude"])
-            geom_array[_i, 2] = value["absolute_height_in_km"]
-    return geom_array
+    def correct_with_3dplane(self, geometry):
+        """
+        Correct a given array geometry with a best-fitting plane.
+        :param geometry: nested dictionary of stations, as returned for example by
+        self.geometry or self.get_geometry_xyz.
+        :return: Returns corrected geometry, again as dict.
+        """
 
-
-def correct_with_3dplane(geometry):
-    """
-    Correct a given array geometry with a best-fitting plane.
-    :param geometry: nested dictionary of stations, as returned for example by
-    self.geometry or self.get_geometry_xyz.
-    :return: Returns corrected geometry, again as dict.
-    """
-
-    # sort keys in the nested dict to be alphabetical:
-    coord_sys_keys = sorted(list(geometry.items())[0][1].keys())
-    if coord_sys_keys[0] == 'x':
-        pass
-    elif coord_sys_keys[0] == 'absolute_height_in_km':
-        # set manually because order is important.
-        coord_sys_keys = ['latitude', 'longitude', 'absolute_height_in_km']
-    else:
-        raise KeyError("Geometry dictionary does not have correct keys.")
-    orig_geometry = geometry.copy()
-    geometry = _geometry_dict_to_array(geometry)
-    a = geometry
-    u, s, vh = np.linalg.linalg.svd(a)
-    v = vh.conj().transpose()
-    # satisfies the plane equation a*x + b*y + c*z = 0
-    result = np.zeros((len(geometry), 3))
-    # now we are seeking the station positions on that plane
-    # geometry[:,2] += v[2,-1]
-    n = v[:, -1]
-    result[:, 0] = (geometry[:, 0] - n[0] * (
-        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-        geometry[:, 2]) / (
-                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-    result[:, 1] = (geometry[:, 1] - n[1] * (
-        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-        geometry[:, 2]) / (
-                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-    result[:, 2] = (geometry[:, 2] - n[2] * (
-        n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
-        geometry[:, 2]) / (
-                        n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
-    geometry = result[:]
-    #print("Best fitting plane-coordinates :\n", geometry)
-
-    # convert geometry array back to a dictionary.
-    geodict = {}
-    # The sorted list is necessary to match the station IDs (the keys in the
-    # geometry dict) to the correct array row (or column?), same as is done in
-    # _geometry_dict_to_array, but backwards.
-    for _i, (key, value) in enumerate(sorted(
-            list(orig_geometry.items()))):
-        geodict[key] = {coord_sys_keys[0]: geometry[_i, 0],
-                        coord_sys_keys[1]: geometry[_i, 1],
-                        coord_sys_keys[2]: geometry[_i, 2]}
-    geometry = geodict
-    return geometry
-
-
-def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
-                         baz_plot, method, st_workon, starttime, wlen,
-                         endtime):
-    """
-    Some plotting taken out from _array_analysis_helper. Can't do the array
-    response overlay now though.
-    :param baz_plot: Whether to show backazimuth-slowness map (True) or
-     slowness x-y map (False).
-    """
-    trace = []
-    t, rel_power, abs_power, baz, slow = out.T
-    baz[baz < 0.0] += 360
-    # now let's do the plotting
-    cmap = cm.rainbow
-    # we will plot everything in s/deg
-    slow = degrees2kilometers(slow)
-    sllx = degrees2kilometers(sllx)
-    slmx = degrees2kilometers(slmx)
-    slly = degrees2kilometers(slly)
-    slmy = degrees2kilometers(slmy)
-    sls = degrees2kilometers(sls)
-
-    numslice = len(t)
-    powmap = []
-
-    slx = np.arange(sllx - sls, slmx, sls)
-    sly = np.arange(slly - sls, slmy, sls)
-    if baz_plot:
-        maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
-        bzs = np.arctan2(sls, np.sqrt(
-            slmx * slmx + slmy * slmy)) * 180 / np.pi
-        xi = np.arange(0., maxslowg, sls)
-        yi = np.arange(-180., 180., bzs)
-        grid_x, grid_y = np.meshgrid(xi, yi)
-    # reading in the rel-power maps
-    for i in range(numslice):
-        powmap.append(np.load(filename_patterns[0] % i))
-        if method != 'FK':
-            trace.append(np.load(filename_patterns[1] % i))
-    # remove last item as a cludge to get plotting to work - not sure
-    # it's always clever or just a kind of rounding or modulo problem
-    if len(slx) == len(powmap[0][0]) + 1:
-        slx = slx[:-1]
-    if len(sly) == len(powmap[0][1]) + 1:
-        sly = sly[:-1]
-
-    npts = st_workon[0].stats.npts
-    df = st_workon[0].stats.sampling_rate
-    T = np.arange(0, npts / df, 1 / df)
-
-    # if we choose windowlen > 0. we now move through our slices
-    for i in range(numslice):
-        slow_x = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
-        slow_y = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
-        st = UTCDateTime(t[i]) - starttime
-        if wlen <= 0:
-            en = endtime
+        # sort keys in the nested dict to be alphabetical:
+        coord_sys_keys = sorted(list(geometry.items())[0][1].keys())
+        if coord_sys_keys[0] == 'x':
+            pass
+        elif coord_sys_keys[0] == 'absolute_height_in_km':
+            # set manually because order is important.
+            coord_sys_keys = ['latitude', 'longitude', 'absolute_height_in_km']
         else:
-            en = st + wlen
-        print(UTCDateTime(t[i]))
-        # add polar and colorbar axes
-        fig = plt.figure(figsize=(12, 12))
-        ax1 = fig.add_axes([0.1, 0.87, 0.7, 0.10])
-        # here we plot the first trace on top of the slowness map
-        # and indicate the possibiton of the lsiding window as green box
-        if method == 'FK':
-            ax1.plot(T, st_workon[0].data, 'k')
-            if wlen > 0.:
-                try:
-                    ax1.axvspan(st, en, facecolor='g', alpha=0.3)
-                except IndexError:
-                    pass
-        else:
-            T = np.arange(0, len(trace[i]) / df, 1 / df)
-            ax1.plot(T, trace[i], 'k')
+            raise KeyError("Geometry dictionary does not have correct keys.")
+        orig_geometry = geometry.copy()
+        geometry = self._geometry_dict_to_array(geometry)
+        a = geometry
+        u, s, vh = np.linalg.linalg.svd(a)
+        v = vh.conj().transpose()
+        # satisfies the plane equation a*x + b*y + c*z = 0
+        result = np.zeros((len(geometry), 3))
+        # now we are seeking the station positions on that plane
+        # geometry[:,2] += v[2,-1]
+        n = v[:, -1]
+        result[:, 0] = (geometry[:, 0] - n[0] * (
+            n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+            geometry[:, 2]) / (
+                            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+        result[:, 1] = (geometry[:, 1] - n[1] * (
+            n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+            geometry[:, 2]) / (
+                            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+        result[:, 2] = (geometry[:, 2] - n[2] * (
+            n[0] * geometry[:, 0] + geometry[:, 1] * n[1] + n[2] *
+            geometry[:, 2]) / (
+                            n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
+        geometry = result[:]
+        #print("Best fitting plane-coordinates :\n", geometry)
 
-        ax1.yaxis.set_major_locator(MaxNLocator(3))
+        # convert geometry array back to a dictionary.
+        geodict = {}
+        # The sorted list is necessary to match the station IDs (the keys in the
+        # geometry dict) to the correct array row (or column?), same as is done in
+        # _geometry_dict_to_array, but backwards.
+        for _i, (key, value) in enumerate(sorted(
+                list(orig_geometry.items()))):
+            geodict[key] = {coord_sys_keys[0]: geometry[_i, 0],
+                            coord_sys_keys[1]: geometry[_i, 1],
+                            coord_sys_keys[2]: geometry[_i, 2]}
+        geometry = geodict
+        return geometry
 
-        ax = fig.add_axes([0.10, 0.1, 0.70, 0.7])
+    @staticmethod
+    def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
+                             baz_plot, method, st_workon, starttime, wlen,
+                             endtime):
+        """
+        Some plotting taken out from _array_analysis_helper. Can't do the array
+        response overlay now though.
+        :param baz_plot: Whether to show backazimuth-slowness map (True) or
+         slowness x-y map (False).
+        """
+        trace = []
+        t, rel_power, abs_power, baz, slow = out.T
+        baz[baz < 0.0] += 360
+        # now let's do the plotting
+        cmap = cm.rainbow
+        # we will plot everything in s/deg
+        slow = degrees2kilometers(slow)
+        sllx = degrees2kilometers(sllx)
+        slmx = degrees2kilometers(slmx)
+        slly = degrees2kilometers(slly)
+        slmy = degrees2kilometers(slmy)
+        sls = degrees2kilometers(sls)
 
-        # if we have chosen the baz_plot option a re-griding
-        # of the sx,sy slowness map is needed
+        numslice = len(t)
+        powmap = []
+
+        slx = np.arange(sllx - sls, slmx, sls)
+        sly = np.arange(slly - sls, slmy, sls)
         if baz_plot:
-            slowgrid = []
-            transgrid = []
-            pow = np.asarray(powmap[i])
-            for ix, sx in enumerate(slx):
-                for iy, sy in enumerate(sly):
-                    bbaz = np.arctan2(sx, sy) * 180 / np.pi + 180.
-                    if bbaz > 180.:
-                        bbaz = -180. + (bbaz - 180.)
-                    slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
-                                     pow[ix, iy]))
+            maxslowg = np.sqrt(slmx * slmx + slmy * slmy)
+            bzs = np.arctan2(sls, np.sqrt(
+                slmx * slmx + slmy * slmy)) * 180 / np.pi
+            xi = np.arange(0., maxslowg, sls)
+            yi = np.arange(-180., 180., bzs)
+            grid_x, grid_y = np.meshgrid(xi, yi)
+        # reading in the rel-power maps
+        for i in range(numslice):
+            powmap.append(np.load(filename_patterns[0] % i))
+            if method != 'FK':
+                trace.append(np.load(filename_patterns[1] % i))
+        # remove last item as a cludge to get plotting to work - not sure
+        # it's always clever or just a kind of rounding or modulo problem
+        if len(slx) == len(powmap[0][0]) + 1:
+            slx = slx[:-1]
+        if len(sly) == len(powmap[0][1]) + 1:
+            sly = sly[:-1]
 
-            slowgrid = np.asarray(slowgrid)
-            sl = slowgrid[:, 0]
-            bz = slowgrid[:, 1]
-            slowg = slowgrid[:, 2]
-            grid = interpolate.griddata((sl, bz), slowg,
-                                        (grid_x, grid_y),
-                                        method='nearest')
-            ax.pcolormesh(xi, yi, grid, cmap=cmap)
+        npts = st_workon[0].stats.npts
+        df = st_workon[0].stats.sampling_rate
+        T = np.arange(0, npts / df, 1 / df)
 
-            ax.set_xlabel('slowness [s/deg]')
-            ax.set_ylabel('backazimuth [deg]')
-            ax.set_xlim(xi[0], xi[-1])
-            ax.set_ylim(yi[0], yi[-1])
-        else:
-            ax.set_xlabel('slowness [s/deg]')
-            ax.set_ylabel('slowness [s/deg]')
-            slow_x = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
-            slow_y = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
-            ax.pcolormesh(slx, sly, powmap[i].T)
-            ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
-                     head_length=0.01, fc='k', ec='k')
-            ax.set_ylim(slx[0], slx[-1])
-            ax.set_xlim(sly[0], sly[-1])
-        new_time = t[i]
+        # if we choose windowlen > 0. we now move through our slices
+        for i in range(numslice):
+            slow_x = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
+            slow_y = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
+            st = UTCDateTime(t[i]) - starttime
+            if wlen <= 0:
+                en = endtime
+            else:
+                en = st + wlen
+            print(UTCDateTime(t[i]))
+            # add polar and colorbar axes
+            fig = plt.figure(figsize=(12, 12))
+            ax1 = fig.add_axes([0.1, 0.87, 0.7, 0.10])
+            # here we plot the first trace on top of the slowness map
+            # and indicate the possibiton of the lsiding window as green box
+            if method == 'FK':
+                ax1.plot(T, st_workon[0].data, 'k')
+                if wlen > 0.:
+                    try:
+                        ax1.axvspan(st, en, facecolor='g', alpha=0.3)
+                    except IndexError:
+                        pass
+            else:
+                T = np.arange(0, len(trace[i]) / df, 1 / df)
+                ax1.plot(T, trace[i], 'k')
 
-        result = "BAZ: %.2f, Slow: %.2f s/deg, Time %s" % (
-            baz[i], slow[i], UTCDateTime(new_time))
-        ax.set_title(result)
+            ax1.yaxis.set_major_locator(MaxNLocator(3))
+
+            ax = fig.add_axes([0.10, 0.1, 0.70, 0.7])
+
+            # if we have chosen the baz_plot option a re-griding
+            # of the sx,sy slowness map is needed
+            if baz_plot:
+                slowgrid = []
+                transgrid = []
+                pow = np.asarray(powmap[i])
+                for ix, sx in enumerate(slx):
+                    for iy, sy in enumerate(sly):
+                        bbaz = np.arctan2(sx, sy) * 180 / np.pi + 180.
+                        if bbaz > 180.:
+                            bbaz = -180. + (bbaz - 180.)
+                        slowgrid.append((np.sqrt(sx * sx + sy * sy), bbaz,
+                                         pow[ix, iy]))
+
+                slowgrid = np.asarray(slowgrid)
+                sl = slowgrid[:, 0]
+                bz = slowgrid[:, 1]
+                slowg = slowgrid[:, 2]
+                grid = interpolate.griddata((sl, bz), slowg,
+                                            (grid_x, grid_y),
+                                            method='nearest')
+                ax.pcolormesh(xi, yi, grid, cmap=cmap)
+
+                ax.set_xlabel('slowness [s/deg]')
+                ax.set_ylabel('backazimuth [deg]')
+                ax.set_xlim(xi[0], xi[-1])
+                ax.set_ylim(yi[0], yi[-1])
+            else:
+                ax.set_xlabel('slowness [s/deg]')
+                ax.set_ylabel('slowness [s/deg]')
+                slow_x = np.cos((baz[i] + 180.) * np.pi / 180.) * slow[i]
+                slow_y = np.sin((baz[i] + 180.) * np.pi / 180.) * slow[i]
+                ax.pcolormesh(slx, sly, powmap[i].T)
+                ax.arrow(0, 0, slow_y, slow_x, head_width=0.005,
+                         head_length=0.01, fc='k', ec='k')
+                ax.set_ylim(slx[0], slx[-1])
+                ax.set_xlim(sly[0], sly[-1])
+            new_time = t[i]
+
+            result = "BAZ: %.2f, Slow: %.2f s/deg, Time %s" % (
+                baz[i], slow[i], UTCDateTime(new_time))
+            ax.set_title(result)
+            plt.show()
+
+    @staticmethod
+    def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
+        """
+        Plot a backazimuth - slowness histogram.
+        :param out: beamforming result e.g. from SeismicArray.fk_analysis.
+        :param slowness: the radial axis limits.
+        :param sls: slowness step (bin width)
+        """
+        from matplotlib.colorbar import ColorbarBase
+        from matplotlib.colors import Normalize
+        cmap = cm.hot_r
+        # make output human readable, adjust backazimuth to values between 0 and 360
+        t, rel_power, abs_power, baz, slow = out.T
+        baz[baz < 0.0] += 360
+        # todo: this needs to be quite a bit more elegant really.
+        # Can't plot negative slownesses:
+        sll = slowness[0] if slowness[0] > 0 else 0
+        slm = slowness[1]
+
+        # choose number of azimuth bins in plot
+        # (desirably 360 degree/N is an integer!)
+        N = 36
+        # number of slowness bins
+        N2 = math.ceil((slowness[1] - slowness[0]) / sls)
+        abins = np.arange(N + 1) * 360. / N
+        sbins = np.linspace(sll, slm, N2 + 1)
+
+        # sum rel power in bins given by abins and sbins
+        hist, baz_edges, sl_edges = \
+            np.histogram2d(baz, slow, bins=[abins, sbins], weights=rel_power)
+
+        # transform to radian
+        baz_edges = np.radians(baz_edges)
+
+        # add polar and colorbar axes
+        fig = plt.figure(figsize=(8, 8))
+        cax = fig.add_axes([0.85, 0.2, 0.05, 0.5])
+        ax = fig.add_axes([0.10, 0.1, 0.70, 0.7], polar=True)
+        ax.set_theta_direction(-1)
+        ax.set_theta_zero_location("N")
+
+        dh = abs(sl_edges[1] - sl_edges[0])
+        dw = abs(baz_edges[1] - baz_edges[0])
+
+        # circle through backazimuth
+        for i, row in enumerate(hist):
+            bars = ax.bar(left=(i * dw) * np.ones(N2),
+                          height=dh * np.ones(N2),
+                          width=dw, bottom=dh * np.arange(N2),
+                          color=cmap(row / hist.max()))
+
+        ax.set_xticks(np.linspace(0, 2 * np.pi, 4, endpoint=False))
+        ax.set_xticklabels(['N', 'E', 'S', 'W'])
+
+        # set slowness limits
+        ax.set_ylim(sll, slm)
+        ColorbarBase(cax, cmap=cmap,
+                     norm=Normalize(vmin=hist.min(), vmax=hist.max()))
+        if t_start is not None and t_end is not None:
+            plt.suptitle('Time: {} - {}'.format(str(t_start)[:-8],
+                                                str(t_end)[:-8]))
         plt.show()
 
+    @staticmethod
+    def plot_bf_results_over_time(out, t_start):
+        import matplotlib.dates as mdates
+        # Plot
+        labels = ['rel.power', 'abs.power', 'baz', 'slow']
 
-def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
-    """
-    Plot a backazimuth - slowness histogram.
-    :param out: beamforming result e.g. from SeismicArray.fk_analysis.
-    :param slowness: the radial axis limits.
-    :param sls: slowness step (bin width)
-    """
-    from matplotlib.colorbar import ColorbarBase
-    from matplotlib.colors import Normalize
-    cmap = cm.hot_r
-    # make output human readable, adjust backazimuth to values between 0 and 360
-    t, rel_power, abs_power, baz, slow = out.T
-    baz[baz < 0.0] += 360
-    # todo: this needs to be quite a bit more elegant really.
-    # Can't plot negative slownesses:
-    sll = slowness[0] if slowness[0] > 0 else 0
-    slm = slowness[1]
+        xlocator = mdates.AutoDateLocator()
+        fig = plt.figure()
+        for i, lab in enumerate(labels):
+            ax = fig.add_subplot(4, 1, i + 1)
+            ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
+                       edgecolors='none')
+            ax.set_ylabel(lab)
+            ax.set_xlim(out[0, 0], out[-1, 0])
+            ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+            ax.xaxis.set_major_locator(xlocator)
+            ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
-    # choose number of azimuth bins in plot
-    # (desirably 360 degree/N is an integer!)
-    N = 36
-    # number of slowness bins
-    N2 = math.ceil((slowness[1] - slowness[0]) / sls)
-    abins = np.arange(N + 1) * 360. / N
-    sbins = np.linspace(sll, slm, N2 + 1)
-
-    # sum rel power in bins given by abins and sbins
-    hist, baz_edges, sl_edges = \
-        np.histogram2d(baz, slow, bins=[abins, sbins], weights=rel_power)
-
-    # transform to radian
-    baz_edges = np.radians(baz_edges)
-
-    # add polar and colorbar axes
-    fig = plt.figure(figsize=(8, 8))
-    cax = fig.add_axes([0.85, 0.2, 0.05, 0.5])
-    ax = fig.add_axes([0.10, 0.1, 0.70, 0.7], polar=True)
-    ax.set_theta_direction(-1)
-    ax.set_theta_zero_location("N")
-
-    dh = abs(sl_edges[1] - sl_edges[0])
-    dw = abs(baz_edges[1] - baz_edges[0])
-
-    # circle through backazimuth
-    for i, row in enumerate(hist):
-        bars = ax.bar(left=(i * dw) * np.ones(N2),
-                      height=dh * np.ones(N2),
-                      width=dw, bottom=dh * np.arange(N2),
-                      color=cmap(row / hist.max()))
-
-    ax.set_xticks(np.linspace(0, 2 * np.pi, 4, endpoint=False))
-    ax.set_xticklabels(['N', 'E', 'S', 'W'])
-
-    # set slowness limits
-    ax.set_ylim(sll, slm)
-    ColorbarBase(cax, cmap=cmap,
-                 norm=Normalize(vmin=hist.min(), vmax=hist.max()))
-    if t_start is not None and t_end is not None:
-        plt.suptitle('Time: {} - {}'.format(str(t_start)[:-8],
-                                            str(t_end)[:-8]))
-    plt.show()
-
-
-def plot_bf_results_over_time(out, t_start):
-    import matplotlib.dates as mdates
-    # Plot
-    labels = ['rel.power', 'abs.power', 'baz', 'slow']
-
-    xlocator = mdates.AutoDateLocator()
-    fig = plt.figure()
-    for i, lab in enumerate(labels):
-        ax = fig.add_subplot(4, 1, i + 1)
-        ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
-                   edgecolors='none')
-        ax.set_ylabel(lab)
-        ax.set_xlim(out[0, 0], out[-1, 0])
-        ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
-        ax.xaxis.set_major_locator(xlocator)
-        ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
-
-    fig.suptitle('Time-dependent beamforming results %s' % (
-        t_start.strftime('%Y-%m-%d'), ))
-    #fig.autofmt_xdate()
-    fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
-    plt.show()
+        fig.suptitle('Time-dependent beamforming results %s' % (
+            t_start.strftime('%Y-%m-%d'), ))
+        #fig.autofmt_xdate()
+        fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
+        plt.show()
 
 
 if __name__ == '__main__':
