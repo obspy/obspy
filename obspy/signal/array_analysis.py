@@ -1215,6 +1215,9 @@ class SeismicArray(object):
                           labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
                           color='r')
             ax.set_rmax(u[-1])
+            # This means that if u does not start at 0, the plot will show a
+            # hole in the middle rather than stitching it up.
+            ax.set_rmin(-0)
             fig.colorbar(CONTF)
             ax.grid(True)
             ax.set_title('Transfer function s ' + str(p))
