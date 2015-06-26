@@ -860,42 +860,29 @@ class SeismicArray(object):
             self.inventory = invbkp
             shutil.rmtree(tmpdir)
 
-    def plot_transfer_function(self, stream, sx=(-10, 10),
+    def plot_transfer_function(self, sx=(-10, 10),
                                sy=(-10, 10), sls=0.5, freqmin=0.1, freqmax=4.0,
-                               numfreqs=10, coordsys='lonlat',
-                               correct3dplane=False, static3D=False,
-                               velcor=4.8):
+                               numfreqs=10):
         """
-        Array Response wrapper routine for MESS 2014.
+        Plot transfer function (uses array transfer function as a function of
+        slowness difference and frequency).
 
-        :param stream: Waveforms for the array processing.
-        :type stream: :class:`obspy.core.stream.Stream`
-        :param slx: Min/Max slowness for analysis in x direction.
-        :type slx: (float, float)
-        :param sly: Min/Max slowness for analysis in y direction.
-        :type sly: (float, float)
+        :param sx: Min/Max slowness for analysis in x direction.
+        :type sx: (float, float)
+        :param sy: Min/Max slowness for analysis in y direction.
+        :type sy: (float, float)
         :param sls: step width of slowness grid
         :type sls: float
-        :param frqmin: Low corner of frequency range for array analysis
-        :type frqmin: float
-        :param frqmax: High corner of frequency range for array analysis
-        :type frqmax: float
+        :param freqmin: Low corner of frequency range for array analysis
+        :type freqmin: float
+        :param freqmax: High corner of frequency range for array analysis
+        :type freqmax: float
         :param numfreqs: number of frequency values used for computing array
          transfer function
         :type numfreqs: int
-        :param coordsys: defined coordinate system of stations (lonlat or km)
-        :type coordsys: string
-        :param correct_3dplane: correct for an inclined surface (not used)
-        :type correct_3dplane: bool
-        :param static_3D: correct topography
-        :type static_3D: bool
-        :param velcor: velocity used for static_3D correction
-        :type velcor: float
         """
-        self._attach_coords_to_stream(stream)
-
         sllx, slmx = sx
-        slly, slmy = sx
+        slly, slmy = sy
         sllx = kilometer2degrees(sllx)
         slmx = kilometer2degrees(slmx)
         slly = kilometer2degrees(slly)
@@ -903,10 +890,9 @@ class SeismicArray(object):
         sls = kilometer2degrees(sls)
 
         stepsfreq = (freqmax - freqmin) / float(numfreqs)
-        transff = self.array_transff_freqslowness(
-            stream, (sllx, slmx, slly, slmy), sls, freqmin, freqmax, stepsfreq,
-            coordsys=coordsys, correct_3dplane=False, static_3D=static3D,
-            vel_cor=velcor)
+        transff = self._array_transff_freqslowness((sllx, slmx, slly, slmy),
+                                                  sls, freqmin, freqmax,
+                                                  stepsfreq)
 
         sllx = degrees2kilometers(sllx)
         slmx = degrees2kilometers(slmx)
@@ -2331,11 +2317,11 @@ class SeismicArray(object):
         transff /= transff.max()
         return transff
 
-    def array_transff_freqslowness(self, slim, sstep, fmin, fmax,
-                                   fstep):
+    def _array_transff_freqslowness(self, slim, sstep, fmin, fmax,
+                                    fstep):
         """
-        Returns array transfer function as a function of slowness difference and
-        frequency.
+        Returns array transfer function as a function of slowness difference
+        and frequency.
 
         :param slim: either a float to use symmetric limits for slowness
             differences or the tupel (sxmin, sxmax, symin, symax)
