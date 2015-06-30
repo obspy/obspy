@@ -102,6 +102,7 @@ INSTALL_REQUIRES = [
     'scipy>=0.7.2',
     'matplotlib',
     'lxml',
+    'setuptools',
     'sqlalchemy']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
