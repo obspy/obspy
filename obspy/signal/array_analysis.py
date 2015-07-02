@@ -37,7 +37,9 @@ from obspy.geodetics import gps2DistAzimuth, degrees2kilometers, \
     kilometer2degrees
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
-from obspy.core import Stream, Trace
+from obspy.core import Trace
+from obspy.core.inventory import Inventory
+
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 from obspy.core.util import AttribDict
@@ -57,10 +59,19 @@ class SeismicArray(object):
         self.inventory = None
 
     def add_inventory(self, inv):
-        # todo add some commentary and type hint
+        """
+        Attach an inventory to the array. Array may only have one inventory
+        attached.
+        :param inv: The inventory to be attached
+        :type inv: :class:`~obspy.core.inventory.Inventory`
+        """
         if self.inventory is not None:
             raise NotImplementedError("Already has an inventory attached.")
-        self.inventory = inv
+        if not isinstance(inv, Inventory):
+            raise TypeError("Can only attach obspy inventories.")
+        # Must use deepcopy, otherwise even temporary changes to the array
+        # inventory will affect the 'original' inventory.
+        self.inventory = copy.deepcopy(inv)
 
     def inventory_cull(self, st):
         """
@@ -783,6 +794,9 @@ class SeismicArray(object):
         # actually represented in the traces are kept in the inventory.
         # Otherwise self.geometry and the xyz geometry arrays will have more
         # entries than the stream.
+        # Todo: if inventory_cull becomes an inventory method, change this to
+        # inv_workon = copy.deepcopy(self.inventory)
+        # and use that instead to avoid the try ... finally.
         invbkp = copy.deepcopy(self.inventory)
         self.inventory_cull(st_workon)
         try:
@@ -849,10 +863,11 @@ class SeismicArray(object):
             if "baz_hist" in plots:
                 self.plot_baz_hist(out, starttime, endtime,
                               slowness=(min(sllx, slly), max(slmx, slmy)),
-                              sls=sls)
+                              sls=sls, show_immediately=False)
             if "bf_time_dep" in plots:
-                self.plot_bf_results_over_time(out, starttime, endtime)
-
+                self.plot_bf_results_over_time(out, starttime,
+                                               show_immediately=False)
+            plt.show()
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
             return out
@@ -1457,7 +1472,8 @@ class SeismicArray(object):
 
     @staticmethod
     def three_c_beamform_plotter(beamresult, u, freqs, plot_frequencies=(),
-                                 average_windows=True, average_freqs=True):
+                                 average_windows=True, average_freqs=True,
+                                 show_immediately=True):
         """
         Pass in an unaveraged beamresult, i.e. with 4 axes. Dud windows should
         (not happen or) be signified by all zeros, so np.nonzero can catch
@@ -1517,7 +1533,7 @@ class SeismicArray(object):
                                  .format(freqs[ifreq]))
 
         if average_freqs and not average_windows:
-            for iwin in range(len(beamresnz[0, 0, :, 0])):
+            for iwin in range(len(beamresnz[0, 0, :])):
                 _actual_plotting(beamresnz[:, :, iwin],
                                  'Averaged all frequencies, window {}'
                                  .format(iwin))
@@ -1531,15 +1547,17 @@ class SeismicArray(object):
                                      'BF result window {}, freq {}'
                                      .format(iwin, freqs[ifreq]))
 
-        plt.plot()
-        plt.show()
+        if show_immediately is True:
+            plt.show()
 
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
                                     freq_range, plot_frequencies=(7, 14),
                                     n_min_stns=7, win_average=1,
                                     plot_transff=False,
-                                    plot_average_freqs=True):
+                                    plot_average_freqs=True,
+                                    plot_average_windows=True,
+                                    show_immediately=True):
         """
         Do three component beamforming following Esmersoy 1985...
         Three streams representing N, E, Z oriented components must be given,
@@ -1576,6 +1594,8 @@ class SeismicArray(object):
          array (only considering stations/channels for which data is present)
         :param plot_average_freqs: whether to plot an average of results for
          all frequencies
+        :param plot_average_windows: whether to plot an average of results for
+         all windows
         :return: A four dimensional :class:`numpy.ndarray` of the beamforming
          results, with dimensions of backazimuth range, slowness range, number
          of windows and number of discrete frequencies; as well as frequency
@@ -1662,7 +1682,9 @@ class SeismicArray(object):
             self.three_c_beamform_plotter(bf_results,
                                           plot_frequencies=plot_frequencies,
                                           u=u, freqs=freqs,
-                                          average_freqs=plot_average_freqs)
+                                          average_freqs=plot_average_freqs,
+                                          show_immediately=show_immediately,
+                                          average_windows=plot_average_windows)
 
             # More interesting perhaps to plot the tranfer function only
             # with the actually used stations, i.e. the culled inventory
@@ -2912,7 +2934,8 @@ class SeismicArray(object):
             plt.show()
 
     @staticmethod
-    def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1):
+    def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1,
+                      show_immediately=True):
         """
         Plot a backazimuth - slowness histogram.
         :param out: beamforming result e.g. from SeismicArray.fk_analysis.
@@ -2972,10 +2995,11 @@ class SeismicArray(object):
         if t_start is not None and t_end is not None:
             plt.suptitle('Time: {} - {}'.format(str(t_start)[:-8],
                                                 str(t_end)[:-8]))
-        plt.show()
+        if show_immediately is True:
+            plt.show()
 
     @staticmethod
-    def plot_bf_results_over_time(out, t_start):
+    def plot_bf_results_over_time(out, t_start, show_immediately=True):
         import matplotlib.dates as mdates
         # Plot
         labels = ['rel.power', 'abs.power', 'baz', 'slow']
@@ -2996,7 +3020,8 @@ class SeismicArray(object):
             t_start.strftime('%Y-%m-%d'), ))
         #fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
-        plt.show()
+        if show_immediately is True:
+            plt.show()
 
 
 if __name__ == '__main__':
