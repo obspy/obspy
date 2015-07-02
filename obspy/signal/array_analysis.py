@@ -1607,6 +1607,12 @@ class SeismicArray(object):
         if wavetype not in pol_dict:
             raise ValueError('Invalid option for wavetype: {}'
                              .format(wavetype))
+        if len(set(len(vel.traces) for vel in (stream_N, stream_E,
+                                               stream_Z))) > 1:
+            raise ValueError("All three streams must have same number of "
+                             "traces.")
+        if len(stream_N.traces) == 0:
+            raise ValueError("Streams do not seem to contain any traces.")
 
         # from _array_analysis_helper:
         starttime = max(max([tr.stats.starttime for tr in st]) for st in
