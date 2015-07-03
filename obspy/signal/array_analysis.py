@@ -39,11 +39,14 @@ from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Trace
 from obspy.core.inventory import Inventory
-
 from scipy.integrate import cumtrapz
+from obspy.core import Stream
+from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosTaper
 from obspy.core.util import AttribDict
 import warnings
+import matplotlib.dates as mdates
+
 
 import cartopy
 import matplotlib.pyplot as plt
@@ -2947,14 +2950,6 @@ class SeismicArray(object):
             plt.show()
 
 
-
-
-
-import copy
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-
 class BeamformerResult:
     """
     Contains results from beamforming and attached plotting methods.
@@ -2962,7 +2957,6 @@ class BeamformerResult:
     # FK and other 1cbf return max relative (and absolute) powers, as well as
     # the slowness and azimuth where it happens.
     # 3cbf as of now returns the whole results...
-
 
     def __init__(self, inventory=None, times=None, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
@@ -3006,10 +3000,11 @@ class BeamformerResult:
 
     def plot_baz_hist(self, show_immediately=True):
         """
-        Plot a backazimuth - slowness histogram.
-        :param out: beamforming result e.g. from SeismicArray.fk_analysis.
-        :param slowness: the radial axis limits.
-        :param sls: slowness step (bin width)
+        Plot a backazimuth - slowness radial histogram.
+        The backazimuth and slowness values of the maximum relative powers
+        of each beamforming window are counted into bins defined
+        by slowness and backazimuth, weighted by the power.
+        :param show_immediately: Whether to call plt.show() immediately.
         """
         from matplotlib.colorbar import ColorbarBase
         from matplotlib.colors import Normalize
@@ -3071,18 +3066,25 @@ class BeamformerResult:
 
     def plot_bf_results_over_time(self, show_immediately=True):
         """
-        :param show_immediately:
-        :return:
+        Plot beamforming results over time, with the relative power as
+        colorscale.
+        :param show_immediately: Whether to call plt.show() immediately.
         """
-
+        self.max_abs_power = None
         labels = ['rel. power', 'abs. power', 'baz', 'slow']
+        datas = [self.max_rel_power, self.max_abs_power,
+                 self.max_pow_baz, self.max_pow_slow]
+        # To account for e.g. the _beamforming method not returning absolute
+        # powers:
+        for data, lab in zip(reversed(datas), reversed(labels)):
+            if data is None:
+                datas.remove(data)
+                labels.remove(lab)
+
         xlocator = mdates.AutoDateLocator()
         fig = plt.figure()
-        for i, (data, lab) in enumerate(zip((self.max_rel_power,
-                                             self.max_abs_power,
-                                             self.max_pow_baz,
-                                             self.max_pow_slow), labels)):
-            ax = fig.add_subplot(4, 1, i + 1)
+        for i, (data, lab) in enumerate(zip(datas, labels)):
+            ax = fig.add_subplot(len(labels), 1, i + 1)
             ax.scatter(self._plotting_timestamps, data, c=self.max_rel_power,
                        alpha=0.6, edgecolors='none')
             ax.set_ylabel(lab)
@@ -3100,9 +3102,6 @@ class BeamformerResult:
                             hspace=0)
         if show_immediately is True:
             plt.show()
-
-
-
 
 
 if __name__ == '__main__':
