@@ -67,7 +67,7 @@ st[4].stats.coordinates = AttribDict({
 paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
-# Execute covariance_array_processing
+# Execute _covariance_array_processing
 stime = UTCDateTime("20080217110515")
 etime = UTCDateTime("20080217110545")
 kwargs = dict(

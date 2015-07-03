@@ -545,14 +545,13 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param plots: List or tuple of desired output plots, e.g.
-         ("baz_slow_map"). Supported options:
-         "baz_slow_map" for a backazimuth-slowness map,
-         "slowness_xy" for a slowness_xy map,
-         "baz_hist" for a backazimuth-slowness polar histogram as in
-          :func:`plot_baz_hist`,
-         "bf_time_dep" for a plot of beamforming results over time as in
-          :func:`plot_bf_results_over_time`.
+        :param plots: List or tuple of desired plots that should be plotted for
+         each beamforming window.
+         Supported options:
+         "baz_slow_map" for backazimuth-slowness maps for each window,
+         "slowness_xy" for slowness_xy maps for each window.
+         Further plotting otions are attached to the returned object.
+        :rtype: :class:`BeamformerResult`
         """
         return self._array_analysis_helper(stream=stream, method="SWP",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -592,14 +591,13 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param plots: List or tuple of desired output plots, e.g.
-         ("baz_slow_map"). Supported options:
-         "baz_slow_map" for a backazimuth-slowness map,
-         "slowness_xy" for a slowness_xy map,
-         "baz_hist" for a backazimuth-slowness polar histogram as in
-          :func:`plot_baz_hist`,
-         "bf_time_dep" for a plot of beamforming results over time as in
-          :func:`plot_bf_results_over_time`.
+        :param plots: List or tuple of desired plots that should be plotted for
+         each beamforming window.
+         Supported options:
+         "baz_slow_map" for backazimuth-slowness maps for each window,
+         "slowness_xy" for slowness_xy maps for each window.
+         Further plotting otions are attached to the returned object.
+        :rtype: :class:`BeamformerResult`
         """
         return self._array_analysis_helper(stream=stream, method="PWS",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -686,14 +684,14 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param plots: List or tuple of desired output plots, e.g.
-         ("baz_slow_map"). Supported options:
+        :param plots: List or tuple of desired plots that should be plotted for
+         each beamforming window.
+         Supported options:
          "baz_slow_map" for backazimuth-slowness maps for each window,
-         "slowness_xy" for slowness_xy maps for each window,
-         "baz_hist" for a backazimuth-slowness polar histogram as in
-          :func:`plot_baz_hist`,
-         "bf_time_dep" for a plot of beamforming results over time as in
-          :func:`plot_bf_results_over_time`.
+         "slowness_xy" for slowness_xy maps for each window.
+         Further plotting otions are attached to the returned object.
+        :rtype: :class:`BeamformerResult`
+
         """
         return self._array_analysis_helper(stream=stream, method="FK",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -740,14 +738,13 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param plots: List or tuple of desired output plots, e.g.
-         ("baz_slow_map"). Supported options:
-         "baz_slow_map" for a backazimuth-slowness map,
-         "slowness_xy" for a slowness_xy map,
-         "baz_hist" for a backazimuth-slowness polar histogram as in
-          :func:`plot_baz_hist`,
-         "bf_time_dep" for a plot of beamforming results over time as in
-          :func:`plot_bf_results_over_time`.
+        :param plots: List or tuple of desired plots that should be plotted for
+         each beamforming window.
+         Supported options:
+         "baz_slow_map" for backazimuth-slowness maps for each window,
+         "slowness_xy" for slowness_xy maps for each window.
+         Further plotting otions are attached to the returned object.
+        :rtype: :class:`BeamformerResult`
         """
 
         if method not in ("FK", "DLS", "PWS", "SWP"):
@@ -764,6 +761,9 @@ class SeismicArray(object):
 
         sllx, slmx = slx
         slly, slmy = sly
+        # In terms of a single 'radial' slowness (used e.g. for plotting):
+        sll = np.sqrt(sllx ** 2 + slly ** 2)
+        slm = np.sqrt(slmx ** 2 + slmy ** 2)
 
         # Do not modify the given stream in place.
         st_workon = stream.copy()
@@ -812,19 +812,24 @@ class SeismicArray(object):
                     store=dump,
                     semb_thres=-1e9, vel_thres=-1e9, verbose=False,
                     # use mlabday to be compatible with matplotlib
-                    timestamp='mlabday', stime=starttime, etime=endtime,
+                    timestamp='julsec', stime=starttime, etime=endtime,
                     method=0, correct_3dplane=False, vel_cor=vel_corr,
                     static_3D=static3D)
 
                 # here we do the array processing
                 start = UTCDateTime()
-                out = self.covariance_array_processing(st_workon, **kwargs)
+                outarr = self._covariance_array_processing(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
                 # make output human readable, adjust backazimuth to values
                 # between 0 and 360
-                t, rel_power, abs_power, baz, slow = out.T
+                t, rel_power, abs_power, baz, slow = outarr.T
                 baz[baz < 0.0] += 360
+                out = BeamformerResult(inventory=self.inventory, times=t,
+                                       max_rel_power=rel_power,
+                                       max_abs_power=abs_power,
+                                       max_pow_baz=baz, max_pow_slowness=slow,
+                                       slowness_range=np.arange(sll, slm, sls))
 
             else:
                 kwargs = dict(
@@ -837,36 +842,34 @@ class SeismicArray(object):
                     store=dump,
                     win_len=wlen, win_frac=0.5,
                     nthroot=4, method=method,
-                    verbose=False, timestamp='mlabday',
+                    verbose=False, timestamp='julsec',
                     stime=starttime, etime=endtime, vel_cor=vel_corr,
                     static_3D=False)
 
                 # here we do the array processing
                 start = UTCDateTime()
-                out = self.beamforming(st_workon, **kwargs)
+                #todo adjust times processing here
+                outarr = self._beamforming(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
                 # make output human readable, adjust backazimuth to values
                 # between 0 and 360
-                t, rel_power, baz, slow_x, slow_y, slow = out.T
+                t, rel_power, baz, slow_x, slow_y, slow = outarr.T
                 baz[baz < 0.0] += 360
+                out = BeamformerResult(inventory=self.inventory, times=t,
+                                       max_rel_power=rel_power,
+                                       max_pow_baz=baz, max_pow_slowness=slow,
+                                       slowness_range=np.arange(sll, slm, sls))
 
             # now let's do the plotting
             if "baz_slow_map" in plots:
-                self._plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                     filename_patterns, True, method,
-                                     st_workon, starttime, wlen, endtime)
+                self._plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
+                                          filename_patterns, True, method,
+                                          st_workon, starttime, wlen, endtime)
             if "slowness_xy" in plots:
-                self._plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
-                                     filename_patterns, False, method,
-                                     st_workon, starttime, wlen, endtime)
-            if "baz_hist" in plots:
-                self.plot_baz_hist(out, starttime, endtime,
-                              slowness=(min(sllx, slly), max(slmx, slmy)),
-                              sls=sls, show_immediately=False)
-            if "bf_time_dep" in plots:
-                self.plot_bf_results_over_time(out, starttime,
-                                               show_immediately=False)
+                self._plot_array_analysis(outarr, sllx, slmx, slly, slmy, sls,
+                                          filename_patterns, False, method,
+                                          st_workon, starttime, wlen, endtime)
             plt.show()
             # Return the beamforming results to allow working more on them,
             # make other plots etc.
@@ -943,11 +946,13 @@ class SeismicArray(object):
                                 longitude=coords["longitude"],
                                 elevation=coords["absolute_height_in_km"]))
 
-    def covariance_array_processing(self, stream, win_len, win_frac, sll_x, slm_x, sll_y,
-                         slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
-                         stime, etime, prewhiten, verbose=False,
-                         timestamp='mlabday', method=0, correct_3dplane=False,
-                         vel_cor=4., static_3D=False, store=None):
+    def _covariance_array_processing(self, stream, win_len, win_frac, sll_x,
+                                     slm_x, sll_y, slm_y, sl_s, semb_thres,
+                                     vel_thres, frqlow, frqhigh, stime, etime,
+                                     prewhiten, verbose=False,
+                                     timestamp='mlabday', method=0,
+                                     correct_3dplane=False, vel_cor=4.,
+                                     static_3D=False, store=None):
         """
         Method for FK-Analysis/Capon
 
@@ -1068,7 +1073,7 @@ class SeismicArray(object):
         # 0.22 matches 0.2 of historical C bbfk.c
         tap = cosTaper(nsamp, p=0.22)
         offset = 0
-        count = 0
+        count = 0  # iteration of loop
         relpow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
         abspow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
         while eotr:
@@ -1122,7 +1127,17 @@ class SeismicArray(object):
             azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
             baz = azimut % -360 + 180
             if relpow > semb_thres and 1. / slow > vel_thres:
-                res.append(np.array([newstart.timestamp, relpow, abspow, baz,
+                if timestamp == 'julsec':
+                    outtime = newstart
+                elif timestamp == 'mlabday':
+                    # 719163 == days between 1970 and 0001 + 1
+                    outtime = UTCDateTime(newstart.timestamp /
+                                          (24. * 3600) + 719163)
+                else:
+                    msg = "Option timestamp must be one of 'julsec'," \
+                          " or 'mlabday'"
+                    raise ValueError(msg)
+                res.append(np.array([outtime, relpow, abspow, baz,
                                      slow]))
                 if verbose:
                     print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
@@ -1132,14 +1147,6 @@ class SeismicArray(object):
 
             newstart += nstep / fs
         res = np.array(res)
-        if timestamp == 'julsec':
-            pass
-        elif timestamp == 'mlabday':
-            # 719163 == days between 1970 and 0001 + 1
-            res[:, 0] = res[:, 0] / (24. * 3600) + 719163
-        else:
-            msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
-            raise ValueError(msg)
         return np.array(res)
 
     @staticmethod
@@ -2399,7 +2406,7 @@ class SeismicArray(object):
         transff /= transff.max()
         return transff
 
-    def beamforming(self, stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow,
+    def _beamforming(self, stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow,
                     frqhigh, stime, etime, win_len=-1, win_frac=0.5,
                     verbose=False, timestamp='mlabday',
                     method="DLS", nthroot=1, store=None, correct_3dplane=False,
@@ -2939,9 +2946,65 @@ class SeismicArray(object):
             ax.set_title(result)
             plt.show()
 
-    @staticmethod
-    def plot_baz_hist(out, t_start=None, t_end=None, slowness=(0, 3), sls=0.1,
-                      show_immediately=True):
+
+
+
+
+import copy
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+
+class BeamformerResult:
+    """
+    Contains results from beamforming and attached plotting methods.
+    """
+    # FK and other 1cbf return max relative (and absolute) powers, as well as
+    # the slowness and azimuth where it happens.
+    # 3cbf as of now returns the whole results...
+
+
+    def __init__(self, inventory=None, times=None, max_rel_power=None,
+                 max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
+                 slowness_range=None):
+        """
+        :param inventory: The inventory that was actually used in the
+         beamforming.
+        :param times: Start times of the beamforming windows.
+        :type times: np.array of :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param max_rel_power: Maximum relative power at every timestep.
+        :param max_abs_power: Maximum absolute power at every timestep.
+        :param max_pow_baz:
+        :param max_pow_slowness:
+        :param slowness_range: The slowness range used for the beamforming.
+         Uses only positive
+        :return:
+        """
+        self.inventory = copy.deepcopy(inventory)
+        self.times = times
+        self.starttime = times[0]
+        self.timestep = times[1] - times[0]
+        self.endtime = times[-1] + self.timestep
+        self.max_rel_power = max_rel_power.astype(float)
+        self.max_abs_power = max_abs_power.astype(float)
+        self.max_pow_baz = max_pow_baz.astype(float)
+        self.max_pow_slow = max_pow_slowness.astype(float)
+        if len(slowness_range) == 1:
+            raise ValueError("Need at least two slowness values.")
+        self.slowness_range = slowness_range.astype(float)
+
+    @property
+    def _plotting_timestamps(self):
+        """
+        Convert the times to the time reference matplotlib uses and return as
+        timestamps.
+        """
+        # Honestly, this is black magic to me.
+        newtimes = np.array([t.timestamp / (24*3600) + 719163
+                             for t in self.times])
+        return newtimes
+
+    def plot_baz_hist(self, show_immediately=True):
         """
         Plot a backazimuth - slowness histogram.
         :param out: beamforming result e.g. from SeismicArray.fk_analysis.
@@ -2951,25 +3014,27 @@ class SeismicArray(object):
         from matplotlib.colorbar import ColorbarBase
         from matplotlib.colors import Normalize
         cmap = cm.hot_r
-        # make output human readable, adjust backazimuth to values between 0 and 360
-        t, rel_power, abs_power, baz, slow = out.T
-        baz[baz < 0.0] += 360
         # todo: this needs to be quite a bit more elegant really.
+        # Do the methods return negative slownesses if that's where the max
+        # values were in the grid search??
         # Can't plot negative slownesses:
-        sll = slowness[0] if slowness[0] > 0 else 0
-        slm = slowness[1]
+        sll = abs(self.slowness_range).min()
+        slm = self.slowness_range.max()
+        sls = self.slowness_range[1] - self.slowness_range[0]
 
         # choose number of azimuth bins in plot
         # (desirably 360 degree/N is an integer!)
         N = 36
         # number of slowness bins
-        N2 = math.ceil((slowness[1] - slowness[0]) / sls)
+        N2 = math.ceil((self.slowness_range.max() - self.slowness_range.min())
+                       / sls)
         abins = np.arange(N + 1) * 360. / N
         sbins = np.linspace(sll, slm, N2 + 1)
 
         # sum rel power in bins given by abins and sbins
         hist, baz_edges, sl_edges = \
-            np.histogram2d(baz, slow, bins=[abins, sbins], weights=rel_power)
+            np.histogram2d(self.max_pow_baz, self.max_pow_slow,
+                           bins=[abins, sbins], weights=self.max_rel_power)
 
         # transform to radian
         baz_edges = np.radians(baz_edges)
@@ -2998,36 +3063,46 @@ class SeismicArray(object):
         ax.set_ylim(sll, slm)
         ColorbarBase(cax, cmap=cmap,
                      norm=Normalize(vmin=hist.min(), vmax=hist.max()))
-        if t_start is not None and t_end is not None:
-            plt.suptitle('Time: {} - {}'.format(str(t_start)[:-8],
-                                                str(t_end)[:-8]))
+        plt.suptitle('Results of time-dependent beamforming from \n{} to {}'
+                     .format(self.starttime.isoformat(),
+                             self.endtime.isoformat()))
         if show_immediately is True:
             plt.show()
 
-    @staticmethod
-    def plot_bf_results_over_time(out, t_start, show_immediately=True):
-        import matplotlib.dates as mdates
-        # Plot
-        labels = ['rel.power', 'abs.power', 'baz', 'slow']
+    def plot_bf_results_over_time(self, show_immediately=True):
+        """
+        :param show_immediately:
+        :return:
+        """
 
+        labels = ['rel. power', 'abs. power', 'baz', 'slow']
         xlocator = mdates.AutoDateLocator()
         fig = plt.figure()
-        for i, lab in enumerate(labels):
+        for i, (data, lab) in enumerate(zip((self.max_rel_power,
+                                             self.max_abs_power,
+                                             self.max_pow_baz,
+                                             self.max_pow_slow), labels)):
             ax = fig.add_subplot(4, 1, i + 1)
-            ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
-                       edgecolors='none')
+            ax.scatter(self._plotting_timestamps, data, c=self.max_rel_power,
+                       alpha=0.6, edgecolors='none')
             ax.set_ylabel(lab)
-            ax.set_xlim(out[0, 0], out[-1, 0])
-            ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+            ax.set_xlim(self._plotting_timestamps[0],
+                        self._plotting_timestamps[-1])
+            ax.set_ylim(data.min(), data.max())
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
-        fig.suptitle('Time-dependent beamforming results %s' % (
-            t_start.strftime('%Y-%m-%d'), ))
-        #fig.autofmt_xdate()
-        fig.subplots_adjust(left=0.15, top=0.95, right=0.95, bottom=0.2, hspace=0)
+        fig.suptitle('Results of time-dependent beamforming from \n{} to {}'
+                     .format(self.starttime.isoformat(),
+                             self.endtime.isoformat()))
+        fig.autofmt_xdate()
+        fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
+                            hspace=0)
         if show_immediately is True:
             plt.show()
+
+
+
 
 
 if __name__ == '__main__':
