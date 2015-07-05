@@ -9,11 +9,11 @@ from future.utils import native_str
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 
-from pysac import SACTrace
+from ..sactrace import SACTrace
 
 class SACTraceTestCase(unittest.TestCase):
     """
-    Test suite for pysac.sactrace
+    Test suite for obspy.io.sac.sactrace
     """
     def setUp(self):
         self.path = os.path.dirname(__file__)

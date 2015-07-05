@@ -6,7 +6,7 @@ This module provides read and write support for ASCII and binary SAC-files as
 defined by IRIS (http://www.iris.edu/files/sac-manual/).
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org) & C. J. Annon
+    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -69,7 +69,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .sacio import (SacError, SacIO, SacIOError, attach_paz, attach_resp)
+from .util import SacError, SacIOError
+from .sacpz import attach_paz, attach_resp
+from .sactrace import SACTrace
 
 
 if __name__ == '__main__':
