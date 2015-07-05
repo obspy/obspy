@@ -33,6 +33,7 @@ Thomas Lecocq
 John Leeman
 Philippe Lesage
 Anthony Lomax
+Jonathan MacCarthy
 Alessia Maggi
 Henri Martin
 Tobias Megies

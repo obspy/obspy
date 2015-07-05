@@ -22,7 +22,7 @@ from future.utils import native_str
 from future.builtins import *
 from obspy.core.compatibility import frombuffer
 
-import obspy.io.sac.header as HD
+from .. import header as HD
 from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int, is_same_byteorder
 

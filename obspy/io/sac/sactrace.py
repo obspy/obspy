@@ -19,10 +19,10 @@ from future.utils import native_str
 from obspy import Trace, UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth, kilometer2degrees
 
-import obspy.io.sac.header as HD
+from .. import header as HD
 from .util import SacError, SacHeaderError, SacInvalidContentError
-import .util as _ut
-import .arrayio as _io
+from .. import util as _ut
+from .. import arrayio as _io
 
 
 # ------------- HEADER GETTER/SETTERS -----------------------------------------
