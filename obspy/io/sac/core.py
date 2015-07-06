@@ -19,6 +19,7 @@ import struct
 from obspy import Stream, Trace
 from obspy.core.compatibility import is_bytes_buffer
 from .sacio import SacIO
+from .sactrace import SACTrace
 
 
 def _is_sac(filename):
