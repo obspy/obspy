@@ -9,8 +9,11 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
-from obspy import read_inventory
+import numpy as np
+
+from obspy import read_inventory, Trace
 from obspy.core.util import NamedTemporaryFile
+from obspy.io.sac import attach_paz, attach_resp
 
 
 class SACPZTestCase(unittest.TestCase):
