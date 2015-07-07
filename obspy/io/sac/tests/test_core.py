@@ -253,7 +253,7 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tempfile, format="SAC")
             with open(tempfile, "rb") as fh:
                 sac2 = SACTrace.read(fh)
-        self.assertEqual(sac2.iztype, 11)
+        self.assertEqual(sac2._header['iztype'], 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
 

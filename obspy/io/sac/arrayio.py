@@ -221,13 +221,14 @@ def read_sac_ascii(source, headonly=False):
     # checks: ASCII-ness, header array length, npts matches data length
     try:
         fh = open(source, 'rb')
-        contents = fh.read()
         is_file_name = True
     except IOError:
         raise SacIOError("No such file: " + source)
     except TypeError:
         fh = source
         is_file_name = False
+
+    contents = fh.read()
 
     contents = [_i.rstrip(b"\n\r") for _i in contents.splitlines(True)]
     if len(contents) < 14 + 8 + 8:
@@ -251,7 +252,7 @@ def read_sac_ascii(source, headonly=False):
     # because every string field has to be 8 characters long
     # apart from the second field which is 16 characters long
     # resulting in a total length of 192 characters
-    hs, _ = init_header_arrays('str')
+    hs = init_header_arrays('str')
     for i, j in enumerate(range(0, 24, 3)):
         line = contents[14 + 8 + i]
         hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'), count=3)

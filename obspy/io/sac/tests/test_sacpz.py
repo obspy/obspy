@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+import io
 
 import numpy as np
 
