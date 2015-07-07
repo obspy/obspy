@@ -18,7 +18,6 @@ import struct
 
 from obspy import Stream, Trace
 from obspy.core.compatibility import is_bytes_buffer
-from .sacio import SacIO
 from .sactrace import SACTrace
 
 
@@ -229,18 +228,10 @@ def __read_sacXY(buf, headonly=False, debug_headers=False,
     >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
-    t = SacIO(debug_headers=debug_headers)
-    if headonly:
-        t.read_sac_xy_header(buf)
-    else:
-        t.read_sac_xy(buf)
+    sac = SACTrace.read(buf, headonly=headonly, ascii=True)
     # assign all header entries to a new dictionary compatible with ObsPy
-    header = t.get_obspy_header()
+    tr = sac.to_obspy_trace(debug_headers=debug_headers)
 
-    if headonly:
-        tr = Trace(header=header)
-    else:
-        tr = Trace(header=header, data=t.seis)
     return Stream([tr])
 
 
@@ -303,8 +294,8 @@ def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
     :param buf: Object to write to.
     :type buf: file-like object
     """
-    t = SacIO(trace)
-    t.write_sac_xy(buf)
+    sac = SACTrace.from_obspy_trace(trace)
+    sac.write(buf, ascii=True)
 
 
 def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
@@ -380,18 +371,10 @@ def __read_sac(buf, headonly=False, debug_headers=False, fsize=True,
     :return: A ObsPy Stream object.
     """
     # read SAC file
-    t = SacIO(debug_headers=debug_headers)
-    if headonly:
-        t.read_sac_header(buf)
-    else:
-        t.read_sac_file(buf, fsize)
+    sac = SACTrace.read(buf, headonly=headonly, ascii=False, checksize=fsize)
     # assign all header entries to a new dictionary compatible with an ObsPy
-    header = t.get_obspy_header()
+    tr = sac.to_obspy_trace(debug_headers=debug_headers)
 
-    if headonly:
-        tr = Trace(header=header)
-    else:
-        tr = Trace(header=header, data=t.seis)
     return Stream([tr])
 
 
@@ -464,14 +447,11 @@ def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
     :type byteorder: int or str
     """
     if byteorder in ("<", 0, "0"):
-        byteorder = 0
+        byteorder = 'little'
     elif byteorder in (">", 1, "1"):
-        byteorder = 1
+        byteorder = 'big'
     else:
         msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
         raise ValueError(msg)
-    t = SacIO(trace)
-    if (byteorder == 1 and t.byteorder == 'little') or \
-            (byteorder == 0 and t.byteorder == 'big'):
-        t.swap_byte_order()
-    t.write_sac_binary(buf)
+    sac = SACTrace.from_obspy_trace(trace)
+    sac.write(buff, ascii=False, byteorder=byteorder)

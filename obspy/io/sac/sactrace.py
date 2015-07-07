@@ -862,10 +862,9 @@ class SACTrace(object):
         # TODO: does a sac file need to have iztype specified, or just 'b'?
         #self.validate('reltime')
 
-        # TODO: i'd like to only retain non-null headers.  sac_to_obspy_header
-        # would have to handle missing values, then.
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
                                            nulls=debug_headers)
+        # TODO: logic to use debug_headers for real
 
         stats = _ut.sac_to_obspy_header(sachdr)
 
