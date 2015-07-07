@@ -9,13 +9,17 @@ Python logicals (True, False) and nulls (None) instead of SAC's 0, 1, or -12345.
 SAC headers are implemented as properties, with appropriate getters and setters.
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.utils import native_str
+from future.builtins import *
+
 import sys
 import warnings
 from copy import deepcopy
 from itertools import chain
 
 import numpy as np
-from future.utils import native_str
 from obspy import Trace, UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth, kilometer2degrees
 

@@ -3,10 +3,16 @@
 SAC module helper functions and data.
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.utils import native_str
+from future.builtins import *
+
 import sys
 import warnings
 
 import numpy as np
+
 from obspy import UTCDateTime
 from obspy.core import Stats
 

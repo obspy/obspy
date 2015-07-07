@@ -13,13 +13,16 @@ checking, except for byteorder and header/data array length.  File- and array-
 based checking routines are provided for additional checks where desired.
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.utils import native_str
+from future.builtins import *
+
 import sys
 import warnings
 
 import numpy as np
 
-from future.utils import native_str
-from future.builtins import *
 from obspy.core.compatibility import frombuffer
 
 from .. import header as HD
