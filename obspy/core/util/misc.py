@@ -515,6 +515,8 @@ def get_window_times(starttime, endtime, window_length, step, offset,
     if step > 0:
         end = endtime.timestamp - 0.001 * step
     else:
+        # This minus is correct here due to the way the actual window times
+        # are calculate later on.
         end = starttime.timestamp - 0.001 * abs(step)
     # Left sides of each window.
     indices = np.arange(start=starttime.timestamp + offset,
