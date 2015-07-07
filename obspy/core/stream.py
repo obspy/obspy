@@ -1622,11 +1622,13 @@ class Stream(object):
 
         Please keep in mind that it only returns a new view of the original
         data. Any modifications are applied to the original data as well. If
-        you don't want this you have to create a copy of the yielded windows.
+        you don't want this you have to create a copy of the yielded
+        windows. Also be aware that if you modify the original data and you
+        have overlapping windows, all following windows are affected as well.
 
         Not all yielded windows must have the same number of traces. The
-        algorithm will determine the maximal temporal extends by analysing
-        all Traces and then create windows based on these times.
+        algorithm will determine the maximal temporal extents by analysing
+        all Traces and then creates windows based on these times.
 
         .. rubric:: Example
 

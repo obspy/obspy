@@ -1139,7 +1139,9 @@ class Trace(object):
 
         Please keep in mind that it only returns a new view of the original
         data. Any modifications are applied to the original data as well. If
-        you don't want this you have to create a copy of the yielded windows.
+        you don't want this you have to create a copy of the yielded
+        windows. Also be aware that if you modify the original data and you
+        have overlapping windows, all following windows are affected as well.
 
         .. rubric:: Example
 
