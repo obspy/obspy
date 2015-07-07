@@ -1297,6 +1297,7 @@ class SeismicArray(object):
         alldataZ = np.zeros((n_stats, num_win, nsamp))
         alldataN, alldataE = alldataZ.copy(), alldataZ.copy()
         nst = np.zeros(num_win)
+        window_start_times = []
 
         # Iterate over the beamfoming windows:
         for i in range(num_win):
@@ -1315,6 +1316,8 @@ class SeismicArray(object):
                     alldataE[n, i, :] = _alldataE[n, i * nstep:
                                                   i * nstep + nsamp] * cosTaper(nsamp)
                     nst[i] += 1
+            window_start_times.append(stream_N.traces[0].stats.starttime + i * nstep/fs)
+        window_start_times = np.array(window_start_times)
 
         print(nst, ' stations/window; average over ', win_average)
 
@@ -1491,7 +1494,7 @@ class SeismicArray(object):
 
         # Could call plot of every window here. Don't.
 
-        return beamres, fr, incidence
+        return beamres, fr, incidence, window_start_times
 
     @staticmethod
     def three_c_beamform_plotter(beamresult, u, freqs, plot_frequencies=(),
@@ -1697,7 +1700,7 @@ class SeismicArray(object):
             uindex = np.where((u > 0.5 * smax + smin)
                               & (u < 0.8 * smax + smin))[0]
 
-            bf_results, freqs, incidence = \
+            bf_results, freqs, incidence, window_start_times = \
                 self._three_c_do_bf(stream_N, stream_E, stream_Z,
                                     win_len=wlen, win_frac=win_frac, u=u,
                                     sub_freq_range=freq_range,
@@ -1721,10 +1724,16 @@ class SeismicArray(object):
             if plot_transff:
                 plot_periods = [1/f for f in plot_frequencies]
                 self._three_c_plot_transfer_function(u, plot_periods)
+
+            out = BeamformerResult(inventory=self.inventory,
+                                   times=window_start_times, slowness_range=u,
+                                   full_beamres=bf_results, freqs=freqs,
+                                   incidence=incidence)
+
         finally:
             self.inventory = invbkp
 
-        return bf_results, freqs, incidence
+        return out
 
     @staticmethod
     def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
@@ -2972,33 +2981,72 @@ class BeamformerResult:
     # the slowness and azimuth where it happens.
     # 3cbf as of now returns the whole results...
 
-    def __init__(self, inventory=None, times=None, max_rel_power=None,
+    def __init__(self, inventory, times, slowness_range, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
-                 slowness_range=None):
+                 full_beamres=None, freqs=None, incidence=None):
         """
         :param inventory: The inventory that was actually used in the
          beamforming.
         :param times: Start times of the beamforming windows.
         :type times: np.array of :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param slowness_range: The slowness range used for the beamforming.
         :param max_rel_power: Maximum relative power at every timestep.
         :param max_abs_power: Maximum absolute power at every timestep.
-        :param max_pow_baz:
-        :param max_pow_slowness:
-        :param slowness_range: The slowness range used for the beamforming.
-        :return:
+        :param max_pow_baz: Backazimuth of the maximum power value at every
+         timestep.
+        :param max_pow_slowness: Slowness of the maximum power value at every
+         timestep.
+        :param full_beamres: 4D numpy array holding relative power results
+         for every backazimuth, slowness, window and discrete frequency (in
+         that order).
+        :param freqs: The discrete frequencies used for which the full_beamres
+         was computed.
+        :param incidence: Rayleigh wave incidence angles (only from three
+         component beamforming).
         """
         self.inventory = copy.deepcopy(inventory)
         self.times = times
         self.starttime = times[0]
         self.timestep = times[1] - times[0]
         self.endtime = times[-1] + self.timestep
-        self.max_rel_power = max_rel_power.astype(float)
-        self.max_abs_power = max_abs_power.astype(float)
-        self.max_pow_baz = max_pow_baz.astype(float)
-        self.max_pow_slow = max_pow_slowness.astype(float)
+        if max_rel_power is not None:
+            self.max_rel_power = max_rel_power.astype(float)
+        if max_abs_power is not None:
+            self.max_abs_power = max_abs_power.astype(float)
+        if max_pow_baz is not None:
+            self.max_pow_baz = max_pow_baz.astype(float)
+        if max_pow_slowness is not None:
+            self.max_pow_slow = max_pow_slowness.astype(float)
         if len(slowness_range) == 1:
             raise ValueError("Need at least two slowness values.")
         self.slowness_range = slowness_range.astype(float)
+
+        if full_beamres is not None and full_beamres.ndim != 4:
+            raise ValueError("Full beamresults should be 4D array.")
+        self.full_beamres = full_beamres
+        if(max_rel_power is None and max_pow_baz is None
+           and max_pow_slowness is None):
+            self.calc_max_values()
+
+    def calc_max_values(self):
+        """
+        If the max power etc values are unset, but the full results are
+        available (atm the case with the three component beamforming),
+        calculate the former from the latter.
+        """
+        # Average over all frequencies.
+        freqavg = self.full_beamres.mean(axis=3)
+        num_win = self.full_beamres.shape[2]
+        # This is still 2D, with time windows and baz (in this order)
+        # as indices.
+        maxazipows = np.array([[azipows.T[t].max() for azipows in freqavg]
+                               for t in range(num_win)])
+        max_rel_power = [_timepowers.max() for _timepowers in maxazipows]
+        self.max_rel_power = np.array(max_rel_power).astype(float)
+        maxpow_indices = np.where(freqavg == self.max_rel_power)
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180
+        self.max_pow_baz = (theo_backazi * 180/math.pi)[maxpow_indices[0]]
+        self.max_pow_slow = self.slowness_range[maxpow_indices[1]]
 
     @property
     def _plotting_timestamps(self):
@@ -3101,9 +3149,63 @@ class BeamformerResult:
             ax.scatter(self._plotting_timestamps, data, c=self.max_rel_power,
                        alpha=0.6, edgecolors='none')
             ax.set_ylabel(lab)
-            ax.set_xlim(self._plotting_timestamps[0],
-                        self._plotting_timestamps[-1])
-            ax.set_ylim(data.min(), data.max())
+            timemargin = 0.05 * (self._plotting_timestamps[-1]
+                                 - self._plotting_timestamps[0])
+            ax.set_xlim(self._plotting_timestamps[0] - timemargin,
+                        self._plotting_timestamps[-1] + timemargin)
+            if lab == 'baz':
+                ax.set_ylim(0, 360)
+            else:
+                datamargin = 0.05 * (data.max() - data.min())
+                ax.set_ylim(data.min() - datamargin, data.max() + datamargin)
+            ax.xaxis.set_major_locator(xlocator)
+            ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
+
+        fig.suptitle('Results of time-dependent beamforming from \n{} to {}'
+                     .format(self.starttime.isoformat(),
+                             self.endtime.isoformat()))
+        fig.autofmt_xdate()
+        fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
+                            hspace=0)
+        if show_immediately is True:
+            plt.show()
+
+    def plot_power(self, show_immediately=True):
+        """
+        Plot relative power as a function of backazimuth and time, like a
+        Vespagram. Requires full 4D results, at the moment only provided by
+        the three component beamforming.
+        :param show_immediately: Whether to call plt.show() immediately.
+        """
+        # Prepare data.
+        freqavg = self.full_beamres.mean(axis=3)
+        num_win = self.full_beamres.shape[2]
+        # This is 2D, with time windows and baz (in this order)
+        # as indices.
+        maxazipows = np.array([[azipows.T[t].max() for azipows in freqavg]
+                               for t in range(num_win)])
+        azis = np.arange(0, 362, 2)
+        labels = ['baz']
+        maskedazipows = np.ma.array(maxazipows, mask=np.isnan(maxazipows))
+        # todo (maybe) implement plotting of slowness map corresponding to the
+        # max powers:
+        # maskedslow = np.ma.array(slowatmax, mask=np.isnan(slowatmax))
+        datas = [maskedazipows]  # , maskedslow]
+
+        xlocator = mdates.AutoDateLocator()
+        fig = plt.figure()
+        for i, (data, lab) in enumerate(zip(datas, labels)):
+            ax = fig.add_subplot(len(labels), 1, i + 1)
+
+            pc = ax.pcolormesh(self._plotting_timestamps, azis, data.T,
+                               cmap=cm.get_cmap('hot_r'))
+            timemargin = 0.05 * (self._plotting_timestamps[-1]
+                                 - self._plotting_timestamps[0])
+            ax.set_xlim(self._plotting_timestamps[0] - timemargin,
+                        self._plotting_timestamps[-1] + timemargin)
+            ax.set_ylim(0, 360)
+            fig.colorbar(pc)
+            ax.set_ylabel('baz')
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
