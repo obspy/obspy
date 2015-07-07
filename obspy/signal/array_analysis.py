@@ -1234,8 +1234,8 @@ class SeismicArray(object):
             ax.set_title('Transfer function s ' + str(p))
         plt.show()
 
-    def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, u,
-                       sub_freq_range, n_min_stns, polarisation,
+    def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, win_frac,
+                       u, sub_freq_range, n_min_stns, polarisation,
                        whiten, coherency, win_average,
                        datalen_sec, uindex):
         # backazimuth range to search
@@ -1279,7 +1279,11 @@ class SeismicArray(object):
 
         fs = stream_N.traces[0].stats.sampling_rate
         nsamp = int(win_len * fs)
-        num_win = int(np.floor(datalen_sec / win_len))
+        # Number of samples to move forward by during a step.
+        nstep = int(nsamp * win_frac)
+        # Number of windows is determined by data length minus one window
+        # length divided by step length, then adding the one omitted window.
+        num_win = int((datalen_sec*fs - nsamp)/nstep) + 1
         alldataZ = np.zeros((n_stats, num_win, nsamp))
         alldataN, alldataE = alldataZ.copy(), alldataZ.copy()
         nst = np.zeros(num_win)
@@ -1287,20 +1291,19 @@ class SeismicArray(object):
         # Iterate over the beamfoming windows:
         for i in range(num_win):
             for n in range(n_stats):
-                if not np.isnan(_alldataZ[n, i * nsamp:(
-                            i + 1) * nsamp]).any() and not np.isnan(
-                        _alldataN[n, i * nsamp:(
-                                    i + 1) * nsamp]).any() and not np.isnan(
-                        _alldataE[n, i * nsamp:(i + 1) * nsamp]).any():
-                    alldataZ[n, i, :] = _alldataZ[n, i * nsamp:(
-                                                                         i + 1) * nsamp] * cosTaper(
-                        nsamp)
-                    alldataN[n, i, :] = _alldataN[n, i * nsamp:(
-                                                                         i + 1) * nsamp] * cosTaper(
-                        nsamp)
-                    alldataE[n, i, :] = _alldataE[n, i * nsamp:(
-                                                                         i + 1) * nsamp] * cosTaper(
-                        nsamp)
+                if not np.isnan(_alldataZ[n, i * nstep:i * nstep +
+                                          nsamp]).any() \
+                        and not np.isnan(_alldataN[n, i * nstep:i * nstep +
+                                                   nsamp]).any() \
+                        and not np.isnan(_alldataE[n, i * nstep:i * nstep +
+                                                   nsamp]).any():
+                    alldataZ[n, i, :] = _alldataZ[n, i * nstep:
+                                                  i * nstep + nsamp] * cosTaper(nsamp)
+
+                    alldataN[n, i, :] = _alldataN[n, i * nstep:
+                                                  i * nstep + nsamp] * cosTaper(nsamp)
+                    alldataE[n, i, :] = _alldataE[n, i * nstep:
+                                                  i * nstep + nsamp] * cosTaper(nsamp)
                     nst[i] += 1
 
         print(nst, ' stations/window; average over ', win_average)
@@ -1563,7 +1566,7 @@ class SeismicArray(object):
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
                                     freq_range, plot_frequencies=(7, 14),
-                                    n_min_stns=7, win_average=1,
+                                    n_min_stns=7, win_average=1, win_frac=1,
                                     plot_transff=False,
                                     plot_average_freqs=True,
                                     plot_average_windows=True,
@@ -1600,6 +1603,7 @@ class SeismicArray(object):
         :param plot_frequencies: frequencies to plot [s]
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
+        :param win_frac: fraction of sliding window to use for step
         :param plot_transff: whether to also plot the transfer function of the
          array (only considering stations/channels for which data is present)
         :param plot_average_freqs: whether to plot an average of results for
@@ -1685,7 +1689,7 @@ class SeismicArray(object):
 
             bf_results, freqs, incidence = \
                 self._three_c_do_bf(stream_N, stream_E, stream_Z,
-                                    win_len=wlen, u=u,
+                                    win_len=wlen, win_frac=win_frac, u=u,
                                     sub_freq_range=freq_range,
                                     n_min_stns=n_min_stns,
                                     polarisation=pol_dict[wavetype],
