@@ -454,4 +454,4 @@ def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
         msg = "Invalid byte order. It must be either '<', '>', 0 or 1"
         raise ValueError(msg)
     sac = SACTrace.from_obspy_trace(trace)
-    sac.write(buff, ascii=False, byteorder=byteorder)
+    sac.write(buf, ascii=False, byteorder=byteorder)
