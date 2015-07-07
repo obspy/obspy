@@ -1039,8 +1039,9 @@ class Trace(object):
             given ``fill_value``. Defaults to ``False``.
         :type nearest_sample: bool, optional
         :param nearest_sample: If set to ``True``, the closest sample is
-            selected, if set to ``False``, the next sample containing the time
-            is selected. Defaults to ``True``.
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
 
             Given the following trace containing 4 samples, "|" are the
             sample points, "A" is the requested starttime::
@@ -1101,8 +1102,9 @@ class Trace(object):
         :param endtime: Specify the end time of slice.
         :type nearest_sample: bool, optional
         :param nearest_sample: If set to ``True``, the closest sample is
-            selected, if set to ``False``, the next sample containing the time
-            is selected. Defaults to ``True``.
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
 
             Given the following trace containing 4 samples, "|" are the
             sample points, "A" is the requested starttime::
@@ -1164,8 +1166,9 @@ class Trace(object):
             shorter then 99.9 % of the desired length are returned.
         :type include_partial_windows: bool
         :param nearest_sample: If set to ``True``, the closest sample is
-            selected, if set to ``False``, the next sample containing the time
-            is selected. Defaults to ``True``.
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
 
             Given the following trace containing 4 samples, "|" are the
             sample points, "A" is the requested starttime::
