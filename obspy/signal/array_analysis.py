@@ -421,16 +421,26 @@ class SeismicArray(object):
                 dtype='float32')
 
     def vespagram(self, stream, event_or_baz, sll, slm, sls, starttime,
-                  endtime, latitude, longitude, absolute_height_in_km,
-                  method="DLS", nthroot=1, static_3D=False, vel_cor=4.0):
+                  endtime, latitude=None, longitude=None,
+                  absolute_height_in_km=None, method="DLS", nthroot=1,
+                  static_3D=False, vel_cor=4.0):
         baz = float(event_or_baz)
-        time_shift_table = self.get_timeshift_baz(
-            sll, slm, sls, baz, latitude, longitude, absolute_height_in_km,
-            static_3D=static_3D, vel_cor=vel_cor)
+        if(latitude is None or longitude is None
+           or absolute_height_in_km is None):
+            time_shift_table = self.get_timeshift_baz(sll, slm, sls, baz,
+                                                      static_3D=static_3D,
+                                                      vel_cor=vel_cor)
+        else:
+            time_shift_table = self.get_timeshift_baz(sll, slm, sls, baz,
+                                                      latitude, longitude,
+                                                      absolute_height_in_km,
+                                                      static_3D=static_3D,
+                                                      vel_cor=vel_cor)
 
-        vg = self.vespagram_baz(stream, time_shift_table, starttime=starttime,
-                                endtime=endtime, method=method,
-                                nthroot=nthroot)
+        return self.vespagram_baz(stream, time_shift_table,
+                                  starttime=starttime,
+                                  endtime=endtime, method=method,
+                                  nthroot=nthroot)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
                                    longitude, absolute_height_in_km=0.0):
@@ -2700,8 +2710,8 @@ class SeismicArray(object):
         for _i, slowness in enumerate(time_shift_table.keys()):
             singlet = 0.0
             if method == 'DLS':
-                for _j, tr in stream:
-                    station = "%s.%s" % (tr.stats.network, tr.stats.station)
+                for _j, tr in enumerate(stream.traces):
+                    station = tr.getId()
                     s = spoint[_j] + int(time_shift_table[slowness][station] *
                                          fs + 0.5)
                     shifted = tr.data[s: s + ndat]
@@ -2975,7 +2985,6 @@ class BeamformerResult:
         :param max_pow_baz:
         :param max_pow_slowness:
         :param slowness_range: The slowness range used for the beamforming.
-         Uses only positive
         :return:
         """
         self.inventory = copy.deepcopy(inventory)
