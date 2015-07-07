@@ -21,12 +21,12 @@ from itertools import chain
 
 import numpy as np
 from obspy import Trace, UTCDateTime
-from obspy.core.util.geodetics import gps2DistAzimuth, kilometer2degrees
+from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-from .. import header as HD
+from ..sac import header as HD
 from .util import SacError, SacHeaderError, SacInvalidContentError
-from .. import util as _ut
-from .. import arrayio as _io
+from ..sac import util as _ut
+from ..sac import arrayio as _io
 
 
 # ------------- HEADER GETTER/SETTERS -----------------------------------------
@@ -1020,7 +1020,7 @@ class SACTrace(object):
 
         """
         # http://ds.iris.edu/files/sac-manual/commands/listhdr.html
-        print self._format_header_str(hdrlist)
+        print(self._format_header_str(hdrlist))
 
     def lh(self, *args, **kwargs):
         """Alias of listhdr method."""
@@ -1093,7 +1093,7 @@ class SACTrace(object):
         """
         if self.lcalda or force:
             try:
-                m, az, baz = gps2DistAzimuth(self.evla, self.evlo, self.stla, self.stlo)
+                m, az, baz = gps2dist_azimuth(self.evla, self.evlo, self.stla, self.stlo)
                 dist = m / 1000.0
                 gcarc = kilometer2degrees(dist)
                 self.az = az

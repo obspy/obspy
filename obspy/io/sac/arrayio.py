@@ -23,9 +23,9 @@ import warnings
 
 import numpy as np
 
-from obspy.core.compatibility import frombuffer
+from obspy.core.compatibility import from_buffer
 
-from .. import header as HD
+from ..sac import header as HD
 from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int, is_same_byteorder
 
@@ -143,9 +143,9 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     #    in strings. Store them in array (and convert the char to a
     #    list). That's a total of 632 bytes.
     # --------------------------------------------------------------
-    hf = frombuffer(f.read(4 * 70), dtype=native_str(endian_str + 'f4'))
-    hi = frombuffer(f.read(4 * 40), dtype=native_str(endian_str + 'i4'))
-    hs = frombuffer(f.read(24 * 8), dtype=native_str('|S8'))
+    hf = from_buffer(f.read(4 * 70), dtype=native_str(endian_str + 'f4'))
+    hi = from_buffer(f.read(4 * 40), dtype=native_str(endian_str + 'i4'))
+    hs = from_buffer(f.read(24 * 8), dtype=native_str('|S8'))
 
     isVALID = is_valid_byteorder(hi)
     if not isVALID:
@@ -187,7 +187,7 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     if headonly:
         data = None
     else:
-        data = frombuffer(f.read(npts * 4), dtype=native_str(endian_str + 'f4'))
+        data = from_buffer(f.read(npts * 4), dtype=native_str(endian_str + 'f4'))
 
         if len(data) != npts:
             f.close()
