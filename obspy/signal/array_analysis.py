@@ -46,6 +46,7 @@ from obspy.signal.invsim import cosTaper
 from obspy.core.util import AttribDict
 import warnings
 import matplotlib.dates as mdates
+from matplotlib.ticker import MultipleLocator
 
 
 import cartopy
@@ -774,7 +775,10 @@ class SeismicArray(object):
         sllx, slmx = slx
         slly, slmy = sly
         # In terms of a single 'radial' slowness (used e.g. for plotting):
-        sll = np.sqrt(sllx ** 2 + slly ** 2)
+        if sllx < 0 or slly < 0:
+            sll = 0
+        else:
+            sll = np.sqrt(sllx ** 2 + slly ** 2)
         slm = np.sqrt(slmx ** 2 + slmy ** 2)
 
         # Do not modify the given stream in place.
@@ -789,6 +793,9 @@ class SeismicArray(object):
         if filter:
             st_workon.filter('bandpass', freqmin=frqlow, freqmax=frqhigh,
                              zerophase=True)
+        else:
+            if frqlow is not None or frqhigh is not None:
+                warnings.warn("No filtering done. Param 'filter' is False.")
         # Making the map plots is efficiently done by saving the power maps to
         # a temporary directory.
         tmpdir = tempfile.mkdtemp(prefix="obspy-")
@@ -2983,14 +2990,14 @@ class BeamformerResult:
         # Can't plot negative slownesses:
         sll = abs(self.slowness_range).min()
         slm = self.slowness_range.max()
-        sls = self.slowness_range[1] - self.slowness_range[0]
 
         # choose number of azimuth bins in plot
         # (desirably 360 degree/N is an integer!)
         N = 36
         # number of slowness bins
-        N2 = math.ceil((self.slowness_range.max() - self.slowness_range.min())
-                       / sls)
+        N2 = len(self.slowness_range)
+        # Plot is not too readable beyond a certain number of bins.
+        N2 = 30 if N2 > 30 else N2
         abins = np.arange(N + 1) * 360. / N
         sbins = np.linspace(sll, slm, N2 + 1)
 
@@ -3038,7 +3045,6 @@ class BeamformerResult:
         colorscale.
         :param show_immediately: Whether to call plt.show() immediately.
         """
-        self.max_abs_power = None
         labels = ['rel. power', 'abs. power', 'baz', 'slow']
         datas = [self.max_rel_power, self.max_abs_power,
                  self.max_pow_baz, self.max_pow_slow]
@@ -3049,7 +3055,9 @@ class BeamformerResult:
                 datas.remove(data)
                 labels.remove(lab)
 
-        xlocator = mdates.AutoDateLocator()
+        xlocator = mdates.AutoDateLocator(interval_multiples=True)
+        ymajorLocator = MultipleLocator(90)
+
         fig = plt.figure()
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
@@ -3062,6 +3070,7 @@ class BeamformerResult:
                         self._plotting_timestamps[-1] + timemargin)
             if lab == 'baz':
                 ax.set_ylim(0, 360)
+                ax.yaxis.set_major_locator(ymajorLocator)
             else:
                 datamargin = 0.05 * (data.max() - data.min())
                 ax.set_ylim(data.min() - datamargin, data.max() + datamargin)
@@ -3073,7 +3082,7 @@ class BeamformerResult:
                              self.endtime.isoformat()))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
-                            hspace=0)
+                            hspace=0.1)
         if show_immediately is True:
             plt.show()
 
@@ -3099,7 +3108,8 @@ class BeamformerResult:
         # maskedslow = np.ma.array(slowatmax, mask=np.isnan(slowatmax))
         datas = [maskedazipows]  # , maskedslow]
 
-        xlocator = mdates.AutoDateLocator()
+        xlocator = mdates.AutoDateLocator(interval_multiples=True)
+        ymajorLocator = MultipleLocator(90)
         fig = plt.figure()
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
@@ -3111,6 +3121,7 @@ class BeamformerResult:
             ax.set_xlim(self._plotting_timestamps[0] - timemargin,
                         self._plotting_timestamps[-1] + timemargin)
             ax.set_ylim(0, 360)
+            ax.yaxis.set_major_locator(ymajorLocator)
             fig.colorbar(pc)
             ax.set_ylabel('baz')
             ax.xaxis.set_major_locator(xlocator)
@@ -3121,7 +3132,7 @@ class BeamformerResult:
                              self.endtime.isoformat()))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
-                            hspace=0)
+                            hspace=0.1)
         if show_immediately is True:
             plt.show()
 
