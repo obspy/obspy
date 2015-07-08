@@ -437,10 +437,10 @@ class SeismicArray(object):
                                                       static_3D=static_3D,
                                                       vel_cor=vel_cor)
 
-        return self.vespagram_baz(stream, time_shift_table,
-                                  starttime=starttime,
-                                  endtime=endtime, method=method,
-                                  nthroot=nthroot)
+        return self._vespagram_baz(stream, time_shift_table,
+                                   starttime=starttime,
+                                   endtime=endtime, method=method,
+                                   nthroot=nthroot)
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
                                    longitude, absolute_height_in_km=0.0):
@@ -564,7 +564,7 @@ class SeismicArray(object):
          "baz_slow_map" for backazimuth-slowness maps for each window,
          "slowness_xy" for slowness_xy maps for each window.
          Further plotting otions are attached to the returned object.
-        :rtype: :class:`BeamformerResult`
+        :rtype: :class:`~obspy.signal.array_analysis.BeamformerResult`
         """
         return self._array_analysis_helper(stream=stream, method="SWP",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -610,7 +610,7 @@ class SeismicArray(object):
          "baz_slow_map" for backazimuth-slowness maps for each window,
          "slowness_xy" for slowness_xy maps for each window.
          Further plotting otions are attached to the returned object.
-        :rtype: :class:`BeamformerResult`
+        :rtype: :class:`~obspy.signal.array_analysis.BeamformerResult`
         """
         return self._array_analysis_helper(stream=stream, method="PWS",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -649,14 +649,13 @@ class SeismicArray(object):
         :type sly: (float, float)
         :param sls: step width of slowness grid [s/km].
         :type sls: float
-        :param plots: List or tuple of desired output plots, e.g.
-         ("baz_slow_map"). Supported options:
-         "baz_slow_map" for a backazimuth-slowness map,
-         "slowness_xy" for a slowness_xy map,
-         "baz_hist" for a backazimuth-slowness polar histogram as in
-          :func:`plot_baz_hist`,
-         "bf_time_dep" for a plot of beamforming results over time as in
-          :func:`plot_bf_results_over_time`.
+        :param plots: List or tuple of desired plots that should be plotted for
+         each beamforming window.
+         Supported options:
+         "baz_slow_map" for backazimuth-slowness maps for each window,
+         "slowness_xy" for slowness_xy maps for each window.
+         Further plotting otions are attached to the returned object.
+        :rtype: :class:`~obspy.signal.array_analysis.BeamformerResult`
         """
         return self._array_analysis_helper(stream=stream, method="DLS",
                                            frqlow=frqlow, frqhigh=frqhigh,
@@ -703,7 +702,7 @@ class SeismicArray(object):
          "baz_slow_map" for backazimuth-slowness maps for each window,
          "slowness_xy" for slowness_xy maps for each window.
          Further plotting otions are attached to the returned object.
-        :rtype: :class:`BeamformerResult`
+        :rtype: :class:`~obspy.signal.array_analysis.BeamformerResult`
 
         """
         return self._array_analysis_helper(stream=stream, method="FK",
@@ -757,7 +756,7 @@ class SeismicArray(object):
          "baz_slow_map" for backazimuth-slowness maps for each window,
          "slowness_xy" for slowness_xy maps for each window.
          Further plotting otions are attached to the returned object.
-        :rtype: :class:`BeamformerResult`
+        :rtype: :class:`~obspy.signal.array_analysis.BeamformerResult`
         """
 
         if method not in ("FK", "DLS", "PWS", "SWP"):
@@ -815,7 +814,7 @@ class SeismicArray(object):
         try:
             if method == 'FK':
                 kwargs = dict(
-                    #slowness grid: X min, X max, Y min, Y max, Slow Step
+                    # slowness grid: X min, X max, Y min, Y max, Slow Step
                     sll_x=sllx, slm_x=slmx, sll_y=slly, slm_y=slmy, sl_s=sls,
                     # sliding window properties
                     win_len=wlen, win_frac=wfrac,
@@ -861,7 +860,6 @@ class SeismicArray(object):
 
                 # here we do the array processing
                 start = UTCDateTime()
-                #todo adjust times processing here
                 outarr = self._beamforming(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
 
@@ -922,8 +920,8 @@ class SeismicArray(object):
 
         stepsfreq = (freqmax - freqmin) / float(numfreqs)
         transff = self._array_transff_freqslowness((sllx, slmx, slly, slmy),
-                                                  sls, freqmin, freqmax,
-                                                  stepsfreq)
+                                                   sls, freqmin, freqmax,
+                                                   stepsfreq)
 
         sllx = degrees2kilometers(sllx)
         slmx = degrees2kilometers(slmx)
@@ -936,7 +934,7 @@ class SeismicArray(object):
         fig = plt.figure(figsize=(12, 12))
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
 
-        #ax.pcolormesh(slx, sly, transff.T)
+        # ax.pcolormesh(slx, sly, transff.T)
         ax.contour(sly, slx, transff.T, 10)
         ax.set_xlabel('slowness [s/deg]')
         ax.set_ylabel('slowness [s/deg]')
@@ -971,8 +969,9 @@ class SeismicArray(object):
 
         :param stream: Stream object, the trace.stats dict like class must
             contain an :class:`~obspy.core.util.attribdict.AttribDict` with
-            'latitude', 'longitude' (in degrees) and 'elevation' (in km), or 'x',
-            'y', 'elevation' (in km) items/attributes. See param ``coordsys``.
+            'latitude', 'longitude' (in degrees) and 'elevation' (in km), or
+            'x', 'y', 'elevation' (in km) items/attributes, as attached in
+            `self._array_analysis_helper`/
         :type win_len: float
         :param win_len: Sliding window length in seconds
         :type win_frac: float
@@ -1002,11 +1001,11 @@ class SeismicArray(object):
         :type prewhiten: int
         :param prewhiten: Do prewhitening, values: 1 or 0
         :type timestamp: str
-        :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-            the timestamp in seconds since 1970-01-01T00:00:00, 'mlabday'
-            returns the timestamp in days (decimals represent hours, minutes
-            and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-            date plotting (see e.g. matplotlib's num2date)
+        :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec'
+            returns the timestamp in seconds since 1970-01-01T00:00:00,
+            'mlabday' returns the timestamp in days (decimals represent hours,
+            minutes and seconds) since '0001-01-01T00:00:00' as needed for
+            matplotlib date plotting (see e.g. matplotlib's num2date)
         :type method: int
         :param method: the method to use 0 == bf, 1 == capon
         :param vel_cor: correction velocity (upper layer) in km/s
@@ -1015,11 +1014,11 @@ class SeismicArray(object):
             t = rxy*s - rz*cos(inc)/vel_cor
             where inc is defined by inv = asin(vel_cor*slow)
         :type store: function
-        :param store: A custom function which gets called on each iteration. It is
-            called with the relative power map and the time offset as first and
-            second arguments and the iteration number as third argument. Useful for
-            storing or plotting the map for each iteration. For this purpose the
-            dump function of this module can be used.
+        :param store: A custom function which gets called on each iteration.
+            It is called with the relative power map and the time offset as
+            first and second arguments and the iteration number as third
+            argument. Useful for storing or plotting the map for each
+            iteration.
         :return: :class:`numpy.ndarray` of timestamp, relative relpow, absolute
             relpow, backazimuth, slowness
         """
@@ -1050,9 +1049,6 @@ class SeismicArray(object):
                                               grdpts_x, grdpts_y,
                                               vel_cor=vel_cor,
                                               static_3D=static_3D)
-        # offset of arrays
-        mini = np.min(time_shift_table[:, :, :])
-        maxi = np.max(time_shift_table[:, :, :])
 
         spoint, _epoint = self.get_stream_offsets(stream, stime, etime)
 
@@ -1181,8 +1177,8 @@ class SeismicArray(object):
                 csamp[:, 2] = np.cumsum(ampN)
                 ampw = np.zeros(nn, dtype=csamp.dtype)
                 for k in range(3):
-                    ampw[ww / 2:nn - ww / 2] += (csamp[ww:, k] - csamp[:-ww, k])\
-                                                / ww
+                    ampw[ww / 2:nn - ww / 2] += (csamp[ww:, k] -
+                                                 csamp[:-ww, k]) / ww
                 ampw[nn - ww / 2:] = ampw[nn - ww / 2 - 1]
                 ampw[:ww / 2] = ampw[ww / 2]
                 ampw *= 1 / 3.
@@ -1316,7 +1312,8 @@ class SeismicArray(object):
                     alldataE[n, i, :] = _alldataE[n, i * nstep:
                                                   i * nstep + nsamp] * cosTaper(nsamp)
                     nst[i] += 1
-            window_start_times.append(stream_N.traces[0].stats.starttime + i * nstep/fs)
+            window_start_times.append(stream_N.traces[0].stats.starttime +
+                                      i * nstep/fs)
         window_start_times = np.array(window_start_times)
 
         print(nst, ' stations/window; average over ', win_average)
@@ -1496,94 +1493,11 @@ class SeismicArray(object):
 
         return beamres, fr, incidence, window_start_times
 
-    @staticmethod
-    def three_c_beamform_plotter(beamresult, u, freqs, plot_frequencies=(),
-                                 average_windows=True, average_freqs=True,
-                                 show_immediately=True):
-        """
-        Pass in an unaveraged beamresult, i.e. with 4 axes. Dud windows should
-        (not happen or) be signified by all zeros, so np.nonzero can catch
-        them.
-        """
-        if average_freqs is True and len(plot_frequencies) > 0:
-            warnings.warn("Ignoring plot_frequencies, only plotting an average"
-                          " of all frequencies.")
-        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
-
-        def _actual_plotting(bfres, title):
-            """
-            Pass in a 2D bfres array of beamforming results with
-            averaged or selected windows and frequencies.
-            """
-            fig = plt.figure(figsize=(6, 6))
-            ax = fig.add_subplot(1, 1, 1, projection='polar')
-            jetmap = cm.get_cmap('jet')
-            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
-                                bfres.T, 100, cmap=jetmap, antialiased=True,
-                                linstyles='dotted')
-            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, bfres.T, 100,
-                       cmap=jetmap)
-            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
-                              labels=['90', '45', '0', '315', '270', '225',
-                                      '180', '135'])
-            # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],labels=['0.1','0.2','0.3',
-            # '0.4','0.5'],color='r')
-            ax.set_rmax(u[-1])
-            fig.colorbar(CONTF)
-            ax.grid(True)
-            ax.set_title(title)
-
-        # Try to remove all windows where actually no beamforming happened -
-        # ought to be full of zeros; don't want to include those in the
-        # averages (although maybe the absolute values don't really matter in
-        # the end).
-        #nonzero_windows = np.nonzero(beamresult[0, 0, :, 0])[0]
-        #beamresnz = beamresult[:, :, nonzero_windows, :]
-        beamresnz = beamresult
-        if average_windows:
-            beamresnz = beamresnz.mean(axis=2)
-        if average_freqs:
-            # Always an average over the last axis, whether or not windows
-            # were averaged.
-            beamresnz = beamresnz.mean(axis=beamresnz.ndim - 1)
-
-        if average_windows and average_freqs:
-            _actual_plotting(beamresnz, 'Averaged BF result.')
-
-        if average_windows and not average_freqs:
-            for plot_freq in plot_frequencies:
-                # works because freqs is a range
-                ifreq = np.searchsorted(freqs, plot_freq)
-                _actual_plotting(beamresnz[:, :, ifreq],
-                                 'Averaged windows, frequency {}'
-                                 .format(freqs[ifreq]))
-
-        if average_freqs and not average_windows:
-            for iwin in range(len(beamresnz[0, 0, :])):
-                _actual_plotting(beamresnz[:, :, iwin],
-                                 'Averaged all frequencies, window {}'
-                                 .format(iwin))
-
-        # Plotting all windows, selected frequencies.
-        if average_freqs is False and average_windows is False:
-            for plot_freq in plot_frequencies:
-                ifreq = np.searchsorted(freqs, plot_freq)
-                for iwin in range(len(beamresnz[0, 0, :, 0])):
-                    _actual_plotting(beamresnz[:, :, iwin, ifreq],
-                                     'BF result window {}, freq {}'
-                                     .format(iwin, freqs[ifreq]))
-
-        if show_immediately is True:
-            plt.show()
-
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
                                     freq_range, plot_frequencies=(7, 14),
                                     n_min_stns=7, win_average=1, win_frac=1,
-                                    plot_transff=False,
-                                    plot_average_freqs=True,
-                                    plot_average_windows=True,
-                                    show_immediately=True):
+                                    plot_transff=False):
         """
         Do three component beamforming following Esmersoy 1985...
         Three streams representing N, E, Z oriented components must be given,
@@ -1619,14 +1533,11 @@ class SeismicArray(object):
         :param win_frac: fraction of sliding window to use for step
         :param plot_transff: whether to also plot the transfer function of the
          array (only considering stations/channels for which data is present)
-        :param plot_average_freqs: whether to plot an average of results for
-         all frequencies
-        :param plot_average_windows: whether to plot an average of results for
-         all windows
-        :return: A four dimensional :class:`numpy.ndarray` of the beamforming
-         results, with dimensions of backazimuth range, slowness range, number
-         of windows and number of discrete frequencies; as well as frequency
-         and incidence angle arrays (the latter will be zero for Love waves).
+        :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
+        object containing the beamforming results, with dimensions of
+        backazimuth range, slowness range, number of windows and number of
+        discrete frequencies; as well as frequency and incidence angle arrays
+        (the latter will be zero for Love waves).
         """
         pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde':
                     2, 'P': 3, 'SV': 4}
@@ -1711,13 +1622,6 @@ class SeismicArray(object):
                                     win_average=win_average,
                                     datalen_sec=datalen_sec,
                                     uindex=uindex)
-
-            self.three_c_beamform_plotter(bf_results,
-                                          plot_frequencies=plot_frequencies,
-                                          u=u, freqs=freqs,
-                                          average_freqs=plot_average_freqs,
-                                          show_immediately=show_immediately,
-                                          average_windows=plot_average_windows)
 
             # More interesting perhaps to plot the tranfer function only
             # with the actually used stations, i.e. the culled inventory
@@ -2326,7 +2230,8 @@ class SeismicArray(object):
         epoint = np.empty(len(stream), dtype=np.int32, order="C")
         for i, tr in enumerate(stream):
             if tr.stats.starttime > stime:
-                msg = "Specified stime %s is smaller than starttime %s in stream"
+                msg = "Specified stime %s is smaller than starttime %s " \
+                      "in stream"
                 raise ValueError(msg % (stime, tr.stats.starttime))
             if tr.stats.endtime < etime:
                 msg = "Specified etime %s is bigger than endtime %s in stream"
@@ -2433,10 +2338,10 @@ class SeismicArray(object):
         return transff
 
     def _beamforming(self, stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow,
-                    frqhigh, stime, etime, win_len=-1, win_frac=0.5,
-                    verbose=False, timestamp='mlabday',
-                    method="DLS", nthroot=1, store=None, correct_3dplane=False,
-                    static_3D=False, vel_cor=4.):
+                     frqhigh, stime, etime, win_len=-1, win_frac=0.5,
+                     verbose=False, timestamp='mlabday',
+                     method="DLS", nthroot=1, store=None, correct_3dplane=False,
+                     static_3D=False, vel_cor=4.):
         """
         Method for Delay and Sum/Phase Weighted Stack/Whitened Slowness Power
 
@@ -2685,8 +2590,8 @@ class SeismicArray(object):
         return np.array(res)
     #    return(baz,slow,slow_x,slow_y,abspow_map,beam_max)
 
-    def vespagram_baz(self, stream, time_shift_table, starttime, endtime,
-                      method="DLS", nthroot=1):
+    def _vespagram_baz(self, stream, time_shift_table, starttime, endtime,
+                       method="DLS", nthroot=1):
         """
         Estimating the azimuth or slowness vespagram
 
@@ -2848,9 +2753,9 @@ class SeismicArray(object):
         return geometry
 
     @staticmethod
-    def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls, filename_patterns,
-                             baz_plot, method, st_workon, starttime, wlen,
-                             endtime):
+    def _plot_array_analysis(out, sllx, slmx, slly, slmy, sls,
+                             filename_patterns, baz_plot, method,
+                             st_workon, starttime, wlen, endtime):
         """
         Some plotting taken out from _array_analysis_helper. Can't do the array
         response overlay now though.
@@ -3020,15 +2925,17 @@ class BeamformerResult:
         if len(slowness_range) == 1:
             raise ValueError("Need at least two slowness values.")
         self.slowness_range = slowness_range.astype(float)
+        self.freqs = freqs
+        self.incidence = incidence
 
         if full_beamres is not None and full_beamres.ndim != 4:
             raise ValueError("Full beamresults should be 4D array.")
         self.full_beamres = full_beamres
         if(max_rel_power is None and max_pow_baz is None
            and max_pow_slowness is None):
-            self.calc_max_values()
+            self._calc_max_values()
 
-    def calc_max_values(self):
+    def _calc_max_values(self):
         """
         If the max power etc values are unset, but the full results are
         available (atm the case with the three component beamforming),
@@ -3218,6 +3125,89 @@ class BeamformerResult:
         if show_immediately is True:
             plt.show()
 
+    def plot_bf_plots(self, plot_frequencies=None, average_windows=True,
+                      average_freqs=True, show_immediately=True):
+        """
+        Plot beamforming results as individual polar plots of relative power as
+        function of backazimuth and slowness. Can plot results averaged over
+        windows/freqeuncies, results for each window and every frequency
+        individually, or for selected frequencies only.
+        :param plot_frequencies: List of discrete frequencies for which windows
+         should be plotted.
+        :param average_windows: Whether to plot an average of results over all
+         windows.
+        :param average_freqs: Whether to plot an average of results over all
+         frequencies (will override :param plot_frequencies:).
+        :param show_immediately: Whether to call plt.show() immediately.
+        """
+        if(type(plot_frequencies) is not list and
+           type(plot_frequencies) is not tuple):
+            plot_frequencies = [plot_frequencies]
+        if average_freqs is True and plot_frequencies:
+            warnings.warn("Ignoring plot_frequencies, only plotting an average"
+                          " of all frequencies.")
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
+
+        def _actual_plotting(bfres, title):
+            """
+            Pass in a 2D bfres array of beamforming results with
+            averaged or selected windows and frequencies.
+            """
+            fig = plt.figure(figsize=(6, 6))
+            ax = fig.add_subplot(1, 1, 1, projection='polar')
+            jetmap = cm.get_cmap('jet')
+            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.),
+                                self.slowness_range,
+                                bfres.T, 100, cmap=jetmap, antialiased=True,
+                                linstyles='dotted')
+            ax.contour((theo_backazi[::-1] + math.pi / 2.),
+                       self.slowness_range, bfres.T, 100, cmap=jetmap)
+            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
+                              labels=['90', '45', '0', '315', '270', '225',
+                                      '180', '135'])
+            # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],labels=['0.1','0.2','0.3',
+            # '0.4','0.5'],color='r')
+            ax.set_rmax(self.slowness_range[-1])
+            fig.colorbar(CONTF)
+            ax.grid(True)
+            ax.set_title(title)
+
+        beamresnz = self.full_beamres
+        if average_windows:
+            beamresnz = beamresnz.mean(axis=2)
+        if average_freqs:
+            # Always an average over the last axis, whether or not windows
+            # were averaged.
+            beamresnz = beamresnz.mean(axis=beamresnz.ndim - 1)
+
+        if average_windows and average_freqs:
+            _actual_plotting(beamresnz, 'Averaged BF result.')
+
+        if average_windows and not average_freqs:
+            for plot_freq in plot_frequencies:
+                # works because freqs is a range
+                ifreq = np.searchsorted(self.freqs, plot_freq)
+                _actual_plotting(beamresnz[:, :, ifreq],
+                                 'Averaged windows, frequency {}'
+                                 .format(self.freqs[ifreq]))
+
+        if average_freqs and not average_windows:
+            for iwin in range(len(beamresnz[0, 0, :])):
+                _actual_plotting(beamresnz[:, :, iwin],
+                                 'Averaged all frequencies, window {}'
+                                 .format(iwin))
+
+        # Plotting all windows, selected frequencies.
+        if average_freqs is False and average_windows is False:
+            for plot_freq in plot_frequencies:
+                ifreq = np.searchsorted(self.freqs, plot_freq)
+                for iwin in range(len(beamresnz[0, 0, :, 0])):
+                    _actual_plotting(beamresnz[:, :, iwin, ifreq],
+                                     'BF result window {}, freq {}'
+                                     .format(iwin, self.freqs[ifreq]))
+
+        if show_immediately is True:
+            plt.show()
 
 if __name__ == '__main__':
     import doctest
