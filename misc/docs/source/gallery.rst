@@ -147,7 +147,7 @@ Gallery
     :alt: Cross Correlation Pick Correction
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap preview plot of Inventory class
 
     from obspy import read_inventory
@@ -155,7 +155,7 @@ Gallery
     inv.plot(projection="local", color_per_network={'GR': 'blue', 'BW': 'green'})
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.network.Network.plot.html
+    :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
     :alt: Basemap preview plot of Network class
 
     from obspy import read_inventory
@@ -171,7 +171,7 @@ Gallery
     cat.plot()
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot_response.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
     :alt: Bode plot of Inventory class
 
     from obspy import read_inventory
@@ -179,7 +179,7 @@ Gallery
     inv.plot_response(0.001, station="RJOB")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.response.Response.plot.html
+    :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
     :alt: Bode plot of Response class
 
     from obspy import read_inventory
@@ -187,7 +187,7 @@ Gallery
     resp.plot(0.001, output="VEL")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap plot of station and event data together
 
     from obspy import read_inventory, read_events
