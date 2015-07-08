@@ -477,7 +477,8 @@ class ImageComparison(NamedTemporaryFile):
         # pyimgur
         import requests
         # try to get imgur client id from environment
-        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
+        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID",
+                                        "53b182544dc5d89")
         if imgur_clientid is None:
             msg = ("Upload to imgur not possible (environment "
                    "variable OBSPY_IMGUR_CLIENTID not set).")
