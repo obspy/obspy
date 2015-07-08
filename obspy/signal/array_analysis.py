@@ -155,7 +155,6 @@ class SeismicArray(object):
                          "absolute_height_in_km":
                          float(station.elevation) / 1000.0}
                     geo[item_code] = this_coordinates
-                    # todo add warning
                 else:
                     for channel in station:
                         item_code = "{}.{}.{}.{}".format(network.code,
@@ -206,8 +205,7 @@ class SeismicArray(object):
         """
         distances = []
         geo = self.geometry
-        # todo: add a unit test and remove the list()
-        for location, coordinates in list(geo.items()):
+        for location, coordinates in geo.items():
             for other_location, other_coordinates in list(geo.items()):
                 if location == other_location:
                     continue
@@ -3104,8 +3102,7 @@ class BeamformerResult:
         labels = ['baz']
         maskedazipows = np.ma.array(maxazipows, mask=np.isnan(maxazipows))
         # todo (maybe) implement plotting of slowness map corresponding to the
-        # max powers:
-        # maskedslow = np.ma.array(slowatmax, mask=np.isnan(slowatmax))
+        # max powers
         datas = [maskedazipows]  # , maskedslow]
 
         xlocator = mdates.AutoDateLocator(interval_multiples=True)
