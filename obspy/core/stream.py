@@ -37,6 +37,7 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
 from obspy.core.util.decorator import (deprecated_keywords,
                                        map_example_filename, raise_if_masked,
                                        uncompress_file)
+from obspy.core.util.misc import get_window_times
 
 
 @map_example_filename("pathname_or_url")
@@ -1438,8 +1439,9 @@ class Stream(object):
             given ``fill_value``. Defaults to ``False``.
         :type nearest_sample: bool, optional
         :param nearest_sample: If set to ``True``, the closest sample is
-            selected, if set to ``False``, the next sample containing the time
-            is selected. Defaults to ``True``.
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
 
             Given the following trace containing 4 samples, "|" are the
             sample points, "A" is the requested starttime::
@@ -1557,7 +1559,8 @@ class Stream(object):
         self.traces = tmp.traces
         return self
 
-    def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
+    def slice(self, starttime=None, endtime=None, keep_empty_traces=False,
+              nearest_sample=True):
         """
         Return new Stream object cut to the given start and end time.
 
@@ -1568,6 +1571,19 @@ class Stream(object):
         :type keep_empty_traces: bool, optional
         :param keep_empty_traces: Empty traces will be kept if set to ``True``.
             Defaults to ``False``.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
+
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
+
+                |        A|         |         |
+
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
         :return: :class:`~obspy.core.stream.Stream`
 
         .. note::
@@ -1597,11 +1613,94 @@ class Stream(object):
         tmp.traces = []
         new = tmp.copy()
         for trace in self:
-            sliced_trace = trace.slice(starttime=starttime, endtime=endtime)
+            sliced_trace = trace.slice(starttime=starttime, endtime=endtime,
+                                       nearest_sample=nearest_sample)
             if keep_empty_traces is False and not sliced_trace.stats.npts:
                 continue
             new.append(sliced_trace)
         return new
+
+    def slide(self, window_length, step, offset=0,
+              include_partial_windows=False, nearest_sample=True):
+        """
+        Generator yielding equal length sliding windows of the Stream.
+
+        Please keep in mind that it only returns a new view of the original
+        data. Any modifications are applied to the original data as well. If
+        you don't want this you have to create a copy of the yielded
+        windows. Also be aware that if you modify the original data and you
+        have overlapping windows, all following windows are affected as well.
+
+        Not all yielded windows must have the same number of traces. The
+        algorithm will determine the maximal temporal extents by analysing
+        all Traces and then creates windows based on these times.
+
+        .. rubric:: Example
+
+        >>> import obspy
+        >>> st = obspy.read()
+        >>> for windowed_st in st.slide(window_length=10.0, step=10.0):
+        ...     print(windowed_st)
+        ...     print("---")  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        3 Trace(s) in Stream:
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ... | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:13.000000Z | ...
+        ---
+        3 Trace(s) in Stream:
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+        ... | 2009-08-24T00:20:13.000000Z - 2009-08-24T00:20:23.000000Z | ...
+
+
+        :param window_length: The length of each window in seconds.
+        :type window_length: float
+        :param step: The step between the start times of two successive
+            windows in seconds. Can be negative if an offset is given.
+        :type step: float
+        :param offset: The offset of the first window in seconds relative to
+            the start time of the whole interval.
+        :type offset: float
+        :param include_partial_windows: Determines if windows that are
+            shorter then 99.9 % of the desired length are returned.
+        :type include_partial_windows: bool
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the outer (previous sample for a
+            start time border, next sample for an end time border) sample
+            containing the time is selected. Defaults to ``True``.
+
+            Given the following trace containing 4 samples, "|" are the
+            sample points, "A" is the requested starttime::
+
+                |        A|         |         |
+
+            ``nearest_sample=True`` will select the second sample point,
+            ``nearest_sample=False`` will select the first sample point.
+        :type nearest_sample: bool, optional
+        """
+        starttime = min(tr.stats.starttime for tr in self)
+        endtime = max(tr.stats.endtime for tr in self)
+        windows = get_window_times(
+            starttime=starttime,
+            endtime=endtime,
+            window_length=window_length,
+            step=step,
+            offset=offset,
+            include_partial_windows=include_partial_windows)
+
+        if len(windows) < 1:
+            raise StopIteration
+
+        for start, stop in windows:
+            temp = self.slice(start, stop,
+                              nearest_sample=nearest_sample)
+            # It might happen that there is a time frame where there are no
+            # windows, e.g. two traces separated by a large gap.
+            if not temp:
+                continue
+            yield temp
+
+        raise StopIteration
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None):

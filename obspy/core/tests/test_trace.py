@@ -684,6 +684,33 @@ class TraceTestCase(unittest.TestCase):
         self.__remove_processing(tr2)
         self.assertEqual(tr_trim, tr2)
 
+    def test_slice_nearest_sample(self):
+        """
+        Tests slicing with the nearest sample flag set to on or off.
+        """
+        tr = Trace(data=np.arange(6))
+        # Samples at:
+        # 0       10       20       30       40       50
+        tr.stats.sampling_rate = 0.1
+
+        # Nearest sample flag defaults to true.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(0))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48))
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(50))
+
+        # Setting it to False changes the returned values.
+        tr2 = tr.slice(UTCDateTime(4), UTCDateTime(44), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
+        tr2 = tr.slice(UTCDateTime(8), UTCDateTime(48), nearest_sample=False)
+        self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
+        self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
+
     def test_trimFloatingPoint(self):
         """
         Tests the slicing of trace objects.
@@ -1930,6 +1957,126 @@ class TraceTestCase(unittest.TestCase):
         window = np.array([0, 1, 2, 3])
         self.assertRaises(ValueError, tr.resample,
                           sampling_rate=0.5, window=window, no_filter=True)
+
+    def test_slide(self):
+        """
+        Tests for sliding a window across a trace object.
+        """
+        tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
+        tr.stats.sampling_rate = 5.0
+
+        # First slice it in 4 pieces. Window length is in seconds.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=5.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 4)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(5), UTCDateTime(10)))
+        self.assertEqual(slices[2],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+        self.assertEqual(slices[3],
+                         tr.slice(UTCDateTime(15), UTCDateTime(20)))
+
+        # Different step which is the distance between two windows measured
+        # from the start of the first window in seconds.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=10.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+
+        # Offset determines the initial starting point. It defaults to zero.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=6.5, offset=8.5):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(8.5), UTCDateTime(13.5)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+
+        # By default only full length windows will be returned so any
+        # remainder that can no longer make up a full window will not be
+        # returned.
+        slices = []
+        for window_tr in tr.slide(window_length=15.0, step=15.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 1)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
+
+        # But it can optionally be returned.
+        slices = []
+        for window_tr in tr.slide(window_length=15.0, step=15.0,
+                                  include_partial_windows=True):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 2)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(0.0), UTCDateTime(15.0)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(15.0), UTCDateTime(20.0)))
+
+        # Negative step lengths work together with an offset.
+        slices = []
+        for window_tr in tr.slide(window_length=5.0, step=-5.0, offset=20.0):
+            slices.append(window_tr)
+
+        self.assertEqual(len(slices), 4)
+        self.assertEqual(slices[0],
+                         tr.slice(UTCDateTime(15), UTCDateTime(20)))
+        self.assertEqual(slices[1],
+                         tr.slice(UTCDateTime(10), UTCDateTime(15)))
+        self.assertEqual(slices[2],
+                         tr.slice(UTCDateTime(5), UTCDateTime(10)))
+        self.assertEqual(slices[3],
+                         tr.slice(UTCDateTime(0), UTCDateTime(5)))
+
+    def test_slide_nearest_sample(self):
+        """
+        Tests that the nearest_sample argument is correctly passed to the
+        slice function calls.
+        """
+        tr = Trace(data=np.linspace(0, 100, 101))
+        tr.stats.starttime = UTCDateTime(0.0)
+        tr.stats.sampling_rate = 5.0
+
+        # It defaults to True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Force True.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5, nearest_sample=True))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertTrue(arg[1]["nearest_sample"])
+
+        # Set to False.
+        with mock.patch("obspy.core.trace.Trace.slice") as patch:
+            patch.return_value = tr
+            list(tr.slide(5, 5, nearest_sample=False))
+
+        self.assertEqual(patch.call_count, 4)
+        for arg in patch.call_args_list:
+            self.assertFalse(arg[1]["nearest_sample"])
 
 
 def suite():
