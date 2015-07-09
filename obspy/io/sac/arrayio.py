@@ -27,7 +27,7 @@ from obspy.core.compatibility import from_buffer
 
 from ..sac import header as HD
 from .util import SacIOError, SacInvalidContentError
-from .util import is_valid_enum_int, is_same_byteorder
+from .util import is_valid_enum_int, is_same_byteorder, byteswap
 
 
 def init_header_arrays(*args):
@@ -336,10 +336,12 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         pass
     else:
         if not is_same_byteorder(byteorder, hf.dtype.byteorder):
-            hf = hf.byteswap(True).newbyteorder(byteorder)
-            hi = hf.byteswap(True).newbyteorder(byteorder)
+            hf, hi = byteswap(hf, hi)
+            #hf = hf.byteswap(True).newbyteorder(byteorder)
+            #hi = hf.byteswap(True).newbyteorder(byteorder)
             if data is not None:
-                data = data.byteswap(True).newbyteorder(byteorder)
+                data = byteswap(data)[0]
+                #data = data.byteswap(True).newbyteorder(byteorder)
 
     # actually write everything
     try:
@@ -629,3 +631,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 def is_valid_byteorder(hi):
     nvhdr = hi[HD.INTHDRS.index('nvhdr')]
     return (0 < nvhdr < 20)
+
+#if __name__ == "__main__":
+#    import doctest
+#    doctest.testmod()

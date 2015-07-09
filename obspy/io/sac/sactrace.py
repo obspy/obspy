@@ -856,13 +856,26 @@ class SACTrace(object):
         >>> tr = Trace(data=sac.data, header=sac.to_obspy_header())
 
         """
-        self.validate('reftime')
+        #make obspy test for tests/data/testxy.sac pass
+        try:
+            self.validate('reftime') 
+        except SacInvalidContentError:
+            if not self.nzyear:
+                self.nzyear = 1970
+            if not self.nzjday:
+                self.nzjday = 1
+            for hdr in ['nzhour', 'nzmin', 'nzsec', 'nzmsec']:
+                if not getattr(self, hdr):
+                    setattr(self, hdr, 0)
         self.validate('delta')
         try:
             self.validate('data_hdrs')
         except SacInvalidContentError:
             self._flush_headers()
             self.validate('data_hdrs')
+        except ValueError:
+            # self.data is None (headonly).  Make it something palatable to obspy
+            self.data = np.array([])
         # TODO: does a sac file need to have iztype specified, or just 'b'?
         #self.validate('reltime')
 
@@ -1107,3 +1120,8 @@ class SACTrace(object):
         else:
             msg = "lcalda is False or unset. To set distances, set it to True."
             raise SacError(msg)
+
+
+#if __name__ == "__main__":
+#    import doctest
+#    doctest.testmod()

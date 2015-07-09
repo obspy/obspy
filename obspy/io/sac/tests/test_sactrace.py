@@ -28,7 +28,9 @@ class SACTraceTestCase(unittest.TestCase):
              -5.87784529e-01, -3.09016049e-01], dtype=np.float32)
 
     def test_read_binary(self):
-        #Tests for SACTrace binary file read
+        """
+        Tests for SACTrace binary file read
+        """
         sac = SACTrace.read(self.file, byteorder='little')
         self.assertEqual(sac.npts, 100)
         self.assertEqual(sac.kstnm, 'STA')
@@ -42,7 +44,9 @@ class SACTraceTestCase(unittest.TestCase):
                                              sac.data[0:10])
 
     def test_read_binary_headonly(self):
-        # a headonly read should return readable headers and data == None
+        """
+        A headonly read should return readable headers and data is None
+        """
         sac = SACTrace.read(self.file, byteorder='little', headonly=True)
         self.assertEqual(sac.data, None)
         self.assertEqual(sac.npts, 100)
@@ -51,7 +55,9 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.depmax, 1.0)
 
     def test_read_sac_byteorder(self):
-        # a read should fail if the byteorder is wrong
+        """
+        A read should fail if the byteorder is wrong
+        """
         with self.assertRaises(IOError):
             sac = SACTrace.read(self.filebe, byteorder='little')
         with self.assertRaises(IOError):
@@ -68,8 +74,10 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.byteorder, 'big')
 
     def test_write_sac(self):
-        # A trace you've written and read in again should look the same as the
-        # one you started with.
+        """
+        A trace you've written and read in again should look the same as the
+        one you started with.
+        """
         sac1 = SACTrace.read(self.file, byteorder='little')
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -79,10 +87,11 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac1._header, sac2._header)
 
     def test_write_binary_headonly(self):
-        # A trace you've written headonly should only modify the header of an
-        # existing file, and fail if the file doesn't exist.
-        #
-        # make a sac trace
+        """
+        A trace you've written headonly should only modify the header of an
+        existing file, and fail if the file doesn't exist.
+        """
+        #make a sac trace
         sac = SACTrace.read(self.file, byteorder='little')
         # write it all to temp file
         with NamedTemporaryFile() as tf:
@@ -114,6 +123,9 @@ class SACTraceTestCase(unittest.TestCase):
         pass
 
     def test_read_sac_ascii(self):
+        """
+        Read an ASCII SAC file.
+        """
         sac = SACTrace.read(self.filexy, ascii=True)
         self.assertEqual(sac.npts, 100)
         self.assertEqual(sac.kstnm, 'sta')
@@ -129,7 +141,9 @@ class SACTraceTestCase(unittest.TestCase):
         pass
 
     def test_reftime(self):
-        # a SACTrace.reftime should be created correctly from a file's nz-times
+        """
+        A SACTrace.reftime should be created correctly from a file's nz-times
+        """
         sac = SACTrace.read(self.fileseis)
         self.assertEqual(sac.reftime, UTCDateTime('1981-03-29T10:38:14.000000Z'))
         # changes to a reftime should be reflected in the nz times and reftime
@@ -143,7 +157,9 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.reftime.year, 2001)
 
     def test_reftime_relative_times(self):
-        # changes in the reftime shift all relative time headers
+        """
+        Changes in the reftime shift all relative time headers
+        """
         sac = SACTrace.read(self.fileseis)
         a, b, t1 = sac.a, sac.b, sac.t1
         sac.reftime -= 10.0
@@ -163,3 +179,9 @@ class SACTraceTestCase(unittest.TestCase):
     @unittest.skip("Not implemented yet.")
     def test_dict_to_header_arrays(self):
         pass
+
+def suite():
+    return unittest.makeSuite(SACTraceTestCase, 'test')
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')
