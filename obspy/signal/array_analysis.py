@@ -2951,16 +2951,16 @@ class BeamformerResult:
         # Average over all frequencies.
         freqavg = self.full_beamres.mean(axis=3)
         num_win = self.full_beamres.shape[2]
-        # This is still 2D, with time windows and baz (in this order)
-        # as indices.
-        maxazipows = np.array([[azipows.T[t].max() for azipows in freqavg]
-                               for t in range(num_win)])
-        max_rel_power = [_timepowers.max() for _timepowers in maxazipows]
-        self.max_rel_power = np.array(max_rel_power).astype(float)
-        maxpow_indices = np.where(freqavg == self.max_rel_power)
-        theo_backazi = np.arange(0, 362, 2) * math.pi / 180
-        self.max_pow_baz = (theo_backazi * 180/math.pi)[maxpow_indices[0]]
-        self.max_pow_slow = self.slowness_range[maxpow_indices[1]]
+        self.max_rel_power = np.empty(num_win, dtype=float)
+        self.max_pow_baz = np.empty_like(self.max_rel_power)
+        self.max_pow_slow = np.empty_like(self.max_rel_power)
+        for win in range(num_win):
+            self.max_rel_power[win] = freqavg[:, :, win].max()
+            ibaz = np.where(freqavg[:, :, win] == freqavg[:, :, win].max())[0]
+            islow = np.where(freqavg[:, :, win] == freqavg[:, :, win].max())[1]
+            # Add [0] in case of multiple matches.
+            self.max_pow_baz[win] = np.arange(0, 362, 2)[ibaz[0]]
+            self.max_pow_slow[win] = self.slowness_range[islow[0]]
 
     def _get_plotting_timestamps(self, extended=False):
         """
