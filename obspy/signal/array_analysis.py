@@ -1317,8 +1317,9 @@ class SeismicArray(object):
                     alldataE[n, i, :] = _alldataE[n, i * nstep:
                                                   i * nstep + nsamp] * cosTaper(nsamp)
                     nst[i] += 1
-            window_start_times.append(stream_N.traces[0].stats.starttime +
-                                      i * nstep/fs)
+            if i % win_average == 0:
+                window_start_times.append(stream_N.traces[0].stats.starttime +
+                                          i * nstep/fs)
         window_start_times = np.array(window_start_times)
 
         print(nst, ' stations/window; average over ', win_average)
@@ -1494,8 +1495,6 @@ class SeismicArray(object):
                     beamres[:, :, win / win_average, f] = res[:, :, k]
                     incidence[win / win_average, f] = incs[k] * 180. / math.pi
 
-        # Could call plot of every window here. Don't.
-
         return beamres, fr, incidence, window_start_times
 
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
@@ -1545,9 +1544,8 @@ class SeismicArray(object):
         (the latter will be zero for Love waves).
         """
         pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde':
-                    2, 'P': 3, 'SV': 4}
-        wavetype = wavetype.lower()
-        if wavetype not in pol_dict:
+                    2, 'p': 3, 'sv': 4}
+        if wavetype.lower() not in pol_dict:
             raise ValueError('Invalid option for wavetype: {}'
                              .format(wavetype))
         if len(set(len(vel.traces) for vel in (stream_N, stream_E,
@@ -1621,7 +1619,7 @@ class SeismicArray(object):
                                     win_len=wlen, win_frac=win_frac, u=u,
                                     sub_freq_range=freq_range,
                                     n_min_stns=n_min_stns,
-                                    polarisation=pol_dict[wavetype],
+                                    polarisation=pol_dict[wavetype.lower()],
                                     whiten=False,
                                     coherency=True,
                                     win_average=win_average,
@@ -2919,14 +2917,18 @@ class BeamformerResult:
         self.starttime = times[0]
         self.timestep = times[1] - times[0]
         self.endtime = times[-1] + self.timestep
+        self.max_rel_power = max_rel_power
         if max_rel_power is not None:
-            self.max_rel_power = max_rel_power.astype(float)
+            self.max_rel_power = self.max_rel_power.astype(float)
+        self.max_abs_power = max_abs_power
         if max_abs_power is not None:
-            self.max_abs_power = max_abs_power.astype(float)
+            self.max_abs_power = self.max_abs_power.astype(float)
+        self.max_pow_baz = max_pow_baz
         if max_pow_baz is not None:
-            self.max_pow_baz = max_pow_baz.astype(float)
-        if max_pow_slowness is not None:
-            self.max_pow_slow = max_pow_slowness.astype(float)
+            self.max_pow_baz = self.max_pow_baz.astype(float)
+        self.max_pow_slow = max_pow_slowness
+        if self.max_pow_slow is not None:
+            self.max_pow_slow = self.max_pow_slow.astype(float)
         if len(slowness_range) == 1:
             raise ValueError("Need at least two slowness values.")
         self.slowness_range = slowness_range.astype(float)
@@ -2937,7 +2939,7 @@ class BeamformerResult:
             raise ValueError("Full beamresults should be 4D array.")
         self.full_beamres = full_beamres
         if(max_rel_power is None and max_pow_baz is None
-           and max_pow_slowness is None):
+           and max_pow_slowness is None and full_beamres is not None):
             self._calc_max_values()
 
     def _calc_max_values(self):
@@ -2960,15 +2962,23 @@ class BeamformerResult:
         self.max_pow_baz = (theo_backazi * 180/math.pi)[maxpow_indices[0]]
         self.max_pow_slow = self.slowness_range[maxpow_indices[1]]
 
-    @property
-    def _plotting_timestamps(self):
+    def _get_plotting_timestamps(self, extended=False):
         """
         Convert the times to the time reference matplotlib uses and return as
-        timestamps.
+        timestamps. Returns the timestamps in days (decimals represent hours,
+        minutes and seconds) since '0001-01-01T00:00:00' as needed for
+        matplotlib date plotting (see e.g. matplotlibs num2date).
         """
+        if extended:
+            # With pcolormesh, will miss one window if only plotting window
+            # start times.
+            plot_times = list(self.times)
+            plot_times.append(self.endtime)
+        else:
+            plot_times = self.times
         # Honestly, this is black magic to me.
         newtimes = np.array([t.timestamp / (24*3600) + 719163
-                             for t in self.times])
+                             for t in plot_times])
         return newtimes
 
     def plot_baz_hist(self, show_immediately=True):
@@ -3059,13 +3069,13 @@ class BeamformerResult:
         fig = plt.figure()
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
-            ax.scatter(self._plotting_timestamps, data, c=self.max_rel_power,
-                       alpha=0.6, edgecolors='none')
+            ax.scatter(self._get_plotting_timestamps(), data,
+                       c=self.max_rel_power, alpha=0.6, edgecolors='none')
             ax.set_ylabel(lab)
-            timemargin = 0.05 * (self._plotting_timestamps[-1]
-                                 - self._plotting_timestamps[0])
-            ax.set_xlim(self._plotting_timestamps[0] - timemargin,
-                        self._plotting_timestamps[-1] + timemargin)
+            timemargin = 0.05 * (self._get_plotting_timestamps()[-1]
+                                 - self._get_plotting_timestamps()[0])
+            ax.set_xlim(self._get_plotting_timestamps()[0] - timemargin,
+                        self._get_plotting_timestamps()[-1] + timemargin)
             if lab == 'baz':
                 ax.set_ylim(0, 360)
                 ax.yaxis.set_major_locator(ymajorLocator)
@@ -3111,12 +3121,14 @@ class BeamformerResult:
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
 
-            pc = ax.pcolormesh(self._plotting_timestamps, azis, data.T,
-                               cmap=cm.get_cmap('hot_r'))
-            timemargin = 0.05 * (self._plotting_timestamps[-1]
-                                 - self._plotting_timestamps[0])
-            ax.set_xlim(self._plotting_timestamps[0] - timemargin,
-                        self._plotting_timestamps[-1] + timemargin)
+            pc = ax.pcolormesh(self._get_plotting_timestamps(extended=True),
+                               azis, data.T, cmap=cm.get_cmap('hot_r'))
+            timemargin = 0.05 * (self._get_plotting_timestamps(extended=True
+                                                               )[-1]
+                                 - self._get_plotting_timestamps()[0])
+            ax.set_xlim(self._get_plotting_timestamps()[0] - timemargin,
+                        self._get_plotting_timestamps(extended=True)[-1]
+                        + timemargin)
             ax.set_ylim(0, 360)
             ax.yaxis.set_major_locator(ymajorLocator)
             fig.colorbar(pc)
