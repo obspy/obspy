@@ -68,12 +68,12 @@ IRIS Web Services
 
 **Available Data Types and Formats:** Various
 
-IRIS (in addition to FDSN web services) offers a large number of web services,
-for some of which ObsPy has interfaces in the :mod:`obspy.iris` module. There
-is probably little use for the services ObsPy has interfaces for when using
-ObsPy, as ObsPy nowadays has functions that can do the same which is almost
-always faster than a web request. We keep them around for special uses and for
-people who don't want their old codes to break.
+IRIS (in addition to FDSN web services) offers a variety of special-purpose web
+services, for some of which ObsPy has interfaces in the :mod:`obspy.iris`
+module. Some of this functionality is meanwhile also directly included in ObsPy
+(e.g. Flinn-Engdahl region lookup in :mod:`obspy.core.util.geodetics`), so
+ObsPy internal tools (not relying on internet connection) can be considered as
+a replacement in some cases.
 
 ---------------------
 Earthworm Wave Server
