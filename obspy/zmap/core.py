@@ -138,7 +138,7 @@ class Pickler(object):
             if origin:
                 dec_year = self._decimal_year(origin.time)
                 dec_second = origin.time.second + \
-                    origin.time.microsecond / float(1e6)
+                    origin.time.microsecond / 1e6
                 strings.update({
                     'depth':   self._num2str(origin.depth/1000.0),  # m to km
                     'z_err':   self._num2str(self._depth_error(origin)),
