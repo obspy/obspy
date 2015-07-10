@@ -43,11 +43,6 @@ code {
   color: #333;
 }
 
-/* Internal links with sphinx 1.3 */
-span.pre {
-    color: #428BCA
-}
-
 dt {
   font-weight: normal;
 }
