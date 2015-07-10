@@ -29,6 +29,8 @@ master:
    * Upgrade to libmseed 2.16
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
+ - obspy.io.zmap
+   * Add support for time values with sub-second precision (see #1093)
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
