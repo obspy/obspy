@@ -12,7 +12,7 @@ the documentation of the various modules.
 
     The most common use case is likely to download waveforms and event/station
     meta information. In almost all cases you will want to use the
-    :mod:`obspy.fdsn` module for this. It supports the largest amount of data
+    :mod:`obspy.fdsn` module for this. It supports the largest number of data
     centers and uses the most modern data formats. There are still a number of
     reasons to choose a different module but please make sure you have one.
 
@@ -37,12 +37,10 @@ The FDSN Web Services
 If you want to requests waveforms, or station/event meta information **you will
 most likely want to use the** :mod:`obspy.fdsn` **module**. It is able to
 request data from any data center implementing the `FDSN web services
-<http://www.fdsn.org/webservices/>`_. Data from a large number of centers like
-IRIS/ORFEUS/INGV/ETH/GFZ/RESIF/... (a curated list of data centers implementing
-these services can be found
-`here <http://www.fdsn.org/webservices/datacenters/>`_) can be requested with
-it. As a further advantage it returns data in the most modern and future proof
-formats.
+<http://www.fdsn.org/webservices/>`_. By now a large number of data centers do
+that. Examples include IRIS/ORFEUS/INGV/ETH/GFZ/RESIF/... - a curated list
+can be found `here <http://www.fdsn.org/webservices/datacenters/>`_. As a
+further advantage it returns data in the most modern and future proof formats.
 
 -------
 ArcLink
@@ -58,7 +56,7 @@ ArcLink
 
 ArcLink is a distributed data request protocol usable to access archived
 waveform data in the MiniSEED or SEED format and associated meta information as
-Dataless SEED files. You can use the :mod:`obspy.arclink` module to requests
+Dataless SEED files. You can use the :mod:`obspy.arclink` module to request
 data from the `EIDA <http://www.orfeus-eu.org/eida/>`_ initiative but most (or
 all) of that data can also be requested using the :mod:`obspy.fdsn` module.
 
@@ -70,10 +68,24 @@ IRIS Web Services
 
 IRIS (in addition to FDSN web services) offers a variety of special-purpose web
 services, for some of which ObsPy has interfaces in the :mod:`obspy.iris`
-module. Some of this functionality is meanwhile also directly included in ObsPy
-(e.g. Flinn-Engdahl region lookup in :mod:`obspy.core.util.geodetics`), so
-ObsPy internal tools (not relying on internet connection) can be considered as
-a replacement in some cases.
+module. Use this if you require response information in the SAC poles & zeros
+or in the RESP format. If you just care about the instrument response, please
+use the :mod:`obspy.fdsn` module to request StationXML data which contains the
+same information.
+
+The interfaces for the calculation tools are kept around for legacy reasons;
+internal ObsPy functionality should be considered as an alternative when
+working within ObsPy:
+
++--------------------------------------------------+--------------------------------------------------------------+
+| IRIS Web Service                                 | Equivalent ObsPy Function/Module                             |
++==================================================+==============================================================+
+| :meth:`obspy.iris.client.Client.traveltime()`    | :mod:`obspy.taup`                                            |
++--------------------------------------------------+--------------------------------------------------------------+
+| :meth:`obspy.iris.client.Client.distaz()`        | :mod:`obspy.core.util.geodetics`                             |
++--------------------------------------------------+--------------------------------------------------------------+
+| :meth:`obspy.iris.client.Client.flinnengdahl()`  | :class:`obspy.core.util.geodetics.flinnengdahl.FlinnEngdahl` |
++--------------------------------------------------+--------------------------------------------------------------+
 
 ---------------------
 Earthworm Wave Server
