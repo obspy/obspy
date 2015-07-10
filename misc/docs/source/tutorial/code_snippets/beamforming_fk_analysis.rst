@@ -3,9 +3,10 @@ Beamforming - FK Analysis
 =========================
 
 The following code shows how to do an FK Analysis with ObsPy. The data are from
-the blasting of the AGFA skyscraper in Munich. To use array analysis, we first
-manually set up an inventory for this array (usually provided by a web service
-or by station XMLs).
+the blasting of the AGFA skyscraper in Munich. The inventory must provide
+location information for all the traces in the stream, as should be the case
+when obtaining data and inventory via, for example, a webservice.
+These processing options are set:
 
 * The slowness grid is set to corner values of -3.0 to 3.0 s/km with a step
   fraction of ``sls = 0.03``.

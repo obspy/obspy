@@ -2881,7 +2881,7 @@ class SeismicArray(object):
             plt.show()
 
 
-class BeamformerResult:
+class BeamformerResult(object):
     """
     Contains results from beamforming and attached plotting methods.
     """
