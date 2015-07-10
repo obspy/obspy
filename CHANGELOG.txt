@@ -13,8 +13,8 @@
       namespace (see #1060).
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
- - obspy.io.zmap
-   * Add support for time values with sub-second precision (see #1093)
+  - obspy.io.zmap
+    * Add support for time values with sub-second precision (see #1093)
 
 0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
