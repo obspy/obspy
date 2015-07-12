@@ -1,15 +1,19 @@
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import os
 import unittest
 import datetime
 
 import numpy as np
 
-from future.utils import native_str
-
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 
 from ..sactrace import SACTrace
+
 
 class SACTraceTestCase(unittest.TestCase):
     """
@@ -91,7 +95,7 @@ class SACTraceTestCase(unittest.TestCase):
         A trace you've written headonly should only modify the header of an
         existing file, and fail if the file doesn't exist.
         """
-        #make a sac trace
+        # make a sac trace
         sac = SACTrace.read(self.file, byteorder='little')
         # write it all to temp file
         with NamedTemporaryFile() as tf:
@@ -147,7 +151,7 @@ class SACTraceTestCase(unittest.TestCase):
         sac = SACTrace.read(self.fileseis)
         self.assertEqual(sac.reftime, UTCDateTime('1981-03-29T10:38:14.000000Z'))
         # changes to a reftime should be reflected in the nz times and reftime
-        nzsec, nzmsec= sac.nzsec, sac.nzmsec
+        nzsec, nzmsec = sac.nzsec, sac.nzmsec
         sac.reftime = sac.reftime + 2.5
         self.assertEqual(sac.nzsec, nzsec + 2)
         self.assertEqual(sac.nzmsec, nzmsec + 500)
@@ -175,10 +179,10 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertAlmostEqual(sac.b, b - 1.0e-3, 6)
         self.assertAlmostEqual(sac.t1, t1 - 1.0e-3, 5)
 
-
     @unittest.skip("Not implemented yet.")
     def test_dict_to_header_arrays(self):
         pass
+
 
 def suite():
     return unittest.makeSuite(SACTraceTestCase, 'test')

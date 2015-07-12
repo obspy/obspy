@@ -2,7 +2,7 @@
 """
 Low-level array interface to the SAC file format.
 
-Functions in this module work directly with numpy arrays that mirror the SAC
+Functions in this module work directly with NumPy arrays that mirror the SAC
 format.  The 'primitives' in this module are the float, int, and string header
 arrays, the float data array, and a header dictionary. Convenience functions
 are provided to convert between header arrays and more user-friendly
@@ -16,7 +16,7 @@ based checking routines are provided for additional checks where desired.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.utils import native_str
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 import sys
 import warnings
@@ -24,10 +24,11 @@ import warnings
 import numpy as np
 
 from obspy.core.compatibility import from_buffer
+from obspy import UTCDateTime
 
 from ..sac import header as HD
 from .util import SacIOError, SacInvalidContentError
-from .util import is_valid_enum_int, is_same_byteorder, byteswap
+from .util import is_valid_enum_int, is_same_byteorder
 
 
 def init_header_arrays(*args):
@@ -48,31 +49,28 @@ def init_header_arrays(*args):
     """
     if len(args) == 0:
         args = ('float', 'int', 'str')
-    #http://stackoverflow.com/a/13052254/745557
+    # http://stackoverflow.com/a/13052254/745557
     out = []
     for itype in args:
         if itype == 'float':
             # null float header array
             # XXX: why not init native byte order?
-            hf = np.ndarray(70, dtype=native_str('<f4'))
-            hf.fill(HD.FNULL)
+            hf = np.full(70, fill_value=HD.FNULL, dtype=native_str('<f4'))
             out.append(hf)
         elif itype == 'int':
             # null integer header array
-            hi = np.ndarray(40, dtype=native_str('<i4'))
-            hi.fill(HD.INULL)
+            hi = np.full(40, fill_value=HD.INULL, dtype=native_str('<i4'))
             # set logicals to 0, not -1234whatever
-            for hdr in HD.INTHDRS:
+            for i, hdr in enumerate(HD.INTHDRS):
                 if hdr.startswith('l'):
-                    hi[HD.INTHDRS.index(hdr)] = 0
+                    hi[i] = 0
             # TODO: initialize enumerated values to something?
-            # calculate distances be default
+            # calculate distances by default
             hi[HD.INTHDRS.index('lcalda')] = 1
             out.append(hi)
         elif itype == 'str':
             # null string header array
-            hs = np.ndarray(24, dtype=native_str('|S8'))
-            hs.fill(HD.SNULL)
+            hs = np.full(24, fill_value=HD.SNULL, dtype=native_str('|S8'))
             out.append(hs)
         else:
             raise ValueError("Unrecognized header array type {}".format(itype))
@@ -92,11 +90,12 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     headonly : bool
         If headonly is True, only read the header arrays not the data array.
     byteorder : str {'little', 'big'}, optional
-        If omitted or None, automatic byte-order checking is done, starting with
-        native order. If byteorder is specified and incorrect, a SacIOError is
-        raised.
+        If omitted or None, automatic byte-order checking is done, starting
+        with native order. If byteorder is specified and incorrect, a
+        SacIOError is raised.
     checksize : bool, default False
-        If true, check that theoretical file size from header matches disk size.
+        If True, check that the theoretical file size from the header matches
+        the size on disk.
 
     Returns
     -------
@@ -109,25 +108,23 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     ------
     ValueError
         Unrecognized byte order.
-    SacIOError
+    IOError
         File not found, incorrect specified byteorder, theoretical file size
         doesn't match header, or header arrays are incorrect length.
 
     """
     # TODO: rewrite using "with" statement instead of open/close management.
-    # checks: byte order, header array length, file size, npts matches data length
+    # check byte order, header array length, file size, npts == data length
     try:
         f = open(source, 'rb')
         is_file_name = True
-    except IOError:
-        raise SacIOError("No such file: " + source)
     except TypeError:
         # source is already a file-like object
         f = source
         is_file_name = False
 
-    isSPECIFIED = byteorder is not None
-    if not isSPECIFIED:
+    is_byteorder_specified = byteorder is not None
+    if not is_byteorder_specified:
         byteorder = sys.byteorder
 
     if byteorder == 'little':
@@ -147,9 +144,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     hi = from_buffer(f.read(4 * 40), dtype=native_str(endian_str + 'i4'))
     hs = from_buffer(f.read(24 * 8), dtype=native_str('|S8'))
 
-    isVALID = is_valid_byteorder(hi)
-    if not isVALID:
-        if isSPECIFIED:
+    if not is_valid_byteorder(hi):
+        if is_byteorder_specified:
             # specified but not valid. you dun messed up.
             raise SacIOError("Incorrect byteorder {}".format(byteorder))
         else:
@@ -180,14 +176,14 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
                   "Check that headers are consistent with time series."
             raise SacIOError(msg)
 
-
     # --------------------------------------------------------------
     # READ DATA
     # --------------------------------------------------------------
     if headonly:
         data = None
     else:
-        data = from_buffer(f.read(npts * 4), dtype=native_str(endian_str + 'f4'))
+        data = from_buffer(f.read(npts * 4),
+                           dtype=native_str(endian_str + 'f4'))
 
         if len(data) != npts:
             f.close()
@@ -319,10 +315,10 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     except IOError:
         raise SacIOError("Cannot open file: " + dest)
     except TypeError:
-        f = dest 
+        f = dest
         is_file_name = False
 
-    if data is None and (f.mode != 'rb+'):
+    if data is None and f.mode != 'rb+':
         msg = "File mode must be 'wb+' for data=None."
         raise ValueError(msg)
 
@@ -332,16 +328,12 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     else:
         assert hf.dtype.byteorder == hi.dtype.byteorder == data.dtype.byteorder
 
-    if byteorder is None:
-        pass
-    else:
+    if byteorder:
         if not is_same_byteorder(byteorder, hf.dtype.byteorder):
-            hf, hi = byteswap(hf, hi)
-            #hf = hf.byteswap(True).newbyteorder(byteorder)
-            #hi = hf.byteswap(True).newbyteorder(byteorder)
+            hf = hf.byteswap(True).newbyteorder(byteorder)
+            hi = hf.byteswap(True).newbyteorder(byteorder)
             if data is not None:
-                data = byteswap(data)[0]
-                #data = data.byteswap(True).newbyteorder(byteorder)
+                data = data.byteswap(True).newbyteorder(byteorder)
 
     # actually write everything
     try:
@@ -358,7 +350,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
 
     if is_file_name:
         f.close()
-
 
 
 def write_sac_ascii(dest, hf, hi, hs, data=None):
@@ -396,7 +387,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         f = dest
         is_file_name = False
 
-    if data is None and (f.mode != 'r+'):
+    if data is None and f.mode != 'r+':
         msg = "File mode must be 'r+' for data=None."
         raise ValueError(msg)
 
@@ -462,6 +453,7 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     # XXX: kevnm may be null when kevnm2 isn't
     if 'kevnm2' in header:
         if 'kevnm' in header:
+            header['kevnm'] = header['kevnm'].decode()
             header['kevnm'] += header.pop('kevnm2').decode()
         else:
             header['kevnm'] = header.pop('kevnm2').decode()
@@ -480,18 +472,18 @@ def dict_to_header_arrays(header=None):
     # have to split kevnm into two fields
     # TODO: add .lower() to hdr lookups, for safety
     if header is not None:
-        for hdr, value in header.iteritems():
+        for hdr, value in header.items():
             if hdr in HD.FLOATHDRS:
                 hf[HD.FLOATHDRS.index(hdr)] = value
             elif hdr in HD.INTHDRS:
                 if not isinstance(value, (np.integer, int)):
-                    warnings.warn("Non-integers may be truncated.")
-                    print(" {}: {}".format(hdr, value))
+                    msg = "Non-integers may be truncated: {} = {}"
+                    warnings.warn(msg.format(hdr, value))
                 hi[HD.INTHDRS.index(hdr)] = value
             elif hdr in HD.STRHDRS:
                 if hdr == 'kevnm':
                     # assumes users will not include a 'kevnm2' key
-                    #XXX check for empty or null value?
+                    # XXX check for empty or null value?
                     kevnm = '{:<8s}'.format(value[0:8])
                     kevnm2 = '{:<8s}'.format(value[8:16])
                     hs[1] = kevnm.encode('ascii', 'strict')
@@ -522,7 +514,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         'data_hdrs' : Length, min, mean, max of data array match header values.
         'enums' : Check validity of enumerated values.
         'reftime' : Reference time values in header are all set.
-        'reltime' : Relative time values in header can be absolutely referenced.
+        'reltime' : Relative time values in header are absolutely referenced.
         'all' : Do all tests.
 
     Raises
@@ -574,7 +566,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
             raise ValueError(msg)
 
     if 'enums' in tests:
-        for hdr in HD.ACCEP_VALS:
+        for hdr in HD.ACCEPTED_VALS:
             val = hi[HD.INTHDRS.index(hdr)]
             if not is_valid_enum_int(hdr, val, allow_null=True):
                 msg = "Invalid enumerated value, '{}': {}".format(hdr, val)
@@ -589,20 +581,17 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         nzmsec = hi[HD.INTHDRS.index('nzmsec')]
 
         # all header reference time fields are set
-        if not all([val != HD.INULL for val in [nzyear, nzjday, nzhour, nzmin, nzsec, nzmsec]]):
+        if not all([val != HD.INULL for val in
+                    [nzyear, nzjday, nzhour, nzmin, nzsec, nzmsec]]):
             msg = "Null reference time values detected."
             raise SacInvalidContentError(msg)
 
         # reference time fields are reasonable values
-        nzjday_ok = 0 <= nzjday <= 366
-        nzhour_ok = 0 <= nzhour <= 24
-        nzmin_ok = 0 <= nzmin <= 59
-        nzsec_ok = 0 <= nzsec <= 59
-        nzmsec_ok = 0 <= nzsec <= 999
-        if not all([nzjday_ok, nzhour_ok, nzmin_ok, nzsec_ok, nzmsec_ok]):
-            msg = "Invalid reference time values detected."
-            raise SacInvalidContentError(msg)
-
+        try:
+            UTCDateTime(year=nzyear, julday=nzjday, hour=nzhour, minute=nzmin,
+                        second=nzsec, microsecond=nzmsec)
+        except ValueError as e:
+            raise SacInvalidContentError("Invalid reference time: %s" % str(e))
 
     if 'reltime' in tests:
         # iztype is set and points to a non-null header value
@@ -631,7 +620,3 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 def is_valid_byteorder(hi):
     nvhdr = hi[HD.INTHDRS.index('nvhdr')]
     return (0 < nvhdr < 20)
-
-#if __name__ == "__main__":
-#    import doctest
-#    doctest.testmod()

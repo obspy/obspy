@@ -5,8 +5,7 @@ SAC module helper functions and data.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import native_str
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 import sys
 import warnings
@@ -22,6 +21,7 @@ from ..sac import header as HD
 TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
                       "This is not supported by the SAC file format standard. "
                       "Prepending '19'.")
+
 
 # ------------- SAC-SPECIFIC EXCEPTIONS ---------------------------------------
 class SacError(Exception):
@@ -45,29 +45,33 @@ class SacInvalidContentError(SacError):
     """
     pass
 
+
 class SacHeaderError(SacError):
     """
     Raised if header has issues.
     """
     pass
 
+
 class SacHeaderTimeError(SacHeaderError, ValueError):
     pass
+
 
 # ------------- VALIDITY CHECKS -----------------------------------------------
 def is_valid_enum_str(hdr, name):
     # is this a valid string name for this hdr
-    # assume that, if a value isn't in HD.ACCEP_VALS, it's not valid
-    if hdr in HD.ACCEP_VALS:
-        tf = name in HD.ACCEP_VALS[hdr]
+    # assume that, if a value isn't in HD.ACCEPTED_VALS, it's not valid
+    if hdr in HD.ACCEPTED_VALS:
+        tf = name in HD.ACCEPTED_VALS[hdr]
     else:
         tf = False
     return tf
 
+
 def is_valid_enum_int(hdr, val, allow_null=True):
     # is this a valid integer for this hdr.
-    if hdr in HD.ACCEP_VALS:
-        accep = [HD.ENUM_VALS[nm] for nm in HD.ACCEP_VALS[hdr]]
+    if hdr in HD.ACCEPTED_VALS:
+        accep = [HD.ENUM_VALS[nm] for nm in HD.ACCEPTED_VALS[hdr]]
         if allow_null:
             accep += [HD.INULL]
         tf = val in accep
@@ -84,7 +88,7 @@ def _convert_enum(header, converter, accep):
 
     # TODO: use functools.partial/wraps?
     for hdr, val in header.items():
-        if hdr in HD.ACCEP_VALS:
+        if hdr in HD.ACCEPTED_VALS:
             if val in accep[hdr]:
                 header[hdr] = converter[val]
             else:
@@ -96,12 +100,12 @@ def _convert_enum(header, converter, accep):
 
 def enum_string_to_int(header):
     """Convert enumerated string values in header dictionary to int values."""
-    return _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEP_VALS)
+    return _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEPTED_VALS)
 
 
 def enum_int_to_string(header):
     """Convert enumerated int values in header dictionary to string values."""
-    return _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEP_INT)
+    return _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEPTED_INT)
 
 
 def byteswap(*arrays):
@@ -161,6 +165,7 @@ def _clean_str(value):
 
     return value
 
+
 # TODO: do this in SACTrace?
 def sac_to_obspy_header(sacheader):
     """
@@ -182,7 +187,6 @@ def sac_to_obspy_header(sacheader):
     try:
         reftime = get_sac_reftime(sacheader)
     except (SacError, ValueError):
-        #reftime = datetime.datetime(1970, 1, 1, 0, 0)
         reftime = UTCDateTime(0.0)
 
     b = sacheader.get('b', HD.FNULL)
@@ -223,8 +227,8 @@ def sac_to_obspy_header(sacheader):
     #   store microseconds from obspy_to_sac_header
     stats['starttime'] = UTCDateTime(reftime) + b
 
-
     return Stats(stats)
+
 
 def split_microseconds(microseconds):
     # Returns milliseconds and remainder microseconds
@@ -233,7 +237,8 @@ def split_microseconds(microseconds):
 
     return milliseconds, microseconds
 
-# TODO: do this in SACTrace? it has some reftime handling overlap with set_reftime.
+
+# TODO: do this in SACTrace? has some reftime handling overlap w/ set_reftime.
 def obspy_to_sac_header(stats, ignore_old_header=True):
     """
     Make a SAC header dictionary from an obspy.stats instance.
@@ -247,7 +252,8 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
     """
     # The Plan:
     # 0. Start with the old SAC header, if present
-    # 1A. Find the new b (starttime-reftime+b) and e (new_b + (new_npts-1)*new_delta)
+    # 1A. Find the new b (starttime-reftime+b) and
+    #     e (new_b + (new_npts-1)*new_delta)
     #     relative to existing reftime, if keep_sac_reftime is rue
     # 1B. If no old SAC header is present, make the header iztype ib and stuff
     #     it with a reftime made from the stats.starttime modulo microseconds,
@@ -298,7 +304,7 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
         header['internal0'] = 2
         header['cmpaz'] = 0
         header['cmpinc'] = 0
-        header['nvhdr'] =  6
+        header['nvhdr'] = 6
         header['leven'] = 1
         header['lpspol'] = 1
         header['lcalda'] = 0
@@ -343,15 +349,12 @@ def get_sac_reftime(header):
         raise SacError(msg)
 
     try:
-        reftime = UTCDateTime(year=yr, julday=nzjday, hour=nzhour, minute=nzmin,
-                              second=nzsec, microsecond=nzmsec * 1000)
-        #reftime = datetime.datetime(yr, 1, 1, nzhour, nzmin, nzsec, nzmsec * 1000) + \
-        #                            datetime.timedelta(int(nzjday-1))
+        reftime = UTCDateTime(year=yr, julday=nzjday, hour=nzhour,
+                              minute=nzmin, second=nzsec,
+                              microsecond=nzmsec * 1000)
     except ValueError:
         # may contain -12345 null values?
         msg = "Invalid time headers."
         raise SacHeaderTimeError(msg)
 
     return reftime
-
-

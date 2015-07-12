@@ -4,15 +4,17 @@ Object-oriented interface to the SAC file format.
 
 The SACTrace object maintains consistency between SAC headers and manages
 header values in a user-friendly way. This includes some value-checking, native
-Python logicals (True, False) and nulls (None) instead of SAC's 0, 1, or -12345...
+Python logicals (True, False) and nulls (None) instead of SAC's 0, 1, or
+-12345...
 
-SAC headers are implemented as properties, with appropriate getters and setters.
+SAC headers are implemented as properties, with appropriate getters and
+setters.
 
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.utils import native_str
-from future.builtins import *
+from future.builtins import *  # NOQA
 
 import sys
 import warnings
@@ -43,9 +45,11 @@ from ..sac import arrayio as _io
 #
 # Usage: delta_getter = _floatgetter('delta')
 #        delta_setter = _floatsetter('delta')
-# These factories produce functions that simply index into their array to get or set.
-# Use them for header values in hf, hi, and hs that need no special handling.
-# Values that depend on other values will need their own getters/setters.
+# These factories produce functions that simply index into their array to get
+# or set.  Use them for header values in hf, hi, and hs that need no special
+# handling. Values that depend on other values will need their own
+# getters/setters.
+#
 # See:
 # http://stackoverflow.com/questions/2123585/python-multiple-properties-one-setter-getter
 #
@@ -58,12 +62,14 @@ def _floatgetter(hdr):
         return value
     return get_float
 
+
 def _floatsetter(hdr):
     def set_float(self, value):
         if value is None:
             value = HD.FNULL
         self._hf[HD.FLOATHDRS.index(hdr)] = value
     return set_float
+
 
 # ints
 def _intgetter(hdr):
@@ -73,6 +79,7 @@ def _intgetter(hdr):
             value = None
         return value
     return get_int
+
 
 def _intsetter(hdr):
     def set_int(self, value):
@@ -84,6 +91,7 @@ def _intsetter(hdr):
         self._hi[HD.INTHDRS.index(hdr)] = value
     return set_int
 
+
 # logicals/bools (subtype of ints)
 def _boolgetter(hdr):
     def get_bool(self):
@@ -91,15 +99,17 @@ def _boolgetter(hdr):
         return bool(value)
     return get_bool
 
+
 def _boolsetter(hdr):
     def set_bool(self, value):
         if value not in (True, False, 1, 0):
-            msg = "Logical header values must be {True, False, 0, 1}"
+            msg = "Logical header values must be {True, False, 1, 0}"
             raise ValueError(msg)
         # booleans are subclasses of integers.  They will be set (cast)
         # directly into an integer array as 0 or 1.
         self._hi[HD.INTHDRS.index(hdr)] = value
     return set_bool
+
 
 # enumerated values (stored as ints, represented by strings)
 def _enumgetter(hdr):
@@ -117,6 +127,7 @@ def _enumgetter(hdr):
         return name
     return get_enum
 
+
 def _enumsetter(hdr):
     def set_enum(self, value):
         if value is None:
@@ -128,6 +139,7 @@ def _enumsetter(hdr):
             raise ValueError(msg.format(value, hdr))
         self._hi[HD.INTHDRS.index(hdr)] = value
     return set_enum
+
 
 # strings
 def _strgetter(hdr):
@@ -143,6 +155,7 @@ def _strgetter(hdr):
         return value
     return get_str
 
+
 def _strsetter(hdr):
     def set_str(self, value):
         if value is None:
@@ -154,6 +167,7 @@ def _strsetter(hdr):
         # they will truncate themselves, since _hs is dtype '|S8'
         self._hs[HD.STRHDRS.index(hdr)] = value
     return set_str
+
 
 # Factory for functions of .data (min, max, mean, len)
 def _make_data_func(func, hdr):
@@ -177,6 +191,7 @@ def _make_data_func(func, hdr):
         return value
     return do_data_func
 
+
 # Factory function for setting relative time headers with either a relative
 # time float or an absolute UTCDateTime
 # used for: b, o, a, f, t0-t9
@@ -193,7 +208,9 @@ def _reltime_setter(hdr):
         floatsetter(self, offset)
     return set_reltime
 
-# Factory function for setting geographic header values (evlo, evla, stalo, stalat)
+
+# Factory function for setting geographic header values
+#   (evlo, evla, stalo, stalat)
 # that will check lcalda and calculate and set dist, az, baz, gcarc
 def _geosetter(hdr):
     def set_geo(self, value):
@@ -241,7 +258,7 @@ def _set_iztype(self, iztype):
     """
     # The Plan:
     # 1. find the seconds needed to shift the old reftime to the new one.
-    # 2. shift the reference time onto the iztype header using that shift value.
+    # 2. shift reference time onto the iztype header using that shift value.
     # 3. this triggers an _allt shift of all relative times by the same amount.
     # 4. If all goes well, actually set the iztype in the header.
 
@@ -262,7 +279,7 @@ def _set_iztype(self, iztype):
             raise SacError(msg)
 
     # 2. set a new reference time,
-    # 3. which also shifts all non-null relative times (self._allt). 
+    # 3. which also shifts all non-null relative times (self._allt).
     #    remainder microseconds may be in the reference header value, because
     #    nzmsec can't hold them.
     self.reftime = self.reftime + ref_val
@@ -271,6 +288,7 @@ def _set_iztype(self, iztype):
     #    make an _enumsetter for iztype and use it, for its enum checking.
     izsetter = _enumsetter('iztype')
     izsetter(self, iztype)
+
 
 # kevnm is 16 characters, split into two 8-character fields
 # intercept and handle in while getting and setting
@@ -287,6 +305,7 @@ def _get_kevnm(self):
         value = None
     return value
 
+
 def _set_kevnm(self, value):
     if value is None:
         value = HD.SNULL + HD.SNULL
@@ -299,6 +318,7 @@ def _set_kevnm(self, value):
     self._hs[HD.STRHDRS.index('kevnm2')] = kevnm2
 
 # TODO: move get/set reftime up here, make it a property
+
 
 # -------------------------- SAC OBJECT INTERFACE -----------------------------
 class SACTrace(object):
@@ -374,12 +394,11 @@ class SACTrace(object):
 
         """
         # The Plan:
-        # 1. Build the default header dictionary and update with provided values.
+        # 1. Build the default header dictionary and update with provided
+        #    values.
         # 2. Convert header dict to arrays (util.dict_to_header_arrays
-        #   initializes the arrays and fills in without checking.
+        #    initializes the arrays and fills in without checking.
         # 3. set the _h[fis] and data arrays on self.
-
-        #data = kwargs.pop('data', data)
 
         # 1.
         # build the required header from provided or default values
@@ -391,10 +410,10 @@ class SACTrace(object):
                   'internal0': internal0, 'cmpaz': cmpaz, 'cmpinc': cmpinc,
                   'kcmpnm': kcmpnm}
 
-        #required = ['delta', 'b', 'npts', ...]
-        #provided = locals()
-        #for hdr in required:
-        #    header[hdr] = kwargs.pop(hdr, provided[hdr])
+        # required = ['delta', 'b', 'npts', ...]
+        # provided = locals()
+        # for hdr in required:
+        #     header[hdr] = kwargs.pop(hdr, provided[hdr])
 
         # combine header with remaining non-required args.
         # XXX: user can put non-SAC key:value pairs into the header.
@@ -406,7 +425,7 @@ class SACTrace(object):
             pass
         else:
             if not isinstance(data, np.ndarray):
-                raise SacError("data needs to be a numpy.ndarray")
+                raise TypeError("data needs to be a numpy.ndarray")
             else:
                 # Only copy the data if they are not of the required type
                 # XXX: why require little endian instead of native byte order?
@@ -576,7 +595,7 @@ class SACTrace(object):
             if self.data is None:
                 assert self._hf.dtype.byteorder == self._hi.dtype.byteorder
             else:
-                assert self._hf.dtype.byteorder == self._hi.dtype.byteorder == \
+                assert self._hf.dtype.byteorder == self._hi.dtype.byteorder ==\
                         self.data.dtype.byteorder
         except AssertionError:
             msg = 'Inconsistent header/data byteorders.'
@@ -609,7 +628,6 @@ class SACTrace(object):
             # if this fails, roll it back?
             raise e
 
-
     @property
     def reftime(self):
         """
@@ -640,7 +658,7 @@ class SACTrace(object):
             old_reftime = self.reftime
 
             # find the milliseconds and leftover microseconds in the new reftime
-            milliseconds, rem_microseconds = _ut.split_microseconds(new_reftime.microsecond)
+            _, rem_microseconds = _ut.split_microseconds(new_reftime.microsecond)
 
             # snap the new reftime to the most recent milliseconds
             # (subtract the leftover microseconds)
@@ -661,11 +679,12 @@ class SACTrace(object):
 
         except AttributeError:
             msg = "New reference time must be an obspy.UTCDateTime instance."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
-    def read(cls, source, headonly=False, ascii=False, byteorder=None, checksize=False):
+    def read(cls, source, headonly=False, ascii=False, byteorder=None,
+             checksize=False):
         """
         Construct an instance from a binary or ASCII file on disk.
 
@@ -713,7 +732,6 @@ class SACTrace(object):
 
         return cls._from_arrays(hf, hi, hs, data)
 
-
     def write(self, dest, headonly=False, ascii=False, byteorder=None):
         """
         Parameters
@@ -726,7 +744,7 @@ class SACTrace(object):
             data headers are not flushed/updated before writing.
             If ascii is True, the file is an ASCII (alphanumeric) type file.
         byteorder : str {'little', 'big'}, optional
-            Desired output byte order.  If omitted, instance byte order is used.
+            Desired output byte order. If omitted, instance byte order is used.
             If data=None, better make sure the file you're writing to has the
             same byte order as headers you're writing.
 
@@ -744,7 +762,6 @@ class SACTrace(object):
             byteorder = byteorder or self.byteorder
             _io.write_sac(dest, self._hf, self._hi, self._hs, data,
                           byteorder=byteorder)
-
 
     @classmethod
     def _from_arrays(cls, hf=None, hi=None, hs=None, data=None):
@@ -766,7 +783,7 @@ class SACTrace(object):
         Examples
         --------
         >>> sac = SACTrace._from_arrays()
-        >>> print sac
+        >>> print(sac)
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
                 iztype not set
             lcalda     = False
@@ -791,7 +808,7 @@ class SACTrace(object):
             hs = hs0
 
         # get the default instance, but replace the arrays
-        # itializes arrays twice, but it beats converting empty arrays to a
+        # initializes arrays twice, but it beats converting empty arrays to a
         # dict and then passing it to __init__, i think
         sac = cls()
         sac._hf = hf
@@ -800,7 +817,6 @@ class SACTrace(object):
         sac.data = data
 
         return sac
-
 
     # TO/FROM OBSPY TRACES
     @classmethod
@@ -837,7 +853,6 @@ class SACTrace(object):
 
         return sac
 
-
     def to_obspy_trace(self, debug_headers=False):
         """
         Return a dictionary suitable for an Obspy Stats header.
@@ -856,9 +871,9 @@ class SACTrace(object):
         >>> tr = Trace(data=sac.data, header=sac.to_obspy_header())
 
         """
-        #make obspy test for tests/data/testxy.sac pass
+        # make the obspy test for tests/data/testxy.sac pass
         try:
-            self.validate('reftime') 
+            self.validate('reftime')
         except SacInvalidContentError:
             if not self.nzyear:
                 self.nzyear = 1970
@@ -874,10 +889,11 @@ class SACTrace(object):
             self._flush_headers()
             self.validate('data_hdrs')
         except ValueError:
-            # self.data is None (headonly).  Make it something palatable to obspy
+            # self.data is None (headonly).
+            # Make it something palatable to obspy
             self.data = np.array([])
         # TODO: does a sac file need to have iztype specified, or just 'b'?
-        #self.validate('reltime')
+        # self.validate('reltime')
 
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
                                            nulls=debug_headers)
@@ -901,10 +917,12 @@ class SACTrace(object):
 
             'delta' : Time step "delta" is positive.
             'logicals' : Logical values are 0, 1, or null
-            'data_hdrs' : Length, min, mean, max of data array match header values.
+            'data_hdrs' : Length, min, mean, max of data array match header
+                          values.
             'enums' : Check validity of enumerated values.
             'reftime' : Reference time values in header are all set.
-            'reltime' : Relative time values in header can be absolutely referenced.
+            'reltime' : Relative time values in header can be absolutely
+                        referenced.
             'all' : Do all tests.
 
         Raises
@@ -916,20 +934,20 @@ class SACTrace(object):
 
         Examples
         --------
-        >>> sac = SACTrace.read(filename)
-        >>> try:
-                sac.validate('delta')
-            except SacInvalidContentError as e:
+        >>> sac = SACTrace.read(filename) # doctest: +SKIP
+        >>> try: # doctest: +SKIP
+                sac.validate('delta') # doctest: +SKIP
+            except SacInvalidContentError as e: # doctest: +SKIP
                 # i'm sure this is what they meant:-)
-                sac.delta *= -1.0
-                sac.validate('delta')
+                sac.delta *= -1.0 # doctest: +SKIP
+                sac.validate('delta') # doctest: +SKIP
 
-        >>> sac.data += 5.0
-        >>> try:
-                sac.validate('data_hdrs')
-            except SacInvalidContentError:
-                sac._flush_headers()
-                sac.validate('data_hdrs')
+        >>> sac.data += 5.0 # doctest: +SKIP
+        >>> try: # doctest: +SKIP
+                sac.validate('data_hdrs') # doctest: +SKIP
+            except SacInvalidContentError: # doctest: +SKIP
+                sac._flush_headers() # doctest: +SKIP
+                sac.validate('data_hdrs') # doctest: +SKIP
 
         """
         _io.validate_sac_content(self._hf, self._hi, self._hs, self.data, *tests)
@@ -946,11 +964,8 @@ class SACTrace(object):
         if hdrlist == 'all':
             hdrlist = sorted(self._header.keys())
         elif hdrlist == 'picks':
-            hdrlist = sorted(('b', 'e', 'o', 'a', 'f', 't0', 't1', 't2', 't3',
-                              't4', 't5', 't6', 't7', 't8', 't9'))
-        elif hdrlist == 'special':
-            warnings.warn("Not implemented: use <arrow-up> in your interpreter")
-            hdrlist = sorted(self._header.keys())
+            hdrlist = ('a', 'b', 'e', 'f', 'o', 't0', 't1', 't2', 't3', 't4',
+                       't5', 't6', 't7', 't8', 't9')
         else:
             msg = "Unrecognized hdrlist '{}'".format(hdrlist)
             raise ValueError(msg)
@@ -963,13 +978,15 @@ class SACTrace(object):
             timefmt = "Reference Time = %m/%d/%Y (%j) %H:%M:%S.%f"
             header_str.append(self.reftime.strftime(timefmt))
         except (ValueError, SacError):
-            warnings.warn("Reference time information incomplete.")
-            header_str.append("Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX")
+            msg = "Reference time information incomplete."
+            warnings.warn(msg)
+            notime_str = "Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX"
+            header_str.append(notime_str)
         #
         # reftime type
         # TODO: use enumerated value dict here?
         iztype = self.iztype
-        if iztype == None:
+        if iztype is None:
             header_str.append("\tiztype not set")
         elif iztype == 'ib':
             header_str.append("\tiztype IB: begin time")
@@ -991,11 +1008,10 @@ class SACTrace(object):
             # XXX: non-null header values might have no property for getattr
             try:
                 header_str.append(hdrfmt.format(hdr, getattr(self, hdr)))
-            except AttributeError as e:
+            except AttributeError:
                 header_str.append(hdrfmt.format(hdr, self._header[hdr]))
 
         return '\n'.join(header_str)
-
 
     def listhdr(self, hdrlist='all'):
         """
@@ -1043,11 +1059,11 @@ class SACTrace(object):
         return self._format_header_str()
 
     def __repr__(self):
-        # I'm not proud...
         # XXX: run self._flush_headers first?
-        # ', '.join(["{{0.{}}}".format(hdr) for hdr in sac._header]).format(sac)
+        # TODO: make this somehow more readable.
         h = self._header
-        argstr = (", {}={!r}" * len(h)).format(*chain.from_iterable(h.items()))[2:]
+        fmt = ", {}={!r}" * len(h)
+        argstr = fmt.format(*chain.from_iterable(h.items()))[2:]
         return self.__class__.__name__ + "(" + argstr + ")"
 
     def copy(self):
@@ -1120,8 +1136,3 @@ class SACTrace(object):
         else:
             msg = "lcalda is False or unset. To set distances, set it to True."
             raise SacError(msg)
-
-
-#if __name__ == "__main__":
-#    import doctest
-#    doctest.testmod()

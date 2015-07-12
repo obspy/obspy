@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import native_str
-from future.builtins import *
+from future.builtins import *  #NOQA
 
 MODULE_DOCSTRING = """
 SAC header specification, including documentation.
 
-Header names, order, and types, nulls, as well as allowed enumerated values, are
-specified here.  Header name strings, and their array order are contained in
-separate float, int, and string tuples.  Enumerated values, and their allowed
-string and integer values, are in dictionaries.  Header value documentation is
-in a dictionary, for reuse throughout the package.
+Header names, order, types, and nulls, as well as allowed enumerated values,
+are specified here.  Header name strings, and their array order are contained
+in separate float, int, and string tuples.  Enumerated values, and their
+allowed string and integer values, are in dictionaries.  Header value
+documentation is in a dictionary, for reuse throughout the package.
 
 """
 
@@ -201,18 +199,18 @@ INULL = -12345
 SNULL = b'-12345  '
 
 # ------------ HEADER NAMES, TYPES, ARRAY POSITIONS ---------------------------
-# these are useful b/c they can be use forwards or backwards, like:
+# these are useful b/c they can be used forwards or backwards, like:
 # FLOADHDRS.index('az') is 40, and FLOATHDRS[40] is 'az'.
-FLOATHDRS = ('delta', 'depmin', 'depmax', 'scale', 'odelta', 'b', 'e', 'o', 'a',
-             'internal0', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8',
-             't9', 'f', 'resp0', 'resp1', 'resp2', 'resp3', 'resp4', 'resp5',
-             'resp6', 'resp7', 'resp8', 'resp9', 'stla', 'stlo', 'stel',
-             'stdp', 'evla', 'evlo', 'evel', 'evdp', 'mag', 'user0', 'user1',
-             'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8',
-             'user9', 'dist', 'az', 'baz', 'gcarc', 'internal1', 'internal2',
-             'depmen', 'cmpaz', 'cmpinc', 'xminimum', 'xmaximum', 'yminimum',
-             'ymaximum', 'unused6', 'unused7', 'unused8', 'unused9',
-             'unused10', 'unused11', 'unused12')
+FLOATHDRS = ('delta', 'depmin', 'depmax', 'scale', 'odelta', 'b', 'e', 'o',
+             'a', 'internal0', 't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7',
+             't8', 't9', 'f', 'resp0', 'resp1', 'resp2', 'resp3', 'resp4',
+             'resp5', 'resp6', 'resp7', 'resp8', 'resp9', 'stla', 'stlo',
+             'stel', 'stdp', 'evla', 'evlo', 'evel', 'evdp', 'mag', 'user0',
+             'user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7',
+             'user8', 'user9', 'dist', 'az', 'baz', 'gcarc', 'internal1',
+             'internal2', 'depmen', 'cmpaz', 'cmpinc', 'xminimum', 'xmaximum',
+             'yminimum', 'ymaximum', 'unused6', 'unused7', 'unused8',
+             'unused9', 'unused10', 'unused11', 'unused12')
 
 INTHDRS = ('nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'nvhdr',
            'norid', 'nevid', 'npts', 'internal3', 'nwfid', 'nxsize', 'nysize',
@@ -234,9 +232,9 @@ kevnm also has a kevnm2 b/c it takes two array spaces.
 SACTrace string property getters/setters, .io.dict_to_header_arrays
 and .arrayio.header_arrays_to_dict.
 """
-# NOTE: using namedtuples for header arrays, sounds great, but they're immutable
+# NOTE: using namedtuples for header arrays sounds great, but they're immutable
 
-# TODO: make a dictionary converter between {'<', '>', '='} and {'little', 'big'}
+# TODO: make a dict converter between {'<', '>', '='} and {'little', 'big'}
 
 # ------------ ENUMERATED VALUES ----------------------------------------------
 # These are stored in the header as integers.
@@ -264,26 +262,27 @@ ENUM_VALS = {'itime': 1, 'irlim': 2, 'iamph': 3, 'ixy': 4, 'iunkn': 5,
              'igey': 94, 'ilit': 95, 'imet': 96, 'iodor': 97, 'ios': 103}
 
 # reverse look-up: you have the number, want the string
-ENUM_NAMES = dict((v,k) for k,v in ENUM_VALS.iteritems())
+ENUM_NAMES = dict((v, k) for k, v in ENUM_VALS.iteritems())
 
 
 # accepted values, by header
-ACCEP_VALS = {'iftype': ['itime', 'irlim', 'iamph', 'ixy'],
-               'idep': ['iunkn', 'idisp', 'ivel', 'ivolts', 'iacc'],
-               'iztype': ['iunkn', 'ib', 'iday', 'io', 'ia', 'it0', 'it1', 'it2',
-                          'it3', 'it4', 'it5', 'it6', 'it7', 'it8', 'it9'],
-               'imagtyp': ['imb', 'ims', 'iml', 'imw', 'imd', 'imx'],
-               'imagsrc': ['ineic', 'ipde', 'iisc', 'ireb', 'iusgs', 'ipdeq',
-                           'ibrk', 'icaltech', 'illnl', 'ievloc', 'ijsop',
-                           'iuser', 'iunknown'],
-               'ievtyp': ['iunkn', 'inucl', 'ipren', 'ipostn', 'iquake', 'ipreq',
-                          'ipostq', 'ichem', 'iqb', 'iqb1', 'iqb2', 'iqbx',
-                          'iqmt', 'ieq', 'ieq1', 'ieq2', 'ime', 'iex', 'inu',
-                          'inc', 'io_', 'il', 'ir', 'it', 'iu', 'iother'],
-               'iqual': ['igood', 'iglch', 'idrop', 'ilowsn', 'iother'],
-               'isynth': ['irldta']}
+ACCEPTED_VALS = {'iftype': ['itime', 'irlim', 'iamph', 'ixy'],
+                 'idep': ['iunkn', 'idisp', 'ivel', 'ivolts', 'iacc'],
+                 'iztype': ['iunkn', 'ib', 'iday', 'io', 'ia', 'it0', 'it1',
+                            'it2', 'it3', 'it4', 'it5', 'it6', 'it7', 'it8',
+                            'it9'],
+                 'imagtyp': ['imb', 'ims', 'iml', 'imw', 'imd', 'imx'],
+                 'imagsrc': ['ineic', 'ipde', 'iisc', 'ireb', 'iusgs', 'ipdeq',
+                             'ibrk', 'icaltech', 'illnl', 'ievloc', 'ijsop',
+                             'iuser', 'iunknown'],
+                 'ievtyp': ['iunkn', 'inucl', 'ipren', 'ipostn', 'iquake',
+                            'ipreq', 'ipostq', 'ichem', 'iqb', 'iqb1', 'iqb2',
+                            'iqbx', 'iqmt', 'ieq', 'ieq1', 'ieq2', 'ime', 'iex',
+                            'inu', 'inc', 'io_', 'il', 'ir', 'it', 'iu',
+                            'iother'],
+                 'iqual': ['igood', 'iglch', 'idrop', 'ilowsn', 'iother'],
+                 'isynth': ['irldta']}
 
-ACCEP_INT = ACCEP_VALS.copy()
-for _hdr in ACCEP_INT:
-    ACCEP_INT[_hdr] = [ENUM_VALS[_ival] for _ival in ACCEP_VALS[_hdr]]
-
+ACCEPTED_INT = ACCEPTED_VALS.copy()
+for _hdr in ACCEPTED_INT:
+    ACCEPTED_INT[_hdr] = [ENUM_VALS[_ival] for _ival in ACCEPTED_VALS[_hdr]]
