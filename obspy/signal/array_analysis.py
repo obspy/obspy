@@ -846,7 +846,8 @@ class SeismicArray(object):
                                        max_rel_power=rel_power,
                                        max_abs_power=abs_power,
                                        max_pow_baz=baz, max_pow_slowness=slow,
-                                       slowness_range=np.arange(sll, slm, sls))
+                                       slowness_range=np.arange(sll, slm, sls),
+                                       method=method)
 
             else:
                 kwargs = dict(
@@ -875,7 +876,8 @@ class SeismicArray(object):
                 out = BeamformerResult(inventory=self.inventory, times=t,
                                        max_rel_power=rel_power,
                                        max_pow_baz=baz, max_pow_slowness=slow,
-                                       slowness_range=np.arange(sll, slm, sls))
+                                       slowness_range=np.arange(sll, slm, sls),
+                                       method=method)
 
             # now let's do the plotting
             if "baz_slow_map" in plots:
@@ -1309,6 +1311,7 @@ class SeismicArray(object):
                                                    nsamp]).any() \
                         and not np.isnan(_alldataE[n, i * nstep:i * nstep +
                                                    nsamp]).any():
+                    # All data, tapered.
                     alldataZ[n, i, :] = _alldataZ[n, i * nstep:
                                                   i * nstep + nsamp] * cosTaper(nsamp)
 
@@ -1357,9 +1360,11 @@ class SeismicArray(object):
         # earlier arr)
         x_offsets = np.array(x_offsets)
         y_offsets = np.array(y_offsets)
-        # This sorts the offset value arrays
+        # This sorts the offset value arrays.
         x_offsets = x_offsets[np.array(ans)]
         y_offsets = y_offsets[np.array(ans)]
+        # The steering vector corresponds to the 'rho_m * cos(theta_m - theta)'
+        # factor in Table 1 of Esmersoy et al., 1985.
         steering = u_y * y_offsets + u_x * x_offsets
 
         # polarizations [Z,E,N]
@@ -1635,7 +1640,8 @@ class SeismicArray(object):
             out = BeamformerResult(inventory=self.inventory,
                                    times=window_start_times, slowness_range=u,
                                    full_beamres=bf_results, freqs=freqs,
-                                   incidence=incidence)
+                                   incidence=incidence,
+                                   method='3C ({})'.format(wavetype))
 
         finally:
             self.inventory = invbkp
@@ -2891,7 +2897,7 @@ class BeamformerResult(object):
 
     def __init__(self, inventory, times, slowness_range, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
-                 full_beamres=None, freqs=None, incidence=None):
+                 full_beamres=None, freqs=None, incidence=None, method=None):
         """
         :param inventory: The inventory that was actually used in the
          beamforming.
@@ -2911,6 +2917,7 @@ class BeamformerResult(object):
          was computed.
         :param incidence: Rayleigh wave incidence angles (only from three
          component beamforming).
+        :param method: Method used for the beamforming.
         """
         self.inventory = copy.deepcopy(inventory)
         self.times = times
@@ -2934,6 +2941,7 @@ class BeamformerResult(object):
         self.slowness_range = slowness_range.astype(float)
         self.freqs = freqs
         self.incidence = incidence
+        self.method = method
 
         if full_beamres is not None and full_beamres.ndim != 4:
             raise ValueError("Full beamresults should be 4D array.")
@@ -3041,8 +3049,8 @@ class BeamformerResult(object):
         ax.set_ylim(sll, slm)
         ColorbarBase(cax, cmap=cmap,
                      norm=Normalize(vmin=hist.min(), vmax=hist.max()))
-        plt.suptitle('Results of time-dependent beamforming from \n{} to {}'
-                     .format(self.starttime.isoformat(),
+        plt.suptitle('{} beamforming: results from \n{} to {}'
+                     .format(self.method, self.starttime.isoformat(),
                              self.endtime.isoformat()))
         if show_immediately is True:
             plt.show()
@@ -3085,8 +3093,8 @@ class BeamformerResult(object):
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
-        fig.suptitle('Results of time-dependent beamforming from \n{} to {}'
-                     .format(self.starttime.isoformat(),
+        fig.suptitle('{} beamforming: results from \n{} to {}'
+                     .format(self.method, self.starttime.isoformat(),
                              self.endtime.isoformat()))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
@@ -3136,8 +3144,8 @@ class BeamformerResult(object):
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
-        fig.suptitle('Results of time-dependent beamforming from \n{} to {}'
-                     .format(self.starttime.isoformat(),
+        fig.suptitle('{} beamforming: results from \n{} to {}'
+                     .format(self.method, self.starttime.isoformat(),
                              self.endtime.isoformat()))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
@@ -3223,8 +3231,9 @@ class BeamformerResult(object):
                 ifreq = np.searchsorted(self.freqs, plot_freq)
                 for iwin in range(len(beamresnz[0, 0, :, 0])):
                     _actual_plotting(beamresnz[:, :, iwin, ifreq],
-                                     'BF result window {}, freq {}'
-                                     .format(iwin, self.freqs[ifreq]))
+                                     '{} BF result window {}, freq {}'
+                                     .format(self.method, iwin,
+                                             self.freqs[ifreq]))
 
         if show_immediately is True:
             plt.show()
