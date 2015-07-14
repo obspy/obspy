@@ -100,12 +100,14 @@ def _convert_enum(header, converter, accep):
 
 def enum_string_to_int(header):
     """Convert enumerated string values in header dictionary to int values."""
-    return _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEPTED_VALS)
+    out = _convert_enum(header, converter=HD.ENUM_VALS, accep=HD.ACCEPTED_VALS)
+    return out
 
 
 def enum_int_to_string(header):
     """Convert enumerated int values in header dictionary to string values."""
-    return _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEPTED_INT)
+    out = _convert_enum(header, converter=HD.ENUM_NAMES, accep=HD.ACCEPTED_INT)
+    return out
 
 
 def byteswap(*arrays):
@@ -133,8 +135,8 @@ def is_same_byteorder(bo1, bo2):
     Parameters
     ----------
     bo1, bo2 : str
-        Byte order strings can be any of:
-        {'l', 'little', 'L', '<', 'b', 'big', 'B', '>', 'n', 'native', 'N', '='}
+       Byte order strings can be any of:
+       {'l', 'little', 'L', '<', 'b', 'big', 'B', '>', 'n', 'native', 'N', '='}
 
     Returns
     -------
@@ -243,11 +245,11 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
     """
     Make a SAC header dictionary from an obspy.stats instance.
 
-    If ignore_old_header is True, a SAC header dictionary is built from scratch.
-    Otherwise, any existing stats.sac dictionary is the base.  iztype and
-    the nz- reference times are kept, and the stats.starttime is turned into a
-    new 'b' and 'e' relative to the existing reference time.  Other SAC header
-    values are also updated, like 'npts', 'depmin/men/max', and others.
+    If ignore_old_header is True, a SAC header dictionary is built from
+    scratch.  Otherwise, any existing stats.sac dictionary is the base.  iztype
+    and the nz- reference times are kept, and the stats.starttime is turned
+    into a new 'b' and 'e' relative to the existing reference time.  Other SAC
+    header values are also updated, like 'npts', 'depmin/men/max', and others.
 
     """
     # The Plan:

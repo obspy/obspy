@@ -160,6 +160,7 @@ seisuk_instrument_resp_removal.pdf
 
     if isinstance(paz_file, (str, native_str)):
         paz_file = open(paz_file, 'r')
+        is_filename = True
 
     while True:
         line = paz_file.readline()
@@ -200,7 +201,9 @@ seisuk_instrument_resp_removal.pdf
             # in the observatory this is the seismometer gain [muVolt/nm/s]
             # the A0_normalization_factor is hardcoded to 1.0
             constant = float(a[1])
-    paz_file.close()
+
+    if is_filename:
+        paz_file.close()
 
     # To convert the velocity response to the displacement response,
     # multiplication with jw is used. This is equivalent to one more

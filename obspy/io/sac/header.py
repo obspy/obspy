@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import *  #NOQA
+from future.builtins import *  # NOQA
 
 MODULE_DOCSTRING = """
 SAC header specification, including documentation.
@@ -29,7 +29,8 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   * IXY {General x versus y data}
                   * IXYZ {General XYZ (3-D) file}''',
        'leven': 'L    TRUE if data is evenly spaced. [required]',
-       'delta': 'F    Increment between evenly spaced samples (nominal value). [required]',
+       'delta': 'F    Increment between evenly spaced samples (nominal value).'
+                ' [required]',
        'odelta': 'F    Observed increment if different from nominal value.',
        'idep': '''I    Type of dependent variable:
                   * IUNKN (Unknown)
@@ -37,11 +38,12 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   * IVEL (Velocity in nm/sec)
                   * IVOLTS (Velocity in volts)
                   * IACC (Acceleration in nm/sec/sec)''',
-       'scale': 'F    Multiplying scale factor for dependent variable [not currently used]',
+       'scale': 'F    Multiplying scale factor for dependent variable '
+                '[not currently used]',
        'depmin': 'F    Minimum value of dependent variable.',
        'depmax': 'F    Maximum value of dependent variable.',
        'depmen': 'F    Mean value of dependent variable.',
-       'nzyear': 'N    GMT year corresponding to reference (zero) time in file.',
+       'nzyear': 'N    GMT year corresponding to reference time in file.',
        'nzjday': 'N    GMT julian day.',
        'nzhour': 'N    GMT hour.',
        'nzmin': 'N    GMT minute.',
@@ -58,18 +60,29 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'ko': 'K    Event origin time identification.',
        'a': 'F    First arrival time (seconds relative to reference time.)',
        'ka': 'K    First arrival time identification.',
-       'f': 'F    Fini or end of event time (seconds relative to reference time.)',
+       'f': 'F    Fini or end of event time '
+            '(seconds relative to reference time.)',
        'kf': 'F    Fini or end of event time identification.',
-       't0': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't1': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't2': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't3': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't4': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't5': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't6': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't7': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't8': 'F    User defined time (seconds picks or markers relative to reference time).',
-       't9': 'F    User defined time (seconds picks or markers relative to reference time).',
+       't0': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't1': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't2': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't3': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't4': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't5': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't6': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't7': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't8': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
+       't9': 'F    User defined time (seconds picks or markers relative to '
+             'reference time).',
        'kt0': 'F    User defined time pick identification.',
        'kt1': 'F    User defined time pick identification.',
        'kt2': 'F    User defined time pick identification.',
@@ -88,11 +101,13 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'stla': 'F    Station latitude (degrees, north positive)',
        'stlo': 'F    Station longitude (degrees, east positive).',
        'stel': 'F    Station elevation (meters). [not currently used]',
-       'stdp': 'F    Station depth below surface (meters). [not currently used]',
+       'stdp': 'F    Station depth below surface (meters). '
+               '[not currently used]',
        'cmpaz': 'F    Component azimuth (degrees, clockwise from north).',
        'cmpinc': 'F    Component incident angle (degrees, from vertical).',
        'kcmpnm': 'K    Component name.',
-       'lpspol': 'L    TRUE if station components have a positive polarity (left-hand rule).',
+       'lpspol': 'L    TRUE if station components have a positive polarity '
+                 '(left-hand rule).',
        'kevnm': 'K    Event name.',
        'ievreg': 'I    Event geographic region. [not currently used]',
        'evla': 'F    Event latitude (degrees north positive).',
@@ -157,7 +172,8 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'az': 'F    Event to station azimuth (degrees).',
        'baz': 'F    Station to event azimuth (degrees).',
        'gcarc': 'F    Station to event great circle arc length (degrees).',
-       'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated from st event coordinates.',
+       'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated '
+                 'from st event coordinates.',
        'iqual': '''I    Quality of data [not currently used]:
                   * IGOOD (Good data)
                   * IGLCH (Glitches)
@@ -182,13 +198,17 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'kuser2': 'K    User defined variable storage area 2.',
        'lovrok': 'L    TRUE if it is okay to overwrite this file on disk.'}
 
+# because readable
+_hdritems = sorted(DOC.items())
+_hdrfmt = "{:10.10s} = {}"
+HDR_DESC = '\n'.join([_hdrfmt.format(_hdr, _doc) for _hdr, _doc in _hdritems])
+
 HEADER_DOCSTRING = """
-============ ==== =========================================================
+============ ==== ===============================================
 Field Name   Type Description
-============ ==== =========================================================
-""" + \
-'\n'.join(["{:10.10s} = {}".format(_hdr, _doc) for _hdr, _doc in sorted(DOC.items())]) + \
-"\n============ ==== ========================================================="
+============ ==== ===============================================
+""" + HDR_DESC + \
+        "\n============ ==== ==============================================="
 
 # Module documentation string
 __doc__ = MODULE_DOCSTRING + HEADER_DOCSTRING
@@ -244,7 +264,7 @@ and .arrayio.header_arrays_to_dict.
 ENUM_VALS = {'itime': 1, 'irlim': 2, 'iamph': 3, 'ixy': 4, 'iunkn': 5,
              'idisp': 6, 'ivel': 7, 'iacc': 8, 'ib': 9, 'iday': 10, 'io': 11,
              'ia': 12, 'it0': 13, 'it1': 14, 'it2': 15, 'it3': 16, 'it4': 17,
-             'it5': 18, 'it6': 19, 'it7': 20, 'it8': 21, 'it9': 22, 
+             'it5': 18, 'it6': 19, 'it7': 20, 'it8': 21, 'it9': 22,
              'iradnv': 23, 'itannv': 24, 'iradev': 25, 'itanev': 26,
              'inorth': 27, 'ieast': 28, 'ihorza': 29, 'idown': 30, 'iup': 31,
              'illlbb': 32, 'iwwsn1': 33, 'iwwsn2': 34, 'ihglp': 35, 'isro': 36,
@@ -277,8 +297,8 @@ ACCEPTED_VALS = {'iftype': ['itime', 'irlim', 'iamph', 'ixy'],
                              'iuser', 'iunknown'],
                  'ievtyp': ['iunkn', 'inucl', 'ipren', 'ipostn', 'iquake',
                             'ipreq', 'ipostq', 'ichem', 'iqb', 'iqb1', 'iqb2',
-                            'iqbx', 'iqmt', 'ieq', 'ieq1', 'ieq2', 'ime', 'iex',
-                            'inu', 'inc', 'io_', 'il', 'ir', 'it', 'iu',
+                            'iqbx', 'iqmt', 'ieq', 'ieq1', 'ieq2', 'ime',
+                            'iex', 'inu', 'inc', 'io_', 'il', 'ir', 'it', 'iu',
                             'iother'],
                  'iqual': ['igood', 'iglch', 'idrop', 'ilowsn', 'iother'],
                  'isynth': ['irldta']}

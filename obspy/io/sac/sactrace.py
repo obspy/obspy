@@ -51,7 +51,8 @@ from ..sac import arrayio as _io
 # getters/setters.
 #
 # See:
-# http://stackoverflow.com/questions/2123585/python-multiple-properties-one-setter-getter
+# http://stackoverflow.com/questions/2123585/ +
+#       python-multiple-properties-one-setter-getter
 #
 # floats
 def _floatgetter(hdr):
@@ -269,7 +270,8 @@ def _set_iztype(self, iztype):
     elif iztype == 'iday':
         # seconds since midnight of reference day
         reftime = self.reftime
-        ref_val = reftime - UTCDateTime(year=reftime.year, julday=reftime.julday)
+        ref_val = reftime - UTCDateTime(year=reftime.year,
+                                        julday=reftime.julday)
     else:
         # a relative time header.
         # remove the 'i' (first character) in the iztype to get the header name
@@ -465,14 +467,17 @@ class SACTrace(object):
     # 3. Header access looks like simple attribute-access syntax.
     #    Looks funny to read here, but natural to use.
 
-    # NOTE: To make something read-only, omit the second argument to "property".
+    # NOTE: To make something read-only, omit second argument to "property".
 
     # FLOATS
-    delta = property(_floatgetter('delta'), _floatsetter('delta'), doc=HD.DOC['delta'])
+    delta = property(_floatgetter('delta'), _floatsetter('delta'),
+                     doc=HD.DOC['delta'])
     depmin = property(_make_data_func(min, 'depmin'), doc=HD.DOC['depmin'])
     depmax = property(_make_data_func(max, 'depmax'), doc=HD.DOC['depmax'])
-    scale = property(_floatgetter('scale'), _floatsetter('scale'), doc=HD.DOC['scale'])
-    odelta = property(_floatgetter('odelta'), _floatsetter('odelta'), doc=HD.DOC['odelta'])
+    scale = property(_floatgetter('scale'), _floatsetter('scale'),
+                     doc=HD.DOC['scale'])
+    odelta = property(_floatgetter('odelta'), _floatsetter('odelta'),
+                      doc=HD.DOC['odelta'])
     b = property(_floatgetter('b'), _reltime_setter('b'), doc=HD.DOC['b'])
     e = property(_get_e, doc=HD.DOC['e'])
     o = property(_floatgetter('o'), _reltime_setter('o'), doc=HD.DOC['o'])
@@ -489,65 +494,111 @@ class SACTrace(object):
     t8 = property(_floatgetter('t8'), _reltime_setter('t8'), doc=HD.DOC['t8'])
     t9 = property(_floatgetter('t9'), _reltime_setter('t9'), doc=HD.DOC['t9'])
     f = property(_floatgetter('f'), _reltime_setter('f'), doc=HD.DOC['f'])
-    stla = property(_floatgetter('stla'), _geosetter('stla'), doc=HD.DOC['stla'])
-    stlo = property(_floatgetter('stlo'), _geosetter('stlo'), doc=HD.DOC['stlo'])
-    stel = property(_floatgetter('stel'), _floatsetter('stel'), doc=HD.DOC['stel'])
-    stdp = property(_floatgetter('stdp'), _floatsetter('stdp'), doc=HD.DOC['stdp'])
-    evla = property(_floatgetter('evla'), _geosetter('evla'), doc=HD.DOC['evla'])
-    evlo = property(_floatgetter('evlo'), _geosetter('evlo'), doc=HD.DOC['evlo'])
-    evdp = property(_floatgetter('evdp'), _floatsetter('evsp'), doc=HD.DOC['evdp'])
+    stla = property(_floatgetter('stla'), _geosetter('stla'),
+                    doc=HD.DOC['stla'])
+    stlo = property(_floatgetter('stlo'), _geosetter('stlo'),
+                    doc=HD.DOC['stlo'])
+    stel = property(_floatgetter('stel'), _floatsetter('stel'),
+                    doc=HD.DOC['stel'])
+    stdp = property(_floatgetter('stdp'), _floatsetter('stdp'),
+                    doc=HD.DOC['stdp'])
+    evla = property(_floatgetter('evla'), _geosetter('evla'),
+                    doc=HD.DOC['evla'])
+    evlo = property(_floatgetter('evlo'), _geosetter('evlo'),
+                    doc=HD.DOC['evlo'])
+    evdp = property(_floatgetter('evdp'), _floatsetter('evsp'),
+                    doc=HD.DOC['evdp'])
     mag = property(_floatgetter('mag'), _floatsetter('mag'), doc=HD.DOC['mag'])
-    user0 = property(_floatgetter('user0'), _floatsetter('user0'), doc=HD.DOC['user0'])
-    user1 = property(_floatgetter('user1'), _floatsetter('user1'), doc=HD.DOC['user1'])
-    user2 = property(_floatgetter('user2'), _floatsetter('user2'), doc=HD.DOC['user2'])
-    user3 = property(_floatgetter('user3'), _floatsetter('user3'), doc=HD.DOC['user3'])
-    user4 = property(_floatgetter('user4'), _floatsetter('user4'), doc=HD.DOC['user4'])
-    user5 = property(_floatgetter('user5'), _floatsetter('user5'), doc=HD.DOC['user5'])
-    user6 = property(_floatgetter('user6'), _floatsetter('user6'), doc=HD.DOC['user6'])
-    user7 = property(_floatgetter('user7'), _floatsetter('user7'), doc=HD.DOC['user7'])
-    user8 = property(_floatgetter('user8'), _floatsetter('user8'), doc=HD.DOC['user8'])
-    user9 = property(_floatgetter('user9'), _floatsetter('user9'), doc=HD.DOC['user9'])
-    dist = property(_floatgetter('dist'), _floatsetter('dist'), doc=HD.DOC['dist'])
+    user0 = property(_floatgetter('user0'), _floatsetter('user0'),
+                     doc=HD.DOC['user0'])
+    user1 = property(_floatgetter('user1'), _floatsetter('user1'),
+                     doc=HD.DOC['user1'])
+    user2 = property(_floatgetter('user2'), _floatsetter('user2'),
+                     doc=HD.DOC['user2'])
+    user3 = property(_floatgetter('user3'), _floatsetter('user3'),
+                     doc=HD.DOC['user3'])
+    user4 = property(_floatgetter('user4'), _floatsetter('user4'),
+                     doc=HD.DOC['user4'])
+    user5 = property(_floatgetter('user5'), _floatsetter('user5'),
+                     doc=HD.DOC['user5'])
+    user6 = property(_floatgetter('user6'), _floatsetter('user6'),
+                     doc=HD.DOC['user6'])
+    user7 = property(_floatgetter('user7'), _floatsetter('user7'),
+                     doc=HD.DOC['user7'])
+    user8 = property(_floatgetter('user8'), _floatsetter('user8'),
+                     doc=HD.DOC['user8'])
+    user9 = property(_floatgetter('user9'), _floatsetter('user9'),
+                     doc=HD.DOC['user9'])
+    dist = property(_floatgetter('dist'), _floatsetter('dist'),
+                    doc=HD.DOC['dist'])
     az = property(_floatgetter('az'), _floatsetter('az'), doc=HD.DOC['az'])
     baz = property(_floatgetter('baz'), _floatsetter('baz'), doc=HD.DOC['baz'])
-    gcarc = property(_floatgetter('gcarc'), _floatsetter('gcarc'), doc=HD.DOC['gcarc'])
+    gcarc = property(_floatgetter('gcarc'), _floatsetter('gcarc'),
+                     doc=HD.DOC['gcarc'])
     depmen = property(_make_data_func(np.mean, 'depmen'), doc=HD.DOC['depmen'])
-    cmpaz = property(_floatgetter('cmpaz'), _floatsetter('cmpaz'), doc=HD.DOC['cmpaz'])
-    cmpinc = property(_floatgetter('cmpinc'), _floatsetter('cmpinc'), doc=HD.DOC['cmpinc'])
+    cmpaz = property(_floatgetter('cmpaz'), _floatsetter('cmpaz'),
+                     doc=HD.DOC['cmpaz'])
+    cmpinc = property(_floatgetter('cmpinc'), _floatsetter('cmpinc'),
+                      doc=HD.DOC['cmpinc'])
     #
     # INTS
-    nzyear = property(_intgetter('nzyear'), _intsetter('nzyear'), doc=HD.DOC['nzyear'])
-    nzjday = property(_intgetter('nzjday'), _intsetter('nzjday'), doc=HD.DOC['nzjday'])
-    nzhour = property(_intgetter('nzhour'), _intsetter('nzhour'), doc=HD.DOC['nzhour'])
-    nzmin = property(_intgetter('nzmin'), _intsetter('nzmin'), doc=HD.DOC['nzmin'])
-    nzsec = property(_intgetter('nzsec'), _intsetter('nzsec'), doc=HD.DOC['nzsec'])
-    nzmsec = property(_intgetter('nzmsec'), _intsetter('nzmsec'), doc=HD.DOC['nzmsec'])
-    nvhdr = property(_intgetter('nvhdr'), _intsetter('nvhdr'), doc=HD.DOC['nvhdr'])
-    norid = property(_intgetter('norid'), _intsetter('norid'), doc=HD.DOC['norid'])
-    nevid = property(_intgetter('nevid'), _intsetter('nevid'), doc=HD.DOC['nevid'])
+    nzyear = property(_intgetter('nzyear'), _intsetter('nzyear'),
+                      doc=HD.DOC['nzyear'])
+    nzjday = property(_intgetter('nzjday'), _intsetter('nzjday'),
+                      doc=HD.DOC['nzjday'])
+    nzhour = property(_intgetter('nzhour'), _intsetter('nzhour'),
+                      doc=HD.DOC['nzhour'])
+    nzmin = property(_intgetter('nzmin'), _intsetter('nzmin'),
+                     doc=HD.DOC['nzmin'])
+    nzsec = property(_intgetter('nzsec'), _intsetter('nzsec'),
+                     doc=HD.DOC['nzsec'])
+    nzmsec = property(_intgetter('nzmsec'), _intsetter('nzmsec'),
+                      doc=HD.DOC['nzmsec'])
+    nvhdr = property(_intgetter('nvhdr'), _intsetter('nvhdr'),
+                     doc=HD.DOC['nvhdr'])
+    norid = property(_intgetter('norid'), _intsetter('norid'),
+                     doc=HD.DOC['norid'])
+    nevid = property(_intgetter('nevid'), _intsetter('nevid'),
+                     doc=HD.DOC['nevid'])
     npts = property(_make_data_func(len, 'npts'), doc=HD.DOC['npts'])
-    nwfid = property(_intgetter('nwfid'), _intsetter('nwfid'), doc=HD.DOC['nwfid'])
-    iftype = property(_enumgetter('iftype'), _enumsetter('iftype'), doc=HD.DOC['iftype'])
-    idep = property(_enumgetter('idep'), _enumsetter('idep'), doc=HD.DOC['idep'])
+    nwfid = property(_intgetter('nwfid'), _intsetter('nwfid'),
+                     doc=HD.DOC['nwfid'])
+    iftype = property(_enumgetter('iftype'), _enumsetter('iftype'),
+                      doc=HD.DOC['iftype'])
+    idep = property(_enumgetter('idep'), _enumsetter('idep'),
+                    doc=HD.DOC['idep'])
     iztype = property(_enumgetter('iztype'), _set_iztype, doc=HD.DOC['iztype'])
-    iinst = property(_intgetter('iinst'), _intsetter('iinst'), doc=HD.DOC['iinst'])
-    istreg = property(_intgetter('istreg'), _intsetter('istreg'), doc=HD.DOC['istreg'])
-    ievreg = property(_intgetter('ievreg'), _intsetter('ievreg'), doc=HD.DOC['ievreg'])
-    ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'), doc=HD.DOC['ievtyp'])
-    iqual = property(_enumgetter('iqual'), _enumsetter('iqual'), doc=HD.DOC['iqual'])
-    isynth = property(_enumgetter('isythn'), _enumsetter('isynth'), doc=HD.DOC['isynth'])
-    imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'), doc=HD.DOC['imagtyp'])
-    imagsrc = property(_enumgetter('imagsrc'), _enumsetter('imagsrc'), doc=HD.DOC['imagsrc'])
-    leven = property(_boolgetter('leven'), _boolsetter('leven'), doc=HD.DOC['leven'])
-    lpspol = property(_boolgetter('lpspol'), _boolsetter('lpspol'), doc=HD.DOC['lpspol'])
-    lovrok = property(_boolgetter('lovrok'), _boolsetter('lovrok'), doc=HD.DOC['lovrok'])
+    iinst = property(_intgetter('iinst'), _intsetter('iinst'),
+                     doc=HD.DOC['iinst'])
+    istreg = property(_intgetter('istreg'), _intsetter('istreg'),
+                      doc=HD.DOC['istreg'])
+    ievreg = property(_intgetter('ievreg'), _intsetter('ievreg'),
+                      doc=HD.DOC['ievreg'])
+    ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
+                      doc=HD.DOC['ievtyp'])
+    iqual = property(_enumgetter('iqual'), _enumsetter('iqual'),
+                     doc=HD.DOC['iqual'])
+    isynth = property(_enumgetter('isythn'), _enumsetter('isynth'),
+                      doc=HD.DOC['isynth'])
+    imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'),
+                       doc=HD.DOC['imagtyp'])
+    imagsrc = property(_enumgetter('imagsrc'), _enumsetter('imagsrc'),
+                       doc=HD.DOC['imagsrc'])
+    leven = property(_boolgetter('leven'), _boolsetter('leven'),
+                     doc=HD.DOC['leven'])
+    lpspol = property(_boolgetter('lpspol'), _boolsetter('lpspol'),
+                      doc=HD.DOC['lpspol'])
+    lovrok = property(_boolgetter('lovrok'), _boolsetter('lovrok'),
+                      doc=HD.DOC['lovrok'])
     lcalda = property(_boolgetter('lcalda'), _set_lcalda, doc=HD.DOC['lcalda'])
     unused23 = property(_intgetter('unused23'), _intsetter('unused23'))
     #
     # STRINGS
-    kstnm = property(_strgetter('kstnm'), _strsetter('kstnm'), doc=HD.DOC['kstnm'])
+    kstnm = property(_strgetter('kstnm'), _strsetter('kstnm'),
+                     doc=HD.DOC['kstnm'])
     kevnm = property(_get_kevnm, _set_kevnm, doc=HD.DOC['kevnm'])
-    khole = property(_strgetter('khole'), _strsetter('khole'), doc=HD.DOC['khole'])
+    khole = property(_strgetter('khole'), _strsetter('khole'),
+                     doc=HD.DOC['khole'])
     ko = property(_strgetter('ko'), _strsetter('ko'), doc=HD.DOC['ko'])
     ka = property(_strgetter('ka'), _strsetter('ka'), doc=HD.DOC['ka'])
     kt0 = property(_strgetter('kt0'), _strsetter('kt0'), doc=HD.DOC['kt0'])
@@ -561,13 +612,19 @@ class SACTrace(object):
     kt8 = property(_strgetter('kt8'), _strsetter('kt8'), doc=HD.DOC['kt8'])
     kt9 = property(_strgetter('kt9'), _strsetter('kt9'), doc=HD.DOC['kt9'])
     kf = property(_strgetter('kf'), _strsetter('kf'), doc=HD.DOC['kf'])
-    kuser0 = property(_strgetter('kuser0'), _strsetter('kuser0'), doc=HD.DOC['kuser0'])
-    kuser1 = property(_strgetter('kuser1'), _strsetter('kuser1'), doc=HD.DOC['kuser1'])
-    kuser2 = property(_strgetter('kuser2'), _strsetter('kuser2'), doc=HD.DOC['kuser2'])
-    kcmpnm = property(_strgetter('kcmpnm'), _strsetter('kcmpnm'), doc=HD.DOC['kcmpnm'])
-    knetwk = property(_strgetter('knetwk'), _strsetter('knetwk'), doc=HD.DOC['knetwk'])
+    kuser0 = property(_strgetter('kuser0'), _strsetter('kuser0'),
+                      doc=HD.DOC['kuser0'])
+    kuser1 = property(_strgetter('kuser1'), _strsetter('kuser1'),
+                      doc=HD.DOC['kuser1'])
+    kuser2 = property(_strgetter('kuser2'), _strsetter('kuser2'),
+                      doc=HD.DOC['kuser2'])
+    kcmpnm = property(_strgetter('kcmpnm'), _strsetter('kcmpnm'),
+                      doc=HD.DOC['kcmpnm'])
+    knetwk = property(_strgetter('knetwk'), _strsetter('knetwk'),
+                      doc=HD.DOC['knetwk'])
     kdatrd = property(_strgetter('kdatrd'), _strsetter('kdatrd'))
-    kinst = property(_strgetter('kinst'), _strsetter('kinst'), doc=HD.DOC['kinst'])
+    kinst = property(_strgetter('kinst'), _strsetter('kinst'),
+                     doc=HD.DOC['kinst'])
 
     @property
     def _header(self):
@@ -579,7 +636,9 @@ class SACTrace(object):
         frugally. See class docstring for header descriptions.
 
         """
-        return _io.header_arrays_to_dict(self._hf, self._hi, self._hs, nulls=False)
+        out = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
+                                        nulls=False)
+        return out
 
     @property
     def byteorder(self):
@@ -657,12 +716,12 @@ class SACTrace(object):
         try:
             old_reftime = self.reftime
 
-            # find the milliseconds and leftover microseconds in the new reftime
-            _, rem_microseconds = _ut.split_microseconds(new_reftime.microsecond)
+            # find the milliseconds and leftover microseconds for new reftime
+            _, rem_microsecs = _ut.split_microseconds(new_reftime.microsecond)
 
             # snap the new reftime to the most recent milliseconds
             # (subtract the leftover microseconds)
-            new_reftime.microsecond -= rem_microseconds
+            new_reftime.microsecond -= rem_microsecs
 
             self.nzyear = new_reftime.year
             self.nzjday = new_reftime.julday
@@ -691,7 +750,7 @@ class SACTrace(object):
         Parameters
         ----------
         source : str or File-like object
-            Full path or File-like object from SAC binary or ASCII file on disk.
+            Full path or File-like object from SAC binary or ASCII file on disk
         headonly, ascii : bool
             If headonly is True, don't read the data array.
             If ascii is True, the file is a SAC ASCII type.
@@ -702,12 +761,13 @@ class SACTrace(object):
             instance attribute .byteorder. This flag is ignored for ASCII files
             and .byteorder is set to native.
         checksize : bool, default False
-            If true, check that theoretical file size from header matches disk size.
+            If true, check that theoretical file size from header matches disk
+            size.
 
         Raises
         ------
         SacIOError
-            checksize failed, byteorder was wrong, header arrays are wrong size.
+            checksize failed, byteorder was wrong, header arrays are wrong size
 
         Examples
         --------
@@ -737,7 +797,7 @@ class SACTrace(object):
         Parameters
         ----------
         dest : str or File-like object
-            Full path or File-like object from SAC binary or ASCII file on disk.
+            Full path or File-like object from SAC binary or ASCII file on disk
         headonly, ascii : bool
             If headonly is True, it is assumed that the user intends to
             overwrite/modify only the header arrays of an existing file, and
@@ -906,14 +966,15 @@ class SACTrace(object):
     # ---------------------- other properties/methods -------------------------
     def validate(self, *tests):
         """
-        Check validity of loaded SAC file content, such as header/data consistency.
+        Check validity of loaded SAC file content, such as header/data
+        consistency.
 
         Supply one or more of the following validity tests to perform:
 
         Parameters
         ----------
-        tests : str {'delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime'}
-            Perform one or more of the following validity tests:
+        tests : str
+            One or more of the following validity tests:
 
             'delta' : Time step "delta" is positive.
             'logicals' : Logical values are 0, 1, or null
@@ -950,9 +1011,8 @@ class SACTrace(object):
                 sac.validate('data_hdrs') # doctest: +SKIP
 
         """
-        _io.validate_sac_content(self._hf, self._hi, self._hs, self.data, *tests)
-
-        return
+        _io.validate_sac_content(self._hf, self._hi, self._hs, self.data,
+                                 *tests)
 
     def _format_header_str(self, hdrlist='all'):
         """
@@ -996,7 +1056,8 @@ class SACTrace(object):
             header_str.append("\tiztype IA: first arrival time")
         elif iztype[1] == 't':
             vals = (iztype.upper(), iztype[1:])
-            header_str.append("\tiztype {}: user-defined time {}".format(*vals))
+            izfmt = "\tiztype {}: user-defined time {}"
+            header_str.append(izfmt.format(*vals))
         elif iztype == 'iunkn':
             header_str.append("\tiztype IUNKN (Unknown)")
         else:
@@ -1122,7 +1183,8 @@ class SACTrace(object):
         """
         if self.lcalda or force:
             try:
-                m, az, baz = gps2dist_azimuth(self.evla, self.evlo, self.stla, self.stlo)
+                m, az, baz = gps2dist_azimuth(self.evla, self.evlo, self.stla,
+                                              self.stlo)
                 dist = m / 1000.0
                 gcarc = kilometer2degrees(dist)
                 self.az = az
@@ -1131,7 +1193,7 @@ class SACTrace(object):
                 self.gcarc = gcarc
             except TypeError:
                 # one of the geographic values is None
-                msg = "Not enough information to calculate distances and azimuths."
+                msg = "Not enough information to calculate distance, azimuth."
                 raise SacHeaderError(msg)
         else:
             msg = "lcalda is False or unset. To set distances, set it to True."

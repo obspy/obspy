@@ -49,7 +49,6 @@ def init_header_arrays(*args):
     """
     if len(args) == 0:
         args = ('float', 'int', 'str')
-    # http://stackoverflow.com/a/13052254/745557
     out = []
     for itype in args:
         if itype == 'float':
@@ -240,10 +239,10 @@ def read_sac_ascii(source, headonly=False):
     # read in the float values
     # TODO: use native '=' dtype byteorder instead of forcing little endian?
     hf = np.array([i.split() for i in contents[:14]],
-                   dtype=native_str('<f4')).ravel()
+                  dtype=native_str('<f4')).ravel()
     # read in the int values
     hi = np.array([i.split() for i in contents[14: 14 + 8]],
-                   dtype=native_str('<i4')).ravel()
+                  dtype=native_str('<i4')).ravel()
     # reading in the string part is a bit more complicated
     # because every string field has to be 8 characters long
     # apart from the second field which is 16 characters long
@@ -259,7 +258,7 @@ def read_sac_ascii(source, headonly=False):
         data = None
     else:
         data = np.array([i.split() for i in contents[30:]],
-                         dtype=native_str('<f4')).ravel()
+                        dtype=native_str('<f4')).ravel()
 
         npts = hi[HD.INTHDRS.index('npts')]
         if len(data) != npts:
@@ -442,9 +441,13 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)] + \
                 [(key, val) for (key, val) in zip(HD.STRHDRS, hs)]
     else:
-        items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf) if val != HD.FNULL] + \
-                [(key, val) for (key, val) in zip(HD.INTHDRS, hi) if val != HD.INULL] + \
-                [(key, val) for (key, val) in zip(HD.STRHDRS, hs) if val != HD.SNULL]
+        # more readable
+        items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)
+                 if val != HD.FNULL] + \
+                [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
+                 if val != HD.INULL] + \
+                [(key, val) for (key, val) in zip(HD.STRHDRS, hs)
+                 if val != HD.SNULL]
 
     header = dict(items)
 
@@ -506,8 +509,8 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         Float, int, string SAC header arrays, respectively.
     data : numpy.ndarray or None
         SAC data array.
-    tests : str {'delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime'}
-        Perform one or more of the following validity tests:
+    tests : str
+        One or more of the following validity tests:
 
         'delta' : Time step "delta" is positive.
         'logicals' : Logical values are 0, 1, or null
@@ -540,15 +543,15 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         raise ValueError(msg)
 
     if 'delta' in tests:
-        val = hf[HD.FLOATHDRS.index('delta')]
-        if not (val >= 0.0):
+        dval = hf[HD.FLOATHDRS.index('delta')]
+        if not (dval >= 0.0):
             msg = "Header 'delta' must be >= 0."
             raise SacInvalidContentError(msg)
 
     if 'logicals' in tests:
         for hdr in ('leven', 'lpspol', 'lovrok', 'lcalda'):
-            val = hi[HD.INTHDRS.index(hdr)]
-            if val not in (0, 1, HD.INULL):
+            lval = hi[HD.INTHDRS.index(hdr)]
+            if lval not in (0, 1, HD.INULL):
                 msg = "Header '{}' must be {{{}, {}, {}}}."
                 raise SacInvalidContentError(msg.format(hdr, 0, 1, HD.INULL))
 
@@ -567,9 +570,9 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 
     if 'enums' in tests:
         for hdr in HD.ACCEPTED_VALS:
-            val = hi[HD.INTHDRS.index(hdr)]
-            if not is_valid_enum_int(hdr, val, allow_null=True):
-                msg = "Invalid enumerated value, '{}': {}".format(hdr, val)
+            enval = hi[HD.INTHDRS.index(hdr)]
+            if not is_valid_enum_int(hdr, enval, allow_null=True):
+                msg = "Invalid enumerated value, '{}': {}".format(hdr, enval)
                 raise SacInvalidContentError(msg)
 
     if 'reftime' in tests:
