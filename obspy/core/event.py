@@ -139,11 +139,10 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
                 raise IOError(2, "No such file or directory", pathname)
 
         catalog = _read(pathnames[0], format, **kwargs)
-        if len(pathnames) == 1:
-            return catalog
-        else:
+        if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
+        return catalog
 
 
 @uncompressFile
