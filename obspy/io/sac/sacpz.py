@@ -161,6 +161,8 @@ seisuk_instrument_resp_removal.pdf
     if isinstance(paz_file, (str, native_str)):
         paz_file = open(paz_file, 'r')
         is_filename = True
+    else:
+        is_filename = False
 
     while True:
         line = paz_file.readline()

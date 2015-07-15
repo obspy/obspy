@@ -431,7 +431,8 @@ class SACTrace(object):
             else:
                 # Only copy the data if they are not of the required type
                 # XXX: why require little endian instead of native byte order?
-                data = np.require(data, native_str('<f4'))
+                # data = np.require(data, native_str('<f4'))
+                pass
 
         # --------------------------- HEADER ARRAYS ---------------------------
         # 2.
@@ -1137,7 +1138,7 @@ class SACTrace(object):
 
         """
         # XXX: do I really care which byte order it is?
-        self.data = np.require(self.data, native_str('<f4'))
+        # self.data = np.require(self.data, native_str('<f4'))
         self._hi[HD.INTHDRS.index('npts')] = self.npts
         self._hf[HD.FLOATHDRS.index('e')] = self.e
         self._hf[HD.FLOATHDRS.index('depmin')] = self.depmin
@@ -1165,7 +1166,8 @@ class SACTrace(object):
         ...it is recommended to just make sure your target reference header is
         set and correct, and set the iztype:
 
-        >>> sac.o = UTCDateTime(...) # doctest: +SKIP
+        >>> sac.o = UTCDateTime(year=1982, julday=123, hour=13, minute=37,
+                                second=10, microsecond=103)  # doctest: +SKIP
         >>> sac.iztype = 'io' # doctest: +SKIP
 
         The iztype setter will deal with shifting the time values.
