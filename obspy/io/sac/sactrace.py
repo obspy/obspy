@@ -369,7 +369,7 @@ class SACTrace(object):
         Examples
         --------
         >>> sac = SACTrace(nzyear=1995, nzmsec=50, data=np.arange(100))
-        >>> print sac
+        >>> print(sac) # doctest: +SKIP
         Reference Time = 01/01/1995 (001) 00:00:00.050000
                 iztype IB: begin time
         b          = 0.0
@@ -771,12 +771,12 @@ class SACTrace(object):
 
         Examples
         --------
-        >>> sac = SACTrace.read(filename, headonly=True)
-        >>> try:
-                sac.validate('data_hdrs')
-            except SacInvalidContentError:
-                sac = SACTrace.read(filename, headonly=False)
-                sac.validate('data_hdrs')
+        >>> sac = SACTrace.read(filename, headonly=True) # doctest: +SKIP
+        >>> try: # doctest: +SKIP
+                sac.validate('data_hdrs') # doctest: +SKIP
+            except SacInvalidContentError: # doctest: +SKIP
+                sac = SACTrace.read(filename, headonly=False) # doctest: +SKIP
+                sac.validate('data_hdrs') # doctest: +SKIP
 
         See Also
         --------
@@ -842,8 +842,8 @@ class SACTrace(object):
 
         Examples
         --------
-        >>> sac = SACTrace._from_arrays()
-        >>> print(sac)
+        >>> sac = SACTrace._from_arrays() # doctest: +SKIP
+        >>> print(sac) # doctest: +SKIP
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
                 iztype not set
             lcalda     = False
@@ -927,8 +927,8 @@ class SACTrace(object):
 
         Examples
         --------
-        >>> sac = SACTrace()
-        >>> tr = Trace(data=sac.data, header=sac.to_obspy_header())
+        >>> sac = SACTrace() # doctest: +SKIP
+        >>> tr = sac.to_obspy_trace() # doctest: +SKIP
 
         """
         # make the obspy test for tests/data/testxy.sac pass
@@ -1086,8 +1086,8 @@ class SACTrace(object):
 
         An iterable of header fields can look like 'bea' or ('b', 'e', 'a').
 
-        >>> sac = SACTrace.read('tests/data/test.sac')
-        >>> sac.lh()
+        >>> sac = SACTrace.read('tests/data/test.sac') # doctest: +SKIP
+        >>> sac.lh() # doctest: +SKIP
         Reference Time = 07/18/1978 (199) 08:00:00.000000
          unrecognized iztype: None
         b	= 10.0
@@ -1165,8 +1165,8 @@ class SACTrace(object):
         ...it is recommended to just make sure your target reference header is
         set and correct, and set the iztype:
 
-        >>> sac.o = UTCDateTime(....)
-        >>> sac.iztype = 'io'
+        >>> sac.o = UTCDateTime(...) # doctest: +SKIP
+        >>> sac.iztype = 'io' # doctest: +SKIP
 
         The iztype setter will deal with shifting the time values.
 
