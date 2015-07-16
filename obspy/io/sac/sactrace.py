@@ -192,6 +192,7 @@ def _make_data_func(func, hdr):
         return value
     return do_data_func
 
+# TODO: a data setter the requires a float32 array
 
 # Factory function for setting relative time headers with either a relative
 # time float or an absolute UTCDateTime

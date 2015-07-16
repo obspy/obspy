@@ -18,6 +18,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.utils import native_str
 from future.builtins import *  # NOQA
 
+import os
 import sys
 import warnings
 
@@ -160,7 +161,8 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     # check header lengths
     if len(hf) != 70 or len(hi) != 40 or len(hs) != 24:
         hf = hi = hs = None
-        f.close()
+        if not is_file_name:
+            f.close()
         raise SacIOError("Cannot read all header values")
 
     npts = hi[HD.INTHDRS.index('npts')]
@@ -168,8 +170,9 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     # check file size
     if checksize:
         cur_pos = f.tell()
-        length = f.seek(0, 2)
-        f.seek(cur_pos, 0)
+        f.seek(0, os.SEEK_END)
+        length = f.tell()
+        f.seek(cur_pos, os.SEEK_SET)
         if length != (632 + 4 * int(npts)):
             msg = "File-size and theoretical size are inconsistent.\n" \
                   "Check that headers are consistent with time series."
@@ -298,6 +301,7 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     for data=None (headonly) writing.
 
     """
+    # this function is a hot mess.  clean up the logic.
 
     # deal with file name versus File-like object, and file mode
     if data is None:
@@ -322,6 +326,7 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         raise ValueError(msg)
 
     # deal with desired byte order
+    # TODO: combine with block above
     if data is None:
         assert hf.dtype.byteorder == hi.dtype.byteorder
     else:
@@ -340,7 +345,7 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         f.write(hi.data)
         f.write(hs.data)
         if data is not None:
-            f.write(data.data)
+            f.write(data.astype(data.dtype.byteorder + 'f4').data)
     except Exception as e:
         if is_file_name:
             f.close()
@@ -507,7 +512,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
     ----------
     hf, hi, hs: numpy.ndarray
         Float, int, string SAC header arrays, respectively.
-    data : numpy.ndarray or None
+    data : numpy.ndarray of float32 or None
         SAC data array.
     tests : str
         One or more of the following validity tests:
