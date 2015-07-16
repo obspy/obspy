@@ -815,6 +815,7 @@ class SACTrace(object):
         if headonly:
             data = None
         else:
+            # do a check for float32 data here instead of arrayio.write_sac?
             data = self.data
             self._flush_headers()
 
@@ -934,16 +935,17 @@ class SACTrace(object):
 
         """
         # make the obspy test for tests/data/testxy.sac pass
-        try:
-            self.validate('reftime')
-        except SacInvalidContentError:
-            if not self.nzyear:
-                self.nzyear = 1970
-            if not self.nzjday:
-                self.nzjday = 1
-            for hdr in ['nzhour', 'nzmin', 'nzsec', 'nzmsec']:
-                if not getattr(self, hdr):
-                    setattr(self, hdr, 0)
+        # ObsPy does not require a valid reftime
+        # try:
+        #     self.validate('reftime')
+        # except SacInvalidContentError:
+        #     if not self.nzyear:
+        #         self.nzyear = 1970
+        #     if not self.nzjday:
+        #         self.nzjday = 1
+        #     for hdr in ['nzhour', 'nzmin', 'nzsec', 'nzmsec']:
+        #         if not getattr(self, hdr):
+        #             setattr(self, hdr, 0)
         self.validate('delta')
         try:
             self.validate('data_hdrs')

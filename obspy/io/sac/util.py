@@ -188,7 +188,8 @@ def sac_to_obspy_header(sacheader):
     # 2. get time
     try:
         reftime = get_sac_reftime(sacheader)
-    except (SacError, ValueError):
+    except (SacError, ValueError, TypeError):
+        # ObsPy doesn't require a valid reftime
         reftime = UTCDateTime(0.0)
 
     b = sacheader.get('b', HD.FNULL)
