@@ -12,8 +12,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import io
-
 import numpy as np
 
 from obspy import UTCDateTime

@@ -13,7 +13,7 @@ setters.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.utils import native_str
+# from future.utils import native_str
 from future.builtins import *  # NOQA
 
 import sys
@@ -193,6 +193,7 @@ def _make_data_func(func, hdr):
     return do_data_func
 
 # TODO: a data setter the requires a float32 array
+
 
 # Factory function for setting relative time headers with either a relative
 # time float or an absolute UTCDateTime

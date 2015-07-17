@@ -16,7 +16,7 @@ from future.utils import native_str
 import os
 import struct
 
-from obspy import Stream, Trace
+from obspy import Stream
 from obspy.core.compatibility import is_bytes_buffer
 from .sactrace import SACTrace
 
