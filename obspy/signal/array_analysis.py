@@ -1506,6 +1506,7 @@ class SeismicArray(object):
                                     smin, smax, sstep, wavetype,
                                     freq_range, plot_frequencies=(7, 14),
                                     n_min_stns=7, win_average=1, win_frac=1,
+                                    whiten=False, coherency=True,
                                     plot_transff=False):
         """
         Do three component beamforming following Esmersoy 1985...
@@ -1540,6 +1541,8 @@ class SeismicArray(object):
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
         :param win_frac: fraction of sliding window to use for step
+        :param whiten: whether to whiten the frequency spectrum
+        :param coherency: whether to normalise the powers
         :param plot_transff: whether to also plot the transfer function of the
          array (only considering stations/channels for which data is present)
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
@@ -1625,8 +1628,8 @@ class SeismicArray(object):
                                     sub_freq_range=freq_range,
                                     n_min_stns=n_min_stns,
                                     polarisation=pol_dict[wavetype.lower()],
-                                    whiten=False,
-                                    coherency=True,
+                                    whiten=whiten,
+                                    coherency=coherency,
                                     win_average=win_average,
                                     datalen_sec=datalen_sec,
                                     uindex=uindex)
@@ -3222,8 +3225,9 @@ class BeamformerResult(object):
         if average_freqs and not average_windows:
             for iwin in range(len(beamresnz[0, 0, :])):
                 _actual_plotting(beamresnz[:, :, iwin],
-                                 'Averaged all frequencies, window {}'
-                                 .format(iwin))
+                                 'Averaged all frequencies, window {}\n'
+                                 '(starting {})'
+                                 .format(iwin, self.times[iwin].isoformat()))
 
         # Plotting all windows, selected frequencies.
         if average_freqs is False and average_windows is False:
@@ -3231,9 +3235,11 @@ class BeamformerResult(object):
                 ifreq = np.searchsorted(self.freqs, plot_freq)
                 for iwin in range(len(beamresnz[0, 0, :, 0])):
                     _actual_plotting(beamresnz[:, :, iwin, ifreq],
-                                     '{} BF result window {}, freq {}'
-                                     .format(self.method, iwin,
-                                             self.freqs[ifreq]))
+                                     '{} BF result freq {}, window {}\n'
+                                     '(starting {})'
+                                     .format(self.method, self.freqs[ifreq],
+                                             iwin,
+                                             self.times[iwin].isoformat()))
 
         if show_immediately is True:
             plt.show()
