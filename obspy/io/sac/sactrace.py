@@ -1170,7 +1170,7 @@ class SACTrace(object):
         ...it is recommended to just make sure your target reference header is
         set and correct, and set the iztype:
 
-        >>> sac.o = UTCDateTime(year=1982, julday=123, hour=13, minute=37,
+        >>> sac.o = UTCDateTime(year=1982, julday=123, hour=13, minute=37,  # doctest: +SKIP
                                 second=10, microsecond=103)  # doctest: +SKIP
         >>> sac.iztype = 'io' # doctest: +SKIP
 
