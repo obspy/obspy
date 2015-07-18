@@ -322,8 +322,10 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         is_file_name = False
 
     if data is None and f.mode != 'rb+':
-        msg = "File mode must be 'wb+' for data=None."
-        raise ValueError(msg)
+        # msg = "File mode must be 'wb+' for data=None."
+        # raise ValueError(msg)
+        msg = "Writing header-only file. Use 'wb+' file mode to update header."
+        warnings.warn(msg)
 
     # deal with desired byte order
     # TODO: combine with block above
