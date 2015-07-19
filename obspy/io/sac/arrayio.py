@@ -394,8 +394,10 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         is_file_name = False
 
     if data is None and f.mode != 'r+':
-        msg = "File mode must be 'r+' for data=None."
-        raise ValueError(msg)
+        # msg = "File mode must be 'r+' for data=None."
+        # raise ValueError(msg)
+        msg = "Writing header-only file. Use 'wb+' file mode to update header."
+        warnings.warn(msg)
 
     try:
         np.savetxt(f, np.reshape(hf, (14, 5)),

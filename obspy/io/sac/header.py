@@ -282,7 +282,7 @@ ENUM_VALS = {'itime': 1, 'irlim': 2, 'iamph': 3, 'ixy': 4, 'iunkn': 5,
              'igey': 94, 'ilit': 95, 'imet': 96, 'iodor': 97, 'ios': 103}
 
 # reverse look-up: you have the number, want the string
-ENUM_NAMES = dict((v, k) for k, v in ENUM_VALS.iteritems())
+ENUM_NAMES = dict((v, k) for k, v in ENUM_VALS.items())
 
 
 # accepted values, by header
