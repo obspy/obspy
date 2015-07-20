@@ -2,6 +2,10 @@
 """
 Module for ObsPy's default colormaps.
 
+"Viridis" is matplotlib's new default colormap from version 2.0 onwards and is
+based on a design by Eric Firing (@efiring, see
+http://thread.gmane.org/gmane.comp.python.matplotlib.devel/13522/focus=13542).
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -41,8 +45,8 @@ def _get_cmap(name):
     return cmap
 
 
-obspy_viridis = _get_cmap("viridis")
-obspy_sequential = obspy_viridis
+viridis = _get_cmap("viridis")
+obspy_sequential = viridis
 obspy_divergent = get_cmap("RdYlBu_r")
 
 
