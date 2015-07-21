@@ -945,6 +945,21 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(2106, 2, 7, 6, 28, 16)
         self.assertEqual(dt.__str__(), '2106-02-07T06:28:16.000000Z')
 
+    def test_format_IRIS_webservice(self):
+        """
+        Tests the format IRIS webservice function.
+
+        See issue #1096.
+        """
+        # These are parse slightly differently (1 microsecond difference but
+        # the IRIS webservice string should be identical as its only
+        # accurate to three digits.
+        d1 = UTCDateTime(2011, 1, 25, 15, 32, 12.26)
+        d2 = UTCDateTime("2011-01-25T15:32:12.26")
+
+        self.assertEqual(d1.formatIRISWebService(),
+                         d2.formatIRISWebService())
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
