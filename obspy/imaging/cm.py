@@ -47,7 +47,8 @@ def _get_cmap(name):
 
 viridis = _get_cmap("viridis")
 obspy_sequential = viridis
-obspy_divergent = get_cmap("RdYlBu_r")
+obspy_divergent = get_cmap("RdBu_r")
+obspy_divergent_r = get_cmap("RdBu")
 
 
 if __name__ == '__main__':
