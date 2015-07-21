@@ -15,26 +15,94 @@ from future.builtins import *  # NOQA
 from math import log
 
 from lxml.etree import Element, SubElement, tostring
+from matplotlib.cm import get_cmap
 
 
-def inventory_to_kml_string(inventory):
+def inventory_to_kml_string(
+        inventory,
+        icon_url="http://maps.google.com/mapfiles/kml/shapes/triangle.png",
+        icon_size=1.5, label_size=1.0, cmap="Paired", encoding="UTF-8"):
     """
     Convert an :class:`~obspy.core.inventory.inventory.Inventory` to a kml
     string representation.
 
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Input station metadata.
+    :type icon_url: str
+    :param icon_url: Internet URL of icon to use for station (e.g. png image).
+    :type icon_size: float
+    :param icon_size: Icon size.
+    :type label_size: float
+    :param label_size: Label size.
+    :type encoding: str
+    :param encoding: Encoding used for XML string.
     :rtype: str
     :return: String containing KML information of the station metadata.
     """
-    res = ""
-    return res
+    # construct the KML file
+    kml = Element("kml")
+    kml.set("xmlns", "http://www.opengis.net/kml/2.2")
+
+    document = SubElement(kml, "Document")
+    SubElement(document, "name").text = "Inventory"
+
+    # style definition
+    cmap = get_cmap(name=cmap, lut=len(inventory.networks))
+    for i in range(len(inventory.networks)):
+        color = _rgba_tuple_to_kml_color_code(cmap(i))
+        style = SubElement(document, "Style")
+        style.set("id", "station_%i" % i)
+
+        iconstyle = SubElement(style, "IconStyle")
+        SubElement(iconstyle, "color").text = color
+        SubElement(iconstyle, "scale").text = str(icon_size)
+        icon = SubElement(iconstyle, "Icon")
+        SubElement(icon, "href").text = icon_url
+        hotspot = SubElement(iconstyle, "hotSpot")
+        hotspot.set("x", "0.5")
+        hotspot.set("y", "0.5")
+        hotspot.set("xunits", "fraction")
+        hotspot.set("yunits", "fraction")
+
+        labelstyle = SubElement(style, "LabelStyle")
+        SubElement(labelstyle, "color").text = color
+        SubElement(labelstyle, "scale").text = str(label_size)
+
+    for i, net in enumerate(inventory):
+        folder = SubElement(document, "Folder")
+        SubElement(folder, "name").text = str(net.code)
+        SubElement(folder, "open").text = "1"
+
+        SubElement(folder, "description").text = str(net)
+
+        style = SubElement(folder, "Style")
+        liststyle = SubElement(style, "ListStyle")
+        SubElement(liststyle, "listItemType").text = "check"
+        SubElement(liststyle, "bgColor").text = "00ffff"
+        SubElement(liststyle, "maxSnippetLines").text = "5"
+
+        # add one marker per station code
+        for sta in net:
+            placemark = SubElement(folder, "Placemark")
+            SubElement(placemark, "name").text = ".".join((net.code, sta.code))
+            SubElement(placemark, "styleUrl").text = "#station_%i" % i
+            SubElement(placemark, "color").text = color
+            if sta.longitude is not None and sta.latitude is not None:
+                point = SubElement(placemark, "Point")
+                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+                    (sta.longitude, sta.latitude)
+
+            SubElement(placemark, "description").text = str(sta)
+
+    # generate and return KML string
+    return tostring(kml, pretty_print=True, xml_declaration=True,
+                    encoding=encoding)
 
 
 def catalog_to_kml_string(
         catalog,
         icon_url="http://maps.google.com/mapfiles/kml/shapes/earthquake.png",
-        label_func=None, icon_size_func=None):
+        label_func=None, icon_size_func=None, encoding="UTF-8"):
     """
     Convert an :class:`~obspy.core.event.Catalog` to a kml string
     representation.
@@ -48,10 +116,12 @@ def catalog_to_kml_string(
         label. User provided function is supposed to take an
         :class:`~obspy.core.event.Event` object as single argument, e.g. for
         empty labels use `label_func=lambda x: ""`.
-    :type icon_size_func_func: func
-    :type icon_size_func_func: Custom function to use for determining each
+    :type icon_size_func: func
+    :type icon_size_func: Custom function to use for determining each
         event's icon size. User provided function is supposed to take an
         :class:`~obspy.core.event.Event` object as single argument.
+    :type encoding: str
+    :param encoding: Encoding used for XML string.
     :rtype: str
     :return: String containing KML information of the event metadata.
     """
@@ -142,7 +212,21 @@ def catalog_to_kml_string(
         SubElement(placemark, "description").text = str(event)
 
     # generate and return KML string
-    return tostring(kml, pretty_print=True, xml_declaration=True)
+    return tostring(kml, pretty_print=True, xml_declaration=True,
+                    encoding=encoding)
+
+
+def _rgba_tuple_to_kml_color_code(rgba):
+    """
+    Convert tuple of (red, green, blue, alpha) float values (0.0-1.0) to KML
+    hex color code string "aabbggrr".
+    """
+    try:
+        r, g, b, a = rgba
+    except:
+        r, g, b = rgba
+        a = 1.0
+    return "".join([hex(int(x * 255))[-2:] for x in (a, b, g, r)])
 
 
 if __name__ == '__main__':
