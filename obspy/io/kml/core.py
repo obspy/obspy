@@ -17,11 +17,14 @@ from math import log
 from lxml.etree import Element, SubElement, tostring
 from matplotlib.cm import get_cmap
 
+from obspy import UTCDateTime
+
 
 def inventory_to_kml_string(
         inventory,
         icon_url="http://maps.google.com/mapfiles/kml/shapes/triangle.png",
-        icon_size=1.5, label_size=1.0, cmap="Paired", encoding="UTF-8"):
+        icon_size=1.5, label_size=1.0, cmap="Paired", encoding="UTF-8",
+        timespans=True, strip_far_future_end_times=True):
     """
     Convert an :class:`~obspy.core.inventory.inventory.Inventory` to a kml
     string representation.
@@ -36,9 +39,23 @@ def inventory_to_kml_string(
     :param label_size: Label size.
     :type encoding: str
     :param encoding: Encoding used for XML string.
-    :rtype: str
-    :return: String containing KML information of the station metadata.
+    :type timespans: bool
+    :param timespans: Whether to add timespan information to the single station
+        elements in the kml or not. If timespans are used, the displayed
+        information in e.g. Google Earth will represent a snapshot in time,
+        such that using the time slider different states of the inventory in
+        time can be visualized. If timespans are not used, any station active
+        at any point in time is always shown.
+    :type strip_far_future_end_times: bool
+    :param strip_far_future_end_times: Leave out likely fictitious end times of
+        stations (more than twenty years after current time). Far future end
+        times may produce time sliders with bad overall time span in third
+        party applications viewing the kml file.
+    :rtype: byte string
+    :return: Encoded byte string containing KML information of the station
+        metadata.
     """
+    twenty_years_from_now = UTCDateTime() + 3600 * 24 * 365 * 20
     # construct the KML file
     kml = Element("kml")
     kml.set("xmlns", "http://www.opengis.net/kml/2.2")
@@ -94,6 +111,29 @@ def inventory_to_kml_string(
 
             SubElement(placemark, "description").text = str(sta)
 
+            if timespans:
+                start = sta.start_date
+                end = sta.end_date
+                if start is not None or end is not None:
+                    timespan = SubElement(placemark, "TimeSpan")
+                    if start is not None:
+                        SubElement(timespan, "begin").text = str(start)
+                    if end is not None:
+                        if not strip_far_future_end_times or \
+                                end < twenty_years_from_now:
+                            SubElement(timespan, "end").text = str(end)
+        if timespans:
+            start = net.start_date
+            end = net.end_date
+            if start is not None or end is not None:
+                timespan = SubElement(folder, "TimeSpan")
+                if start is not None:
+                    SubElement(timespan, "begin").text = str(start)
+                if end is not None:
+                    if not strip_far_future_end_times or \
+                            end < twenty_years_from_now:
+                        SubElement(timespan, "end").text = str(end)
+
     # generate and return KML string
     return tostring(kml, pretty_print=True, xml_declaration=True,
                     encoding=encoding)
@@ -102,7 +142,8 @@ def inventory_to_kml_string(
 def catalog_to_kml_string(
         catalog,
         icon_url="http://maps.google.com/mapfiles/kml/shapes/earthquake.png",
-        label_func=None, icon_size_func=None, encoding="UTF-8"):
+        label_func=None, icon_size_func=None, encoding="UTF-8",
+        timestamps=True):
     """
     Convert an :class:`~obspy.core.event.Catalog` to a kml string
     representation.
@@ -122,8 +163,16 @@ def catalog_to_kml_string(
         :class:`~obspy.core.event.Event` object as single argument.
     :type encoding: str
     :param encoding: Encoding used for XML string.
-    :rtype: str
-    :return: String containing KML information of the event metadata.
+    :type timestamps: bool
+    :param timestamps: Whether to add timestamp information to the event
+        elements in the kml or not. If timestamps are used, the displayed
+        information in e.g. Google Earth will represent a snapshot in time,
+        such that using the time slider different states of the catalog in time
+        can be visualized. If timespans are not used, any event happening at
+        any point in time is always shown.
+    :rtype: byte string
+    :return: Encoded byte string containing KML information of the event
+        metadata.
     """
     # default label and size functions
     if not label_func:
@@ -211,6 +260,11 @@ def catalog_to_kml_string(
 
         SubElement(placemark, "description").text = str(event)
 
+        if timestamps:
+            time = _get_event_timestamp(event)
+            if time is not None:
+                SubElement(placemark, "TimeStamp").text = str(time)
+
     # generate and return KML string
     return tostring(kml, pretty_print=True, xml_declaration=True,
                     encoding=encoding)
@@ -227,6 +281,29 @@ def _rgba_tuple_to_kml_color_code(rgba):
         r, g, b = rgba
         a = 1.0
     return "".join([hex(int(x * 255))[-2:] for x in (a, b, g, r)])
+
+
+def _get_event_timestamp(event):
+    """
+    Get timestamp information for the event. Search is perfomed in the
+    following order:
+
+     - origin time of preferred origin
+     - origin time of first origin found that has a origin time
+     - minimum of all found pick times
+     - `None` if no time is found in the above search
+    """
+    origin = event.preferred_origin()
+    if origin is not None and origin.time is not None:
+        return origin.time
+    for origin in event.origins:
+        if origin.time is not None:
+            return origin.time
+    pick_times = [pick.time for pick in event.picks
+                  if pick.time is not None]
+    if pick_times:
+        return min(pick_times)
+    return None
 
 
 if __name__ == '__main__':
