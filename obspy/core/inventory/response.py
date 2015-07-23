@@ -12,6 +12,7 @@ Classes related to instrument responses.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import ctypes as C
 import warnings
@@ -1323,6 +1324,31 @@ class Response(ComparingObject):
         paz = self.get_paz()
         sensitivity = self.instrument_sensitivity.value
         return paz_to_sacpz_string(paz, sensitivity)
+
+    def get_paz_dict(self):
+        """
+        Get simple dictionary representation of poles, zeros and overall
+        sensitivity.
+
+        >>> from obspy import UTCDateTime, read_inventory
+        >>> t = UTCDateTime(2015, 1, 1)
+        >>> inv = read_inventory()
+        >>> resp = inv.get_response("BW.RJOB..EHZ", t)
+        >>> paz = resp.get_paz_dict()
+        >>> print(sorted(paz.keys()))
+        ['poles', 'sensitivity', 'zeros']
+        >>> print(sorted(paz.items()))  # doctest: +NORMALIZE_WHITESPACE
+        [('poles', [(-0.037004+0.037016j), (-0.037004-0.037016j),
+                    (-251.33+0j), (-131.04-467.29j), (-131.04+467.29j)]),
+         ('sensitivity', 2516800000.0),
+         ('zeros', [0j, 0j])]
+        """
+        paz = self.get_paz()
+        paz_dict = {}
+        paz_dict[native_str('poles')] = deepcopy(paz.poles)
+        paz_dict[native_str('zeros')] = deepcopy(paz.zeros)
+        paz_dict[native_str('sensitivity')] = self.instrument_sensitivity.value
+        return paz_dict
 
 
 def paz_to_sacpz_string(paz, instrument_sensitivity):
