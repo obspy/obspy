@@ -241,6 +241,8 @@ class SeismicArray(object):
         """
         Pretty representation of the array.
         """
+        if self.inventory is None:
+            return 'Empty Array'
         ret_str = "Seismic Array '{name}'\n".format(name=self.name)
         ret_str += "\t{count} Stations\n".format(count=len(self.geometry))
         ret_str += "\tAperture: {aperture:.2f} km".format(
@@ -2952,6 +2954,22 @@ class BeamformerResult(object):
         if(max_rel_power is None and max_pow_baz is None
            and max_pow_slowness is None and full_beamres is not None):
             self._calc_max_values()
+
+    def __add__(self, other):
+        if not isinstance(other, BeamformerResult):
+            raise TypeError
+        if self.method != other.method:
+            raise ValueError
+        if any((self.__dict__[attr] != other.__dict__[attr]).any()
+               for attr in ['freqs', 'slowness_range']):
+            raise ValueError
+        times = np.append(self.times, other.times)
+        full_beamres = np.append(self.full_beamres, other.full_beamres, axis=2)
+        # todo change this inventory call
+        out = self.__class__(self.inventory, times,
+                             slowness_range=self.slowness_range,
+                             full_beamres=full_beamres)
+        return out
 
     def _calc_max_values(self):
         """
