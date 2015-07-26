@@ -1646,7 +1646,8 @@ class SeismicArray(object):
                                    times=window_start_times, slowness_range=u,
                                    full_beamres=bf_results, freqs=freqs,
                                    incidence=incidence,
-                                   method='3C ({})'.format(wavetype))
+                                   method='3C ({})'.format(wavetype),
+                                   timestep=wlen*win_frac*win_average)
 
         finally:
             self.inventory = invbkp
@@ -2902,7 +2903,8 @@ class BeamformerResult(object):
 
     def __init__(self, inventory, times, slowness_range, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
-                 full_beamres=None, freqs=None, incidence=None, method=None):
+                 full_beamres=None, freqs=None, incidence=None, method=None,
+                 timestep=None):
         """
         :param inventory: The inventory that was actually used in the
          beamforming.
@@ -2927,7 +2929,13 @@ class BeamformerResult(object):
         self.inventory = copy.deepcopy(inventory)
         self.times = times
         self.starttime = times[0]
-        self.timestep = times[1] - times[0]
+        if timestep is not None:
+            self.timestep = timestep
+        elif timestep is None and len(times) == 1:
+            msg = "Can't calculate a timestep. Please set manually."
+            warnings.warn(msg)
+        else:
+            self.timestep = times[1] - times[0]
         self.endtime = times[-1] + self.timestep
         self.max_rel_power = max_rel_power
         if max_rel_power is not None:
@@ -2957,7 +2965,7 @@ class BeamformerResult(object):
 
     def __add__(self, other):
         if not isinstance(other, BeamformerResult):
-            raise TypeError
+            raise TypeError('unsupported operand types')
         if self.method != other.method:
             raise ValueError
         if any((self.__dict__[attr] != other.__dict__[attr]).any()
@@ -2966,9 +2974,12 @@ class BeamformerResult(object):
         times = np.append(self.times, other.times)
         full_beamres = np.append(self.full_beamres, other.full_beamres, axis=2)
         # todo change this inventory call
+        # Inventories can vary, but should maybe represent that somehow.
         out = self.__class__(self.inventory, times,
+                             full_beamres=full_beamres,
                              slowness_range=self.slowness_range,
-                             full_beamres=full_beamres)
+                             freqs=self.freqs,
+                             method=self.method)
         return out
 
     def _calc_max_values(self):
