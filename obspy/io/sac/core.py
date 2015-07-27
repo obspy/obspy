@@ -19,6 +19,7 @@ import struct
 from obspy import Stream
 from obspy.core.compatibility import is_bytes_buffer
 from .sactrace import SACTrace
+import obspy.io.sac.arrayio as _aio
 
 
 def _is_sac(filename):
@@ -228,6 +229,8 @@ def __read_sacXY(buf, headonly=False, debug_headers=False,
     >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
+    #hf, hi, hs, data = _aio.read_sac_ascii(buf, headonly=headonly)
+    #sac = SACTrace._from_arrays(hf, hi, hs, data)
     sac = SACTrace.read(buf, headonly=headonly, ascii=True)
     # assign all header entries to a new dictionary compatible with ObsPy
     tr = sac.to_obspy_trace(debug_headers=debug_headers)
@@ -294,8 +297,8 @@ def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
     :param buf: Object to write to.
     :type buf: file-like object
     """
-    sac = SACTrace.from_obspy_trace(trace)
-    sac.write(buf, ascii=True)
+    sac = SACTrace.from_obspy_trace(trace, ignore_old_header=True)
+    sac.write(buf, ascii=True, flush_headers=False)
 
 
 def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,

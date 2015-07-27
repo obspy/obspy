@@ -25,9 +25,13 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
+#import obspy.io.sac.header as HD
 from ..sac import header as HD
+#from obspy.io.sac.util import SacError, SacHeaderError, SacInvalidContentError
 from .util import SacError, SacHeaderError, SacInvalidContentError
+#from obspy.io.sac import util as _ut
 from ..sac import util as _ut
+#from obspy.io.sac import arrayio as _io
 from ..sac import arrayio as _io
 
 
@@ -350,15 +354,18 @@ class SACTrace(object):
     def __init__(self, leven=True, delta=1.0, b=0.0, e=0.0, iztype='ib',
                  nvhdr=6, npts=0, iftype='itime', nzyear=1970, nzjday=1,
                  nzhour=0, nzmin=0, nzsec=0, nzmsec=0, lcalda=False,
-                 lpspol=True, lovrok=True, internal0=2.0, cmpaz=0.0,
-                 cmpinc=0.0, kcmpnm='Z', data=None, **kwargs):
+                 lpspol=True, lovrok=True, internal0=2.0, data=None, **kwargs):
         """
         Initialize a SACTrace object using header key-value pairs and a
         numpy.ndarray for the data, both optional.
 
         If not provided, the required headers are set to valid default values.
-        The default instance is an evenly-space Z trace, with a sample rate of
+        The default instance is an evenly-space trace, with a sample rate of
         1.0, and len(data) or 0 npts, starting at 1970-01-01T00:00:00.000000.
+
+        This is the human-facing interface for making a valid instance.  For
+        file-based or other constructors, see class methods .read and
+        .from_obspy_trace.
 
         Parameters
         ----------
@@ -411,8 +418,7 @@ class SACTrace(object):
                   'nzyear': nzyear, 'nzjday': nzjday, 'nzhour': nzhour,
                   'nzmin': nzmin, 'nzsec': nzsec, 'nzmsec': nzmsec,
                   'lcalda': lcalda, 'lpspol': lpspol, 'lovrok': lovrok,
-                  'internal0': internal0, 'cmpaz': cmpaz, 'cmpinc': cmpinc,
-                  'kcmpnm': kcmpnm}
+                  'internal0': internal0}
 
         # required = ['delta', 'b', 'npts', ...]
         # provided = locals()
@@ -795,7 +801,8 @@ class SACTrace(object):
 
         return cls._from_arrays(hf, hi, hs, data)
 
-    def write(self, dest, headonly=False, ascii=False, byteorder=None):
+    def write(self, dest, headonly=False, ascii=False, byteorder=None,
+              flush_headers=True):
         """
         Parameters
         ----------
@@ -810,6 +817,9 @@ class SACTrace(object):
             Desired output byte order. If omitted, instance byte order is used.
             If data=None, better make sure the file you're writing to has the
             same byte order as headers you're writing.
+        flush_headers : bool
+            If True, update data headers like 'depmin' and 'depmax' with values
+            from the data array.
 
         """
 
@@ -818,7 +828,8 @@ class SACTrace(object):
         else:
             # do a check for float32 data here instead of arrayio.write_sac?
             data = self.data
-            self._flush_headers()
+            if flush_headers:
+                self._flush_headers()
 
         if ascii:
             _io.write_sac_ascii(dest, self._hf, self._hi, self._hs, data)
@@ -871,9 +882,9 @@ class SACTrace(object):
         if hs is None:
             hs = hs0
 
-        # get the default instance, but replace the arrays
+        # get the default instance, but completely replace the arrays
         # initializes arrays twice, but it beats converting empty arrays to a
-        # dict and then passing it to __init__, i think
+        # dict and then passing it to __init__, i think...maybe...
         sac = cls()
         sac._hf = hf
         sac._hi = hi
@@ -924,9 +935,9 @@ class SACTrace(object):
 
     def to_obspy_trace(self, debug_headers=False):
         """
-        Return a dictionary suitable for an Obspy Stats header.
+        Return an ObsPy Trace instance.
 
-        Required headers:  nz-time fields, npts, delta, calib, kcmpnm, kstnm,
+        Required headers: nz-time fields, npts, delta, calib, kcmpnm, kstnm,
         ...?
 
         Parameters
@@ -953,17 +964,12 @@ class SACTrace(object):
         #         if not getattr(self, hdr):
         #             setattr(self, hdr, 0)
         self.validate('delta')
-        try:
-            self.validate('data_hdrs')
-        except SacInvalidContentError:
-            self._flush_headers()
-            self.validate('data_hdrs')
-        except ValueError:
-            # self.data is None (headonly).
-            # Make it something palatable to obspy
-            self.data = np.array([])
-        # TODO: does a sac file need to have iztype specified, or just 'b'?
-        # self.validate('reltime')
+        if self.data is None:
+            # headonly is True
+            # Make it something palatable to ObsPy
+            data = np.array([], dtype=self._hf.dtype.byteorder + 'f4')
+        else:
+            data = self.data
 
         sachdr = _io.header_arrays_to_dict(self._hf, self._hi, self._hs,
                                            nulls=debug_headers)
@@ -971,7 +977,7 @@ class SACTrace(object):
 
         stats = _ut.sac_to_obspy_header(sachdr)
 
-        return Trace(data=self.data, header=stats)
+        return Trace(data=data, header=stats)
 
     # ---------------------- other properties/methods -------------------------
     def validate(self, *tests):

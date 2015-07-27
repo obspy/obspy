@@ -263,6 +263,12 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
     #     and push microseconds from stats.starttime into b.
     # 2. Stuff the appropriate Stats headers into the sac header
 
+    # New Plan :
+    # 0. Make a SAC header from the ObsPy header as if there was no SAC header
+    # 1. Merge the old SAC header, if found
+    # 2. if keep_sac_reftime = True, adjust reftime, b, e
+    # 3. if reftime is undefined, just make it an 'ib' file, like normal.
+
     # 0.
     header = stats.get('sac', {}).copy()
     is_old_header = bool(header)
@@ -279,7 +285,12 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
         #
         # just the difference btwn the old reftime and the trace starttime is b
         # b naturally includes any microseconds
-        reftime = get_sac_reftime(header)
+        try:
+            reftime = get_sac_reftime(header)
+        except SacError:
+            # the old header has an invalid reftime
+            # b will be 
+            raise SacError("Old header has invalid reftime.")
         header['b'] = starttime - reftime
     else:
         # B. make the SAC header from scratch
@@ -300,6 +311,16 @@ def obspy_to_sac_header(stats, ignore_old_header=True):
         header['nzmsec'] = millisecond
         header['b'] = (microsecond * 1e-6) if microsecond else 0.0
         reftime = starttime - header['b']
+
+        # XXX: if starttime is 1970001 + b, it is meaningless. 
+        #   don't write nz-times.
+        if starttime == UTCDateTime(0) + header['b']:
+            header['nzyear'] = HD.INULL
+            header['nzjday'] = HD.INULL
+            header['nzhour'] = HD.INULL
+            header['nzmin'] = HD.INULL
+            header['nzsec'] = HD.INULL
+
 
         # make other SAC values from scratch
         # TODO: are all of these necessary? Especially if header is being
