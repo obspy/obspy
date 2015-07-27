@@ -3225,9 +3225,12 @@ class BeamformerResult(object):
             ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
                               labels=['90', '45', '0', '315', '270', '225',
                                       '180', '135'])
-            # ax.set_rgrids([0.1,0.2,0.3,0.4,0.5],labels=['0.1','0.2','0.3',
-            # '0.4','0.5'],color='r')
             ax.set_rmax(self.slowness_range[-1])
+            # Setting this to -0 means that when the slowness range doesn't
+            # start at 0, the plot is shown with a 'hole' in the middle rather
+            # stitching it up. This behaviour shows the resulting shapes much
+            # better.
+            ax.set_rmin(-0)
             fig.colorbar(CONTF)
             ax.grid(True)
             ax.set_title(title)
