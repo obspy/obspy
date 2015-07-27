@@ -250,7 +250,7 @@ def read_sac_ascii(source, headonly=False):
     # because every string field has to be 8 characters long
     # apart from the second field which is 16 characters long
     # resulting in a total length of 192 characters
-    hs = init_header_arrays('str')
+    hs, = init_header_arrays('str')
     for i, j in enumerate(range(0, 24, 3)):
         line = contents[14 + 8 + i]
         hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'), count=3)
@@ -407,10 +407,11 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         for i in range(0, 24, 3):
             f.write(hs[i:i + 3].data)
             f.write(b'\n')
-    except:
+    except Exception as e:
         if is_file_name:
             f.close()
-        raise SacIOError("Cannot write header values: " + f.name)
+        raise(e, "Cannot write header values: " + f.name)
+        #raise SacIOError("Cannot write header values: " + f.name)
 
     if data is not None:
         npts = hi[9]
