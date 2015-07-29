@@ -109,6 +109,10 @@ class ObsPyRestructureMetaPathFinderAndLoader(object):
     Make sure to remove this once 0.11 has been released!
     """
     def find_module(self, fullname, path=None):
+        # Compatibility with namespace paths.
+        if hasattr(path, "_path"):
+            path = path._path
+
         if not path or not path[0].startswith(__path__[0]):
             return None
 
