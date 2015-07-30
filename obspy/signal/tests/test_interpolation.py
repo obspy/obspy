@@ -51,7 +51,6 @@ class InterpolationTestCase(unittest.TestCase):
             values["full_kernel"], np.sinc(x) * np.sinc(x / 5.0),
             atol=1E-9)
 
-
     def test_lanczos_interpolation(self):
         """
         Tests against the instaseis implementation which should work well

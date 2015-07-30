@@ -2219,7 +2219,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param time_shift: Interpolation also can shift the data with
             subsample accuracy. The time shift is always given in seconds. A
             positive shift means the data is shifted towards the future,
-            e.g. a positive time delta.
+            e.g. a positive time delta. Please note that a time shift in
+            the Fourier domain is always more accurate then this. When using
+            Lanczos interpolation with large values of ``a`` and away from the
+            boundaries this is nonetheless pretty good.
 
         .. rubric:: _`Usage Examples`
 

@@ -182,7 +182,7 @@ _LANCZOS_KERNEL_MAP = {
 
 
 def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
-                          a, window="lanczos"):
+                          a, window="lanczos", *args, **kwargs):
     r"""
     Function performing Lanczos resampling, see
     http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
