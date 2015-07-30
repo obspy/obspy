@@ -2176,14 +2176,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Interpolate the data using various interpolation techniques.
 
-        No filter, antialiasing, ... is applied so make sure the data is
-        suitable for the operation to be performed.
+        Be careful when downsampling data and make sure to apply a proper
+        anti-aliasing lowpass filter in case its necessary.
 
         .. note::
 
             The :class:`~Trace` object has three different methods to change
             the sampling rate of its data: :meth:`~.resample`,
-            :meth:`~.decimate`, and :meth:`~.interpolate`
+            :meth:`~.decimate`, and :meth:`~.interpolate`.
 
             Make sure to choose the most appropriate one for the problem at
             hand.
@@ -2195,18 +2195,36 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~.copy` to create a copy of your Trace
             object.
 
+        .. rubric:: _`Interpolation Methods:`
+
+        The chosen method is crucial and we will elaborate a bit about the
+        choices here:
+
+        * ``"lanczos"``: This offers the highest quality interpolation and
+          should be chosen whenever possible. It is only due to legacy
+          reasons that this is not the default method. The one downside it
+          has that it can be fairly expensive. See the
+          :func:`~obspy.signal.interpolation.lanczos_interpolation` function
+          for more details.
+        * ``"weighted_average_slopes"``: This is the interpolation method used
+          by SAC. Refer to
+          :func:`~obspy.signal.interpolation.weighted_average_slopes` for
+          more details.
+        * ``"slinear"``, ``"quadratic"`` and ``"cubic"``: spline interpolation
+          of first, second or third order
+        * ``"linear"``: Linear interpolation.
+        * ``"nearest"``: Nearest neighbour interpolation.
+        * ``"zero"``: Last encountered value interpolation.
+
+        .. rubric:: _`Parameters:`
 
         :param sampling_rate: The new sampling rate in ``Hz``.
-        :param method: The kind of interpolation to perform as a string (
+        :param method: The kind of interpolation to perform as a string. One of
             ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
-            ``"quadratic"``, ``"cubic"``, or ``"weighted_average_slopes"``
-            where ``"slinear"``, ``"quadratic"`` and ``"cubic"`` refer  to a
-            spline interpolation of first,  second or third order) or as an
-            integer specifying the order of the spline interpolator to use.
-            Defaults to ``"weighted_average_slopes"`` which is the
-            interpolation technique used by SAC. Refer to
-            :func:`~obspy.signal.interpolation.weighted_average_slopes` for
-            more details.
+            ``"quadratic"``, ``"cubic"``, ``"lanczos"``, or
+            ``"weighted_average_slopes"``. Alternatively an integer
+            specifying the order of the spline interpolator to use also works.
+            Defaults to ``"weighted_average_slopes"``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
         :param starttime: The start time (or timestamp) for the new
             interpolated stream. Will be set to current start time of the
@@ -2216,7 +2234,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             fitting  number to retain the current end time of the trace if
             not given.
         :type time_shift: float
-        :param time_shift: Interpolation also can shift the data with
+        :param time_shift: Interpolation can also shift the data with
             subsample accuracy. The time shift is always given in seconds. A
             positive shift means the data is shifted towards the future,
             e.g. a positive time delta. Please note that a time shift in
@@ -2224,8 +2242,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Lanczos interpolation with large values of ``a`` and away from the
             boundaries this is nonetheless pretty good.
 
-        .. rubric:: _`Usage Examples`
+        .. rubric:: _`New in version 0.11:`
 
+        * New parameter ``time_shift``.
+        * New interpolation method ``lanczos``.
+
+
+        .. rubric:: _`Usage Examples`
 
         >>> from obspy import read
         >>> tr = read()[0]
