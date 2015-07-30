@@ -54,6 +54,8 @@ double blackmann_kernel(double x, int a) {
  *     y_in: The data values to be interpolated.
  *     y_out: The output array. Must already be initialized with zeros.
  *     dt: The sampling rate factor.
+ *     offset: The offset of the first sample in the output array relative
+ *         to the input array.
  *     len_in: The length of the input array.
  *     len_out: The length of the output array.
  *     a: The width of the taper in samples on either side.
@@ -61,14 +63,15 @@ double blackmann_kernel(double x, int a) {
  *
  * Output will be written to y_out.
  */
-void lanczos_resample(double *y_in, double *y_out, double dt, int len_in,
-                      int len_out, int a, enum lanczos_window_type window) {
+void lanczos_resample(double *y_in, double *y_out, double dt, double offset,
+                      int len_in, int len_out, int a,
+                      enum lanczos_window_type window) {
 
     int idx, i, m;
     double x, _x;
 
     for (idx=0; idx < len_out; idx++) {
-        x = dt * idx;
+        x = dt * idx + offset;
         for (m=-a; m<=a; m++) {
             i = (int)floor(x) - m;
             if (i < 0 || i >= len_in) {

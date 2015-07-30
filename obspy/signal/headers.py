@@ -123,6 +123,8 @@ clibsignal.lanczos_resample.argtypes = [
                            flags=native_str('C_CONTIGUOUS')),
     # dt
     C.c_double,
+    # offset
+    C.c_double,
     # len_in
     C.c_int,
     # len_out,
