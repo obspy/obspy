@@ -177,7 +177,7 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
 _LANCZOS_KERNEL_MAP = {
     "lanczos": 0,
     "hanning": 1,
-    "blackmann": 2
+    "blackman": 2
 }
 
 
@@ -215,7 +215,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     :param a: The width of the window in samples on either side.
     :type window: str
     :param window: The window used to multiply the sinc function with. One
-        of ``"lanczos"``, ``"hanning"``, ``"blackmann"``.
+        of ``"lanczos"``, ``"hanning"``, ``"blackman"``.
     """
     _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts)
     dt_factor = float(new_dt) / old_dt
@@ -240,7 +240,7 @@ def calculate_lanczos_kernel(x, a, window):
     :param a: The width of the window in samples on either side.
     :type window: str
     :param window: The window used to multiply the sinc function with. One
-        of ``"lanczos"``, ``"hanning"``, ``"blackmann"``.
+        of ``"lanczos"``, ``"hanning"``, ``"blackman"``.
 
     Return a dictionary of arrays.
     """

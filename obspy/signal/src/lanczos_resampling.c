@@ -40,7 +40,7 @@ double hanning_kernel(double x, int a) {
  *
  * Values are taken from http://mathworld.wolfram.com/BlackmanFunction.html
  */
-double blackmann_kernel(double x, int a) {
+double blackman_kernel(double x, int a) {
     return 21.0 / 50.0 +
            0.5 * cos(x / (double)a * M_PI) +
            2.0 / 25.0 * cos(2.0 * x / (double)a * M_PI);
@@ -87,7 +87,7 @@ void lanczos_resample(double *y_in, double *y_out, double dt, double offset,
                     y_out[idx] += y_in[i] * sinc(_x) * hanning_kernel(_x, a);
                 }
                 else if (window == BLACKMAN) {
-                    y_out[idx] += y_in[i] * sinc(_x) * blackmann_kernel(_x, a);
+                    y_out[idx] += y_in[i] * sinc(_x) * blackman_kernel(_x, a);
                 }
             }
         }
@@ -129,7 +129,7 @@ void calculate_kernel(double *x, double *y, int len, int a,
                     y[idx] = sinc(value) * hanning_kernel(value, a);
                 }
                 else if (window == BLACKMAN) {
-                    y[idx] = sinc(value) * blackmann_kernel(value, a);
+                    y[idx] = sinc(value) * blackman_kernel(value, a);
                 }
             }
             else {
@@ -150,7 +150,7 @@ void calculate_kernel(double *x, double *y, int len, int a,
                     y[idx] = hanning_kernel(value, a);
                 }
                 else if (window == BLACKMAN) {
-                    y[idx] = blackmann_kernel(value, a);
+                    y[idx] = blackman_kernel(value, a);
                 }
             }
             else {
