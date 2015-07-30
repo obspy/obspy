@@ -183,20 +183,13 @@ _LANCZOS_KERNEL_MAP = {
 
 def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
                           a, window="lanczos", *args, **kwargs):
-    """
+    r"""
     Function performing Lanczos resampling, see
     http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
     finite support version of sinc resampling (ideal reconstruction filter).
-    For large values of a it converges towards sinc resamples. If used for
-    downsampling, make sure to apply a proper anti-aliasing lowpass filter
+    For large values of ``a`` it converges towards sinc resampling. If used
+    for downsampling, make sure to apply a proper anti-aliasing lowpass filter
     first.
-
-    Values of >= 20 for ``a`` show good results even for data that has
-    energy close to the Nyquist frequency. If your data is way oversampled
-    you can get away with much smaller ``a``'s.
-
-    To get an idea of the response of the filter, please use the
-    :func:`~obspy.signal.interpolation.plot_lanczos_windows` function.
 
     :type data: array_like
     :param data: Array to interpolate.
@@ -216,6 +209,66 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     :type window: str
     :param window: The window used to multiply the sinc function with. One
         of ``"lanczos"``, ``"hanning"``, ``"blackman"``.
+
+    Values of ``a`` >= 20 show good results even for data that has
+    energy close to the Nyquist frequency. If your data is way oversampled
+    you can get away with much smaller ``a``'s.
+
+    To get an idea of the response of the filter, please use the
+    :func:`~obspy.signal.interpolation.plot_lanczos_windows` function.
+
+    Also be aware of any boundary effects. All values outside the data
+    range are assumed to be zero which matters when calculating interpolated
+    values at the boundaries. At each side the area with potential boundary
+    effects is ``a`` * ``old_dt``. If you want to avoid any boundary effects
+    you will have to remove these values.
+
+    **Mathematical Details:**
+
+    The :math:`sinc` function is defined as
+
+    .. math::
+
+        sinc(t) = \frac{\sin(\pi t)}{\pi t}.
+
+    The Lanczos kernel is then given by a multiplication of the :math:`sinc`
+    function with an additional window function resulting in a finite support
+    kernel.
+
+    .. math::
+
+        \begin{align}
+            L(t) =
+            \begin{cases}
+                sinc(t)\, \cdot sinc(t/a)
+                    & \text{if } t \in [-a, a]
+                    \text{ and `window`} = \text{`lanczos`}\\
+                sinc(t)\, \cdot \frac{1}{2}
+                (1 + \cos(\pi\, t/a))
+                    & \text{if } t \in [-a, a]
+                    \text{ and `window`} = \text{`hanning`}\\
+                sinc(t)\, \cdot \left( \frac{21}{50} + \frac{1}{2}
+                \cos(\pi\, t/a) + \frac{2}{25} \cos (2\pi\, t/a) \right)
+                    & \text{if } t \in [-a, a] \text{ and `window`} =
+                    \text{`blackman`}\\
+                0                     & \text{else,}
+            \end{cases}
+        \end{align}
+
+
+    Finally interpolation is performed by convolving the discrete signal
+    :math:`s_i` with that this kernel and evaluating it at the new timesamples
+    :math:`t_j`:
+
+    .. math::
+
+        \begin{align}
+            S(t_j) = \sum_{i = \left \lfloor{x}\right \rfloor - a + 1}
+                          ^{\left \lfloor{x}\right \rfloor + a}
+            s_i L(t_j - i),
+        \end{align}
+
+    where :math:`\lfloor \cdot \rfloor` denotes the floor function.
     """
     _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts)
     dt_factor = float(new_dt) / old_dt
@@ -279,10 +332,17 @@ def plot_lanczos_windows(a):
     :type a: int
     :param a: The width of the window in samples on either side.
 
-    .. plot::
+    .. code-block:: python
 
         from obspy.signal.interpolation import plot_lanczos_windows
-        plot_lanczos_windows(a)
+        plot_lanczos_windows(a=20)
+
+    .. plot::
+
+        import matplotlib.pyplot as plt
+        plt.figure(figsize=(10, 15))
+        from obspy.signal.interpolation import plot_lanczos_windows
+        plot_lanczos_windows(a=20)
     """
     x_max = 1024.0 - 0.5
     n = 2 ** 15
@@ -338,7 +398,6 @@ def plot_lanczos_windows(a):
 
     plt.suptitle("Different windows for sinc interpolation with an a of %i"
                  % a, fontsize="large")
-    plt.tight_layout()
     plt.show()
 
 
