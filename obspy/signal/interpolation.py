@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 import scipy.interpolate
+import matplotlib.pyplot as plt
 
 from obspy.signal.headers import clibsignal
 
@@ -163,13 +164,180 @@ def weighted_average_slopes(data, old_start, old_dt, new_start, new_dt,
 
     # Create interpolated value using hermite interpolation. In this case
     # it is directly applicable as the first derivatives are known.
-    # Using scipy.interpolate.piecewise_polynomial_interpolate() is to
+    # Using scipy.interpolate.piecewise_polynomial_interpolate() is too
     # memory intensive
     return_data = np.empty(len(new_time_array), dtype=np.float64)
     clibsignal.hermite_interpolation(data, slope, new_time_array, return_data,
                                      len(data), len(return_data), old_dt,
                                      old_start)
     return return_data
+
+
+# Map corresponding to the enum on the C side of things.
+_LANCZOS_KERNEL_MAP = {
+    "lanczos": 0,
+    "hanning": 1,
+    "blackmann": 2
+}
+
+
+def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
+                          a, window="lanczos", *args, **kwargs):
+    """
+    Function performing Lanczos resampling, see
+    http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
+    finite support version of sinc resampling (ideal reconstruction filter).
+    For large values of a it converges towards sinc resamples. If used for
+    downsampling, make sure to apply a proper anti-aliasing lowpass filter
+    first.
+
+    Values of >= 20 for ``a`` show good results even for data that has
+    energy close to the Nyquist frequency. If your data is way oversampled
+    you can get away with much smaller ``a``'s.
+
+    To get an idea of the response of the filter, please use the
+    :func:`~obspy.signal.interpolation.plot_lanczos_windows` function.
+
+    :type data: array_like
+    :param data: Array to interpolate.
+    :type old_start: float
+    :param old_start: The start of the array as a number.
+    :type old_start: float
+    :param old_dt: The time delta of the current array.
+    :type new_start: float
+    :param new_start: The start of the interpolated array. Must be greater
+        or equal to the current start of the array.
+    :type new_dt: float
+    :param new_dt: The desired new time delta.
+    :type new_npts: int
+    :param new_npts: The new number of samples.
+    :type a: int
+    :param a: The width of the window in samples on either side.
+    :type window: str
+    :param window: The window used to multiply the sinc function with. One
+        of ``"lanczos"``, ``"hanning"``, ``"blackmann"``.
+    """
+    old_end, new_end = _validate_parameters(data, old_start, old_dt,
+                                            new_start, new_dt, new_npts)
+    dt_factor = float(new_dt) / old_dt
+
+    return_data = np.zeros(new_npts, dtype="float64")
+
+    clibsignal.lanczos_resample(data, return_data, dt_factor, len(data),
+                                len(return_data), a, 0)
+    return return_data
+
+
+def calculate_lanczos_kernel(x, a, window):
+    """
+    Helper function to get the actually used kernel for a specific value of a.
+
+    :type x: :class:`numpy.ndarray`
+    :param x: The x values at which to calculate the kernel.
+    :type a: int
+    :param a: The width of the window in samples on either side.
+    :type window: str
+    :param window: The window used to multiply the sinc function with. One
+        of ``"lanczos"``, ``"hanning"``, ``"blackmann"``.
+
+    Return a dictionary of arrays.
+    """
+    window = window.lower()
+    if window not in _LANCZOS_KERNEL_MAP:
+        msg = "Invalid window. Valid windows: %s" % ", ".join(
+            sorted(_LANCZOS_KERNEL_MAP.keys()))
+        raise ValueError(msg)
+
+    x = np.require(x, dtype=np.float64)
+    y0 = np.zeros(x.shape, dtype=np.float64)
+    y1 = np.zeros(x.shape, dtype=np.float64)
+    y2 = np.zeros(x.shape, dtype=np.float64)
+
+    clibsignal.calculate_kernel(
+        x, y0, len(x), a, 0, _LANCZOS_KERNEL_MAP[window])
+    clibsignal.calculate_kernel(
+        x, y1, len(x), a, 1, _LANCZOS_KERNEL_MAP[window])
+    clibsignal.calculate_kernel(
+        x, y2, len(x), a, 2, _LANCZOS_KERNEL_MAP[window])
+
+    ret_val = {
+        "full_kernel": y0,
+        "only_sinc": y1,
+        "only_taper": y2
+    }
+
+    return ret_val
+
+
+def plot_lanczos_windows(a):
+    """
+    Helper function producing a plot of all available tapers of the sinc
+    function and their response for the Lanczos interpolation.
+
+    :type a: int
+    :param a: The width of the window in samples on either side.
+
+    .. plot::
+
+        from obspy.signal.interpolation import plot_lanczos_windows
+        plot_lanczos_windows(a)
+    """
+    x_max = 1024.0 - 0.5
+    n = 2 ** 15
+    x = np.linspace(-x_max, x_max, n)
+    dx = 2 * x_max / (n - 1)
+
+    arrays = {}
+    for key in _LANCZOS_KERNEL_MAP.keys():
+        arrays[key] = calculate_lanczos_kernel(x, a, key)
+        arrays[key]["fft"] = \
+            np.abs(np.fft.rfft(arrays[key]["full_kernel"]) * dx)
+
+    height = len(_LANCZOS_KERNEL_MAP) + 1
+
+    plt.subplot(height, 2, 1)
+    for key in sorted(arrays.keys()):
+        plt.plot(x, arrays[key]["full_kernel"], label=key.capitalize())
+
+    plt.legend()
+    plt.xlim(-a, a)
+    plt.ylim(-0.3, 1.1)
+    plt.title("All Windows")
+
+    plt.subplot(height, 2, 2)
+    plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
+             color="0.1", label="ideal")
+    for key in sorted(arrays.keys()):
+        plt.plot(np.fft.rfftfreq(len(x), dx),
+                 arrays[key]["fft"], label=key.capitalize())
+    plt.xlim(0.2, 0.8)
+    plt.ylim(-0.1, 1.1)
+    plt.legend()
+    plt.title("Frequency Response of All Windows")
+
+    for _i, key in enumerate(sorted(_LANCZOS_KERNEL_MAP.keys())):
+        plt.subplot(height, 2, 3 + 2 * _i)
+        plt.title(key.capitalize())
+        plt.plot(x, arrays[key]["full_kernel"], color="black", label="final")
+        plt.plot(x, arrays[key]["only_sinc"], "--", color="gray", label="sinc")
+        plt.plot(x, arrays[key]["only_taper"], color="red", label="taper")
+        plt.legend()
+        plt.xlim(-a, a)
+        plt.ylim(-0.3, 1.1)
+
+        plt.subplot(height, 2, 3 + 2 * _i + 1)
+        plt.title(key.capitalize() + " Response")
+        plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
+                 color="0.1")
+        plt.plot(np.fft.rfftfreq(len(x), dx),
+                 arrays[key]["fft"])
+        plt.xlim(0.2, 0.8)
+        plt.ylim(-0.1, 1.1)
+
+    plt.suptitle("Different windows for sinc interpolation with an a of %i"
+                 % a, fontsize="large")
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == '__main__':

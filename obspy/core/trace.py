@@ -2171,7 +2171,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @raise_if_masked
     @_add_processing_info
     def interpolate(self, sampling_rate, method="weighted_average_slopes",
-                    starttime=None, npts=None):
+                    starttime=None, npts=None, *args, **kwargs):
         """
         Interpolate the data using various interpolation techniques.
 
@@ -2274,7 +2274,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                                   dt)) + 1
         self.data = np.atleast_1d(func(np.require(self.data, dtype=np.float64),
                                        old_start, old_dt, starttime, dt, npts,
-                                       type=method))
+                                       type=method, *args, **kwargs))
         self.stats.starttime = UTCDateTime(starttime)
         self.stats.delta = dt
 

@@ -114,6 +114,41 @@ clibsignal.hermite_interpolation.argtypes = [
     C.c_int, C.c_int, C.c_double, C.c_double]
 clibsignal.hermite_interpolation.restype = C.c_void_p
 
+clibsignal.lanczos_resample.argtypes = [
+    # y_in
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # y_out
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # dt
+    C.c_double,
+    # len_in
+    C.c_int,
+    # len_out,
+    C.c_int,
+    # a,
+    C.c_int,
+    # window
+    C.c_int]
+clibsignal.lanczos_resample.restype = C.c_void_p
+
+clibsignal.calculate_kernel.argtypes = [
+    # double *x
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # double *y
+    np.ctypeslib.ndpointer(dtype=np.float64, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    # int len
+    C.c_int,
+    # int a,
+    C.c_int,
+    # int return_type,
+    C.c_int,
+    # enum lanczos_window_type window
+    C.c_int]
+clibsignal.calculate_kernel.restype = C.c_void_p
 
 STALEN = 64
 NETLEN = 64
