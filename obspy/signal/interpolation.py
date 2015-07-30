@@ -217,8 +217,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     :param window: The window used to multiply the sinc function with. One
         of ``"lanczos"``, ``"hanning"``, ``"blackmann"``.
     """
-    old_end, new_end = _validate_parameters(data, old_start, old_dt,
-                                            new_start, new_dt, new_npts)
+    _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts)
     dt_factor = float(new_dt) / old_dt
     offset = new_start - old_start
     if offset < 0:
