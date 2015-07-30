@@ -182,14 +182,23 @@ _LANCZOS_KERNEL_MAP = {
 
 
 def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
-                          a, window="lanczos", *args, **kwargs):
+                          a, window="lanczos"):
     r"""
     Function performing Lanczos resampling, see
     http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
-    finite support version of sinc resampling (ideal reconstruction filter).
-    For large values of ``a`` it converges towards sinc resampling. If used
-    for downsampling, make sure to apply a proper anti-aliasing lowpass filter
-    first.
+    finite support version of sinc resampling (the ideal reconstruction
+    filter). For large values of ``a`` it converges towards sinc resampling. If
+    used for downsampling, make sure to apply a proper anti-aliasing lowpass
+    filter first.
+
+    .. note::
+
+        In most cases you do not want to call this method directly but invoke
+        it via either the :meth:`obspy.core.stream.Stream.interpolate` or the
+        :meth:`obspy.core.trace.Trace.interpolate` method. These offer a nicer
+        API that naturally integrates with the rest of ObsPy. Use
+        ``method="lanczos"`` to use this interpolation method. In that case the
+        only additional parameters of interest are ``a`` and ``window``.
 
     :type data: array_like
     :param data: Array to interpolate.
@@ -205,16 +214,23 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     :type new_npts: int
     :param new_npts: The new number of samples.
     :type a: int
-    :param a: The width of the window in samples on either side.
+    :param a: The width of the window in samples on either side. Runtimes
+        scales linearly with the value of ``a`` but the interpolation also get
+        better.
     :type window: str
     :param window: The window used to multiply the sinc function with. One
-        of ``"lanczos"``, ``"hanning"``, ``"blackman"``.
+        of ``"lanczos"``, ``"hanning"``, ``"blackman"``. The window determines
+        the trade-off between "sharpness" and the amplitude of the wiggles in
+        the pass and stop band. Please use the
+        :func:`~obspy.signal.interpolation.plot_lanczos_windows` function to
+        judge these for any given application.
 
     Values of ``a`` >= 20 show good results even for data that has
     energy close to the Nyquist frequency. If your data is way oversampled
     you can get away with much smaller ``a``'s.
 
-    To get an idea of the response of the filter, please use the
+    To get an idea of the response of the filter and the effect of the
+    different windows, please use the
     :func:`~obspy.signal.interpolation.plot_lanczos_windows` function.
 
     Also be aware of any boundary effects. All values outside the data
@@ -268,7 +284,8 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
             s_i L(t_j - i),
         \end{align}
 
-    where :math:`\lfloor \cdot \rfloor` denotes the floor function.
+    where :math:`\lfloor \cdot \rfloor` denotes the floor function. For more
+    details and justification please see [Burger2009]_ and [vanDriel2015]_.
     """
     _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts)
     dt_factor = float(new_dt) / old_dt
