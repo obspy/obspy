@@ -32,6 +32,7 @@ master:
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
+   * New Lanczos interpolation/resampling (see #1101)
 
 0.10.x:
   - obspy.fdsn:
