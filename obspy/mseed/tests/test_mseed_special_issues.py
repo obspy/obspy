@@ -733,42 +733,32 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
     def test_microsecond_accuracy_reading_and_writing_before_1970(self):
         """
-        Tests that reading and writing data with microsecond accuray and
+        Tests that reading and writing data with microsecond accuracy and
         before 1970 works as expected.
         """
-        # For the sake of sanity check first for times after 1970.
-        starttime = UTCDateTime(0) + 123456.789123
+        # Test a couple of timestamps. Positive and negative ones.
+        timestamps = [123456.789123, -123456.789123, 1.123400, 1.123412,
+                      1.123449, 1.123450, 1.123499, -1.123400, -1.123412,
+                      -1.123449, -1.123450, -1.123451, -1.123499]
 
-        tr = Trace(data=np.linspace(0, 100, 101))
-        tr.stats.starttime = starttime
+        for timestamp in timestamps:
+            # For the sake of sanity check first for times after 1970.
+            starttime = UTCDateTime(timestamp)
+            self.assertEqual(starttime.timestamp, timestamp)
 
-        with io.BytesIO() as fh:
-            tr.write(fh, format="mseed")
-            fh.seek(0, 0)
-            tr2 = read(fh)[0]
+            tr = Trace(data=np.linspace(0, 100, 101))
+            tr.stats.starttime = starttime
 
-        del tr2.stats.mseed
-        del tr2.stats._format
+            with io.BytesIO() as fh:
+                tr.write(fh, format="mseed")
+                fh.seek(0, 0)
+                tr2 = read(fh)[0]
 
-        self.assertEqual(tr2.stats.starttime, starttime)
-        self.assertEqual(tr2, tr)
+            del tr2.stats.mseed
+            del tr2.stats._format
 
-        # Now do the same, but this time before 1970.
-        starttime = UTCDateTime(0) - 123456.789123
-
-        tr = Trace(data=np.linspace(0, 100, 101))
-        tr.stats.starttime = starttime
-
-        with io.BytesIO() as fh:
-            tr.write(fh, format="mseed")
-            fh.seek(0, 0)
-            tr2 = read(fh)[0]
-
-        del tr2.stats.mseed
-        del tr2.stats._format
-
-        self.assertEqual(tr2.stats.starttime, starttime)
-        self.assertEqual(tr2, tr)
+            self.assertEqual(tr2.stats.starttime, starttime)
+            self.assertEqual(tr2, tr)
 
 
 def suite():
