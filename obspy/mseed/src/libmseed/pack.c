@@ -879,7 +879,16 @@ msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
       sec = msr->starttime / (HPTMODULUS / 10000);
       usec = msr->starttime - (sec * (HPTMODULUS / 10000));
       usec /= (HPTMODULUS / 1000000);
-      
+
+      /* Deal with negative timestamps and a negative offset.
+       *
+       * The value is rounded down when writing the fixed header
+       * thus the offset needs to be relative to the next smaller
+       * value representable by the BTIME definition. */
+      if (msr->starttime <= 0 && usec < 0) {
+        usec += 100;
+      }
+
       /* Update microseconds offset in blockette chain entry */
       msr->Blkt1001->usec = (int8_t) usec;
       
