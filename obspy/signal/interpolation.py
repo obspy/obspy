@@ -298,8 +298,9 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
 
     return_data = np.zeros(new_npts, dtype="float64")
 
-    clibsignal.lanczos_resample(data, return_data, dt_factor, offset,
-                                len(data), len(return_data), int(a), 0)
+    clibsignal.lanczos_resample(
+        np.require(data, dtype=np.float64), return_data, dt_factor, offset,
+        len(data), len(return_data), int(a), 0)
     return return_data
 
 
