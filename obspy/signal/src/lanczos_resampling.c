@@ -5,6 +5,10 @@
 #   Author: Lion Krischer
 # Copyright (C) 2015 Lion Krischer and Martin van Driel
 #---------------------------------------------------------------------*/
+
+/* Windows apparently needs this */
+#define _USE_MATH_DEFINES
+
 #include <math.h>
 
 
