@@ -293,10 +293,13 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     if offset < 0:
         raise ValueError("Cannot extrapolate.")
 
+    if a < 1:
+        raise ValueError("a must be at least 1.")
+
     return_data = np.zeros(new_npts, dtype="float64")
 
     clibsignal.lanczos_resample(data, return_data, dt_factor, offset,
-                                len(data), len(return_data), a, 0)
+                                len(data), len(return_data), int(a), 0)
     return return_data
 
 
