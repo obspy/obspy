@@ -242,35 +242,101 @@ def _add_processing_info(func):
     return new_func
 
 
-class Trace(object):
-    """
-    An object containing data of a continuous series, such as a seismic trace.
+class BaseTrace(object):
 
-    :type data: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
-    :param data: Array of data samples
-    :type header: dict or :class:`~obspy.core.trace.Stats`
-    :param header: Dictionary containing header fields
+    def max(self):
+        """
+        Returns the value of the absolute maximum amplitude in the trace.
 
-    :var id: A SEED compatible identifier of the trace.
-    :var stats: A container :class:`~obspy.core.trace.Stats` for additional
-        header information of the trace.
-    :var data: Data samples in a :class:`~numpy.ndarray` or
-        :class:`~numpy.ma.MaskedArray`
+        :return: Value of absolute maximum of ``trace.data``.
 
-    .. rubric:: Supported Operations
+        .. rubric:: Example
 
-    ``trace = traceA + traceB``
-        Merges traceA and traceB into one new trace object.
-        See also: :meth:`Trace.__add__`.
-    ``len(trace)``
-        Returns the number of samples contained in the trace. That is
-        it es equal to ``len(trace.data)``.
-        See also: :meth:`Trace.__len__`.
-    ``str(trace)``
-        Returns basic information about the trace object.
-        See also: :meth:`Trace.__str__`.
-    """
+        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr.max()
+        9
+        >>> tr = Trace(data=np.array([0, -3, -9, 6, 4]))
+        >>> tr.max()
+        -9
+        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
+        >>> tr.max()
+        9.0
+        """
+        value = self.data.max()
+        _min = self.data.min()
+        if abs(_min) > abs(value):
+            value = _min
+        return value
 
+    def std(self):
+        """
+        Method to get the standard deviation of amplitudes in the trace.
+
+        :return: Standard deviation of ``trace.data``.
+
+        Standard deviation is calculated by NumPy method
+        :meth:`~numpy.ndarray.std` on ``trace.data``.
+
+        .. rubric:: Example
+
+        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr.std()
+        4.2614551505325036
+        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
+        >>> tr.std()
+        4.4348618918744247
+        """
+        return self.data.std()
+
+    def copy(self):
+        """
+        Returns a deepcopy of the trace.
+
+        :return: Copy of trace.
+
+        This actually copies all data in the trace and does not only provide
+        another pointer to the same data. At any processing step if the
+        original data has to be available afterwards, this is the method to
+        use to make a copy of the trace.
+
+        .. rubric:: Example
+
+        Make a Trace and copy it:
+
+        >>> tr = Trace(data=np.random.rand(10))
+        >>> tr2 = tr.copy()
+
+        The two objects are not the same:
+
+        >>> tr2 is tr
+        False
+
+        But they have equal data (before applying further processing):
+
+        >>> tr2 == tr
+        True
+
+        The following example shows how to make an alias but not copy the
+        data. Any changes on ``tr3`` would also change the contents of ``tr``.
+
+        >>> tr3 = tr
+        >>> tr3 is tr
+        True
+        >>> tr3 == tr
+        True
+        """
+        return deepcopy(self)
+
+    def _addProcessingInfo(self, info):
+        """
+        Add the given informational string to the `processing` field in the
+        trace's :class:`~obspy.core.trace.Stats` object.
+        """
+        proc = self.stats.setdefault('processing', [])
+        proc.append(info)
+
+
+class TimeseriesTrace(BaseTrace):
     def __init__(self, data=np.array([]), header=None):
         # make sure Trace gets initialized with suitable ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data
@@ -1243,141 +1309,6 @@ class Trace(object):
         return self
 
     @_add_processing_info
-    def simulate(self, paz_remove=None, paz_simulate=None,
-                 remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
-        """
-        Correct for instrument response / Simulate new instrument response.
-
-        :type paz_remove: dict, None
-        :param paz_remove: Dictionary containing keys ``'poles'``, ``'zeros'``,
-            ``'gain'`` (A0 normalization factor). Poles and zeros must be a
-            list of complex floating point numbers, gain must be of type float.
-            Poles and Zeros are assumed to correct to m/s, SEED convention.
-            Use ``None`` for no inverse filtering.
-        :type paz_simulate: dict, None
-        :param paz_simulate: Dictionary containing keys ``'poles'``,
-            ``'zeros'``, ``'gain'``. Poles and zeros must be a list of complex
-            floating point numbers, gain must be of type float. Or ``None`` for
-            no simulation.
-        :type remove_sensitivity: bool
-        :param remove_sensitivity: Determines if data is divided by
-            ``paz_remove['sensitivity']`` to correct for overall sensitivity of
-            recording instrument (seismometer/digitizer) during instrument
-            correction.
-        :type simulate_sensitivity: bool
-        :param simulate_sensitivity: Determines if data is multiplied with
-            ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
-            new instrument (seismometer/digitizer) during instrument
-            simulation.
-
-        This function corrects for the original instrument response given by
-        `paz_remove` and/or simulates a new instrument response given by
-        `paz_simulate`.
-        For additional information and more options to control the instrument
-        correction/simulation (e.g. water level, demeaning, tapering, ...) see
-        :func:`~obspy.signal.invsim.simulate_seismometer`.
-
-        `paz_remove` and `paz_simulate` are expected to be dictionaries
-        containing information on poles, zeros and gain (and usually also
-        sensitivity).
-
-        If both `paz_remove` and `paz_simulate` are specified, both steps are
-        performed in one go in the frequency domain, otherwise only the
-        specified step is performed.
-
-        .. note::
-
-            Instead of the builtin deconvolution based on Poles and Zeros
-            information, the deconvolution can be performed using evalresp
-            instead by using the option `seedresp` (see documentation of
-            :func:`~obspy.signal.invsim.simulate_seismometer` and the `ObsPy
-            Tutorial <http://docs.obspy.org/master/tutorial/code_snippets/\
-seismometer_correction_simulation.html#using-a-resp-file>`_.
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
-            a copy of your trace object.
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of this trace.
-
-        .. rubric:: Example
-
-        >>> from obspy import read
-        >>> from obspy.signal.invsim import corn_freq_2_paz
-        >>> st = read()
-        >>> tr = st[0]
-        >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-        ...                       -251.33+0j,
-        ...                       -131.04-467.29j, -131.04+467.29j],
-        ...             'zeros': [0j, 0j],
-        ...             'gain': 60077000.0,
-        ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
-        >>> paz_1hz['sensitivity'] = 1.0
-        >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-        ... # doctest: +ELLIPSIS
-        <...Trace object at 0x...>
-        >>> tr.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import read
-            from obspy.signal.invsim import corn_freq_2_paz
-            st = read()
-            tr = st[0]
-            paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-                                  -251.33+0j,
-                                  -131.04-467.29j, -131.04+467.29j],
-                        'zeros': [0j, 0j],
-                        'gain': 60077000.0,
-                        'sensitivity': 2516778400.0}
-            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
-            paz_1hz['sensitivity'] = 1.0
-            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-            tr.plot()
-        """
-        # XXX accepting string "self" and using attached PAZ then
-        if paz_remove == 'self':
-            paz_remove = self.stats.paz
-
-        # some convenience handling for evalresp type instrument correction
-        if "seedresp" in kwargs:
-            seedresp = kwargs["seedresp"]
-            # if date is missing use trace's starttime
-            seedresp.setdefault("date", self.stats.starttime)
-            # if a Parser object is provided, get corresponding RESP
-            # information
-            from obspy.io.xseed import Parser
-            if isinstance(seedresp['filename'], Parser):
-                seedresp = deepcopy(seedresp)
-                kwargs['seedresp'] = seedresp
-                resp_key = ".".join(("RESP", self.stats.network,
-                                     self.stats.station, self.stats.location,
-                                     self.stats.channel))
-                for key, stringio in seedresp['filename'].get_RESP():
-                    if key == resp_key:
-                        stringio.seek(0, 0)
-                        seedresp['filename'] = stringio
-                        break
-                else:
-                    msg = "Response for %s not found in Parser" % self.id
-                    raise ValueError(msg)
-            # Set the SEED identifiers!
-            for item in ["network", "station", "location", "channel"]:
-                seedresp[item] = self.stats[item]
-
-        from obspy.signal.invsim import simulate_seismometer
-        self.data = simulate_seismometer(
-            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
-            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
-            simulate_sensitivity=simulate_sensitivity, **kwargs)
-
-        return self
-
-    @_add_processing_info
     def filter(self, type, **options):
         """
         Filter the data of the current trace.
@@ -1447,94 +1378,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
-        return self
-
-    @_add_processing_info
-    def trigger(self, type, **options):
-        """
-        Run a triggering algorithm on the data of the current trace.
-
-        :param type: String that specifies which trigger is applied (e.g.
-            ``'recstalta'``). See the `Supported Trigger`_ section below for
-            further details.
-        :param options: Necessary keyword arguments for the respective trigger
-            that will be passed on.
-            (e.g. ``sta=3``, ``lta=10``)
-            Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
-            and ``nlta`` (samples) by multiplying with sampling rate of trace.
-            (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
-            seconds average, respectively)
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
-            a copy of your trace object.
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of this trace.
-
-        .. rubric:: _`Supported Trigger`
-
-        ``'classicstalta'``
-            Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classic_STALTA`).
-
-        ``'recstalta'``
-            Recursive STA/LTA
-            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
-
-        ``'recstaltapy'``
-            Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recursive_STALTA_py`).
-
-        ``'delayedstalta'``
-            Delayed STA/LTA.
-            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
-
-        ``'carlstatrig'``
-            Computes the carl_STA_trig characteristic function (uses
-            :func:`obspy.signal.trigger.carl_STA_trig`).
-
-        ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
-
-        .. rubric:: Example
-
-        >>> from obspy import read
-        >>> st = read()
-        >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
-        <...Trace object at 0x...>
-        >>> tr.plot()  # doctest: +SKIP
-        >>> tr.trigger("recstalta", sta=1, lta=4)  # doctest: +ELLIPSIS
-        <...Trace object at 0x...>
-        >>> tr.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import read
-            st = read()
-            tr = st[0]
-            tr.filter("highpass", freq=1.0)
-            tr.plot()
-            tr.trigger('recstalta', sta=1, lta=4)
-            tr.plot()
-        """
-        type = type.lower()
-        # retrieve function call from entry points
-        func = _get_function_from_entry_point('trigger', type)
-        # convert the two arguments sta and lta to nsta and nlta as used by
-        # actual triggering routines (needs conversion to int, as samples are
-        # used in length of trigger averages)...
-        spr = self.stats.sampling_rate
-        for key in ['sta', 'lta']:
-            if key in options:
-                options['n%s' % (key)] = int(options.pop(key) * spr)
-        # triggering
-        # the options dictionary is passed as kwargs to the function that is
-        # mapped according to the trigger_functions dictionary
-        self.data = func(self.data, **options)
         return self
 
     @skip_if_no_data
@@ -1743,50 +1586,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = integer_decimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
         return self
-
-    def max(self):
-        """
-        Returns the value of the absolute maximum amplitude in the trace.
-
-        :return: Value of absolute maximum of ``trace.data``.
-
-        .. rubric:: Example
-
-        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
-        >>> tr.max()
-        9
-        >>> tr = Trace(data=np.array([0, -3, -9, 6, 4]))
-        >>> tr.max()
-        -9
-        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
-        >>> tr.max()
-        9.0
-        """
-        value = self.data.max()
-        _min = self.data.min()
-        if abs(_min) > abs(value):
-            value = _min
-        return value
-
-    def std(self):
-        """
-        Method to get the standard deviation of amplitudes in the trace.
-
-        :return: Standard deviation of ``trace.data``.
-
-        Standard deviation is calculated by NumPy method
-        :meth:`~numpy.ndarray.std` on ``trace.data``.
-
-        .. rubric:: Example
-
-        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
-        >>> tr.std()
-        4.2614551505325036
-        >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
-        >>> tr.std()
-        4.4348618918744247
-        """
-        return self.data.std()
 
     @deprecated_keywords({'type': 'method'})
     @skip_if_no_data
@@ -2094,53 +1893,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         return self
 
-    def copy(self):
-        """
-        Returns a deepcopy of the trace.
-
-        :return: Copy of trace.
-
-        This actually copies all data in the trace and does not only provide
-        another pointer to the same data. At any processing step if the
-        original data has to be available afterwards, this is the method to
-        use to make a copy of the trace.
-
-        .. rubric:: Example
-
-        Make a Trace and copy it:
-
-        >>> tr = Trace(data=np.random.rand(10))
-        >>> tr2 = tr.copy()
-
-        The two objects are not the same:
-
-        >>> tr2 is tr
-        False
-
-        But they have equal data (before applying further processing):
-
-        >>> tr2 == tr
-        True
-
-        The following example shows how to make an alias but not copy the
-        data. Any changes on ``tr3`` would also change the contents of ``tr``.
-
-        >>> tr3 = tr
-        >>> tr3 is tr
-        True
-        >>> tr3 == tr
-        True
-        """
-        return deepcopy(self)
-
-    def _addProcessingInfo(self, info):
-        """
-        Add the given informational string to the `processing` field in the
-        trace's :class:`~obspy.core.trace.Stats` object.
-        """
-        proc = self.stats.setdefault('processing', [])
-        proc.append(info)
-
     @_add_processing_info
     def split(self):
         """
@@ -2342,6 +2094,259 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(self.data, np.ma.masked_array):
             timeArray = np.ma.array(timeArray, mask=self.data.mask)
         return timeArray
+
+
+class Trace(TimeseriesTrace):
+    """
+    An object containing data of a continuous series, such as a seismic trace.
+
+    :type data: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
+    :param data: Array of data samples
+    :type header: dict or :class:`~obspy.core.trace.Stats`
+    :param header: Dictionary containing header fields
+
+    :var id: A SEED compatible identifier of the trace.
+    :var stats: A container :class:`~obspy.core.trace.Stats` for additional
+        header information of the trace.
+    :var data: Data samples in a :class:`~numpy.ndarray` or
+        :class:`~numpy.ma.MaskedArray`
+
+    .. rubric:: Supported Operations
+
+    ``trace = traceA + traceB``
+        Merges traceA and traceB into one new trace object.
+        See also: :meth:`Trace.__add__`.
+    ``len(trace)``
+        Returns the number of samples contained in the trace. That is
+        it es equal to ``len(trace.data)``.
+        See also: :meth:`Trace.__len__`.
+    ``str(trace)``
+        Returns basic information about the trace object.
+        See also: :meth:`Trace.__str__`.
+    """
+
+    @_add_processing_info
+    def simulate(self, paz_remove=None, paz_simulate=None,
+                 remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
+        """
+        Correct for instrument response / Simulate new instrument response.
+
+        :type paz_remove: dict, None
+        :param paz_remove: Dictionary containing keys ``'poles'``, ``'zeros'``,
+            ``'gain'`` (A0 normalization factor). Poles and zeros must be a
+            list of complex floating point numbers, gain must be of type float.
+            Poles and Zeros are assumed to correct to m/s, SEED convention.
+            Use ``None`` for no inverse filtering.
+        :type paz_simulate: dict, None
+        :param paz_simulate: Dictionary containing keys ``'poles'``,
+            ``'zeros'``, ``'gain'``. Poles and zeros must be a list of complex
+            floating point numbers, gain must be of type float. Or ``None`` for
+            no simulation.
+        :type remove_sensitivity: bool
+        :param remove_sensitivity: Determines if data is divided by
+            ``paz_remove['sensitivity']`` to correct for overall sensitivity of
+            recording instrument (seismometer/digitizer) during instrument
+            correction.
+        :type simulate_sensitivity: bool
+        :param simulate_sensitivity: Determines if data is multiplied with
+            ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
+            new instrument (seismometer/digitizer) during instrument
+            simulation.
+
+        This function corrects for the original instrument response given by
+        `paz_remove` and/or simulates a new instrument response given by
+        `paz_simulate`.
+        For additional information and more options to control the instrument
+        correction/simulation (e.g. water level, demeaning, tapering, ...) see
+        :func:`~obspy.signal.invsim.simulate_seismometer`.
+
+        `paz_remove` and `paz_simulate` are expected to be dictionaries
+        containing information on poles, zeros and gain (and usually also
+        sensitivity).
+
+        If both `paz_remove` and `paz_simulate` are specified, both steps are
+        performed in one go in the frequency domain, otherwise only the
+        specified step is performed.
+
+        .. note::
+
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.simulate_seismometer` and the `ObsPy
+            Tutorial <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> from obspy.signal.invsim import corn_freq_2_paz
+        >>> st = read()
+        >>> tr = st[0]
+        >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+        ...                       -251.33+0j,
+        ...                       -131.04-467.29j, -131.04+467.29j],
+        ...             'zeros': [0j, 0j],
+        ...             'gain': 60077000.0,
+        ...             'sensitivity': 2516778400.0}
+        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
+        >>> paz_1hz['sensitivity'] = 1.0
+        >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+        ... # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            from obspy.signal.invsim import corn_freq_2_paz
+            st = read()
+            tr = st[0]
+            paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
+                                  -251.33+0j,
+                                  -131.04-467.29j, -131.04+467.29j],
+                        'zeros': [0j, 0j],
+                        'gain': 60077000.0,
+                        'sensitivity': 2516778400.0}
+            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
+            paz_1hz['sensitivity'] = 1.0
+            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+            tr.plot()
+        """
+        # XXX accepting string "self" and using attached PAZ then
+        if paz_remove == 'self':
+            paz_remove = self.stats.paz
+
+        # some convenience handling for evalresp type instrument correction
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # if date is missing use trace's starttime
+            seedresp.setdefault("date", self.stats.starttime)
+            # if a Parser object is provided, get corresponding RESP
+            # information
+            from obspy.io.xseed import Parser
+            if isinstance(seedresp['filename'], Parser):
+                seedresp = deepcopy(seedresp)
+                kwargs['seedresp'] = seedresp
+                resp_key = ".".join(("RESP", self.stats.network,
+                                     self.stats.station, self.stats.location,
+                                     self.stats.channel))
+                for key, stringio in seedresp['filename'].get_RESP():
+                    if key == resp_key:
+                        stringio.seek(0, 0)
+                        seedresp['filename'] = stringio
+                        break
+                else:
+                    msg = "Response for %s not found in Parser" % self.id
+                    raise ValueError(msg)
+            # Set the SEED identifiers!
+            for item in ["network", "station", "location", "channel"]:
+                seedresp[item] = self.stats[item]
+
+        from obspy.signal.invsim import simulate_seismometer
+        self.data = simulate_seismometer(
+            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
+            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
+            simulate_sensitivity=simulate_sensitivity, **kwargs)
+
+        return self
+
+    @_add_processing_info
+    def trigger(self, type, **options):
+        """
+        Run a triggering algorithm on the data of the current trace.
+
+        :param type: String that specifies which trigger is applied (e.g.
+            ``'recstalta'``). See the `Supported Trigger`_ section below for
+            further details.
+        :param options: Necessary keyword arguments for the respective trigger
+            that will be passed on.
+            (e.g. ``sta=3``, ``lta=10``)
+            Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
+            and ``nlta`` (samples) by multiplying with sampling rate of trace.
+            (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
+            seconds average, respectively)
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
+        .. rubric:: _`Supported Trigger`
+
+        ``'classicstalta'``
+            Computes the classic STA/LTA characteristic function (uses
+            :func:`obspy.signal.trigger.classic_STALTA`).
+
+        ``'recstalta'``
+            Recursive STA/LTA
+            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
+
+        ``'recstaltapy'``
+            Recursive STA/LTA written in Python (uses
+            :func:`obspy.signal.trigger.recursive_STALTA_py`).
+
+        ``'delayedstalta'``
+            Delayed STA/LTA.
+            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
+
+        ``'carlstatrig'``
+            Computes the carl_STA_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_STA_trig`).
+
+        ``'zdetect'``
+            Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
+
+        .. rubric:: Example
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> tr = st[0]
+        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+        >>> tr.trigger("recstalta", sta=1, lta=4)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            tr = st[0]
+            tr.filter("highpass", freq=1.0)
+            tr.plot()
+            tr.trigger('recstalta', sta=1, lta=4)
+            tr.plot()
+        """
+        type = type.lower()
+        # retrieve function call from entry points
+        func = _get_function_from_entry_point('trigger', type)
+        # convert the two arguments sta and lta to nsta and nlta as used by
+        # actual triggering routines (needs conversion to int, as samples are
+        # used in length of trigger averages)...
+        spr = self.stats.sampling_rate
+        for key in ['sta', 'lta']:
+            if key in options:
+                options['n%s' % (key)] = int(options.pop(key) * spr)
+        # triggering
+        # the options dictionary is passed as kwargs to the function that is
+        # mapped according to the trigger_functions dictionary
+        self.data = func(self.data, **options)
+        return self
 
     def attach_response(self, inventories):
         """
