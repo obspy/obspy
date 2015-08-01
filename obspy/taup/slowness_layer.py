@@ -83,7 +83,7 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
     :param layer: The layer to check.
     :type layer: :class:`~numpy.ndarray` (shape = (1, ), dtype =
         :const:`SlownessLayer`)
-    :param ray_param: The ray paramater to use for calculation, in s/km.
+    :param ray_param: The ray parameter to use for calculation, in s/km.
     :type ray_param: float
     :param radiusOfEarth: The radius (in km) of the Earth to use.
     :type radiusOfEarth: float
@@ -110,11 +110,16 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
             except OverflowError:
                 denom = np.inf
             A = np.divide(layer['topP'], denom)
-            with np.errstate(divide='ignore', invalid='ignore'):
+            if A != 0 and B != 0:
                 tempDepth = radiusOfEarth - math.exp(
                     1.0 / B * math.log(np.divide(ray_param, A)))
-            # or equivalent (maybe better stability?):
-            # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
+                # or equivalent (maybe better stability?):
+                # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
+            else:
+                # Overflow. Use linear interpolation.
+                tempDepth = ((layer['botDepth'] - layer['topDepth']) /
+                             (layer['botP'] - layer['topP']) *
+                             (ray_param - layer['topP'])) + layer['topDepth']
             # Check if slightly outside layer due to rounding or
             # numerical instability:
             if layer['topDepth'] > tempDepth > layer['topDepth'] - 0.000001:
