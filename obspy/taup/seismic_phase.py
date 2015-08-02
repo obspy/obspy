@@ -252,9 +252,9 @@ class SeismicPhase(object):
                                            isPWave, endAction)
                     else:
                         raise TauModelError(
-                            "Phase not recognised: {currLeg} followed by "
-                            "{nextLeg} when currBranch > disconBranch".format(
-                                **locals()))
+                            "Phase not recognised: {} followed by {} when "
+                            "currBranch > disconBranch".format(currLeg,
+                                                               nextLeg))
                 elif nextLeg == "m" and self.currBranch >= tMod.mohoBranch:
                     endAction = self.TRANSUP
                     self.add_to_branch(tMod, self.currBranch, tMod.mohoBranch,
@@ -299,9 +299,9 @@ class SeismicPhase(object):
                                            endAction)
                     else:
                         raise TauModelError(
-                            "Phase not recognised: {currLeg} followed by "
-                            "{nextLeg} when currBranch > disconBranch".format(
-                                **locals()))
+                            "Phase not recognised: {} followed by {} when "
+                            "currBranch > disconBranch".format(currLeg,
+                                                               nextLeg))
                 elif nextLeg[0] == "^":
                     disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if prevLeg == "K":
@@ -329,9 +329,9 @@ class SeismicPhase(object):
                                            isPWave, endAction)
                     else:
                         raise TauModelError(
-                            "Phase not recognised: {currLeg} followed by "
-                            "{nextLeg} when currBranch > disconBranch".format(
-                                **locals()))
+                            "Phase not recognised: {} followed by {} when "
+                            "currBranch > disconBranch".format(currLeg,
+                                                               nextLeg))
                 elif nextLeg == "c":
                     endAction = self.REFLECTBOT
                     self.add_to_branch(tMod, self.currBranch,
@@ -355,9 +355,9 @@ class SeismicPhase(object):
                             # Check the discontinuity below the current
                             # branch when the ray should be upgoing
                             raise TauModelError(
-                                "Phase not recognised: {currLeg} followed by "
-                                "{nextLeg} when currBranch > disconBranch"
-                                .format(**locals()))
+                                "Phase not recognised: {} followed by {} when "
+                                "currBranch > disconBranch".format(currLeg,
+                                                                   nextLeg))
                         endAction = self.TRANSUP
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
