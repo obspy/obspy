@@ -137,7 +137,7 @@ class Arrival(object):
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
-                 takeoff_angle, incident_angle):
+                 receiver_depth, takeoff_angle, incident_angle):
         self.phase = phase
         self.distance = distance
         self.time = time
@@ -147,8 +147,9 @@ class Arrival(object):
         self.name = name
         self.purist_name = purist_name
         self.source_depth = source_depth
-        self.incident_angle = incident_angle
+        self.receiver_depth = receiver_depth
         self.takeoff_angle = takeoff_angle
+        self.incident_angle = incident_angle
         self.pierce = None
         self.path = None
 

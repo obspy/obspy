@@ -1192,7 +1192,8 @@ class SeismicPhase(object):
             # degenerate case
             return Arrival(self, degrees, self.time[0], searchDist,
                            self.ray_param[0], rayNum, self.name,
-                           self.puristName, self.source_depth, 0, 0)
+                           self.puristName, self.source_depth,
+                           self.receiver_depth, 0, 0)
 
         arrivalTime = ((searchDist - self.dist[rayNum]) /
                        (self.dist[rayNum + 1] - self.dist[rayNum]) *
@@ -1236,7 +1237,7 @@ class SeismicPhase(object):
 
         return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
                        rayNum, self.name, self.puristName, self.source_depth,
-                       takeoffAngle, incidentAngle)
+                       self.receiver_depth, takeoffAngle, incidentAngle)
 
     @classmethod
     def get_earliest_arrival(cls, relPhases, degrees):

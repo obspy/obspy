@@ -174,10 +174,12 @@ class Arrivals(list):
             arrowprops = dict(arrowstyle='-|>,head_length=0.8,head_width=0.5',
                               color='#C95241',
                               lw=1.5)
+            station_radius = radius - arrivals[0].receiver_depth
             ax.annotate('',
-                        xy=(np.deg2rad(distance), radius),
+                        xy=(np.deg2rad(distance), station_radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(distance), radius * 1.02),
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.02),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -186,9 +188,10 @@ class Arrivals(list):
                               lw=1.5,
                               fill=False)
             ax.annotate('',
-                        xy=(np.deg2rad(distance), radius),
+                        xy=(np.deg2rad(distance), station_radius),
                         xycoords='data',
-                        xytext=(np.deg2rad(distance), radius * 1.01),
+                        xytext=(np.deg2rad(distance),
+                                station_radius + radius * 0.01),
                         textcoords='data',
                         arrowprops=arrowprops,
                         clip_on=False)
@@ -196,7 +199,8 @@ class Arrivals(list):
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
                 # We cannot just set the text of the annotations above because
                 # it changes the arrow path.
-                t = _SmartPolarText(np.deg2rad(distance), radius * 1.07,
+                t = _SmartPolarText(np.deg2rad(distance),
+                                    station_radius + radius * 0.07,
                                     name, clip_on=False)
                 ax.add_artist(t)
 
@@ -236,14 +240,14 @@ class Arrivals(list):
                 fig=ax.get_figure(),
                 y=ms / 2.0,
                 units="points")
-            ax.plot([distance], [0.0],
+            ax.plot([distance], [arrivals[0].receiver_depth],
                     marker="v", color="#C95241",
                     markersize=ms, zorder=10, markeredgewidth=1.5,
                     markeredgecolor="0.3", clip_on=False,
                     transform=station_marker_transform)
             if label_arrivals:
                 name = ','.join(sorted(set(ray.name for ray in arrivals)))
-                ax.annotate(name, xy=(distance, 0.0),
+                ax.annotate(name, xy=(distance, arrivals[0].receiver_depth),
                             xytext=(0, ms * 1.5), textcoords='offset points',
                             ha='center', annotation_clip=False)
 
@@ -268,7 +272,8 @@ class Arrivals(list):
             possible_distances = [_i for _i in possible_distances
                                   if x[0] <= _i <= x[1]]
             if possible_distances:
-                ax.plot(possible_distances,  [0.0] * len(possible_distances),
+                ax.plot(possible_distances,
+                        [arrivals[0].receiver_depth] * len(possible_distances),
                         marker="v", color="#C95241",
                         markersize=ms, zorder=10, markeredgewidth=1.5,
                         markeredgecolor="0.3", clip_on=False, lw=0,
@@ -317,7 +322,7 @@ class TauPyModel(object):
         self.earth_flattening = earth_flattening
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
-                         phase_list=("ttall",)):
+                         phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return travel times of every given phase.
 
@@ -328,6 +333,8 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -338,13 +345,13 @@ class TauPyModel(object):
         # might be useful, but also difficult: several arrivals can have the
         # same phase.
         tt = TauP_Time(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree)
+                       distance_in_degree, receiver_depth_in_km)
         tt.run()
         return Arrivals(sorted(tt.arrivals, key=lambda x: x.time),
                         model=self.model)
 
     def get_pierce_points(self, source_depth_in_km, distance_in_degree,
-                          phase_list=("ttall",)):
+                          phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return pierce points of every given phase.
 
@@ -355,6 +362,8 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -362,13 +371,13 @@ class TauPyModel(object):
         :rtype: :class:`Arrivals`
         """
         pp = TauP_Pierce(self.model, phase_list, source_depth_in_km,
-                         distance_in_degree)
+                         distance_in_degree, receiver_depth_in_km)
         pp.run()
         return Arrivals(sorted(pp.arrivals, key=lambda x: x.time),
                         model=self.model)
 
     def get_ray_paths(self, source_depth_in_km, distance_in_degree=None,
-                      phase_list=("ttall",)):
+                      phase_list=("ttall",), receiver_depth_in_km=0.0):
         """
         Return ray paths of every given phase.
 
@@ -379,6 +388,8 @@ class TauPyModel(object):
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
+        :param receiver_depth_in_km: Receiver depth in km
+        :type receiver_depth_in_km: float
 
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -386,7 +397,7 @@ class TauPyModel(object):
         :rtype: :class:`Arrivals`
         """
         rp = TauP_Path(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree)
+                       distance_in_degree, receiver_depth_in_km)
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
                         model=self.model)
