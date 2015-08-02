@@ -17,8 +17,9 @@ class TauP_Time(object):
     Calculate travel times for different branches using linear interpolation
     between known slowness samples.
     """
-    def __init__(self, model, phase_list, depth, degrees):
+    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
         self.depth = depth
+        self.receiver_depth = receiver_depth
         self.degrees = degrees
         self.arrivals = []
         self.phases = []
@@ -34,19 +35,24 @@ class TauP_Time(object):
         Do all the calculations and print the output if told to. The resulting
         arrival times will be in self.arrivals.
         """
-        self.depth_correct(self.depth)
+        self.depth_correct(self.depth, self.receiver_depth)
         self.calculate(self.degrees)
 
-    def depth_correct(self, depth):
+    def depth_correct(self, depth, receiver_depth=None):
         """
         Corrects the TauModel for the given source depth (if not already
         corrected).
         """
+        if receiver_depth is None:
+            receiver_depth = self.receiver_depth
         if self.depth_corrected_model is None or \
                 self.depth_corrected_model.source_depth != depth:
             self.depth_corrected_model = self.model.depth_correct(depth)
             self.arrivals = []
             self.recalc_phases()
+        # If already split on reciever depth this does nothing.
+        self.depth_corrected_model = self.depth_corrected_model.splitBranch(
+            receiver_depth)
         self.source_depth = depth
 
     def recalc_phases(self):
@@ -57,19 +63,21 @@ class TauP_Time(object):
         new_phases = []
         for temp_phase_name in self.phase_names:
             for phase_num, seismic_phase in enumerate(self.phases):
-                if seismic_phase.name == temp_phase_name:
-                    self.phases.pop(phase_num)
-                    if (seismic_phase.source_depth == self.depth and
-                            seismic_phase.tMod == self.depth_corrected_model):
-                        # OK so copy to new_phases:
-                        new_phases.append(seismic_phase)
-                        break
+                pass
+                # if seismic_phase.name == temp_phase_name:
+                #     self.phases.pop(phase_num)
+                #     if (seismic_phase.source_depth == self.depth and
+                #            seismic_phase.tMod == self.depth_corrected_model):
+                #         # OK so copy to new_phases:
+                #         new_phases.append(seismic_phase)
+                #         break
             # Executed, if break is NOT called.
             else:
                 # Didn't find it precomputed, so recalculate:
                 try:
                     seismic_phase = SeismicPhase(temp_phase_name,
-                                                 self.depth_corrected_model)
+                                                 self.depth_corrected_model,
+                                                 self.receiver_depth)
                     new_phases.append(seismic_phase)
                 except TauModelError:
                     print("Error with this phase, skipping it: " +
@@ -80,7 +88,7 @@ class TauP_Time(object):
         """
         Calculate the arrival times.
         """
-        self.depth_correct(self.source_depth)
+        self.depth_correct(self.source_depth, self.receiver_depth)
         # Called before, but depth_correct might have changed the phases.
         self.recalc_phases()
         self.calc_time(degrees)

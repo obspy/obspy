@@ -238,6 +238,8 @@ depth to an interface involved in an interaction.
       mantle boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
+    * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
+      receiver below the source (see 3 below)
 3. The characters ``p`` and ``s`` **always** represent up-going legs. An
    example is the source to surface leg of the phase ``pP`` from a source at
    depth. ``P`` and ``S`` can be turning waves, but always indicate downgoing
@@ -248,6 +250,13 @@ depth to an interface involved in an interaction.
    cases. For instance, ``PcP`` is allowed since the direction of the phase is
    unambiguously determined by the symbol ``c``, but would be named ``Pcp`` by
    a purist using our nomenclature.
+
+   With the ability to have sources at depth, there is a need to specify the
+   difference between a wave that is exclusively downgoing to the receiver from
+   one that turns and is upgoing at the receiver. The suffix ``ed`` can be
+   appended to indicate exclusively downgoing. So for a source at 10 km depth
+   and a receiver at 20 km depth at 0 degree distance ``P`` does not have an
+   arrival but ``Ped`` does.
 4. Numbers, except velocities for ``kmps`` phases (see 10 below), represent
    depths at which interactions take place. For example, ``P410s`` represents a
    *P*-to-*S* conversion at a discontinuity at 410km depth. Since the *S*-leg
