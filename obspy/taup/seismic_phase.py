@@ -786,8 +786,7 @@ class SeismicPhase(object):
         arrivals = []
         for _i in range(phase_count):
             arrivals.append(self.linear_interp_arrival(
-                degrees, r_dist[_i], r_ray_num[_i], self.name, self.puristName,
-                self.source_depth))
+                degrees, r_dist[_i], r_ray_num[_i]))
         return arrivals
 
     def calc_pierce(self, degrees):
@@ -1026,8 +1025,7 @@ class SeismicPhase(object):
 
         return pierce, index
 
-    def linear_interp_arrival(self, degrees, searchDist, rayNum, name,
-                              puristName, source_depth):
+    def linear_interp_arrival(self, degrees, searchDist, rayNum):
         arrivalTime = ((searchDist - self.dist[rayNum]) /
                        (self.dist[rayNum + 1] - self.dist[rayNum]) *
                        (self.time[rayNum + 1] - self.time[rayNum]) +
@@ -1037,18 +1035,19 @@ class SeismicPhase(object):
                             self.ray_param[rayNum + 1]) /
                            (self.dist[rayNum] - self.dist[rayNum + 1]) +
                            self.ray_param[rayNum + 1])
-        if name.endswith("kmps"):
+        if self.name.endswith("kmps"):
             takeoffAngle = 0
             incidentAngle = 0
         else:
             vMod = self.tMod.sMod.vMod
             if self.downGoing[0]:
-                takeoffVelocity = vMod.evaluateBelow(source_depth, name[0])
+                takeoffVelocity = vMod.evaluateBelow(self.source_depth,
+                                                     self.name[0])
             else:
                 # Fake negative velocity so angle is negative in case of
                 # upgoing ray.
-                takeoffVelocity = -1 * vMod.evaluateAbove(source_depth,
-                                                          name[0])
+                takeoffVelocity = -1 * vMod.evaluateAbove(self.source_depth,
+                                                          self.name[0])
             takeoffAngle = np.degrees(math.asin(np.clip(
                 takeoffVelocity * arrivalRayParam /
                 (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
@@ -1057,8 +1056,8 @@ class SeismicPhase(object):
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
                 self.tMod.radiusOfEarth))
         return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
-                       rayNum, name, puristName, source_depth, takeoffAngle,
-                       incidentAngle)
+                       rayNum, self.name, self.puristName, self.source_depth,
+                       takeoffAngle, incidentAngle)
 
     @classmethod
     def get_earliest_arrival(cls, relPhases, degrees):
