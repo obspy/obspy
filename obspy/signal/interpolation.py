@@ -241,33 +241,34 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
 
     **Mathematical Details:**
 
-    The :math:`sinc` function is defined as
+    The :math:`\operatorname{sinc}` function is defined as
 
     .. math::
 
-        sinc(t) = \frac{\sin(\pi t)}{\pi t}.
+        \operatorname{sinc}(t) = \frac{\sin(\pi t)}{\pi t}.
 
-    The Lanczos kernel is then given by a multiplication of the :math:`sinc`
-    function with an additional window function resulting in a finite support
-    kernel.
+    The Lanczos kernel is then given by a multiplication of the
+    :math:`\operatorname{sinc}` function with an additional window function
+    resulting in a finite support kernel.
 
     .. math::
 
         \begin{align}
             L(t) =
             \begin{cases}
-                sinc(t)\, \cdot sinc(t/a)
+                \operatorname{sinc}(t)\, \cdot \operatorname{sinc}(t/a)
                     & \text{if } t \in [-a, a]
-                    \text{ and `window`} = \text{`lanczos`}\\
-                sinc(t)\, \cdot \frac{1}{2}
+                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                \operatorname{sinc}(t)\, \cdot \frac{1}{2}
                 (1 + \cos(\pi\, t/a))
                     & \text{if } t \in [-a, a]
-                    \text{ and `window`} = \text{`hanning`}\\
-                sinc(t)\, \cdot \left( \frac{21}{50} + \frac{1}{2}
+                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                \operatorname{sinc}(t)\, \cdot \left( \frac{21}{50} +
+                \frac{1}{2}
                 \cos(\pi\, t/a) + \frac{2}{25} \cos (2\pi\, t/a) \right)
-                    & \text{if } t \in [-a, a] \text{ and `window`} =
-                    \text{`blackman`}\\
-                0                     & \text{else,}
+                    & \text{if } t \in [-a, a]
+                    \text{ and } \texttt{window} = \texttt{lanczos}\\
+                0                     & \text{else}
             \end{cases}
         \end{align}
 
@@ -279,9 +280,10 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     .. math::
 
         \begin{align}
-            S(t_j) = \sum_{i = \left \lfloor{x}\right \rfloor - a + 1}
-                          ^{\left \lfloor{x}\right \rfloor + a}
-            s_i L(t_j - i),
+            S(t_j) =
+                \sum_{i = \left \lfloor{t_j / \Delta t}\right \rfloor -a + 1}
+                    ^{\left \lfloor{t_j / \Delta t}\right \rfloor + a}
+            s_i L(t_j/\Delta t - i),
         \end{align}
 
     where :math:`\lfloor \cdot \rfloor` denotes the floor function. For more
