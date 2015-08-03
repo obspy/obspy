@@ -742,7 +742,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                       -1.123449, -1.123450, -1.123451, -1.123499]
 
         for timestamp in timestamps:
-            # For the sake of sanity check first for times after 1970.
             starttime = UTCDateTime(timestamp)
             self.assertEqual(starttime.timestamp, timestamp)
 
