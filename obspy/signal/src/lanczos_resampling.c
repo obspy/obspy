@@ -20,7 +20,7 @@ enum lanczos_window_type {
 
 
 /* Sinc function */
-double sinc(double x) {
+static double sinc(double x) {
     if (fabs(x) < 1E-10) {
         return 1.0;
     }
@@ -29,13 +29,13 @@ double sinc(double x) {
 
 
 /* Standard Lanczos Kernel */
-double lanczos_kernel(double x, int a) {
+static double lanczos_kernel(double x, int a) {
     return sinc(x / (double)a);
 }
 
 
 /* von Hann window or raised cosine window*/
-double hanning_kernel(double x, int a) {
+static double hanning_kernel(double x, int a) {
     return 0.5 * (1.0 + cos(x / (double)a * M_PI));
 }
 
@@ -44,7 +44,7 @@ double hanning_kernel(double x, int a) {
  *
  * Values are taken from http://mathworld.wolfram.com/BlackmanFunction.html
  */
-double blackman_kernel(double x, int a) {
+static double blackman_kernel(double x, int a) {
     return 21.0 / 50.0 +
            0.5 * cos(x / (double)a * M_PI) +
            2.0 / 25.0 * cos(2.0 * x / (double)a * M_PI);

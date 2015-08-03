@@ -133,7 +133,7 @@ clibsignal.lanczos_resample.argtypes = [
     C.c_int,
     # window
     C.c_int]
-clibsignal.lanczos_resample.restype = C.c_void_p
+clibsignal.lanczos_resample.restype = None
 
 clibsignal.calculate_kernel.argtypes = [
     # double *x
@@ -150,7 +150,7 @@ clibsignal.calculate_kernel.argtypes = [
     C.c_int,
     # enum lanczos_window_type window
     C.c_int]
-clibsignal.calculate_kernel.restype = C.c_void_p
+clibsignal.calculate_kernel.restype = None
 
 STALEN = 64
 NETLEN = 64

@@ -188,13 +188,13 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
     finite support version of sinc resampling (the ideal reconstruction
     filter). For large values of ``a`` it converges towards sinc resampling. If
-    used for downsampling, make sure to apply a proper anti-aliasing lowpass
-    filter first.
+    used for downsampling, make sure to apply a appropriate anti-aliasing
+    lowpass filter first.
 
     .. note::
 
         In most cases you do not want to call this method directly but invoke
-        it via either the :meth:`obspy.core.stream.Stream.interpolate` or the
+        it via either the :meth:`obspy.core.stream.Stream.interpolate` or
         :meth:`obspy.core.trace.Trace.interpolate` method. These offer a nicer
         API that naturally integrates with the rest of ObsPy. Use
         ``method="lanczos"`` to use this interpolation method. In that case the
@@ -214,20 +214,20 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     :type new_npts: int
     :param new_npts: The new number of samples.
     :type a: int
-    :param a: The width of the window in samples on either side. Runtimes
-        scales linearly with the value of ``a`` but the interpolation also get
+    :param a: The width of the window in samples on either side. Runtime
+        scales linearly with the value of ``a`` but the interpolation also gets
         better.
     :type window: str
-    :param window: The window used to multiply the sinc function with. One
-        of ``"lanczos"``, ``"hanning"``, ``"blackman"``. The window determines
+    :param window: The window used to taper the sinc function. One of
+        ``"lanczos"``, ``"hanning"``, ``"blackman"``. The window determines
         the trade-off between "sharpness" and the amplitude of the wiggles in
         the pass and stop band. Please use the
         :func:`~obspy.signal.interpolation.plot_lanczos_windows` function to
         judge these for any given application.
 
     Values of ``a`` >= 20 show good results even for data that has
-    energy close to the Nyquist frequency. If your data is way oversampled
-    you can get away with much smaller ``a``'s.
+    energy close to the Nyquist frequency. If your data is extremely
+    oversampled you can get away with much smaller ``a``'s.
 
     To get an idea of the response of the filter and the effect of the
     different windows, please use the
@@ -273,7 +273,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
 
 
     Finally interpolation is performed by convolving the discrete signal
-    :math:`s_i` with that this kernel and evaluating it at the new timesamples
+    :math:`s_i` with that kernel and evaluating it at the new time samples
     :math:`t_j`:
 
     .. math::
@@ -291,12 +291,13 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     dt_factor = float(new_dt) / old_dt
     offset = new_start - old_start
     if offset < 0:
-        raise ValueError("Cannot extrapolate.")
+        raise ValueError("Cannot extrapolate. Make sure to only interpolate "
+                         "within the time range of the original signal.")
 
     if a < 1:
         raise ValueError("a must be at least 1.")
 
-    return_data = np.zeros(new_npts, dtype="float64")
+    return_data = np.zeros(new_npts, dtype=np.float64)
 
     clibsignal.lanczos_resample(
         np.require(data, dtype=np.float64), return_data, dt_factor, offset,
@@ -306,7 +307,9 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
 
 def calculate_lanczos_kernel(x, a, window):
     """
-    Helper function to get the actually used kernel for a specific value of a.
+    Helper function to get the actually used kernel for a specific value of
+    a. Useful to analyse the behaviour of different tapers and different values
+    of a.
 
     :type x: :class:`numpy.ndarray`
     :param x: The x values at which to calculate the kernel.
@@ -316,7 +319,11 @@ def calculate_lanczos_kernel(x, a, window):
     :param window: The window used to multiply the sinc function with. One
         of ``"lanczos"``, ``"hanning"``, ``"blackman"``.
 
-    Return a dictionary of arrays.
+    Returns a dictionary of arrays:
+
+    * ``"full_kernel"``: The tapered sinc function evaluated at samples x.
+    * ``"only_sinc"``: The sinc function evaluated at samples x.
+    * ``"only_taper"``: The taper function evaluated at samples x.
     """
     window = window.lower()
     if window not in _LANCZOS_KERNEL_MAP:
@@ -389,7 +396,7 @@ def plot_lanczos_windows(a):
 
     plt.subplot(height, 2, 2)
     plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
-             color="0.1", label="ideal")
+             color="0.1", label="Ideal")
     for key in sorted(arrays.keys()):
         plt.plot(np.fft.rfftfreq(len(x), dx),
                  arrays[key]["fft"], label=key.capitalize())
@@ -401,9 +408,9 @@ def plot_lanczos_windows(a):
     for _i, key in enumerate(sorted(_LANCZOS_KERNEL_MAP.keys())):
         plt.subplot(height, 2, 3 + 2 * _i)
         plt.title(key.capitalize())
-        plt.plot(x, arrays[key]["full_kernel"], color="black", label="final")
-        plt.plot(x, arrays[key]["only_sinc"], "--", color="gray", label="sinc")
-        plt.plot(x, arrays[key]["only_taper"], color="red", label="taper")
+        plt.plot(x, arrays[key]["full_kernel"], color="black", label="Final")
+        plt.plot(x, arrays[key]["only_sinc"], "--", color="gray", label="Sinc")
+        plt.plot(x, arrays[key]["only_taper"], color="red", label="Taper")
         plt.legend()
         plt.xlim(-a, a)
         plt.ylim(-0.3, 1.1)
@@ -417,7 +424,7 @@ def plot_lanczos_windows(a):
         plt.xlim(0.2, 0.8)
         plt.ylim(-0.1, 1.1)
 
-    plt.suptitle("Different windows for sinc interpolation with an a of %i"
+    plt.suptitle("Different windows for sinc interpolation with a=%i"
                  % a, fontsize="large")
     plt.show()
 

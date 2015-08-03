@@ -2176,8 +2176,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Interpolate the data using various interpolation techniques.
 
-        Be careful when downsampling data and make sure to apply a proper
-        anti-aliasing lowpass filter in case its necessary.
+        Be careful when downsampling data and make sure to apply an appropriate
+        anti-aliasing lowpass filter before interpolating in case it's
+        necessary.
 
         .. note::
 
@@ -2203,7 +2204,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         * ``"lanczos"``: This offers the highest quality interpolation and
           should be chosen whenever possible. It is only due to legacy
           reasons that this is not the default method. The one downside it
-          has that it can be fairly expensive. See the
+          has is that it can be fairly expensive. See the
           :func:`~obspy.signal.interpolation.lanczos_interpolation` function
           for more details.
         * ``"weighted_average_slopes"``: This is the interpolation method used
@@ -2211,7 +2212,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
           :func:`~obspy.signal.interpolation.weighted_average_slopes` for
           more details.
         * ``"slinear"``, ``"quadratic"`` and ``"cubic"``: spline interpolation
-          of first, second or third order
+          of first, second or third order.
         * ``"linear"``: Linear interpolation.
         * ``"nearest"``: Nearest neighbour interpolation.
         * ``"zero"``: Last encountered value interpolation.
@@ -2238,7 +2239,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             subsample accuracy. The time shift is always given in seconds. A
             positive shift means the data is shifted towards the future,
             e.g. a positive time delta. Please note that a time shift in
-            the Fourier domain is always more accurate then this. When using
+            the Fourier domain is always more accurate than this. When using
             Lanczos interpolation with large values of ``a`` and away from the
             boundaries this is nonetheless pretty good.
 

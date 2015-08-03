@@ -1853,10 +1853,10 @@ class TraceTestCase(unittest.TestCase):
         # positions. Then one can shift by subsample accuracy while leaving
         # the sample positions intact. Note that there naturally are some
         # boundary effects and as the interpolation method does not deal
-        # with any kind of extrapolation you will loose the first or last
+        # with any kind of extrapolation you will lose the first or last
         # samples.
         # This is a fairly extreme example but of course there are errors
-        # when doing an interpolation - an shift using an FFT is more accurate.
+        # when doing an interpolation - a shift using an FFT is more accurate.
         tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
                        starttime=tr.stats.starttime + tr.stats.delta,
                        time_shift=0.2)
@@ -1867,7 +1867,7 @@ class TraceTestCase(unittest.TestCase):
         # The data naturally also changed.
         self.assertRaises(AssertionError, np.testing.assert_allclose,
                           tr.data, org_tr.data[1:], atol=1E-9)
-        # Shift back. This time we will loose the last sample.
+        # Shift back. This time we will lose the last sample.
         tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
                        starttime=tr.stats.starttime,
                        time_shift=-0.2)
