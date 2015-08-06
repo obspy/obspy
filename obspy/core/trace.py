@@ -2265,7 +2265,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
-                        **kwargs):
+                        plot=False, **kwargs):
         """
         Deconvolve instrument response.
 
@@ -2356,6 +2356,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in time domain prior to deconvolution.
         :type taper_fraction: float
         :param taper_fraction: Taper fraction of cosine taper to use.
+        :type plot: bool
+        :param plot: If activated, brings up a plot that illustrates how the
+            data are processed in the frequency domain in three steps. First by
+            `pre_filt` frequency domain tapering, then by inverting the
+            instrument response spectrum with or without `water_level` and
+            finally showing data with inverted instrument response multiplied
+            on it in frequency domain. It also shows the comparison of
+            raw/corrected data in time domain.
         """
         from obspy.station import Response, PolynomialResponseStage
         from obspy.signal.invsim import cosTaper, c_sac_taper, specInv
@@ -2411,15 +2419,83 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         freq_response, freqs = \
             self.stats.response.get_evalresp_response(self.stats.delta, nfft,
                                                       output=output, **kwargs)
+
+        if plot:
+            import matplotlib.pyplot as plt
+            color1 = "blue"
+            color2 = "red"
+            fig = plt.figure(figsize=(14, 10))
+            ax1 = fig.add_subplot(321)
+            ax2 = fig.add_subplot(323, sharex=ax1)
+            ax3 = fig.add_subplot(325, sharex=ax1)
+            ax4 = fig.add_subplot(222)
+            ax5 = fig.add_subplot(224, sharex=ax4)
+            ax1.loglog(freqs, np.abs(data), color=color1)
+
+        # frequency domain pre-filtering of data spectrum
+        # (apply cosine taper in frequency domain)
         if pre_filt:
-            data *= c_sac_taper(freqs, flimit=pre_filt)
+            freq_domain_taper = c_sac_taper(freqs, flimit=pre_filt)
+            data *= freq_domain_taper
+
+        if plot:
+            ax1b = ax1.twinx()
+            try:
+                freq_domain_taper
+            except NameError:
+                freq_domain_taper = np.ones(len(freqs))
+            ax1b.semilogx(freqs, freq_domain_taper, color=color2)
+            ax1b.set_ylim(-0.05, 1.05)
+            ax1.text(0.05, 0.1, 'pre_filt=%s' % pre_filt,
+                     ha="left", va="bottom", transform=ax1.transAxes,
+                     fontsize="large")
+            ax1.set_ylabel("Data amplitude spectrum,\nraw (%s)" % color1)
+            ax1b.set_ylabel("'pre_filt' taper fraction (%s)" % color2)
+            ax2.loglog(freqs, np.abs(data), color=color1)
+            ax2b = ax2.twinx()
+            ax2b.loglog(freqs, np.abs(freq_response), color=color2)
+            ax2.set_ylabel("Data amplitude spectrum,\n"
+                           "'pre_filt' applied (%s)" % color1)
+            ax2b.set_ylabel("Instrument (amplitude)\nresponse (%s)" % color2)
+
         if water_level is not None:
             specInv(freq_response, water_level)
         data *= freq_response
 
+        if plot:
+            ax3.loglog(freqs, np.abs(data), color=color1)
+            ax3b = ax3.twinx()
+            ax3b.loglog(freqs, np.abs(freq_response), color=color2)
+            ax3.text(0.05, 0.1, 'water_level=%s' % water_level,
+                     ha="left", va="bottom", transform=ax3.transAxes,
+                     fontsize="large")
+            ax3.set_ylabel("Data spectrum,\ndivided by inverted\n"
+                           "instrument response (%s)" % color1)
+            ax3b.set_ylabel("Inverted instrument\n(amplitude) response,\n"
+                            "water level applied (%s)" % color2)
+            ax3.set_xlabel("Frequency [Hz]")
+
         data[-1] = abs(data[-1]) + 0.0j
         # transform data back into the time domain
         data = np.fft.irfft(data)[0:npts]
+
+        if plot:
+            times = self.times()
+            ax4.plot(times, self.data, color="k")
+            ax4.set_ylabel("Raw")
+            ax4.yaxis.set_ticks_position("right")
+            ax4.yaxis.set_label_position("right")
+            ax5.plot(times, data, color="k")
+            ax5.set_ylabel("Response removed")
+            ax5.set_xlabel("Time [s]")
+            ax5.yaxis.set_ticks_position("right")
+            ax5.yaxis.set_label_position("right")
+            plt.subplots_adjust(wspace=0.4)
+            ax1.grid()
+            ax2.grid()
+            ax3.grid()
+            plt.show()
+
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
