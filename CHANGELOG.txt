@@ -1,4 +1,12 @@
 0.10.x:
+  - obspy.core:
+    * Fixed a bug when using
+      `Trace.remove_response(..., water_level=None)`.
+      With that setting that is supposed to not use any water level
+      stabilization in the inversion of the instrument response
+      spectrum actually the instrument response was never inverted and
+      thus instead of a deconvolution a convolution was performed
+      (see #1104).
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
   - obspy.mseed:
