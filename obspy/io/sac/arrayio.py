@@ -400,13 +400,15 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         warnings.warn(msg)
 
     try:
-        np.savetxt(f, np.reshape(hf, (14, 5)),
-                   fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
-        np.savetxt(f, np.reshape(hi, (8, 5)),
-                   fmt=native_str("%10d%10d%10d%10d%10d"))
-        for i in range(0, 24, 3):
-            f.write(hs[i:i + 3].data)
-            f.write(b'\n')
+        np.savetxt(f, np.reshape(hf, (14, 5)), fmt=native_str("%#15.7g"),
+                   delimiter='')
+        np.savetxt(f, np.reshape(hi, (8, 5)), fmt=native_str("%10d"),
+                   delimiter='')
+        np.savetxt(f, np.reshape(hs, (8, 3)), fmt=native_str('%-8s'),
+                   delimiter='')
+        #for i in range(0, 24, 3):
+        #    f.write(hs[i:i + 3].data)
+        #    f.write(b'\n')
     except Exception as e:
         if is_file_name:
             f.close()
