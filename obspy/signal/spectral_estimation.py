@@ -597,10 +597,10 @@ class PPSD():
         # have estimated the spectra to avoid elevated lp noise
 
         spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
-                          detrend=mlab.detrend_linear, window=fft_taper,
-                          noverlap=self.nlap, sides='onesided',
-                          scale_by_freq=True)
-        
+                               detrend=mlab.detrend_linear, window=fft_taper,
+                               noverlap=self.nlap, sides='onesided',
+                               scale_by_freq=True)
+
         # leave out first entry (offset)
         spec = spec[1:]
 
@@ -612,12 +612,12 @@ class PPSD():
         # we can also convert to acceleration if we have non-rotational data
         if self.is_rotational_data:
             # in case of rotational data just remove sensitivity
-            spec /= paz['sensitivity']**2
+            spec /= paz['sensitivity'] ** 2
         else:
             # Get the complex response from the pole/zero model
-            resp = pazToFreqResp(paz['poles'], paz['zeros'],
-                                 paz['gain']*paz['sensitivity'],
-                                 self.delta, nfft=self.nfft)
+            resp = paz_to_freq_resp(paz['poles'], paz['zeros'],
+                                    paz['gain'] * paz['sensitivity'],
+                                    self.delta, nfft=self.nfft)
             resp = resp[1:]
             resp = resp[::-1]
             # Now get the amplitude response (squared)
@@ -626,7 +626,7 @@ class PPSD():
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            spec = (w**2) * spec / respamp
+            spec = (w ** 2) * spec / respamp
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
