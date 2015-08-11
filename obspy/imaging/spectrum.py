@@ -12,7 +12,7 @@ from numpy.fft import rfft, rfftfreq
 
 
 def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
-                  axes=None, title=None, show=True):
+                  fig=None, ax=None, title=None, show=True):
 
     """
      Compute and plot the spectrum of the input data
@@ -21,31 +21,24 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 
-    npts = len(data)
-
     # Compute the FFT
     frq = rfftfreq(data.size, d=1./samp_rate)
-    X = rfft(data)/npts  # fft computing and normalization
+    X = rfft(data)/samp_rate  # fft computing and normalization
 
-    if not axes:
+    if fig is None:
         fig = plt.figure()
-        ax = fig.add_subplot(111)
-    else:
-        ax = axes
+
+    if ax is None:
+        ax = plt.subplot(111)
 
     print(np.shape(frq), np.shape(X))
     ax.loglog(frq, abs(X), color='k')
     ax.set_xlabel('Freq (Hz)')
     ax.set_ylabel('|Y(freq)|')
 
-    # set correct way of axis, whitespace before and after with window
-    # length
     ax.axis('tight')
     ax.set_xlim(0, frq[-1])
     ax.grid(False)
-
-    if axes:
-        return ax
 
     if title:
         ax.set_title(title)
@@ -55,7 +48,8 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
             fig.savefig(outfile, format=fmt)
         else:
             fig.savefig(outfile)
-    elif show:
+
+    if show:
         plt.show()
-    else:
-        return fig
+
+    return fig, ax
