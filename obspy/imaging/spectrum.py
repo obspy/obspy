@@ -10,8 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.fft import rfft, rfftfreq
 
+
 def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
-             axes=None, title=None, show=True):
+                  axes=None, title=None, show=True):
 
     """
      Compute and plot the spectrum of the input data
@@ -23,14 +24,8 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     npts = len(data)
 
     # Compute the FFT
-    npts = len(data)
-    k = np.arange(npts)
-    T = npts/samp_rate
-    frq = k/T  # two sides frequency range
-    frq = frq[range(npts/2)]  # one side frequency range
     frq = rfftfreq(data.size, d=1./samp_rate)
     X = rfft(data)/npts  # fft computing and normalization
-    #X = X[range(npts/2)]
 
     if not axes:
         fig = plt.figure()
@@ -39,7 +34,7 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
         ax = axes
 
     print(np.shape(frq), np.shape(X))
-    ax.loglog(frq, abs(X), color = 'k') # plotting the spectrum
+    ax.loglog(frq, abs(X), color='k')
     ax.set_xlabel('Freq (Hz)')
     ax.set_ylabel('|Y(freq)|')
 
