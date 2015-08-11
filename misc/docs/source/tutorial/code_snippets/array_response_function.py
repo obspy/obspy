@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from obspy.imaging.cm import obspy_sequential
 from obspy.signal.array_analysis import array_transff_wavenumber
 
 
@@ -25,7 +26,7 @@ transff = array_transff_wavenumber(coords, klim, kstep, coordsys='xy')
 # plot
 plt.pcolor(np.arange(kxmin, kxmax + kstep * 1.1, kstep) - kstep / 2.,
            np.arange(kymin, kymax + kstep * 1.1, kstep) - kstep / 2.,
-           transff.T)
+           transff.T, cmap=obspy_sequential)
 
 plt.colorbar()
 plt.clim(vmin=0., vmax=1.)

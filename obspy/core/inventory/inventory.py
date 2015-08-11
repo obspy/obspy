@@ -19,7 +19,6 @@ import textwrap
 import warnings
 
 from pkg_resources import load_entry_point
-import numpy as np
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
@@ -414,8 +413,8 @@ class Inventory(ComparingObject):
 
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
-             size=15**2, label=True, color='blue', color_per_network=False,
-             colormap="jet", legend="upper left", time=None, show=True,
+             size=15**2, label=True, color='#b15928', color_per_network=False,
+             colormap="Paired", legend="upper left", time=None, show=True,
              outfile=None, method=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
@@ -454,7 +453,8 @@ class Inventory(ComparingObject):
         :param label: Whether to label stations with "network.station" or not.
         :type color: str
         :param color: Face color of marker symbol (see
-            :func:`matplotlib.pyplot.scatter`).
+            :func:`matplotlib.pyplot.scatter`). Defaults to the first color
+            from the single-element "Paired" color map.
         :type color_per_network: bool or dict
         :param color_per_network: If set to ``True``, each network will be
             drawn in a different color. A dictionary can be provided that maps
@@ -463,7 +463,7 @@ class Inventory(ComparingObject):
         :type colormap: str, any matplotlib colormap, optional
         :param colormap: Only used if ``color_per_network=True``. Specifies
             which colormap is used to draw the colors for the individual
-            networks.
+            networks. Defaults to the "Paired" color map.
         :type legend: str or None
         :param legend: Location string for legend, if networks are plotted in
             different colors (i.e. option ``color_per_network`` in use). See
@@ -544,11 +544,10 @@ class Inventory(ComparingObject):
 
         if color_per_network and not isinstance(color_per_network, dict):
             from matplotlib.cm import get_cmap
-            cmap = get_cmap(name=colormap)
             codes = set([n.code for n in inv])
-            nums = np.linspace(0, 1, endpoint=False, num=len(codes))
-            color_per_network = dict([(code, cmap(n))
-                                      for code, n in zip(sorted(codes), nums)])
+            cmap = get_cmap(name=colormap, lut=len(codes))
+            color_per_network = dict([(code, cmap(i))
+                                      for i, code in enumerate(sorted(codes))])
 
         for net in inv:
             for sta in net:
