@@ -8,7 +8,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import fft
+from numpy.fft import rfft, rfftfreq
 
 def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
              axes=None, title=None, show=True):
@@ -28,9 +28,9 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     T = npts/samp_rate
     frq = k/T  # two sides frequency range
     frq = frq[range(npts/2)]  # one side frequency range
-
-    X = fft(data)/npts  # fft computing and normalization
-    X = X[range(npts/2)]
+    frq = rfftfreq(data.size, d=1./samp_rate)
+    X = rfft(data)/npts  # fft computing and normalization
+    #X = X[range(npts/2)]
 
     if not axes:
         fig = plt.figure()
@@ -38,6 +38,7 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     else:
         ax = axes
 
+    print(np.shape(frq), np.shape(X))
     ax.loglog(frq, abs(X), color = 'k') # plotting the spectrum
     ax.set_xlabel('Freq (Hz)')
     ax.set_ylabel('|Y(freq)|')
