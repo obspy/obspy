@@ -2171,18 +2171,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @raise_if_masked
     @_add_processing_info
     def interpolate(self, sampling_rate, method="weighted_average_slopes",
-                    starttime=None, npts=None):
+                    starttime=None, npts=None, time_shift=0.0,
+                    *args, **kwargs):
         """
         Interpolate the data using various interpolation techniques.
 
-        No filter, antialiasing, ... is applied so make sure the data is
-        suitable for the operation to be performed.
+        Be careful when downsampling data and make sure to apply an appropriate
+        anti-aliasing lowpass filter before interpolating in case it's
+        necessary.
 
         .. note::
 
             The :class:`~Trace` object has three different methods to change
             the sampling rate of its data: :meth:`~.resample`,
-            :meth:`~.decimate`, and :meth:`~.interpolate`
+            :meth:`~.decimate`, and :meth:`~.interpolate`.
 
             Make sure to choose the most appropriate one for the problem at
             hand.
@@ -2194,18 +2196,36 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~.copy` to create a copy of your Trace
             object.
 
+        .. rubric:: _`Interpolation Methods:`
+
+        The chosen method is crucial and we will elaborate a bit about the
+        choices here:
+
+        * ``"lanczos"``: This offers the highest quality interpolation and
+          should be chosen whenever possible. It is only due to legacy
+          reasons that this is not the default method. The one downside it
+          has is that it can be fairly expensive. See the
+          :func:`~obspy.signal.interpolation.lanczos_interpolation` function
+          for more details.
+        * ``"weighted_average_slopes"``: This is the interpolation method used
+          by SAC. Refer to
+          :func:`~obspy.signal.interpolation.weighted_average_slopes` for
+          more details.
+        * ``"slinear"``, ``"quadratic"`` and ``"cubic"``: spline interpolation
+          of first, second or third order.
+        * ``"linear"``: Linear interpolation.
+        * ``"nearest"``: Nearest neighbour interpolation.
+        * ``"zero"``: Last encountered value interpolation.
+
+        .. rubric:: _`Parameters:`
 
         :param sampling_rate: The new sampling rate in ``Hz``.
-        :param method: The kind of interpolation to perform as a string (
+        :param method: The kind of interpolation to perform as a string. One of
             ``"linear"``, ``"nearest"``, ``"zero"``, ``"slinear"``,
-            ``"quadratic"``, ``"cubic"``, or ``"weighted_average_slopes"``
-            where ``"slinear"``, ``"quadratic"`` and ``"cubic"`` refer  to a
-            spline interpolation of first,  second or third order) or as an
-            integer specifying the order of the spline interpolator to use.
-            Defaults to ``"weighted_average_slopes"`` which is the
-            interpolation technique used by SAC. Refer to
-            :func:`~obspy.signal.interpolation.weighted_average_slopes` for
-            more details.
+            ``"quadratic"``, ``"cubic"``, ``"lanczos"``, or
+            ``"weighted_average_slopes"``. Alternatively an integer
+            specifying the order of the spline interpolator to use also works.
+            Defaults to ``"weighted_average_slopes"``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` or int
         :param starttime: The start time (or timestamp) for the new
             interpolated stream. Will be set to current start time of the
@@ -2214,9 +2234,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param npts: The new number of samples. Will be set to the best
             fitting  number to retain the current end time of the trace if
             not given.
+        :type time_shift: float
+        :param time_shift: Interpolation can also shift the data with
+            subsample accuracy. The time shift is always given in seconds. A
+            positive shift means the data is shifted towards the future,
+            e.g. a positive time delta. Please note that a time shift in
+            the Fourier domain is always more accurate than this. When using
+            Lanczos interpolation with large values of ``a`` and away from the
+            boundaries this is nonetheless pretty good.
+
+        .. rubric:: _`New in version 0.11:`
+
+        * New parameter ``time_shift``.
+        * New interpolation method ``lanczos``.
+
 
         .. rubric:: _`Usage Examples`
-
 
         >>> from obspy import read
         >>> tr = read()[0]
@@ -2251,32 +2284,44 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("The time step must be positive.")
         dt = 1.0 / sampling_rate
 
-        if isinstance(method, int) or method in ["linear", "nearest", "zero",
-                                                 "slinear", "quadratic",
-                                                 "cubic"]:
-            func = _get_function_from_entry_point('interpolate',
-                                                  'interpolate_1d')
-        else:
-            func = _get_function_from_entry_point('interpolate', method)
-        old_start = self.stats.starttime.timestamp
-        old_dt = self.stats.delta
+        # We just shift the old start time. The interpolation will take care
+        # of the rest.
+        if time_shift:
+            self.stats.starttime += time_shift
 
-        if starttime is not None:
-            try:
-                starttime = starttime.timestamp
-            except AttributeError:
-                pass
-        else:
-            starttime = self.stats.starttime.timestamp
+        try:
+            if isinstance(method, int) or \
+                    method in ["linear", "nearest", "zero", "slinear",
+                               "quadratic", "cubic"]:
+                func = _get_function_from_entry_point('interpolate',
+                                                      'interpolate_1d')
+            else:
+                func = _get_function_from_entry_point('interpolate', method)
+            old_start = self.stats.starttime.timestamp
+            old_dt = self.stats.delta
 
-        if npts is None:
-            npts = int(math.floor((self.stats.endtime.timestamp - starttime) /
-                                  dt)) + 1
-        self.data = np.atleast_1d(func(np.require(self.data, dtype=np.float64),
-                                       old_start, old_dt, starttime, dt, npts,
-                                       type=method))
-        self.stats.starttime = UTCDateTime(starttime)
-        self.stats.delta = dt
+            if starttime is not None:
+                try:
+                    starttime = starttime.timestamp
+                except AttributeError:
+                    pass
+            else:
+                starttime = self.stats.starttime.timestamp
+            endtime = self.stats.endtime.timestamp
+            if npts is None:
+                npts = int(math.floor((endtime - starttime) / dt)) + 1
+
+            self.data = np.atleast_1d(func(
+                np.require(self.data, dtype=np.float64), old_start, old_dt,
+                starttime, dt, npts, type=method, *args, **kwargs))
+            self.stats.starttime = UTCDateTime(starttime)
+            self.stats.delta = dt
+        except:
+            # Revert the start time change if something went wrong.
+            if time_shift:
+                self.stats.starttime -= time_shift
+            # re-raise last exception.
+            raise
 
         return self
 

@@ -1815,6 +1815,70 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(int_tr.stats.delta, 2.0)
             self.assertLessEqual(int_tr.stats.endtime, org_tr.stats.endtime)
 
+    def test_interpolation_time_shift(self):
+        """
+        Tests the time shift of the interpolation.
+        """
+        tr = read()[0]
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:500]
+        tr.interpolate(method="lanczos", sampling_rate=10.0, a=20)
+        tr.stats.sampling_rate = 1.0
+        tr.data = tr.data[:500]
+        tr.stats.starttime = UTCDateTime(0)
+
+        org_tr = tr.copy()
+
+        # Now this does not do much for now but actually just shifts the
+        # samples.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=0.2)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 0.2)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime + 0.2)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=0.4)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 0.6)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime + 0.6)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=1,
+                       time_shift=-0.6)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime)
+        np.testing.assert_allclose(tr.data, org_tr.data, atol=1E-9)
+
+        # This becomes more interesting when also fixing the sample
+        # positions. Then one can shift by subsample accuracy while leaving
+        # the sample positions intact. Note that there naturally are some
+        # boundary effects and as the interpolation method does not deal
+        # with any kind of extrapolation you will lose the first or last
+        # samples.
+        # This is a fairly extreme example but of course there are errors
+        # when doing an interpolation - a shift using an FFT is more accurate.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
+                       starttime=tr.stats.starttime + tr.stats.delta,
+                       time_shift=0.2)
+        # The sample point did not change but we lost the first sample,
+        # as we shifted towards the future.
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 1.0)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime)
+        # The data naturally also changed.
+        self.assertRaises(AssertionError, np.testing.assert_allclose,
+                          tr.data, org_tr.data[1:], atol=1E-9)
+        # Shift back. This time we will lose the last sample.
+        tr.interpolate(method="lanczos", sampling_rate=1.0, a=50,
+                       starttime=tr.stats.starttime,
+                       time_shift=-0.2)
+        self.assertEqual(tr.stats.starttime, org_tr.stats.starttime + 1.0)
+        self.assertEqual(tr.stats.endtime, org_tr.stats.endtime - 1.0)
+        # But the data (aside from edge effects - we are going forward and
+        # backwards again so they go twice as far!) should now again be the
+        # same as we started out with.
+        np.testing.assert_allclose(
+            tr.data[100:-100], org_tr.data[101:-101], atol=1E-9, rtol=1E-4)
+
     def test_interpolation_arguments(self):
         """
         Test case for the interpolation arguments.
