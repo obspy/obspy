@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2015.061
+ * modified: 2015.213
  ***************************************************************************/
 
 #include <stdio.h>
@@ -24,6 +24,9 @@ static hptime_t ms_time2hptime_int (int year, int day, int hour,
 
 static struct tm *ms_gmtime_r (int64_t *timep, struct tm *result);
 
+
+/* A constant number of seconds between the NTP and Posix/Unix time epoch */
+#define NTPPOSIXEPOCHDELTA 2208988800LL
 
 /* Global variable to hold a leap second list */
 LeapSecond *leapsecondlist = NULL;
@@ -584,6 +587,46 @@ ms_btime2seedtimestr (BTime *btime, char *seedtimestr)
   else
     return seedtimestr;
 }  /* End of ms_btime2seedtimestr() */
+
+
+/***************************************************************************
+ * ms_hptime2tomsusecoffset:
+ *
+ * Convert a high precision epoch time to a time value in tenths of
+ * milliseconds (aka toms) and a microsecond offset (aka usecoffset).
+ *
+ * The tenths of milliseconds value will be rounded to the nearest
+ * value having a microsecond offset value between -50 to +49.
+ *
+ * Returns 0 on success and -1 on error.
+ ***************************************************************************/
+int
+ms_hptime2tomsusecoffset (hptime_t hptime, hptime_t *toms, int8_t *usecoffset)
+{
+  if ( toms == NULL || usecoffset == NULL )
+    return -1;
+  
+  /* Split time into tenths of milliseconds and microseconds */
+  *toms = hptime / (HPTMODULUS / 10000);
+  *usecoffset = hptime - (*toms * (HPTMODULUS / 10000));
+  
+  /* Round tenths and adjust microsecond offset to -50 to +49 range */
+  if ( *usecoffset > 49 && *usecoffset < 100 )
+    {
+      *toms += 1;
+      *usecoffset -= 100;
+    }
+  else if ( *usecoffset < -50 && *usecoffset > -100 )
+    {
+      *toms -= 1;
+      *usecoffset += 100;
+    }
+  
+  /* Convert tenths of milliseconds to be in hptime_t (HPTMODULUS) units */
+  *toms *= (HPTMODULUS / 10000);
+  
+  return 0;
+}  /* End of ms_hptime2tomsusecoffset() */
 
 
 /***************************************************************************
@@ -1158,10 +1201,10 @@ ms_readleapsecondfile (char *filename)
   FILE *fp = NULL;
   LeapSecond *ls = NULL;
   LeapSecond *lastls = NULL;
-  long long int expires;
+  int64_t expires;
   char readline[200];
   char *cp;
-  long long int leapsecond;
+  int64_t leapsecond;
   int TAIdelta;
   int fields;
   int count = 0;
@@ -1192,12 +1235,12 @@ ms_readleapsecondfile (char *filename)
       if ( ! strncmp (readline, "#@", 2) )
         {
           expires = 0;
-          fields = sscanf (readline, "#@ %lld", &expires);
+          fields = sscanf (readline, "#@ %"SCNd64, &expires);
           
           if ( fields == 1 )
             {
               /* Convert expires to Unix epoch */
-              expires = expires - 2208988800;
+              expires = expires - NTPPOSIXEPOCHDELTA;
 
               /* Compare expire time to current time */
               if ( time(NULL) > expires )
@@ -1216,7 +1259,7 @@ ms_readleapsecondfile (char *filename)
       if ( *readline == '#' )
         continue;
       
-      fields = sscanf (readline, "%lld %d ", &leapsecond, &TAIdelta);
+      fields = sscanf (readline, "%"SCNd64" %d ", &leapsecond, &TAIdelta);
       
       if ( fields == 2 )
         {
@@ -1227,7 +1270,7 @@ ms_readleapsecondfile (char *filename)
             }
           
           /* Convert NTP epoch time to Unix epoch time and then to HPT */
-          ls->leapsecond = MS_EPOCH2HPTIME( (leapsecond - 2208988800) );
+          ls->leapsecond = MS_EPOCH2HPTIME( (leapsecond - NTPPOSIXEPOCHDELTA) );
           ls->TAIdelta = TAIdelta;
           ls->next = NULL;
           

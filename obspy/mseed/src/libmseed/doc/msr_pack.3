@@ -177,8 +177,8 @@ main() {
   /* Pack the record(s) */
   precords = msr_pack (msr, &record_handler, srcname, &psamples, 1, verbose);
 
-  ms_log (0, "Packed %lld samples into %d records\n",
-             (long long int)psamples, precords);
+  ms_log (0, "Packed %"PRId64" samples into %d records\n",
+             psamples, precords);
 
   msr_free (&msr);
 }
