@@ -1,3 +1,47 @@
+2015.213: 2.17
+	- Round Fixed Section Data Header start time values to the nearest
+	tenth of millisecond and restrict the microsecond offset value
+	to a range between -50 and +49 as recommended in SEED.  Previously
+	start times were truncated at tenths of millisecond resolution
+	and the microsecond offset value was between 0 and +99.  This also
+	addresses a bug where microsecond offsets were off by 100ms for times
+	before Jan 1 1970.  Thanks to Lion Krischer for reporting.
+
+	Note to future hackers: the definition of HPTMODULUS governing the
+	time tick interval for high precision time values implies that this
+	tick interval may be changed.  In reality, this should not be changed
+	from the default, microsecond tick value without thorough testing.
+	Some logic is know to be dependent on the microsecond tick.
+
+2015.134: 2.16m
+	- Add defines for needed integer types and macros from inttypes.h
+	missing in older MSVC versions.  MSVC 2010 and later appear to have
+	enough C99 support.
+	- Add define tests for _WIN32 and _WIN64 to cover all WINs.
+	- ms_fread(): Add cast to quiet warning for conversion from size_t
+	to int.  In this case the read will always be <= MAXRECLEN, much
+	smaller than int, making the conversion safe.
+
+2015.113: 2.16
+	- Update minor release version in Makefile.
+
+2015.108:
+	- Cleanup of lmplatform.h removing unneeded headers and using C99
+	standard headers except for a few platform specific cases.
+	- Convert all printf() and scanf() usage of %lld for 64-bit integers
+	to use the C99 PRId64 and SCNd64 macros for portability (MingGW).
+	- Change detection of Linux/Cygwin to set global define LMP_LINUX
+	instead of LMP_GLIB2 (now marked as deprecated).
+	- Change detection of Windows to set global define LMP_WIN instead
+	of LMP_WIN32 (now marked as deprecated).
+	- Add detection of __MINGW64__ define.
+	- Tested building on Win7 with: Open Watcom 1.9, MinGW gcc 4.8.1 and
+	Cygwin 1.7.35 (gcc 2.9.2).
+
+2015.074:
+	- Define NTP-Posix time epoch conversion constant specifically as
+	a long long integer to avoid warnings on some compilers.
+
 2015.070: 2.15
 	- Fix infinite loop if blockette chain is corrupt.  Patch submitted
 	by Elliott Sales de Andrade.
