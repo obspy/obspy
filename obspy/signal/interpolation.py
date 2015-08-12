@@ -188,7 +188,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
     finite support version of sinc resampling (the ideal reconstruction
     filter). For large values of ``a`` it converges towards sinc resampling. If
-    used for downsampling, make sure to apply a appropriate anti-aliasing
+    used for downsampling, make sure to apply an appropriate anti-aliasing
     lowpass filter first.
 
     .. note::
@@ -323,9 +323,9 @@ def calculate_lanczos_kernel(x, a, window):
 
     Returns a dictionary of arrays:
 
-    * ``"full_kernel"``: The tapered sinc function evaluated at samples x.
-    * ``"only_sinc"``: The sinc function evaluated at samples x.
-    * ``"only_taper"``: The taper function evaluated at samples x.
+    * ``"full_kernel"``: The tapered sinc function evaluated at samples ``x``.
+    * ``"only_sinc"``: The sinc function evaluated at samples ``x``.
+    * ``"only_taper"``: The taper function evaluated at samples ``x``.
     """
     window = window.lower()
     if window not in _LANCZOS_KERNEL_MAP:
