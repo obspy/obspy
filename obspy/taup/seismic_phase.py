@@ -1204,40 +1204,58 @@ class SeismicPhase(object):
                             self.ray_param[rayNum + 1]) /
                            (self.dist[rayNum] - self.dist[rayNum + 1]) +
                            self.ray_param[rayNum + 1])
-        if self.name.endswith("kmps"):
-            takeoffAngle = 0
-            incidentAngle = 0
-        else:
-            vMod = self.tMod.sMod.vMod
-            if self.downGoing[0]:
-                takeoffVelocity = vMod.evaluateBelow(self.source_depth,
-                                                     self.name[0])
-            else:
-                # Fake negative velocity so angle is negative in case of
-                # upgoing ray.
-                takeoffVelocity = -1 * vMod.evaluateAbove(self.source_depth,
-                                                          self.name[0])
-            takeoffAngle = np.degrees(math.asin(np.clip(
-                takeoffVelocity * arrivalRayParam /
-                (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
+        return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
+                       rayNum, self.name, self.puristName, self.source_depth,
+                       self.receiver_depth)
 
-            lastLeg = self.legs[-2][0]  # very last item is "END"
+    def calc_takeoff_angle(self, ray_param):
+        if self.name.endswith("kmps"):
+            return 0
+
+        vMod = self.tMod.sMod.vMod
+        try:
+            if self.downGoing[0]:
+                takeoff_velocity = vMod.evaluateBelow(self.source_depth,
+                                                      self.name[0])
+            else:
+                takeoff_velocity = vMod.evaluateAbove(self.source_depth,
+                                                      self.name[0])
+        except (IndexError, LookupError) as e:
+            raise RuntimeError('Should not happen: ' + str(e))
+
+        takeoff_angle = np.degrees(math.asin(np.clip(
+            takeoff_velocity * ray_param /
+            (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
+        if not self.downGoing[0]:
+            # upgoing, so angle is in 90-180 range
+            takeoff_angle = 180 - takeoff_angle
+
+        return takeoff_angle
+
+    def calc_incident_angle(self, ray_param):
+        if self.name.endswith("kmps"):
+            return 0
+
+        vMod = self.tMod.sMod.vMod
+        # Very last item is "END", assume first char is P or S
+        lastLeg = self.legs[-2][0]
+        try:
             if self.downGoing[-1]:
-                # Fake negative velocity so angle is negative in case of
-                # downgoing ray.
-                incident_velocity = -1 * vMod.evaluateAbove(
-                    self.receiver_depth,
-                    lastLeg)
+                incident_velocity = vMod.evaluateAbove(self.receiver_depth,
+                                                       lastLeg)
             else:
                 incident_velocity = vMod.evaluateBelow(self.receiver_depth,
                                                        lastLeg)
-            incidentAngle = np.degrees(math.asin(
-                incident_velocity * arrivalRayParam /
-                (self.tMod.radiusOfEarth - self.receiver_depth)))
+        except (IndexError, LookupError) as e:
+            raise RuntimeError('Should not happen: ' + str(e))
 
-        return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
-                       rayNum, self.name, self.puristName, self.source_depth,
-                       self.receiver_depth, takeoffAngle, incidentAngle)
+        incident_angle = np.degrees(math.asin(
+            incident_velocity * ray_param /
+            (self.tMod.radiusOfEarth - self.receiver_depth)))
+        if self.downGoing[-1]:
+            incident_angle = 180 - incident_angle
+
+        return incident_angle
 
     @classmethod
     def get_earliest_arrival(cls, relPhases, degrees):
