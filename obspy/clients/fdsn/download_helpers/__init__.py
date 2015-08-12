@@ -1,0 +1,372 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Data Acquisition Helpers for FDSN compliant web services
+========================================================
+
+This package contains functionality to query and integrate data from any
+number of FDSN web service providers. It can be used by itself or as a
+library integrated into a bigger project.
+
+:copyright:
+    Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+
+
+How it Works
+------------
+
+*to be written*
+
+MiniSEED filenames are downloaded in larger chunks and then split at the
+file level. This assures that no information present in the original MinSEED
+files is lost in the process.
+
+
+Usage
+-----
+
+Using the download helpers requires the definition of three separate things,
+all of which are detailed in the following paragraphs.
+
+1. **Data Selection:** The data to be downloaded can be defined by enforcing
+   geographical or temporal constraints and a couple of other options.
+2. **Storage Options:** Choosing where the final MiniSEED and StationXML files
+   should be stored.
+3. **Start the Download:** Choose from which provider(s) to download and then
+   launch the downloading process.
+
+
+Step 1: Data Selection
+~~~~~~~~~~~~~~~~~~~~~~
+
+Data set selection serves the purpose to limit the data to be downloaded to
+data useful for the purpose at hand. It is handled by two objects:
+subclasses of the  :class:`~obspy.fdsn.download_helpers.domain.Domain`
+object and the
+:class:`~obspy.fdsn.download_helpers.restrictions.Restrictions` class.
+
+The :class:`~obspy.fdsn.download_helpers.domain` module currently defines three
+different domain types used to limit the geographical extent of the queried
+data: :class:`~obspy.fdsn.download_helpers.domain.RectangularDomain`,
+:class:`~obspy.fdsn.download_helpers.domain.CircularDomain`, and
+:class:`~obspy.fdsn.download_helpers.domain.GlobalDomain`. Subclassing
+:class:`~obspy.fdsn.download_helpers.domain.Domain` enables the construction of
+arbitrary complex domains. Please see the
+:class:`~obspy.fdsn.download_helpers.domain` module for more details.
+Instances of these classes will later be passed to the function sparking the
+downloading process. A rectangular domain for example is defined like this:
+
+>>> from obspy.fdsn.download_helpers.domain import RectangularDomain
+>>> domain = RectangularDomain(minlatitude=-10, maxlatitude=10,
+...                            minlongitude=-10, maxlongitude=10)
+
+Additional restrictions like temporal bounds, SEED identifier wildcards,
+and other things are set with the help of
+the :class:`~obspy.fdsn.download_helpers.restrictions.Restrictions` class.
+Please refer to its documentation for a more detailed explanation of the
+parameters.
+
+>>> from obspy import UTCDateTime
+>>> from obspy.fdsn.download_helpers import Restrictions
+>>> restrict = Restrictions(
+...     starttime=UTCDateTime(2012, 1, 1),
+...     endtime=UTCDateTime(2012, 1, 1, 1),
+...     network=None, station=None, location=None, channel=None,
+...     reject_channels_with_gaps=True,
+...     minimum_length=0.9,
+...     minimum_interstation_distance_in_m=1000,
+...     channel_priorities=["HH[Z,N,E]", "BH[Z,N,E]"],
+...     location_priorities=["", "00", "01"]
+
+
+Step 2: Storage Options
+~~~~~~~~~~~~~~~~~~~~~~~
+
+After determining what to download, the helpers must know where to store the to
+be downloaded data. This requires some flexibility in case this is integrated
+as a component into a bigger system. An example of this is a toolbox that has a
+database to manage its data. A major concern is to not download already
+existing data. In order to enable such a use case the download helpers can be
+given functions that are evaluated when determining the filenames of the to be
+downloaded data.  Depending on the return value, the helper class will download
+the whole, only parts, or even nothing, of that particular piece of data.
+
+Storing MiniSEED waveforms
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
+:func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
+method of the
+:class:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper` class.
+
+**Option 1: Folder Name**
+
+In the simplest case it is just a folder name:
+
+>>> mseed_storage = "waveforms"
+
+This will cause all MiniSEED files to be stored as
+
+``waveforms/NETWORK.STATION.LOCATION.CHANNEL__STARTTIME__ENDTIME.mseed``.
+
+An example of this is
+
+``waveforms/BW.FURT..BHZ__2014-10-27T16-37-23Z__2014-10-27T16-37-33Z.mseed``
+
+which is rather general but also quite long.
+
+**Option 2: String Template**
+
+For more control use the second possibility and provide a string containing
+``{network}``, ``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
+and ``{endtime}`` format specifiers. These values will be interpolated to
+acquire the final filename. The start and end times will be formatted with
+``strftime()`` with the specifier ``'%Y-%m-%dT%H-%M-%SZ'`` in an effort to
+avoid colons which are troublesome in filenames on many systems.
+
+>>> mseed_storage = ("some_folder/{network}/{station}/"
+...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
+
+results in
+
+``some_folder/BW/FURT/.BHZ.2014-10-27T16-37-23Z.2014-10-27T16-37-33Z.mseed``.
+
+The download helpers will create any non-existing folders along the path.
+
+**Option 3: Custom Function**
+
+The most complex but also most powerful possibility is to use a function which
+will be evaluated to determine the filename. **If the function returns**
+``True`` **, the MiniSEED file is assumed to already be available and will not
+be downloaded again; keep in mind that in that case no station data will be
+downloaded for that channel.** If it returns a string, the MiniSEED file will
+be saved to that path. Utilize closures to use any other parameters in the
+function. This hypothetical function checks if the file is already in a
+database and otherwise returns a string which will be interpreted as a
+filename.
+
+>>> def get_mseed_storage(network, station, location, channel, starttime,
+...                       endtime):
+...     # Returning True means that neither the data nor the StationXML file
+...     # will be downloaded.
+...     if is_in_db(network, station, location, channel, starttime, endtime):
+...         return True
+...     # If a string is returned the file will be saved in that location.
+...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed." % (network, station,
+...                                                       location, channel))
+>>> mseed_storage = get_mseed_storage
+
+.. note::
+
+    No matter which approach is chosen, if a file already exists, it will not
+    be overwritten; it will be parsed and the download helper class will
+    attempt to download matching StationXML files.
+
+
+Storing StationXML files
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The same logic applies to the StationXML files. This time the rules are set by
+the ``stationxml_storage`` argument of the
+:func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
+method of the
+:class:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper` class.
+StationXML files will be downloaded on a per-station basis thus all channels
+and locations from one station will end up in the same StationXML file.
+
+**Option 1: Folder Name**
+
+A simple string will be interpreted as a folder name. This example will save
+the files to ``"stations/NETWORK.STATION.xml"``, e.g. to
+``"stations/BW.FURT.xml"``.
+
+>>> stationxml_storage = "stations"
+
+**Option 2: String Template**
+
+Another option is to provide a string formatting template, e.g.
+
+>>> stationxml_storage = "some_folder/{network}/{station}.xml"
+
+will write to ``"some_folder/NETWORK/STATION.xml"``, in this case for example
+to ``"some_folder/BW/FURT.xml"``.
+
+.. note::
+
+    If the StationXML file already exists, it will be opened to see what is in
+    the file. In case it does not contain all necessary channels, it will be
+    deleted and **only those channels needed in the current run will be
+    downloaded again**. Pass a custom function to the ``stationxml_path``
+    argument if you require different behavior as documented in thefollowing.
+
+**Option 3: Custom Function**
+
+As with the waveform data, the StationXML paths can also be set with the help
+of a function. The function in this case is a bit more complex then for the
+waveform case. It has to return a dictionary with three keys:
+``"available_channels"``, ``"missing_channels"``, and ``"filename"``.
+``"available_channel"`` is a list of channels that are already available as
+station information and that require no new download. Make sure to include all
+already available channels; this information is later used to discard
+MiniSEED files that have no corresponding station information.
+``"missing_channels"`` is a list of channels for that particular station that
+must be downloaded and ``"filename"`` determines where to save these. Please
+note that in this particular case the StationXML file will be overwritten if it
+already exists and the ``"missing_channels"`` will be downloaded to it,
+independent of what already exists in the file.
+
+Alternatively the function can also return a string and the behaviour is the
+same as two first options for the ``stationxml_storage`` argument.
+
+The next example illustrates a complex use case where the availability of each
+channel's station information is queried in some database and only those
+channels that do not exist yet will be downloaded. Use closures to pass more
+arguments to the function.
+
+>>> def get_stationxml_storage(network, station, channels, starttime, endtime):
+...     available_channels = []
+...     missing_channels = []
+...     for location, channel in channels:
+...         if is_in_db(network, station, location, channel, starttime,
+...                     endtime):
+...             available_channels.append((location, channel))
+...         else:
+...             missing_channels.append((location, channel))
+...     filename = os.path.join(ROOT, "%s.%s.xml" % (network, station))
+...     return {
+...         "available_channels": available_channels,
+...         "missing_channels": missing_channels,
+...         "filename": filename}
+>>> stationxml_storage = get_stationxml_storage
+
+Step 3: Start the Download
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+>>> dlh = DownloadHelper()
+
+>>> dlh.download(domain, restrictions, chunk_size_in_mb=50,
+...              thread_per_client=3, mseed_storage=mseed_storage,
+...              stationxml_storage=stationxml_storage)
+
+
+Logging
+~~~~~~~
+
+*to be written*
+
+
+Examples
+--------
+
+This section illustrates the usage of the download helpers for a few typical
+examples which can serve as templates for your own needs.
+
+
+Earthquake Data
+~~~~~~~~~~~~~~~
+
+One of the most often used type of data set in seismology is a classical
+earthquake data set consisting of waveform recordings for a certain earthquake.
+The following example downloads all data it can find for the Tohoku-Oki
+Earthquake from 5 minutes before the earthquake centroid time to 1 hour after.
+It will furthermore only download data with a distance between 70.0 and 90.0
+degrees from the data and some additional restrictions.
+
+.. code:: python
+
+    import obspy
+    from obspy.fdsn.download_helpers import CircularDomain, Restrictions, \\
+        DownloadHelper
+
+    origin_time = obspy.UTCDateTime(2011, 3, 11, 5, 47, 32)
+
+    # Circular domain around the epicenter. This will download all data between
+    # 70 and 90 degrees distance from the epicenter.
+    domain = CircularDomain(latitude=37.52, longitude=143.04,
+                            minradius=70.0, maxradius=90.0)
+
+    restrictions = Restrictions(
+        # Get data from 5 minutes before the event to one hours after the
+        # event.
+        starttime=origin_time - 5 * 60,
+        endtime=origin_time + 3600,
+        # You might not want to deal with gaps in the data.
+        reject_channels_with_gaps=True,
+        # And you might only want waveform that have data for at least 95 % of
+        # the requested time span.
+        minimum_length=0.95,
+        # No two stations should be closer than 10 km to each other.
+        minimum_interstation_distance_in_m=10E3,
+        # Only HH or BH channels. If a station has HH channels, those will be
+        # downloaded, otherwise the BH. Nothing will be downloaded if it has
+        # neither.
+        channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]"),
+        # Locations codes are arbitrary and there is no rule which location is
+        # best.
+        location_priorities=("", "00", "10"))
+
+    # No specified providers will result in all known ones being queried.
+    dlh = DownloadHelper()
+    # The data will be downloaded to ``./waveforms/`` ans ``./stations`` with
+    # autmatically chosen names.
+    dlh.download(domain, restrictions, mseed_storage="waveforms",
+                 stationxml_storage="stations")
+
+
+Continuous Request
+~~~~~~~~~~~~~~~~~~
+
+Ambient seismic noise correlations require continuous recordings from stations
+over a large time span. This example downloads data, from within a certain
+geographical domain, for a whole year. Individual MiniSEED files will be split
+per day.
+
+.. code:: python
+
+    import obspy
+    from obspy.fdsn.download_helpers import RectangularDomain, Restrictions, \\
+        DownloadHelper
+
+    # Rectangular domain containing parts of southern Germany.
+    domain = RectangularDomain(minlatitude=30, maxlatitude=50,
+                               minlongitude=5, maxlongitude=25)
+
+    restrictions = Restrictions(
+        # Get data for a whole year.
+        starttime=obspy.UTCDateTime(2012, 1, 1),
+        endtime=obspy.UTCDateTime(2013, 1, 1),
+        # Chunk it to have one file per day.
+        chunklength=86400,
+        # Considering the enormous amount of data associated with continuous
+        # requests, you might want to limit the data based on SEED identifiers.
+        # If the location code is specified, the location priority list is not
+        # used; the same is true for the channel argument and priority list.
+        network="BW", station="A*", location="", channel="BH*",
+        # The typical use case for such a data set are noise correlations where
+        # gaps are dealt with at a later stage.
+        reject_channels_with_gaps=False,
+        # Same is true with the minimum length. Any data during a day might be
+        # useful.
+        minimum_length=0.0,
+        # Guard against the same station having different names.
+        minimum_interstation_distance_in_m=100.0)
+
+    # Restrict the number of providers if you know which serve the desired
+    # data. If in doubt just don't specify - then all providers will be
+    # queried.
+    dlh = DownloadHelper(providers=["ORFEUS", "GFZ"])
+    dlh.download(domain, restrictions, mseed_storage="waveforms",
+                 stationxml_storage="stations")
+
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
+from .download_helpers import DownloadHelper  # NOQA
+from .restrictions import Restrictions  # NOQA
+from .domain import Domain, RectangularDomain, CircularDomain  # NOQA
+from .domain import GlobalDomain  # NOQA

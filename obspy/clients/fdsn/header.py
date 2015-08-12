@@ -163,6 +163,4 @@ DEFAULT_TYPES = {
 # not useful for the ObsPy client.
 # Current the nodata parameter used by IRIS is part of that list. The ObsPy
 # client relies on the HTTP codes.
-# Furthermore the format parameter is part of that list. ObsPy relies on the
-# default format.
-WADL_PARAMETERS_NOT_TO_BE_PARSED = ["nodata", "format"]
+WADL_PARAMETERS_NOT_TO_BE_PARSED = ["nodata"]

@@ -19,6 +19,10 @@ master:
      (see #860)
    * Stream/Trace.slice() now has the optional `nearest_sample` argument from
      Stream/Trace.trim().
+ - obspy.clients.fdsn:
+   * Now requests gzipped data for the XML files. Much smaller files!
+   * The station service can now also be used to download files in the text
+     format. This has limited information but is much faster.
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
@@ -29,6 +33,8 @@ master:
      from matplotlib is available for those using older matplotlib releases.
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
+ - obspy.io.stationtxt:
+   * New module reading the FDSN station files.
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
