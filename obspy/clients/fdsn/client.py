@@ -469,9 +469,9 @@ class Client(object):
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
         :type format: str
-        :param format: The format of the returned station information. Most
-            services support "xml" and "text". ObsPy can also deal with the
-            text output but the information is much more limited in that case.
+        :param format: The format in which to request station information.
+            ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
+            XML has more information but text is much faster.
 
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: Inventory with requested station information.

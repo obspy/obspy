@@ -14,6 +14,8 @@ master:
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
      - ESRI shapefile write support, useful in GIS applications (see #1066)
+   * Support for additional station data format:
+     - The FDSN web service station text format can now be read.
  - obspy.core:
    * New method for generating sliding windows from Stream/Trace windows.
      (see #860)
@@ -35,6 +37,10 @@ master:
    * New module for ESRI shapefile write support (see #1066)
  - obspy.io.stationtxt:
    * New module reading the FDSN station files.
+ - obspy.io.stationxml:
+   * Format detection no longer based on validating against the schema. While
+     strictly speaking correct this does not work with many real-world files.
+	 It now simply checks the root tag.
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)

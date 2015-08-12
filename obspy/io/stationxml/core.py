@@ -46,7 +46,7 @@ def _is_stationxml(path_or_file_object):
     1.0 file. Returns True of False.
 
     The test is not exhaustive - it only checks the root tag but that should
-    be goood enough for most real world use cases. If the schema is used to
+    be good enough for most real world use cases. If the schema is used to
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
 
