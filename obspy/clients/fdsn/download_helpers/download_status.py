@@ -1109,7 +1109,10 @@ class ClientDownloadHelper(object):
                 # Group by locations and apply the channel priority filter to
                 # each.
                 filtered_channels = []
-                get_loc = lambda x: x.location
+
+                def get_loc(x):
+                    return x.location
+
                 for location, _channels in itertools.groupby(
                         sorted(channels, key=get_loc), get_loc):
                     filtered_channels.extend(utils.filter_channel_priority(
