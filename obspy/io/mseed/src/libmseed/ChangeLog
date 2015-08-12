@@ -1,3 +1,18 @@
+2015.213: 2.17
+	- Round Fixed Section Data Header start time values to the nearest
+	tenth of millisecond and restrict the microsecond offset value
+	to a range between -50 and +49 as recommended in SEED.  Previously
+	start times were truncated at tenths of millisecond resolution
+	and the microsecond offset value was between 0 and +99.  This also
+	addresses a bug where microsecond offsets were off by 100ms for times
+	before Jan 1 1970.  Thanks to Lion Krischer for reporting.
+
+	Note to future hackers: the definition of HPTMODULUS governing the
+	time tick interval for high precision time values implies that this
+	tick interval may be changed.  In reality, this should not be changed
+	from the default, microsecond tick value without thorough testing.
+	Some logic is know to be dependent on the microsecond tick.
+
 2015.134: 2.16m
 	- Add defines for needed integer types and macros from inttypes.h
 	missing in older MSVC versions.  MSVC 2010 and later appear to have

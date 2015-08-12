@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2015.108
+ * modified: 2015.213
  ***************************************************************************/
 
 #include <stdio.h>
@@ -587,6 +587,46 @@ ms_btime2seedtimestr (BTime *btime, char *seedtimestr)
   else
     return seedtimestr;
 }  /* End of ms_btime2seedtimestr() */
+
+
+/***************************************************************************
+ * ms_hptime2tomsusecoffset:
+ *
+ * Convert a high precision epoch time to a time value in tenths of
+ * milliseconds (aka toms) and a microsecond offset (aka usecoffset).
+ *
+ * The tenths of milliseconds value will be rounded to the nearest
+ * value having a microsecond offset value between -50 to +49.
+ *
+ * Returns 0 on success and -1 on error.
+ ***************************************************************************/
+int
+ms_hptime2tomsusecoffset (hptime_t hptime, hptime_t *toms, int8_t *usecoffset)
+{
+  if ( toms == NULL || usecoffset == NULL )
+    return -1;
+  
+  /* Split time into tenths of milliseconds and microseconds */
+  *toms = hptime / (HPTMODULUS / 10000);
+  *usecoffset = hptime - (*toms * (HPTMODULUS / 10000));
+  
+  /* Round tenths and adjust microsecond offset to -50 to +49 range */
+  if ( *usecoffset > 49 && *usecoffset < 100 )
+    {
+      *toms += 1;
+      *usecoffset -= 100;
+    }
+  else if ( *usecoffset < -50 && *usecoffset > -100 )
+    {
+      *toms -= 1;
+      *usecoffset += 100;
+    }
+  
+  /* Convert tenths of milliseconds to be in hptime_t (HPTMODULUS) units */
+  *toms *= (HPTMODULUS / 10000);
+  
+  return 0;
+}  /* End of ms_hptime2tomsusecoffset() */
 
 
 /***************************************************************************

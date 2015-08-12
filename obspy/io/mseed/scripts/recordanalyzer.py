@@ -275,7 +275,7 @@ class RecordAnalyser(object):
         elif blkt_type == 1001:
             _tmp = self.file.read(4)
             try:
-                unpack_values = unpack(native_str('%sBBxB' % self.endian),
+                unpack_values = unpack(native_str('%sbbxb' % self.endian),
                                        _tmp)
             except:
                 if len(_tmp) == 0:

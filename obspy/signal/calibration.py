@@ -19,6 +19,7 @@ Functions for relative calibration.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import numpy as np
 
@@ -129,10 +130,10 @@ def rel_calib_stack(st1, st2, calib_file, window_len, overlap_frac=0.5,
         temp[:, 0] = freq
         temp[:, 1] = amp
         temp[:, 2] = phase
-        np.savetxt(trans_new, temp, fmt="%.10f")
+        np.savetxt(trans_new, temp, fmt=native_str('%.10f'))
         temp[:, 1] = ra
         temp[:, 2] = rpha
-        np.savetxt(trans_ref, temp, fmt="%.10f")
+        np.savetxt(trans_ref, temp, fmt=native_str('%.10f'))
 
     return freq, amp, phase
 

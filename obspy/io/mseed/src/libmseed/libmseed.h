@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.16m"
-#define LIBMSEED_RELEASE "2015.134"
+#define LIBMSEED_VERSION "2.17"
+#define LIBMSEED_RELEASE "2015.213"
 
 #define MINRECLEN   128      /* Minimum Mini-SEED record length, 2^7 bytes */
                              /* Note: the SEED specification minimum is 256 */
@@ -658,6 +658,7 @@ extern hptime_t ms_btime2hptime (BTime *btime);
 extern char*    ms_btime2isotimestr (BTime *btime, char *isotimestr);
 extern char*    ms_btime2mdtimestr (BTime *btime, char *mdtimestr);
 extern char*    ms_btime2seedtimestr (BTime *btime, char *seedtimestr);
+extern int      ms_hptime2tomsusecoffset (hptime_t hptime, hptime_t *toms, int8_t *usecoffset);
 extern int      ms_hptime2btime (hptime_t hptime, BTime *btime);
 extern char*    ms_hptime2isotimestr (hptime_t hptime, char *isotimestr, flag subsecond);
 extern char*    ms_hptime2mdtimestr (hptime_t hptime, char *mdtimestr, flag subsecond);

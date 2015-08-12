@@ -14,6 +14,7 @@ import numpy as np
 
 from obspy import read
 from obspy.signal.calibration import rel_calib_stack
+from obspy.core.util.misc import TemporaryWorkingDirectory
 
 
 class CalibrationTestCase(unittest.TestCase):
@@ -22,7 +23,8 @@ class CalibrationTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 'data'))
 
     def test_relcal_sts2_vs_unknown(self):
         """
@@ -33,8 +35,15 @@ class CalibrationTestCase(unittest.TestCase):
         st2 = read(os.path.join(self.path, 'ref_unknown'))
         calfile = os.path.join(self.path, 'STS2_simp.cal')
 
-        freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20, smooth=10,
-                                           save_data=False)
+        with TemporaryWorkingDirectory():
+            freq, amp, phase = rel_calib_stack(st1, st2, calfile, 20,
+                                               smooth=10, save_data=True)
+            self.assertTrue(os.path.isfile("0438.EHZ.20.resp"))
+            self.assertTrue(os.path.isfile("STS2.refResp"))
+            freq_, amp_, phase_ = np.loadtxt("0438.EHZ.20.resp", unpack=True)
+            self.assertTrue(np.allclose(freq, freq_, rtol=1e-8, atol=1e-8))
+            self.assertTrue(np.allclose(amp, amp_, rtol=1e-8, atol=1e-8))
+            self.assertTrue(np.allclose(phase, phase_, rtol=1e-8, atol=1e-8))
 
         # read in the reference responses
         un_resp = np.loadtxt(os.path.join(self.path, 'unknown.resp'))

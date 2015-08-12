@@ -7,7 +7,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2015.108
+ * modified: 2015.213
  ***************************************************************************/
 
 #include <stdio.h>
@@ -257,6 +257,8 @@ int
 msr_normalize_header ( MSRecord *msr, flag verbose )
 {
   struct blkt_link_s *cur_blkt;
+  hptime_t hptimems;
+  int8_t usecoffset;
   char seqnum[7];
   int offset = 0;
   int blktcnt = 0;
@@ -265,6 +267,9 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
   
   if ( ! msr )
     return -1;
+  
+  /* Get start time rounded to tenths of milliseconds and microsecond offset */
+  ms_hptime2tomsusecoffset (msr->starttime, &hptimems, &usecoffset);
   
   /* Update values in fixed section of data header */
   if ( msr->fsdh )
@@ -285,7 +290,7 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
       ms_strncpopen (msr->fsdh->station, msr->station, 5);
       ms_strncpopen (msr->fsdh->location, msr->location, 2);
       ms_strncpopen (msr->fsdh->channel, msr->channel, 3);
-      ms_hptime2btime (msr->starttime, &(msr->fsdh->start_time));
+      ms_hptime2btime (hptimems, &(msr->fsdh->start_time));
       
       /* When the sampling rate is <= 32767 Hertz determine the factor
        * and multipler through rational approximation.  For higher rates
@@ -311,7 +316,7 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
 	msr->fsdh->blockette_offset = 0;
     }
   
-  /* Traverse blockette chain and performs necessary updates*/
+  /* Traverse blockette chain and perform necessary updates*/
   cur_blkt = msr->blkts;
   
   if ( cur_blkt && verbose > 2 )
@@ -352,14 +357,7 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
       
       else if ( cur_blkt->blkt_type == 1001 )
 	{
-	  hptime_t sec, usec;
-	  
-	  /* Insert microseconds offset */
-	  sec = msr->starttime / (HPTMODULUS / 10000);
-	  usec = msr->starttime - (sec * (HPTMODULUS / 10000));
-	  usec /= (HPTMODULUS / 1000000);
-	  
-	  msr->Blkt1001->usec = (int8_t) usec;
+	  msr->Blkt1001->usec = usecoffset;
 	  offset += sizeof (struct blkt_1001_s);
 	}
       

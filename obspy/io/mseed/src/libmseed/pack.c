@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2015.062
+ * modified: 2015.213
  ***************************************************************************/
 
 #include <stdio.h>
@@ -847,6 +847,8 @@ msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
 		    struct blkt_1001_s *blkt1001, flag verbose )
 {
   struct fsdh_s *fsdh;
+  hptime_t hptimems;
+  int8_t usecoffset;
   char seqnum[7];
   
   if ( ! msr || ! rawrec )
@@ -861,8 +863,11 @@ msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
   snprintf (seqnum, 7, "%06d", msr->sequence_number);
   memcpy (fsdh->sequence_number, seqnum, 6);
   
+  /* Get start time rounded to tenths of milliseconds and microsecond offset */
+  ms_hptime2tomsusecoffset (msr->starttime, &hptimems, &usecoffset);
+  
   /* Update fixed-section start time */
-  ms_hptime2btime (msr->starttime, &(fsdh->start_time));
+  ms_hptime2btime (hptimems, &(fsdh->start_time));
   
   /* Swap byte order? */
   if ( swapflag )
@@ -870,21 +875,14 @@ msr_update_header ( MSRecord *msr, char *rawrec, flag swapflag,
       MS_SWAPBTIME (&fsdh->start_time);
     }
   
-  /* Update microseconds if Blockette 1001 is present */
+  /* Update microsecond offset value if Blockette 1001 is present */
   if ( msr->Blkt1001 && blkt1001 )
     {
-      hptime_t sec, usec;
-      
-      /* Calculate microseconds offset */
-      sec = msr->starttime / (HPTMODULUS / 10000);
-      usec = msr->starttime - (sec * (HPTMODULUS / 10000));
-      usec /= (HPTMODULUS / 1000000);
-      
       /* Update microseconds offset in blockette chain entry */
-      msr->Blkt1001->usec = (int8_t) usec;
+      msr->Blkt1001->usec = usecoffset;
       
       /* Update microseconds offset in packed header */
-      blkt1001->usec = (int8_t) usec;
+      blkt1001->usec = usecoffset;
     }
   
   return 0;
