@@ -12,10 +12,12 @@ from datetime import datetime
 import re
 import numpy as np
 
-# a delay in the KNet data logger - subtract this from "record time"
-KNET_TRIGGER_DELAY = 15.0
 
-TIMEFMT = '%Y/%m/%d %H:%M:%S'
+class KnetFormatError(Exception):
+    pass
+
+class KnetDataError(Exception):
+    pass
 
 def _is_knet_ascii(filename):
     with open(filename, 'rt') as f:
@@ -27,63 +29,125 @@ def _is_knet_ascii(filename):
             return True
     return False
 
+def _prep_hdr_line(name, line):
+    if not line.startswith(name):
+        raise KnetFormatError("Expected line to start with %s but got %s " \
+                              % (name, line))
+    else:
+        return line.split()
+
 def _read_knet_hdr(hdrlines):
     """
     Read the header values into a dictionary.
     @param hdlines: List of the first lines of a KNet ASCII file, not including the "Memo." line.
     @return: Dictionary of values containing most of the elements expected in a Stats object.
     """
-    hdrdict = {}
-    for line in hdrlines:
-        if line.startswith('Station Code'):
-            parts = line.split()
-            hdrdict['station'] = parts[2]
-        if line.startswith('Station Lat'):
-            parts = line.split()
-            hdrdict['lat'] = float(parts[2])
-        if line.startswith('Station Long'):
-            parts = line.split()
-            hdrdict['lon'] = float(parts[2])
-        if line.startswith('Station Height'):
-            parts = line.split()
-            hdrdict['height'] = float(parts[2])
-        if line.startswith('Record Time'):
-            parts = line.split()
-            datestr = parts[2] + ' ' + parts[3]
-            hdrdict['starttime'] = UTCDateTime(datetime.strptime(datestr, TIMEFMT)) - KNET_TRIGGER_DELAY
-        if line.startswith('Sampling Freq'):
-            parts = line.split()
-            freqstr = parts[2]
-            m = re.search('[0-9]*', freqstr)
-            freq = int(m.group())
-            delta = 1.0 / freq
-            hdrdict['delta'] = delta
-            hdrdict['sampling_rate'] = freq
-        if line.startswith('Duration Time'):
-            parts = line.split()
-            duration = float(parts[2])
-            hdrdict['duration'] = duration
-        if line.startswith('Dir.'):
-            parts = line.split()
-            channel = parts[1].replace('-', '')
-            kiknetcomps = {'1':'NS1', '2':'EW1', '3':'UD1',
-                           '4':'NS2', '5':'EW2', '6':'UD2'}
-            if channel.strip() in kiknetcomps.keys():  # kiknet directions are 1-6
-                channel = kiknetcomps[channel.strip()]
-            hdrdict['channel'] = channel
-        if line.startswith('Scale Factor'):
-            parts = line.split()
-            eqn = parts[2]
-            num, denom = eqn.split('/')
-            num = float(re.search('[0-9]*', num).group())
-            denom = float(denom)
-            # convert the calibration from gal to m/s^2
-            hdrdict['calib'] = 0.01 * num / denom
-        if line.startswith('Max. Acc'):
-            parts = line.split()
-            acc = float(parts[3])
-            hdrdict['accmax'] = acc
-        hdrdict['units'] = 'acc'  # this will be in all of the headers I read
+    hdrdict = {'knet':{}}
+    hdrnames = ['Origin Time', 'Lat.', 'Long.', 'Depth. (km)', 'Mag.',
+                'Station Code', 'Station Lat.', 'Station Long.',
+                'Station Height(m)', 'Record Time', 'Sampling Freq(Hz)',
+                'Duration Time(s)', 'Dir.', 'Scale Factor', 'Max. Acc. (gal)',
+                'Last Correction', 'Memo.']
+    _i = 0
+    # Event information
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    dt = flds[2] + ' ' + flds[3]
+    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    hdrdict['knet']['evot'] = dt
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    lat = float(flds[1])
+    hdrdict['knet']['evla'] = lat
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    lon = float(flds[1])
+    hdrdict['knet']['evlo'] = lon
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    dp = float(flds[2])
+    hdrdict['knet']['evdp'] = dp
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    mag = float(flds[1])
+    hdrdict['knet']['mag'] = mag
+
+    # Station information
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    hdrdict['station'] = flds[2]
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    hdrdict['knet']['stla'] = float(flds[2])
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    hdrdict['knet']['stlo'] = float(flds[2])
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    hdrdict['knet']['stel'] = float(flds[2])
+
+    # Data information
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    dt = flds[2] + ' ' + flds[3]
+    # A 15 s delay is added to the record time by the
+    # the K-NET and KiK-Net data logger"
+    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S')) - 15.0
+    hdrdict['starttime'] = dt
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    freqstr = flds[2]
+    m = re.search('[0-9]*', freqstr)
+    freq = int(m.group())
+    delta = 1.0 / freq
+    hdrdict['delta'] = delta
+    hdrdict['sampling_rate'] = freq
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    hdrdict['knet']['duration'] = float(flds[2])
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    channel = flds[1].replace('-', '')
+    kiknetcomps = {'1':'NS1', '2':'EW1', '3':'UD1',
+                   '4':'NS2', '5':'EW2', '6':'UD2'}
+    if channel.strip() in kiknetcomps.keys():  # kiknet directions are 1-6
+        channel = kiknetcomps[channel.strip()]
+    hdrdict['channel'] = channel
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    eqn = flds[2]
+    num, denom = eqn.split('/')
+    num = float(re.search('[0-9]*', num).group())
+    denom = float(denom)
+    # convert the calibration from gal to m/s^2
+    hdrdict['calib'] = 0.01 * num / denom
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    acc = float(flds[3])
+    hdrdict['knet']['accmax'] = acc
+
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    dt = flds[2] + ' ' + flds[3]
+    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    hdrdict['knet']['last correction'] = dt
+
+    # The comment ('Memo') field is optional
+    _i += 1
+    flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
+    if len(flds) > 1:
+        hdrdict['knet']['comment'] = ' '.join(flds[1:])
     return hdrdict
 
 def _read_knet_ascii(filename, **kwargs):
@@ -99,6 +163,7 @@ def _read_knet_ascii(filename, **kwargs):
         headerlines = []
         for line in f.readlines():
             if line.startswith('Memo'):
+                headerlines.append(line)
                 hdrdict = _read_knet_hdr(headerlines)
                 dataOn = True
                 continue
@@ -112,14 +177,11 @@ def _read_knet_ascii(filename, **kwargs):
 
     # fill in the values usually expected in Stats as best we can
     hdrdict['npts'] = len(data)
+
     elapsed = float(hdrdict['npts']) / float(hdrdict['sampling_rate'])
     hdrdict['endtime'] = hdrdict['starttime'] + elapsed
     hdrdict['network'] = 'NIED'
     hdrdict['location'] = ''
-
-    # The Stats constructor appears to modify the fields in the input dictionary
-    # - let's save a copy
-    header = hdrdict.copy()
 
     data = np.array(data)
     stats = Stats(hdrdict)

@@ -23,9 +23,10 @@ class KnetReadingTestCase(unittest.TestCase):
         tr.data *= tr.stats.calib
         tr.data -= tr.data.mean()
         max = np.abs(tr.data).max() * 100  # Maximum acc converted to gal
-        np.testing.assert_array_almost_equal(max, 4.383, decimal=3)
+        np.testing.assert_array_almost_equal(max, tr.stats.knet.accmax,
+                                             decimal=3)
         duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
-        self.assertEqual(duration, 59)
+        self.assertEqual(duration, int(tr.stats.knet.duration))
 
     def test_is_knet_ascii(self):
         """
