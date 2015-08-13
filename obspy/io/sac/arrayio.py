@@ -424,7 +424,8 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         try:
             rows = npts // 5
             np.savetxt(f, np.reshape(data[0:5 * rows], (rows, 5)),
-                       fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
+                       fmt=native_str("%#15.7g"), delimiter='')
+                       #fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, data[5 * rows:], delimiter=b'\t')
         except:
             f.close()

@@ -895,27 +895,30 @@ class SACTrace(object):
 
     # TO/FROM OBSPY TRACES
     @classmethod
-    def from_obspy_trace(cls, trace, ignore_old_header=False):
+    def from_obspy_trace(cls, trace, keep_sac_header=True):
         """
         Construct an instance from an ObsPy Trace.
 
         Parameters
         ----------
         trace : obspy.Trace instance
-        ignore_old_header : bool
-            If a trace.stats.sac dictionary is present, ignore it and build a
-            new SAC header from scratch. Otherwise, keep all the old values,
-            including reference time and iztype, and just overprint new header
-            values related to the data vector and a few trace.stats fields.
+        keep_sac_header : bool
+            If True, any old stats.sac header values are kept as is,
+            and only a minimal set of values are updated from the stats
+            dictionary: npts, e, and data.  If an old iztype and a valid
+            reftime are present, b and e will be properly referenced to it.
+            If False, a new SAC header is constructed from only information
+            found in the stats dictionary, with some other default values
+            introduced.
 
         """
         # keep_sac_header
         try:
-            header = _ut.obspy_to_sac_header(trace.stats, ignore_old_header)
+            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_reftime)
         except SacError:
             # not enough time info in old SAC header
-            # XXX: do something besides ignore the old header!
-            header = _ut.obspy_to_sac_header(trace.stats, ignore_old_header=True)
+            # XXX: try to do something besides ignore the old header!
+            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_reftime=False)
 
         # handle the data headers
         data = trace.data

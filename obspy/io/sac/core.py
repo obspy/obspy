@@ -297,7 +297,7 @@ def __write_sacXY(trace, buf, **kwargs):  # @UnusedVariable
     :param buf: Object to write to.
     :type buf: file-like object
     """
-    sac = SACTrace.from_obspy_trace(trace, ignore_old_header=True)
+    sac = SACTrace.from_obspy_trace(trace, keep_sac_reftime=False)
     sac.write(buf, ascii=True, flush_headers=False)
 
 

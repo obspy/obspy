@@ -175,6 +175,12 @@ def sac_to_obspy_header(sacheader):
 
     """
     # 1. get required sac header values
+    # 2. get time
+    # 3. get optional sac header values
+    # 4. deal with null values
+    # 5. transform to obspy values
+
+    # 1. get required sac header values
     try:
         npts = sacheader['npts']
         delta = sacheader['delta']
@@ -242,111 +248,102 @@ def split_microseconds(microseconds):
 
 
 # TODO: do this in SACTrace? has some reftime handling overlap w/ set_reftime.
-def obspy_to_sac_header(stats, ignore_old_header=True):
+def obspy_to_sac_header(stats, keep_sac_header=True):
     """
-    Make a SAC header dictionary from an obspy.stats instance.
+    Make a SAC header dictionary from an ObsPy Stats or dict instance.
 
-    If ignore_old_header is True, a SAC header dictionary is built from
-    scratch.  Otherwise, any existing stats.sac dictionary is the base.  iztype
-    and the nz- reference times are kept, and the stats.starttime is turned
-    into a new 'b' and 'e' relative to the existing reference time.  Other SAC
-    header values are also updated, like 'npts', 'depmin/men/max', and others.
+    If keep_sac_header is True, any old stats.sac header values are kept as is,
+    and only a minimal set of values are updated from the stats dictionary:
+    npts, e, and data.  If an old iztype and a valid reftime are present, b and
+    e will be properly referenced to it. If keep_sac_header is False, a new SAC
+    header is constructed from only information found in the stats dictionary,
+    with some other default values introduced.
+
+    # XXX: old docstring below
+    If an old stats.sac dictionary is found, it is used as the base header and
+    old values are blindly overwritten by relevant values from stats.
+    If keep_sac_reftime is True, an attempt is made to keep the old iztype,
+    the "nz" reference times, and other relative-time headers.  If successful,
+    the stats.starttime/endtime becomes 'b' and 'e' relative to the old
+    reference time.  If  an old SAC reftime can't be built, a warning is
+    issued.
 
     """
-    # The Plan:
-    # 0. Start with the old SAC header, if present
-    # 1A. Find the new b (starttime-reftime+b) and
-    #     e (new_b + (new_npts-1)*new_delta)
-    #     relative to existing reftime, if keep_sac_reftime is rue
-    # 1B. If no old SAC header is present, make the header iztype ib and stuff
-    #     it with a reftime made from the stats.starttime modulo microseconds,
-    #     and push microseconds from stats.starttime into b.
-    # 2. Stuff the appropriate Stats headers into the sac header
+    # The Plan :
+    # 1. Start with an old SAC header, if present 
+    # 2. Overwrite with stats values
+    # 3a. if keep_sac_reftime = True, adjust reftime, b, e, ...
+    # 3b. if reftime is undefined, warn and pass
 
-    # New Plan :
-    # 0. Make a SAC header from the ObsPy header as if there was no SAC header
-    # 1. Merge the old SAC header, if found
-    # 2. if keep_sac_reftime = True, adjust reftime, b, e
-    # 3. if reftime is undefined, just make it an 'ib' file, like normal.
+    # 1. use any old values and keep them for later
+    oldheader = stats.get('sac', {}).copy()
+    header = oldheader.copy()
 
-    # 0.
-    header = stats.get('sac', {}).copy()
-    is_old_header = bool(header)
+    # 2. begin filling with Stats values
 
-    # overprint with current trace information
-    header['npts'] = stats.npts
-    header['delta'] = stats.delta
+    header['npts'] = stats['npts']
+    header['delta'] = stats['delta']
 
-    # 1.
-    # get a reference time [UTCDateTime] and a b
-    starttime = stats.starttime
-    if is_old_header and (not ignore_old_header):
-        # A. modify old header
-        #
-        # just the difference btwn the old reftime and the trace starttime is b
-        # b naturally includes any microseconds
-        try:
-            reftime = get_sac_reftime(header)
-        except SacError:
-            # the old header has an invalid reftime
-            # b will be 
-            raise SacError("Old header has invalid reftime.")
-        header['b'] = starttime - reftime
-    else:
-        # B. make the SAC header from scratch
-        #
-        # make reference time and b
-        # an obspy trace is naturally iztype ib (9)
-        header['iztype'] = 9
-        header['nzyear'] = starttime.year
-        header['nzjday'] = starttime.julday
-        header['nzhour'] = starttime.hour
-        header['nzmin'] = starttime.minute
-        header['nzsec'] = starttime.second
+    # make nz-times times and b
+    # an obspy trace is naturally iztype ib (9)
+    header['iztype'] = 9
+    starttime = stats['starttime']
+    header['nzyear'] = starttime.year
+    header['nzjday'] = starttime.julday
+    header['nzhour'] = starttime.hour
+    header['nzmin'] = starttime.minute
+    header['nzsec'] = starttime.second
+    # nz times don't have enough precision, so push microseconds into b,
+    # using integer arithmetic
+    millisecond, microsecond = split_microseconds(starttime.microsecond)
+    header['nzmsec'] = millisecond
 
-        # nz times don't have enough precision, so push microseconds into b
-        # using integer arithmetic
-        millisecond, microsecond = split_microseconds(starttime.microsecond)
-
-        header['nzmsec'] = millisecond
-        header['b'] = (microsecond * 1e-6) if microsecond else 0.0
-        reftime = starttime - header['b']
-
-        # XXX: if starttime is 1970001 + b, it is meaningless. 
-        #   don't write nz-times.
-        if starttime == UTCDateTime(0) + header['b']:
-            header['nzyear'] = HD.INULL
-            header['nzjday'] = HD.INULL
-            header['nzhour'] = HD.INULL
-            header['nzmin'] = HD.INULL
-            header['nzsec'] = HD.INULL
-
-
-        # make other SAC values from scratch
-        # TODO: are all of these necessary? Especially if header is being
-        #       fed to SACTrace(), which has a lot of these in it already.
-        header['internal0'] = 2
-        header['cmpaz'] = 0
-        header['cmpinc'] = 0
-        header['nvhdr'] = 6
-        header['leven'] = 1
-        header['lpspol'] = 1
-        header['lcalda'] = 0
-        header['lovrok'] = 1
-        header['evla'] = 0
-        header['evlo'] = 0
-        header['iftype'] = 1
+    header['b'] = (microsecond * 1e-6) if microsecond else 0.0
 
     # we now have correct b, npts, delta, and nz times
     header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
 
-    # 2.
-    header['scale'] = stats.calib
-    header['kcmpnm'] = stats.channel if stats.channel else HD.SNULL
-    header['kstnm'] = stats.station if stats.station else HD.SNULL
-    header['knetwk'] = stats.network if stats.network else HD.SNULL
-    header['khole'] = stats.location if stats.location else HD.SNULL
+    header['scale'] = stats.get('calib', HD.FNULL)
+    # nulls for these are '', which stats.get(hdr, HD.SNULL) won't catch
+    header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
+    header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
+    header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
+    header['khole'] = stats['location'] if stats['location'] else HD.SNULL
 
+    # other SAC values not from stats
+    # XXX: should I be adding values that don't come from anywhere?
+    # header['internal0'] = 2.0
+    # header['cmpaz'] = 0
+    # header['cmpinc'] = 0
+    header['nvhdr'] = 6
+    header['leven'] = 1
+    # header['lpspol'] = 1
+    # header['lcalda'] = 0
+    header['lovrok'] = 1
+    # header['evla'] = 0
+    # header['evlo'] = 0
+    header['iftype'] = 1
+
+    # SAC header from stats is complete. we shouldn't need stats anymore.
+    # Old header 
+
+    # 3.
+    if keep_sac_reftime:
+        try:
+            # 3a.
+            # TODO: exact same functionality as sac.reftime setter and _allt
+            #   can I move that down to this function, or somehow use it at the
+            #   SACTrace level?
+            # keep: 'a', 'b', 'e', 'f', 'iztype', 'nz*', 't[0-9]'
+            # b is the difference btwn the old reftime and the trace starttime
+            # b naturally includes any microseconds that were pushed into it
+            reftime = get_sac_reftime(oldheader)
+            header['b'] = starttime - reftime
+        except SacHeaderTimeError as e:
+            msg = "Old header has invalid reftime."
+            warnings.warn(msg)
+
+ 
     return header
 
 
@@ -354,31 +351,37 @@ def get_sac_reftime(header):
     """
     Get SAC header reference time as a UTCDateTime instance from a SAC header
     dictionary.
+
+    Raises
+    ------
+    SacHeaderTimeError
+        Contains null nz-time fields.
     """
     # NOTE: epoch seconds can be got by:
     # (reftime - datetime.datetime(1970,1,1)).total_seconds()
     # TODO: let null nz values be 0?
     try:
         yr = header['nzyear']
-        if 0 <= yr <= 99:
-            warnings.warn(TWO_DIGIT_YEAR_MSG)
-            yr += 1900
         nzjday = header['nzjday']
         nzhour = header['nzhour']
         nzmin = header['nzmin']
         nzsec = header['nzsec']
         nzmsec = header['nzmsec']
     except KeyError as e:
+        # header doesn't have all the keys
         msg = "Not enough time information: {}".format(e.message)
-        raise SacError(msg)
+        raise SacHeaderTimeError(msg)
+
+    if 0 <= yr <= 99:
+        warnings.warn(TWO_DIGIT_YEAR_MSG)
+        yr += 1900
 
     try:
         reftime = UTCDateTime(year=yr, julday=nzjday, hour=nzhour,
                               minute=nzmin, second=nzsec,
                               microsecond=nzmsec * 1000)
-    except ValueError:
-        # may contain -12345 null values?
-        msg = "Invalid time headers."
+    except (ValueError, TypeError):
+        msg = "Invalid time headers. May contain null values."
         raise SacHeaderTimeError(msg)
 
     return reftime
