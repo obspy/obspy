@@ -148,6 +148,10 @@ def _read_knet_hdr(hdrlines):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     if len(flds) > 1:
         hdrdict['knet']['comment'] = ' '.join(flds[1:])
+
+    if len(hdrlines) != _i + 1:
+        raise KnetFormatError("Expected %d header lines but got %d" \
+                              % (_i + 1, len(hdrlines)))
     return hdrdict
 
 def _read_knet_ascii(filename, **kwargs):
