@@ -28,3 +28,6 @@ The service offers the following optional standard parameters:
     matchtimeseries (bool)
         Specify that the availabilities line up with available data. This is an
         IRIS extension to the FDSN specification
+    format (str), Default value: xml, Choices: xml, text
+        Specify output format. This is an IRIS extension to the FDSN
+        specification

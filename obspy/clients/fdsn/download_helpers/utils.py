@@ -27,8 +27,8 @@ from socket import timeout as SocketTimeout
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.fdsn.client import FDSNException
-from obspy.mseed.util import getRecordInformation
+from obspy.clients.fdsn.client import FDSNException
+from obspy.io.mseed.util import getRecordInformation
 
 
 # Different types of errors that can happen when downloading data via the

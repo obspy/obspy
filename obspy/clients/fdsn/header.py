@@ -74,7 +74,7 @@ DEFAULT_STATION_PARAMETERS = [
 OPTIONAL_STATION_PARAMETERS = [
     "startbefore", "startafter", "endbefore", "endafter", "latitude",
     "longitude", "minradius", "maxradius", "includerestricted",
-    "includeavailability", "updatedafter", "matchtimeseries"]
+    "includeavailability", "updatedafter", "matchtimeseries", "format"]
 
 DEFAULT_EVENT_PARAMETERS = [
     "starttime", "endtime", "minlatitude", "maxlatitude", "minlongitude",

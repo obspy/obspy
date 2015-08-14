@@ -36,6 +36,7 @@ GFZ     http://geofon.gfz-potsdam.de
 INGV    http://webservices.rm.ingv.it
 IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu
+ISC     http://isc-mirror.iris.washington.edu
 KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
