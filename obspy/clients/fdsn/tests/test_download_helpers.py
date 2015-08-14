@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The obspy.fdsn.download_helpers test suite.
+The obspy.clients.fdsn.download_helpers test suite.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2105
@@ -20,12 +20,13 @@ import unittest
 
 import obspy
 from obspy.core.compatibility import mock
-from obspy.fdsn.download_helpers import domain, Restrictions, DownloadHelper
-from obspy.fdsn.download_helpers.utils import filter_channel_priority, \
-    get_stationxml_filename, get_mseed_filename, \
-    get_stationxml_contents
-from obspy.fdsn.download_helpers.download_status import Channel, \
-    TimeInterval, Station, STATUS
+from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
+                                                 DownloadHelper)
+from obspy.clients.fdsn.download_helpers.utils import (
+    filter_channel_priority, get_stationxml_filename, get_mseed_filename,
+    get_stationxml_contents)
+from obspy.clients.fdsn.download_helpers.download_status import (
+    Channel, TimeInterval, Station, STATUS)
 
 
 class DomainTestCase(unittest.TestCase):
@@ -88,6 +89,83 @@ class DomainTestCase(unittest.TestCase):
         Trying to create a root domain object should fail.
         """
         self.assertRaises(TypeError, domain.Domain)
+
+
+class RestrictionsTestCase(unittest.TestCase):
+    """
+    Test case for the restrictions object.
+    """
+    def __init__(self, *args, **kwargs):
+        super(RestrictionsTestCase, self).__init__(*args, **kwargs)
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
+    def test_restrictions_object(self):
+        """
+        Tests the restrictions object.
+        """
+        start = obspy.UTCDateTime(2014, 1, 1)
+        res = Restrictions(starttime=start, endtime=start + 10)
+
+        # No chunklength means it should just return one item.
+        chunks = list(res)
+        self.assertEqual(len(chunks), 1)
+        self.assertEqual(chunks[0], (start, start + 10))
+
+        # One with chunklength should return the chunked pieces.
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           chunklength_in_sec=1)
+        chunks = list(res)
+        self.assertEqual(len(chunks), 10)
+        self.assertEqual(
+            [_i[0] for _i in chunks],
+            [start + _i * 1 for _i in range(10)])
+        self.assertEqual(
+            [_i[1] for _i in chunks],
+            [start + _i * 1 for _i in range(1, 11)])
+        self.assertEqual(chunks[0][0], start)
+        self.assertEqual(chunks[-1][1], start + 10)
+
+        # Make sure the last piece is cut if it needs to be.
+        start = obspy.UTCDateTime(2012, 1, 1)
+        end = obspy.UTCDateTime(2012, 2, 1)
+        res = Restrictions(starttime=start, endtime=end,
+                           chunklength_in_sec=86400 * 10)
+        chunks = list(res)
+        self.assertEqual(chunks, [
+            (start, start + 86400 * 10),
+            (start + 86400 * 10, start + 86400 * 20),
+            (start + 86400 * 20, start + 86400 * 30),
+            (start + 86400 * 30, end)])
+
+        # No station start-and endtime by default
+        res = Restrictions(starttime=start, endtime=start + 10)
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, None)
+
+        # One can only set one of the two.
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           station_starttime=start - 10)
+        self.assertEqual(res.station_starttime, start - 10)
+        self.assertEqual(res.station_endtime, None)
+
+        res = Restrictions(starttime=start, endtime=start + 10,
+                           station_endtime=start + 20)
+        self.assertEqual(res.station_starttime, None)
+        self.assertEqual(res.station_endtime, start + 20)
+
+        # Will raise a ValueError if either within the time interval of the
+        # normal start- and endtime.
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start+10, station_starttime=start + 1)
+
+        self.assertRaises(ValueError, Restrictions, starttime=start,
+                          endtime=start+10, station_endtime=start + 9)
+
+        # Fine if they are equal with both.
+        Restrictions(starttime=start, endtime=start + 10,
+                     station_starttime=start, station_endtime=start + 10)
+
 
 
 class DownloadHelpersUtilTestCase(unittest.TestCase):
@@ -310,28 +388,28 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
     #     filtered_stations = filter_stations(stations, 111000)
     #     self.assertEqual(len(filtered_stations), 2)
 
-    def test_merge_station_lists(self):
-        """
-        Tests the merging of two stations.
-        """
-        list_one = [
-            Station("11", "11", 0, 0, 0, [], None),
-            Station("11", "11", 0, 0, 500, [], None),
-            Station("11", "11", 0, 0, 1500, [], None),
-        ]
-        list_two = [
-            Station("11", "11", 0, 0, 10, [], None),
-            Station("11", "11", 0, 0, 505, [], None),
-            Station("11", "11", 0, 0, 1505, [], None),
-        ]
-        new_list = filter_based_on_interstation_distance(list_one, list_two,
-                                                         20)
-        self.assertEqual(new_list, list_one)
-        new_list = filter_based_on_interstation_distance(list_one, list_two, 2)
-        self.assertEqual(new_list, list_one + list_two)
-        new_list = filter_based_on_interstation_distance(list_one, list_two, 8)
-        self.assertEqual(new_list, list_one + [
-            Station("11", "11", 0, 0, 10, [], None)])
+    # def test_merge_station_lists(self):
+    #     """
+    #     Tests the merging of two stations.
+    #     """
+    #     list_one = [
+    #         Station("11", "11", 0, 0, 0, [], None),
+    #         Station("11", "11", 0, 0, 500, [], None),
+    #         Station("11", "11", 0, 0, 1500, [], None),
+    #     ]
+    #     list_two = [
+    #         Station("11", "11", 0, 0, 10, [], None),
+    #         Station("11", "11", 0, 0, 505, [], None),
+    #         Station("11", "11", 0, 0, 1505, [], None),
+    #     ]
+    #     new_list = filter_based_on_interstation_distance(list_one, list_two,
+    #                                                      20)
+    #     self.assertEqual(new_list, list_one)
+    #     new_list = filter_based_on_interstation_distance(list_one, list_two, 2)
+    #     self.assertEqual(new_list, list_one + list_two)
+    #     new_list = filter_based_on_interstation_distance(list_one, list_two, 8)
+    #     self.assertEqual(new_list, list_one + [
+    #         Station("11", "11", 0, 0, 10, [], None)])
 
     def test_stationxml_filename_helper(self):
         """
@@ -483,9 +561,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             ["network", "station", "location", "channel", "starttime",
              "endtime", "filename"])
 
-        filename = os.path.join(os.path.dirname(os.path.dirname(
-            os.path.dirname(self.data))), "station", "tests", "data",
-            "AU.MEEK.xml")
+        filename = os.path.join(self.data, "AU.MEEK.xml")
         # Read with ObsPy and the fast variant.
         inv = obspy.read_inventory(filename)
         # Consistency test.
@@ -499,72 +575,6 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             [ChannelAvailability(net.code, sta.code, cha.location_code,
                                  cha.code, cha.start_date, cha.end_date,
                                  filename)])
-
-    def test_restrictions_object(self):
-        """
-        Tests the restrictions object.
-        """
-        start = obspy.UTCDateTime(2014, 1, 1)
-        res = Restrictions(starttime=start, endtime=start + 10)
-
-        # No chunklength means it should just return one item.
-        chunks = list(res)
-        self.assertEqual(len(chunks), 1)
-        self.assertEqual(chunks[0], (start, start + 10))
-
-        # One with chunklength should return the chunked pieces.
-        res = Restrictions(starttime=start, endtime=start + 10,
-                           chunklength_in_sec=1)
-        chunks = list(res)
-        self.assertEqual(len(chunks), 10)
-        self.assertEqual(
-            [_i[0] for _i in chunks],
-            [start + _i * 1 for _i in range(10)])
-        self.assertEqual(
-            [_i[1] for _i in chunks],
-            [start + _i * 1 for _i in range(1, 11)])
-        self.assertEqual(chunks[0][0], start)
-        self.assertEqual(chunks[-1][1], start + 10)
-
-        # Make sure the last piece is cut if it needs to be.
-        start = obspy.UTCDateTime(2012, 1, 1)
-        end = obspy.UTCDateTime(2012, 2, 1)
-        res = Restrictions(starttime=start, endtime=end,
-                           chunklength_in_sec=86400 * 10)
-        chunks = list(res)
-        self.assertEqual(chunks, [
-            (start, start + 86400 * 10),
-            (start + 86400 * 10, start + 86400 * 20),
-            (start + 86400 * 20, start + 86400 * 30),
-            (start + 86400 * 30, end)])
-
-        # No station start-and endtime by default
-        res = Restrictions(starttime=start, endtime=start + 10)
-        self.assertEqual(res.station_starttime, None)
-        self.assertEqual(res.station_endtime, None)
-
-        # One can only set one of the two.
-        res = Restrictions(starttime=start, endtime=start + 10,
-                           station_starttime=start - 10)
-        self.assertEqual(res.station_starttime, start - 10)
-        self.assertEqual(res.station_endtime, None)
-
-        res = Restrictions(starttime=start, endtime=start + 10,
-                           station_endtime=start + 20)
-        self.assertEqual(res.station_starttime, None)
-        self.assertEqual(res.station_endtime, start + 20)
-
-        # Will raise a ValueError if either within the time interval of the
-        # normal start- and endtime.
-        self.assertRaises(ValueError, Restrictions, starttime=start,
-                          endtime=start+10, station_starttime=start + 1)
-
-        self.assertRaises(ValueError, Restrictions, starttime=start,
-                          endtime=start+10, station_endtime=start + 9)
-
-        # Fine if they are equal with both.
-        Restrictions(starttime=start, endtime=start + 10,
-                     station_starttime=start, station_endtime=start + 10)
 
     def test_channel_str_representation(self):
         """
@@ -742,8 +752,8 @@ class StationTestCase(unittest.TestCase):
         with mock.patch("os.path.exists") as exists_mock:
             exists_mock.return_value = True
 
-            with mock.patch("obspy.fdsn.download_helpers.utils.safe_delete") \
-                    as p:
+            with mock.patch("obspy.clients.fdsn.download_helpers"
+                            ".utils.safe_delete") as p:
                 # All status are NONE thus nothing should be deleted.
                 station.remove_files(logger)
                 self.assertEqual(p.call_count, 0)
@@ -813,7 +823,8 @@ class StationTestCase(unittest.TestCase):
 
         logger = mock.MagicMock()
 
-        with mock.patch("obspy.fdsn.download_helpers.utils.safe_delete") as p:
+        with mock.patch("obspy.clients.fdsn.download_helpers"
+                        ".utils.safe_delete") as p:
             # By default, nothing will happen.
             station.sanitize_downloads(logger)
             self.assertEqual(p.call_count, 0)
@@ -992,7 +1003,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability("TA", "A001", "", "BHZ",
@@ -1024,7 +1035,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability("TA", "A001", "", "BHZ",
@@ -1052,7 +1063,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability(
@@ -1242,7 +1253,7 @@ class DownloadHelperTestCase(unittest.TestCase):
     """
     Test cases for the DownloadHelper class.
     """
-    @mock.patch("obspy.fdsn.download_helpers.download_helpers."
+    @mock.patch("obspy.clients.fdsn.download_helpers.download_helpers."
                 "DownloadHelper._initialize_clients")
     def test_initialization(self, patch):
         """
@@ -1250,10 +1261,11 @@ class DownloadHelperTestCase(unittest.TestCase):
         """
         d = DownloadHelper()
         self.assertEqual(patch.call_count, 1)
-        self.assertEqual(
-            d.providers,
-            ("IRIS", "GEONET", "GFZ", "INGV", "NCEDC", "NERIES", "RESIF",
-             "SCEC", "USGS", "USP", "ORFEUS"))
+        # The amount of services is variable and more and more get added.
+        # Assert its larger then 8 and contains a couple stable ones.
+        self.assertTrue(len(d.providers) > 8)
+        self.assertTrue("IRIS" in d.providers)
+        self.assertTrue("ORFEUS" in d.providers)
         patch.reset_mock()
 
         d = DownloadHelper(providers=["A", "B", "IRIS"])
@@ -1270,6 +1282,7 @@ def suite():
     testsuite.addTest(unittest.makeSuite(ChannelTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(DownloadHelperTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(RestrictionsTestCase, 'test'))
     return testsuite
 
 
