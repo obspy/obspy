@@ -75,6 +75,7 @@ The functionality is provided through the following packages:
    obspy.io.css
    obspy.io.sac.sacpz
    obspy.io.shapefile
+   obspy.io.stationtxt
    obspy.io.stationxml
 
 .. rubric:: Database or Web Service Access Clients
