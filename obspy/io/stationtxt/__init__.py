@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-obspy.io.stationtxt - Reading the FDSNWS station text files
-===========================================================
+obspy.io.stationtxt - Read support for the  FDSNWS station text files
+=====================================================================
 
 This module provides read support for the station text files served by the FDSN
 web services.
