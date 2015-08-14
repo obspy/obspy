@@ -52,4 +52,4 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     if show:
         plt.show()
 
-    return fig, ax
+    return fig, ax, frq, abs(X)
