@@ -19,8 +19,10 @@ import os
 import unittest
 
 import obspy
-import obspy.station
-from obspy.station import fdsn_text
+from obspy.io.stationtxt.core import (is_FDSN_station_text_file,
+                                      read_FDSN_station_text_file)
+from obspy.core.inventory import (Channel, Station, Network, Inventory, Site,
+                                  Equipment, Response, InstrumentSensitivity)
 
 
 class StationTextTestCase(unittest.TestCase):
@@ -43,52 +45,52 @@ class StationTextTestCase(unittest.TestCase):
 
         # Test with filenames.
         for filename in txt_files:
-            self.assertTrue(fdsn_text.is_FDSN_station_text_file(filename))
+            self.assertTrue(is_FDSN_station_text_file(filename))
         for filename in non_txt_files:
-            self.assertFalse(fdsn_text.is_FDSN_station_text_file(filename))
+            self.assertFalse(is_FDSN_station_text_file(filename))
 
         # Text with open files in binary mode.
         for filename in txt_files:
             with open(filename, "rb") as fh:
-                self.assertTrue(fdsn_text.is_FDSN_station_text_file(fh))
+                self.assertTrue(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
-                self.assertFalse(fdsn_text.is_FDSN_station_text_file(fh))
+                self.assertFalse(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
 
         # Text with open files in text mode.
         for filename in txt_files:
             with open(filename, "rt") as fh:
-                self.assertTrue(fdsn_text.is_FDSN_station_text_file(fh))
+                self.assertTrue(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rt") as fh:
-                self.assertFalse(fdsn_text.is_FDSN_station_text_file(fh))
+                self.assertFalse(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
 
         # Text with BytesIO.
         for filename in txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertTrue(fdsn_text.is_FDSN_station_text_file(buf))
+                    self.assertTrue(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertFalse(fdsn_text.is_FDSN_station_text_file(buf))
+                    self.assertFalse(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
 
         # Text with StringIO.
         for filename in txt_files:
             with open(filename, "rt") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertTrue(fdsn_text.is_FDSN_station_text_file(buf))
+                    self.assertTrue(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rt") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertFalse(fdsn_text.is_FDSN_station_text_file(buf))
+                    self.assertFalse(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
 
     def test_reading_network_file(self):
@@ -96,15 +98,15 @@ class StationTextTestCase(unittest.TestCase):
         Test reading a file at the network level.
         """
         # Manually create an expected Inventory object.
-        expected_inv = obspy.station.Inventory(source=None, networks=[
-            obspy.station.Network(
+        expected_inv = Inventory(source=None, networks=[
+            Network(
                 code="TA", total_number_of_stations=1700,
                 start_date=obspy.UTCDateTime("2003-01-01T00:00:00"),
                 end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
                 description="USArray Transportable Array (NSF EarthScope "
                             "Project)"),
 
-            obspy.station.Network(
+            Network(
                 code="TC", total_number_of_stations=0,
                 start_date=obspy.UTCDateTime("2011-01-01T00:00:00"),
                 end_date=obspy.UTCDateTime("2500-12-31T23:59:59"),
@@ -113,7 +115,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "network_level_fdsn.txt")
-        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv = read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -124,7 +126,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -134,7 +136,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -146,7 +148,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -158,7 +160,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -171,34 +173,34 @@ class StationTextTestCase(unittest.TestCase):
         Test reading a file at the station level.
         """
         # Manually create an expected Inventory object.
-        expected_inv = obspy.station.Inventory(source=None, networks=[
-            obspy.station.Network(
+        expected_inv = Inventory(source=None, networks=[
+            Network(
                 code="TA", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="A04A", latitude=48.7197, longitude=-122.707,
-                        elevation=23.0, site=obspy.station.Site(
+                        elevation=23.0, site=Site(
                             name="Legoe Bay, Lummi Island, WA, USA"),
                         start_date=obspy.UTCDateTime("2004-09-19T00:00:00"),
                         end_date=obspy.UTCDateTime("2008-02-19T23:59:59")),
-                    obspy.station.Station(
+                    Station(
                         code="A04D", latitude=48.7201, longitude=-122.7063,
-                        elevation=13.0, site=obspy.station.Site(
+                        elevation=13.0, site=Site(
                             name="Lummi Island, WA, USA"),
                         start_date=obspy.UTCDateTime("2010-08-18T00:00:00"),
                         end_date=obspy.UTCDateTime("2599-12-31T23:59:59"))
                 ]),
-            obspy.station.Network(
+            Network(
                 code="TR", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="ALNG", latitude=10.1814, longitude=-61.6883,
-                        elevation=10.0, site=obspy.station.Site(
+                        elevation=10.0, site=Site(
                             name="Trinidad, Point Fortin"),
                         start_date=obspy.UTCDateTime("2000-01-01T00:00:00"),
                         end_date=obspy.UTCDateTime("2599-12-31T23:59:59"))])])
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "station_level_fdsn.txt")
-        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv = read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -209,7 +211,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -219,7 +221,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -231,7 +233,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -243,7 +245,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -255,17 +257,31 @@ class StationTextTestCase(unittest.TestCase):
         """
         Test reading a file at the channel level.
         """
+
+        resp_1 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.02, input_units="M/S", output_units=None,
+                value=4.88233E8))
+        resp_2 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.03, input_units="M/S",
+                output_units=None, value=4.98112E8))
+        resp_3 = Response(
+            instrument_sensitivity=InstrumentSensitivity(
+                frequency=0.03, input_units="M/S",
+                output_units=None, value=6.27252E8))
+
         # Manually create an expected Inventory object.
-        expected_inv = obspy.station.Inventory(source=None, networks=[
-            obspy.station.Network(
+        expected_inv = Inventory(source=None, networks=[
+            Network(
                 code="AK", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="BAGL",
                         latitude=60.4896,
                         longitude=-142.0915,
                         elevation=1470,
                         channels=[
-                            obspy.station.Channel(
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=60.4896,
                                 longitude=-142.0915,
@@ -274,26 +290,22 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Nanometrics Trillium 240 Sec "
                                          "Response sn 400 and a"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-01-01T00:00:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2599-12-31T23:59:59"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.02, input_units="M/S",
-                                        output_units=None, value=4.88233E8)))
+                                response=resp_1)
                         ]),
-                    obspy.station.Station(
+                    Station(
                         code="BWN",
                         latitude=64.1732,
                         longitude=-149.2991,
                         elevation=356.0,
                         channels=[
-                            obspy.station.Channel(
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=64.1732,
                                 longitude=-149.2991,
@@ -302,19 +314,15 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Nanometrics Trillium 240 Sec "
                                          "Response sn 400 and a"),
                                 start_date=obspy.UTCDateTime(
                                     "2010-07-23T00:00:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2014-05-28T23:59:59"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.02, input_units="M/S",
-                                        output_units=None, value=4.88233E8))),
-                            obspy.station.Channel(
+                                response=resp_1),
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=64.1732,
                                 longitude=-149.2991,
@@ -323,29 +331,25 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Nanometrics Trillium 120 Sec "
                                          "Response/Quanterra 33"),
                                 start_date=obspy.UTCDateTime(
                                     "2014-08-01T00:00:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2599-12-31T23:59:59"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.03, input_units="M/S",
-                                        output_units=None, value=4.98112E8)))
+                                response=resp_2)
                         ])
                 ]),
-            obspy.station.Network(
+            Network(
                 code="AZ", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="BZN",
                         latitude=33.4915,
                         longitude=-116.667,
                         elevation=1301.0,
                         channels=[
-                            obspy.station.Channel(
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=33.4915,
                                 longitude=-116.667,
@@ -354,19 +358,15 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Streckeisen STS-2 G1/Quanterra 330 "
                                          "Linear Phase Be"),
                                 start_date=obspy.UTCDateTime(
                                     "2010-07-26T17:22:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2013-07-15T21:22:23"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.03, input_units="M/S",
-                                        output_units=None, value=6.27252E8))),
-                            obspy.station.Channel(
+                                response=resp_3),
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=33.4915,
                                 longitude=-116.667,
@@ -375,19 +375,15 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Streckeisen STS-2 G1/Quanterra 330 "
                                          "Linear Phase Be"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-07-15T21:22:23"),
                                 end_date=obspy.UTCDateTime(
                                     "2013-10-22T19:30:00"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.03, input_units="M/S",
-                                        output_units=None, value=6.27252E8))),
-                            obspy.station.Channel(
+                                response=resp_3),
+                            Channel(
                                 code="LHZ", location_code="",
                                 latitude=33.4915,
                                 longitude=-116.667,
@@ -396,25 +392,21 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=-90.0,
                                 sample_rate=1.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Streckeisen STS-2 G1/Quanterra 330 "
                                          "Linear Phase Be"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-10-22T19:30:00"),
                                 end_date=obspy.UTCDateTime(
                                     "2599-12-31T23:59:59"),
-                                response=obspy.station.Response(
-                                    instrument_sensitivity=obspy.station
-                                    .InstrumentSensitivity(
-                                        frequency=0.03, input_units="M/S",
-                                        output_units=None, value=6.27252E8))),
+                                response=resp_3)
                         ])
                 ])
             ])
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
-        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv = read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -425,7 +417,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -435,7 +427,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -447,7 +439,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -459,7 +451,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -472,19 +464,19 @@ class StationTextTestCase(unittest.TestCase):
         Tests reading a file with non ASCII characters.
         """
         # Manually create an expected Inventory object.
-        expected_inv = obspy.station.Inventory(source=None, networks=[
-            obspy.station.Network(
+        expected_inv = Inventory(source=None, networks=[
+            Network(
                 code="PR", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="CTN1", latitude=18.43718, longitude=-67.1303,
-                        elevation=10.0, site=obspy.station.Site(
+                        elevation=10.0, site=Site(
                             name="CATA¿O DEFENSA CIVIL"),
                         start_date=obspy.UTCDateTime("2004-01-27T00:00:00"),
                         end_date=obspy.UTCDateTime("2599-12-31T23:59:59"))])])
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "unicode_example_fdsn.txt")
-        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv = read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -495,7 +487,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -505,7 +497,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -517,7 +509,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -529,7 +521,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -544,16 +536,16 @@ class StationTextTestCase(unittest.TestCase):
         instruments.
         """
         # Manually create an expected Inventory object.
-        expected_inv = obspy.station.Inventory(source=None, networks=[
-            obspy.station.Network(
+        expected_inv = Inventory(source=None, networks=[
+            Network(
                 code="6E", stations=[
-                    obspy.station.Station(
+                    Station(
                         code="SH01",
                         latitude=37.7457,
                         longitude=-88.1368,
                         elevation=126.0,
                         channels=[
-                            obspy.station.Channel(
+                            Channel(
                                 code="LOG", location_code="",
                                 latitude=37.7457,
                                 longitude=-88.1368,
@@ -562,7 +554,7 @@ class StationTextTestCase(unittest.TestCase):
                                 azimuth=0.0,
                                 dip=0.0,
                                 sample_rate=0.0,
-                                sensor=obspy.station.Equipment(
+                                sensor=Equipment(
                                     type="Reftek 130 Datalogger"),
                                 start_date=obspy.UTCDateTime(
                                     "2013-11-23T00:00:00"),
@@ -574,7 +566,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "log_channel_fdsn.txt")
-        inv = fdsn_text.read_FDSN_station_text_file(filename)
+        inv = read_FDSN_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -585,7 +577,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -595,7 +587,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = fdsn_text.read_FDSN_station_text_file(fh)
+            inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -607,7 +599,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -619,7 +611,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = fdsn_text.read_FDSN_station_text_file(buf)
+                inv = read_FDSN_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -637,9 +629,9 @@ class StationTextTestCase(unittest.TestCase):
         bad_file = os.path.join(self.data_dir,
                                 "channel_level_fdsn_faulty_header.txt")
 
-        inv_good = fdsn_text.read_FDSN_station_text_file(good_file)
+        inv_good = read_FDSN_station_text_file(good_file)
         inv_obs_good = obspy.read_inventory(good_file)
-        inv_bad = fdsn_text.read_FDSN_station_text_file(bad_file)
+        inv_bad = read_FDSN_station_text_file(bad_file)
         inv_obs_bad = obspy.read_inventory(bad_file)
 
         # Copy creation dates as it will be slightly different otherwise.
@@ -666,9 +658,9 @@ class StationTextTestCase(unittest.TestCase):
         ]
 
         for file_a, file_b in file_pairs:
-            inv_a = fdsn_text.read_FDSN_station_text_file(file_a)
+            inv_a = read_FDSN_station_text_file(file_a)
             inv_obs_a = obspy.read_inventory(file_a)
-            inv_b = fdsn_text.read_FDSN_station_text_file(file_b)
+            inv_b = read_FDSN_station_text_file(file_b)
             inv_obs_b = obspy.read_inventory(file_b)
 
             # Copy creation dates as it will be slightly different otherwise.

@@ -5,8 +5,8 @@ Data Acquisition Helpers for FDSN compliant web services
 ========================================================
 
 This package contains functionality to query and integrate data from any
-number of FDSN web service providers. It can be used by itself or as a
-library integrated into a bigger project.
+number of FDSN web service providers simultaneously. It can be used by
+itself or as a library component integrated into a bigger project.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
@@ -59,7 +59,7 @@ arbitrary complex domains. Please see the
 Instances of these classes will later be passed to the function sparking the
 downloading process. A rectangular domain for example is defined like this:
 
->>> from obspy.fdsn.download_helpers.domain import RectangularDomain
+>>> from obspy.clients.fdsn.download_helpers.domain import RectangularDomain
 >>> domain = RectangularDomain(minlatitude=-10, maxlatitude=10,
 ...                            minlongitude=-10, maxlongitude=10)
 
@@ -70,7 +70,7 @@ Please refer to its documentation for a more detailed explanation of the
 parameters.
 
 >>> from obspy import UTCDateTime
->>> from obspy.fdsn.download_helpers import Restrictions
+>>> from obspy.clients.fdsn.download_helpers import Restrictions
 >>> restrict = Restrictions(
 ...     starttime=UTCDateTime(2012, 1, 1),
 ...     endtime=UTCDateTime(2012, 1, 1, 1),
@@ -90,7 +90,7 @@ be downloaded data. This requires some flexibility in case this is integrated
 as a component into a bigger system. An example of this is a toolbox that has a
 database to manage its data. A major concern is to not download already
 existing data. In order to enable such a use case the download helpers can be
-given functions that are evaluated when determining the filenames of the to be
+given functions that are evaluated when determining the filen ames of the to be
 downloaded data.  Depending on the return value, the helper class will download
 the whole, only parts, or even nothing, of that particular piece of data.
 
@@ -98,9 +98,9 @@ Storing MiniSEED waveforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
-:func:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper.download`
+:func:`~obspy.clients.fdsn.download_helpers.DownloadHelper.download`
 method of the
-:class:`~obspy.fdsn.download_helpers.download_helpers.DownloadHelper` class.
+:class:`~obspy.clients.fdsn.download_helpers.DownloadHelper` class.
 
 **Option 1: Folder Name**
 
@@ -278,8 +278,8 @@ degrees from the data and some additional restrictions.
 .. code:: python
 
     import obspy
-    from obspy.fdsn.download_helpers import CircularDomain, Restrictions, \\
-        DownloadHelper
+    from obspy.clients.fdsn.download_helpers import CircularDomain, \\
+        Restrictions, DownloadHelper
 
     origin_time = obspy.UTCDateTime(2011, 3, 11, 5, 47, 32)
 
@@ -327,8 +327,8 @@ per day.
 .. code:: python
 
     import obspy
-    from obspy.fdsn.download_helpers import RectangularDomain, Restrictions, \\
-        DownloadHelper
+    from obspy.clients.fdsn.download_helpers import RectangularDomain, \\
+        Restrictions, DownloadHelper
 
     # Rectangular domain containing parts of southern Germany.
     domain = RectangularDomain(minlatitude=30, maxlatitude=50,

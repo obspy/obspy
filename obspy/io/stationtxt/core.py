@@ -21,7 +21,9 @@ import csv
 import io
 
 import obspy
-import obspy.station
+from obspy.core.inventory import (Inventory, Network, Station, Channel,
+                                  Response, Equipment, Site,
+                                  InstrumentSensitivity)
 
 
 def float_or_none(value):
@@ -177,11 +179,11 @@ def read_FDSN_station_text_file(path_or_file_object):
             v_type(value) for value, v_type in zip(line, filetypes)])
 
     # Now convert to an inventory object.
-    inv = obspy.station.Inventory(networks=[], source=None)
+    inv = Inventory(networks=[], source=None)
 
     if level == "network":
         for net in converted_content:
-            network = obspy.station.Network(
+            network = Network(
                 code=net[0],
                 description=net[1],
                 start_date=net[2],
@@ -191,8 +193,8 @@ def read_FDSN_station_text_file(path_or_file_object):
     elif level == "station":
         networks = collections.OrderedDict()
         for sta in converted_content:
-            site = obspy.station.Site(name=sta[5])
-            station = obspy.station.Station(
+            site = Site(name=sta[5])
+            station = Station(
                 code=sta[1], latitude=sta[2], longitude=sta[3],
                 elevation=sta[4], site=site, start_date=sta[6],
                 end_date=sta[7])
@@ -200,7 +202,7 @@ def read_FDSN_station_text_file(path_or_file_object):
                 networks[sta[0]] = []
             networks[sta[0]].append(station)
         for network_code, stations in networks.items():
-            net = obspy.station.Network(code=network_code, stations=stations)
+            net = Network(code=network_code, stations=stations)
             inv.networks.append(net)
     elif level == "channel":
         networks = collections.OrderedDict()
@@ -211,23 +213,23 @@ def read_FDSN_station_text_file(path_or_file_object):
                 scale_freq, scale_units, s_r, st, et = channel
 
             if net not in networks:
-                networks[net] = obspy.station.Network(code=net)
+                networks[net] = Network(code=net)
 
             if (net, sta) not in stations:
-                station = obspy.station.Station(code=sta, latitude=lat,
-                                                longitude=lng, elevation=ele)
+                station = Station(code=sta, latitude=lat,
+                                  longitude=lng, elevation=ele)
                 networks[net].stations.append(station)
                 stations[(net, sta)] = station
 
-            sensor = obspy.station.Equipment(type=inst)
+            sensor = Equipment(type=inst)
             if scale is not None and scale_freq is not None:
-                resp = obspy.station.Response(
-                    instrument_sensitivity=obspy.station.InstrumentSensitivity(
+                resp = Response(
+                    instrument_sensitivity=InstrumentSensitivity(
                         value=scale, frequency=scale_freq,
                         input_units=scale_units, output_units=None))
             else:
                 resp = None
-            channel = obspy.station.Channel(
+            channel = Channel(
                 code=chan, location_code=loc, latitude=lat, longitude=lng,
                 elevation=ele, depth=dep, azimuth=azi, dip=dip, sensor=sensor,
                 sample_rate=s_r, start_date=st, end_date=et, response=resp)

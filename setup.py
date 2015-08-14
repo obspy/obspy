@@ -307,7 +307,7 @@ ENTRY_POINTS = {
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
-        'STATIONTXT = obspy.io.stationtxt.fdsn_text'
+        'STATIONTXT = obspy.io.stationtxt.core'
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -324,9 +324,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
     ],
     'obspy.plugin.inventory.STATIONTXT': [
-        'isFormat = obspy.io.stationtxt.fdsn_text:is_FDSN_station_text_file',
+        'isFormat = obspy.io.stationtxt.core:is_FDSN_station_text_file',
         'readFormat = '
-        'obspy.io.stationtxt.fdsn_text:read_FDSN_station_text_file',
+        'obspy.io.stationtxt.core:read_FDSN_station_text_file',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
