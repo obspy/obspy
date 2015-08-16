@@ -266,7 +266,7 @@ class CoreTestCase(unittest.TestCase):
     def test_referenceTime(self):
         """
         Test case for bug #107. The SAC reference time is specified by the
-        iztype. However is seems no matter what iztype is given, the
+        iztype. However it seems no matter what iztype is given, the
         starttime of the seismogram is calculated by adding the B header
         (in seconds) to the SAC reference time.
         """

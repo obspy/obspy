@@ -912,13 +912,12 @@ class SACTrace(object):
             introduced.
 
         """
-        # keep_sac_header
         try:
-            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_reftime)
+            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header)
         except SacError:
             # not enough time info in old SAC header
-            # XXX: try to do something besides ignore the old header!
-            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_reftime=False)
+            # XXX: try to do something besides ignore the old header?
+            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header=False)
 
         # handle the data headers
         data = trace.data

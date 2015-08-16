@@ -254,96 +254,103 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
 
     If keep_sac_header is True, any old stats.sac header values are kept as is,
     and only a minimal set of values are updated from the stats dictionary:
-    npts, e, and data.  If an old iztype and a valid reftime are present, b and
-    e will be properly referenced to it. If keep_sac_header is False, a new SAC
-    header is constructed from only information found in the stats dictionary,
-    with some other default values introduced.
-
-    # XXX: old docstring below
-    If an old stats.sac dictionary is found, it is used as the base header and
-    old values are blindly overwritten by relevant values from stats.
-    If keep_sac_reftime is True, an attempt is made to keep the old iztype,
-    the "nz" reference times, and other relative-time headers.  If successful,
-    the stats.starttime/endtime becomes 'b' and 'e' relative to the old
-    reference time.  If  an old SAC reftime can't be built, a warning is
-    issued.
+    npts, delta, e.  If an old iztype and valid reftime are found, the new b
+    and e will be properly referenced to it. If keep_sac_header is False, a new
+    SAC header is constructed from only information found in the stats
+    dictionary, with some other default values introduced.  It will be an
+    iztype 9 ('ib') file, with small adjustments for micro/milliseconds issues.
 
     """
-    # The Plan :
-    # 1. Start with an old SAC header, if present 
-    # 2. Overwrite with stats values
-    # 3a. if keep_sac_reftime = True, adjust reftime, b, e, ...
-    # 3b. if reftime is undefined, warn and pass
+    # XXX: forces the user to keep either all or nothing of the old SAC header
+    # (almost).  e.g. updates to stats.channel are ignored for stats.sac.kcmpnm
+    # if you want to keep the old iztype & nz times with keep_sac_header=True.
+    header = {}
+    oldsac = stats.get('sac', {})
 
-    # 1. use any old values and keep them for later
-    oldheader = stats.get('sac', {}).copy()
-    header = oldheader.copy()
-
-    # 2. begin filling with Stats values
-
+    # Here, set headers from stats that don't depend on any flags:
+    #   npts, delta
     header['npts'] = stats['npts']
     header['delta'] = stats['delta']
 
-    # make nz-times times and b
-    # an obspy trace is naturally iztype ib (9)
-    header['iztype'] = 9
-    starttime = stats['starttime']
-    header['nzyear'] = starttime.year
-    header['nzjday'] = starttime.julday
-    header['nzhour'] = starttime.hour
-    header['nzmin'] = starttime.minute
-    header['nzsec'] = starttime.second
-    # nz times don't have enough precision, so push microseconds into b,
-    # using integer arithmetic
-    millisecond, microsecond = split_microseconds(starttime.microsecond)
-    header['nzmsec'] = millisecond
+    if keep_sac_header and oldsac:
+        # start with the old header, and only update a minimal set of headers
+        # values from stats: npts, b, e, delta
+        header.update(oldsac)
 
-    header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+        if header['b'] == HD.FNULL:
+            b = 0.0
+        else:
+            b = header['b']
 
-    # we now have correct b, npts, delta, and nz times
-    header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
-
-    header['scale'] = stats.get('calib', HD.FNULL)
-    # nulls for these are '', which stats.get(hdr, HD.SNULL) won't catch
-    header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
-    header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
-    header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
-    header['khole'] = stats['location'] if stats['location'] else HD.SNULL
-
-    # other SAC values not from stats
-    # XXX: should I be adding values that don't come from anywhere?
-    # header['internal0'] = 2.0
-    # header['cmpaz'] = 0
-    # header['cmpinc'] = 0
-    header['nvhdr'] = 6
-    header['leven'] = 1
-    # header['lpspol'] = 1
-    # header['lcalda'] = 0
-    header['lovrok'] = 1
-    # header['evla'] = 0
-    # header['evlo'] = 0
-    header['iftype'] = 1
-
-    # SAC header from stats is complete. we shouldn't need stats anymore.
-    # Old header 
-
-    # 3.
-    if keep_sac_reftime:
         try:
-            # 3a.
-            # TODO: exact same functionality as sac.reftime setter and _allt
-            #   can I move that down to this function, or somehow use it at the
-            #   SACTrace level?
-            # keep: 'a', 'b', 'e', 'f', 'iztype', 'nz*', 't[0-9]'
-            # b is the difference btwn the old reftime and the trace starttime
-            # b naturally includes any microseconds that were pushed into it
-            reftime = get_sac_reftime(oldheader)
-            header['b'] = starttime - reftime
-        except SacHeaderTimeError as e:
+            # if the first sample time in stats is different than the one in
+            # the old header (e.g. from trimming), we need to know that shift.
+            # The treatment will depend on whether the old header had a valid
+            # reftime.
+            reftime = get_sac_reftime(header)
+            # reftme + b is the old first sample time
+            bshift = stats['starttime'] - reftime + b
+        except SacHeaderTimeError:
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
+            # can't determine absolute time shift.
+            # b will be untouched.
+            bshift = 0.0
+        except (KeyError, TypeError):
+            # b isn't present or is -12345.0
+            # b will be untouched.
+            bshift = 0.0
 
- 
+        # NOTE: if b or e is null, it will become set here.
+        header['b'] = b + bshift
+        header['e'] = b + bshift + (stats['endtime'] - stats['starttime'])
+
+        # b and e are now set correctly, and old SAC header values are present.
+
+    else:
+        # SAC header from scratch
+        # Here, set headers from stats that would otherwise depend on the old
+        # SAC header
+        header['iztype'] = 9
+        starttime = stats['starttime']
+        header['nzyear'] = starttime.year
+        header['nzjday'] = starttime.julday
+        header['nzhour'] = starttime.hour
+        header['nzmin'] = starttime.minute
+        header['nzsec'] = starttime.second
+        # nz times don't have enough precision, so push microseconds into b,
+        # using integer arithmetic
+        millisecond, microsecond = split_microseconds(starttime.microsecond)
+        header['nzmsec'] = millisecond
+
+        header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+
+        # we now have correct b, npts, delta, and nz times
+        header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
+
+        header['scale'] = stats.get('calib', HD.FNULL)
+
+        # nulls for these are '', which stats.get(hdr, HD.SNULL) won't catch
+        header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
+        header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
+        header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
+        header['khole'] = stats['location'] if stats['location'] else HD.SNULL
+
+        # other SAC values not from stats
+        # XXX: should I be adding values that don't come from anywhere?
+        # header['internal0'] = 2.0
+        # header['cmpaz'] = 0
+        # header['cmpinc'] = 0
+        header['nvhdr'] = 6
+        header['leven'] = 1
+        # header['lpspol'] = 1
+        # header['lcalda'] = 0
+        header['lovrok'] = 1
+        # header['evla'] = 0
+        # header['evlo'] = 0
+        header['iftype'] = 1
+
+
     return header
 
 
