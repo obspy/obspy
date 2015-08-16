@@ -289,7 +289,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # reftime.
             reftime = get_sac_reftime(header)
             # reftme + b is the old first sample time
-            bshift = stats['starttime'] - reftime + b
+            bshift = (reftime + b) - stats['starttime'] 
         except SacHeaderTimeError:
             msg = "Old header has invalid reftime."
             warnings.warn(msg)

@@ -32,34 +32,35 @@ from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int, is_same_byteorder
 
 
-def init_header_arrays(*args):
+def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
     """
     Initialize arbitrary header arrays.
 
     Parameters
     ----------
-    which : str, {'float', 'int', 'str'}
-        Specify which arrays to initialize, and desired order.
+    arrays : tuple of strings {'float', 'int', 'str'}
+        Specify which arrays to initialize and the desired order.
         If omitted, returned arrays are ('float', 'int', 'str').
+    byteorder : str {'<', '=', '>'}
+        Desired byte order of initialized arrays (little, native, big).
 
     Returns
     -------
-    arrays : list of numpy.ndarrays
+    list of numpy.ndarrays
         The desired SAC header arrays.
 
     """
-    if len(args) == 0:
-        args = ('float', 'int', 'str')
     out = []
-    for itype in args:
+    for itype in arrays:
         if itype == 'float':
             # null float header array
-            # XXX: why not init native byte order?
-            hf = np.full(70, fill_value=HD.FNULL, dtype=native_str('<f4'))
+            hf = np.full(70, fill_value=HD.FNULL,
+                         dtype=native_str(byteorder + 'f4'))
             out.append(hf)
         elif itype == 'int':
             # null integer header array
-            hi = np.full(40, fill_value=HD.INULL, dtype=native_str('<i4'))
+            hi = np.full(40, fill_value=HD.INULL,
+                         dtype=native_str(byteorder + 'i4'))
             # set logicals to 0, not -1234whatever
             for i, hdr in enumerate(HD.INTHDRS):
                 if hdr.startswith('l'):
@@ -250,7 +251,7 @@ def read_sac_ascii(source, headonly=False):
     # because every string field has to be 8 characters long
     # apart from the second field which is 16 characters long
     # resulting in a total length of 192 characters
-    hs, = init_header_arrays('str')
+    hs, = init_header_arrays(arrays=('str',))
     for i, j in enumerate(range(0, 24, 3)):
         line = contents[14 + 8 + i]
         hs[j:j + 3] = np.fromstring(line, dtype=native_str('|S8'), count=3)
@@ -477,13 +478,16 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     return header
 
 
-def dict_to_header_arrays(header=None):
+def dict_to_header_arrays(header=None, byteorder='='):
     """
     Returns null hf, hi, hs arrays, optionally filled with values from a
     dictionary.  No header checking.
 
+    byteorder : str {'<', '=', '>'}
+        Desired byte order of initialized arrays (little, native, big).
+
     """
-    hf, hi, hs = init_header_arrays()
+    hf, hi, hs = init_header_arrays(byteorder=byteorder)
 
     # have to split kevnm into two fields
     # TODO: add .lower() to hdr lookups, for safety

@@ -873,7 +873,8 @@ class SACTrace(object):
         SACTrace.from_obspy_trace : construct from an ObsPy Trace instance.
 
         """
-        hf0, hi0, hs0 = _io.init_header_arrays()
+        # XXX: handle byte order independently instead of just from "hf"
+        hf0, hi0, hs0 = _io.init_header_arrays(byteorder=hf.dtype.byteorder)
 
         if hf is None:
             hf = hf0
@@ -929,9 +930,16 @@ class SACTrace(object):
             # data is None
             data = None
 
-        hf, hi, hs = _io.dict_to_header_arrays(header)
+        try:
+            byteorder = data.dtype.byteorder
+        except AttributeError:
+            # data is None
+            byteorder = '='
+
+        # XXX: only gives native-endian arrays, doesnt handle big endian data.
+        hf, hi, hs = _io.dict_to_header_arrays(header, byteorder=byteorder)
         sac = cls._from_arrays(hf, hi, hs, data)
-        sac._flush_headers()
+        #sac._flush_headers()
 
         return sac
 
