@@ -18,13 +18,15 @@ import copy
 import os
 import unittest
 
+import numpy as np
+
 import obspy
 from obspy.core.compatibility import mock
 from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
                                                  DownloadHelper)
 from obspy.clients.fdsn.download_helpers.utils import (
     filter_channel_priority, get_stationxml_filename, get_mseed_filename,
-    get_stationxml_contents)
+    get_stationxml_contents, SphericalNearestNeighbour)
 from obspy.clients.fdsn.download_helpers.download_status import (
     Channel, TimeInterval, Station, STATUS)
 
@@ -279,6 +281,37 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         filtered_channels = filter_channel_priority(
             channels, key="location", priorities=None)
         self.assertEqual(filtered_channels, channels)
+
+    def test_spherical_nearest_neighbour(self):
+        """
+        Tests the spherical kd-tree.
+        """
+        # Get the distance of a point to itself.
+        point = Station("", "", 10.0, 20.0, [])
+        tree = SphericalNearestNeighbour(data=[point])
+        result = tree.query(points=[point])
+        distance, indices = result[0][0], result[1][0]
+        np.testing.assert_allclose(distance, [0])
+        np.testing.assert_allclose(indices, [0])
+
+        # Two points, one 50 km, the other 150 km distant.
+        point_a = Station("", "", 0.0, -0.5, [])
+        point_b = Station("", "", 0.0, 1.5, [])
+        tree = SphericalNearestNeighbour(data=[point_a, point_b])
+        result = tree.query(points=[Station("", "", 0.0, 0.0, [])])
+        distance, indices = result[0][0], result[1][0]
+
+        np.testing.assert_allclose(distance, [55597.36, 166787.862],
+                                   atol=1, rtol=1E-5)
+        np.testing.assert_allclose(indices, [0, 1])
+
+        # Query pairs.
+        point_a = Station("", "", 0.0, -0.5, [])
+        point_b = Station("", "", 0.0, 1.5, [])
+        point_c = Station("", "", 0.0, 0.0, [])
+        tree = SphericalNearestNeighbour(data=[point_a, point_b, point_c])
+        # 100 km apart. Only contains points a and c.
+        self.assertEqual(tree.query_pairs(100000), {(0, 2)})
 
     # def test_station_list_nearest_neighbour_filter(self):
     #     """

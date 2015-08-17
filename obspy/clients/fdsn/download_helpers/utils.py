@@ -269,7 +269,16 @@ class SphericalNearestNeighbour(object):
     def query(self, points, k=10):
         points = self.spherical2cartesian(points)
         d, i = self.kd_tree.query(points, k=k)
-        return d, i
+        new_d, new_i = [], []
+
+        # Filter NaNs. Happens when not enough points are available.
+        for _d, _i in zip(d[0], i[0]):
+            if not np.isfinite(_d):
+                continue
+            new_d.append(_d)
+            new_i.append(_i)
+
+        return np.array([new_d]), np.array([new_i])
 
     def query_pairs(self, maximum_distance):
         return self.kd_tree.query_pairs(maximum_distance)
