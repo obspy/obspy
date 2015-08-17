@@ -36,7 +36,7 @@ def _prep_hdr_line(name, line):
     else:
         return line.split()
 
-def _read_knet_hdr(hdrlines):
+def _read_knet_hdr(hdrlines, **kwargs):
     """
     Read the header values into a dictionary.
     @param hdlines: List of the first lines of a KNet ASCII file, not including the "Memo." line.
@@ -78,7 +78,23 @@ def _read_knet_hdr(hdrlines):
     # Station information
     _i += 1
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
-    hdrdict['station'] = flds[2]
+    # K-NET and KiK-Net station names can be more than 5 characters long
+    # which will cause the station name to be truncated when writing the
+    # the trace as miniSEED; if convert_stnm is enabled, the last two
+    # letters of the station code are written to the 'location' field
+    stnm = flds[2]
+    location = ''
+    convert_stnm = False
+    if 'convert_stnm' in kwargs:
+        convert_stnm = kwargs['convert_stnm']
+    if convert_stnm and len(stnm) > 5:
+        location = stnm[-2:]
+        stnm = stnm[:-2]
+    if len(stnm) > 7:
+        raise KnetFormatError("Station name can't be more than 7 characters\
+        long!")
+    hdrdict['station'] = stnm
+    hdrdict['location'] = location
 
     _i += 1
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
@@ -168,7 +184,7 @@ def _read_knet_ascii(filename, **kwargs):
         for line in f.readlines():
             if line.startswith('Memo'):
                 headerlines.append(line)
-                hdrdict = _read_knet_hdr(headerlines)
+                hdrdict = _read_knet_hdr(headerlines, **kwargs)
                 dataOn = True
                 continue
             if not dataOn:
@@ -184,8 +200,9 @@ def _read_knet_ascii(filename, **kwargs):
 
     elapsed = float(hdrdict['npts']) / float(hdrdict['sampling_rate'])
     hdrdict['endtime'] = hdrdict['starttime'] + elapsed
-    hdrdict['network'] = 'NIED'
-    hdrdict['location'] = ''
+    # The FDSN network code for the National Research Institute for Earth
+    # Science and Disaster Prevention (NEID JAPAN) is BO (Bosai-Ken Network)
+    hdrdict['network'] = 'BO'
 
     data = np.array(data)
     stats = Stats(hdrdict)
