@@ -267,16 +267,18 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     header = {}
     oldsac = stats.get('sac', {})
 
-    # Here, set headers from stats that don't depend on any flags:
-    #   npts, delta
-    header['npts'] = stats['npts']
-    header['delta'] = stats['delta']
-
     if keep_sac_header and oldsac:
         # start with the old header, and only update a minimal set of headers
         # values from stats: npts, b, e, delta
         header.update(oldsac)
 
+        header['npts'] = stats['npts']
+        header['delta'] = stats['delta']
+
+        # XXX: if you don't know "b", you don't know the difference btwn
+        #   the old and new 1st sample times, and b/bshift will be wrong.
+        #   ObsPy compatible behavior is to procede as though iztype is 'ib',
+        #   the starttime is the reftime, and b is 0.0?
         if header['b'] == HD.FNULL:
             b = 0.0
         else:
@@ -294,21 +296,27 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
             # can't determine absolute time shift.
-            # b will be untouched.
+            # assume that the old and new 1st sample times are the same
             bshift = 0.0
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
-            # b will be untouched.
+            # Assume an iztype 9/'ib' type file: move the reftime to the
+            # starttime and assume that the old and new 1st sample times are
+            # the same
+            #bshift = stats['starttime'] - (reftime + b)
             bshift = 0.0
 
         # NOTE: if b or e is null, it will become set here.
         header['b'] = b + bshift
         header['e'] = b + bshift + (stats['endtime'] - stats['starttime'])
 
-        # b and e are now set correctly, and old SAC header values are present.
+        # set values: b, e, npts, delta, and any old SAC header values.
 
     else:
         # SAC header from scratch
+        header['npts'] = stats['npts']
+        header['delta'] = stats['delta']
+
         # Here, set headers from stats that would otherwise depend on the old
         # SAC header
         header['iztype'] = 9
