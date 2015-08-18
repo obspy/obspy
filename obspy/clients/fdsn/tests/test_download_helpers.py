@@ -31,7 +31,7 @@ from obspy.clients.fdsn.download_helpers.utils import (
     get_stationxml_contents, SphericalNearestNeighbour, safe_delete,
     download_stationxml, download_and_split_mseed_bulk)
 from obspy.clients.fdsn.download_helpers.download_status import (
-    Channel, TimeInterval, Station, STATUS)
+    Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
 
 
 class DomainTestCase(unittest.TestCase):
@@ -1679,6 +1679,98 @@ class StationTestCase(unittest.TestCase):
                 "BHZ" in
                 logger.method_calls[0][1][0])
 
+    def test_str_method(self):
+        """
+        Test the __str__ method of the Station object.
+        """
+        # Minimal information.
+        st = Station("BW", "ALTM", 10, 20, [])
+        self.assertEqual(str(st), (
+            "Station 'BW.ALTM' [Lat: 10.00, Lng: 20.00]\n"
+            "\t-> Filename: None (does not yet exist)\n"
+            "\t-> Wants station information for channels:  \n"
+            "\t-> Has station information for channels:    \n"
+            "\t-> Misses station information for channels: \n\t"))
+
+        # A bit more information.
+        channels = [Channel("", "BHE", [TimeInterval(obspy.UTCDateTime(0),
+                                                     obspy.UTCDateTime(10))]),
+                    Channel("", "BHZ", [TimeInterval(obspy.UTCDateTime(10),
+                                                     obspy.UTCDateTime(20))])]
+        st = Station("BW", "ALTM", 10, 20, channels=channels,
+                     stationxml_status=STATUS.ignore)
+        self.assertEqual(str(st), (
+            "Station 'BW.ALTM' [Lat: 10.00, Lng: 20.00]\n"
+            "\t-> Filename: None (does not yet exist)\n"
+            "\t-> Wants station information for channels:  \n"
+            "\t-> Has station information for channels:    \n"
+            "\t-> Misses station information for channels: \n"
+            "\tChannel '.BHE':\n"
+            "\t\tTimeInterval(start=UTCDateTime(1970, 1, 1, 0, 0), "
+            "end=UTCDateTime(1970, 1, 1, 0, 0, 10), filename=None, "
+            "status='none')\n"
+            "\tChannel '.BHZ':\n"
+            "\t\tTimeInterval(start=UTCDateTime(1970, 1, 1, 0, 0, 10), "
+            "end=UTCDateTime(1970, 1, 1, 0, 0, 20), filename=None, "
+            "status='none')"))
+
+
+class ClientDownloadHelperTestCase(unittest.TestCase):
+    """
+    Test cases for the ClientDownloadHelper class.
+    """
+    def setUp(self):
+        self.client = mock.MagicMock()
+        self.client_name = "Test"
+        self.restrictions = None
+        self.domain = None
+        self.mseed_storage = "miniseed"
+        self.stationxml_storage = "stationxml_storage"
+        self.logger = mock.MagicMock()
+
+    def _init_client(self):
+        return ClientDownloadHelper(
+            client=self.client, client_name=self.client_name,
+            restrictions=self.restrictions, domain=self.domain,
+            mseed_storage=self.mseed_storage,
+            stationxml_storage=self.stationxml_storage, logger=self.logger)
+
+    def test_looped_methods(self):
+        """
+        Some methods are just used to loop over methods on the station
+        objects. Those are mocked here.
+        """
+        sta1 = mock.MagicMock()
+        sta2 = mock.MagicMock()
+
+        c = self._init_client()
+        c.stations["BW.ALTM"] = sta1
+        c.stations["BW.RJOB"] = sta2
+
+        c.prepare_mseed_download()
+        self.assertEqual(sta1.prepare_mseed_download.call_count, 1)
+        self.assertEqual(sta2.prepare_mseed_download.call_count, 1)
+        self.assertEqual(
+            sta1.prepare_mseed_download.call_args[1]["mseed_storage"],
+            self.mseed_storage)
+        self.assertEqual(
+            sta2.prepare_mseed_download.call_args[1]["mseed_storage"],
+            self.mseed_storage)
+
+        sta1.reset_mock()
+        sta2.reset_mock()
+
+        c.prepare_stationxml_download()
+        self.assertEqual(sta1.prepare_stationxml_download.call_count, 1)
+        self.assertEqual(sta2.prepare_stationxml_download.call_count, 1)
+
+        sta1.reset_mock()
+        sta2.reset_mock()
+
+        c.sanitize_downloads()
+        self.assertEqual(sta1.sanitize_downloads.call_count, 1)
+        self.assertEqual(sta2.sanitize_downloads.call_count, 1)
+
 
 class DownloadHelperTestCase(unittest.TestCase):
     """
@@ -1713,6 +1805,7 @@ def suite():
     testsuite.addTest(unittest.makeSuite(ChannelTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(StationTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(DownloadHelperTestCase, 'test'))
+    testsuite.addTest(unittest.makeSuite(ClientDownloadHelperTestCase, 'test'))
     testsuite.addTest(unittest.makeSuite(RestrictionsTestCase, 'test'))
     return testsuite
 
