@@ -254,7 +254,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
             pass
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), original_bulk_length))
-    return open_files.keys()
+    return sorted(open_files.keys())
 
 
 class SphericalNearestNeighbour(object):

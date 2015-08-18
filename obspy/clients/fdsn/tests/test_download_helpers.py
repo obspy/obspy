@@ -29,7 +29,7 @@ from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
 from obspy.clients.fdsn.download_helpers.utils import (
     filter_channel_priority, get_stationxml_filename, get_mseed_filename,
     get_stationxml_contents, SphericalNearestNeighbour, safe_delete,
-    download_stationxml)
+    download_stationxml, download_and_split_mseed_bulk)
 from obspy.clients.fdsn.download_helpers.download_status import (
     Channel, TimeInterval, Station, STATUS)
 
@@ -396,6 +396,320 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         self.assertEqual(
             client.get_stations_bulk.call_args[1]["filename"], filename)
 
+    def test_download_and_split_mseed(self):
+        """
+        Largely mocked test for the download_and_split_mseed() function.
+        """
+        client_name = "mock"
+
+        client = mock.MagicMock()
+        logger = mock.MagicMock()
+
+        def get_waveforms_bulk_mock(bulk, filename):
+            """
+            Actually create the requested MiniSEED file.
+            """
+            st = obspy.Stream()
+            for item in bulk:
+                tr = obspy.Trace()
+                tr.stats.network = item[0]
+                tr.stats.station = item[1]
+                tr.stats.location = item[2]
+                tr.stats.channel = item[3]
+                tr.stats.starttime = item[4]
+                tr.stats.delta = 1.0
+                tr.data = np.empty(int(item[5] - item[4]) + 1)
+                st.traces.append(tr)
+
+            st.write(filename, format="mseed")
+
+        client.get_waveforms_bulk.side_effect = get_waveforms_bulk_mock
+
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            chunks = [
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_1.mseed")],
+                ["BW", "ALTM", "", "EHN", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_2.mseed")],
+                ["BW", "ALTM", "", "EHZ", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_3.mseed")],
+            ]
+            ret_val = download_and_split_mseed_bulk(
+                client=client, client_name=client_name, chunks=chunks,
+                logger=logger)
+
+            contents = [("file_1.mseed", "BW.ALTM..EHE"),
+                        ("file_2.mseed", "BW.ALTM..EHN"),
+                        ("file_3.mseed", "BW.ALTM..EHZ")]
+
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
+
+            # Make sure all files have been written.
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
+            # Check the actual files.
+            for filename, id, in contents:
+                st = obspy.read(os.path.join(tmpdir, filename))
+                self.assertEqual(len(st), 1)
+                tr = st[0]
+                self.assertEqual(tr.id, id)
+                self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
+                self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(10))
+
+        finally:
+            shutil.rmtree(tmpdir)
+
+        # Same as before but now add some random other things so make sure
+        # they get filtered out.
+        client.reset_mock()
+        logger.reset_mock()
+
+        def get_waveforms_bulk_mock(bulk, filename):
+            """
+            Actually create the requested MiniSEED file.
+            """
+            st = obspy.Stream()
+            for item in bulk:
+                tr = obspy.Trace()
+                tr.stats.network = item[0]
+                tr.stats.station = item[1]
+                tr.stats.location = item[2]
+                tr.stats.channel = item[3]
+                tr.stats.starttime = item[4]
+                tr.stats.delta = 1.0
+                tr.data = np.empty(int(item[5] - item[4]) + 1)
+                st.traces.append(tr)
+
+            # Add some random other stuff to mess with things.
+            tr = obspy.Trace()
+            tr.stats.network = "HM"
+            tr.stats.channel = "EHE"
+            tr.data = np.empty(12)
+            st.traces.append(tr)
+
+            tr = obspy.Trace()
+            tr.stats.network = "HM"
+            tr.stats.channel = "BHE"
+            tr.data = np.empty(12)
+            st.traces.append(tr)
+
+            # This time same id as above, but different time span.
+            tr = obspy.Trace()
+            tr.stats.network = bulk[0][0]
+            tr.stats.station = bulk[0][1]
+            tr.stats.location = bulk[0][2]
+            tr.stats.channel = bulk[0][3]
+            tr.data = np.empty(34)
+            tr.stats.starttime += 1234567.345
+            st.traces.append(tr)
+
+            st.write(filename, format="mseed")
+
+        client.get_waveforms_bulk.side_effect = get_waveforms_bulk_mock
+
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            chunks = [
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_1.mseed")],
+                ["BW", "ALTM", "", "EHN", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_2.mseed")],
+                ["BW", "ALTM", "", "EHZ", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(10), os.path.join(tmpdir, "file_3.mseed")],
+            ]
+            ret_val = download_and_split_mseed_bulk(
+                client=client, client_name=client_name, chunks=chunks,
+                logger=logger)
+
+            contents = [("file_1.mseed", "BW.ALTM..EHE"),
+                        ("file_2.mseed", "BW.ALTM..EHN"),
+                        ("file_3.mseed", "BW.ALTM..EHZ")]
+
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
+
+            # Make sure all files have been written.
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
+            # Check the actual files.
+            for filename, id, in contents:
+                st = obspy.read(os.path.join(tmpdir, filename))
+                self.assertEqual(len(st), 1)
+                tr = st[0]
+                self.assertEqual(tr.id, id)
+                self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
+                self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(10))
+
+        finally:
+            shutil.rmtree(tmpdir)
+
+        # Now simulate a request of lots of data from the same channel.
+        client.reset_mock()
+        logger.reset_mock()
+
+        def get_waveforms_bulk_mock(bulk, filename):
+            """
+            Actually create the requested MiniSEED file.
+            """
+            st = obspy.Stream()
+            for item in bulk:
+                tr = obspy.Trace()
+                tr.stats.network = item[0]
+                tr.stats.station = item[1]
+                tr.stats.location = item[2]
+                tr.stats.channel = item[3]
+                tr.stats.starttime = item[4]
+                tr.stats.delta = 1.0
+                tr.data = np.empty(int(item[5] - item[4]) + 1)
+                st.traces.append(tr)
+
+            st.write(filename, format="mseed")
+
+        client.get_waveforms_bulk.side_effect = get_waveforms_bulk_mock
+
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            chunks = [
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(1E5), os.path.join(tmpdir, "file_1.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(1E5),
+                 obspy.UTCDateTime(2E5), os.path.join(tmpdir, "file_2.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(2E5),
+                 obspy.UTCDateTime(3E5), os.path.join(tmpdir, "file_3.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(3E5),
+                 obspy.UTCDateTime(4E5), os.path.join(tmpdir, "file_4.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(4E5),
+                 obspy.UTCDateTime(5E5), os.path.join(tmpdir, "file_5.mseed")],
+                 ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(6E5),
+                  obspy.UTCDateTime(7E5), os.path.join(tmpdir, "file_6.mseed")]
+            ]
+            ret_val = download_and_split_mseed_bulk(
+                client=client, client_name=client_name, chunks=chunks,
+                logger=logger)
+
+            # Nof five files but all the same channel.
+            contents = [("file_1.mseed", "BW.ALTM..EHE"),
+                        ("file_2.mseed", "BW.ALTM..EHE"),
+                        ("file_3.mseed", "BW.ALTM..EHE"),
+                        ("file_4.mseed", "BW.ALTM..EHE"),
+                        ("file_5.mseed", "BW.ALTM..EHE"),
+                        ("file_6.mseed", "BW.ALTM..EHE")]
+
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
+
+            # Make sure all files have been written.
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             [_i[0] for _i in contents])
+
+            # The interesting thing here is that it should only send a
+            # request for single time span and then split again on the
+            # client side. Here is two time spans as one segment is further
+            # away.
+            call_args = client.get_waveforms_bulk.call_args[0][0]
+            self.assertEqual(
+                call_args,[
+                    ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(0),
+                     obspy.UTCDateTime(5E5)],
+                    ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(6E5),
+                     obspy.UTCDateTime(7E5)]])
+
+        finally:
+            shutil.rmtree(tmpdir)
+
+        # Last one attempting to get overlapping filenames.
+        client.reset_mock()
+        logger.reset_mock()
+
+        def get_waveforms_bulk_mock(bulk, filename):
+            """
+            Actually create the requested MiniSEED file.
+            """
+            st = obspy.Stream()
+            for item in bulk:
+                tr = obspy.Trace()
+                tr.stats.network = item[0]
+                tr.stats.station = item[1]
+                tr.stats.location = item[2]
+                tr.stats.channel = item[3]
+                tr.stats.starttime = item[4]
+                tr.stats.delta = 1.0
+                tr.data = np.empty(int(item[5] - item[4]) + 1)
+                st.traces.append(tr)
+
+            st.write(filename, format="mseed")
+
+        client.get_waveforms_bulk.side_effect = get_waveforms_bulk_mock
+
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            chunks = [
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(0),
+                 obspy.UTCDateTime(1E5), os.path.join(tmpdir, "file_1.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(0.4E5),
+                 obspy.UTCDateTime(1.6E5),
+                 os.path.join(tmpdir, "file_2.mseed")],
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(1.2E5),
+                 obspy.UTCDateTime(2.2E5),
+                 os.path.join(tmpdir, "file_3.mseed")]]
+            ret_val = download_and_split_mseed_bulk(
+                client=client, client_name=client_name, chunks=chunks,
+                logger=logger)
+
+            contents = [("file_1.mseed", "BW.ALTM..EHE"),
+                        ("file_2.mseed", "BW.ALTM..EHE"),
+                        ("file_3.mseed", "BW.ALTM..EHE")]
+
+            self.assertEqual(ret_val,
+                             sorted([os.path.join(tmpdir, _i[0])
+                                     for _i in contents]))
+
+            # Make sure all files have been written.
+            self.assertEqual(sorted(os.listdir(tmpdir)),
+                             ["file_1.mseed", "file_2.mseed", "file_3.mseed"])
+            # Check the actual files. There will be no overlap of data in
+            # the files but the data should be distributed across
+            # files according to some heuristics.
+            st = obspy.read(os.path.join(tmpdir, "file_1.mseed"))
+            self.assertEqual(len(st), 1)
+            tr = st[0]
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
+            self.assertEqual(tr.stats.starttime, obspy.UTCDateTime(0))
+            # Record length of 512.
+            self.assertTrue(
+                abs(tr.stats.endtime - obspy.UTCDateTime(1E5)) < 512)
+
+            st = obspy.read(os.path.join(tmpdir, "file_2.mseed"))
+            self.assertEqual(len(st), 1)
+            tr = st[0]
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
+            # Record length of 512.
+            self.assertTrue(
+                abs(tr.stats.starttime - obspy.UTCDateTime(1E5)) < 512)
+            self.assertTrue(
+                abs(tr.stats.endtime - obspy.UTCDateTime(1.6E5)) < 512)
+
+            st = obspy.read(os.path.join(tmpdir, "file_3.mseed"))
+            self.assertEqual(len(st), 1)
+            tr = st[0]
+            self.assertEqual(tr.id, "BW.ALTM..EHE")
+            # Record length of 512.
+            self.assertTrue(
+                abs(tr.stats.starttime - obspy.UTCDateTime(1.6E5)) < 512)
+            # Endtime is exact again as no more overlaps occur.
+            self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(2.2E5))
+
+        finally:
+            shutil.rmtree(tmpdir)
 
     # def test_station_list_nearest_neighbour_filter(self):
     #     """
