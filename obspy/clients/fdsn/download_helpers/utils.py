@@ -60,10 +60,11 @@ def download_stationxml(client, client_name, bulk, filename, logger):
     network = bulk[0][0]
     station = bulk[0][1]
     try:
-        client.get_stations_bulk(bulk, level="response", filename=filename)
+        client.get_stations_bulk(bulk=bulk, level="response",
+                                 filename=filename)
     except Exception:
-        logger.info("Failed to downloaded StationXML from %s for station "
-                    "%s.%s." % (client_name, network, station))
+        logger.info("Failed to download StationXML from '%s' for station "
+                    "'%s.%s'." % (client_name, network, station))
         return None
     logger.info("Client '%s' - Successfully downloaded '%s'." %
                 (client_name, filename))
@@ -207,7 +208,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
         bulk_channels[key] = cur_bulk
     bulk = list(itertools.chain.from_iterable(bulk_channels.values()))
 
-    # Save first to a temporary file, then cut the file into seperate files.
+    # Save first to a temporary file, then cut the file into separate files.
     temp_filename = NamedTemporaryFile().name
 
     open_files = {}

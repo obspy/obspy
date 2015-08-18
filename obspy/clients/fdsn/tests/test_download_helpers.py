@@ -16,6 +16,8 @@ from future.builtins import *  # NOQA
 import collections
 import copy
 import os
+import shutil
+import tempfile
 import unittest
 
 import numpy as np
@@ -26,7 +28,8 @@ from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
                                                  DownloadHelper)
 from obspy.clients.fdsn.download_helpers.utils import (
     filter_channel_priority, get_stationxml_filename, get_mseed_filename,
-    get_stationxml_contents, SphericalNearestNeighbour)
+    get_stationxml_contents, SphericalNearestNeighbour, safe_delete,
+    download_stationxml)
 from obspy.clients.fdsn.download_helpers.download_status import (
     Channel, TimeInterval, Station, STATUS)
 
@@ -312,6 +315,87 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         tree = SphericalNearestNeighbour(data=[point_a, point_b, point_c])
         # 100 km apart. Only contains points a and c.
         self.assertEqual(tree.query_pairs(100000), {(0, 2)})
+
+    def test_safe_delete(self):
+        """
+        Test the safe-delete function.
+        """
+        dir = tempfile.mkdtemp()
+        try:
+            # If the file does not exist, nothing happens.
+            safe_delete(os.path.join(dir, "non-existant"))
+            # If not a file, an error will be raised.
+            name = os.path.join(dir, "tmpdir")
+            os.makedirs(name)
+            self.assertRaises(ValueError, safe_delete, name)
+            # Otherwise it can delete a file just fine.
+            name = os.path.join(dir, "tmpfile")
+            with open(name, "wt") as fh:
+                fh.write("0")
+            self.assertTrue(os.path.exists(name))
+            safe_delete(name)
+            self.assertFalse(os.path.exists(name))
+
+        finally:
+            shutil.rmtree(dir)
+
+    def test_download_stationxml(self):
+        """
+        Mock test for the StationXML downloading.
+
+        Does not do much and is not a proper test but its something and
+        makes sure there is not obvious logic error.
+        """
+        bulk = [
+            ["BW", "ALTM"],
+            ["BW", "ALTM"],
+        ]
+        filename = "temp.xml"
+        client_name = "mock"
+
+        client = mock.MagicMock()
+        logger = mock.MagicMock()
+
+        # Normal call.
+        ret_val = download_stationxml(client, client_name, bulk, filename,
+                                      logger)
+        self.assertEqual(ret_val, (("BW", "ALTM"), filename))
+
+        self.assertEqual(logger.info.call_count, 1)
+        self.assertEqual(logger.info.call_args[0][0],
+                         "Client 'mock' - Successfully downloaded 'temp.xml'.")
+        self.assertEqual(client.get_stations_bulk.call_count, 1)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["bulk"], bulk)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["level"], "response")
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["filename"], filename)
+
+        # Call that raises.
+        client.reset_mock()
+        logger.reset_mock()
+
+        def raise_exception():
+            raise ValueError("Test")
+        client.get_stations_bulk.side_effect = raise_exception
+
+        ret_val = download_stationxml(client, client_name, bulk, filename,
+                                      logger)
+        self.assertEqual(ret_val, None)
+
+        self.assertEqual(logger.info.call_count, 1)
+        self.assertEqual(
+            logger.info.call_args[0][0],
+            "Failed to download StationXML from 'mock' for station 'BW.ALTM'.")
+        self.assertEqual(client.get_stations_bulk.call_count, 1)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["bulk"], bulk)
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["level"], "response")
+        self.assertEqual(
+            client.get_stations_bulk.call_args[1]["filename"], filename)
+
 
     # def test_station_list_nearest_neighbour_filter(self):
     #     """
