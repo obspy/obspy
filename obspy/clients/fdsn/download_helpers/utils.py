@@ -267,13 +267,13 @@ class SphericalNearestNeighbour(object):
         self.data = data
         self.kd_tree = cKDTree(data=cart_data, leafsize=10)
 
-    def query(self, points, k=10):
+    def query(self, points):
         points = self.spherical2cartesian(points)
-        d, i = self.kd_tree.query(points, k=k)
+        d, i = self.kd_tree.query(points)
         new_d, new_i = [], []
 
         # Filter NaNs. Happens when not enough points are available.
-        for _d, _i in zip(d[0], i[0]):
+        for _d, _i in zip(d, i):
             if not np.isfinite(_d):
                 continue
             new_d.append(_d)

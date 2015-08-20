@@ -304,9 +304,9 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         result = tree.query(points=[Station("", "", 0.0, 0.0, [])])
         distance, indices = result[0][0], result[1][0]
 
-        np.testing.assert_allclose(distance, [55597.36, 166787.862],
+        np.testing.assert_allclose(distance, [55597.36],
                                    atol=1, rtol=1E-5)
-        np.testing.assert_allclose(indices, [0, 1])
+        np.testing.assert_allclose(indices, [0])
 
         # Query pairs.
         point_a = Station("", "", 0.0, -0.5, [])
@@ -1614,6 +1614,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.client = mock.MagicMock()
+        self.client.base_url = "http://example.com"
         self.client_name = "Test"
         self.restrictions = None
         self.domain = None
@@ -1664,6 +1665,35 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.assertEqual(sta1.sanitize_downloads.call_count, 1)
         self.assertEqual(sta2.sanitize_downloads.call_count, 1)
 
+    def test_basic_object_methods(self):
+        """
+        Tests some of the basic object methods.
+        """
+        c = self._init_client()
+
+        self.assertFalse(bool(c))
+        self.assertEqual(len(c), 0)
+
+        # Only the one at longitude 200 should be removed as it is the only one
+        # that has two neighbours inside the filter radius.
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 0, []),
+            ("B", "B"): Station("B", "B", 0, 200, []),
+            ("C", "C"): Station("C", "C", 0, 400, []),
+            ("D", "D"): Station("D", "D", 0, 2000, [])
+        }
+
+        self.assertEqual(len(c), 4)
+        self.assertTrue(bool(c))
+
+        self.assertTrue(str(c).startswith(
+            "ClientDownloadHelper object for client 'Test' "
+            "(http://example.com)\n"
+            "-> Unknown reliability of availability information\n"
+            "-> Manages 4 stations.\n"
+            "Station "
+        ))
+
     def test_station_list_nearest_neighbour_filter(self):
         """
         Test the filtering based on geographical distance.
@@ -1684,9 +1714,13 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             ("C", "C"): Station("C", "C", 0, _m_to_deg(400), []),
             ("D", "D"): Station("D", "D", 0, _m_to_deg(2000), [])
         }
-        c.filter_stations_based_on_minimum_distance([])
+        # It should always filter out the one with 200 m longitude as if
+        # that one is picked "A" and "C" can both be no longer picked.
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual([("A", "A"), ("C", "C"), ("D", "D")],
                          sorted(c.stations.keys()))
+        self.assertEqual([("B", "B")],
+                         sorted(rej.keys()))
 
         # The two at 200 and 250 m longitude should be removed.
         c.stations = {
@@ -1695,9 +1729,11 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             ("C", "C"): Station("C", "C", 0, _m_to_deg(250), []),
             ("D", "D"): Station("D", "D", 0, _m_to_deg(400), []),
             ("E", "E"): Station("E", "E", 0, _m_to_deg(2000), [])}
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual([("A", "A"), ("D", "D"), ("E", "E")],
                          sorted(c.stations.keys()))
+        self.assertEqual([("B", "B"), ("C", "C")],
+                         sorted(rej.keys()))
 
         # Set the distance to 1 degree and check the longitude behaviour at
         # the longitude wraparound point.
@@ -1712,7 +1748,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             0, 1, minimum_interstation_distance_in_m=111000)
         c = self._init_client()
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
 
         # Only 4 stations should remain and either the one at 0,180 or the
         # one at 0, -180 should have been removed as they are equal.
@@ -1722,6 +1758,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
                                           ("D", "D")] or
             sorted(c.stations.keys()) == [("A", "A"), ("B", "B"), ("D", "D"),
                                           ("E", "E")])
+        self.assertEqual(len(rej), 1)
 
         # Test filtering around the longitude wraparound.
         stations = {
@@ -1730,76 +1767,140 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             ("C", "C"): Station("C", "C", 0, 180.8, [])}
         # The middle one should be removed as then the other two can be kept.
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual([("B", "B"), ("C", "C")],
                          sorted(c.stations.keys()))
+        self.assertEqual([("A", "A")],
+                         sorted(rej.keys()))
         # Same but longitude defined the other way around.
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, 179.2, []),
             ("C", "C"): Station("C", "C", 0, -179.2, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual([("B", "B"), ("C", "C")],
                          sorted(c.stations.keys()))
+        self.assertEqual([("A", "A")],
+                         sorted(rej.keys()))
 
         # Test the conversion of lat/lng to meter distances.
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, -180, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, -179.5, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, -179.1, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, 180, []),
             ("B", "B"): Station("B", "B", 0, 178.9, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 2)
+        self.assertEqual(len(rej), 0)
 
         # Also test the latitude settings.
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -90, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -89.5, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -89.1, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 1)
+        self.assertEqual(len(rej), 1)
 
         stations = {
             ("A", "A"): Station("A", "A", 0, -90, []),
             ("B", "B"): Station("B", "B", 0, -88.9, [])}
         c.stations = stations
-        c.filter_stations_based_on_minimum_distance([])
+        rej = c.filter_stations_based_on_minimum_distance([])
         self.assertEqual(len(c.stations), 2)
+        self.assertEqual(len(rej), 0)
+
+        # Does not do anything if the minimum distance is not set.
+        stations = {
+            ("A", "A"): Station("A", "A", 0, 0, []),
+            ("B", "B"): Station("B", "B", 0, 90, []),
+            ("C", "C"): Station("C", "C", 0, 180, []),
+            ("D", "D"): Station("D", "D", 0, -90, []),
+            ("E", "E"): Station("E", "E", 0, -180, [])}
+
+        self.restrictions = Restrictions(
+            0, 1, minimum_interstation_distance_in_m=0)
+        c = self._init_client()
+        c.stations = stations
+        rej = c.filter_stations_based_on_minimum_distance([])
+        self.assertEqual(len(c.stations), 5)
+        self.assertEqual(len(rej), 0)
+
+        # Test with already existing stations. In that case the remaining
+        # stations will be added to the existing one.
+        self.restrictions = Restrictions(
+            0, 1, minimum_interstation_distance_in_m=200)
+
+        def _m_to_deg(meters):
+            return meters / 111000.0
+
+        # Two existing clients, both with one station.
+        existing_client_a = self._init_client()
+        existing_client_a.stations = {
+            ("D", "D"): Station("D", "D", 0, _m_to_deg(2000), [])}
+
+        existing_client_b = self._init_client()
+        existing_client_b.stations = {
+            ("A", "A"): Station("A", "A", 0, _m_to_deg(0), [])}
+
+        ex_clients = [existing_client_a, existing_client_b]
+
+        # New client has four stations.
+        c = self._init_client()
+        c.stations = {
+            ("X", "X"): Station("X", "X", 0, _m_to_deg(100), []),
+            ("B", "B"): Station("B", "B", 0, _m_to_deg(400), []),
+            ("C", "C"): Station("C", "C", 0, _m_to_deg(500), []),
+            ("Y", "Y"): Station("Y", "Y", 0, _m_to_deg(1900), [])}
+
+        # Now it should only add station C as it has the furthest distance
+        # to the existing stations.
+        rej = c.filter_stations_based_on_minimum_distance(
+            existing_client_dl_helpers=ex_clients)
+        self.assertEqual([("C", "C")],
+                         sorted(c.stations.keys()))
+        self.assertEqual([("B", "B"), ("X", "X"), ("Y", "Y")],
+                         sorted(rej.keys()))
 
 
 class DownloadHelperTestCase(unittest.TestCase):

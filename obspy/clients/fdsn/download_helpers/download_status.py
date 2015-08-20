@@ -472,14 +472,13 @@ class ClientDownloadHelper(object):
         return bool(len(self))
 
     def __str__(self):
-        if self.is_availability_reliable is None:
-            reliability = "Unknown reliability of availability information"
-        elif self.is_availability_reliable is True:
-            reliability = "Reliable availability information"
-        elif self.is_availability_reliable is False:
-            reliability = "Non-reliable availability information"
-        else:
-            raise NotImplementedError
+        avail_map = {
+            None: "Unknown reliability of availability information",
+            True: "Reliable availability information",
+            False: "Non-reliable availability information"
+
+        }
+        reliability = avail_map[self.is_availability_reliable]
         return (
             "ClientDownloadHelper object for client '{client}' ({url})\n"
             "-> {reliability}\n"
@@ -509,13 +508,16 @@ class ClientDownloadHelper(object):
         Removes stations until all stations have a certain minimum distance to
         each other.
 
+        Returns the rejected stations which is mainly useful for testing.
+
         :param existing_client_dl_helpers: Instances of already existing
             client download helpers.
         :type existing_client_dl_helpers: list of
             :class:`~.ClientDownloadHelper`
         """
         if not self.restrictions.minimum_interstation_distance_in_m:
-            return
+            # No rejected stations.
+            return []
 
         # Create a sorted copy that will be used in the following. Make it
         # more deterministic by sorting the stations based on the id.
@@ -552,34 +554,50 @@ class ClientDownloadHelper(object):
 
             # Remove these indices this results in a set of stations we wish to
             # keep.
-            stations = set([_i[1] for _i in itertools.filterfalse(
-                lambda x: x[0] in indexes_to_remove,
-                enumerate(stations))])
-
-            # Get the stations to be deleted and delete them.
-            existing_ids = set(self.stations.keys())
-            to_be_removed = existing_ids.difference(
-                set([(_i.network, _i.station) for _i in stations]))
-
-            for station in stations:
-                if (station.network, station.station) not in to_be_removed:
-                    remaining_stations.append(station)
-                    continue
-                rejected_stations.append(station)
+            remaining_stations.extend(
+                set([_i[1] for _i in itertools.filterfalse(
+                    lambda x: x[0] in indexes_to_remove,
+                    enumerate(stations))]))
+            rejected_stations.extend(
+                set([_i[1] for _i in filter(
+                    lambda x: x[0] in indexes_to_remove,
+                    enumerate(stations))]))
         # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
-            for station in stations:
-                kd_tree = utils.SphericalNearestNeighbour(existing_stations)
-                neighbours = kd_tree.query([station])[0][0]
-                if np.isinf(neighbours[0]):
-                    continue
-                min_distance = neighbours[0]
-                if min_distance < \
-                        self.restrictions.minimum_interstation_distance_in_m:
-                    rejected_stations.append(station)
-                    continue
-                remaining_stations.append(station)
+            while stations:
+                # kd-tree with all existing_stations
+                existing_kd_tree = utils.SphericalNearestNeighbour(
+                    existing_stations)
+                # Now we have to get the distance to the closest existing
+                # station for all new stations.
+                distances = np.ma.array(existing_kd_tree.query(stations)[0][0])
+                if np.isinf(distances[0]):
+                    break
+                distances.mask = False
+
+                # Step one is to get rid of all stations that are closer
+                # then the minimum distance to any existing station.
+                remove = np.where(
+                    distances <
+                    self.restrictions.minimum_interstation_distance_in_m)[0]
+                rejected_stations.extend([stations[_i] for _i in remove])
+
+                keep = np.where(
+                    distances >=
+                    self.restrictions.minimum_interstation_distance_in_m)[0]
+                distances.mask[remove] = True
+
+                if len(keep):
+                    # Station with the largest distance to next closer station.
+                    largest = np.argmax(distances)
+                    remaining_stations.append(stations[largest])
+                    existing_stations.append(stations[largest])
+
+                    # Add all rejected stations here.
+                    stations = [stations[_i] for _i in keep if _i != largest]
+                else:
+                    stations = []
 
         # Now actually delete the files and everything of the rejected
         # stations.
@@ -588,6 +606,9 @@ class ClientDownloadHelper(object):
         self.stations = {}
         for station in remaining_stations:
             self.stations[(station.network, station.station)] = station
+
+        # Return the rejected stations.
+        return {(_i.network, _i.station): _i for _i in rejected_stations}
 
     def prepare_stationxml_download(self):
         """
