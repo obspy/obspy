@@ -642,6 +642,7 @@ class ClientDownloadHelper(object):
                 return None
             return ret_val
 
+        # Build up everything we want to download.
         arguments = []
         for station in self.stations.values():
             if not station.miss_station_information:
@@ -661,28 +662,33 @@ class ClientDownloadHelper(object):
                              "download." % self.client_name)
             return
 
+        # Download it.
         s_time = timeit.default_timer()
         pool = ThreadPool(min(threads, len(arguments)))
         results = pool.map(star_download_station, arguments)
         pool.close()
         e_time = timeit.default_timer()
 
-        if isinstance(results[0], list):
-            results = itertools.chain.from_iterable(results)
         results = [_i for _i in results if _i is not None]
 
+        # Check it.
         filecount = 0
         download_size = 0
-        # Update the station structures.
+
+        # Update the station structures. Loop over each returned file.
         for s_id, filename in results:
             filecount += 1
             station = self.stations[s_id]
             size = os.path.getsize(filename)
             download_size += size
+
+            # Extract information about that file.
             info = utils.get_stationxml_contents(filename)
 
             still_missing = {}
-            # Make sure all missing information has been downloaded!
+            # Make sure all missing information has been downloaded by
+            # looping over each channel of the station that originally
+            # requested to be downloaded.
             for c_id, times in station.miss_station_information.items():
                 # Get the temporal range of information in the file.
                 c_info = [_i for _i in info if
@@ -691,7 +697,7 @@ class ClientDownloadHelper(object):
                           _i.location == c_id[0] and
                           _i.channel == c_id[1]]
                 if not c_info:
-                    break
+                    continue
                 starttime = min([_i.starttime for _i in c_info])
                 endtime = max([_i.endtime for _i in c_info])
                 if starttime > times[0] or endtime < times[1]:

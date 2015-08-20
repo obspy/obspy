@@ -1617,7 +1617,11 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.client = mock.MagicMock()
         self.client.base_url = "http://example.com"
         self.client_name = "Test"
-        self.restrictions = None
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1))
         self.domain = None
         self.mseed_storage = "miniseed"
         self.stationxml_storage = "stationxml_storage"
@@ -2027,6 +2031,70 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         # The error logger should not have been called  as no data available
         # is just an info message.
         self.assertEqual(c.logger.error.call_count, 0)
+
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "utils.download_stationxml")
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "utils.get_stationxml_contents")
+    @mock.patch("os.makedirs")
+    @mock.patch("os.path.getsize")
+    def test_download_stationxml(self, patch_getsize, patch_mkdir,
+                                 patch_get_stationxml_contents,
+                                 patch_download_stationxml):
+        """
+        Test the StationXML downloading from a client helper object.
+
+        This (like some others) is a bit of a silly test as it is largely
+        mocked but at least it makes sure everything can executed.
+        """
+        patch_getsize.return_value = 100
+
+        ChannelAvailability = collections.namedtuple(
+            "ChannelAvailability",
+            ["network", "station", "location", "channel", "starttime",
+             "endtime", "filename"])
+
+        patch_get_stationxml_contents.return_value = [ChannelAvailability(
+            "A", "A", "", "BHZ", obspy.UTCDateTime(0), obspy.UTCDateTime(1),
+            "temp.xml")]
+
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 1800, st + (_i + 1) * 1800)
+            for _i in range(10)]
+        for _i in time_intervals:
+            _i.status = STATUS.NEEDS_DOWNLOADING
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.copy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.copy(time_intervals))
+        channels = [c1, c2]
+
+        # Create a client with a number of stations and channels.
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels)),
+            ("B", "B"): Station("B", "B", 0, 20, copy.deepcopy(channels)),
+            ("C", "C"): Station("C", "C", 0, 30, copy.deepcopy(channels)),
+            ("D", "D"): Station("D", "D", 0, 40, copy.deepcopy(channels)),
+            ("E", "E"): Station("E", "E", 0, 40, copy.deepcopy(channels)),
+            ("F", "F"): Station("F", "F", 0, 40, copy.deepcopy(channels))}
+
+        def ret_val(*args, **kwargs):
+            return (args[2][0][0], args[2][0][1]), args[-1]
+
+        patch_download_stationxml.side_effect = ret_val
+
+        missing_info = {}
+        for channel in channels:
+            missing_info[(channel.location, channel.channel)] = \
+                channel.intervals
+
+        for station in c.stations.values():
+            station.miss_station_information = copy.deepcopy(missing_info)
+            station.stationxml_filename = "temp.xml"
+
+        c.download_stationxml()
 
 
 class DownloadHelperTestCase(unittest.TestCase):
