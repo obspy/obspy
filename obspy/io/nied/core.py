@@ -28,13 +28,13 @@ class NIEDException(Exception):
 
 class GenSC3ID:
     """
-    Generate an event ID following the SC3 convention.
+    Generate an event ID following the SeisComP3 convention.
     """
 
-    def __init__(self):
-        self.sym = "abcdefghijklmnopqrstuvwxyz"
-        self.numsym = 26
-        self.len = 6
+    def __init__(self, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
+        self.sym = sym
+        self.numsym = len(sym)
+        self.numenc = numenc
 
     def get_id(self, dt):
         """
@@ -47,7 +47,7 @@ class GenSC3ID:
         dx = (((370 * 24) * 60) * 60) * 1000
         rng = 1
         tmp = rng
-        for i in xrange(self.len):
+        for i in xrange(self.numenc):
             rng *= self.numsym
         w = int(dx / rng)
         if w == 0:
@@ -58,7 +58,7 @@ class GenSC3ID:
         else:
             x = x * int(rng / dx)
         enc = ''
-        for i in xrange(self.len):
+        for i in xrange(self.numenc):
             d = int(x / self.numsym)
             r = x % self.numsym
             enc += self.sym[r]
@@ -77,7 +77,34 @@ def _get_resource_id(cmtname, res_type, tag=None):
 
 
 def _is_nied_catalog(filename):
-    pass
+    """
+    Test whether file is an NIED moment tensor catalog file by reading the
+    header and the first data line. Reads at most 40 lines.
+    """
+    fh = open(filename)
+    cnt = 0
+    try:
+        while True:
+            line = fh.readline()
+            if not line:
+                return False
+            if cnt >= 40:
+                return False
+            if line.find('Total Number') != -1:
+                match = re.search(r'Total Number:\s+(\d+)\s+', line)
+                if match:
+                    nevents = int(match.group(1))
+            if line.startswith('Origin Time'):
+                if nevents > 0:
+                    data = fh.readline()
+                    a = data.split()
+                    if len(a) != 21:
+                        return False
+                    return True
+    except:
+        return False
+    else:
+        return True
 
 
 def _read_nied_catalog(filename):
@@ -153,16 +180,19 @@ def _read_nied_catalog(filename):
             foc_mec.nodal_planes = nod
 
             tensor = Tensor(
-                            m_rr=mzz,
+                            m_rr=mxx,
                             m_tt=myy,
-                            m_pp=mxx,
-                            m_rt=myz,
+                            m_pp=mzz,
+                            m_rt=mxy,
                             m_rp=mxz,
-                            m_tp=mxy)
+                            m_tp=myz)
+            cm = Comment(text="Basis system: North,East,Down (Jost and \
+            Herrmann 1989")
+            cm.resource_id = _get_resource_id(event_name, 'comment', 'mt')
             mt = MomentTensor(derived_origin_id=o_mt.resource_id,
                               moment_magnitude_id=m_mt.resource_id,
-                              scalar_moment=mo,
-                              tensor=tensor)
+                              scalar_moment=mo, comments=[cm],
+                              tensor=tensor, variance_reduction=var_red)
             mt.resource_id = _get_resource_id(event_name,
                                                    'moment_tensor')
             foc_mec.moment_tensor = mt
@@ -172,6 +202,6 @@ def _read_nied_catalog(filename):
             cat.append(e)
     # Consistency check
     if len(cat) != nevents:
-        raise NIEDException('Parsing failed! Expected to read %d events \
-        but read %d.' % (nevents, len(cat)))
+        raise NIEDException('Parsing failed! Expected %d events but read %d.' \
+                            % (nevents, len(cat)))
     return cat
