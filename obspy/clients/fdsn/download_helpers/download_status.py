@@ -786,7 +786,7 @@ class ClientDownloadHelper(object):
                                      key.upper()))
 
         if not chunks:
-            return []
+            return
 
         def star_download_mseed(args):
             """

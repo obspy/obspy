@@ -17,6 +17,7 @@ import collections
 import copy
 import os
 import shutil
+from socket import timeout as SocketTimeout
 import tempfile
 import unittest
 
@@ -1901,6 +1902,131 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
                          sorted(c.stations.keys()))
         self.assertEqual([("B", "B"), ("X", "X"), ("Y", "Y")],
                          sorted(rej.keys()))
+
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "utils.download_and_split_mseed_bulk")
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "download_status.ClientDownloadHelper._check_downloaded_data")
+    def test_download_mseed(self, patch_check_data, patch_download_mseed):
+        """
+        Test the MiniSEED downloading from a client helper object.
+        """
+        patch_check_data.return_value = (20, 5)
+
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 1800, st + (_i + 1) * 1800)
+            for _i in range(10)]
+        for _i in time_intervals:
+            _i.status = STATUS.NEEDS_DOWNLOADING
+        c1 = Channel(location="", channel="BHZ",
+                     intervals=copy.copy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.copy(time_intervals))
+        channels = [c1, c2]
+
+        # Create a client with a number of stations and channels.
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels)),
+            ("B", "B"): Station("B", "B", 0, 20, copy.deepcopy(channels)),
+            ("C", "C"): Station("C", "C", 0, 30, copy.deepcopy(channels)),
+            ("D", "D"): Station("D", "D", 0, 40, copy.deepcopy(channels)),
+            ("E", "E"): Station("E", "E", 0, 40, copy.deepcopy(channels)),
+            ("F", "F"): Station("F", "F", 0, 40, copy.deepcopy(channels))}
+
+        c.download_mseed()
+
+        # Check data should be called once, and download mseed at least once
+        # with each chunk all in all.
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertTrue(patch_download_mseed.call_count >= 1)
+
+        # 6 stations with 2 channels with 10 time intervals each.
+        bulk_count = sum([
+            len(_i[0][2]) for _i in patch_download_mseed.call_args_list])
+        self.assertEqual(bulk_count, 120)
+
+        # Exotic band codes to trigger some rarer code paths.
+        patch_check_data.reset_mock()
+        patch_download_mseed.reset_mock()
+
+        st = obspy.UTCDateTime(2015, 1, 1)
+        time_intervals = [
+            TimeInterval(st + _i * 1800, st + (_i + 1) * 1800)
+            for _i in range(10)]
+        # Only the first five will require downloading.
+        for _i in time_intervals[:5]:
+            _i.status = STATUS.NEEDS_DOWNLOADING
+        c1 = Channel(location="", channel="XHZ",
+                     intervals=copy.copy(time_intervals))
+        c2 = Channel(location="00", channel="EHE",
+                     intervals=copy.copy(time_intervals))
+        channels = [c1, c2]
+
+        # Create a client with a number of stations and channels.
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels)),
+            ("B", "B"): Station("B", "B", 0, 20, copy.deepcopy(channels)),
+            ("C", "C"): Station("C", "C", 0, 30, copy.deepcopy(channels)),
+            ("D", "D"): Station("D", "D", 0, 40, copy.deepcopy(channels)),
+            ("E", "E"): Station("E", "E", 0, 40, copy.deepcopy(channels)),
+            ("F", "F"): Station("F", "F", 0, 40, copy.deepcopy(channels))}
+
+        c.download_mseed()
+
+        # Check data should be called once, and download mseed at least once
+        # with each chunk all in all.
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertTrue(patch_download_mseed.call_count >= 1)
+
+        # 6 stations with 2 channels with 10 time intervals each. But only 5
+        # intervals require downloading for each.
+        bulk_count = sum([
+            len(_i[0][2]) for _i in patch_download_mseed.call_args_list])
+        self.assertEqual(bulk_count, 60)
+
+        # Nothing to do when no stations exist.
+        patch_check_data.reset_mock()
+        patch_download_mseed.reset_mock()
+        c = self._init_client()
+        c.download_mseed()
+        self.assertEqual(patch_check_data.call_count, 0)
+        self.assertEqual(patch_download_mseed.call_count, 0)
+
+        # Last one to trigger a bit of exception handling.
+        patch_check_data.reset_mock()
+        patch_download_mseed.reset_mock()
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels))
+        }
+
+        patch_download_mseed.side_effect = SocketTimeout("Nooooo")
+
+        c.download_mseed()
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
+        # The error logger should have been called once
+        self.assertEqual(c.logger.error.call_count, 1)
+
+        patch_check_data.reset_mock()
+        patch_download_mseed.reset_mock()
+        c.logger.reset_mock()
+        c = self._init_client()
+        c.stations = {
+            ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels))
+        }
+
+        patch_download_mseed.side_effect = SocketTimeout("no data available")
+
+        c.download_mseed()
+        self.assertEqual(patch_check_data.call_count, 1)
+        self.assertEqual(patch_download_mseed.call_count, 1)
+        # The error logger should not have been called  as no data available
+        # is just an info message.
+        self.assertEqual(c.logger.error.call_count, 0)
 
 
 class DownloadHelperTestCase(unittest.TestCase):
