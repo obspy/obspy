@@ -2121,6 +2121,30 @@ class DownloadHelperTestCase(unittest.TestCase):
         self.assertEqual(d.providers, ("A", "B", "IRIS"))
         patch.reset_mock()
 
+    @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
+                autospec=True)
+    @mock.patch("logging.Logger.info")
+    @mock.patch("logging.Logger.warning")
+    def test_initialization_detailed(self, log_w, log_p, patch):
+        def side_effect(self, *args, **kwargs):
+            if "iris" in self.base_url:
+                self.services = {"dataselect": "dummy"}
+            elif "gfz" in self.base_url:
+                raise SocketTimeout("Random Error")
+            elif "resif" in self.base_url:
+                raise SocketTimeout("timeout error")
+            else:
+                self.services = {"dataselect": "dummy", "station": "dummy_2"}
+
+        patch.side_effect = side_effect
+
+        d = DownloadHelper()
+        self.assertTrue(len(d._initialized_clients) > 10)
+        self.assertFalse("IRIS" in d._initialized_clients)
+        self.assertFalse("RESIF" in d._initialized_clients)
+        self.assertFalse("GFZ" in d._initialized_clients)
+        self.assertTrue("ORFEUS" in d._initialized_clients)
+
 
 def suite():
     testsuite = unittest.TestSuite()

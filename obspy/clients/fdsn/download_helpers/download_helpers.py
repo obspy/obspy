@@ -21,7 +21,7 @@ import warnings
 
 from obspy.core.util.obspy_types import OrderedDict
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNException
-from obspy.clients.fdsn import Client
+from obspy.clients.fdsn.client import Client
 
 from . import utils
 from .download_status import ClientDownloadHelper, STATUS
