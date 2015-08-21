@@ -18,8 +18,7 @@ Example
 -------
 
 Don't use this module directly but utilize it through the
-
-:func:`~obspy.core.inventory.read_inventory` function.
+:func:`~obspy.core.inventory.inventory.read_inventory` function.
 
 >>> import obspy
 >>> inv = obspy.read_inventory("/path/to/channel_level_fdsn.txt")
