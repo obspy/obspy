@@ -41,6 +41,12 @@ ERRORS = (FDSNException, HTTPError, URLError, SocketTimeout)
 EARTH_RADIUS = 6371009
 
 
+ChannelAvailability = collections.namedtuple(
+    "ChannelAvailability",
+    ["network", "station", "location", "channel", "starttime", "endtime",
+     "filename"])
+
+
 def download_stationxml(client, client_name, bulk, filename, logger):
     """
     Download all channels for a station in the already prepared bulk list.
@@ -368,11 +374,6 @@ def get_stationxml_contents(filename):
     :param filename: The path to the file.
     :returns: list of ChannelAvailability objects.
     """
-    ChannelAvailability = collections.namedtuple(
-        "ChannelAvailability",
-        ["network", "station", "location", "channel", "starttime", "endtime",
-         "filename"])
-
     # Small state machine.
     network, station, location, channel, starttime, endtime = [None] * 6
 

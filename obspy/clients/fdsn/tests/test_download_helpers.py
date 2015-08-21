@@ -25,6 +25,7 @@ import numpy as np
 
 import obspy
 from obspy.core.compatibility import mock
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
                                                  DownloadHelper)
 from obspy.clients.fdsn.download_helpers.utils import (
@@ -2107,6 +2108,52 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         c.client.get_stations.return_value = obspy.read_inventory(
             os.path.join(self.data, "channel_level_fdsn.txt"))
         c.get_availability()
+
+    def test_parse_miniseed_filenames(self):
+        """
+        Tests the parse MiniSEED filesnames.
+        """
+        c = self._init_client()
+
+        tf = NamedTemporaryFile()
+        tf.close()
+        filename = tf.name
+
+        try:
+            tr = obspy.read()[0]
+            tr.write(filename, format="mseed")
+            result = c._parse_miniseed_filenames([filename], self.restrictions)
+            self.assertEqual(result, [])
+
+            # No minimum length restrictions. Now it should pass.
+            self.restrictions.minimum_length = 0
+            tr.write(filename, format="mseed")
+            result = c._parse_miniseed_filenames([filename], self.restrictions)
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0].network, "BW")
+            self.assertEqual(result[0].station, "RJOB")
+            self.assertEqual(result[0].location, "")
+            self.assertEqual(result[0].channel, "EHZ")
+            self.assertEqual(result[0].starttime,
+                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 3))
+            self.assertEqual(result[0].endtime,
+                             obspy.UTCDateTime(2009, 8, 24, 0, 20, 32, 990000))
+            self.assertEqual(result[0].filename, filename)
+
+            # Add a gap.
+            self.restrictions.minimum_length = 0
+            st = obspy.read()
+            st = st[0:1] + st[0:1]
+            st[1].stats.starttime += 10
+            st.write(filename, format="mseed")
+            result = c._parse_miniseed_filenames([filename], self.restrictions)
+            self.assertEqual(len(result), 0)
+
+        finally:
+            try:
+                os.remove(filename)
+            except OSError:
+                pass
 
 
 class DownloadHelperTestCase(unittest.TestCase):
