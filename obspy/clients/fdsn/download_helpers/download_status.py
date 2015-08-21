@@ -1098,6 +1098,7 @@ class ClientDownloadHelper(object):
         # Get the time intervals from the restrictions.
         intervals = [TimeInterval(start=_i[0], end=_i[1])
                      for _i in self.restrictions]
+
         for network in inv:
             for station in network:
                 # Skip the station if it is not in the desired domain.
@@ -1110,8 +1111,8 @@ class ClientDownloadHelper(object):
                 for channel in station.channels:
                     # Remove channels that somehow slipped past the temporal
                     # constraints due to weird behaviour from the data center.
-                    if (channel.start_date > self.restrictions.starttime) or \
-                            (channel.end_date < self.restrictions.endtime):
+                    if (channel.start_date > self.restrictions.endtime) or \
+                            (channel.end_date < self.restrictions.starttime):
                         continue
                     # Use availability information if possible. In the other
                     # cases it should already work.
@@ -1126,8 +1127,8 @@ class ClientDownloadHelper(object):
                                 "The final availability might not be "
                                 "complete" % self.client_name)
                             continue
-                        if (da.start > self.restrictions.starttime) or \
-                                (da.end < self.restrictions.endtime):
+                        if (da.start > self.restrictions.endtime) or \
+                                (da.end < self.restrictions.starttime):
                             continue
                     channels.append(Channel(
                         location=channel.location_code, channel=channel.code,

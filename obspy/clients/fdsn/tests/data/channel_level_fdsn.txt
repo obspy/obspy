@@ -1,0 +1,7 @@
+#Network | Station | Location | Channel | Latitude | Longitude | Elevation | Depth | Azimuth | Dip | SensorDescription | Scale | ScaleFreq | ScaleUnits |  SampleRate | StartTime | EndTime
+AK|BAGL|  |LHZ|60.4896|-142.0915|1470.0|0.0|0.0|-90.0|Nanometrics Trillium 240 Sec Response sn 400 and a|4.88233E8|0.02|M/S|1.0|2013-01-01T00:00:00|2599-12-31T23:59:59
+AK|BWN|  |LHZ|64.1732|-149.2991|356.0|0.0|0.0|-90.0|Nanometrics Trillium 240 Sec Response sn 400 and a|4.88233E8|0.02|M/S|1.0|2010-07-23T00:00:00|2014-05-28T23:59:59
+AK|BWN|  |LHZ|64.1732|-149.2991|356.0|1.5|0.0|-90.0|Nanometrics Trillium 120 Sec Response/Quanterra 33|4.98112E8|0.03|M/S|1.0|2014-08-01T00:00:00|2599-12-31T23:59:59
+AZ|BZN|  |LHZ|33.4915|-116.667|1301.0|0.0|0.0|-90.0|Streckeisen STS-2 G1/Quanterra 330 Linear Phase Be|6.27252E8|0.03|M/S|1.0|2010-07-26T17:22:00|2013-07-15T21:22:23
+AZ|BZN|  |LHZ|33.4915|-116.667|1301.0|0.0|0.0|-90.0|Streckeisen STS-2 G1/Quanterra 330 Linear Phase Be|6.27252E8|0.03|M/S|1.0|2013-07-15T21:22:23|2013-10-22T19:30:00
+AZ|BZN|  |LHZ|33.4915|-116.667|1301.0|0.0|0.0|-90.0|Streckeisen STS-2 G1/Quanterra 330 Linear Phase Be|6.27252E8|0.03|M/S|1.0|2013-10-22T19:30:00|2599-12-31T23:59:59

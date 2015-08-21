@@ -1614,6 +1614,9 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
     Test cases for the ClientDownloadHelper class.
     """
     def setUp(self):
+        self.path = os.path.dirname(__file__)
+        self.data = os.path.join(self.path, "data")
+
         self.client = mock.MagicMock()
         self.client.base_url = "http://example.com"
         self.client_name = "Test"
@@ -1622,7 +1625,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             endtime=obspy.UTCDateTime(2015, 1, 1),
             station_starttime=obspy.UTCDateTime(2000, 1, 1),
             station_endtime=obspy.UTCDateTime(2015, 1, 1))
-        self.domain = None
+        self.domain = domain.GlobalDomain()
         self.mseed_storage = "miniseed"
         self.stationxml_storage = "stationxml_storage"
         self.logger = mock.MagicMock()
@@ -2095,6 +2098,15 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             station.stationxml_filename = "temp.xml"
 
         c.download_stationxml()
+
+    def test_get_availability(self):
+        """
+        Tests the get_availability function.
+        """
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
 
 
 class DownloadHelperTestCase(unittest.TestCase):
