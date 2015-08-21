@@ -2145,6 +2145,104 @@ class DownloadHelperTestCase(unittest.TestCase):
         self.assertFalse("GFZ" in d._initialized_clients)
         self.assertTrue("ORFEUS" in d._initialized_clients)
 
+    @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
+                autospec=True)
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "download_status.ClientDownloadHelper.get_availability",
+                autospec=True)
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "download_status.ClientDownloadHelper.download_mseed")
+    @mock.patch("obspy.clients.fdsn.download_helpers."
+                "download_status.ClientDownloadHelper.download_stationxml")
+    @mock.patch("os.makedirs")
+    @mock.patch("logging.Logger.info")
+    @mock.patch("logging.Logger.warning")
+    def test_download_method(self, _log_w, _log_p, _patch_makedirs,
+                             patch_dl_mseed, patch_dl_stationxml,
+                             patch_get_avail, patch_discover):
+        """
+        Mock test of the central download method.
+
+        This only assures that every line of code can be executed...the
+        actual logic is very complex all in all and is tested by the
+        sub-objects and methods and by simply using the download helpers.
+        """
+        def side_effect(self, *args, **kwargs):
+            self.services = {"dataselect": "dummy", "station": "dummy_2"}
+        patch_discover.side_effect = side_effect
+
+        dom = domain.RectangularDomain(-10, 10, -20, 20)
+        restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(0),
+            endtime=obspy.UTCDateTime(10))
+
+        # No availability for all.
+        d = DownloadHelper()
+        d.download(domain=dom, restrictions=restrictions,
+                   mseed_storage="mseed", stationxml_storage="stationxml")
+
+        # Availability for all.
+        d = DownloadHelper()
+
+        def avail(self):
+            if self.client_name == "IRIS":
+                self.is_availability_reliable = True
+            else:
+                self.is_availability_reliable = False
+
+            st = obspy.UTCDateTime(2015, 1, 1)
+            time_intervals = [
+                TimeInterval(st + _i * 1800, st + (_i + 1) * 1800)
+                for _i in range(10)]
+            for _i in time_intervals:
+                _i.status = STATUS.NEEDS_DOWNLOADING
+            c1 = Channel(location="", channel="BHZ",
+                         intervals=copy.copy(time_intervals))
+            c2 = Channel(location="00", channel="EHE",
+                         intervals=copy.copy(time_intervals))
+            channels = [c1, c2]
+
+            # Create a client with a number of stations and channels.
+            self.stations = {
+                ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels)),
+                ("B", "B"): Station("B", "B", 0, 20, copy.deepcopy(channels)),
+                ("C", "C"): Station("C", "C", 0, 30, copy.deepcopy(channels)),
+                ("D", "D"): Station("D", "D", 0, 40, copy.deepcopy(channels)),
+                ("E", "E"): Station("E", "E", 0, 40, copy.deepcopy(channels)),
+                ("F", "F"): Station("F", "F", 0, 40, copy.deepcopy(channels))}
+
+        patch_get_avail.side_effect = avail
+
+        d.download(domain=dom, restrictions=restrictions,
+                   mseed_storage="mseed", stationxml_storage="stationxml")
+
+        # Discard all stations.
+        with mock.patch("obspy.clients.fdsn.download_helpers.download_status."
+                        "ClientDownloadHelper.discard_stations",
+                        autospec=True) as p:
+            def temp(self, *args, **kwargs):
+                self.stations = {}
+            p.side_effect = temp
+
+            d = DownloadHelper()
+
+            d.download(domain=dom, restrictions=restrictions,
+                       mseed_storage="mseed", stationxml_storage="stationxml")
+
+        # Filter all.
+        # Discard all stations.
+        with mock.patch("obspy.clients.fdsn.download_helpers.download_status."
+                        "ClientDownloadHelper"
+                        ".filter_stations_based_on_minimum_distance",
+                        autospec=True) as p:
+            def temp(self, *args, **kwargs):
+                self.stations = {}
+            p.side_effect = temp
+
+            d = DownloadHelper()
+            d.download(domain=dom, restrictions=restrictions,
+                       mseed_storage="mseed", stationxml_storage="stationxml")
+
 
 def suite():
     testsuite = unittest.TestSuite()
