@@ -847,7 +847,7 @@ class SeismicArray(object):
                 out = BeamformerResult(inventory=self.inventory, times=t,
                                        max_rel_power=rel_power,
                                        max_abs_power=abs_power,
-                                       max_pow_baz=baz, max_pow_slowness=slow,
+                                       max_pow_baz=baz, max_pow_slow=slow,
                                        slowness_range=np.arange(sll, slm, sls),
                                        method=method)
 
@@ -877,7 +877,7 @@ class SeismicArray(object):
                 baz[baz < 0.0] += 360
                 out = BeamformerResult(inventory=self.inventory, times=t,
                                        max_rel_power=rel_power,
-                                       max_pow_baz=baz, max_pow_slowness=slow,
+                                       max_pow_baz=baz, max_pow_slow=slow,
                                        slowness_range=np.arange(sll, slm, sls),
                                        method=method)
 
@@ -1506,12 +1506,12 @@ class SeismicArray(object):
 
     def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
                                     smin, smax, sstep, wavetype,
-                                    freq_range, plot_frequencies=(7, 14),
+                                    freq_range, plot_frequencies=None,
                                     n_min_stns=7, win_average=1, win_frac=1,
                                     whiten=False, coherency=True,
                                     plot_transff=False):
         """
-        Do three component beamforming following Esmersoy 1985...
+        Do three component beamforming following Esmersoy 1985.
         Three streams representing N, E, Z oriented components must be given,
         where the traces contained are from the different stations. The
         traces must all have same length and start/end times (to within
@@ -2902,7 +2902,7 @@ class BeamformerResult(object):
     # 3cbf as of now returns the whole results...
 
     def __init__(self, inventory, times, slowness_range, max_rel_power=None,
-                 max_abs_power=None, max_pow_baz=None, max_pow_slowness=None,
+                 max_abs_power=None, max_pow_baz=None, max_pow_slow=None,
                  full_beamres=None, freqs=None, incidence=None, method=None,
                  timestep=None):
         """
@@ -2915,7 +2915,7 @@ class BeamformerResult(object):
         :param max_abs_power: Maximum absolute power at every timestep.
         :param max_pow_baz: Backazimuth of the maximum power value at every
          timestep.
-        :param max_pow_slowness: Slowness of the maximum power value at every
+        :param max_pow_slow: Slowness of the maximum power value at every
          timestep.
         :param full_beamres: 4D numpy array holding relative power results
          for every backazimuth, slowness, window and discrete frequency (in
@@ -2946,7 +2946,7 @@ class BeamformerResult(object):
         self.max_pow_baz = max_pow_baz
         if max_pow_baz is not None:
             self.max_pow_baz = self.max_pow_baz.astype(float)
-        self.max_pow_slow = max_pow_slowness
+        self.max_pow_slow = max_pow_slow
         if self.max_pow_slow is not None:
             self.max_pow_slow = self.max_pow_slow.astype(float)
         if len(slowness_range) == 1:
@@ -2960,7 +2960,7 @@ class BeamformerResult(object):
             raise ValueError("Full beamresults should be 4D array.")
         self.full_beamres = full_beamres
         if(max_rel_power is None and max_pow_baz is None
-           and max_pow_slowness is None and full_beamres is not None):
+           and max_pow_slow is None and full_beamres is not None):
             self._calc_max_values()
 
     def __add__(self, other):
@@ -2968,18 +2968,39 @@ class BeamformerResult(object):
             raise TypeError('unsupported operand types')
         if self.method != other.method:
             raise ValueError
+        if self.freqs is None or other.freqs is None:
+            attrs = ['slowness_range']
+        else:
+            attrs = ['freqs', 'slowness_range']
         if any((self.__dict__[attr] != other.__dict__[attr]).any()
-               for attr in ['freqs', 'slowness_range']):
+               for attr in attrs):
             raise ValueError
         times = np.append(self.times, other.times)
-        full_beamres = np.append(self.full_beamres, other.full_beamres, axis=2)
-        # todo change this inventory call
-        # Inventories can vary, but should maybe represent that somehow.
+        if self.full_beamres is not None and other.full_beamres is not None:
+            full_beamres = np.append(self.full_beamres,
+                                     other.full_beamres, axis=2)
+            max_rel_power, max_pow_baz, \
+                max_pow_slow, max_abs_power = None, None, None, None
+        else:
+            full_beamres = None
+            max_rel_power = np.append(self.max_rel_power, other.max_rel_power)
+            max_pow_baz = np.append(self.max_pow_baz, other.max_pow_baz)
+            max_pow_slow = np.append(self.max_pow_slow, other.max_pow_slow)
+            if self.max_abs_power is not None:
+                max_abs_power = np.append(self.max_abs_power,
+                                          other.max_abs_power)
+            else:
+                max_abs_power = None
+
         out = self.__class__(self.inventory, times,
                              full_beamres=full_beamres,
                              slowness_range=self.slowness_range,
                              freqs=self.freqs,
-                             method=self.method)
+                             method=self.method,
+                             max_abs_power=max_abs_power,
+                             max_rel_power=max_rel_power,
+                             max_pow_baz=max_pow_baz,
+                             max_pow_slow=max_pow_slow)
         return out
 
     def _calc_max_values(self):
@@ -3021,13 +3042,13 @@ class BeamformerResult(object):
                              for t in plot_times])
         return newtimes
 
-    def plot_baz_hist(self, show_immediately=True):
+    def plot_baz_hist(self, show=True):
         """
         Plot a backazimuth - slowness radial histogram.
         The backazimuth and slowness values of the maximum relative powers
         of each beamforming window are counted into bins defined
         by slowness and backazimuth, weighted by the power.
-        :param show_immediately: Whether to call plt.show() immediately.
+        :param show: Whether to call plt.show() immediately.
         """
         from matplotlib.colorbar import ColorbarBase
         from matplotlib.colors import Normalize
@@ -3084,14 +3105,14 @@ class BeamformerResult(object):
         plt.suptitle('{} beamforming: results from \n{} to {}'
                      .format(self.method, self.starttime.isoformat(),
                              self.endtime.isoformat()))
-        if show_immediately is True:
+        if show is True:
             plt.show()
 
-    def plot_bf_results_over_time(self, show_immediately=True):
+    def plot_bf_results_over_time(self, show=True):
         """
         Plot beamforming results over time, with the relative power as
         colorscale.
-        :param show_immediately: Whether to call plt.show() immediately.
+        :param show: Whether to call plt.show() immediately.
         """
         labels = ['rel. power', 'abs. power', 'baz', 'slow']
         datas = [self.max_rel_power, self.max_abs_power,
@@ -3131,15 +3152,15 @@ class BeamformerResult(object):
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
                             hspace=0.1)
-        if show_immediately is True:
+        if show is True:
             plt.show()
 
-    def plot_power(self, show_immediately=True):
+    def plot_power(self, show=True):
         """
         Plot relative power as a function of backazimuth and time, like a
         Vespagram. Requires full 4D results, at the moment only provided by
         the three component beamforming.
-        :param show_immediately: Whether to call plt.show() immediately.
+        :param show: Whether to call plt.show() immediately.
         """
         # Prepare data.
         freqavg = self.full_beamres.mean(axis=3)
@@ -3162,7 +3183,8 @@ class BeamformerResult(object):
             ax = fig.add_subplot(len(labels), 1, i + 1)
 
             pc = ax.pcolormesh(self._get_plotting_timestamps(extended=True),
-                               azis, data.T, cmap=cm.get_cmap('hot_r'))
+                               azis, data.T, cmap=cm.get_cmap('hot_r'),
+                               rasterized=True)
             timemargin = 0.05 * (self._get_plotting_timestamps(extended=True
                                                                )[-1]
                                  - self._get_plotting_timestamps()[0])
@@ -3171,8 +3193,9 @@ class BeamformerResult(object):
                         + timemargin)
             ax.set_ylim(0, 360)
             ax.yaxis.set_major_locator(ymajorLocator)
-            fig.colorbar(pc)
-            ax.set_ylabel('baz')
+            cbar = fig.colorbar(pc)
+            cbar.solids.set_rasterized(True)
+            ax.set_ylabel('Backazimuth')
             ax.xaxis.set_major_locator(xlocator)
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
@@ -3182,11 +3205,11 @@ class BeamformerResult(object):
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
                             hspace=0.1)
-        if show_immediately is True:
+        if show is True:
             plt.show()
 
     def plot_bf_plots(self, plot_frequencies=None, average_windows=True,
-                      average_freqs=True, show_immediately=True):
+                      average_freqs=True, show=True):
         """
         Plot beamforming results as individual polar plots of relative power as
         function of backazimuth and slowness. Can plot results averaged over
@@ -3198,14 +3221,15 @@ class BeamformerResult(object):
          windows.
         :param average_freqs: Whether to plot an average of results over all
          frequencies (will override :param plot_frequencies:).
-        :param show_immediately: Whether to call plt.show() immediately.
+        :param show: Whether to call plt.show() immediately.
         """
+        if average_freqs is True and plot_frequencies is not None:
+            warnings.warn("Ignoring plot_frequencies, only plotting an average"
+                          " of all frequencies.")
         if(type(plot_frequencies) is not list and
            type(plot_frequencies) is not tuple):
             plot_frequencies = [plot_frequencies]
-        if average_freqs is True and plot_frequencies:
-            warnings.warn("Ignoring plot_frequencies, only plotting an average"
-                          " of all frequencies.")
+
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
 
         def _actual_plotting(bfres, title):
@@ -3273,7 +3297,7 @@ class BeamformerResult(object):
                                              iwin,
                                              self.times[iwin].isoformat()))
 
-        if show_immediately is True:
+        if show is True:
             plt.show()
 
 if __name__ == '__main__':
