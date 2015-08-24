@@ -53,6 +53,8 @@ def _read_knet_hdr(hdrlines, **kwargs):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
     dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    dt -= 9 * 3600.
     hdrdict['knet']['evot'] = dt
 
     _i += 1
@@ -113,8 +115,10 @@ def _read_knet_hdr(hdrlines, **kwargs):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
     # A 15 s delay is added to the record time by the
-    # the K-NET and KiK-Net data logger"
+    # the K-NET and KiK-Net data logger
     dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S')) - 15.0
+    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    dt -= 9 * 3600.
     hdrdict['starttime'] = dt
 
     _i += 1
@@ -157,6 +161,8 @@ def _read_knet_hdr(hdrlines, **kwargs):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
     dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    dt -= 9 * 3600.
     hdrdict['knet']['last correction'] = dt
 
     # The comment ('Memo') field is optional
