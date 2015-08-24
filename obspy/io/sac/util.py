@@ -279,10 +279,10 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         #   the old and new 1st sample times, and b/bshift will be wrong.
         #   ObsPy compatible behavior is to procede as though iztype is 'ib',
         #   the starttime is the reftime, and b is 0.0?
-        if header['b'] == HD.FNULL:
-            b = 0.0
-        else:
-            b = header['b']
+        #if header['b'] == HD.FNULL:
+        #    b = 0.0
+        #else:
+        #    b = header['b']
 
         try:
             # if the first sample time in stats is different than the one in
@@ -291,24 +291,25 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # reftime.
             reftime = get_sac_reftime(header)
             # reftme + b is the old first sample time
-            bshift = (reftime + b) - stats['starttime'] 
+            b = stats['starttime'] - reftime
+            # NOTE: if b or e is null, it will become set here.
+            # TODO: I want to uncomment this eventually.
+            header['b'] = b
+            header['e'] = b + (stats['endtime'] - stats['starttime'])
         except SacHeaderTimeError:
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
             # can't determine absolute time shift.
             # assume that the old and new 1st sample times are the same
-            bshift = 0.0
+            #b = 0.0
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
             # Assume an iztype 9/'ib' type file: move the reftime to the
             # starttime and assume that the old and new 1st sample times are
             # the same
             #bshift = stats['starttime'] - (reftime + b)
-            bshift = 0.0
-
-        # NOTE: if b or e is null, it will become set here.
-        header['b'] = b + bshift
-        header['e'] = b + bshift + (stats['endtime'] - stats['starttime'])
+            #b = 0.0
+            pass
 
         # set values: b, e, npts, delta, and any old SAC header values.
 

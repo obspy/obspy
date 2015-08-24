@@ -247,10 +247,15 @@ def _set_lcalda(self, value):
 
 
 def _get_e(self):
-    if self.npts:
-        e = self.b + (self.npts - 1) * self.delta
-    else:
-        e = self.b
+    try:
+        if self.npts:
+            e = self.b + (self.npts - 1) * self.delta
+        else:
+            e = self.b
+    except TypeError:
+        # b, npts, and/or delta are None/null
+        # TODO: assume "b" is 0.0?
+        e = None
     return e
 
 

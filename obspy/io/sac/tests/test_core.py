@@ -314,10 +314,10 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tmpfile, format="SAC")
             tr2 = read(tmpfile)[0]
             self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
-            self.assertEqual(tr2.stats.sac.b, -12345.0)
+            self.assertEqual(tr2.stats.sac.b, 10.0)
             with open(tmpfile, "rb") as fh:
                 sac_ref_time2 = SACTrace.read(fh).reftime
-        self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
+        self.assertEqual(sac_ref_time2.timestamp, 269596800.0)
 
     def test_issue156(self):
         """
