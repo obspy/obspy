@@ -32,11 +32,6 @@ from obspy.core.util import Enum
 
 from . import utils
 
-# Some application.wadls are wrong...
-OVERWRITE_CAPABILITIES = {
-    "resif": None
-}
-
 # The current status of an entity.
 STATUS = Enum(["none", "needs_downloading", "downloaded", "ignore", "exists",
                "download_failed", "download_rejected",
@@ -1045,26 +1040,11 @@ class ClientDownloadHelper(object):
         # appropriate way of acquiring availability information. Some services
         # right now require manual overwriting of what they claim to be
         # capable of.
-        if self.client_name.lower() in OVERWRITE_CAPABILITIES:
-            cap = OVERWRITE_CAPABILITIES[self.client_name.lower()]
-            if cap is None:
-                self.is_availability_reliable = False
-            elif cap == "matchtimeseries":
-                self.is_availability_reliable = True
-                arguments["matchtimeseries"] = True
-            elif cap == "includeavailability":
-                self.is_availability_reliable = True
-                arguments["includeavailability"] = True
-            else:
-                raise NotImplementedError
-        elif "matchtimeseries" in self.client.services["station"]:
+        if "matchtimeseries" in self.client.services["station"]:
             arguments["matchtimeseries"] = True
             if "format" in self.client.services["station"]:
                 arguments["format"] = "text"
             self.is_availability_reliable = True
-        elif "includeavailability" in self.client.services["station"]:
-            self.is_availability_reliable = True
-            arguments["includeavailability"] = True
         else:
             if "format" in self.client.services["station"]:
                 arguments["format"] = "text"
@@ -1114,22 +1094,6 @@ class ClientDownloadHelper(object):
                     if (channel.start_date > self.restrictions.endtime) or \
                             (channel.end_date < self.restrictions.starttime):
                         continue
-                    # Use availability information if possible. In the other
-                    # cases it should already work.
-                    if "includeavailability" in arguments and \
-                            arguments["includeavailability"]:
-                        da = channel.data_availability
-                        if da is None:
-                            self.logger.warning(
-                                "Client '%s' supports the "
-                                "'includeavailability' parameter but returns "
-                                "channels without availability information. "
-                                "The final availability might not be "
-                                "complete" % self.client_name)
-                            continue
-                        if (da.start > self.restrictions.endtime) or \
-                                (da.end < self.restrictions.starttime):
-                            continue
                     channels.append(Channel(
                         location=channel.location_code, channel=channel.code,
                         intervals=copy.deepcopy(intervals)))
