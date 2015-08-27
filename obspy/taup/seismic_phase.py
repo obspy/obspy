@@ -125,7 +125,7 @@ class SeismicPhase(object):
                 disconBranch = closest_branch_to_depth(tMod, currLeg[1:])
                 legDepth = tMod.tauBranches[0, disconBranch].topDepth
                 puristName += currLeg[0]
-                puristName += str(legDepth)
+                puristName += str(int(round(legDepth)))
             else:
                 try:
                     float(currLeg)
