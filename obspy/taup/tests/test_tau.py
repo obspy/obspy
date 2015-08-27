@@ -771,6 +771,18 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self._compare_arrivals_with_file(arrivals, "underside_reflections.txt")
 
+    def test_buried_receiver(self):
+        """
+        Simple test for a buried receiver.
+        """
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_travel_times(
+            source_depth_in_km=10.0, distance_in_degree=90.0,
+            receiver_depth_in_km=50,
+            phase_list=["P", "PP", "S"])
+
+        self._compare_arrivals_with_file(arrivals, "buried_receivers.txt")
+
     def test_different_models(self):
         """
         Open all included models and make sure that they can produce
