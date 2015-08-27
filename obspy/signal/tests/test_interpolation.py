@@ -91,6 +91,31 @@ class InterpolationTestCase(unittest.TestCase):
             new_npts=13, a=a)
         np.testing.assert_allclose(output, expected_output, atol=1E-9)
 
+    def test_lanczos_interpolation_units(self):
+        """
+        Regression test for a bug that manifested when the original sampling
+        rate is not 1 Hertz and new and old start times are not identical.
+        """
+        # Generate a highly oversampled sine curve. Upsample and downsample
+        # it again and it should not change a lot except at the boundaries.
+        # Also shift a bit to trigger the bug.
+        original_dt = 13.333
+        new_dt = 17.23
+
+        data = np.sin(np.linspace(0, 2 * np.pi, 1000))
+
+        output = lanczos_interpolation(
+            data, old_dt=original_dt, new_start=10 * original_dt,
+            old_start=0.0, a=20,
+            new_dt=new_dt, new_npts=int(990 * original_dt / new_dt))
+        output = lanczos_interpolation(
+            output, old_dt=new_dt, new_start=10 * original_dt,
+            old_start=0.0, a=20,
+            new_dt=original_dt, new_npts=int(980 * original_dt / new_dt) - 1)
+
+        np.testing.assert_allclose(data[220:620], output[200:600], atol=1E-4,
+                                   rtol=1E-4)
+
 
 def suite():
     return unittest.makeSuite(InterpolationTestCase, 'test')
