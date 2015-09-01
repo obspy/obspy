@@ -68,6 +68,7 @@ class UtilsTestCase(unittest.TestCase):
         # List of files that are actually RESP files, all other files are
         # considered non-RESP files
         resp_filenames = [
+            "IUANMO.resp",
             "RESP.NZ.CRLZ.10.HHZ",
             "RESP.NZ.CRLZ.10.HHZ.mac",
             "RESP.NZ.CRLZ.10.HHZ.windows",

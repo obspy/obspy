@@ -1,0 +1,147 @@
+#		<< obspy, Version 0.10.3rc1.dev0+341.gd93a28e2f3.dirty.obspy.ppsd.response.removal >>
+#		
+#		======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     ANMO
+B050F16     Network:     IU
+B052F03     Location:    00
+B052F04     Channel:     LHZ
+B052F22     Start date:  2008,182,20:00:00.0000
+B052F23     End date:    2011,049,19:11:00.0000
+#		=======================================
+#		+               +--------------------------------------------+                +
+#		+               |   Response (Poles & Zeros),  ANMO ch LHZ   |                +
+#		+               +--------------------------------------------+                +
+#		
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S - Velocity in Meters Per Second
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               86282.9
+B053F08     Normalization frequency:               0.02
+B053F09     Number of zeroes:                      2
+B053F14     Number of poles:                       5
+#		Complex zeroes:
+#		  i  real          imag          real_error    imag_error
+B053F10-13    0  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    1  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+#		Complex poles:
+#		  i  real          imag          real_error    imag_error
+B053F15-18    0 -5.943130E+01  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    1 -2.271210E+01  2.710650E+01  0.000000E+00  0.000000E+00
+B053F15-18    2 -2.271210E+01 -2.710650E+01  0.000000E+00  0.000000E+00
+B053F15-18    3 -4.800400E-03  0.000000E+00  0.000000E+00  0.000000E+00
+B053F15-18    4 -7.388540E-02  0.000000E+00  2.396280E-04  0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  ANMO ch LHZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  1.952100E+03
+B058F05     Frequency of gain:                     2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  ANMO ch LHZ   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - Volts
+B054F06     Response out units lookup:             COUNTS - Digital Counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  ANMO ch LHZ   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 2
+B057F04     Input sample rate:                     1.000000E+00
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  ANMO ch LHZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  1.677720E+06
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+               +-------------------------------------------+                 +
+#		+               |   Response (Coefficients),  ANMO ch LHZ   |                 +
+#		+               +-------------------------------------------+                 +
+#		
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 3
+B054F05     Response in units lookup:              COUNTS - Digital Counts
+B054F06     Response out units lookup:             COUNTS - Digital Counts
+B054F07     Number of numerators:                  31
+B054F10     Number of denominators:                0
+#		Numerator coefficients:
+#		  i, coefficient,  error
+B054F08-09    0  1.219930E-16  0.000000E+00
+B054F08-09    1  3.161920E-10  0.000000E+00
+B054F08-09    2 -4.314650E-08  0.000000E+00
+B054F08-09    3 -5.635560E-07  0.000000E+00
+B054F08-09    4 -1.267010E-04  0.000000E+00
+B054F08-09    5  3.658140E-03  0.000000E+00
+B054F08-09    6  1.675310E-04  0.000000E+00
+B054F08-09    7 -5.404510E-03  0.000000E+00
+B054F08-09    8  1.278610E-02  0.000000E+00
+B054F08-09    9 -1.803570E-02  0.000000E+00
+B054F08-09   10  1.473120E-02  0.000000E+00
+B054F08-09   11  3.226940E-03  0.000000E+00
+B054F08-09   12 -3.859690E-02  0.000000E+00
+B054F08-09   13  8.883530E-02  0.000000E+00
+B054F08-09   14 -1.482430E-01  0.000000E+00
+B054F08-09   15  2.177660E-01  0.000000E+00
+B054F08-09   16  8.099140E-01  0.000000E+00
+B054F08-09   17  1.245960E-01  0.000000E+00
+B054F08-09   18 -1.230410E-01  0.000000E+00
+B054F08-09   19  8.899750E-02  0.000000E+00
+B054F08-09   20 -4.850160E-02  0.000000E+00
+B054F08-09   21  1.425910E-02  0.000000E+00
+B054F08-09   22  6.896390E-03  0.000000E+00
+B054F08-09   23 -1.444340E-02  0.000000E+00
+B054F08-09   24  1.242860E-02  0.000000E+00
+B054F08-09   25 -6.568730E-03  0.000000E+00
+B054F08-09   26  1.522040E-03  0.000000E+00
+B054F08-09   27  3.142090E-03  0.000000E+00
+B054F08-09   28  3.656270E-05  0.000000E+00
+B054F08-09   29 -2.152990E-06  0.000000E+00
+B054F08-09   30 -2.597830E-07  0.000000E+00
+#		
+#		+                      +------------------------------+                       +
+#		+                      |   Decimation,  ANMO ch LHZ   |                       +
+#		+                      +------------------------------+                       +
+#		
+B057F03     Stage sequence number:                 3
+B057F04     Input sample rate:                     1.000000E+00
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             1.593000E+01
+B057F08     Correction applied (seconds):          1.593000E+01
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |       Channel Gain,  ANMO ch LHZ      |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 3
+B058F04     Gain:                                  1.000000E+00
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#		
+#		+                  +---------------------------------------+                  +
+#		+                  |   Channel Sensitivity,  ANMO ch LHZ   |                  +
+#		+                  +---------------------------------------+                  +
+#		
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           3.275080E+09
+B058F05     Frequency of sensitivity:              2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#		

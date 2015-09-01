@@ -14,8 +14,9 @@ import warnings
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime, read
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
                                               welch_window)
 
@@ -263,6 +264,46 @@ class PsdTestCase(unittest.TestCase):
             # Here is the actual test
             np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
                                        np.mean(percenlist), rtol=0.0, atol=1.0)
+
+    def test_PPSD_w_IRIS_against_obspy_results(self):
+        """
+        Test against results obtained after merging of #1108.
+        """
+        # Read in ANMO data for one day
+        st = read(os.path.join(self.path, 'IUANMO.seed'))
+
+        # Read in metadata in various different formats
+        paz = {'gain': 86298.5, 'zeros': [0, 0],
+               'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
+                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+        resp = os.path.join(self.path, 'IUANMO.resp')
+        parser = Parser(os.path.join(self.path, 'IUANMO.dataless'))
+        inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
+
+        # load expected results, for both only PAZ and full response
+        results_paz = np.load(os.path.join(self.path, 'IUANMO_ppsd_paz.npz'))
+        results_full = np.load(os.path.join(self.path,
+                                            'IUANMO_ppsd_fullresponse.npz'))
+        arrays_to_check = ['hist_stack', 'spec_bins', 'period_bins']
+
+        # Calculate the PPSDs and test against expected results
+        # first: only PAZ
+        ppsd = PPSD(st[0].stats, paz)
+        ppsd.add(st)
+        for key in arrays_to_check:
+            self.assertTrue(np.allclose(
+                getattr(ppsd, key), results_paz[key], rtol=1e-5))
+        # second: various methods for full response
+        # (also test various means of initialization, basically testing the
+        #  decorator that maps the deprecated keywords)
+        for metadata in [parser, inv, resp]:
+            ppsd = PPSD(st[0].stats, paz=metadata)
+            ppsd = PPSD(st[0].stats, parser=metadata)
+            ppsd = PPSD(st[0].stats, metadata)
+            ppsd.add(st)
+            for key in arrays_to_check:
+                self.assertTrue(np.allclose(
+                    getattr(ppsd, key), results_full[key], rtol=1e-5))
 
 
 def suite():
