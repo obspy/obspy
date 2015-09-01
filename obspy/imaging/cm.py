@@ -6,6 +6,8 @@ Module for ObsPy's default colormaps.
 based on a design by Eric Firing (@efiring, see
 http://thread.gmane.org/gmane.comp.python.matplotlib.devel/13522/focus=13542).
 
+Colormap of PQLX for PPSD is available as :const:`obspy.imaging.cm.pqlx`.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -52,13 +54,13 @@ def _get_cmap(name, reverse=False):
     cmap = LinearSegmentedColormap(name=name, segmentdata=data)
     return cmap
 
-
 viridis = _get_cmap("viridis")
 viridis_r = _get_cmap("viridis", reverse=True)
 obspy_sequential = viridis
 obspy_sequential_r = viridis_r
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
+pqlx = _get_cmap("pqlx")
 
 
 if __name__ == '__main__':

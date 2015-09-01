@@ -85,6 +85,14 @@ window..
 
 .. plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
 
+To use the colormap used by PQLX / [McNamara2004]_ you can import and use that
+colormap from :mod:`obspy.imaging.cm`:
+
+    >>> from obspy.imaging.cm import pqlx
+    >>> ppsd.plot(cmap=pqlx)
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density2.py
+
 Below the actual PPSD (for a detailed discussion see
 [McNamara2004]_) is a visualization of the data basis for the PPSD
 (can also be switched off during plotting). The top row shows data fed into the

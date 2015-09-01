@@ -33,7 +33,7 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
    * New Lanczos interpolation/resampling (see #1101)
-   * PPSD:
+   * PPSD (see #931 and #1108):
      - Algorithm for PSD computation was improved, especially affecting results
        at long periods (for detailed discussion see #931 and #1108).
      - Keywords `paz` and `parser` were removed in favor of new keyword
@@ -57,6 +57,10 @@ master:
      - New save/load mechanism using numpy .npz binary format that circumvents
        some problems with the old pickle mechanism:
        `PPSD.save_npz()` and `PPSD.load_npz()`
+     - Change default colormap to new obspy default sequential colormap
+       (matplotlibs new viridis colormap). The old PQLX colormap is provided by
+       `obspy.imaging.cm.pqlx` and can be used with
+       `PPSD.plot(..., cmap=...)`.
 
 0.10.x:
   - obspy.fdsn:

@@ -32,7 +32,6 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import mlab
-from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
@@ -42,6 +41,7 @@ from obspy.core import Stats
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
@@ -52,28 +52,6 @@ MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
 
-# build colormap as done in paper by mcnamara
-CDICT = {'red': ((0.0, 1.0, 1.0),
-                 (0.05, 1.0, 1.0),
-                 (0.2, 0.0, 0.0),
-                 (0.4, 0.0, 0.0),
-                 (0.6, 0.0, 0.0),
-                 (0.8, 1.0, 1.0),
-                 (1.0, 1.0, 1.0)),
-         'green': ((0.0, 1.0, 1.0),
-                   (0.05, 0.0, 0.0),
-                   (0.2, 0.0, 0.0),
-                   (0.4, 1.0, 1.0),
-                   (0.6, 1.0, 1.0),
-                   (0.8, 1.0, 1.0),
-                   (1.0, 0.0, 0.0)),
-         'blue': ((0.0, 1.0, 1.0),
-                  (0.05, 1.0, 1.0),
-                  (0.2, 1.0, 1.0),
-                  (0.4, 1.0, 1.0),
-                  (0.6, 0.0, 0.0),
-                  (0.8, 0.0, 0.0),
-                  (1.0, 0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 NPZ_STORE_KEYS = [
@@ -394,7 +372,6 @@ class PPSD(object):
         num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
         self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
                                      endpoint=True)
-        self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
 
     @property
     def times(self):
@@ -911,7 +888,7 @@ class PPSD(object):
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
              max_percentage=30, period_lim=(0.01, 179), show_mode=False,
-             show_mean=False):
+             show_mean=False, cmap=obspy_sequential):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -947,6 +924,9 @@ class PPSD(object):
         :param show_mode: Enable/disable plotting of mode psd values.
         :type show_mean: bool, optional
         :param show_mean: Enable/disable plotting of mean psd values.
+        :type cmap: :class:`matplotlib.colors.Colormap`
+        :param cmap: Colormap to use for the plot. To use the color map like in
+            PQLX, [McNamara2004]_ use :const:`obspy.imaging.cm.pqlx`.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -965,12 +945,13 @@ class PPSD(object):
             ax = fig.add_subplot(111)
 
         if show_histogram:
-            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=self.colormap)
+            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=cmap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
-            color_limits = (0, max_percentage)
-            ppsd.set_clim(*color_limits)
-            cb.set_clim(*color_limits)
+            if max_percentage is not None:
+                color_limits = (0, max_percentage)
+                ppsd.set_clim(*color_limits)
+                cb.set_clim(*color_limits)
             if grid:
                 ax.grid(b=grid, which="major")
                 ax.grid(b=grid, which="minor")
