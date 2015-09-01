@@ -18,6 +18,8 @@ from lxml.etree import Element, SubElement, tostring
 from matplotlib.cm import get_cmap
 
 from obspy import UTCDateTime
+from obspy.core.event import Catalog
+from obspy.core.inventory.inventory import Inventory
 
 
 def inventory_to_kml_string(
@@ -269,6 +271,34 @@ def catalog_to_kml_string(
     # generate and return KML string
     return tostring(kml, pretty_print=True, xml_declaration=True,
                     encoding=encoding)
+
+
+def _write_kml(obj, filename, **kwargs):
+    """
+    Write :class:`~obspy.core.inventory.inventory.Inventory` or
+    :class:`~obspy.core.event.Catalog` object to a KML file.
+    For additional parameters see :meth:`inventory_to_kml_string` and
+    :meth:`catalog_to_kml_string`.
+
+    :type obj: :class:`~obspy.core.event.Catalog` or
+        :class:`~obspy.core.inventory.Inventory`
+    :param obj: ObsPy object for KML output
+    :type filename: str
+    :param filename: Filename to write to. Suffix ".kml" will be appended if
+        not already present.
+    """
+    if isinstance(obj, Catalog):
+        kml_string = catalog_to_kml_string(obj, **kwargs)
+    elif isinstance(obj, Inventory):
+        kml_string = inventory_to_kml_string(obj, **kwargs)
+    else:
+        msg = ("Object for KML output must be "
+               "a Catalog or Inventory.")
+        raise TypeError(msg)
+    if not filename.endswith(".kml"):
+        filename += ".kml"
+    with open(filename, "wb") as fh:
+        fh.write(kml_string)
 
 
 def _rgba_tuple_to_kml_color_code(rgba):

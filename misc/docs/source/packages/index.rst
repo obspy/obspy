@@ -59,6 +59,7 @@ The functionality is provided through the following packages:
    obspy.io.cmtsolution
    obspy.io.cnv
    obspy.io.json
+   obspy.io.kml
    obspy.io.ndk
    obspy.io.nlloc
    obspy.io.pde
@@ -73,6 +74,7 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.io.css
+   obspy.io.kml
    obspy.io.sac.sacpz
    obspy.io.shapefile
    obspy.io.stationxml
