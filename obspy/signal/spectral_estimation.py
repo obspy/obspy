@@ -37,7 +37,7 @@ from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
-from obspy import Stream, Trace
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords
@@ -191,7 +191,7 @@ def welch_window(N):
     return taper
 
 
-class PPSD():
+class PPSD(object):
     """
     Class to compile probabilistic power spectral densities for one combination
     of network/station/location/channel/sampling_rate.
@@ -358,10 +358,9 @@ class PPSD():
         self.nfft = prev_pow_2(self.nfft)
         #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
-        self.times_used = []
-        self.times = self.times_used
-        self.times_data = []
-        self.times_gaps = []
+        self._times_used = []
+        self._times_data = []
+        self._times_gaps = []
         self.hist_stack = None
         self.__setup_bins()
         # set up the binning for the db scale
@@ -369,6 +368,24 @@ class PPSD():
         self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
                                      endpoint=True)
         self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
+
+    @property
+    def times(self):
+        return list(map(UTCDateTime, self._times_used))
+
+    @property
+    def times_used(self):
+        return list(map(UTCDateTime, self._times_used))
+
+    @property
+    def times_data(self):
+        return [(UTCDateTime(t1), UTCDateTime(t2))
+                for t1, t2 in self._times_data]
+
+    @property
+    def times_gaps(self):
+        return [(UTCDateTime(t1), UTCDateTime(t2))
+                for t1, t2 in self._times_gaps]
 
     def __setup_bins(self):
         """
@@ -434,7 +451,7 @@ class PPSD():
 
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        bisect.insort(self.times_used, utcdatetime)
+        bisect.insort(self._times_used, utcdatetime.timestamp)
 
     def __insert_gap_times(self, stream):
         """
@@ -443,7 +460,8 @@ class PPSD():
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self.times_gaps += [[gap[4], gap[5]] for gap in stream.getGaps()]
+        self._times_gaps += [[gap[4].timestamp, gap[5].timestamp]
+                             for gap in stream.getGaps()]
 
     def __insert_data_times(self, stream):
         """
@@ -452,8 +470,9 @@ class PPSD():
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self.times_data += \
-            [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
+        self._times_data += \
+            [[tr.stats.starttime.timestamp, tr.stats.endtime.timestamp]
+             for tr in stream]
 
     def __check_time_present(self, utcdatetime):
         """
@@ -464,9 +483,9 @@ class PPSD():
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self.times_used, utcdatetime)
-        index2 = bisect.bisect_right(self.times_used,
-                                     utcdatetime + self.ppsd_length)
+        index1 = bisect.bisect_left(self._times_used, utcdatetime.timestamp)
+        index2 = bisect.bisect_right(self._times_used,
+                                     utcdatetime.timestamp + self.ppsd_length)
         if index1 != index2:
             return True
         else:
@@ -756,7 +775,7 @@ class PPSD():
         """
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
         mean = (self.hist_stack * db_bin_centers /
-                len(self.times_used)).sum(axis=1)
+                len(self._times_used)).sum(axis=1)
         return (self.period_bin_centers, mean)
 
     def __get_normalized_cumulative_histogram(self):
@@ -879,7 +898,7 @@ class PPSD():
             raise Exception(msg)
 
         X, Y = np.meshgrid(self.xedges, self.yedges)
-        hist_stack = self.hist_stack * 100.0 / len(self.times_used)
+        hist_stack = self.hist_stack * 100.0 / len(self._times_used)
 
         fig = plt.figure()
 
@@ -930,8 +949,10 @@ class PPSD():
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date,
-                         self.times_used[-1].date, len(self.times_used))
+        title = title % (self.id,
+                         UTCDateTime(self._times_used[0]).date,
+                         UTCDateTime(self._times_used[-1]).date,
+                         len(self._times_used))
         ax.set_title(title)
 
         if show_coverage:
@@ -963,8 +984,10 @@ class PPSD():
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date,
-                         self.times_used[-1].date, len(self.times_used))
+        title = title % (self.id,
+                         UTCDateTime(self._times_used[0]).date,
+                         UTCDateTime(self._times_used[-1]).date,
+                         len(self._times_used))
         ax.set_title(title)
 
         plt.draw()
