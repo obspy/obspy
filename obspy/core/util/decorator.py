@@ -64,9 +64,24 @@ def deprecated_keywords(keywords):
         fname = func.__name__
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
         msg2 = "Deprecated keyword %s in %s() call - ignoring."
+        msg3 = ("Conflicting deprecated keywords (%s) in %s() call"
+                " - please use new '%s' keyword instead.")
 
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
+            # check if multiple deprecated keywords get mapped to the same new
+            # keyword
+            new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
+            for key, new_key in keywords.items():
+                if key in kwargs:
+                    new_keyword_appearance_counts[new_key] += 1
+            for key_ in keywords.values():
+                if new_keyword_appearance_counts[key_] > 1:
+                    conflicting_keys = ", ".join(
+                        [old_key for old_key, new_key in keywords.items()
+                         if new_key == key_])
+                    raise Exception(msg3 % (conflicting_keys, fname, new_key))
+            # map deprecated keywords to new keywords
             for kw in kwargs.keys():
                 if kw in keywords:
                     nkw = keywords[kw]
