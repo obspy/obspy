@@ -260,10 +260,11 @@ class PPSD():
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
-    @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata'})
+    @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
+                          'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5, water_level=600.0, **kwargs):
+                 ppsd_length=3600., overlap=0.5, **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -326,8 +327,6 @@ class PPSD():
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
-        :type water_level: float, optional
-        :param water_level: Water level used in instrument correction.
         """
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
@@ -339,7 +338,6 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
-        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
         self.metadata = metadata
