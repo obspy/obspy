@@ -264,30 +264,26 @@ class PPSD(object):
 
     .. rubric:: Saving and Loading
 
-    The PPSD object supports saving to a pickled file with optional
-    compression:
+    The PPSD object supports saving to a numpy npz compressed binary file:
 
-    >>> ppsd.save("myfile.pkl.bz2", compress=True) # doctest: +SKIP
+    >>> ppsd.save_npz("myfile.npz") # doctest: +SKIP
 
     The saved PPSD can then be loaded again using the static method
-    :func:`~obspy.signal.spectral_estimation.PPSD.load`, e.g. to add more data
-    or plot it again:
+    :func:`~obspy.signal.spectral_estimation.PPSD.load_npz`, e.g. to add more
+    data afterwards or to simply plot the results again. Metadata must be
+    provided again, since it is not stored in the numpy npz file:
 
-    >>> ppsd = PPSD.load("myfile.pkl.bz2")  # doctest: +SKIP
-
-    The :func:`~obspy.signal.spectral_estimation.PPSD.load` method detects
-    compression automatically.
+    >>> ppsd = PPSD.load("myfile.npz", metadata=paz)  # doctest: +SKIP
 
     .. note::
 
-        While saving the PPSD with compression enabled takes significantly
-        longer, it can reduce the resulting file size by more than 80%.
-
-    .. note::
-
-        It is safer (but a bit slower) to provide a
-        :class:`~obspy.io.xseed.parser.Parser` instance with information from
-        e.g. a Dataless SEED than to just provide a static PAZ dictionary.
+        When using metadata from an
+        :class:`~obspy.core.inventory.inventory.Inventory`,
+        a :class:`~obspy.io.xseed.parser.Parser` instance or from a RESP file,
+        information on metadata will be correctly picked for the respective
+        starttime of the data trace. This means that instrument changes are
+        correctly taken into account during response removal.
+        This is obviously not the case for a static PAZ dictionary!
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
