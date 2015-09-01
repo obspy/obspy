@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import numpy as np
 
 from obspy import Trace, Stream
@@ -31,8 +35,8 @@ def _read_reflexw_datafile(filename, format_code):
     """
     :type filename: str
     :param filename: Filename of REFLEXW data file.
-    :type filename: int
-    :param filename: Format code of REFLEXW data file
+    :type format_code: int
+    :param format_code: Format code of REFLEXW data file
         (`2` for "new 16 bit integer",
          `3` for "new 32 bit floating point").
     """
@@ -59,3 +63,8 @@ def _read_reflexw_datafile(filename, format_code):
             st.append(tr)
             next_header = fh.read(DATA_TRACE_HEADER_LENGTH)
     return st
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
