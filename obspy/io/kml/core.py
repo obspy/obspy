@@ -22,17 +22,17 @@ from obspy import UTCDateTime
 
 def inventory_to_kml_string(
         inventory,
-        icon_url="http://maps.google.com/mapfiles/kml/shapes/triangle.png",
+        icon_url="https://maps.google.com/mapfiles/kml/shapes/triangle.png",
         icon_size=1.5, label_size=1.0, cmap="Paired", encoding="UTF-8",
         timespans=True, strip_far_future_end_times=True):
     """
-    Convert an :class:`~obspy.core.inventory.inventory.Inventory` to a kml
+    Convert an :class:`~obspy.core.inventory.inventory.Inventory` to a KML
     string representation.
 
     :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Input station metadata.
     :type icon_url: str
-    :param icon_url: Internet URL of icon to use for station (e.g. png image).
+    :param icon_url: Internet URL of icon to use for station (e.g. PNG image).
     :type icon_size: float
     :param icon_size: Icon size.
     :type label_size: float
@@ -41,7 +41,7 @@ def inventory_to_kml_string(
     :param encoding: Encoding used for XML string.
     :type timespans: bool
     :param timespans: Whether to add timespan information to the single station
-        elements in the kml or not. If timespans are used, the displayed
+        elements in the KML or not. If timespans are used, the displayed
         information in e.g. Google Earth will represent a snapshot in time,
         such that using the time slider different states of the inventory in
         time can be visualized. If timespans are not used, any station active
@@ -50,7 +50,7 @@ def inventory_to_kml_string(
     :param strip_far_future_end_times: Leave out likely fictitious end times of
         stations (more than twenty years after current time). Far future end
         times may produce time sliders with bad overall time span in third
-        party applications viewing the kml file.
+        party applications viewing the KML file.
     :rtype: byte string
     :return: Encoded byte string containing KML information of the station
         metadata.
@@ -106,7 +106,7 @@ def inventory_to_kml_string(
             SubElement(placemark, "color").text = color
             if sta.longitude is not None and sta.latitude is not None:
                 point = SubElement(placemark, "Point")
-                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+                SubElement(point, "coordinates").text = "%.6f,%.6f,0" % \
                     (sta.longitude, sta.latitude)
 
             SubElement(placemark, "description").text = str(sta)
@@ -141,17 +141,17 @@ def inventory_to_kml_string(
 
 def catalog_to_kml_string(
         catalog,
-        icon_url="http://maps.google.com/mapfiles/kml/shapes/earthquake.png",
+        icon_url="https://maps.google.com/mapfiles/kml/shapes/earthquake.png",
         label_func=None, icon_size_func=None, encoding="UTF-8",
         timestamps=True):
     """
-    Convert an :class:`~obspy.core.event.Catalog` to a kml string
+    Convert a :class:`~obspy.core.event.Catalog` to a KML string
     representation.
 
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Input catalog data.
     :type icon_url: str
-    :param icon_url: Internet URL of icon to use for events (e.g. png image).
+    :param icon_url: Internet URL of icon to use for events (e.g. PNG image).
     :type label_func: func
     :type label_func: Custom function to use for determining each event's
         label. User provided function is supposed to take an
@@ -159,13 +159,14 @@ def catalog_to_kml_string(
         empty labels use `label_func=lambda x: ""`.
     :type icon_size_func: func
     :type icon_size_func: Custom function to use for determining each
-        event's icon size. User provided function is supposed to take an
-        :class:`~obspy.core.event.Event` object as single argument.
+        event's icon size. User provided function should take an
+        :class:`~obspy.core.event.Event` object as single argument and return a
+        float.
     :type encoding: str
     :param encoding: Encoding used for XML string.
     :type timestamps: bool
     :param timestamps: Whether to add timestamp information to the event
-        elements in the kml or not. If timestamps are used, the displayed
+        elements in the KML or not. If timestamps are used, the displayed
         information in e.g. Google Earth will represent a snapshot in time,
         such that using the time slider different states of the catalog in time
         can be visualized. If timespans are not used, any event happening at
@@ -255,7 +256,7 @@ def catalog_to_kml_string(
         if origin:
             if origin.longitude is not None and origin.latitude is not None:
                 point = SubElement(placemark, "Point")
-                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+                SubElement(point, "coordinates").text = "%.6f,%.6f,0" % \
                     (origin.longitude, origin.latitude)
 
         SubElement(placemark, "description").text = str(event)
@@ -280,7 +281,7 @@ def _rgba_tuple_to_kml_color_code(rgba):
     except:
         r, g, b = rgba
         a = 1.0
-    return "".join([hex(int(x * 255))[-2:] for x in (a, b, g, r)])
+    return "".join(["%02x" % int(x * 255) for x in (a, b, g, r)])
 
 
 def _get_event_timestamp(event):
