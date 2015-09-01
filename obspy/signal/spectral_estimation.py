@@ -38,9 +38,10 @@ from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version
-from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
@@ -75,6 +76,36 @@ CDICT = {'red': ((0.0, 1.0, 1.0),
                   (1.0, 0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
+NPZ_STORE_KEYS = [
+    'hist_stack',
+    '_times_data',
+    '_times_gaps',
+    '_times_used',
+    'xedges',
+    'yedges',
+    'channel',
+    'delta',
+    'freq',
+    'id',
+    'is_rotational_data',
+    'len',
+    'location',
+    'merge_method',
+    'network',
+    'nfft',
+    'nlap',
+    'overlap',
+    'per',
+    'per_octaves',
+    'per_octaves_left',
+    'per_octaves_right',
+    'period_bin_centers',
+    'period_bins',
+    'ppsd_length',
+    'sampling_rate',
+    'spec_bins',
+    'station',
+    ]
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -795,16 +826,13 @@ class PPSD(object):
         hist_cum = (hist_cum.T / norm).T
         return hist_cum
 
+    @deprecated("Old save/load mechanism based on pickle module is not "
+                "working well across versions, so please use new "
+                "'save_npz'/'load_npz' mechanism.")
     def save(self, filename, compress=False):
         """
-        Saves the PPSD as a pickled file with optional compression.
-
-        The resulting file can be restored using PPSD.load(filename).
-
-        :type filename: str
-        :param filename: Name of output file with pickled PPSD object
-        :type compress: bool, optional
-        :param compress: Enable/disable file compression.
+        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
+        instead!
         """
         if compress:
             # due to an bug in older python version we can't use with
@@ -817,15 +845,13 @@ class PPSD(object):
                 pickle.dump(self, file_)
 
     @staticmethod
+    @deprecated("Old save/load mechanism based on pickle module is not "
+                "working well across versions, so please use new "
+                "'save_npz'/'load_npz' mechanism.")
     def load(filename):
         """
-        Restores a PPSD instance from a file.
-
-        Automatically determines whether the file was saved with compression
-        enabled or disabled.
-
-        :type filename: str
-        :param filename: Name of file containing the pickled PPSD object
+        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
+        instead!
         """
         # identify bzip2 compressed file using bzip2's magic number
         bz2_magic = b'\x42\x5a\x68'
@@ -849,6 +875,40 @@ class PPSD(object):
             with open(filename, 'rb') as file_:
                 ppsd = pickle.load(file_)
 
+        return ppsd
+
+    def save_npz(self, filename):
+        """
+        Saves the PPSD as a compressed numpy binary (npz format).
+
+        The resulting file can be restored using `my_ppsd.load_npz(filename)`.
+
+        :type filename: str
+        :param filename: Name of numpy .npz output file
+        """
+        out = dict([(key, getattr(self, key)) for key in NPZ_STORE_KEYS])
+        np.savez(filename, **out)
+
+    @staticmethod
+    def load_npz(filename, metadata):
+        """
+        Loads previously computed PPSD results (from a
+        compressed numpy binary in npz format, written with
+        :meth:`~PPSD.write_npz`).
+        Metadata have to be specified again during loading because they are not
+        stored in the npz format.
+
+        :type filename: str
+        :param filename: Name of numpy .npz file with stored PPSD data
+        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed Parser` or str or dict
+        :param metadata: Response information of instrument. See notes in
+            :meth:`PPSD.__init__` for details.
+        """
+        data = np.load(filename)
+        ppsd = PPSD(Stats(), metadata=metadata)
+        for key in NPZ_STORE_KEYS:
+            setattr(ppsd, key, data[key])
         return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,

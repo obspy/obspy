@@ -54,6 +54,9 @@ master:
        Parser object). When using a poles and zeros dictionary response
        calculation is unchanged (as no information on other stages is
        available, of course).
+     - New save/load mechanism using numpy .npz binary format that circumvents
+       some problems with the old pickle mechanism:
+       `PPSD.save_npz()` and `PPSD.load_npz()`
 
 0.10.x:
   - obspy.fdsn:

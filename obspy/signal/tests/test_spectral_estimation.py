@@ -18,7 +18,7 @@ from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window)
+                                              welch_window, NPZ_STORE_KEYS)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -304,6 +304,24 @@ class PsdTestCase(unittest.TestCase):
             for key in arrays_to_check:
                 self.assertTrue(np.allclose(
                     getattr(ppsd, key), results_full[key], rtol=1e-5))
+
+    def test_PPSD_save_and_load_npz(self):
+        """
+        Test PPSD.load_npz() and PPSD.save_npz()
+        """
+        _, paz = _get_sample_data()
+        ppsd = _get_ppsd()
+
+        # save results to npz file
+        with NamedTemporaryFile(suffix=".npz") as tf:
+            filename = tf.name
+            # test saving and loading an uncompressed file
+            ppsd.save_npz(filename)
+            ppsd_loaded = PPSD.load_npz(filename, metadata=paz)
+
+        for key in NPZ_STORE_KEYS:
+            np.testing.assert_equal(getattr(ppsd, key),
+                                    getattr(ppsd_loaded, key))
 
 
 def suite():
