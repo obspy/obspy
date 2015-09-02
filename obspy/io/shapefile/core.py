@@ -23,7 +23,8 @@ else:
 
 def _write_shapefile(obj, filename, **kwargs):
     """
-    Write :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
+    Write :class:`~obspy.core.inventory.inventory.Inventory` or
+    :class:`~obspy.core.event.Catalog` object to a ESRI shapefile.
 
     :type obj: :class:`~obspy.core.event.Catalog` or
         :class:`~obspy.core.inventory.Inventory`
