@@ -122,10 +122,10 @@ class SeismicPhase(object):
             # Find out if the next leg represents a phase conversion or
             # reflection depth.
             if currLeg[0] in "v^":
-                disconBranch = closest_branch_to_depth(tMod, currLeg[1])
+                disconBranch = closest_branch_to_depth(tMod, currLeg[1:])
                 legDepth = tMod.tauBranches[0, disconBranch].topDepth
                 puristName += currLeg[0]
-                puristName += str(legDepth)
+                puristName += str(int(round(legDepth)))
             else:
                 try:
                     float(currLeg)
@@ -243,7 +243,7 @@ class SeismicPhase(object):
                         "p and s must always be upgoing and cannot come "
                         "immediately before a top-sided reflection.")
                 elif nextLeg.startswith("^"):
-                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1])
+                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if self.currBranch >= disconBranch:
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, self.REFLECTTOP)
@@ -281,7 +281,7 @@ class SeismicPhase(object):
                     self.add_to_branch(tMod, self.currBranch, 0, isPWave,
                                        self.REFLECTTOP)
                 elif nextLeg[0] == "v":
-                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1])
+                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if self.currBranch <= disconBranch - 1:
                         self.add_to_branch(tMod, self.currBranch,
                                            disconBranch - 1, isPWave,
@@ -292,7 +292,7 @@ class SeismicPhase(object):
                             "{nextLeg} when currBranch > disconBranch".format(
                                 **locals()))
                 elif nextLeg[0] == "^":
-                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1])
+                    disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if prevLeg == "K":
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, self.REFLECTTOP)
@@ -305,7 +305,7 @@ class SeismicPhase(object):
                                            isPWave, self.REFLECTTOP)
                     elif ((prevLeg[0] == "v" and
                             disconBranch < closest_branch_to_depth(
-                                tMod, prevLeg[1]) or
+                                tMod, prevLeg[1:]) or
                            (prevLeg == "m" and
                                disconBranch < tMod.mohoBranch) or
                            (prevLeg == "c" and

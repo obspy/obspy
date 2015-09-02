@@ -16,6 +16,7 @@
       namespace (see #1060).
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
+    * Calculating arrivals for underside reflections now works (see #1089)
   - obspy.io.zmap
     * Add support for time values with sub-second precision (see #1093)
 
