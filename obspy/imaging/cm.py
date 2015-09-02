@@ -26,7 +26,7 @@ from matplotlib.cm import get_cmap
 from matplotlib.colors import LinearSegmentedColormap
 
 
-def _get_cmap(name, reverse=False):
+def _get_cmap(name, lut=None, reverse=False):
     """
     Load a :class:`~matplotlib.colors.LinearSegmentedColormap` from
     `segmentdata` dictionary saved as numpy compressed binary data.
@@ -34,6 +34,9 @@ def _get_cmap(name, reverse=False):
     :type name: str
     :param name: Name of colormap to load, same as filename in
         `obspy/imaging/data` without `.npz` file suffix.
+    :type lut: int
+    :param lut: Specifies the number of discrete color values in the colormap.
+        `None` to use matplotlib default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
@@ -51,7 +54,8 @@ def _get_cmap(name, reverse=False):
             # copied from matplotlib source, cm.py@f7a578656abc2b2c13 line 47
             data_r[key] = [(1.0 - x, y1, y0) for x, y0, y1 in reversed(val)]
         data = data_r
-    cmap = LinearSegmentedColormap(name=name, segmentdata=data)
+    kwargs = lut and {"N": lut} or {}
+    cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
     return cmap
 
 viridis = _get_cmap("viridis")

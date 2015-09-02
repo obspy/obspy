@@ -85,6 +85,13 @@ window..
 
 .. plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
 
+A (for each frequency bin) cumulative version of the histogram can also be
+visualized:
+
+    >>> ppsd.plot(cumulative=True)
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
+
 To use the colormap used by PQLX / [McNamara2004]_ you can import and use that
 colormap from :mod:`obspy.imaging.cm`:
 

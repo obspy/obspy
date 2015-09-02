@@ -61,6 +61,9 @@ master:
        (matplotlibs new viridis colormap). The old PQLX colormap is provided by
        `obspy.imaging.cm.pqlx` and can be used with
        `PPSD.plot(..., cmap=...)`.
+     - new option `PPSD.plot(..., cumulative=True)` for a cumulative plot of
+       the histogram, i.e. a non-exceedence percentage visualization, similar
+       to the `percentile` option.
 
 0.10.x:
   - obspy.fdsn:

@@ -32,6 +32,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import mlab
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
@@ -888,7 +889,8 @@ class PPSD(object):
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
              max_percentage=30, period_lim=(0.01, 179), show_mode=False,
-             show_mean=False, cmap=obspy_sequential):
+             show_mean=False, cmap=obspy_sequential, cumulative=False,
+             cumulative_number_of_colors=20):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -927,6 +929,16 @@ class PPSD(object):
         :type cmap: :class:`matplotlib.colors.Colormap`
         :param cmap: Colormap to use for the plot. To use the color map like in
             PQLX, [McNamara2004]_ use :const:`obspy.imaging.cm.pqlx`.
+        :type cumulative: bool
+        :param cumulative: Can be set to `True` to show a cumulative
+            representation of the histogram, i.e. showing color coded for each
+            frequency/amplitude bin at what percentage in time the value is
+            not exceeded by the data (similar to the `percentile` option but
+            continuously and color coded over the whole area). `max_percentage`
+            is ignored when this option is specified.
+        :type cumulative_number_of_colors: int
+        :param cumulative_number_of_colors: Number of discrete color shades to
+            use, `None` for a continuous colormap.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -945,9 +957,24 @@ class PPSD(object):
             ax = fig.add_subplot(111)
 
         if show_histogram:
-            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=cmap)
+            label = "[%]"
+            data = hist_stack
+            if cumulative:
+                data = data.cumsum(axis=1)
+                data = np.multiply(data.T, 100.0/data.max(axis=1)).T
+                if max_percentage is not None:
+                    msg = ("Parameter 'max_percentage' is ignored when "
+                           "'cumulative=True'.")
+                    warnings.warn(msg)
+                max_percentage = 100
+                label = "non-exceedance (cumulative) [%]"
+                if cumulative_number_of_colors is not None:
+                    cmap = LinearSegmentedColormap(
+                        name=cmap.name, segmentdata=cmap._segmentdata,
+                        N=cumulative_number_of_colors)
+            ppsd = ax.pcolormesh(X, Y, data.T, cmap=cmap)
             cb = plt.colorbar(ppsd, ax=ax)
-            cb.set_label("[%]")
+            cb.set_label(label)
             if max_percentage is not None:
                 color_limits = (0, max_percentage)
                 ppsd.set_clim(*color_limits)
