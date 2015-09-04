@@ -24,7 +24,7 @@ from matplotlib.cm import get_cmap
 from matplotlib.colors import LinearSegmentedColormap
 
 
-def _get_cmap(name):
+def _get_cmap(name, reverse=False):
     """
     Load a :class:`~matplotlib.colors.LinearSegmentedColormap` from
     `segmentdata` dictionary saved as numpy compressed binary data.
@@ -32,6 +32,8 @@ def _get_cmap(name):
     :type name: str
     :param name: Name of colormap to load, same as filename in
         `obspy/imaging/data` without `.npz` file suffix.
+    :type reverse: bool
+    :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
     directory = os.path.dirname(os.path.abspath(
@@ -40,13 +42,21 @@ def _get_cmap(name):
     if name.endswith(".npz"):
         name = name.rsplit(".npz", 1)[0]
     filename = os.path.join(directory, name + ".npz")
-    cmap = LinearSegmentedColormap(name=name,
-                                   segmentdata=dict(np.load(filename)))
+    data = dict(np.load(filename))
+    if reverse:
+        data_r = {}
+        for key, val in data.items():
+            # copied from matplotlib source, cm.py@f7a578656abc2b2c13 line 47
+            data_r[key] = [(1.0 - x, y1, y0) for x, y0, y1 in reversed(val)]
+        data = data_r
+    cmap = LinearSegmentedColormap(name=name, segmentdata=data)
     return cmap
 
 
 viridis = _get_cmap("viridis")
+viridis_r = _get_cmap("viridis", reverse=True)
 obspy_sequential = viridis
+obspy_sequential_r = viridis_r
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
 
