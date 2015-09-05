@@ -174,10 +174,12 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
         f.seek(0, os.SEEK_END)
         length = f.tell()
         f.seek(cur_pos, os.SEEK_SET)
-        if length != (632 + 4 * int(npts)):
-            msg = "File-size and theoretical size are inconsistent.\n" \
+        th_length = (632 + 4 * int(npts))
+        if length != th_length:
+            msg = "Actual and theoretical file size are inconsistent.\n" \
+                  "Actual/Theoretical: {}/{}\n" \
                   "Check that headers are consistent with time series."
-            raise SacIOError(msg)
+            raise SacIOError(msg.format(length, th_length))
 
     # --------------------------------------------------------------
     # READ DATA
@@ -336,11 +338,22 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         assert hf.dtype.byteorder == hi.dtype.byteorder == data.dtype.byteorder
 
     if byteorder:
-        if not is_same_byteorder(byteorder, hf.dtype.byteorder):
-            hf = hf.byteswap(True).newbyteorder(byteorder)
-            hi = hf.byteswap(True).newbyteorder(byteorder)
-            if data is not None:
-                data = data.byteswap(True).newbyteorder(byteorder)
+        if byteorder == 'little':
+            endian_str = '<'
+        elif byteorder == 'big':
+            endian_str = '>'
+        else:
+            raise ValueError("Unrecognized byteorder. Use {'little', 'big'}")
+
+        hf = hf.astype(native_str(endian_str + 'f4'))
+        hi = hi.astype(native_str(endian_str + 'i4'))
+        if data is not None:
+            data = data.astype(native_str(endian_str + 'f4'))
+        #if not is_same_byteorder(byteorder, hf.dtype.byteorder):
+        #    hf = hf.byteswap(True).newbyteorder(byteorder)
+        #    hi = hf.byteswap(True).newbyteorder(byteorder)
+        #    if data is not None:
+        #        data = data.byteswap(True).newbyteorder(byteorder)
 
     # actually write everything
     try:
@@ -348,6 +361,8 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         f.write(hi.data)
         f.write(hs.data)
         if data is not None:
+            # TODO: this long way of writing it is to make sure that
+            # 'f8' data, for example, is correctly cast as 'f4'
             f.write(data.astype(data.dtype.byteorder + 'f4').data)
     except Exception as e:
         if is_file_name:
