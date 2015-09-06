@@ -40,7 +40,8 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.kstnm, 'STA')
         self.assertEqual(sac.delta, 1.0)
         self.assertEqual(sac.kcmpnm, 'Q')
-        self.assertEqual(sac.reftime.datetime, datetime.datetime(1978, 7, 18, 8, 0))
+        self.assertEqual(sac.reftime.datetime,
+                         datetime.datetime(1978, 7, 18, 8, 0))
         self.assertEqual(sac.nvhdr, 6)
         self.assertEqual(sac.b, 10.0)
         self.assertAlmostEqual(sac.depmen, 9.0599059e-8)
@@ -138,7 +139,8 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.nvhdr, 6)
         self.assertEqual(sac.b, 10.0)
         self.assertAlmostEqual(sac.depmen, 9.4771387e-08)
-        np.testing.assert_array_almost_equal(self.testdata[0:10], sac.data[0:10])
+        np.testing.assert_array_almost_equal(self.testdata[0:10],
+                                             sac.data[0:10])
 
     @unittest.skip("Not implemented yet.")
     def test_write_sac_ascii(self):
@@ -149,13 +151,15 @@ class SACTraceTestCase(unittest.TestCase):
         A SACTrace.reftime should be created correctly from a file's nz-times
         """
         sac = SACTrace.read(self.fileseis)
-        self.assertEqual(sac.reftime, UTCDateTime('1981-03-29T10:38:14.000000Z'))
+        self.assertEqual(sac.reftime,
+                         UTCDateTime('1981-03-29T10:38:14.000000Z'))
         # changes to a reftime should be reflected in the nz times and reftime
         nzsec, nzmsec = sac.nzsec, sac.nzmsec
         sac.reftime = sac.reftime + 2.5
         self.assertEqual(sac.nzsec, nzsec + 2)
         self.assertEqual(sac.nzmsec, nzmsec + 500)
-        self.assertEqual(sac.reftime, UTCDateTime('1981-03-29T10:38:16.500000Z'))
+        self.assertEqual(sac.reftime,
+                         UTCDateTime('1981-03-29T10:38:16.500000Z'))
         # changes in the nztimes should be reflected reftime
         sac.nzyear = 2001
         self.assertEqual(sac.reftime.year, 2001)
