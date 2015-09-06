@@ -332,10 +332,11 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
 
     # deal with desired byte order
     # TODO: combine with block above
-    if data is None:
-        assert hf.dtype.byteorder == hi.dtype.byteorder
-    else:
-        assert hf.dtype.byteorder == hi.dtype.byteorder == data.dtype.byteorder
+    #if data is None:
+    #    assert hf.dtype.byteorder == hi.dtype.byteorder
+    #else:
+    #    print(hf.dtype.byteorder, hi.dtype.byteorder, data.dtype.byteorder)
+    #    assert hf.dtype.byteorder == hi.dtype.byteorder == data.dtype.byteorder
 
     if byteorder:
         if byteorder == 'little':
@@ -349,11 +350,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         hi = hi.astype(native_str(endian_str + 'i4'))
         if data is not None:
             data = data.astype(native_str(endian_str + 'f4'))
-        #if not is_same_byteorder(byteorder, hf.dtype.byteorder):
-        #    hf = hf.byteswap(True).newbyteorder(byteorder)
-        #    hi = hf.byteswap(True).newbyteorder(byteorder)
-        #    if data is not None:
-        #        data = data.byteswap(True).newbyteorder(byteorder)
 
     # actually write everything
     try:
