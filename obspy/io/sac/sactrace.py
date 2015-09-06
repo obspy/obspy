@@ -25,13 +25,9 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-#import obspy.io.sac.header as HD
 from ..sac import header as HD
-#from obspy.io.sac.util import SacError, SacHeaderError, SacInvalidContentError
-from .util import SacError, SacHeaderError, SacInvalidContentError
-#from obspy.io.sac import util as _ut
+from .util import SacError, SacHeaderError
 from ..sac import util as _ut
-#from obspy.io.sac import arrayio as _io
 from ..sac import arrayio as _io
 
 
@@ -923,7 +919,8 @@ class SACTrace(object):
         except SacError:
             # not enough time info in old SAC header
             # XXX: try to do something besides ignore the old header?
-            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header=False)
+            header = _ut.obspy_to_sac_header(trace.stats,
+                                             keep_sac_header=False)
 
         # handle the data headers
         data = trace.data
@@ -941,10 +938,9 @@ class SACTrace(object):
             # data is None
             byteorder = '='
 
-        # XXX: only gives native-endian arrays, doesnt handle big endian data.
         hf, hi, hs = _io.dict_to_header_arrays(header, byteorder=byteorder)
         sac = cls._from_arrays(hf, hi, hs, data)
-        #sac._flush_headers()
+        # sac._flush_headers()
 
         return sac
 
@@ -1196,7 +1192,8 @@ class SACTrace(object):
         ...it is recommended to just make sure your target reference header is
         set and correct, and set the iztype:
 
-        >>> sac.o = UTCDateTime(year=1982, julday=123, hour=13, minute=37,  # doctest: +SKIP
+        >>> sac.o = UTCDateTime(year=1982, julday=123,  # doctest: +SKIP
+                                hour=13, minute=37,  # doctest: +SKIP
                                 second=10, microsecond=103)  # doctest: +SKIP
         >>> sac.iztype = 'io' # doctest: +SKIP
 

@@ -29,7 +29,7 @@ from obspy import UTCDateTime
 
 from ..sac import header as HD
 from .util import SacIOError, SacInvalidContentError
-from .util import is_valid_enum_int, is_same_byteorder
+from .util import is_valid_enum_int
 
 
 def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
@@ -400,8 +400,6 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
         is_file_name = False
 
     if data is None and f.mode != 'r+':
-        # msg = "File mode must be 'r+' for data=None."
-        # raise ValueError(msg)
         msg = "Writing header-only file. Use 'wb+' file mode to update header."
         warnings.warn(msg)
 
@@ -412,14 +410,10 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
                    delimiter='')
         np.savetxt(f, np.reshape(hs, (8, 3)), fmt=native_str('%-8s'),
                    delimiter='')
-        #for i in range(0, 24, 3):
-        #    f.write(hs[i:i + 3].data)
-        #    f.write(b'\n')
     except Exception as e:
         if is_file_name:
             f.close()
         raise(e, "Cannot write header values: " + f.name)
-        #raise SacIOError("Cannot write header values: " + f.name)
 
     if data is not None:
         npts = hi[9]
@@ -431,7 +425,6 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
             rows = npts // 5
             np.savetxt(f, np.reshape(data[0:5 * rows], (rows, 5)),
                        fmt=native_str("%#15.7g"), delimiter='')
-                       #fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, data[5 * rows:], delimiter=b'\t')
         except:
             f.close()
