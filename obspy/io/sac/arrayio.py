@@ -330,14 +330,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         msg = "Writing header-only file. Use 'wb+' file mode to update header."
         warnings.warn(msg)
 
-    # deal with desired byte order
-    # TODO: combine with block above
-    #if data is None:
-    #    assert hf.dtype.byteorder == hi.dtype.byteorder
-    #else:
-    #    print(hf.dtype.byteorder, hi.dtype.byteorder, data.dtype.byteorder)
-    #    assert hf.dtype.byteorder == hi.dtype.byteorder == data.dtype.byteorder
-
     if byteorder:
         if byteorder == 'little':
             endian_str = '<'
@@ -350,6 +342,8 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         hi = hi.astype(native_str(endian_str + 'i4'))
         if data is not None:
             data = data.astype(native_str(endian_str + 'f4'))
+
+    # TODO: make sure all arrays have same byte order
 
     # actually write everything
     try:
