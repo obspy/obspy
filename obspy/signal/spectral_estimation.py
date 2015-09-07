@@ -42,6 +42,7 @@ from obspy.core import Stats
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
@@ -117,7 +118,7 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     msg = ('This wrapper is no longer necessary. Please use the '
            'matplotlib.mlab.psd function directly, specifying '
            '`sides="onesided"` and `scale_by_freq=True`.')
-    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+    warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
 
     # build up kwargs
     kwargs = {}

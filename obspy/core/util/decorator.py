@@ -26,6 +26,7 @@ import numpy as np
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 def deprecated(warning_msg=None):
@@ -43,7 +44,7 @@ def deprecated(warning_msg=None):
                 msg = warning_msg
             else:
                 msg = "Call to deprecated function %s." % func.__name__
-            warnings.warn(msg, category=DeprecationWarning)
+            warnings.warn(msg, category=ObsPyDeprecationWarning)
             return func(*args, **kwargs)
 
         new_func.__name__ = func.__name__
@@ -87,10 +88,10 @@ def deprecated_keywords(keywords):
                     nkw = keywords[kw]
                     if nkw is None:
                         warnings.warn(msg2 % (kw, fname),
-                                      category=DeprecationWarning)
+                                      category=ObsPyDeprecationWarning)
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
-                                      category=DeprecationWarning)
+                                      category=ObsPyDeprecationWarning)
                         kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)

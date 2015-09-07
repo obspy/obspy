@@ -18,6 +18,7 @@ from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 class ClientTestCase(unittest.TestCase):
@@ -718,8 +719,8 @@ class ClientTestCase(unittest.TestCase):
         """
         # user is a required keyword - raises now a deprecation warning
         with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', DeprecationWarning)
-            self.assertRaises(DeprecationWarning, Client)
+            warnings.simplefilter('error', ObsPyDeprecationWarning)
+            self.assertRaises(ObsPyDeprecationWarning, Client)
 
 
 def suite():

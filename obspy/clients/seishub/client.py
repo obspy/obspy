@@ -32,6 +32,7 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 
 
@@ -62,7 +63,7 @@ def _call_change_get_paz(func):
     This is a decorator to intercept a change in the arg list for
     seishub.client.station.get_paz() with revision [3778].
 
-    * throw a DeprecationWarning
+    * throw a ObsPyDeprecationWarning
     * make the correct call
     """
     @functools.wraps(func)
@@ -72,7 +73,7 @@ def _call_change_get_paz(func):
             msg = "The arg/kwarg call syntax of get_paz() has changed. " + \
                   "Please update your code! The old call syntax has been " + \
                   "deprecated and will stop working with the next version."
-            warnings.warn(msg, DeprecationWarning)
+            warnings.warn(msg, ObsPyDeprecationWarning)
             _self = args[0]
             network = args[1]
             station = args[2]

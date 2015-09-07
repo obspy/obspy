@@ -21,6 +21,7 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
@@ -271,11 +272,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
         with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', DeprecationWarning)
+            warnings.simplefilter('error', ObsPyDeprecationWarning)
             # This should not raise a warning.
             read(timingqual)
             # This should warn.
-            self.assertRaises(DeprecationWarning, read, timingqual,
+            self.assertRaises(ObsPyDeprecationWarning, read, timingqual,
                               quality=True)
 
     def test_readWithMissingBlockette010(self):

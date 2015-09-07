@@ -5,12 +5,11 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import codecs
 import fnmatch
-import inspect
 import os
 import re
 import unittest
 
-from obspy.core.util.testing import check_flake8
+from obspy.core.util.testing import check_flake8, get_all_py_files
 
 
 class CodeFormattingTestCase(unittest.TestCase):
@@ -29,6 +28,28 @@ class CodeFormattingTestCase(unittest.TestCase):
         self.assertGreater(file_count, 10)
         self.assertEqual(error_count, 0, "\n" + message.decode())
 
+    def test_use_ObsPyDeprecationWarning(self):
+        """
+        Tests that ObsPyDeprecationWarning is used rather than the usual
+        DeprecationWarning when using `warnings.warn()`
+        (because the latter is not shown by Python by default anymore).
+        """
+        msg = ("File '%s' seems to use DeprecationWarning instead of "
+               "obspy.core.util.deprecation_helpers.ObsPyDeprecationWarning:"
+               "\n\n%s")
+        pattern = r'warn\([^)]*?([\w]*?)DeprecationWarning[^)]*\)'
+
+        failures = []
+        for filename in get_all_py_files():
+            with codecs.open(filename, "r", encoding="utf-8") as fh:
+                content = fh.read()
+
+            for match in re.finditer(pattern, content):
+                if match.group(1) != 'ObsPy':
+                    failures.append(msg % (filename, match.group(0)))
+
+        self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
+
 
 class FutureUsageTestCase(unittest.TestCase):
     def test_future_imports_in_every_file(self):
@@ -36,9 +57,6 @@ class FutureUsageTestCase(unittest.TestCase):
         Tests that every single Python file includes the appropriate future
         headers to enforce consistent behavior.
         """
-        test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
-        obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
-
         # There are currently only three exceptions. Two files are imported
         # during installation and thus cannot contain future imports. The
         # third file is the compatibility layer which naturally also does
@@ -49,7 +67,7 @@ class FutureUsageTestCase(unittest.TestCase):
             os.path.join('core', 'compatibility.py'),
             os.path.join('lib', '*'),
         ]
-        exceptions = [os.path.join(obspy_dir, i) for i in exceptions]
+        exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
 
         def _match_exceptions(filename):
             for pattern in exceptions:
@@ -72,24 +90,19 @@ class FutureUsageTestCase(unittest.TestCase):
             flags=re.MULTILINE)
 
         failures = []
-        # Walk the obspy directory.
-        for dirpath, _, filenames in os.walk(obspy_dir):
-            # Find all Python files.
-            filenames = [os.path.abspath(os.path.join(dirpath, i)) for i in
-                         filenames if i.endswith(".py")]
-            for filename in filenames:
-                if _match_exceptions(filename):
-                    continue
-                with codecs.open(filename, "r", encoding="utf-8") as fh:
-                    content = fh.read()
+        for filename in get_all_py_files():
+            if _match_exceptions(filename):
+                continue
+            with codecs.open(filename, "r", encoding="utf-8") as fh:
+                content = fh.read()
 
-                    if re.search(future_imports_pattern, content) is None:
-                        failures.append("File '%s' misses imports: %s" %
-                                        (filename, future_import_line))
+            if re.search(future_imports_pattern, content) is None:
+                failures.append("File '%s' misses imports: %s" %
+                                (filename, future_import_line))
 
-                    if re.search(builtin_pattern, content) is None:
-                        failures.append("File '%s' misses imports: %s" %
-                                        (filename, builtins_line))
+            if re.search(builtin_pattern, content) is None:
+                failures.append("File '%s' misses imports: %s" %
+                                (filename, builtins_line))
         self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
 
 
