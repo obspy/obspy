@@ -160,7 +160,7 @@ def is_same_byteorder(bo1, bo2):
 
 
 def _clean_str(value):
-    null_term = value.find(b'\x00')
+    null_term = value.find(b'\x00'.decode())
     if null_term >= 0:
         value = value[:null_term]
     value = value.strip()
