@@ -3,6 +3,7 @@ python:
   - 2.7
   - 3.3
   - 3.4
+  - "nightly"
 sudo: false
 install:
   - lsb_release -a # get info on the operating system
