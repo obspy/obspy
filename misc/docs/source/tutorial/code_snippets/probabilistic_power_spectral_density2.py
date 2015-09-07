@@ -1,5 +1,6 @@
 from obspy import read
 from obspy.signal import PPSD
+from obspy.imaging.cm import pqlx
 from obspy.io.xseed import Parser
 
 
@@ -11,4 +12,4 @@ ppsd.add(st)
 st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
 ppsd.add(st)
 
-ppsd.plot()
+ppsd.plot(cmap=pqlx)

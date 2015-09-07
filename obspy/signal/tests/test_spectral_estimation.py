@@ -14,10 +14,11 @@ import warnings
 
 import numpy as np
 
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window)
+                                              welch_window, NPZ_STORE_KEYS)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -210,6 +211,117 @@ class PsdTestCase(unittest.TestCase):
                                           binning['spec_bins'])
             np.testing.assert_array_equal(ppsd_loaded.period_bins,
                                           binning['period_bins'])
+
+    def test_PPSD_w_IRIS(self):
+        # Bands to be used this is the upper and lower frequency band pairs
+        fres = zip([0.1, 0.05], [0.2, 0.1])
+
+        file_dataANMO = os.path.join(self.path, 'IUANMO.seed')
+        # Read in ANMO data for one day
+        st = read(file_dataANMO)
+
+        # Use a canned ANMO response which will stay static
+        paz = {'gain': 86298.5, 'zeros': [0, 0],
+               'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
+                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+
+        # Make an empty PPSD and add the data
+        ppsd = PPSD(st[0].stats, paz)
+        ppsd.add(st)
+
+        # Get the 50th percentile from the PPSD
+        (per, perval) = ppsd.get_percentile(percentile=50)
+
+        # Read in the results obtained from a Mustang flat file
+        file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
+        freq, power, hits = np.genfromtxt(file_dataIRIS, comments='#',
+                                          delimiter=',', unpack=True)
+
+        # For each frequency pair we want to compare the mean of the bands
+        for fre in fres:
+            pervalGoodOBSPY = []
+
+            # Get the values for the bands from the PPSD
+            perinv = 1 / per
+            mask = (fre[0] < perinv) & (perinv < fre[1])
+            pervalGoodOBSPY = perval[mask]
+
+            # Now we sort out all of the data from the IRIS flat file
+            mask = (fre[0] < freq) & (freq < fre[1])
+            triples = list(zip(freq[mask], hits[mask], power[mask]))
+            # We now have all of the frequency values of interest
+            # We will get the distinct frequency values
+            freqdistinct = sorted(list(set(freq[mask])), reverse=True)
+            percenlist = []
+            # We will loop through the frequency values and compute a
+            # 50th percentile
+            for curfreq in freqdistinct:
+                tempvalslist = []
+                for triple in triples:
+                    if np.isclose(curfreq, triple[0], atol=1e-3, rtol=0.0):
+                        tempvalslist += [int(triple[2])] * int(triple[1])
+                percenlist.append(np.percentile(tempvalslist, 50))
+            # Here is the actual test
+            np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
+                                       np.mean(percenlist), rtol=0.0, atol=1.0)
+
+    def test_PPSD_w_IRIS_against_obspy_results(self):
+        """
+        Test against results obtained after merging of #1108.
+        """
+        # Read in ANMO data for one day
+        st = read(os.path.join(self.path, 'IUANMO.seed'))
+
+        # Read in metadata in various different formats
+        paz = {'gain': 86298.5, 'zeros': [0, 0],
+               'poles': [-59.4313, -22.7121 + 27.1065j, -22.7121 + 27.1065j,
+                         -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
+        resp = os.path.join(self.path, 'IUANMO.resp')
+        parser = Parser(os.path.join(self.path, 'IUANMO.dataless'))
+        inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
+
+        # load expected results, for both only PAZ and full response
+        results_paz = np.load(os.path.join(self.path, 'IUANMO_ppsd_paz.npz'))
+        results_full = np.load(os.path.join(self.path,
+                                            'IUANMO_ppsd_fullresponse.npz'))
+        arrays_to_check = ['hist_stack', 'spec_bins', 'period_bins']
+
+        # Calculate the PPSDs and test against expected results
+        # first: only PAZ
+        ppsd = PPSD(st[0].stats, paz)
+        ppsd.add(st)
+        for key in arrays_to_check:
+            self.assertTrue(np.allclose(
+                getattr(ppsd, key), results_paz[key], rtol=1e-5))
+        # second: various methods for full response
+        # (also test various means of initialization, basically testing the
+        #  decorator that maps the deprecated keywords)
+        for metadata in [parser, inv, resp]:
+            ppsd = PPSD(st[0].stats, paz=metadata)
+            ppsd = PPSD(st[0].stats, parser=metadata)
+            ppsd = PPSD(st[0].stats, metadata)
+            ppsd.add(st)
+            for key in arrays_to_check:
+                self.assertTrue(np.allclose(
+                    getattr(ppsd, key), results_full[key], rtol=1e-5))
+
+    def test_PPSD_save_and_load_npz(self):
+        """
+        Test PPSD.load_npz() and PPSD.save_npz()
+        """
+        _, paz = _get_sample_data()
+        ppsd = _get_ppsd()
+
+        # save results to npz file
+        with NamedTemporaryFile(suffix=".npz") as tf:
+            filename = tf.name
+            # test saving and loading an uncompressed file
+            ppsd.save_npz(filename)
+            ppsd_loaded = PPSD.load_npz(filename, metadata=paz)
+
+        for key in NPZ_STORE_KEYS:
+            np.testing.assert_equal(getattr(ppsd, key),
+                                    getattr(ppsd_loaded, key))
 
 
 def suite():

@@ -11,4 +11,4 @@ ppsd.add(st)
 st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
 ppsd.add(st)
 
-ppsd.plot()
+ppsd.plot(cumulative=True)
