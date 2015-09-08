@@ -411,6 +411,14 @@ class ComplexWithUncertainties(CustomComplex):
                                       upper_uncertainty=_upper)
 
 
+class ObsPyException(Exception):
+    pass
+
+
+class ZeroSamplingRate(ObsPyException):
+    pass
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

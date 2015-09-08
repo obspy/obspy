@@ -2546,10 +2546,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         freq_response, freqs = \
             self.stats.response.get_evalresp_response(self.stats.delta, nfft,
                                                       output=output, **kwargs)
+
+        # frequency domain pre-filtering of data spectrum
+        # (apply cosine taper in frequency domain)
         if pre_filt:
             data *= cosine_sac_taper(freqs, flimit=pre_filt)
-        if water_level is not None:
+
+        if water_level is None:
+            # No water level used, so just directly invert the response.
+            # First entry is at zero frequency and value is zero, too.
+            # Just do not invert the first value (and set to 0 to make sure).
+            freq_response[0] = 0.0
+            freq_response[1:] = 1.0 / freq_response[1:]
+        else:
+            # Invert spectrum with specified water level.
             invert_spectrum(freq_response, water_level)
+
         data *= freq_response
 
         data[-1] = abs(data[-1]) + 0.0j

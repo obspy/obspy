@@ -37,10 +37,6 @@ master:
    * New module for ESRI shapefile write support (see #1066)
  - obspy.io.stationtxt:
    * New module reading the FDSN station files.
- - obspy.io.stationxml:
-   * Format detection no longer based on validating against the schema. While
-     strictly speaking correct this does not work with many real-world files.
-	 It now simply checks the root tag.
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
@@ -78,6 +74,19 @@ master:
        to the `percentile` option.
 
 0.10.x:
+  - obspy.core:
+    * Fix reading of multiple catalog files using globs (see #1065).
+    * Fixed a bug when using
+      `Trace.remove_response(..., water_level=None)`.
+      With that setting that is supposed to not use any water level
+      stabilization in the inversion of the instrument response
+      spectrum actually the instrument response was never inverted and
+      thus instead of a deconvolution a convolution was performed
+      (see #1104).
+    * Fixing floating point precision/rounding issue with UTCDateTime when
+      initializing with floating point seconds, i.e. with microseconds,
+      that could lead to microseconds being off by 1 microsecond
+      (see #1096)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
   - obspy.mseed:
@@ -91,10 +100,21 @@ master:
     * Bug fixed within rotate.rotate2ZNE(). Additionally it can now also
       perform the inverse rotation (see #1061).
   - obspy.station:
+    * Plotting responses across multiple channels is more robust now in
+      presence of some strange channels (e.g. with zero sampling rate,
+      happens e.g. for state of health channels, see #1115)
     * ObsPy no longer assumes that the StationXML namespace is the default
       namespace (see #1060).
+    * Checking if a file is a StationXML file is less rigorous (and much
+      faster) now (not checking strict validity against xsd schema but
+      only looking for a FDSNStationXML root element, see #1114).
+      This means that `read_inventory()` without explicitly specified
+      format will correctly detect more files as StationXML that have very
+      slight breaches of the schema but still can be interpreted as
+      StationXML.
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
+    * Calculating arrivals for underside reflections now works (see #1089)
   - obspy.io.zmap
     * Add support for time values with sub-second precision (see #1093)
 

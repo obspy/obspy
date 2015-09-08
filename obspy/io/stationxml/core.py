@@ -17,6 +17,7 @@ import inspect
 import io
 import math
 import os
+import re
 import warnings
 
 from lxml import etree
@@ -65,7 +66,12 @@ def _is_stationxml(path_or_file_object):
             except etree.XMLSyntaxError:
                 return False
         root = xmldoc.getroot()
-        if root.tag != "{http://www.fdsn.org/xml/station/1}FDSNStationXML":
+        try:
+            match = re.match(
+                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+                root.tag)
+            assert match is not None
+        except:
             return False
         # Convert schema number to a float to have positive comparisons
         # between, e.g "1" and "1.0".
