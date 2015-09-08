@@ -446,7 +446,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         time = UTCDateTime(2010, 0o5, 31, 19, 54, 24.490)
         res = -0.045149
 
-        result1 = UTCDateTime("2010-05-31T19:54:24.535148Z")
+        result1 = UTCDateTime("2010-05-31T19:54:24.535149Z")
         result2 = time + (-res)
         result3 = time - res
         self.assertAlmostEqual(result2 - result3, 0.0)
