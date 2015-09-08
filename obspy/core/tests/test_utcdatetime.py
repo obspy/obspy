@@ -446,13 +446,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         Tests subtraction of floats from UTCDateTime
         """
         time = UTCDateTime(2010, 0o5, 31, 19, 54, 24.490)
-        res = -0.045149
+        delta = -0.045149
+        expected = UTCDateTime("2010-05-31T19:54:24.535149Z")
 
-        result1 = UTCDateTime("2010-05-31T19:54:24.535148Z")
-        result2 = time + (-res)
-        result3 = time - res
-        self.assertAlmostEqual(result2 - result3, 0.0)
-        self.assertAlmostEqual(result1.timestamp, result2.timestamp, 6)
+        got1 = time + (-delta)
+        got2 = time - delta
+        self.assertAlmostEqual(got1 - got2, 0.0)
+        self.assertAlmostEqual(expected.timestamp, got1.timestamp, 6)
 
     def test_issue159(self):
         """
@@ -961,6 +961,32 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(dt.__str__(), '2038-01-19T03:14:08.000000Z')
         dt = UTCDateTime(2106, 2, 7, 6, 28, 16)
         self.assertEqual(dt.__str__(), '2106-02-07T06:28:16.000000Z')
+
+    def test_format_IRIS_webservice(self):
+        """
+        Tests the format IRIS webservice function.
+
+        See issue #1096.
+        """
+        # These are parse slightly differently (1 microsecond difference but
+        # the IRIS webservice string should be identical as its only
+        # accurate to three digits.
+        d1 = UTCDateTime(2011, 1, 25, 15, 32, 12.26)
+        d2 = UTCDateTime("2011-01-25T15:32:12.26")
+
+        self.assertEqual(d1.format_IRIS_web_service(),
+                         d2.format_IRIS_web_service())
+
+    def test_floating_point_second_initialization(self):
+        """
+        Tests floating point precision issues in initialization of UTCDateTime
+        objects with floating point seconds.
+
+        See issue #1096.
+        """
+        for microns in np.arange(0, 5999, dtype=np.int):
+            t = UTCDateTime(2011, 1, 25, 15, 32, 12 + microns / 1e6)
+            self.assertEqual(microns, t.microsecond)
 
 
 def suite():

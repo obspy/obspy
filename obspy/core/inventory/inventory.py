@@ -24,8 +24,9 @@ import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin)
 from obspy.core.util.decorator import map_example_filename
-from .network import Network
+from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
+from .network import Network
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -692,11 +693,20 @@ class Inventory(ComparingObject):
         for net in matching.networks:
             for sta in net.stations:
                 for cha in sta.channels:
-                    cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                             label=".".join((net.code, sta.code,
-                                             cha.location_code, cha.code)),
-                             unwrap_phase=unwrap_phase, show=False,
-                             outfile=None)
+                    try:
+                        cha.plot(min_freq=min_freq, output=output,
+                                 axes=(ax1, ax2),
+                                 label=".".join((net.code, sta.code,
+                                                 cha.location_code, cha.code)),
+                                 unwrap_phase=unwrap_phase, show=False,
+                                 outfile=None)
+                    except ZeroSamplingRate:
+                        msg = ("Skipping plot of channel with zero "
+                               "sampling rate:\n%s")
+                        warnings.warn(msg % str(cha), UserWarning)
+                    except ObsPyException as e:
+                        msg = "Skipping plot of channel (%s):\n%s"
+                        warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
         if not axes:

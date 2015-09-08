@@ -57,11 +57,11 @@ class TauPyModelTestCase(unittest.TestCase):
         """
         Helper method comparing arrivals against the phases stored in a file.
         """
-        arrivals = sorted(arrivals, key=lambda x: x.time)
+        arrivals = sorted(arrivals, key=lambda x: (x.time, x.name))
 
-        _expected_arrivals_unsorted = self._read_taup_output(filename)
-        _index = _expected_arrivals_unsorted['time'].argsort()
-        expected_arrivals = _expected_arrivals_unsorted[_index]
+        expected_arrivals = self._read_taup_output(filename)
+        expected_arrivals = sorted(expected_arrivals,
+                                   key=lambda x: (x["time"], x["name"]))
 
         for arr, expected_arr in zip(arrivals, expected_arrivals):
             self._assert_arrivals_equal(arr, expected_arr)
@@ -478,6 +478,21 @@ class TauPyModelTestCase(unittest.TestCase):
                     self.assertEqual(round(arrival.time, 2), round(time, 2))
                     self.assertEqual(round(arrival.ray_param_sec_degree, 2),
                                      round(ray_param, 2))
+
+    def test_underside_reflections(self):
+        """
+        Tests the calculation of a couple of underside reflection phases.
+        """
+        m = TauPyModel(model="iasp91")
+        # If an interface that is not in the model is used for a phase name,
+        # it should snap to the next closest interface. This is reflected in
+        # the purist name of the arrivals.
+        arrivals = m.get_travel_times(
+            source_depth_in_km=10.0, distance_in_degree=90.0,
+            phase_list=["P", "PP", "P^410P", "P^660P", "P^300P", "P^400P",
+                        "P^500P", "P^600P"])
+
+        self._compare_arrivals_with_file(arrivals, "underside_reflections.txt")
 
 
 def suite():

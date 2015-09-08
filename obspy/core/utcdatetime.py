@@ -324,7 +324,7 @@ class UTCDateTime(object):
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
             _frac, _sec = math.modf(round(args[5], 6))
-            kwargs['microsecond'] = int(_frac * 1e6)
+            kwargs['microsecond'] = int(round(_frac * 1e6))
             kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)

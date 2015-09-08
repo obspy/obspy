@@ -17,6 +17,7 @@ import inspect
 import io
 import math
 import os
+import re
 import warnings
 
 from lxml import etree
@@ -49,7 +50,26 @@ def _is_stationxml(path_or_file_object):
 
     :param path_or_file_object: File name or file like object.
     """
-    return validate_StationXML(path_or_file_object)[0]
+    if isinstance(path_or_file_object, etree._Element):
+        xmldoc = path_or_file_object
+    else:
+        try:
+            xmldoc = etree.parse(path_or_file_object)
+        except etree.XMLSyntaxError:
+            return False
+    try:
+        root = xmldoc.getroot()
+    except:
+        return False
+    # check tag of root element
+    try:
+        match = re.match(
+            r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+            root.tag)
+        assert match is not None
+    except:
+        return False
+    return True
 
 
 def validate_StationXML(path_or_object):

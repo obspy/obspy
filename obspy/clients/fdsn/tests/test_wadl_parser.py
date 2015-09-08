@@ -101,17 +101,7 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertIn("maxlongitude", params)
         self.assertIn("minmagnitude", params)
         self.assertIn("maxmagnitude", params)
-        # XXX hack for IRIS wadl that contains the abbreviated "magtype"
-        # XXX instead of the normal "magnitudetype" currently. Emailed them
-        # XXX about it, expecting that to be changed since no other
-        # XXX abbreviations are used in the WADL otherwise.
-        # XXX When it is changed at IRIS, we should update data/event.wadl
-        # XXX and remove this.
-        key_magnitudetype = "magnitudetype"
-        # XXX see above, remove following line again when event.wadl is fixed
-        # XXX at IRIS and data/event.wadl is updated
-        key_magnitudetype = "magtype"
-        self.assertIn(key_magnitudetype, params)
+        self.assertIn("magnitudetype", params)
         self.assertIn("catalog", params)
 
         self.assertIn("contributor", params)
@@ -138,15 +128,11 @@ class WADLParserTestCase(unittest.TestCase):
         # Same for the format attribute.
         self.assertFalse("format" in params)
 
-        key_magnitudetype = "magnitudetype"
-        # XXX see above, remove following line again when event.wadl is fixed
-        # XXX at IRIS and data/event.wadl is updated
-        key_magnitudetype = "magtype"
         self.assertEqual(
-            params[key_magnitudetype]["doc_title"],
+            params["magnitudetype"]["doc_title"],
             "type of Magnitude used to test minimum and maximum limits "
             "(case insensitive)")
-        self.assertEqual(params[key_magnitudetype]["doc"],
+        self.assertEqual(params["magnitudetype"]["doc"],
                          "Examples: Ml,Ms,mb,Mw\"")
 
     def test_station_wadl_parsing(self):

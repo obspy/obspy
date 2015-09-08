@@ -18,6 +18,8 @@ import fnmatch
 import textwrap
 import warnings
 
+from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
+
 from .station import Station
 from .util import BaseNode
 
@@ -552,10 +554,19 @@ class Network(BaseNode):
 
         for sta in matching.stations:
             for cha in sta.channels:
-                cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
-                         label=".".join((self.code, sta.code,
-                                         cha.location_code, cha.code)),
-                         unwrap_phase=unwrap_phase, show=False, outfile=None)
+                try:
+                    cha.plot(min_freq=min_freq, output=output, axes=(ax1, ax2),
+                             label=".".join((self.code, sta.code,
+                                             cha.location_code, cha.code)),
+                             unwrap_phase=unwrap_phase, show=False,
+                             outfile=None)
+                except ZeroSamplingRate:
+                    msg = ("Skipping plot of channel with zero "
+                           "sampling rate:\n%s")
+                    warnings.warn(msg % str(cha), UserWarning)
+                except ObsPyException as e:
+                    msg = "Skipping plot of channel (%s):\n%s"
+                    warnings.warn(msg % (str(e), str(cha)), UserWarning)
 
         # final adjustments to plot if we created the figure in here
         if not axes:

@@ -197,6 +197,7 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
@@ -212,7 +213,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(isinstance(cat.creation_info, CreationInfo))
         self.assertEqual(cat.creation_info.author, 'test2')
 
-    def test_readEventsWithoutParameters(self):
+    def test_read_events_without_parameters(self):
         """
         Calling read_events w/o any parameter will create an example catalog.
         """
@@ -227,9 +228,9 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(catalog.__str__().startswith("3 Event(s) in Catalog:"))
         self.assertTrue(catalog.__str__().endswith("37.736 | 3.0 ML | manual"))
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
-        Tests the read_events function using entry points.
+        Tests the read_events() function using entry points.
         """
         # iris
         catalog = read_events(self.iris_xml)
@@ -242,6 +243,17 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
         self.assertEqual(catalog[2]._format, 'QUAKEML')
+
+    def test_read_events_with_wildcard(self):
+        """
+        Tests the read_events() function with a filename wild card.
+        """
+        # without wildcard..
+        expected = read_events(self.iris_xml)
+        expected += read_events(self.neries_xml)
+        # with wildcard
+        got = read_events(os.path.join(self.path, "*_events.xml"))
+        self.assertEqual(expected, got)
 
     def test_append(self):
         """

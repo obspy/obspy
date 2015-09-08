@@ -94,7 +94,7 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     Wrapper for :func:`matplotlib.mlab.psd`.
 
     Always returns a onesided psd (positive frequencies only), corrects for
-    this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
+    this fact by scaling with a factor of 2. Also, always normalizes to 1/Hz
     by dividing with sampling rate.
 
     .. deprecated:: 0.11.0
