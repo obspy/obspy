@@ -24,7 +24,8 @@ import numpy as np
 from obspy.core.util.base import ComparingObject, getMatplotlibVersion
 from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
                                          FloatWithUncertainties,
-                                         FloatWithUncertaintiesAndUnit)
+                                         FloatWithUncertaintiesAndUnit,
+                                         ObsPyException)
 from obspy.station.util import Angle, Frequency
 
 
@@ -756,6 +757,11 @@ class Response(ComparingObject):
         :rtype: tuple of two arrays
         :returns: frequency response and corresponding frequencies
         """
+        if not self.response_stages:
+            msg = ("Can not use evalresp on response with no response "
+                   "stages.")
+            raise ObsPyException(msg)
+
         import obspy.signal.evrespwrapper as ew
         from obspy.signal.headers import clibevresp
 
