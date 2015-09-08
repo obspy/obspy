@@ -22,6 +22,13 @@
   - obspy.station:
     * ObsPy no longer assumes that the StationXML namespace is the default
       namespace (see #1060).
+    * Checking if a file is a StationXML file is less rigorous (and much
+      faster) now (not checking strict validity against xsd schema but
+      only looking for a FDSNStationXML root element, see #1114).
+      This means that `read_inventory()` without explicitly specified
+      format will correctly detect more files as StationXML that have very
+      slight breaches of the schema but still can be interpreted as
+      StationXML.
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
     * Calculating arrivals for underside reflections now works (see #1089)
