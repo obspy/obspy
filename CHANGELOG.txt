@@ -45,6 +45,37 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
    * New Lanczos interpolation/resampling (see #1101)
+   * PPSD (see #931 and #1108):
+     - Algorithm for PSD computation was improved, especially affecting results
+       at long periods (for detailed discussion see #931 and #1108).
+     - Keywords `paz` and `parser` were removed in favor of new keyword
+       `metadata`. PPSD now accepts `metadata` in a much wider range
+       of formats:
+          * Inventory objects (e.g. from StationXML or from FDSN webservice)
+          * obspy.io.xseed Parser objects (e.g. from dataless SEED file)
+          * filename of a RESP file
+          * dictionary with poles and zeros information (like in
+            prior versions)
+       Most old codes should still work, issuing a deprecation warning, but
+       old code that specifies *both* `paz` and `parser` keywords will raise
+       an exception.
+     - Whenever possible (i.e. when using for `metadata` an Inventory,
+       a Parser or a RESP file), response calculation now takes into account
+       the full response (all stages) as opposed to only using the poles and
+       zeros response stage (as was done in previous versions when using a
+       Parser object). When using a poles and zeros dictionary response
+       calculation is unchanged (as no information on other stages is
+       available, of course).
+     - New save/load mechanism using numpy .npz binary format that circumvents
+       some problems with the old pickle mechanism:
+       `PPSD.save_npz()` and `PPSD.load_npz()`
+     - Change default colormap to new obspy default sequential colormap
+       (matplotlibs new viridis colormap). The old PQLX colormap is provided by
+       `obspy.imaging.cm.pqlx` and can be used with
+       `PPSD.plot(..., cmap=...)`.
+     - new option `PPSD.plot(..., cumulative=True)` for a cumulative plot of
+       the histogram, i.e. a non-exceedence percentage visualization, similar
+       to the `percentile` option.
 
 0.10.x:
   - obspy.fdsn:

@@ -21,16 +21,19 @@ Read data and select a trace with the desired station/channel combination:
     >>> st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
     >>> tr = st.select(id="BW.KW1..EHZ")[0]
 
-Get poles and zeros information, e.g. from a dataless SEED file. Then
-initialize a new :class:`~obspy.signal.spectral_estimation.PPSD` instance. The
-ppsd object will then make sure that only appropriate data go into the
-probabilistic psd statistics.
+Metadata can be provided as an
+:class:`~obspy.core.inventory.inventory.Inventory` (e.g. from a StationXML file
+or from a request to a FDSN web service), a :class:`~obspy.io.xseed.Parser`
+(e.g. from a dataless SEED file), a filename of a local RESP file (or a legacy
+poles and zeros dictionary). Then we initialize a new
+:class:`~obspy.signal.spectral_estimation.PPSD` instance. The ppsd object will
+then make sure that only appropriate data go into the probabilistic psd
+statistics.
 
 .. doctest::
 
     >>> parser = Parser("http://examples.obspy.org/dataless.seed.BW_KW1")
-    >>> paz = parser.getPAZ(tr.id)
-    >>> ppsd = PPSD(tr.stats, paz)
+    >>> ppsd = PPSD(tr.stats, metadata=parser)
 
 Now we can add data (either trace or stream objects) to the ppsd estimate. This
 step may take a while. The return value ``True`` indicates that the data was
@@ -82,6 +85,21 @@ window..
 
 .. plot:: tutorial/code_snippets/probabilistic_power_spectral_density.py
 
+A (for each frequency bin) cumulative version of the histogram can also be
+visualized:
+
+    >>> ppsd.plot(cumulative=True)
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
+
+To use the colormap used by PQLX / [McNamara2004]_ you can import and use that
+colormap from :mod:`obspy.imaging.cm`:
+
+    >>> from obspy.imaging.cm import pqlx
+    >>> ppsd.plot(cmap=pqlx)
+
+.. plot:: tutorial/code_snippets/probabilistic_power_spectral_density2.py
+
 Below the actual PPSD (for a detailed discussion see
 [McNamara2004]_) is a visualization of the data basis for the PPSD
 (can also be switched off during plotting). The top row shows data fed into the
@@ -93,6 +111,6 @@ lines.
 
 .. note::
    
-   Providing metadata from e.g. a Dataless SEED volume is safer than specifying
-   static poles and zeros information (see
+   Providing metadata from e.g. a Dataless SEED or StationXML volume is safer
+   than specifying static poles and zeros information (see
    :class:`~obspy.signal.spectral_estimation.PPSD`). 

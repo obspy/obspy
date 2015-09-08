@@ -26,6 +26,7 @@ import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
 from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -120,7 +121,7 @@ class Client(object):
         See :class:`obspy.clients.arclink.client.Client` for all parameters.
         """
         if user is None:
-            warnings.warn(MSG_USER_REQUIRED, category=DeprecationWarning)
+            warnings.warn(MSG_USER_REQUIRED, category=ObsPyDeprecationWarning)
             self.user = 'ObsPy client'
         else:
             self.user = user
@@ -445,7 +446,7 @@ class Client(object):
         if kwargs.get('get_paz') or kwargs.get('getCoordinates'):
             msg = "Keywords get_paz and getCoordinates are deprecated. " + \
                   "Please use keyword metadata instead."
-            warnings.warn(msg, DeprecationWarning)
+            warnings.warn(msg, ObsPyDeprecationWarning)
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('get_paz', False) or \
             kwargs.get('getCoordinates', False)
@@ -819,7 +820,7 @@ class Client(object):
             # warn if old scheme
             msg = "The 'starttime' and 'endtime' keywords will be " + \
                 "deprecated. Please use 'time' instead."
-            warnings.warn(msg, category=DeprecationWarning)
+            warnings.warn(msg, category=ObsPyDeprecationWarning)
         elif starttime and not endtime:
             # use a single starttime as time keyword
             time = starttime
@@ -977,7 +978,7 @@ class Client(object):
             msg = "The 'starttime' and 'endtime' keywords will be " + \
                 "deprecated. Please use 'time' instead. Be aware that the" + \
                 "result of get_paz() will differ using the 'time' keyword."
-            warnings.warn(msg, category=DeprecationWarning)
+            warnings.warn(msg, category=ObsPyDeprecationWarning)
         elif starttime and not endtime:
             # use a single starttime as time keyword
             time = starttime

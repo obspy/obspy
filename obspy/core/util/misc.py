@@ -26,6 +26,8 @@ from subprocess import STDOUT, CalledProcessError, check_output
 
 import numpy as np
 
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+
 
 # The following dictionary maps the first character of the channel_id to the
 # lowest sampling rate this so called Band Code should be used for according
@@ -331,7 +333,7 @@ def wrap_long_string(string, line_length=79, prefix="",
 
     warnings.warn('The wrap_long_string function is deprecated. Please use '
                   'the textwrap module from the standard library instead.',
-                  DeprecationWarning)
+                  ObsPyDeprecationWarning)
 
     def text_width_for_prefix(line_length, prefix):
         text_width = line_length - len(prefix) - \

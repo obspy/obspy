@@ -290,8 +290,11 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
     details and justification please see [Burger2009]_ and [vanDriel2015]_.
     """
     _validate_parameters(data, old_start, old_dt, new_start, new_dt, new_npts)
+
+    # dt and offset in terms of the original sampling interval.
     dt_factor = float(new_dt) / old_dt
-    offset = new_start - old_start
+    offset = (new_start - old_start) / float(old_dt)
+
     if offset < 0:
         raise ValueError("Cannot extrapolate. Make sure to only interpolate "
                          "within the time range of the original signal.")

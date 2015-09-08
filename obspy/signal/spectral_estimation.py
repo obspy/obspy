@@ -20,6 +20,7 @@ Various Routines Related to Spectral Estimation
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import bisect
 import bz2
@@ -36,40 +37,55 @@ from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
-from obspy import Stream, Trace
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
+from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version
+from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.imaging.cm import obspy_sequential
+from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
+from obspy.signal.invsim import paz_to_freq_resp, evalresp
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
 
 dtiny = np.finfo(0.0).tiny
 
-# build colormap as done in paper by mcnamara
-CDICT = {'red': ((0.0, 1.0, 1.0),
-                 (0.05, 1.0, 1.0),
-                 (0.2, 0.0, 0.0),
-                 (0.4, 0.0, 0.0),
-                 (0.6, 0.0, 0.0),
-                 (0.8, 1.0, 1.0),
-                 (1.0, 1.0, 1.0)),
-         'green': ((0.0, 1.0, 1.0),
-                   (0.05, 0.0, 0.0),
-                   (0.2, 0.0, 0.0),
-                   (0.4, 1.0, 1.0),
-                   (0.6, 1.0, 1.0),
-                   (0.8, 1.0, 1.0),
-                   (1.0, 0.0, 0.0)),
-         'blue': ((0.0, 1.0, 1.0),
-                  (0.05, 1.0, 1.0),
-                  (0.2, 1.0, 1.0),
-                  (0.4, 1.0, 1.0),
-                  (0.6, 0.0, 0.0),
-                  (0.8, 0.0, 0.0),
-                  (1.0, 0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
+NPZ_STORE_KEYS = [
+    'hist_stack',
+    '_times_data',
+    '_times_gaps',
+    '_times_used',
+    'xedges',
+    'yedges',
+    'channel',
+    'delta',
+    'freq',
+    'id',
+    'is_rotational_data',
+    'len',
+    'location',
+    'merge_method',
+    'network',
+    'nfft',
+    'nlap',
+    'overlap',
+    'per',
+    'per_octaves',
+    'per_octaves_left',
+    'per_octaves_right',
+    'period_bin_centers',
+    'period_bins',
+    'ppsd_length',
+    'sampling_rate',
+    'spec_bins',
+    'station',
+    ]
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -102,7 +118,7 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
     msg = ('This wrapper is no longer necessary. Please use the '
            'matplotlib.mlab.psd function directly, specifying '
            '`sides="onesided"` and `scale_by_freq=True`.')
-    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+    warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
 
     # build up kwargs
     kwargs = {}
@@ -186,7 +202,7 @@ def welch_window(N):
     return taper
 
 
-class PPSD():
+class PPSD(object):
     """
     Class to compile probabilistic power spectral densities for one combination
     of network/station/location/channel/sampling_rate.
@@ -228,68 +244,71 @@ class PPSD():
 
     .. rubric:: Saving and Loading
 
-    The PPSD object supports saving to a pickled file with optional
-    compression:
+    The PPSD object supports saving to a numpy npz compressed binary file:
 
-    >>> ppsd.save("myfile.pkl.bz2", compress=True) # doctest: +SKIP
+    >>> ppsd.save_npz("myfile.npz") # doctest: +SKIP
 
     The saved PPSD can then be loaded again using the static method
-    :func:`~obspy.signal.spectral_estimation.PPSD.load`, e.g. to add more data
-    or plot it again:
+    :func:`~obspy.signal.spectral_estimation.PPSD.load_npz`, e.g. to add more
+    data afterwards or to simply plot the results again. Metadata must be
+    provided again, since it is not stored in the numpy npz file:
 
-    >>> ppsd = PPSD.load("myfile.pkl.bz2")  # doctest: +SKIP
-
-    The :func:`~obspy.signal.spectral_estimation.PPSD.load` method detects
-    compression automatically.
+    >>> ppsd = PPSD.load_npz("myfile.npz", metadata=paz)  # doctest: +SKIP
 
     .. note::
 
-        While saving the PPSD with compression enabled takes significantly
-        longer, it can reduce the resulting file size by more than 80%.
-
-    .. note::
-
-        It is safer (but a bit slower) to provide a
-        :class:`~obspy.io.xseed.parser.Parser` instance with information from
-        e.g. a Dataless SEED than to just provide a static PAZ dictionary.
+        When using metadata from an
+        :class:`~obspy.core.inventory.inventory.Inventory`,
+        a :class:`~obspy.io.xseed.parser.Parser` instance or from a RESP file,
+        information on metadata will be correctly picked for the respective
+        starttime of the data trace. This means that instrument changes are
+        correctly taken into account during response removal.
+        This is obviously not the case for a static PAZ dictionary!
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
-    def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
+    @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
+                          'water_level': None})
+    def __init__(self, stats, metadata, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5, water_level=600.0):
+                 ppsd_length=3600., overlap=0.5, **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
         estimates.
-        The necessary instrument response information can be provided in two
-        ways:
+        The necessary instrument response information can be provided in
+        several ways using the `metadata` keyword argument:
 
-        * Providing an `obspy.io.xseed` :class:`~obspy.io.xseed.parser.Parser`,
-          e.g. containing metadata from a Dataless SEED file. This is the safer
-          way but it might a bit slower because for every processed time
-          segment the response information is extracted from the parser.
+        * Providing an :class:`~obspy.core.inventory.inventory.Inventory`
+          object (e.g. read from a StationXML file using
+          :func:`~obspy.core.inventory.inventory.read_inventory` or fetched
+          from a :mod:`FDSN <obspy.clients.fdsn>` webservice).
+        * Providing an
+          :class:`obspy.io.xseed Parser <obspy.io.xseed.parser.Parser>`,
+          (e.g. containing metadata from a Dataless SEED file).
+        * Providing the filename/path to a local RESP file.
         * Providing a dictionary containing poles and zeros information. Be
           aware that this leads to wrong results if the instrument's response
-          is changing with data added to the PPSD. Use with caution!
+          is changing over the timespans that are added to the PPSD.
+          Use with caution!
 
         :note: When using `is_rotational_data=True` the applied processing
-               steps are changed. Differentiation of data (converting velocity
+               steps are changed (and it is assumed that a dictionary is
+               provided as `metadata`).
+               Differentiation of data (converting velocity
                to acceleration data) will be omitted and a flat instrument
                response is assumed, leaving away response removal and only
-               dividing by `paz['sensitivity']` specified in the provided `paz`
-               dictionary (other keys do not have to be present then). For
-               scaling factors that are usually multiplied to the data remember
-               to use the inverse as `paz['sensitivity']`.
+               dividing by `metadata['sensitivity']` specified in the provided
+               `metadata` dictionary (other keys do not have to be present
+               then). For scaling factors that are usually multiplied to the
+               data remember to use the inverse as `metadata['sensitivity']`.
 
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
-        :type paz: dict, optional
-        :param paz: Response information of instrument. If not specified the
-                information is supposed to be present as stats.paz.
-        :type parser: :class:`obspy.io.xseed.parser.Parser`, optional
-        :param parser: Parser instance with response information (e.g. read
-                from a Dataless SEED volume)
+        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed Parser` or str or dict
+        :param metadata: Response information of instrument. See above notes
+            for details.
         :type skip_on_gaps: bool, optional
         :param skip_on_gaps: Determines whether time segments with gaps should
                 be skipped entirely. [McNamara2004]_ merge gappy
@@ -315,14 +334,7 @@ class PPSD():
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
-        :type water_level: float, optional
-        :param water_level: Water level used in instrument correction.
         """
-        if paz is not None and parser is not None:
-            msg = "Both paz and parser specified. Using parser object for " \
-                  "metadata."
-            warnings.warn(msg)
-
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.network = stats.network
         self.station = stats.station
@@ -333,12 +345,10 @@ class PPSD():
         self.is_rotational_data = is_rotational_data
         self.ppsd_length = ppsd_length
         self.overlap = overlap
-        self.water_level = water_level
         # trace length for one segment
         self.len = int(self.sampling_rate * ppsd_length)
-        # set paz either from kwarg or try to get it from stats
-        self.paz = paz
-        self.parser = parser
+        self.metadata = metadata
+
         if skip_on_gaps:
             self.merge_method = -1
         else:
@@ -355,17 +365,33 @@ class PPSD():
         self.nfft = prev_pow_2(self.nfft)
         #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
-        self.times_used = []
-        self.times = self.times_used
-        self.times_data = []
-        self.times_gaps = []
+        self._times_used = []
+        self._times_data = []
+        self._times_gaps = []
         self.hist_stack = None
         self.__setup_bins()
         # set up the binning for the db scale
         num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
         self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
                                      endpoint=True)
-        self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
+
+    @property
+    def times(self):
+        return list(map(UTCDateTime, self._times_used))
+
+    @property
+    def times_used(self):
+        return list(map(UTCDateTime, self._times_used))
+
+    @property
+    def times_data(self):
+        return [(UTCDateTime(t1), UTCDateTime(t2))
+                for t1, t2 in self._times_data]
+
+    @property
+    def times_gaps(self):
+        return [(UTCDateTime(t1), UTCDateTime(t2))
+                for t1, t2 in self._times_gaps]
 
     def __setup_bins(self):
         """
@@ -431,7 +457,7 @@ class PPSD():
 
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
-        bisect.insort(self.times_used, utcdatetime)
+        bisect.insort(self._times_used, utcdatetime.timestamp)
 
     def __insert_gap_times(self, stream):
         """
@@ -440,7 +466,8 @@ class PPSD():
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self.times_gaps += [[gap[4], gap[5]] for gap in stream.getGaps()]
+        self._times_gaps += [[gap[4].timestamp, gap[5].timestamp]
+                             for gap in stream.getGaps()]
 
     def __insert_data_times(self, stream):
         """
@@ -449,8 +476,9 @@ class PPSD():
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self.times_data += \
-            [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
+        self._times_data += \
+            [[tr.stats.starttime.timestamp, tr.stats.endtime.timestamp]
+             for tr in stream]
 
     def __check_time_present(self, utcdatetime):
         """
@@ -461,9 +489,9 @@ class PPSD():
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self.times_used, utcdatetime)
-        index2 = bisect.bisect_right(self.times_used,
-                                     utcdatetime + self.ppsd_length)
+        index1 = bisect.bisect_left(self._times_used, utcdatetime.timestamp)
+        index2 = bisect.bisect_right(self._times_used,
+                                     utcdatetime.timestamp + self.ppsd_length)
         if index1 != index2:
             return True
         else:
@@ -572,39 +600,12 @@ class PPSD():
         except AttributeError:
             pass
 
-        # get instrument response preferably from parser object
-        try:
-            paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
-        except Exception as e:
-            if self.parser is not None:
-                msg = "Error getting response from parser:\n%s: %s\n" \
-                      "Skipping time segment(s)."
-                msg = msg % (e.__class__.__name__, e.message)
-                warnings.warn(msg)
-                return False
-            paz = self.paz
-        if paz is None:
-            msg = "Missing poles and zeros information for response " \
-                  "removal. Skipping time segment(s)."
-            warnings.warn(msg)
-            return False
         # restitution:
         # mcnamara apply the correction at the end in freq-domain,
         # does it make a difference?
         # probably should be done earlier on bigger chunk of data?!
-        if self.is_rotational_data:
-            # in case of rotational data just remove sensitivity
-            tr.data /= paz['sensitivity']
-        else:
-            tr.simulate(paz_remove=paz, remove_sensitivity=True,
-                        paz_simulate=None, simulate_sensitivity=False,
-                        water_level=self.water_level)
-
-        # go to acceleration, do nothing for rotational data:
-        if self.is_rotational_data:
-            pass
-        else:
-            tr.data = np.gradient(tr.data, self.delta)
+        # Yes, you should avoid removing the response until after you
+        # have estimated the spectra to avoid elevated lp noise
 
         spec, _freq = mlab.psd(tr.data, self.nfft, self.sampling_rate,
                                detrend=mlab.detrend_linear, window=fft_taper,
@@ -617,6 +618,33 @@ class PPSD():
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
 
+        # Here we remove the response using the same conventions
+        # since the power is squared we want to square the sensitivity
+        # we can also convert to acceleration if we have non-rotational data
+        if self.is_rotational_data:
+            # in case of rotational data just remove sensitivity
+            spec /= self.metadata['sensitivity'] ** 2
+        else:
+            # determine instrument response from metadata
+            try:
+                resp = self._get_response(tr)
+            except Exception as e:
+                msg = ("Error getting response from provided metadata:\n"
+                       "%s: %s\n"
+                       "Skipping time segment(s).")
+                msg = msg % (e.__class__.__name__, e.message)
+                warnings.warn(msg)
+                return False
+
+            resp = resp[1:]
+            resp = resp[::-1]
+            # Now get the amplitude response (squared)
+            respamp = np.absolute(resp * np.conjugate(resp))
+            # Make omega with the same conventions as spec
+            w = 2.0 * math.pi * _freq[1:]
+            w = w[::-1]
+            # Here we do the response removal
+            spec = (w ** 2) * spec / respamp
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
@@ -646,6 +674,62 @@ class PPSD():
             # only during first run initialize stack with first histogram
             self.hist_stack = hist
         return True
+
+    def _get_response(self, tr):
+        # check type of metadata and use the correct subroutine
+        # first, to save some time, tried to do this in __init__ like:
+        #   self._get_response = self._get_response_from_inventory
+        # but that makes the object non-picklable
+        if isinstance(self.metadata, Inventory):
+            return self._get_response_from_inventory(tr)
+        elif isinstance(self.metadata, Parser):
+            return self._get_response_from_parser(tr)
+        elif isinstance(self.metadata, dict):
+            return self._get_response_from_paz_dict(tr)
+        elif isinstance(self.metadata, (str, native_str)):
+            return self._get_response_from_RESP(tr)
+        else:
+            msg = "Unexpected type for `metadata`: %s" % type(metadata)
+            raise TypeError(msg)
+
+    def _get_response_from_inventory(self, tr):
+        inventory = self.metadata
+        response = inventory.get_response(self.id, tr.stats.starttime)
+        resp, _ = response.get_evalresp_response(
+            t_samp=self.delta, nfft=self.nfft, output="VEL")
+        return resp
+
+    def _get_response_from_parser(self, tr):
+        parser = self.metadata
+        resp_key = "RESP." + self.id
+        for key, resp_file in parser.getRESP():
+            if key == resp_key:
+                break
+        else:
+            msg = "Response for %s not found in Parser" % self.id
+            raise ValueError(msg)
+        resp_file.seek(0, 0)
+        resp = evalresp(t_samp=self.delta, nfft=self.nfft,
+                        filename=resp_file, date=tr.stats.starttime,
+                        station=self.station, channel=self.channel,
+                        network=self.network, locid=self.location,
+                        units="VEL", freq=False, debug=False)
+        return resp
+
+    def _get_response_from_paz_dict(self, tr):
+        paz = self.metadata
+        resp = paz_to_freq_resp(paz['poles'], paz['zeros'],
+                                paz['gain'] * paz['sensitivity'],
+                                self.delta, nfft=self.nfft)
+        return resp
+
+    def _get_response_from_RESP(self, tr):
+        resp = evalresp(t_samp=self.delta, nfft=self.nfft,
+                        filename=self.metadata, date=tr.stats.starttime,
+                        station=self.station, channel=self.channel,
+                        network=self.network, locid=self.location,
+                        units="VEL", freq=False, debug=False)
+        return resp
 
     def get_percentile(self, percentile=50, hist_cum=None):
         """
@@ -697,7 +781,7 @@ class PPSD():
         """
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
         mean = (self.hist_stack * db_bin_centers /
-                len(self.times_used)).sum(axis=1)
+                len(self._times_used)).sum(axis=1)
         return (self.period_bin_centers, mean)
 
     def __get_normalized_cumulative_histogram(self):
@@ -717,16 +801,13 @@ class PPSD():
         hist_cum = (hist_cum.T / norm).T
         return hist_cum
 
+    @deprecated("Old save/load mechanism based on pickle module is not "
+                "working well across versions, so please use new "
+                "'save_npz'/'load_npz' mechanism.")
     def save(self, filename, compress=False):
         """
-        Saves the PPSD as a pickled file with optional compression.
-
-        The resulting file can be restored using PPSD.load(filename).
-
-        :type filename: str
-        :param filename: Name of output file with pickled PPSD object
-        :type compress: bool, optional
-        :param compress: Enable/disable file compression.
+        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
+        instead!
         """
         if compress:
             # due to an bug in older python version we can't use with
@@ -739,15 +820,13 @@ class PPSD():
                 pickle.dump(self, file_)
 
     @staticmethod
+    @deprecated("Old save/load mechanism based on pickle module is not "
+                "working well across versions, so please use new "
+                "'save_npz'/'load_npz' mechanism.")
     def load(filename):
         """
-        Restores a PPSD instance from a file.
-
-        Automatically determines whether the file was saved with compression
-        enabled or disabled.
-
-        :type filename: str
-        :param filename: Name of file containing the pickled PPSD object
+        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
+        instead!
         """
         # identify bzip2 compressed file using bzip2's magic number
         bz2_magic = b'\x42\x5a\x68'
@@ -773,11 +852,46 @@ class PPSD():
 
         return ppsd
 
+    def save_npz(self, filename):
+        """
+        Saves the PPSD as a compressed numpy binary (npz format).
+
+        The resulting file can be restored using `my_ppsd.load_npz(filename)`.
+
+        :type filename: str
+        :param filename: Name of numpy .npz output file
+        """
+        out = dict([(key, getattr(self, key)) for key in NPZ_STORE_KEYS])
+        np.savez(filename, **out)
+
+    @staticmethod
+    def load_npz(filename, metadata):
+        """
+        Loads previously computed PPSD results (from a
+        compressed numpy binary in npz format, written with
+        :meth:`~PPSD.write_npz`).
+        Metadata have to be specified again during loading because they are not
+        stored in the npz format.
+
+        :type filename: str
+        :param filename: Name of numpy .npz file with stored PPSD data
+        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+            :class:`~obspy.io.xseed Parser` or str or dict
+        :param metadata: Response information of instrument. See notes in
+            :meth:`PPSD.__init__` for details.
+        """
+        data = np.load(filename)
+        ppsd = PPSD(Stats(), metadata=metadata)
+        for key in NPZ_STORE_KEYS:
+            setattr(ppsd, key, data[key])
+        return ppsd
+
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
              max_percentage=30, period_lim=(0.01, 179), show_mode=False,
-             show_mean=False):
+             show_mean=False, cmap=obspy_sequential, cumulative=False,
+             cumulative_number_of_colors=20):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -813,6 +927,19 @@ class PPSD():
         :param show_mode: Enable/disable plotting of mode psd values.
         :type show_mean: bool, optional
         :param show_mean: Enable/disable plotting of mean psd values.
+        :type cmap: :class:`matplotlib.colors.Colormap`
+        :param cmap: Colormap to use for the plot. To use the color map like in
+            PQLX, [McNamara2004]_ use :const:`obspy.imaging.cm.pqlx`.
+        :type cumulative: bool
+        :param cumulative: Can be set to `True` to show a cumulative
+            representation of the histogram, i.e. showing color coded for each
+            frequency/amplitude bin at what percentage in time the value is
+            not exceeded by the data (similar to the `percentile` option but
+            continuously and color coded over the whole area). `max_percentage`
+            is ignored when this option is specified.
+        :type cumulative_number_of_colors: int
+        :param cumulative_number_of_colors: Number of discrete color shades to
+            use, `None` for a continuous colormap.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -820,7 +947,7 @@ class PPSD():
             raise Exception(msg)
 
         X, Y = np.meshgrid(self.xedges, self.yedges)
-        hist_stack = self.hist_stack * 100.0 / len(self.times_used)
+        hist_stack = self.hist_stack * 100.0 / len(self._times_used)
 
         fig = plt.figure()
 
@@ -831,12 +958,28 @@ class PPSD():
             ax = fig.add_subplot(111)
 
         if show_histogram:
-            ppsd = ax.pcolormesh(X, Y, hist_stack.T, cmap=self.colormap)
+            label = "[%]"
+            data = hist_stack
+            if cumulative:
+                data = data.cumsum(axis=1)
+                data = np.multiply(data.T, 100.0/data.max(axis=1)).T
+                if max_percentage is not None:
+                    msg = ("Parameter 'max_percentage' is ignored when "
+                           "'cumulative=True'.")
+                    warnings.warn(msg)
+                max_percentage = 100
+                label = "non-exceedance (cumulative) [%]"
+                if cumulative_number_of_colors is not None:
+                    cmap = LinearSegmentedColormap(
+                        name=cmap.name, segmentdata=cmap._segmentdata,
+                        N=cumulative_number_of_colors)
+            ppsd = ax.pcolormesh(X, Y, data.T, cmap=cmap)
             cb = plt.colorbar(ppsd, ax=ax)
-            cb.set_label("[%]")
-            color_limits = (0, max_percentage)
-            ppsd.set_clim(*color_limits)
-            cb.set_clim(*color_limits)
+            cb.set_label(label)
+            if max_percentage is not None:
+                color_limits = (0, max_percentage)
+                ppsd.set_clim(*color_limits)
+                cb.set_clim(*color_limits)
             if grid:
                 ax.grid(b=grid, which="major")
                 ax.grid(b=grid, which="minor")
@@ -871,8 +1014,10 @@ class PPSD():
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date,
-                         self.times_used[-1].date, len(self.times_used))
+        title = title % (self.id,
+                         UTCDateTime(self._times_used[0]).date,
+                         UTCDateTime(self._times_used[-1]).date,
+                         len(self._times_used))
         ax.set_title(title)
 
         if show_coverage:
@@ -904,8 +1049,10 @@ class PPSD():
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date,
-                         self.times_used[-1].date, len(self.times_used))
+        title = title % (self.id,
+                         UTCDateTime(self._times_used[0]).date,
+                         UTCDateTime(self._times_used[-1]).date,
+                         len(self._times_used))
         ax.set_title(title)
 
         plt.draw()

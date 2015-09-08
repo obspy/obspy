@@ -26,6 +26,7 @@ import numpy as np
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 def deprecated(warning_msg=None):
@@ -43,7 +44,7 @@ def deprecated(warning_msg=None):
                 msg = warning_msg
             else:
                 msg = "Call to deprecated function %s." % func.__name__
-            warnings.warn(msg, category=DeprecationWarning)
+            warnings.warn(msg, category=ObsPyDeprecationWarning)
             return func(*args, **kwargs)
 
         new_func.__name__ = func.__name__
@@ -64,18 +65,33 @@ def deprecated_keywords(keywords):
         fname = func.__name__
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
         msg2 = "Deprecated keyword %s in %s() call - ignoring."
+        msg3 = ("Conflicting deprecated keywords (%s) in %s() call"
+                " - please use new '%s' keyword instead.")
 
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
+            # check if multiple deprecated keywords get mapped to the same new
+            # keyword
+            new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
+            for key, new_key in keywords.items():
+                if key in kwargs:
+                    new_keyword_appearance_counts[new_key] += 1
+            for key_ in keywords.values():
+                if new_keyword_appearance_counts[key_] > 1:
+                    conflicting_keys = ", ".join(
+                        [old_key for old_key, new_key in keywords.items()
+                         if new_key == key_])
+                    raise Exception(msg3 % (conflicting_keys, fname, new_key))
+            # map deprecated keywords to new keywords
             for kw in kwargs.keys():
                 if kw in keywords:
                     nkw = keywords[kw]
                     if nkw is None:
                         warnings.warn(msg2 % (kw, fname),
-                                      category=DeprecationWarning)
+                                      category=ObsPyDeprecationWarning)
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
-                                      category=DeprecationWarning)
+                                      category=ObsPyDeprecationWarning)
                         kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)

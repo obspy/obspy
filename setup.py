@@ -58,6 +58,8 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe())))
 
 # Import the version string.
+# Any .py files that are used at install time must be registered in
+# obspy.core.tests.test_util_misc.UtilMiscTestCase.test_no_obspy_imports!
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport

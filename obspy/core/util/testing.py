@@ -477,7 +477,8 @@ class ImageComparison(NamedTemporaryFile):
         # pyimgur
         import requests
         # try to get imgur client id from environment
-        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID", None)
+        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID",
+                                        "53b182544dc5d89")
         if imgur_clientid is None:
             msg = ("Upload to imgur not possible (environment "
                    "variable OBSPY_IMGUR_CLIENTID not set).")
@@ -656,6 +657,22 @@ def remove_unique_IDs(xml_string, remove_creation_time=False):
         xml_string = re.sub("<%s>.*?</%s>" % (prefix, prefix),
                             '<%s/>' % prefix, xml_string)
     return xml_string
+
+
+def get_all_py_files():
+    """
+    Return a list with full absolute paths to all .py files in ObsPy file tree.
+
+    :rtype: list of str
+    """
+    util_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
+    obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(util_dir)))
+    py_files = set()
+    # Walk the obspy directory structure
+    for dirpath, _, filenames in os.walk(obspy_dir):
+        py_files.update([os.path.abspath(os.path.join(dirpath, i)) for i in
+                         filenames if i.endswith(".py")])
+    return sorted(py_files)
 
 
 if __name__ == '__main__':
