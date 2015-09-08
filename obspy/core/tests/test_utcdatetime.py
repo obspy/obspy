@@ -960,6 +960,17 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(d1.formatIRISWebService(),
                          d2.formatIRISWebService())
 
+    def test_floating_point_second_initialization(self):
+        """
+        Tests floating point precision issues in initialization of UTCDateTime
+        objects with floating point seconds.
+
+        See issue #1096.
+        """
+        for microns in np.arange(0, 5999, dtype=np.int):
+            t = UTCDateTime(2011, 1, 25, 15, 32, 12 + microns / 1e6)
+            self.assertEqual(microns, t.microsecond)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
