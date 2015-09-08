@@ -253,7 +253,7 @@ class PPSD(object):
     data afterwards or to simply plot the results again. Metadata must be
     provided again, since it is not stored in the numpy npz file:
 
-    >>> ppsd = PPSD.load("myfile.npz", metadata=paz)  # doctest: +SKIP
+    >>> ppsd = PPSD.load_npz("myfile.npz", metadata=paz)  # doctest: +SKIP
 
     .. note::
 
