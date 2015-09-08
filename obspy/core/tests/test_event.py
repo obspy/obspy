@@ -192,6 +192,7 @@ class CatalogTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
         self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
@@ -237,6 +238,17 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(catalog[0]._format, 'QUAKEML')
         self.assertEqual(catalog[1]._format, 'QUAKEML')
         self.assertEqual(catalog[2]._format, 'QUAKEML')
+
+    def test_readEvents_with_wildcard(self):
+        """
+        Tests the readEvents function with a filename wild card.
+        """
+        # without wildcard..
+        expected = readEvents(self.iris_xml)
+        expected += readEvents(self.neries_xml)
+        # with wildcard
+        got = readEvents(os.path.join(self.path, "*_events.xml"))
+        self.assertEqual(expected, got)
 
     def test_append(self):
         """

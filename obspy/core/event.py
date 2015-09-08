@@ -130,7 +130,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     else:
         pathname = pathname_or_url
         # File name(s)
-        pathnames = glob.glob(pathname)
+        pathnames = sorted(glob.glob(pathname))
         if not pathnames:
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob.glob(pathname):
@@ -139,11 +139,10 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
                 raise IOError(2, "No such file or directory", pathname)
 
         catalog = _read(pathnames[0], format, **kwargs)
-        if len(pathnames) == 1:
-            return catalog
-        else:
+        if len(pathnames) > 1:
             for filename in pathnames[1:]:
                 catalog.extend(_read(filename, format, **kwargs).events)
+        return catalog
 
 
 @uncompressFile
