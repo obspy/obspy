@@ -814,6 +814,7 @@ class Response(ComparingObject):
                 "VOLTS": ew.ENUM_UNITS["VOLTS"],
                 # This is weird, but evalresp appears to do the same.
                 "V/M": ew.ENUM_UNITS["VOLTS"],
+                "COUNT": ew.ENUM_UNITS["COUNTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "T": ew.ENUM_UNITS["TESLA"],
                 "PA": ew.ENUM_UNITS["PRESSURE"],
