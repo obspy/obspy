@@ -145,9 +145,16 @@ def _enumsetter(hdr):
 # strings
 def _strgetter(hdr):
     def get_str(self):
-        value = self._hs[HD.STRHDRS.index(hdr)]
+        try:
+            # value is a bytes
+            value = self._hs[HD.STRHDRS.index(hdr)].decode()
+        except AttributeError:
+            # value is a str
+            value = self._hs[HD.STRHDRS.index(hdr)]
+
         if value == HD.SNULL:
             value = None
+
         try:
             value = value.strip()
         except AttributeError:
@@ -166,7 +173,11 @@ def _strsetter(hdr):
                   "right-truncated."
             warnings.warn(msg)
         # they will truncate themselves, since _hs is dtype '|S8'
-        self._hs[HD.STRHDRS.index(hdr)] = value
+        try:
+            self._hs[HD.STRHDRS.index(hdr)] = value.encode('ascii', 'strict')
+        except AttributeError:
+            self._hs[HD.STRHDRS.index(hdr)] = value
+
     return set_str
 
 
@@ -302,16 +313,25 @@ def _set_iztype(self, iztype):
 # kevnm is 16 characters, split into two 8-character fields
 # intercept and handle in while getting and setting
 def _get_kevnm(self):
-    # TODO: handle/understand ".decode()" stuff better
     kevnm = self._hs[HD.STRHDRS.index('kevnm')]
     kevnm2 = self._hs[HD.STRHDRS.index('kevnm2')]
+    try:
+        kevnm = kevnm.decode()
+        kevnm2 = kevnm2.decode()
+    except AttributeError:
+        # kevnm is a str
+        pass
+
     if kevnm == HD.SNULL:
         kevnm = ''
     if kevnm2 == HD.SNULL:
         kevnm2 = ''
-    value = (kevnm.decode() + kevnm2.decode()).strip()
+
+    value = (kevnm + kevnm2).strip()
+
     if not value:
         value = None
+
     return value
 
 

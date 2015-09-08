@@ -187,7 +187,7 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     if headonly:
         data = None
     else:
-        data = from_buffer(f.read(npts * 4),
+        data = from_buffer(f.read(int(npts) * 4),
                            dtype=native_str(endian_str + 'f4'))
 
         if len(data) != npts:
@@ -507,7 +507,9 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     hs[1] = kevnm.encode('ascii', 'strict')
                     hs[2] = kevnm2.encode('ascii', 'strict')
                 else:
-                    hs[HD.STRHDRS.index(hdr)] = value.encode('ascii', 'strict')
+                    # TODO: why was encoding done?
+                    # hs[HD.STRHDRS.index(hdr)] = value.encode('ascii', 'strict')
+                    hs[HD.STRHDRS.index(hdr)] = value
             else:
                 raise ValueError("Unrecognized header name: {}.".format(hdr))
 

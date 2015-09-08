@@ -160,10 +160,23 @@ def is_same_byteorder(bo1, bo2):
 
 
 def _clean_str(value):
-    null_term = value.find(b'\x00'.decode())
+    # Remove null values and whitespace, return a str
+    try:
+        # value is a str
+        null_term = value.find('\x00')
+    except TypeError:
+        # value is a bytes
+        # null_term = value.decode().find('\x00')
+        null_term = value.find(b'\x00')
+
     if null_term >= 0:
         value = value[:null_term]
     value = value.strip()
+
+    try:
+        value = value.decode()
+    except AttributeError:
+        pass
 
     return value
 
@@ -374,7 +387,7 @@ def get_sac_reftime(header):
         nzmsec = header['nzmsec']
     except KeyError as e:
         # header doesn't have all the keys
-        msg = "Not enough time information: {}".format(e.message)
+        msg = "Not enough time information: {}".format(e)
         raise SacHeaderTimeError(msg)
 
     if 0 <= yr <= 99:
