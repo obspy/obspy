@@ -25,7 +25,8 @@ from obspy.core.util.base import ComparingObject, getMatplotlibVersion
 from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
-                                         ObsPyException)
+                                         ObsPyException,
+                                         ZeroSamplingRate)
 from obspy.station.util import Angle, Frequency
 
 
@@ -1233,6 +1234,9 @@ class Response(ComparingObject):
                        "response stages. Please manually specify parameter "
                        "`sampling_rate`")
                 raise Exception(msg)
+        if sampling_rate == 0:
+            msg = "Can not plot response for channel with sampling rate `0`."
+            raise ZeroSamplingRate(msg)
 
         t_samp = 1.0 / sampling_rate
         nyquist = sampling_rate / 2.0
@@ -1270,18 +1274,21 @@ class Response(ComparingObject):
             arrowprops = dict(
                 arrowstyle="wedge,tail_width=1.4,shrink_factor=0.8", fc=color)
             bbox = dict(boxstyle="round", fc="w")
-            ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
-                         (self.instrument_sensitivity.frequency, 1.0),
-                         xytext=(self.instrument_sensitivity.frequency, 1.1),
-                         xycoords=trans_above, textcoords=trans_above,
-                         ha="center", va="bottom",
-                         arrowprops=arrowprops, bbox=bbox)
-            ax1.annotate("%.1e" % self.instrument_sensitivity.value,
-                         (1.0, self.instrument_sensitivity.value),
-                         xytext=(1.05, self.instrument_sensitivity.value),
-                         xycoords=trans_right, textcoords=trans_right,
-                         ha="left", va="center",
-                         arrowprops=arrowprops, bbox=bbox)
+            if self.instrument_sensitivity.frequency:
+                ax1.annotate("%.1g" % self.instrument_sensitivity.frequency,
+                             (self.instrument_sensitivity.frequency, 1.0),
+                             xytext=(self.instrument_sensitivity.frequency,
+                                     1.1),
+                             xycoords=trans_above, textcoords=trans_above,
+                             ha="center", va="bottom",
+                             arrowprops=arrowprops, bbox=bbox)
+            if self.instrument_sensitivity.value:
+                ax1.annotate("%.1e" % self.instrument_sensitivity.value,
+                             (1.0, self.instrument_sensitivity.value),
+                             xytext=(1.05, self.instrument_sensitivity.value),
+                             xycoords=trans_right, textcoords=trans_right,
+                             ha="left", va="center",
+                             arrowprops=arrowprops, bbox=bbox)
 
         # plot phase response
         phase = np.angle(cpx_response)
