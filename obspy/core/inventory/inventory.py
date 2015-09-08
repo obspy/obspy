@@ -416,7 +416,7 @@ class Inventory(ComparingObject):
              continent_fill_color='0.9', water_fill_color='1.0', marker="v",
              size=15**2, label=True, color='#b15928', color_per_network=False,
              colormap="Paired", legend="upper left", time=None, show=True,
-             outfile=None, method=None, **kwargs):  # @UnusedVariable
+             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
         """
         Creates a preview map of all networks/stations in current inventory
         object.
@@ -490,6 +490,16 @@ class Inventory(ComparingObject):
             * ``None`` to use the best available library
 
             Defaults to ``None``.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse, returned from a previous
+            inventory/catalog plot call with `method=basemap`.
+            If a previous basemap plot is reused, any kwargs regarding the
+            basemap plot setup will be ignored (i.e.  `projection`,
+            `resolution`, `continent_fill_color`, `water_fill_color`). Note
+            that multiple plots using colorbars likely are problematic, but
+            e.g. one station plot (without colorbar) and one event plot (with
+            colorbar) together should work well.
+        :returns: Figure instance with the plot.
 
         .. rubric:: Example
 
@@ -529,6 +539,22 @@ class Inventory(ComparingObject):
             inv.plot(projection="local",
                      color_per_network={'GR': 'blue',
                                         'BW': 'green'})
+
+        Combining a station and event plot (uses basemap):
+
+        >>> from obspy import read_inventory, read_events
+        >>> inv = read_inventory()
+        >>> cat = read_events()
+        >>> fig = inv.plot(method=basemap, show=False)  # doctest:+SKIP
+        >>> cat.plot(method=basemap, fig=fig)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory, read_events
+            inv = read_inventory()
+            cat = read_events()
+            fig = inv.plot(show=False)
+            cat.plot(fig=fig)
         """
         from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
@@ -576,7 +602,7 @@ class Inventory(ComparingObject):
                        continent_fill_color=continent_fill_color,
                        water_fill_color=water_fill_color,
                        colormap=None, colorbar=False, marker=marker,
-                       title=None, show=False, **kwargs)
+                       title=None, show=False, fig=fig, **kwargs)
 
         if legend is not None and color_per_network:
             ax = fig.axes[0]

@@ -84,7 +84,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                  resolution='l', continent_fill_color='0.8',
                  water_fill_color='1.0', colormap=None, colorbar=None,
                  marker="o", title=None, colorbar_ticklabel_format=None,
-                 show=True, **kwargs):  # @UnusedVariable
+                 show=True, fig=None, **kwargs):  # @UnusedVariable
     """
     Creates a basemap plot with a data point scatter plot.
 
@@ -145,6 +145,14 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     :type show: bool
     :param show: Whether to show the figure after plotting or not. Can be used
         to do further customization of the plot before showing it.
+    :type fig: :class:`matplotlib.figure.Figure`
+    :param fig: Figure instance to reuse, returned from a previous
+        :func:`plot_basemap` call. If a previous basemap plot is reused, any
+        kwargs regarding the basemap plot setup will be ignored (i.e.
+        `projection`, `resolution`, `continent_fill_color`,
+        `water_fill_color`). Note that multiple plots using colorbars likely
+        are problematic, but e.g. one station plot (without colorbar) and one
+        event plot (with colorbar) together should work well.
     """
     min_color = min(color)
     max_color = max(color)
@@ -160,134 +168,151 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                               cmap=colormap)
     scal_map.set_array(np.linspace(0, 1, 1))
 
-    fig = plt.figure()
-
     # The colorbar should only be plotted if more then one event is
     # present.
-    if colorbar is not None:
-        show_colorbar = colorbar
-    else:
+    if colorbar is None:
         if len(lons) > 1 and hasattr(color, "__len__") and \
                 not isinstance(color, (str, native_str)):
-            show_colorbar = True
+            colorbar = True
         else:
-            show_colorbar = False
+            colorbar = False
 
-    if projection == "local":
-        ax_x0, ax_width = 0.10, 0.80
-    elif projection == "global":
-        ax_x0, ax_width = 0.01, 0.98
-    else:
-        ax_x0, ax_width = 0.05, 0.90
+    if fig is None:
+        fig = plt.figure()
 
-    if show_colorbar:
-        map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
-        cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-    else:
-        ax_y0, ax_height = 0.05, 0.85
         if projection == "local":
-            ax_y0 += 0.05
-            ax_height -= 0.05
-        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
-
-    if projection == 'global':
-        bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
-                       resolution=_BASEMAP_RESOLUTIONS[resolution], ax=map_ax)
-    elif projection == 'ortho':
-        bmap = Basemap(projection='ortho',
-                       resolution=_BASEMAP_RESOLUTIONS[resolution],
-                       area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
-                       lon_0=round(np.mean(lons), 4), ax=map_ax)
-    elif projection == 'local':
-        if min(lons) < -150 and max(lons) > 150:
-            max_lons = max(np.array(lons) % 360)
-            min_lons = min(np.array(lons) % 360)
+            ax_x0, ax_width = 0.10, 0.80
+        elif projection == "global":
+            ax_x0, ax_width = 0.01, 0.98
         else:
-            max_lons = max(lons)
-            min_lons = min(lons)
-        lat_0 = max(lats) / 2. + min(lats) / 2.
-        lon_0 = max_lons / 2. + min_lons / 2.
-        if lon_0 > 180:
-            lon_0 -= 360
-        deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
-        deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
-        if len(lats) > 1:
-            height = (max(lats) - min(lats)) * deg2m_lat
-            width = (max_lons - min_lons) * deg2m_lon
-            margin = 0.2 * (width + height)
-            height += margin
-            width += margin
-        else:
-            height = 2.0 * deg2m_lat
-            width = 5.0 * deg2m_lon
-        # do intelligent aspect calculation for local projection
-        # adjust to figure dimensions
-        w, h = fig.get_size_inches()
-        aspect = w / h
-        if show_colorbar:
-            aspect *= 1.2
-        if width / height < aspect:
-            width = height * aspect
-        else:
-            height = width / aspect
+            ax_x0, ax_width = 0.05, 0.90
 
-        bmap = Basemap(projection='aea',
-                       resolution=_BASEMAP_RESOLUTIONS[resolution],
-                       area_thresh=1000.0, lat_0=round(lat_0, 4),
-                       lon_0=round(lon_0, 4),
-                       width=width, height=height, ax=map_ax)
-        # not most elegant way to calculate some round lats/lons
+        if colorbar:
+            map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
+            cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
+        else:
+            ax_y0, ax_height = 0.05, 0.85
+            if projection == "local":
+                ax_y0 += 0.05
+                ax_height -= 0.05
+            map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
 
-        def linspace2(val1, val2, N):
-            """
-            returns around N 'nice' values between val1 and val2
-            """
-            dval = val2 - val1
-            round_pos = int(round(-np.log10(1. * dval / N)))
-            # Fake negative rounding as not supported by future as of now.
-            if round_pos < 0:
-                factor = 10 ** (abs(round_pos))
-                delta = round(2. * dval / N / factor) * factor / 2
+        if projection == 'global':
+            bmap = Basemap(projection='moll', lon_0=round(np.mean(lons), 4),
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           ax=map_ax)
+        elif projection == 'ortho':
+            bmap = Basemap(projection='ortho',
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
+                           lon_0=round(np.mean(lons), 4), ax=map_ax)
+        elif projection == 'local':
+            if min(lons) < -150 and max(lons) > 150:
+                max_lons = max(np.array(lons) % 360)
+                min_lons = min(np.array(lons) % 360)
             else:
-                delta = round(2. * dval / N, round_pos) / 2
-            new_val1 = np.ceil(val1 / delta) * delta
-            new_val2 = np.floor(val2 / delta) * delta
-            N = (new_val2 - new_val1) / delta + 1
-            return np.linspace(new_val1, new_val2, N)
+                max_lons = max(lons)
+                min_lons = min(lons)
+            lat_0 = max(lats) / 2. + min(lats) / 2.
+            lon_0 = max_lons / 2. + min_lons / 2.
+            if lon_0 > 180:
+                lon_0 -= 360
+            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
+            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
+            if len(lats) > 1:
+                height = (max(lats) - min(lats)) * deg2m_lat
+                width = (max_lons - min_lons) * deg2m_lon
+                margin = 0.2 * (width + height)
+                height += margin
+                width += margin
+            else:
+                height = 2.0 * deg2m_lat
+                width = 5.0 * deg2m_lon
+            # do intelligent aspect calculation for local projection
+            # adjust to figure dimensions
+            w, h = fig.get_size_inches()
+            aspect = w / h
+            if colorbar:
+                aspect *= 1.2
+            if width / height < aspect:
+                width = height * aspect
+            else:
+                height = width / aspect
 
-        N1 = int(np.ceil(height / max(width, height) * 8))
-        N2 = int(np.ceil(width / max(width, height) * 8))
-        parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
-                              lat_0 + height / 2 / deg2m_lat, N1)
+            bmap = Basemap(projection='aea',
+                           resolution=_BASEMAP_RESOLUTIONS[resolution],
+                           area_thresh=1000.0, lat_0=round(lat_0, 4),
+                           lon_0=round(lon_0, 4),
+                           width=width, height=height, ax=map_ax)
+            # not most elegant way to calculate some round lats/lons
 
-        # Old basemap versions have problems with non-integer parallels.
-        try:
-            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
-        except KeyError:
-            parallels = sorted(list(set(map(int, parallels))))
-            bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+            def linspace2(val1, val2, N):
+                """
+                returns around N 'nice' values between val1 and val2
+                """
+                dval = val2 - val1
+                round_pos = int(round(-np.log10(1. * dval / N)))
+                # Fake negative rounding as not supported by future as of now.
+                if round_pos < 0:
+                    factor = 10 ** (abs(round_pos))
+                    delta = round(2. * dval / N / factor) * factor / 2
+                else:
+                    delta = round(2. * dval / N, round_pos) / 2
+                new_val1 = np.ceil(val1 / delta) * delta
+                new_val2 = np.floor(val2 / delta) * delta
+                N = (new_val2 - new_val1) / delta + 1
+                return np.linspace(new_val1, new_val2, N)
 
-        if min(lons) < -150 and max(lons) > 150:
-            lon_0 %= 360
-        meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                              lon_0 + width / 2 / deg2m_lon, N2)
-        meridians[meridians > 180] -= 360
-        bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
+            N1 = int(np.ceil(height / max(width, height) * 8))
+            N2 = int(np.ceil(width / max(width, height) * 8))
+            parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
+                                  lat_0 + height / 2 / deg2m_lat, N1)
+
+            # Old basemap versions have problems with non-integer parallels.
+            try:
+                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+            except KeyError:
+                parallels = sorted(list(set(map(int, parallels))))
+                bmap.drawparallels(parallels, labels=[0, 1, 1, 0])
+
+            if min(lons) < -150 and max(lons) > 150:
+                lon_0 %= 360
+            meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
+                                  lon_0 + width / 2 / deg2m_lon, N2)
+            meridians[meridians > 180] -= 360
+            bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
+        else:
+            msg = "Projection '%s' not supported." % projection
+            raise ValueError(msg)
+
+        # draw coast lines, country boundaries, fill continents.
+        map_ax.set_axis_bgcolor(water_fill_color)
+        bmap.drawcoastlines(color="0.4")
+        bmap.drawcountries(color="0.75")
+        bmap.fillcontinents(color=continent_fill_color,
+                            lake_color=water_fill_color)
+        # draw the edge of the bmap projection region (the projection limb)
+        bmap.drawmapboundary(fill_color=water_fill_color)
+        # draw lat/lon grid lines every 30 degrees.
+        bmap.drawmeridians(np.arange(-180, 180, 30))
+        bmap.drawparallels(np.arange(-90, 90, 30))
+        fig.bmap = bmap
     else:
-        msg = "Projection '%s' not supported." % projection
-        raise ValueError(msg)
-
-    # draw coast lines, country boundaries, fill continents.
-    map_ax.set_axis_bgcolor(water_fill_color)
-    bmap.drawcoastlines(color="0.4")
-    bmap.drawcountries(color="0.75")
-    bmap.fillcontinents(color=continent_fill_color,
-                        lake_color=water_fill_color)
-    # draw the edge of the bmap projection region (the projection limb)
-    bmap.drawmapboundary(fill_color=water_fill_color)
-    # draw lat/lon grid lines every 30 degrees.
-    bmap.drawmeridians(np.arange(-180, 180, 30))
-    bmap.drawparallels(np.arange(-90, 90, 30))
+        error_message_suffix = (
+            ". Please provide a figure object from a previous call to the "
+            ".plot() method of e.g. an Inventory or Catalog object.")
+        try:
+            map_ax = fig.axes[0]
+        except IndexError as e:
+            e.args = tuple([e.args[0] + error_message_suffix] +
+                           list(e.args[1:]))
+            raise
+        try:
+            bmap = fig.bmap
+        except AttributeError as e:
+            e.args = tuple([e.args[0] + error_message_suffix] +
+                           list(e.args[1:]))
+            raise
 
     # compute the native bmap projection coordinates for events.
     x, y = bmap(lons, lats)
@@ -331,8 +356,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     if title:
         plt.suptitle(title)
 
-    # Only show the colorbar for more than one event.
-    if show_colorbar:
+    if colorbar:
         if colorbar_ticklabel_format is not None:
             if isinstance(colorbar_ticklabel_format, (str, native_str)):
                 formatter = FormatStrFormatter(colorbar_ticklabel_format)
@@ -351,10 +375,17 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             else:
                 locator = None
                 formatter = None
-        cb = Colorbar(cm_ax, scatter, cmap=colormap,
-                      orientation='horizontal',
-                      ticks=locator,
-                      format=formatter)
+
+        # normal case: axes for colorbar was set up in this routine
+        if "cm_ax" in locals():
+            cb_kwargs = {"cax": cm_ax}
+        # unusual case: reusing a plot that has no colorbar set up previously
+        else:
+            cb_kwargs = {"ax": map_ax}
+
+        cb = fig.colorbar(
+            mappable=scatter, cmap=colormap, orientation='horizontal',
+            ticks=locator, format=formatter, **cb_kwargs)
         # Compat with old matplotlib versions.
         if hasattr(cb, "update_ticks"):
             cb.update_ticks()

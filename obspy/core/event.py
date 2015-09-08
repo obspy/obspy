@@ -3202,12 +3202,9 @@ class Catalog(object):
         write_format(self, filename, **kwargs)
 
     def plot(self, projection='global', resolution='l',
-             continent_fill_color='0.9',
-             water_fill_color='1.0',
-             label='magnitude',
-             color='depth',
-             colormap=None, show=True, outfile=None, method=None,
-             **kwargs):  # @UnusedVariable
+             continent_fill_color='0.9', water_fill_color='1.0',
+             label='magnitude', color='depth', colormap=None, show=True,
+             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
 
@@ -3279,6 +3276,16 @@ class Catalog(object):
             * ``None`` to pick the best available library
 
             Defaults to ``None``.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse, returned from a previous
+            inventory/catalog plot call with `method=basemap`.
+            If a previous basemap plot is reused, any kwargs regarding the
+            basemap plot setup will be ignored (i.e.  `projection`,
+            `resolution`, `continent_fill_color`, `water_fill_color`). Note
+            that multiple plots using colorbars likely are problematic, but
+            e.g. one station plot (without colorbar) and one event plot (with
+            colorbar) together should work well.
+        :returns: Figure instance with the plot.
 
         .. rubric:: Examples
 
@@ -3312,6 +3319,22 @@ class Catalog(object):
             from obspy import read_events
             cat = read_events()
             cat.plot(projection="local")
+
+        Combining a station and event plot (uses basemap):
+
+        >>> from obspy import read_inventory, read_events
+        >>> inv = read_inventory()
+        >>> cat = read_events()
+        >>> fig = inv.plot(method=basemap, show=False)  # doctest:+SKIP
+        >>> cat.plot(method=basemap, fig=fig)  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_inventory, read_events
+            inv = read_inventory()
+            cat = read_events()
+            fig = inv.plot(show=False)
+            cat.plot(fig=fig)
         """
         from obspy.imaging.maps import plot_map
         import matplotlib.pyplot as plt
@@ -3401,7 +3424,7 @@ class Catalog(object):
                        continent_fill_color=continent_fill_color,
                        water_fill_color=water_fill_color,
                        colormap=colormap, marker="o", title=title,
-                       show=False, **kwargs)
+                       show=False, fig=fig, **kwargs)
 
         if outfile:
             fig.savefig(outfile)
