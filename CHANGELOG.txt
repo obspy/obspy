@@ -21,6 +21,9 @@
     * Bug fixed within rotate.rotate2ZNE(). Additionally it can now also
       perform the inverse rotation (see #1061).
   - obspy.station:
+    * Plotting responses across multiple channels is more robust now in
+      presence of some strange channels (e.g. with zero sampling rate,
+      happens e.g. for state of health channels, see #1115)
     * ObsPy no longer assumes that the StationXML namespace is the default
       namespace (see #1060).
     * Checking if a file is a StationXML file is less rigorous (and much
