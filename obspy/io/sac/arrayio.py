@@ -451,14 +451,14 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     if nulls:
         items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)] + \
-                [(key, val) for (key, val) in zip(HD.STRHDRS, hs)]
+                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)]
     else:
         # more readable
         items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)
                  if val != HD.FNULL] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
-                [(key, val) for (key, val) in zip(HD.STRHDRS, hs)
+                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)
                  if val != HD.SNULL]
 
     header = dict(items)
@@ -468,10 +468,10 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     # XXX: kevnm may be null when kevnm2 isn't
     if 'kevnm2' in header:
         if 'kevnm' in header:
-            header['kevnm'] = header['kevnm'].decode()
-            header['kevnm'] += header.pop('kevnm2').decode()
+            header['kevnm'] = header['kevnm']
+            header['kevnm'] += header.pop('kevnm2')
         else:
-            header['kevnm'] = header.pop('kevnm2').decode()
+            header['kevnm'] = header.pop('kevnm2')
 
     return header
 
@@ -508,7 +508,8 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     hs[2] = kevnm2.encode('ascii', 'strict')
                 else:
                     # TODO: why was encoding done?
-                    # hs[HD.STRHDRS.index(hdr)] = value.encode('ascii', 'strict')
+                    # hs[HD.STRHDRS.index(hdr)] = value.encode('ascii',
+                    #                                          'strict')
                     hs[HD.STRHDRS.index(hdr)] = value
             else:
                 raise ValueError("Unrecognized header name: {}.".format(hdr))
