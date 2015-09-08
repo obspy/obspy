@@ -77,6 +77,7 @@ $BASEDIR/bin/python setup.py develop --verbose
 # keep some packages up to date
 $BASEDIR/bin/pip install --upgrade pip
 $BASEDIR/bin/pip install --upgrade --no-deps pep8==1.5.7 flake8
+$BASEDIR/bin/pip install pyimgur
 
 # make docs
 cd $GITDIR/misc/docs
@@ -121,5 +122,5 @@ fi
 
 
 # report
-$BASEDIR/bin/obspy-runtests -v -x seishub -n sphinx -r --all
+$BASEDIR/bin/obspy-runtests -v -x seishub -n sphinx -r --all --keep-images
 exit 0
