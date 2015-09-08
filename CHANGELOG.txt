@@ -8,6 +8,10 @@
       spectrum actually the instrument response was never inverted and
       thus instead of a deconvolution a convolution was performed
       (see #1104).
+    * Fixing floating point precision/rounding issue with UTCDateTime when
+      initializing with floating point seconds, i.e. with microseconds,
+      that could lead to microseconds being off by 1 microsecond
+      (see #1096)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
   - obspy.mseed:
