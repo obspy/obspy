@@ -444,13 +444,13 @@ class UTCDateTimeTestCase(unittest.TestCase):
         Tests subtraction of floats from UTCDateTime
         """
         time = UTCDateTime(2010, 0o5, 31, 19, 54, 24.490)
-        res = -0.045149
+        delta = -0.045149
+        expected = UTCDateTime("2010-05-31T19:54:24.535149Z")
 
-        result1 = UTCDateTime("2010-05-31T19:54:24.535149Z")
-        result2 = time + (-res)
-        result3 = time - res
-        self.assertAlmostEqual(result2 - result3, 0.0)
-        self.assertAlmostEqual(result1.timestamp, result2.timestamp, 6)
+        got1 = time + (-delta)
+        got2 = time - delta
+        self.assertAlmostEqual(got1 - got2, 0.0)
+        self.assertAlmostEqual(expected.timestamp, got1.timestamp, 6)
 
     def test_issue159(self):
         """
