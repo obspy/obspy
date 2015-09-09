@@ -408,8 +408,8 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
                    delimiter='')
         np.savetxt(f, np.reshape(hi, (8, 5)), fmt=native_str("%10d"),
                    delimiter='')
-        np.savetxt(f, np.reshape(hs, (8, 3)), fmt=native_str('%-8s'),
-                   delimiter='')
+        np.savetxt(f, np.reshape(hs, (8, 3)).astype('|U8'),
+                   fmt=native_str('%-8s'), delimiter='')
     except Exception as e:
         if is_file_name:
             f.close()
