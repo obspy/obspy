@@ -216,7 +216,7 @@ __doc__ = MODULE_DOCSTRING + HEADER_DOCSTRING
 # ------------ NULL VALUES ----------------------------------------------------
 FNULL = -12345.0
 INULL = -12345
-SNULL = b'-12345  '
+SNULL = '-12345  '
 
 # ------------ HEADER NAMES, TYPES, ARRAY POSITIONS ---------------------------
 # these are useful b/c they can be used forwards or backwards, like:

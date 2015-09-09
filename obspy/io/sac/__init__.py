@@ -17,7 +17,7 @@ Similar to reading any other waveform data format using
 :func:`~obspy.core.stream.read()`:
 
 >>> from obspy import read
->>> st = read('/path/to/test.sac')
+>>> st = read('/path/to/test.sac', debug_headers=True)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +ELLIPSIS
