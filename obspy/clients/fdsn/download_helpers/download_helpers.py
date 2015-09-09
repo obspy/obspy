@@ -28,7 +28,7 @@ from .download_status import ClientDownloadHelper, STATUS
 
 
 # Setup the logger.
-logger = logging.getLogger("obspy-download-helper")
+logger = logging.getLogger("obspy.clients.fdsn.download_helpers")
 logger.setLevel(logging.DEBUG)
 # Prevent propagating to higher loggers.
 logger.propagate = 0

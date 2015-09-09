@@ -453,9 +453,18 @@ How it Works
 Logging
 ~~~~~~~
 
-*to be written*
 
+The download helpers utilizes Python's `logging facilities
+<https://docs.python.org/2/library/logging.html>`__. By default it will log to
+stdout at the ``logging.INFO`` level which provides a fair amount of detail. If
+you want to change the log level or setup a different stream handler, just get
+the corresponding logger after you import the download helpers module:
 
+.. code:: python
+
+    >>> import logging
+    >>> logger = logging.getLogger("obspy.clients.fdsn.download_helpers")
+    >>> logger.setLevel(logging.DEBUG)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
