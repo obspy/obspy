@@ -527,3 +527,8 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     elif not isinstance(path, (str, bytes)):
         raise TypeError("'%s' is not a filepath." % str(path))
     return path
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

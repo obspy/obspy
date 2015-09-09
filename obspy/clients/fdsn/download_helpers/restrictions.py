@@ -130,7 +130,6 @@ class Restrictions(object):
         used if the ``location`` argument is used.
     :type location_priorities: list of str
     """
-
     def __init__(self, starttime, endtime,
                  station_starttime=None, station_endtime=None,
                  chunklength_in_sec=None,
@@ -192,4 +191,10 @@ class Restrictions(object):
                 yield (starttime, min(starttime + chunklength, endtime))
                 starttime += chunklength
             raise StopIteration
+
         return it()
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

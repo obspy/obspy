@@ -307,3 +307,8 @@ class DownloadHelper(object):
         logger.info("Successfully initialized %i client(s): %s."
                     % (len(self._initialized_clients),
                        ", ".join(self._initialized_clients.keys())))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
