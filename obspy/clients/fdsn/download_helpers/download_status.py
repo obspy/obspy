@@ -430,11 +430,12 @@ class TimeInterval(object):
 
     def __repr__(self):
         return "TimeInterval(start={start}, end={end}, filename={filename}, " \
-               "status={status})".format(
+               "status='{status}')".format(
                    start=repr(self.start),
                    end=repr(self.end),
-                   filename=repr(self.filename),
-                   status=repr(self.status))
+                   filename="'%s'" % self.filename
+                   if self.filename is not None else "None",
+                   status=str(self.status))
 
 
 class ClientDownloadHelper(object):
