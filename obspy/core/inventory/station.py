@@ -24,7 +24,7 @@ from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
-                   Longitude, _unified_content_strings, _textwrap)
+                   Longitude, Site, _unified_content_strings, _textwrap)
 
 
 @python_2_unicode_compatible
@@ -35,8 +35,8 @@ class Station(BaseNode):
         single station epoch with the station's creation and termination dates
         as the epoch start and end dates.
     """
-    def __init__(self, code, latitude, longitude, elevation, channels=None,
-                 site=None, vault=None, geology=None, equipments=None,
+    def __init__(self, code, latitude, longitude, elevation, site,
+                 channels=None, vault=None, geology=None, equipments=None,
                  operators=None, creation_date=None, termination_date=None,
                  total_number_of_channels=None,
                  selected_number_of_channels=None, description=None,
@@ -51,8 +51,12 @@ class Station(BaseNode):
         :type longitude: :class:`~obspy.core.inventory.util.Longitude`
         :param longitude: The longitude of the station
         :param elevation: The elevation of the station in meter.
+        :type site: :class:`~obspy.station.util.Site` (or str)
         :param site: These fields describe the location of the station using
-            geopolitical entities (country, city, etc.).
+            geopolitical entities (country, city, etc.). If a plain `str` is
+            provided instead of a :class:`~obspy.station.util.Site` object, a
+            :class:`~obspy.station.util.Site` object with this string as field
+            "name" will be created.
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
             etc
         :param geology: Type of rock and/or geologic formation.
@@ -106,6 +110,8 @@ class Station(BaseNode):
         self.longitude = longitude
         self.elevation = elevation
         self.channels = channels or []
+        if isinstance(site, (str, native_str)):
+            site = Site(site)
         self.site = site
         self.vault = vault
         self.geology = geology
