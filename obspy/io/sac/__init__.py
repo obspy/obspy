@@ -69,9 +69,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .util import SacError, SacIOError
 from .sacpz import attach_paz, attach_resp
-from .sactrace import SACTrace
+from .pysac.util import SacError, SacIOError
+from .pysac import SACTrace
 
 
 if __name__ == '__main__':

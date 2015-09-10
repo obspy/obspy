@@ -12,7 +12,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 
-from ..sactrace import SACTrace
+from ..pysac.sactrace import SACTrace
 
 
 class SACTraceTestCase(unittest.TestCase):

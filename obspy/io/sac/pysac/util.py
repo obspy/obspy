@@ -15,7 +15,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core import Stats
 
-from ..sac import header as HD
+from . import header as HD
 
 # ------------- DATA ----------------------------------------------------------
 TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "

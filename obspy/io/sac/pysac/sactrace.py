@@ -25,10 +25,10 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-from ..sac import header as HD
+from . import header as HD
 from .util import SacError, SacHeaderError
-from ..sac import util as _ut
-from ..sac import arrayio as _io
+from . import util as _ut
+from . import arrayio as _io
 
 
 # ------------- HEADER GETTER/SETTERS -----------------------------------------

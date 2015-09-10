@@ -27,7 +27,7 @@ import numpy as np
 from obspy.core.compatibility import from_buffer
 from obspy import UTCDateTime
 
-from ..sac import header as HD
+from . import header as HD
 from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int
 
@@ -459,7 +459,7 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
                 [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)
-                 if val != HD.SNULL]
+                 if val.decode() != HD.SNULL]
 
     header = dict(items)
 
