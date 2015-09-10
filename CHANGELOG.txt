@@ -19,6 +19,9 @@ master:
      (see #860)
    * Stream/Trace.slice() now has the optional `nearest_sample` argument from
      Stream/Trace.trim().
+   * Trace.remove_response() now has `plot` option to show/output a plot of all
+     individual steps of instrument response removal in frequency domain
+     (see #1116).
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.

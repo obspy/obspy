@@ -50,6 +50,10 @@ Gallery
     :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
+.. gallery-plot:: tutorial/code_snippets/seismometer_correction_simulation_5.py
+    :target: tutorial/code_snippets/seismometer_correction_simulation.html
+    :alt: Seismometer Correction/Simulation
+
 .. gallery-plot:: tutorial/code_snippets/plotting_spectrograms.py
     :target: tutorial/code_snippets/plotting_spectrograms.html
     :alt: Plotting Spectrograms

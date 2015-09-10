@@ -20,6 +20,7 @@ import warnings
 from copy import copy, deepcopy
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
@@ -2397,7 +2398,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
-                        **kwargs):
+                        plot=False, **kwargs):
         """
         Deconvolve instrument response.
 
@@ -2463,6 +2464,33 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_response()
             tr.plot()
 
+        Using the `plot` option it is possible to visualize the individual
+        steps during response removal in the frequency domain to check the
+        chosen `pre_filt` and `water_level` options to stabilize the
+        deconvolution of the inverted instrument response spectrum:
+
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")
+        >>> tr = st[0]
+        >>> inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
+        >>> tr.attach_response(inv)
+        >>> pre_filt = [0.001, 0.005, 45, 50]
+        >>> tr.remove_response(pre_filt=pre_filt, output="DISP",
+        ...                    water_level=60, plot=True)  # doctest: +SKIP
+        <...Trace object at 0x...>
+
+        .. plot::
+
+            from obspy import read, read_inventory
+            st = read("http://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
+            tr = st[0]
+            inv = read_inventory("http://examples.obspy.org/IU_ULN.xml")
+            tr.attach_response(inv)
+            pre_filt = [0.001, 0.005, 45, 50]
+            output = "DISP"
+            tr.remove_response(pre_filt=pre_filt, output=output,
+                               water_level=60, plot=True)
+
         :type output: str
         :param output: Output units. One of:
 
@@ -2489,6 +2517,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             in time domain prior to deconvolution.
         :type taper_fraction: float
         :param taper_fraction: Taper fraction of cosine taper to use.
+        :type plot: bool or str
+        :param plot: If `True`, brings up a plot that illustrates how the
+            data are processed in the frequency domain in three steps. First by
+            `pre_filt` frequency domain tapering, then by inverting the
+            instrument response spectrum with or without `water_level` and
+            finally showing data with inverted instrument response multiplied
+            on it in frequency domain. It also shows the comparison of
+            raw/corrected data in time domain. If a `str` is provided then the
+            plot is saved to file (filename must have a valid image suffix
+            recognizable by matplotlib e.g. '.png').
         """
         from obspy.core.inventory import Response, PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
@@ -2536,6 +2574,62 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if taper:
             data *= cosine_taper(npts, taper_fraction,
                                  sactaper=True, halfcosine=False)
+
+        if plot:
+            color1 = "blue"
+            color2 = "red"
+            bbox = dict(boxstyle="round", fc="w", alpha=1, ec="w")
+            bbox1 = dict(boxstyle="round", fc="blue", alpha=0.15)
+            bbox2 = dict(boxstyle="round", fc="red", alpha=0.15)
+            fig = plt.figure(figsize=(14, 10))
+            fig.suptitle(str(self))
+            ax1 = fig.add_subplot(321)
+            ax1b = ax1.twinx()
+            ax2 = fig.add_subplot(323, sharex=ax1)
+            ax2b = ax2.twinx()
+            ax3 = fig.add_subplot(325, sharex=ax1)
+            ax3b = ax3.twinx()
+            ax4 = fig.add_subplot(322)
+            ax5 = fig.add_subplot(324, sharex=ax4)
+            ax6 = fig.add_subplot(326, sharex=ax4)
+            for ax_ in (ax1, ax2, ax3, ax4, ax5, ax6):
+                ax_.grid(zorder=-10)
+            ax1.text(0.05, 0.1, 'pre_filt: %s' % pre_filt,
+                     ha="left", va="bottom", transform=ax1.transAxes,
+                     fontsize="large", bbox=bbox, zorder=5)
+            ax1.set_ylabel("Data spectrum, raw", bbox=bbox1)
+            ax1b.set_ylabel("'pre_filt' taper fraction", bbox=bbox2)
+            evalresp_info = "\n".join(
+                ['output: %s' % output] +
+                ['%s: %s' % (key, value) for key, value in kwargs.items()])
+            ax2.text(0.05, 0.1, evalresp_info, ha="left",
+                     va="bottom", transform=ax2.transAxes,
+                     fontsize="large", zorder=5, bbox=bbox)
+            ax2.set_ylabel("Data spectrum,\n"
+                           "'pre_filt' applied", bbox=bbox1)
+            ax2b.set_ylabel("Instrument response", bbox=bbox2)
+            ax3.text(0.05, 0.1, 'water_level: %s' % water_level,
+                     ha="left", va="bottom", transform=ax3.transAxes,
+                     fontsize="large", zorder=5, bbox=bbox)
+            ax3.set_ylabel("Data spectrum,\nmultiplied with inverted\n"
+                           "instrument response", bbox=bbox1)
+            ax3b.set_ylabel("Inverted instrument response,\n"
+                            "water level applied", bbox=bbox2)
+            ax3.set_xlabel("Frequency [Hz]")
+            times = self.times()
+            ax4.plot(times, self.data, color="k")
+            ax4.set_ylabel("Raw")
+            ax4.yaxis.set_ticks_position("right")
+            ax4.yaxis.set_label_position("right")
+            ax5.plot(times, data, color="k")
+            ax5.set_ylabel("Raw, after time\ndomain pre-processing")
+            ax5.yaxis.set_ticks_position("right")
+            ax5.yaxis.set_label_position("right")
+            ax6.set_ylabel("Response removed")
+            ax6.set_xlabel("Time [s]")
+            ax6.yaxis.set_ticks_position("right")
+            ax6.yaxis.set_label_position("right")
+
         # smart calculation of nfft dodging large primes
         from obspy.signal.util import _npts2nfft
         nfft = _npts2nfft(npts)
@@ -2547,10 +2641,24 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.stats.response.get_evalresp_response(self.stats.delta, nfft,
                                                       output=output, **kwargs)
 
+        if plot:
+            ax1.loglog(freqs, np.abs(data), color=color1, zorder=9)
+
         # frequency domain pre-filtering of data spectrum
         # (apply cosine taper in frequency domain)
         if pre_filt:
-            data *= cosine_sac_taper(freqs, flimit=pre_filt)
+            freq_domain_taper = cosine_sac_taper(freqs, flimit=pre_filt)
+            data *= freq_domain_taper
+
+        if plot:
+            try:
+                freq_domain_taper
+            except NameError:
+                freq_domain_taper = np.ones(len(freqs))
+            ax1b.semilogx(freqs, freq_domain_taper, color=color2, zorder=10)
+            ax1b.set_ylim(-0.05, 1.05)
+            ax2.loglog(freqs, np.abs(data), color=color1, zorder=9)
+            ax2b.loglog(freqs, np.abs(freq_response), color=color2, zorder=10)
 
         if water_level is None:
             # No water level used, so just directly invert the response.
@@ -2563,10 +2671,24 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             invert_spectrum(freq_response, water_level)
 
         data *= freq_response
-
         data[-1] = abs(data[-1]) + 0.0j
+
+        if plot:
+            ax3.loglog(freqs, np.abs(data), color=color1, zorder=9)
+            ax3b.loglog(freqs, np.abs(freq_response), color=color2, zorder=10)
+
         # transform data back into the time domain
         data = np.fft.irfft(data)[0:npts]
+
+        if plot:
+            ax6.plot(times, data, color="k")
+            plt.subplots_adjust(wspace=0.4)
+            if plot is True:
+                plt.show()
+            else:
+                plt.savefig(plot)
+                plt.close(fig)
+
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
