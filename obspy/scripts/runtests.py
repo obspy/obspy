@@ -556,12 +556,15 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
 
 
 def run(argv=None, interactive=True):
+    import matplotlib
     try:
-        import matplotlib
-        matplotlib.use("AGG")
-        if matplotlib.get_backend().upper() != "AGG":
-            raise Exception()
-    except:
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error", UserWarning)
+            matplotlib.use('Agg')
+    except UserWarning:
+        import matplotlib.pyplot as plt
+        plt.switch_backend("Agg")
+    if matplotlib.get_backend().upper() != "AGG":
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
 
