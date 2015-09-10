@@ -363,7 +363,7 @@ class Parser(object):
         fh.write(self.get_SEED(*args, **kwargs))
         fh.close()
 
-    @deprecated("'get_RESP' has been renamed to 'get_RESP'. "
+    @deprecated("'getRESP' has been renamed to 'get_RESP'. "
                 "Use that instead.")
     def getRESP(self, *args, **kwargs):
         return self.get_RESP(*args, **kwargs)

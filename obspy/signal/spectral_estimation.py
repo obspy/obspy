@@ -702,7 +702,7 @@ class PPSD(object):
     def _get_response_from_parser(self, tr):
         parser = self.metadata
         resp_key = "RESP." + self.id
-        for key, resp_file in parser.getRESP():
+        for key, resp_file in parser.get_RESP():
             if key == resp_key:
                 break
         else:
