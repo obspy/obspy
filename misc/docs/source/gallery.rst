@@ -106,6 +106,10 @@ Gallery
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
+.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
+
 .. gallery-plot:: tutorial/code_snippets/array_response_function.py
     :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
