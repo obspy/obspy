@@ -150,6 +150,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
         KNOWN_FALSE = [
             os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
                          '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
+            os.path.join('core', 'tests', 'data',
+                         'IU_ULN_00_LH1_2015-07-18T02.mseed'),
         ]
         formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
