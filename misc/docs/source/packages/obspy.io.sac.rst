@@ -10,7 +10,9 @@
        :nosignatures:
 
        core
-       sacio
        sacpz
+       pysac.sactrace
+       pysac.util
+       pysac.arrayio
 
     .. comment to end block
