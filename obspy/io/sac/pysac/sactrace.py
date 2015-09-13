@@ -879,8 +879,8 @@ class SACTrace(object):
         :type hi: :class:`numpy.ndarray` of ints
         :param hs: SAC string header array
         :type hs: :class:`numpy.ndarray` of str
-        :param data: SAC data array, optional.  
-        
+        :param data: SAC data array, optional.
+
         If omitted or None, the header arrays are intialized according to
         :func:`pysac.arrayio.init_header_arrays`.  If data is omitted, it is
         simply set to None on the corresponding :class:`SACTrace`.
@@ -1117,7 +1117,7 @@ class SACTrace(object):
     def listhdr(self, hdrlist='all'):
         """
         Print header values.
-        
+
         Default is all non-null values.
 
         :param hdrlist: Which header fields to you want to list. Choose one of

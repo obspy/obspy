@@ -481,14 +481,14 @@ def dict_to_header_arrays(header=None, byteorder='='):
     """
     Returns null hf, hi, hs arrays, optionally filled with values from a
     dictionary.
-    
+
     No header checking.
 
     :param header: SAC header dictionary.
     :type header: dict
     :param byteorder: Desired byte order of initialized arrays (little, native,
         big).
-    :type byteorder: str {'<', '=', '>'} 
+    :type byteorder: str {'<', '=', '>'}
 
     :return: The float, integer, and string header arrays, in that order.
     :rtype: tuple of :class:`numpy.ndarray`

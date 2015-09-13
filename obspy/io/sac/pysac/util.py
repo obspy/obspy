@@ -188,7 +188,7 @@ def sac_to_obspy_header(sacheader):
 
     :param sacheader: SAC header dictionary.
     :type sacheader: dict
-    
+
     :rtype: :class:`~obspy.core.Stats`
     :return: Filled ObsPy Stats header.
 
@@ -375,7 +375,7 @@ def get_sac_reftime(header):
     Get SAC header reference time as a UTCDateTime instance from a SAC header
     dictionary.
 
-    Builds the reference time from SAC "nz" time fields. Raises 
+    Builds the reference time from SAC "nz" time fields. Raises
     :class:`SacHeaderTimeError` if any time fields are null.
 
     :param header: SAC header
