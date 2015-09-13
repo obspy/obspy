@@ -1331,14 +1331,14 @@ class UTCDateTime(object):
         2008,275,00:30
         """
         if not compact:
-            if not self.time:
+            if self.time == datetime.time(0):
                 return "%04d,%03d" % (self.year, self.julday)
             return "%04d,%03d,%02d:%02d:%02d.%04d" % (self.year, self.julday,
                                                       self.hour, self.minute,
                                                       self.second,
                                                       self.microsecond // 100)
         temp = "%04d,%03d" % (self.year, self.julday)
-        if not self.time:
+        if self.time == datetime.time(0):
             return temp
         temp += ",%02d" % self.hour
         if self.microsecond:
