@@ -132,15 +132,15 @@ def is_same_byteorder(bo1, bo2):
     """
     Deal with all the ways to compare byte order string representations.
 
-    Parameters
-    ----------
-    bo1, bo2 : str
-       Byte order strings can be any of:
-       {'l', 'little', 'L', '<', 'b', 'big', 'B', '>', 'n', 'native', 'N', '='}
+    :param bo1: Byte order string. Can be one of {'l', 'little', 'L', '<',
+        'b', 'big', 'B', '>', 'n', 'native','N', '='}
+    :type bo1: str
+    :param bo2: Byte order string. Can be one of {'l', 'little', 'L', '<',
+        'b', 'big', 'B', '>', 'n', 'native','N', '='}
+    :type bo1: str
 
-    Returns
-    -------
-    isSAME : bool
+    :rtype: bool
+    :return: True of same byte order.
 
     """
     # TODO: extend this as is_same_byteorder(*byteorders)
@@ -186,12 +186,13 @@ def sac_to_obspy_header(sacheader):
     """
     Make an ObsPy Stats header dictionary from a SAC header dictionary.
 
+    :param sacheader: SAC header dictionary.
+    :type sacheader: dict
+    
+    :rtype: :class:`~obspy.core.Stats`
+    :return: Filled ObsPy Stats header.
+
     """
-    # 1. get required sac header values
-    # 2. get time
-    # 3. get optional sac header values
-    # 4. deal with null values
-    # 5. transform to obspy values
 
     # 1. get required sac header values
     try:
@@ -265,13 +266,17 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     """
     Make a SAC header dictionary from an ObsPy Stats or dict instance.
 
-    If keep_sac_header is True, any old stats.sac header values are kept as is,
-    and only a minimal set of values are updated from the stats dictionary:
-    npts, delta, e.  If an old iztype and valid reftime are found, the new b
-    and e will be properly referenced to it. If keep_sac_header is False, a new
-    SAC header is constructed from only information found in the stats
-    dictionary, with some other default values introduced.  It will be an
-    iztype 9 ('ib') file, with small adjustments for micro/milliseconds issues.
+    :param stats: Filled ObsPy Stats header
+    :type stats: dict or :class:`~obspy.core.Stats`
+    :param keep_sac_header: If keep_sac_header is True, any old stats.sac
+        header values are kept as is, and only a minimal set of values are
+        updated from the stats dictionary: npts, delta, e.  If an old iztype
+        and valid reftime are found, the new b and e will be properly
+        referenced to it. If keep_sac_header is False, a new SAC header is
+        constructed from only information found in the stats dictionary, with
+        some other default values introduced.  It will be an iztype 9 ('ib')
+        file, with small adjustments for micro/milliseconds issues.
+    :type keep_sac_header: bool
 
     """
     # XXX: forces the user to keep either all or nothing of the old SAC header
@@ -370,14 +375,18 @@ def get_sac_reftime(header):
     Get SAC header reference time as a UTCDateTime instance from a SAC header
     dictionary.
 
-    Raises
-    ------
-    SacHeaderTimeError
-        Contains null nz-time fields.
+    Builds the reference time from SAC "nz" time fields. Raises 
+    :class:`SacHeaderTimeError` if any time fields are null.
+
+    :param header: SAC header
+    :type header: dict
+
+    :rtype: :class:`~obspy.core.UTCDateTime`
+    :returns: SAC reference time.
+
     """
     # NOTE: epoch seconds can be got by:
     # (reftime - datetime.datetime(1970,1,1)).total_seconds()
-    # TODO: let null nz values be 0?
     try:
         yr = header['nzyear']
         nzjday = header['nzjday']

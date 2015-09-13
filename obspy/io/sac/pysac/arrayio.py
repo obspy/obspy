@@ -36,18 +36,15 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
     """
     Initialize arbitrary header arrays.
 
-    Parameters
-    ----------
-    arrays : tuple of strings {'float', 'int', 'str'}
-        Specify which arrays to initialize and the desired order.
-        If omitted, returned arrays are ('float', 'int', 'str').
-    byteorder : str {'<', '=', '>'}
-        Desired byte order of initialized arrays (little, native, big).
+    :param arrays: Specify which arrays to initialize and the desired order.
+        If omitted, returned arrays are ('float', 'int', 'str'), in that order.
+    :type arrays: Tuple of strings {'float', 'int', 'str'}
+    :param byteorder: Desired byte order of initialized arrays
+        (little, native, big).
+    :type byteorder: str {'<', '=', '>'}
 
-    Returns
-    -------
-    list of numpy.ndarrays
-        The desired SAC header arrays.
+    :rtype: list of :class:`~numpy.ndarray` instances
+    :returns: The desired SAC header arrays.
 
     """
     out = []
@@ -83,34 +80,26 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
     """
     Read a SAC binary file.
 
-    Parameters
-    ----------
-    source : str or file-like object
-        Full path string for File-like object from a SAC binary file on disk.
-        If the latter, open 'rb'.
-    headonly : bool
-        If headonly is True, only read the header arrays not the data array.
-    byteorder : str {'little', 'big'}, optional
-        If omitted or None, automatic byte-order checking is done, starting
-        with native order. If byteorder is specified and incorrect, a
-        SacIOError is raised.
-    checksize : bool, default False
-        If True, check that the theoretical file size from the header matches
-        the size on disk.
+    :param source: Full path string for File-like object from a SAC binary file
+        on disk.  If it is an open File object, open 'rb'.
+    :type source: str or file
+    :param headonly: If headonly is True, only read the header arrays not the
+        data array.
+    :type headonly: bool
+    :param byteorder: If omitted or None, automatic byte-order checking is
+        done, starting with native order. If byteorder is specified and
+        incorrect, a SacIOError is raised.
+    :type byteorder: str {'little', 'big'}, optional
+    :param checksize: If True, check that the theoretical file size from the
+        header matches the size on disk.
+    :type checksize: bool
 
-    Returns
-    -------
-    hf, hi, hs : numpy.ndarray
-        The float, integer, and string header arrays.
-    data : numpy.ndarray or None
-        float32 data array. If headonly is True, data will be None.
+    :return: The float, integer, and string header arrays, and data array,
+        in that order. Data array will be None if headonly is True.
+    :rtype: tuple of :class:`numpy.ndarray`
 
-    Raises
-    ------
-    ValueError
-        Unrecognized byte order.
-    IOError
-        File not found, incorrect specified byteorder, theoretical file size
+    :raises: :class:`ValueError` if unrecognized byte order.  :class:`IOError`
+        if file not found, incorrect specified byteorder, theoretical file size
         doesn't match header, or header arrays are incorrect length.
 
     """
@@ -202,23 +191,20 @@ def read_sac(source, headonly=False, byteorder=None, checksize=False):
 
 def read_sac_ascii(source, headonly=False):
     """
-    Read a SAC ASCII file.
+    Read a SAC ASCII/Alphanumeric file.
 
-    Parameters
-    ----------
-    source : str for File-like object
-        Full path or File-like object from a SAC ASCII file on disk.
-    headonly : bool
-        If headonly is True, only read the header arrays not the data array.
+    :param source: Full path or File-like object from a SAC ASCII file on disk.
+    :type source: str or file
+    :param headonly: If headonly is True, return the header arrays not the
+        data array.  Note, the entire file is still read in if headonly=True.
+    :type headonly: bool
 
-    Returns
-    -------
-    hf, hi, hs : numpy.ndarray
-        The float, integer, and string header arrays.
-    data : numpy.ndarray or None
-        float32 data array. If headonly is True, data will be None.
+    :return: The float, integer, and string header arrays, and data array,
+        in that order. Data array will be None if headonly is True.
+    :rtype: :class:`numpy.ndarray`
 
     """
+    # TODO: make headonly=True only read part of the file, not all of it.
     # checks: ASCII-ness, header array length, npts matches data length
     try:
         fh = open(source, 'rb')
@@ -282,26 +268,31 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     """
     Write the header and (optionally) data arrays to a SAC binary file.
 
-    Parameters
-    ----------
-    dest : str or File-like object
-        Full path or File-like object from SAC binary file on disk.
+    :param dest: Full path or File-like object to SAC binary file on disk.
         If data is None, file mode should be 'wb+'.
-    hf, hi, hs : numpy.ndarray
-        The float, integer, and string header arrays.
-    data : numpy.ndarray, optional
-        float32 data array.  If omitted or None, it is assumed that the user
-        intends to overwrite/modify only the header arrays of an existing file.
-        Equivalent to "writehdr".
-    byteorder : str {'little', 'big'}, optional
-        Desired output byte order.  If omitted, arrays are written as they are.
-        If data=None, better make sure the file you're writing to has the same
-        byte order as headers you're writing.
+    :type dest: str or file
+    :param hf: SAC float header array
+    :type hf: :class:`numpy.ndarray` of floats
+    :param hi: SAC int header array
+    :type hi: :class:`numpy.ndarray` of ints
+    :param hs: SAC string header array
+    :type hs: :class:`numpy.ndarray` of str
+    :param data: SAC data array, optional.  If omitted or None, it is assumed
+        that the user intends to overwrite/modify only the header arrays of an
+        existing file.  Equivalent to SAC's "writehdr".
+    :type data: :class:`numpy.ndarray` of float32
+    :param byteorder: Desired output byte order.  If omitted, arrays are
+        written as they are.  If data=None, better make sure the file you're
+        writing to has the same byte order as headers you're writing.
+    :type byteorder: str {'little', 'big'}, optional
 
-    Notes
-    -----
+    :return: None
+
+    .. rubric:: Notes
+
     A user can/should not _create_ a header-only binary file.  Use mode 'wb+'
-    for data=None (headonly) writing.
+    for data=None (headonly) writing to just write over the header part of an
+    existing binary file with data in it.
 
     """
     # this function is a hot mess.  clean up the logic.
@@ -368,17 +359,19 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     """
     Write the header and (optionally) data arrays to a SAC ASCII file.
 
-    Parameters
-    ----------
-    dest : str or File-like object
-        Full path or File-like object from SAC ASCII file on disk.
-    hf, hi, hs : numpy.ndarray
-        The float, integer, and string header arrays.
-    data : numpy.ndarray, optional
-        float32 data array.  If omitted or None, it is assumed that the user
-        intends to overwrite/modify only the header arrays of an existing file.
-        Equivalent to "writehdr". If data is None, better make sure the header
-        you're writing matches any data already in the file.
+    :param dest: Full path or File-like object from SAC ASCII file on disk.
+    :type dest: str or file
+    :param hf: SAC float header array.
+    :type hf: :class:`numpy.ndarray` of floats
+    :param hi: SAC int header array.
+    :type hi: :class:`numpy.ndarray` of ints
+    :param hs: SAC string header array.
+    :type hs: :class:`numpy.ndarray` of strings
+    :param data: SAC data array.  If omitted or None, it is assumed that the
+        user intends to overwrite/modify only the header arrays of an existing
+        file.  Equivalent to "writehdr". If data is None, better make sure the
+        header you're writing matches any data already in the file.
+    :type data: :class:`numpy.ndarray` of float32 or None
 
     """
     # TODO: fix prodigious use of file open/close for "with" statements.
@@ -440,12 +433,20 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
 # TODO: put these in sac.util?
 def header_arrays_to_dict(hf, hi, hs, nulls=False):
     """
-    Returns
-    -------
-    dict
-        The correctly-ordered SAC header values, as a dictionary.
-    nulls : bool
-        If True, return all values including nulls.
+    Convert SAC header arrays to a more user-friendly dict.
+
+    :param hf: SAC float header array.
+    :type hf: :class:`numpy.ndarray` of floats
+    :param hi: SAC int header array.
+    :type hi: :class:`numpy.ndarray` of ints
+    :param hs: SAC string header array.
+    :type hs: :class:`numpy.ndarray` of strings
+    :param nulls: If True, return all header values, including nulls, else
+        omit them.
+    :type nulls: bool
+
+    :return: SAC header dictionary
+    :rtype: dict
 
     """
     if nulls:
@@ -479,10 +480,18 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
 def dict_to_header_arrays(header=None, byteorder='='):
     """
     Returns null hf, hi, hs arrays, optionally filled with values from a
-    dictionary.  No header checking.
+    dictionary.
+    
+    No header checking.
 
-    byteorder : str {'<', '=', '>'}
-        Desired byte order of initialized arrays (little, native, big).
+    :param header: SAC header dictionary.
+    :type header: dict
+    :param byteorder: Desired byte order of initialized arrays (little, native,
+        big).
+    :type byteorder: str {'<', '=', '>'} 
+
+    :return: The float, integer, and string header arrays, in that order.
+    :rtype: tuple of :class:`numpy.ndarray`
 
     """
     hf, hi, hs = init_header_arrays(byteorder=byteorder)
@@ -521,15 +530,15 @@ def validate_sac_content(hf, hi, hs, data, *tests):
     """
     Check validity of loaded SAC file content, such as header/data consistency.
 
-    Parameters
-    ----------
-    hf, hi, hs: numpy.ndarray
-        Float, int, string SAC header arrays, respectively.
-    data : numpy.ndarray of float32 or None
-        SAC data array.
-    tests : str
-        One or more of the following validity tests:
-
+    :param hf: SAC float header array
+    :type hf: :class:`numpy.ndarray` of floats
+    :param hi: SAC int header array
+    :type hi: :class:`numpy.ndarray` of ints
+    :param hs: SAC string header array
+    :type hs: :class:`numpy.ndarray` of str
+    :param data: SAC data array
+    :type data: :class:`numpy.ndarray` of float32
+    :param tests: One or more of the following validity tests:
         'delta' : Time step "delta" is positive.
         'logicals' : Logical values are 0, 1, or null
         'data_hdrs' : Length, min, mean, max of data array match header values.
@@ -537,14 +546,11 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         'reftime' : Reference time values in header are all set.
         'reltime' : Relative time values in header are absolutely referenced.
         'all' : Do all tests.
+    :type tests: str
 
-    Raises
-    ------
-    SacInvalidContentError
-        Any of the specified tests fail.
-    ValueError
-        'data_hdrs' is specified and data is None, empty array
-        No tests specified.
+    :raises: :class:`SacInvalidContentError` if any of the specified tests
+        fail. :class:`ValueError` if 'data_hdrs' is specified and data is None,
+        empty array, or no tests specified.
 
     """
     # TODO: move this to util.py and write and use individual test functions,

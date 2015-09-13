@@ -13,7 +13,6 @@ setters.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-# from future.utils import native_str
 from future.builtins import *  # NOQA
 
 import sys
@@ -268,11 +267,22 @@ def _get_e(self):
 
 def _set_iztype(self, iztype):
     """
+    Set the iztype, which describes what the reftime is.
+
     Setting the iztype will shift the relative time headers, such that the
     header that iztype points to is (near) zero, and all others are shifted
     together by the difference.
 
     Affected headers: b, o, a, f, t0-t9
+
+    :param iztype: One of the following strings:
+        'iunkn'
+        'ib', begin time
+        'iday', midnight of reference GMT day
+        'io', event origin time
+        'ia', first arrival time
+        'it0'-'it9', user defined pick t0-t9.
+    :type iztype: str
 
     """
     # The Plan:
@@ -355,15 +365,29 @@ class SACTrace(object):
     Convenient and consistent in-memory representation of Seismic Analysis Code
     (SAC) files.
 
-    SACTrace instances preserve relationships between header values.
+    This is the human-facing interface for making a valid instance.  For
+    file-based or other constructors, see class methods .read and
+    .from_obspy_trace.  SACTrace instances preserve relationships between
+    header values.
 
-    Attributes
-    ----------
-    reftime : datetime.datetime
-        Read-only reference time, calculated from nzyear, nzjday, nzhour,
-        nzmin, nzsec, nzmsec.
-    Any valid header name is also an attribute. See below, pysac.header, or
-    individial attribution docstrings for more header information.
+    :param data: Associated time-series data vector. Optional. If omitted, None
+        is set as the instance data attribute.
+    :type data: :class:`numpy.ndarray` of float32
+
+    Any valid header key/value pair is also an optional input keyword argument.
+    If not provided, minimum required headers are set to valid default values.
+    The default instance is an evenly-space trace, with a sample rate of 1.0,
+    and len(data) or 0 npts, starting at 1970-01-01T00:00:00.000000.
+
+    :var reftime: Read-only reference time.  Calculated from nzyear, nzjday,
+        nzhour, nzmin, nzsec, nzmsec.
+    :var byteorder: The byte order of the underlying header/data arrays.
+        Raises :class:`SacError` if array byte orders are inconsistent, even in
+        the case where '<' is your native order and byteorders look like '<',
+        '=', '='.
+
+    Any valid header name is also an attribute. See below, :mod:`pysac.header`,
+    or individial attribution docstrings for more header information.
 
                                  THE SAC HEADER
 
@@ -380,24 +404,8 @@ class SACTrace(object):
         Initialize a SACTrace object using header key-value pairs and a
         numpy.ndarray for the data, both optional.
 
-        If not provided, the required headers are set to valid default values.
-        The default instance is an evenly-space trace, with a sample rate of
-        1.0, and len(data) or 0 npts, starting at 1970-01-01T00:00:00.000000.
+        ..rubric:: Example
 
-        This is the human-facing interface for making a valid instance.  For
-        file-based or other constructors, see class methods .read and
-        .from_obspy_trace.
-
-        Parameters
-        ----------
-        Any SAC header key-value pair is a valid argument. See the class
-            documentation for header descriptions.
-        data : numpy.ndarray (optional)
-            Associated time-series data vector. If omitted, None is set as the
-            instance data attribute.
-
-        Examples
-        --------
         >>> sac = SACTrace(nzyear=1995, nzmsec=50, data=np.arange(100))
         >>> print(sac) # doctest: +SKIP
         Reference Time = 01/01/1995 (001) 00:00:00.050000
@@ -729,8 +737,8 @@ class SACTrace(object):
         accordingly.  It accepts a UTCDateTime object, from which time shifts
         are calculated.
 
-        Notes
-        -----
+        ..rubric:: notes
+
         The reftime you supply will be robbed of its remainder microseconds,
         which are then pushed into the relative time header shifts.  This means
         that the reftime you observe after you set it here may not exactly
@@ -777,30 +785,28 @@ class SACTrace(object):
         """
         Construct an instance from a binary or ASCII file on disk.
 
-        Parameters
-        ----------
-        source : str or File-like object
-            Full path or File-like object from SAC binary or ASCII file on disk
-        headonly, ascii : bool
-            If headonly is True, don't read the data array.
-            If ascii is True, the file is a SAC ASCII type.
-        byteorder : str {'little', 'big'}, optional
-            If omitted or None, automatic byte-order checking is done for
-            binary files.  If byteorder is specified and incorrect, an
-            exception is raised. Successful binary byteorder is stored as
-            instance attribute .byteorder. This flag is ignored for ASCII files
-            and .byteorder is set to native.
-        checksize : bool, default False
-            If true, check that theoretical file size from header matches disk
-            size.
+        :param source: Full path string for File-like object from a SAC binary
+            file on disk.  If it is an open File object, open 'rb'.
+        :type source: str or file
+        :param headonly: If headonly is True, only read the header arrays not
+            the data array.
+        :type headonly: bool
+        :param ascii: If True, file is a SAC ASCII/Alphanumeric file.
+        :type ascii: bool
+        :param byteorder: If omitted or None, automatic byte-order checking is
+            done, starting with native order. If byteorder is specified and
+            incorrect, a :class:`SacIOError` is raised. Only valid for binary
+            files.
+        :type byteorder: str {'little', 'big'}, optional
+        :param checksize: If True, check that the theoretical file size from
+            the header matches the size on disk. Only valid for binary files.
+        :type checksize: bool
 
-        Raises
-        ------
-        SacIOError
-            checksize failed, byteorder was wrong, header arrays are wrong size
+        :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
+            or header arrays are wrong size.
 
-        Examples
-        --------
+        .. rubric:: Example
+
         >>> sac = SACTrace.read(filename, headonly=True) # doctest: +SKIP
         >>> try: # doctest: +SKIP
                 sac.validate('data_hdrs') # doctest: +SKIP
@@ -808,9 +814,7 @@ class SACTrace(object):
                 sac = SACTrace.read(filename, headonly=False) # doctest: +SKIP
                 sac.validate('data_hdrs') # doctest: +SKIP
 
-        See Also
-        --------
-        SACTrace.validate
+        See also: :meth:`SACTrace.validate`
 
         """
         if ascii:
@@ -825,25 +829,25 @@ class SACTrace(object):
     def write(self, dest, headonly=False, ascii=False, byteorder=None,
               flush_headers=True):
         """
-        Parameters
-        ----------
-        dest : str or File-like object
-            Full path or File-like object from SAC binary or ASCII file on disk
-        headonly, ascii : bool
-            If headonly is True, it is assumed that the user intends to
-            overwrite/modify only the header arrays of an existing file, and
-            data headers are not flushed/updated before writing.
-            If ascii is True, the file is an ASCII (alphanumeric) type file.
-        byteorder : str {'little', 'big'}, optional
-            Desired output byte order. If omitted, instance byte order is used.
-            If data=None, better make sure the file you're writing to has the
-            same byte order as headers you're writing.
-        flush_headers : bool
-            If True, update data headers like 'depmin' and 'depmax' with values
-            from the data array.
+        Write the header and (optionally) data arrays to a SAC binary file.
+
+        :param dest: Full path or File-like object to SAC binary file on disk.
+        :type dest: str or file
+        :param headonly: If headonly is True, only read the header arrays not
+            the data array.
+        :type headonly: bool
+        :param ascii: If True, file is a SAC ASCII/Alphanumeric file.
+        :type ascii: bool
+        :param byteorder: If omitted or None, automatic byte-order checking is
+            done, starting with native order. If byteorder is specified and
+            incorrect, a :class:`SacIOError` is raised. Only valid for binary
+            files.
+        :type byteorder: str {'little', 'big'}, optional
+        :param flush_headers: If True, update data headers like 'depmin' and
+            'depmax' with values from the data array.
+        :type flush_headers: bool
 
         """
-
         if headonly:
             data = None
         else:
@@ -869,15 +873,20 @@ class SACTrace(object):
         No value checking is done and header values are completely overwritten
         with the provided arrays, which is why this is a hidden constructor.
 
-        Parameters
-        ----------
-        hf, hi, hs : numpy.ndarray
-            Header arrays of dtype 'f4', int, '|S08', respectively.
-        data : numpy.ndarray
-            Corresponding seismogram array.
+        :param hf: SAC float header array
+        :type hf: :class:`numpy.ndarray` of floats
+        :param hi: SAC int header array
+        :type hi: :class:`numpy.ndarray` of ints
+        :param hs: SAC string header array
+        :type hs: :class:`numpy.ndarray` of str
+        :param data: SAC data array, optional.  
+        
+        If omitted or None, the header arrays are intialized according to
+        :func:`pysac.arrayio.init_header_arrays`.  If data is omitted, it is
+        simply set to None on the corresponding :class:`SACTrace`.
 
-        Examples
-        --------
+        .. rubric:: Example
+
         >>> sac = SACTrace._from_arrays() # doctest: +SKIP
         >>> print(sac) # doctest: +SKIP
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
@@ -887,14 +896,9 @@ class SACTrace(object):
             lovrok     = False
             lpspol     = False
 
-        See Also
-        --------
-        SACTrace.read : construct from a SAC binary or ASCII file on disk.
-        SACTrace.write : write to a SAC binary or ASCII file on disk.
-        SACTrace.from_obspy_trace : construct from an ObsPy Trace instance.
-
         """
-        # XXX: handle byte order independently instead of just from "hf"
+        # TODO: handle byte order independently instead of just from "hf".
+        # XXX: assumes hf was provided.
         hf0, hi0, hs0 = _io.init_header_arrays(byteorder=hf.dtype.byteorder)
 
         if hf is None:
@@ -921,17 +925,15 @@ class SACTrace(object):
         """
         Construct an instance from an ObsPy Trace.
 
-        Parameters
-        ----------
-        trace : obspy.Trace instance
-        keep_sac_header : bool
-            If True, any old stats.sac header values are kept as is,
-            and only a minimal set of values are updated from the stats
-            dictionary: npts, e, and data.  If an old iztype and a valid
-            reftime are present, b and e will be properly referenced to it.
-            If False, a new SAC header is constructed from only information
-            found in the stats dictionary, with some other default values
-            introduced.
+        :param trace: Source Trace object
+        :type trace: :class:`~obspy.core.Trace` instance
+        :param keep_sac_header: If True, any old stats.sac header values are
+            kept as is, and only a minimal set of values are updated from the
+            stats dictionary: npts, e, and data.  If an old iztype and a valid
+            reftime are present, b and e will be properly referenced to it.  If
+            False, a new SAC header is constructed from only information found
+            in the stats dictionary, with some other default values introduced.
+        :type keep_sac_header: bool
 
         """
         try:
@@ -971,13 +973,12 @@ class SACTrace(object):
         Required headers: nz-time fields, npts, delta, calib, kcmpnm, kstnm,
         ...?
 
-        Parameters
-        ----------
-        debug_headers : bool
-            Include _all_ SAC headers into the Trace.stats.sac dictionary.
+        :param debug_headers: Include _all_ SAC headers into the
+            Trace.stats.sac dictionary.
+        :type debug_headers: bool
 
-        Examples
-        --------
+        .. rubric:: Example
+
         >>> sac = SACTrace() # doctest: +SKIP
         >>> tr = sac.to_obspy_trace() # doctest: +SKIP
 
@@ -1016,32 +1017,24 @@ class SACTrace(object):
         Check validity of loaded SAC file content, such as header/data
         consistency.
 
-        Supply one or more of the following validity tests to perform:
-
-        Parameters
-        ----------
-        tests : str
-            One or more of the following validity tests:
-
+        :param tests: One or more of the following validity tests:
             'delta' : Time step "delta" is positive.
             'logicals' : Logical values are 0, 1, or null
             'data_hdrs' : Length, min, mean, max of data array match header
-                          values.
+                values.
             'enums' : Check validity of enumerated values.
             'reftime' : Reference time values in header are all set.
-            'reltime' : Relative time values in header can be absolutely
-                        referenced.
+            'reltime' : Relative time values in header are absolutely
+                referenced.
             'all' : Do all tests.
+        :type tests: str
 
-        Raises
-        ------
-        SacInvalidContentError
-            If any specified tests fail.
-        ValueError
-            'data_hdrs' is specified and data is None, empty array
+        :raises: :class:`SacInvalidContentError` if any of the specified tests
+            fail. :class:`ValueError` if 'data_hdrs' is specified and data is
+            None, empty array, or no tests specified.
 
-        Examples
-        --------
+        .. rubric:: Example
+
         >>> sac = SACTrace.read(filename) # doctest: +SKIP
         >>> try: # doctest: +SKIP
                 sac.validate('delta') # doctest: +SKIP
@@ -1123,15 +1116,20 @@ class SACTrace(object):
 
     def listhdr(self, hdrlist='all'):
         """
-        Print header values.  Default, all non-null values.
+        Print header values.
+        
+        Default is all non-null values.
 
-        Parameters
-        ----------
-        hdrlist : str {'all', 'picks'} or iterable of header fields
+        :param hdrlist: Which header fields to you want to list. Choose one of
+            {'all', 'picks'} or iterable of header fields.  An iterable of
+            header fields can look like 'bea' or ('b', 'e', 'a').
+
             'all' (default) prints all non-null values.
             'picks' prints fields which are used to define time picks.
 
         An iterable of header fields can look like 'bea' or ('b', 'e', 'a').
+
+        .. rubric:: Example
 
         >>> sac = SACTrace.read('tests/data/test.sac') # doctest: +SKIP
         >>> sac.lh() # doctest: +SKIP
