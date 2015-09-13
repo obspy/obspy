@@ -210,7 +210,7 @@ class Autosummary(Directive):
             # adapt to a change with sphinx 1.3:
             # for sphinx >= 1.3 env.config.source_suffix is a list
             # see sphinx-doc/sphinx@bf3bdcc7f505a2761c0e83c9b1550e7206929f74
-            if map(int, sphinx.__version__.split(".")[:2]) < (1, 3):
+            if map(int, sphinx.__version__.split(".")[:2]) < [1, 3]:
                 suffixes = [suffixes]
             dirname = posixpath.dirname(env.docname)
 
