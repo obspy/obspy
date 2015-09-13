@@ -144,7 +144,7 @@ def get_documenter(obj, parent):
     belongs to.
     """
     from sphinx.ext.autodoc import AutoDirective, DataDocumenter, \
-         ModuleDocumenter
+        ModuleDocumenter
 
     if inspect.ismodule(obj):
         # ModuleDocumenter.can_document_member always returns False
@@ -206,6 +206,11 @@ class Autosummary(Directive):
 
         if 'toctree' in self.options:
             suffix = env.config.source_suffix
+            # seems there was a change with sphinx 1.3:
+            # for sphinx < 1.3 env.config.source_suffix is `'.rst'`
+            # for sphinx >= 1.3 it seemde to change to `['.rst']`
+            if suffix == ['.rst']:
+                suffix = suffix[0]
             dirname = posixpath.dirname(env.docname)
 
             tree_prefix = self.options['toctree'].strip()
@@ -222,7 +227,7 @@ class Autosummary(Directive):
 
             tocnode = addnodes.toctree()
             tocnode['includefiles'] = docnames
-            tocnode['entries'] = [(None, docname) for docname in docnames]
+            tocnode['entries'] = [(None, docname_) for docname_ in docnames]
             tocnode['maxdepth'] = -1
             tocnode['glob'] = None
 
