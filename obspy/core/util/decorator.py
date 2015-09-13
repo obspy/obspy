@@ -263,7 +263,14 @@ def map_example_filename(arg_kwarg_name):
             # check args
             else:
                 try:
-                    ind = inspect.getargspec(func).args.index(arg_kwarg_name)
+                    inspected_args = [
+                        p.name
+                        for p in inspect.signature(func).parameters.values()
+                    ]
+                except AttributeError:
+                    inspected_args = inspect.getargspec(func).args
+                try:
+                    ind = inspected_args.index(arg_kwarg_name)
                 except ValueError:
                     pass
                 else:
