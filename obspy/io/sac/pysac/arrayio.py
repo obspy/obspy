@@ -208,16 +208,15 @@ def read_sac_ascii(source, headonly=False):
     # checks: ASCII-ness, header array length, npts matches data length
     try:
         fh = open(source, 'rb')
-        is_file_name = True
-    except IOError:
-        raise SacIOError("No such file: " + source)
     except TypeError:
         fh = source
-        is_file_name = False
+    except IOError:
+        raise SacIOError("No such file: " + source)
+    finally:
+        contents = fh.read()
+        fh.close()
 
-    contents = fh.read()
-
-    contents = [_i.rstrip(b"\n\r") for _i in contents.splitlines(True)]
+    contents = [_i.rstrip(b"\n\r") for _i in contents.splitlines()]
     if len(contents) < 14 + 8 + 8:
         raise SacIOError("%s is not a valid SAC file:" % fh.name)
 
@@ -254,12 +253,7 @@ def read_sac_ascii(source, headonly=False):
 
         npts = hi[HD.INTHDRS.index('npts')]
         if len(data) != npts:
-            if is_file_name:
-                fh.close()
             raise SacIOError("Cannot read all data points")
-
-    if is_file_name:
-        fh.close()
 
     return hf, hi, hs, data
 
