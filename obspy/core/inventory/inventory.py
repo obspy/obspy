@@ -545,8 +545,8 @@ class Inventory(ComparingObject):
         >>> from obspy import read_inventory, read_events
         >>> inv = read_inventory()
         >>> cat = read_events()
-        >>> fig = inv.plot(method=basemap, show=False)  # doctest:+SKIP
-        >>> cat.plot(method=basemap, fig=fig)  # doctest:+SKIP
+        >>> fig = inv.plot(method="basemap", show=False)  # doctest:+SKIP
+        >>> cat.plot(method="basemap", fig=fig)  # doctest:+SKIP
 
         .. plot::
 
