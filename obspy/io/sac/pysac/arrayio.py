@@ -208,13 +208,16 @@ def read_sac_ascii(source, headonly=False):
     # checks: ASCII-ness, header array length, npts matches data length
     try:
         fh = open(source, 'rb')
+        is_file_name = True
     except TypeError:
         fh = source
+        is_file_name = False
     except IOError:
         raise SacIOError("No such file: " + source)
     finally:
         contents = fh.read()
-        fh.close()
+        if is_file_name:
+            fh.close()
 
     contents = [_i.rstrip(b"\n\r") for _i in contents.splitlines()]
     if len(contents) < 14 + 8 + 8:
@@ -299,22 +302,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         # start from scratch
         fmode = 'wb+'
 
-    # TODO: use "with" statements (will always closes the file object?)
-    try:
-        f = open(dest, fmode)
-        is_file_name = True
-    except IOError:
-        raise SacIOError("Cannot open file: " + dest)
-    except TypeError:
-        f = dest
-        is_file_name = False
-
-    if data is None and f.mode != 'rb+':
-        # msg = "File mode must be 'wb+' for data=None."
-        # raise ValueError(msg)
-        msg = "Writing header-only file. Use 'wb+' file mode to update header."
-        warnings.warn(msg)
-
     if byteorder:
         if byteorder == 'little':
             endian_str = '<'
@@ -329,6 +316,22 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
             data = data.astype(native_str(endian_str + 'f4'))
 
     # TODO: make sure all arrays have same byte order
+
+    # TODO: use "with" statements (will always closes the file object?)
+    try:
+        f = open(dest, fmode)
+        is_file_name = True
+    except TypeError:
+        f = dest
+        is_file_name = False
+    except IOError:
+        raise SacIOError("Cannot open file: " + dest)
+
+    if data is None and f.mode != 'rb+':
+        # msg = "File mode must be 'wb+' for data=None."
+        # raise ValueError(msg)
+        msg = "Writing header-only file. Use 'wb+' file mode to update header."
+        warnings.warn(msg)
 
     # actually write everything
     try:
