@@ -333,6 +333,8 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         msg = "Writing header-only file. Use 'wb+' file mode to update header."
         warnings.warn(msg)
 
+    # TODO: make sure all data have the same/desired byte order
+
     # actually write everything
     try:
         f.write(hf.data)
