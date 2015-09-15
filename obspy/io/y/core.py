@@ -154,7 +154,7 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #   DataFormat is some text describing the data format recorded
                 #   at the station.
                 data = fh.read(next_tag)
-                parts = [p.decode() for p in
+                parts = [p.decode('ascii', errors='ignore') for p in
                          unpack(b'5s2s3s51s61s31s51s7s', data[8:])]
                 trace.stats.station = parts[0].strip()
                 trace.stats.location = parts[1].strip()

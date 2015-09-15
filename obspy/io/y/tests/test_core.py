@@ -45,6 +45,21 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(min(tr.data),
                          tr.stats.y.tag_series_info.min_amplitude)
 
+    def test_ignore_non_ascii_tag_station_info(self):
+        """
+        Test faulty Y file containing non ASCII chars in TAG_STATION_INFO.
+        """
+        testfile = os.path.join(self.path, 'data', 'YAZRSPE.20100119.060433')
+        st = _read_y(testfile)
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(len(tr), 16976)
+        self.assertEqual(tr.stats.sampling_rate, 50.0)
+        self.assertEqual(tr.stats.station, 'AZR')
+        self.assertEqual(tr.stats.channel, 'E')
+        self.assertEqual(tr.stats.location, 'SP')
+        self.assertEqual(tr.stats.network, '')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
