@@ -75,13 +75,16 @@ def _is_nied_catalog(filename_or_buf):
         return _buffer_proxy(filename_or_buf, __is_nied_catalog, reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
-    except (OSError, FileNotFoundError):
+    except (OSError):
         return False
 
 def __is_nied_catalog(buf):
     """
     Test whether file is an NIED moment tensor catalog file by reading the
     header and the first data line. Reads at most 40 lines.
+
+    :param buf: File to read.
+    :type buf: Open file or open file like object.
     """
     cnt = 0
     try:
