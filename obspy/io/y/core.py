@@ -12,6 +12,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import re
+import warnings
 from struct import unpack
 
 import numpy as np
@@ -21,6 +23,53 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
+
+
+INVALID_CHAR_MSG = (
+    "Invalid non-ASCII characters in Y file header detected (%s). "
+    "These were ignored.")
+
+
+def _unpack_with_asciiz_and_decode(fmt, data):
+    """
+    Unpack binary data and decode ASCII bytestrings, stripping ASCIIZ
+    bytestrings correctly as specified by Y format definition. In addition to
+    format flags defined by :py:func:`struct.unpack`, "z" can be used to denote
+    ASCIIZ fields.
+
+    :param fmt: see :py:func:`struct.unpack`
+    :param data: see :py:func:`struct.unpack`
+    :returns: see :py:func:`struct.unpack` but with bytestrings being decoded
+    """
+    fmt_list = re.findall(b'[a-zA-Z]', fmt)
+    z_positions = [pos for pos, fmt_ in enumerate(fmt_list) if fmt_ == b"z"]
+    s_positions = [pos for pos, fmt_ in enumerate(fmt_list) if fmt_ == b"s"]
+
+    parts = list(unpack(fmt.replace(b"z", b"s"), data))
+
+    # special handling for ASCIIZ fields:
+    # strip everything after first (if any) ASCII NULL character *before*
+    # decoding (those need not be valid encoded ASCII bytes and should be
+    # ignored)
+    for i in z_positions:
+        part = parts[i]
+        terminal_index = part.find(b"\x00")
+        if terminal_index != -1:
+            parts[i] = part[:terminal_index]
+    # decode all bytestrings from ASCII
+    for i in z_positions + s_positions:
+        part = parts[i]
+        try:
+            part = part.decode('ascii', errors="strict")
+        except UnicodeError as e:
+            warnings.warn(INVALID_CHAR_MSG % str(e), UserWarning)
+            part = part.decode('ascii', errors="ignore")
+        parts[i] = part
+    # right-strip all BLANKPADDED fields
+    for i in s_positions:
+        parts[i] = parts[i].rstrip()
+
+    return tuple(parts)
 
 
 def __parse_tag(fh):
@@ -154,18 +203,18 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #   DataFormat is some text describing the data format recorded
                 #   at the station.
                 data = fh.read(next_tag)
-                parts = [p.decode('ascii', errors='ignore') for p in
-                         unpack(b'5s2s3s51s61s31s51s7s', data[8:])]
-                trace.stats.station = parts[0].strip()
-                trace.stats.location = parts[1].strip()
-                trace.stats.channel = parts[2].strip()
+                parts = _unpack_with_asciiz_and_decode(
+                    b'5s2s3s51z61z31z51z7z', data[8:])
+                trace.stats.station = parts[0]
+                trace.stats.location = parts[1]
+                trace.stats.channel = parts[2]
                 # extra
                 params = AttribDict()
-                params.network_id = parts[3].rstrip('\x00')
-                params.side_name = parts[4].rstrip('\x00')
-                params.comment = parts[5].rstrip('\x00')
-                params.sensor_type = parts[6].rstrip('\x00')
-                params.data_format = parts[7].rstrip('\x00')
+                params.network_id = parts[3]
+                params.side_name = parts[4]
+                params.comment = parts[5]
+                params.sensor_type = parts[6]
+                params.data_format = parts[7]
                 trace.stats.y.tag_station_info = params
             elif tag_type == 2:
                 # TAG_STATION_LOCATION
@@ -188,7 +237,8 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #   Dip is the dip of the sensor. 90 degrees is defined as
                 #   vertical right way up.
                 data = fh.read(next_tag)
-                parts = unpack(endian + b'ffffff', data[8:])
+                parts = _unpack_with_asciiz_and_decode(
+                    endian + b'ffffff', data[8:])
                 params = AttribDict()
                 params.latitude = parts[0]
                 params.longitude = parts[1]
@@ -231,7 +281,8 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #   Filler Pads out the record to satisfy the alignment
                 #   restrictions for reading data on a SPARC processor.
                 data = fh.read(next_tag)
-                parts = unpack(endian + b'ddffff24s24s27sc4s', data[16:])
+                parts = _unpack_with_asciiz_and_decode(
+                    endian + b'ddffff24z24z27sc4s', data[16:])
                 trace.stats.sampling_rate = parts[4]
                 # extra
                 params = AttribDict()
@@ -241,9 +292,9 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 params.sens_freq = parts[3]
                 params.sample_rate = parts[4]
                 params.max_clk_drift = parts[5]
-                params.sens_units = parts[6].rstrip(b'\x00').decode()
-                params.calib_units = parts[7].rstrip(b'\x00').decode()
-                params.chan_flags = parts[8].strip()
+                params.sens_units = parts[6]
+                params.calib_units = parts[7]
+                params.chan_flags = parts[8]
                 params.update_flag = parts[9]
                 trace.stats.y.tag_station_parameters = params
             elif tag_type == 4:
@@ -256,10 +307,11 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 # UCHAR Key[16]
                 #   Unique key that identifies this record in the database.
                 data = fh.read(next_tag)
-                parts = unpack(endian + b'd16s', data[8:])
+                parts = _unpack_with_asciiz_and_decode(
+                    endian + b'd16s', data[8:])
                 params = AttribDict()
                 params.load_date = parts[0]
-                params.key = parts[1].rstrip(b'\x00')
+                params.key = parts[1]
                 trace.stats.y.tag_station_database = params
             elif tag_type == 5:
                 # TAG_SERIES_INFO
@@ -285,7 +337,8 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #   FormatVersion is the version of the format of the data.
                 #   This should always be “5.0”
                 data = fh.read(next_tag)
-                parts = unpack(endian + b'ddLlll8s8s', data[16:])
+                parts = _unpack_with_asciiz_and_decode(
+                    endian + b'ddLlll8z8z', data[16:])
                 trace.stats.starttime = UTCDateTime(parts[0])
                 count = parts[2]
                 # extra
@@ -295,8 +348,8 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 params.dc_offset = parts[3]
                 params.max_amplitude = parts[4]
                 params.min_amplitude = parts[5]
-                params.format = parts[6].rstrip(b'\x00').decode()
-                params.format_version = parts[7].rstrip(b'\x00').decode()
+                params.format = parts[6]
+                params.format_version = parts[7]
                 trace.stats.y.tag_series_info = params
             elif tag_type == 6:
                 # TAG_SERIES_DATABASE
@@ -308,10 +361,11 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 # UCHAR Key[16]
                 #   Unique key that identifies this record in the database.
                 data = fh.read(next_tag)
-                parts = unpack(endian + b'd16s', data[8:])
+                parts = _unpack_with_asciiz_and_decode(
+                    endian + b'd16s', data[8:])
                 params = AttribDict()
                 params.load_date = parts[0]
-                params.key = parts[1].rstrip(b'\x00').decode()
+                params.key = parts[1]
                 trace.stats.y.tag_series_database = params
             elif tag_type == 26:
                 # TAG_STATION_RESPONSE
@@ -322,9 +376,9 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 #  PathName is the full name of the file which contains the
                 #  response information for this station.
                 data = fh.read(next_tag)
-                parts = unpack(b'260s', data[8:])
+                parts = _unpack_with_asciiz_and_decode(b'260s', data[8:])
                 params = AttribDict()
-                params.path_name = parts[0].rstrip(b'\x00').decode()
+                params.path_name = parts[0]
                 trace.stats.y.tag_station_response = params
             elif tag_type == 7:
                 # TAG_DATA_INT32
