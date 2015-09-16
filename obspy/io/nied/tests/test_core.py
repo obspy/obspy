@@ -4,6 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import os
+import io
 import unittest
 from obspy.core.event import read_events
 from obspy.io.nied.core import _is_nied_catalog
@@ -19,13 +20,37 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
         self.path = os.path.dirname(__file__)
 
     def test_read_nied_catalog(self):
-        testfile = os.path.join(self.path, 'data', 'Tohoku.txt')
+        testfile = os.path.join(self.path, 'data', 'NIEDCATALOG')
         cat = read_events(testfile, 'NIED')
         self.assertEqual(len(cat), 1)
         ev = cat[0]
         self.assertEqual(len(ev.origins), 2)
         self.assertEqual(len(ev.magnitudes), 2)
 
+    def test_read_nied_catalog_from_open_files(self):
+        """
+        Tests that reading an NIED moment tensor file from an open file works.
+        """
+        testfile = os.path.join(self.path, 'data', 'NIEDCATALOG')
+        with open(testfile, "rb") as fh:
+            data = fh.read()
+            fh.seek(0, 0)
+            cat = read_events(fh)
+
+    def test_read_nied_catalog_from_bytes_io(self):
+        """
+        Tests that reading an NIED moment tensor file from an BytesIO objects
+        works.
+        """
+        testfile = os.path.join(self.path, 'data', 'NIEDCATALOG')
+        with open(testfile, "rb") as fh:
+            buf = io.BytesIO(fh.read())
+            data = buf.read()
+            buf.seek(0, 0)
+
+        with buf:
+            buf.seek(0, 0)
+            cat = read_events(buf)
 
     def test_is_nied_catalog(self):
         """
@@ -37,7 +62,7 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
         changes in the structure of the package.
         """
         # NIED catalog file names.
-        nied_filenames = ['Tohoku.txt']
+        nied_filenames = ['NIEDCATALOG']
 
         # Non NIED file names.
         non_nied_filenames = ['test_core.py',
@@ -52,7 +77,6 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
             filename = os.path.join(self.path, _i)
             is_nied = _is_nied_catalog(filename)
             self.assertFalse(is_nied)
-
 
 def suite():
     return unittest.makeSuite(NIEDCatalogReadingTestCase, 'test')
