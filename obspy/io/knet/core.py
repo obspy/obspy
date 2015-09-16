@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Reading of the K-NET and KiK-net ascii format as defined on
+Reading of the K-NET and KiK-net ASCII format as defined on
 http://www.kyoshin.bosai.go.jp.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA @UnusedWildImport
 
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
-# from obspy.core.trace import Trace
-# from obspy.core.trace import Stats
 from datetime import datetime
 import re
 import numpy as np
@@ -16,31 +17,98 @@ import numpy as np
 class KnetFormatError(Exception):
     pass
 
+
 class KnetDataError(Exception):
     pass
 
-def _is_knet_ascii(filename):
-    with open(filename, 'rt') as f:
-        first_string = f.read(11)
-        # File has less than 7 characters
-        if len(first_string) != 11:
-            return False
-        if first_string == 'Origin Time':
-            return True
+
+def _buffer_proxy(filename_or_buf, function, reset_fp=True,
+                  file_mode="rb", *args, **kwargs):
+    """
+    Calls a function with an open file or file-like object as the first
+    argument. If the file originally was a filename, the file will be
+    opened, otherwise it will just be passed to the underlying function.
+
+    :param filename_or_buf: File to pass.
+    :type filename_or_buf: str, open file, or file-like object.
+    :param function: The function to call.
+    :param reset_fp: If True, the file pointer will be set to the initial
+        position after the function has been called.
+    :type reset_fp: bool
+    :param file_mode: Mode to open file in if necessary.
+    """
+    try:
+        position = filename_or_buf.tell()
+        is_buffer = True
+    except AttributeError:
+        is_buffer = False
+
+    if is_buffer is True:
+        ret_val = function(filename_or_buf, *args, **kwargs)
+        if reset_fp:
+            filename_or_buf.seek(position, 0)
+        return ret_val
+    else:
+        with open(filename_or_buf, file_mode) as fh:
+            return function(fh, *args, **kwargs)
+
+
+def _is_knet_ascii(filename_or_buf):
+    """
+    Checks if the file is a valid K-NET/KiK-net ASCII file.
+
+    :param filename_or_buf: File to test.
+    :type filename_or_buf: str or file-like object.
+    """
+    try:
+        return _buffer_proxy(filename_or_buf, __is_knet_ascii, reset_fp=True)
+    # Happens for example when passing the data as a string which would be
+    # interpreted as a filename.
+    except (OSError):
+        return False
+
+
+def __is_knet_ascii(buf):
+    """
+    Checks if the file is a valid K-NET/KiK-net ASCII file.
+
+    :param buf: File to read.
+    :type buf: Open file or open file like object.
+    """
+    first_string = buf.read(11)
+    # File has less than 11 characters
+    if len(first_string) != 11:
+        return False
+    if first_string == 'Origin Time':
+        return True
     return False
 
+
 def _prep_hdr_line(name, line):
+    """
+    Helper function to check the contents of a line and split it.
+
+    :param name: String that the line should start with.
+    :type name: str
+    :param line: Line to check and split.
+    :type line: str
+    """
     if not line.startswith(name):
         raise KnetFormatError("Expected line to start with %s but got %s " \
                               % (name, line))
     else:
         return line.split()
 
-def _read_knet_hdr(hdrlines, **kwargs):
+
+def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     """
     Read the header values into a dictionary.
-    @param hdlines: List of the first lines of a KNet ASCII file, not including the "Memo." line.
-    @return: Dictionary of values containing most of the elements expected in a Stats object.
+
+    :param hdrlines: List of the header lines of a a K-NET/KiK-net ASCII file
+    :type hdrlines: list
+    :param convert_stnm: For station names with 6 letters write the last two
+    letters of the station code to the 'location' field
+    :type convert_stnm: bool
     """
     hdrdict = {'knet':{}}
     hdrnames = ['Origin Time', 'Lat.', 'Long.', 'Depth. (km)', 'Mag.',
@@ -87,8 +155,6 @@ def _read_knet_hdr(hdrlines, **kwargs):
     stnm = flds[2]
     location = ''
     convert_stnm = False
-    if 'convert_stnm' in kwargs:
-        convert_stnm = kwargs['convert_stnm']
     if convert_stnm and len(stnm) > 5:
         location = stnm[-2:]
         stnm = stnm[:-2]
@@ -176,34 +242,60 @@ def _read_knet_hdr(hdrlines, **kwargs):
                               % (_i + 1, len(hdrlines)))
     return hdrdict
 
-def _read_knet_ascii(filename, **kwargs):
+
+def _read_knet_ascii(filename_or_buf, **kwargs):
     """
-    Read a KNet ASCII file, and return an ObsPy Trace object, plus a dictionary of header values.
-    @param knetfilename: String path to valid KNet ASCII file, as described here: http://www.kyoshin.bosai.go.jp/kyoshin/man/knetform_en.html
-    @return: ObsPy Trace object, and a dictionary of some of the header values found in the input file.
+    Reads a K-NET/KiK-net ASCII file and returns an ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :param filename: K-NET/KiK-net ASCII file to be read.
+    :type filename: str or file-like object.
+    """
+    return _buffer_proxy(filename_or_buf, __read_knet_ascii, **kwargs)
+
+
+def __read_knet_ascii(buf, **kwargs):
+    """
+    Reads a K-NET/KiK-net ASCII file and returns an ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :param buf: File to read.
+    :type buf: Open file or open file like object.
     """
     data = []
     hdrdict = {}
-    with open(filename, 'rt') as f:
-        dataOn = False
-        headerlines = []
-        for line in f.readlines():
-            if line.startswith('Memo'):
-                headerlines.append(line)
-                hdrdict = _read_knet_hdr(headerlines, **kwargs)
-                dataOn = True
-                continue
-            if not dataOn:
-                headerlines.append(line)
-                continue
-            if dataOn:
-                parts = line.strip().split()
-                mdata = [float(p) for p in parts]
-                data = data + mdata
 
-    # fill in the values usually expected in Stats as best we can
+    cur_pos = buf.tell()
+    buf.seek(0, 2)
+    size = buf.tell()
+    buf.seek(cur_pos, 0)
+
+    # First read the headerlines
+    headerlines = []
+    while True:
+        if buf.tell() >= size:
+            break
+        line = buf.readline()
+        if line.startswith('Memo'):
+            headerlines.append(line)
+            hdrdict = _read_knet_hdr(headerlines, **kwargs)
+            break
+        headerlines.append(line)
+
+    while True:
+        if buf.tell() >= size:
+            break
+        line = buf.readline()
+        parts = line.strip().split()
+        data += [float(p) for p in parts]
+
     hdrdict['npts'] = len(data)
-
     elapsed = float(hdrdict['npts']) / float(hdrdict['sampling_rate'])
     hdrdict['endtime'] = hdrdict['starttime'] + elapsed
     # The FDSN network code for the National Research Institute for Earth
@@ -214,6 +306,7 @@ def _read_knet_ascii(filename, **kwargs):
     stats = Stats(hdrdict)
     trace = Trace(data, header=stats)
     return Stream([trace])
+
 
 if __name__ == '__main__':
     import doctest
