@@ -154,7 +154,6 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     # letters of the station code are written to the 'location' field
     stnm = flds[2]
     location = ''
-    convert_stnm = False
     if convert_stnm and len(stnm) > 5:
         location = stnm[-2:]
         stnm = stnm[:-2]

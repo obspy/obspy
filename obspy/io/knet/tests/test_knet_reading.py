@@ -63,6 +63,16 @@ class KnetReadingTestCase(unittest.TestCase):
             duration = int(tr.stats.endtime - tr.stats.starttime + 0.5)
             self.assertEqual(duration, int(tr.stats.knet.duration))
 
+    def test_station_name_hack(self):
+        """
+        Station names in K-NET and KiK-net are 6 characters long which is not
+        conform with the SEED standard. Test hack to write the last 2
+        characters of the station name into the location field.
+        """
+        testfile = os.path.join(self.path, 'data', 'test.knet')
+        tr = read(testfile, convert_stnm=True)[0]
+        self.assertEqual(tr.stats.location, '13')
+
     def test_is_knet_ascii(self):
         """
         This tests the _is_knet_ascii method by just validating that each file in
