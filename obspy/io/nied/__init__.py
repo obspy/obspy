@@ -25,9 +25,9 @@ It works by utilizing ObsPy's :func:`~obspy.core.event.read_events` function.
 
 The event will contain a couple of origins and magnitudes.
 
->>> print(cat[0])  # doctest: +NORMALIZE_WHITESPACES +ELLIPSIS
+>>> print(cat[0])  # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
 Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 9.0 ML
-
+<BLANKLINE>
               resource_id: ResourceIdentifier(id="smi:local/nied/2011excpds/event")
                event_type: u'earthquake'
         ---------
@@ -36,6 +36,7 @@ Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 9.0 ML
                magnitudes: 2 Elements
 
 """
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
