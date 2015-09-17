@@ -3,6 +3,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy import UTCDateTime
 
 def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     """
@@ -10,7 +11,7 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     divides a year into 26^6 intervals assigning each a unique combination of
     characters.
 
-    >>> print _get_sc3_id(UTCDateTime(2015, 8, 18, 10, 55, 51, 367580))
+    >>> print(gen_sc3_id(UTCDateTime(2015, 8, 18, 10, 55, 51, 367580)))
     2015qffasl
     """
     numsym = len(sym)
