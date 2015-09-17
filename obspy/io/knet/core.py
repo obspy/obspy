@@ -86,7 +86,7 @@ def __is_knet_ascii(buf):
 
 def _prep_hdr_line(name, line):
     """
-    Helper function to check the contents of a line and split it.
+    Helper function to check the contents of a header line and split it.
 
     :param name: String that the line should start with.
     :type name: str
