@@ -19,6 +19,9 @@ from .helper_classes import (Arrival, SlownessModelError, TauModelError,
 from .c_wrappers import clibtau
 
 
+REFINE_DIST_RADIAN_TOL = 0.0049 * math.pi / 180
+
+
 class SeismicPhase(object):
     """
     Stores and transforms seismic phase names to and from their
@@ -54,6 +57,8 @@ class SeismicPhase(object):
     # Note this is not the total distance, only the segment along the CMB.
     # The default is 60 degrees.
     maxDiffraction = 60
+    # The maximum number of refinements to make to an Arrival.
+    maxRecursion = 5
 
     def __init__(self, name, tMod, receiver_depth=0.0):
         # Minimum/maximum ray parameters that exist for this phase.
@@ -796,15 +801,8 @@ class SeismicPhase(object):
         self.dist = np.zeros(shape=self.ray_param.shape)
         self.time = np.zeros(shape=self.ray_param.shape)
 
-        # Initialise the counter for each branch to 0. 0 is P and 1 is S.
-        timesBranches = np.zeros((2, tMod.tauBranches.shape[1]))
-        # Count how many times each branch appears in the path.
-        # waveType is at least as long as branchSeq
-        for wt, bs in zip(self.waveType, self.branchSeq):
-            if wt:
-                timesBranches[0][bs] += 1
-            else:
-                timesBranches[1][bs] += 1
+        # Counter for passes through each branch. 0 is P and 1 is S.
+        timesBranches = self.calc_branch_mult(tMod)
 
         # Sum the branches with the appropriate multiplier.
         size = self.minRayParamIndex - self.maxRayParamIndex + 1
@@ -925,6 +923,24 @@ class SeismicPhase(object):
                         self.time = newtime
                         self.ray_param = new_ray_params
 
+    def calc_branch_mult(self, tMod):
+        """
+        Calculate how many times the phase passes through a branch, up or down.
+
+        With this result, we can just multiply instead of doing the ray calc
+        for each time.
+        """
+        # Initialise the counter for each branch to 0. 0 is P and 1 is S.
+        timesBranches = np.zeros((2, tMod.tauBranches.shape[1]))
+        # Count how many times each branch appears in the path.
+        # waveType is at least as long as branchSeq
+        for wt, bs in zip(self.waveType, self.branchSeq):
+            if wt:
+                timesBranches[0][bs] += 1
+            else:
+                timesBranches[1][bs] += 1
+        return timesBranches
+
     def calc_time(self, degrees):
         """
         Calculate arrival times for this phase, sorted by time.
@@ -947,8 +963,9 @@ class SeismicPhase(object):
 
         arrivals = []
         for _i in range(phase_count):
-            arrivals.append(self.linear_interp_arrival(
-                degrees, r_dist[_i], r_ray_num[_i]))
+            arrivals.append(self.refine_arrival(
+                degrees, r_ray_num[_i], r_dist[_i], REFINE_DIST_RADIAN_TOL,
+                self.maxRecursion))
         return arrivals
 
     def calc_pierce(self, degrees):
@@ -1187,29 +1204,151 @@ class SeismicPhase(object):
 
         return pierce, index
 
-    def linear_interp_arrival(self, degrees, searchDist, rayNum):
-        if rayNum == 0 and searchDist == self.dist[0]:
-            # degenerate case
-            return Arrival(self, degrees, self.time[0], searchDist,
-                           self.ray_param[0], rayNum, self.name,
-                           self.puristName, self.source_depth,
-                           self.receiver_depth, 0, 0)
+    def refine_arrival(self, degrees, ray_index, dist_radian, tolerance,
+                       recursion_limit):
+        left = Arrival(self, degrees, self.time[ray_index],
+                       self.dist[ray_index], self.ray_param[ray_index],
+                       ray_index, self.name, self.puristName,
+                       self.source_depth, self.receiver_depth)
+        right = Arrival(self, degrees, self.time[ray_index + 1],
+                        self.dist[ray_index + 1],
+                        self.ray_param[ray_index + 1],
+                        # Use ray_index since dist is between ray_index and
+                        # (ray_index + 1).
+                        ray_index, self.name, self.puristName,
+                        self.source_depth, self.receiver_depth)
+        return self._refine_arrival(degrees, left, right, dist_radian,
+                                    tolerance, recursion_limit)
 
-        arrivalTime = ((searchDist - self.dist[rayNum]) /
-                       (self.dist[rayNum + 1] - self.dist[rayNum]) *
-                       (self.time[rayNum + 1] - self.time[rayNum]) +
-                       self.time[rayNum])
-        arrivalRayParam = ((searchDist - self.dist[rayNum + 1]) *
-                           (self.ray_param[rayNum] -
-                            self.ray_param[rayNum + 1]) /
-                           (self.dist[rayNum] - self.dist[rayNum + 1]) +
-                           self.ray_param[rayNum + 1])
-        return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
-                       rayNum, self.name, self.puristName, self.source_depth,
-                       self.receiver_depth)
+    def _refine_arrival(self, degrees, left_estimate, right_estimate,
+                        search_dist, tolerance, recursion_limit):
+        new_estimate = self.linear_interp_arrival(degrees, search_dist,
+                                                  left_estimate,
+                                                  right_estimate)
+        if (recursion_limit <= 0 or self.name.endswith('kmps') or
+                any(phase in self.name
+                    for phase in ['Pdiff', 'Sdiff', 'Pn', 'Sn'])):
+            # can't shoot/refine for non-body waves
+            return new_estimate
+
+        try:
+            shoot = self.shoot_ray(degrees, new_estimate.ray_param)
+            if ((left_estimate.distance - search_dist) *
+                    (search_dist - shoot.distance)) > 0:
+                # search between left and shoot
+                if abs(shoot.distance - new_estimate.distance) < tolerance:
+                    return self.linear_interp_arrival(degrees, search_dist,
+                                                      left_estimate, shoot)
+                else:
+                    return self._refine_arrival(left_estimate, shoot,
+                                                search_dist, tolerance,
+                                                recursion_limit - 1)
+            else:
+                # search between shoot and right
+                if abs(shoot.distance - new_estimate.distance) < tolerance:
+                    return self.linear_interp_arrival(degrees, search_dist,
+                                                      shoot, right_estimate)
+                else:
+                    return self._refine_arrival(shoot, right_estimate,
+                                                search_dist, tolerance,
+                                                recursion_limit - 1)
+        except (IndexError, LookupError, SlownessModelError) as e:
+            raise RuntimeError('Should not happen: ' + str(e))
+
+    def shoot_ray(self, degrees, ray_param):
+        if (any(phase in self.name
+                for phase in ['Pdiff', 'Sdiff', 'Pn', 'Sn']) or
+                self.name.endswith('kmps')):
+            raise SlownessModelError('Unable to shoot ray in non-body waves')
+
+        if ray_param < self.minRayParam or self.maxRayParam < ray_param:
+            msg = 'Ray param %f is outside range for this phase: min=%f max=%f'
+            raise SlownessModelError(msg % (ray_param, self.minRayParam,
+                                            self.maxRayParam))
+
+        # looks like a body wave and ray param can propagate
+        for ray_param_index in range(len(self.ray_param) - 1):
+            if self.ray_param[ray_param_index + 1] < ray_param:
+                break
+
+        tMod = self.tMod
+        sMod = tMod.sMod
+
+        # counter for passes through each branch. 0 is P and 1 is S.
+        timesBranches = self.calc_branch_mult(tMod)
+        time = 0.0
+        dist = 0.0
+        ray_param = np.array([ray_param])
+
+        # Sum the branches with the appropriate multiplier.
+        for j in range(tMod.tauBranches.shape[1]):
+            if timesBranches[0, j] != 0:
+                br = tMod.getTauBranch(j, sMod.PWAVE)
+                top_layer = sMod.layerNumberBelow(br.topDepth, sMod.PWAVE)
+                bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.PWAVE)
+                td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
+                                     True)
+
+                time += timesBranches[0, j] * td['time']
+                dist += timesBranches[0, j] * td['dist']
+
+            if timesBranches[1, j] != 0:
+                br = tMod.getTauBranch(j, sMod.SWAVE)
+                top_layer = sMod.layerNumberBelow(br.topDepth, sMod.SWAVE)
+                bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.SWAVE)
+                td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
+                                     True)
+
+                time += timesBranches[1, j] * td['time']
+                dist += timesBranches[1, j] * td['dist']
+
+        return Arrival(self, degrees, time, dist, ray_param[0],
+                       ray_param_index, self.name, self.puristName,
+                       self.source_depth, self.receiver_depth)
+
+    def linear_interp_arrival(self, degrees, search_dist, left, right):
+        if left.ray_param_index == 0 and search_dist == self.dist[0]:
+            # degenerate case
+            return Arrival(self, degrees, self.time[0], search_dist,
+                           self.ray_param[0], 0, self.name, self.puristName,
+                           self.source_depth, self.receiver_depth, 0, 0)
+
+        if left.distance == search_dist:
+            return left
+
+        arrival_time = ((search_dist - left.distance) /
+                        (right.distance - left.distance) *
+                        (right.time - left.time)) + left.time
+        if math.isnan(arrival_time):
+            msg = ('Time is NaN, search=%f leftDist=%f leftTime=%f '
+                   'rightDist=%f rightTime=%f')
+            raise RuntimeError(msg % (search_dist, left.distance, left.time,
+                                      right.distance, right.time))
+
+        ray_param = ((search_dist - right.distance) *
+                     (left.ray_param - right.ray_param) /
+                     (left.distance - right.distance)) + right.ray_param
+        return Arrival(self, degrees, arrival_time, search_dist, ray_param,
+                       left.ray_param_index, self.name, self.puristName,
+                       self.source_depth, self.receiver_depth)
+
+    def calc_ray_param_for_takeoff(self, takeoff_degree):
+        vMod = self.tMod.sMod.vMod
+        try:
+            if self.downGoing[0]:
+                takeoff_velocity = vMod.evaluateBelow(self.source_depth,
+                                                      self.name[0])
+            else:
+                takeoff_velocity = vMod.evaluateAbove(self.source_depth,
+                                                      self.name[0])
+        except (IndexError, LookupError) as e:
+            raise RuntimeError('Should not happen: ' + str(e))
+
+        return ((self.tMod.radiusOfEarth - self.source_depth) *
+                math.sin(np.radians(takeoff_degree)) / takeoff_velocity)
 
     def calc_takeoff_angle(self, ray_param):
-        if self.name.endswith("kmps"):
+        if self.name.endswith('kmps'):
             return 0
 
         vMod = self.tMod.sMod.vMod
@@ -1233,7 +1372,7 @@ class SeismicPhase(object):
         return takeoff_angle
 
     def calc_incident_angle(self, ray_param):
-        if self.name.endswith("kmps"):
+        if self.name.endswith('kmps'):
             return 0
 
         vMod = self.tMod.sMod.vMod

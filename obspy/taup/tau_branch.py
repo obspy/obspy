@@ -84,7 +84,8 @@ class TauBranch(object):
         self.dist = timeDist['dist']
         self.tau = self.time - ray_params * self.dist
 
-    def calcTimeDist(self, sMod, topLayerNum, botLayerNum, ray_params):
+    def calcTimeDist(self, sMod, topLayerNum, botLayerNum, ray_params,
+                     allow_turn_in_layer=False):
         timeDist = np.zeros(shape=ray_params.shape, dtype=TimeDist)
         timeDist['p'] = ray_params
 
@@ -102,11 +103,14 @@ class TauBranch(object):
             time, dist = sMod.layerTimeDist(ray_params, layerNum, self.isPWave,
                                             check=False)
 
-        mask = np.cumprod(
-            (ray_params <= layer['topP'][np.newaxis, :]) &
-            (ray_params <= layer['botP'][np.newaxis, :]),
-            axis=1)
-        mask = mask.astype(np.int32)
+        if allow_turn_in_layer:
+            mask = np.ones(ray_params.shape, dtype=np.int32)
+        else:
+            mask = np.cumprod(
+                (ray_params <= layer['topP'][np.newaxis, :]) &
+                (ray_params <= layer['botP'][np.newaxis, :]),
+                axis=1)
+            mask = mask.astype(np.int32)
 
         clibtau.tau_branch_calc_time_dist_inner_loop(
             ray_params, mask, time, dist, layer, timeDist, ray_params.shape[0],

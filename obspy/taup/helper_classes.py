@@ -138,6 +138,12 @@ class Arrival(object):
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
                  receiver_depth, takeoff_angle=None, incident_angle=None):
+        if np.isnan(time):
+            raise ValueError('Time cannot be NaN')
+        if ray_param_index < 0:
+            raise ValueError(
+                'ray_param_index cannot be negative: %d' % (ray_param_index, ))
+
         self.phase = phase
         self.distance = distance
         self.time = time
