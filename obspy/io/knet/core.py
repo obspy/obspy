@@ -94,7 +94,7 @@ def _prep_hdr_line(name, line):
     :type line: str
     """
     if not line.startswith(name):
-        raise KnetFormatError("Expected line to start with %s but got %s " \
+        raise KnetFormatError("Expected line to start with %s but got %s "
                               % (name, line))
     else:
         return line.split()
@@ -110,7 +110,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     letters of the station code to the 'location' field
     :type convert_stnm: bool
     """
-    hdrdict = {'knet':{}}
+    hdrdict = {'knet': {}}
     hdrnames = ['Origin Time', 'Lat.', 'Long.', 'Depth. (km)', 'Mag.',
                 'Station Code', 'Station Lat.', 'Station Long.',
                 'Station Height(m)', 'Record Time', 'Sampling Freq(Hz)',
@@ -202,8 +202,8 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     _i += 1
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     channel = flds[1].replace('-', '')
-    kiknetcomps = {'1':'NS1', '2':'EW1', '3':'UD1',
-                   '4':'NS2', '5':'EW2', '6':'UD2'}
+    kiknetcomps = {'1': 'NS1', '2': 'EW1', '3': 'UD1',
+                   '4': 'NS2', '5': 'EW2', '6': 'UD2'}
     if channel.strip() in kiknetcomps.keys():  # kiknet directions are 1-6
         channel = kiknetcomps[channel.strip()]
     hdrdict['channel'] = channel
@@ -237,7 +237,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
         hdrdict['knet']['comment'] = ' '.join(flds[1:])
 
     if len(hdrlines) != _i + 1:
-        raise KnetFormatError("Expected %d header lines but got %d" \
+        raise KnetFormatError("Expected %d header lines but got %d"
                               % (_i + 1, len(hdrlines)))
     return hdrdict
 

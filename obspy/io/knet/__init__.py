@@ -49,7 +49,7 @@ automatically.
 >>> st = read('/path/to/test.knet')
 >>> print(st) # doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-BO.AKT013..EW | 1996-08-10T18:12:24.000000Z - 1996-08-10T18:13:22.990000Z | 100.0 Hz, 5900 samples
+BO.AKT013..EW | 1996-08-10T18:12:24.. - 1996-08-10T... | 100.0 Hz, 5900 samples
 
 Note that K-NET/KiK-net station names are 6 characters long. This will cause
 problems if you want to write MiniSEED as it only allows 5 character station
@@ -60,7 +60,7 @@ in the channel name (s.o.).
 >>> st = read('/path/to/test.knet',convert_stnm=True)
 >>> print(st) # doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-BO.AKT0.13.EW | 1996-08-10T18:12:24.000000Z - 1996-08-10T18:13:22.990000Z | 100.0 Hz, 5900 samples
+BO.AKT0.13.EW | 1996-08-10T18:12... - 1996-08-10T... | 100.0 Hz, 5900 samples
 
 Additional header entries from are written to an additional dictionary called
 'knet':

@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy import UTCDateTime
 
 def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     """
@@ -15,8 +14,8 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     2015qffasl
     """
     numsym = len(sym)
-    x = (((((dt.julday - 1) * 24) + dt.hour) * 60 + dt.minute) * 60 + dt.second) * 1000 \
-    + dt.microsecond / 1000
+    x = (((((dt.julday - 1) * 24) + dt.hour) * 60 + dt.minute) *
+         60 + dt.second) * 1000 + dt.microsecond / 1000
     dx = (((370 * 24) * 60) * 60) * 1000
     rng = 1
     for _ in range(numenc):
@@ -25,7 +24,7 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     if w == 0:
         w = 1
 
-    if  dx >= rng:
+    if dx >= rng:
         x = int(x / w)
     else:
         x = x * int(rng / dx)

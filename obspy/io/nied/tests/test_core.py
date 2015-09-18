@@ -8,7 +8,6 @@ import io
 import unittest
 from obspy.core.event import read_events
 from obspy.io.nied.core import _is_nied_catalog
-import numpy as np
 
 
 class NIEDCatalogReadingTestCase(unittest.TestCase):
@@ -33,7 +32,7 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'NIEDCATALOG')
         with open(testfile, "rb") as fh:
-            cat = read_events(fh)
+            read_events(fh)
 
     def test_read_nied_catalog_from_bytes_io(self):
         """
@@ -45,7 +44,7 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
             buf = io.BytesIO(fh.read())
 
         with buf:
-            cat = read_events(buf)
+            read_events(buf)
 
     def test_is_nied_catalog(self):
         """
@@ -61,7 +60,7 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
 
         # Non NIED file names.
         non_nied_filenames = ['test_core.py',
-                               '__init__.py']
+                              '__init__.py']
         # Loop over NIED files
         for _i in nied_filenames:
             filename = os.path.join(self.path, 'data', _i)
@@ -72,6 +71,7 @@ class NIEDCatalogReadingTestCase(unittest.TestCase):
             filename = os.path.join(self.path, _i)
             is_nied = _is_nied_catalog(filename)
             self.assertFalse(is_nied)
+
 
 def suite():
     return unittest.makeSuite(NIEDCatalogReadingTestCase, 'test')

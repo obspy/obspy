@@ -12,18 +12,19 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import warnings
-from obspy import UTCDateTime
 import re
 import uuid
-from obspy.core.event import (Catalog, Comment, Event, EventDescription,
+
+from obspy import UTCDateTime
+from obspy.core.event import (Catalog, Comment, Event,
                               Origin, Magnitude, FocalMechanism, MomentTensor,
-                              Tensor, SourceTimeFunction, NodalPlane,
-                              NodalPlanes)
+                              Tensor, NodalPlane, NodalPlanes)
 from . import util
+
 
 class NIEDException(Exception):
     pass
+
 
 def _get_resource_id(name, res_type, tag=None):
     """
@@ -33,6 +34,7 @@ def _get_resource_id(name, res_type, tag=None):
     if tag is not None:
         res_id += "#" + tag
     return res_id
+
 
 def _buffer_proxy(filename_or_buf, function, reset_fp=True,
                   file_mode="rb", *args, **kwargs):
@@ -64,6 +66,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
         with open(filename_or_buf, file_mode) as fh:
             return function(fh, *args, **kwargs)
 
+
 def _is_nied_catalog(filename_or_buf):
     """
     Checks if the file is a NIED moment tensor file.
@@ -77,6 +80,7 @@ def _is_nied_catalog(filename_or_buf):
     # interpreted as a filename.
     except (OSError):
         return False
+
 
 def __is_nied_catalog(buf):
     """
@@ -113,18 +117,22 @@ def __is_nied_catalog(buf):
     else:
         return True
 
+
 def _read_nied_catalog(filename_or_buf, **kwargs):
     """
-    Reads an NIED moment tensor catalog file to a :class:`~obspy.core.event.Catalog` object.
+    Reads an NIED moment tensor catalog file to a
+    :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
     return _buffer_proxy(filename_or_buf, __read_nied_catalog, **kwargs)
 
+
 def __read_nied_catalog(buf, **kwargs):
     """
-    Reads an NIED moment tensor catalog file to a :class:`~obspy.core.event.Catalog` object.
+    Reads an NIED moment tensor catalog file to a
+    :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
     :type buf: Open file or open file like object.
@@ -166,16 +174,17 @@ def __read_nied_catalog(buf, **kwargs):
 
     # Consistency check
     if len(events) != nevents:
-        raise NIEDException('Parsing failed! Expected %d events but read %d.' \
+        raise NIEDException('Parsing failed! Expected %d events but read %d.'
                             % (nevents, len(cat)))
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                    events=events, description=headerlines[:-1])
 
+
 def __read_single_nied_entry(buf, **kwargs):
     """
-    Reads a single NIED moment tensor solution to a :class:`~obspy.core.event.Event`
-    object.
+    Reads a single NIED moment tensor solution to a
+    :class:`~obspy.core.event.Event` object.
 
     :param buf: File to read.
     :type buf: Open file or open file like object.
@@ -198,7 +207,6 @@ def __read_single_nied_entry(buf, **kwargs):
     magmt = float(a[11])
     var_red = float(a[12])
     mxx, mxy, mxz, myy, myz, mzz, unit = map(float, a[13:20])
-    nstat = int(a[20])
 
     event_name = util.gen_sc3_id(ot)
     e = Event(event_type="earthquake")
@@ -209,36 +217,30 @@ def __read_single_nied_entry(buf, **kwargs):
                    depth=depjma, depth_type="from location",
                    region=region)
     o_jma.resource_id = _get_resource_id(event_name,
-                                              'orgin', 'JMA')
+                                         'orgin', 'JMA')
     m_jma = Magnitude(mag=magjma, magnitude_type='ML',
                       origin_id=o_jma.resource_id)
     m_jma.resource_id = _get_resource_id(event_name,
-                                              'magnitude', 'JMA')
+                                         'magnitude', 'JMA')
     # MT solution
     o_mt = Origin(time=ot, latitude=lat, longitude=lon,
-                   depth=depmt, region=region,
-                   depth_type="from moment tensor inversion")
+                  depth=depmt, region=region,
+                  depth_type="from moment tensor inversion")
     o_mt.resource_id = _get_resource_id(event_name,
-                                              'orgin', 'MT')
+                                        'orgin', 'MT')
     m_mt = Magnitude(mag=magmt, magnitude_type='Mw',
-                      origin_id=o_mt.resource_id)
+                     origin_id=o_mt.resource_id)
     m_mt.resource_id = _get_resource_id(event_name,
-                                              'magnitude', 'MT')
+                                        'magnitude', 'MT')
     foc_mec = FocalMechanism(triggering_origin_id=o_jma.resource_id)
     foc_mec.resource_id = _get_resource_id(event_name,
-                                                "focal_mechanism")
+                                           "focal_mechanism")
     nod1 = NodalPlane(strike=strike[0], dip=dip[0], rake=rake[0])
     nod2 = NodalPlane(strike=strike[1], dip=dip[1], rake=rake[1])
     nod = NodalPlanes(nodal_plane_1=nod1, nodal_plane_2=nod2)
     foc_mec.nodal_planes = nod
 
-    tensor = Tensor(
-                    m_rr=mxx,
-                    m_tt=myy,
-                    m_pp=mzz,
-                    m_rt=mxy,
-                    m_rp=mxz,
-                    m_tp=myz)
+    tensor = Tensor(m_rr=mxx, m_tt=myy, m_pp=mzz, m_rt=mxy, m_rp=mxz, m_tp=myz)
     cm = Comment(text="Basis system: North,East,Down (Jost and \
     Herrmann 1989")
     cm.resource_id = _get_resource_id(event_name, 'comment', 'mt')
@@ -247,7 +249,7 @@ def __read_single_nied_entry(buf, **kwargs):
                       scalar_moment=mo, comments=[cm],
                       tensor=tensor, variance_reduction=var_red)
     mt.resource_id = _get_resource_id(event_name,
-                                           'moment_tensor')
+                                      'moment_tensor')
     foc_mec.moment_tensor = mt
     e.origins = [o_jma, o_mt]
     e.magnitudes = [m_jma, m_mt]

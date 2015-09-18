@@ -10,6 +10,7 @@ from obspy import read
 from obspy.io.knet.core import _is_knet_ascii
 import numpy as np
 
+
 class KnetReadingTestCase(unittest.TestCase):
     """
     Test reading of K-NET and KiK-net ASCII format files from a file.
@@ -75,9 +76,9 @@ class KnetReadingTestCase(unittest.TestCase):
 
     def test_is_knet_ascii(self):
         """
-        This tests the _is_knet_ascii method by just validating that each file in
-        the data directory is a K-NET ascii file and each file in the working
-        directory is not.
+        This tests the _is_knet_ascii method by just validating that each file
+        in the data directory is a K-NET ascii file and each file in the
+        working directory is not.
 
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
@@ -87,7 +88,7 @@ class KnetReadingTestCase(unittest.TestCase):
 
         # Non K-NET file names.
         non_knet_filenames = ['test_knet_reading.py',
-                               '__init__.py']
+                              '__init__.py']
         # Loop over K-NET files
         for _i in knet_filenames:
             filename = os.path.join(self.path, 'data', _i)
