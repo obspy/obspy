@@ -92,6 +92,7 @@ def __is_nied_catalog(buf):
             line = buf.readline()
             if not line:
                 return False
+            line = line.decode()
             # read at most 40 lines
             if cnt > 40:
                 return False
@@ -141,7 +142,7 @@ def __read_nied_catalog(buf, **kwargs):
     while True:
         if buf.tell() >= size:
             break
-        line = buf.readline()
+        line = buf.readline().decode()
         if line.find('Total Number') != -1:
             match = re.search(r'Total Number:\s+(\d+)\s+', line)
             if match:
@@ -180,7 +181,7 @@ def __read_single_nied_entry(buf, **kwargs):
     :type buf: Open file or open file like object.
     """
 
-    line = buf.readline()
+    line = buf.readline().decode()
     a = line.split()
     try:
         ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
