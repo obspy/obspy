@@ -1,6 +1,6 @@
 """
 obspy.io.nied - NIED's moment tensors TEXT format support for ObsPy
-================================================================
+===================================================================
 
 This module provides read support for the moment tensor files (TEXT format)
 provided by the National Research Institute for Earth Science and Disaster
