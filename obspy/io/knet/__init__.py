@@ -49,7 +49,7 @@ automatically.
 >>> st = read('/path/to/test.knet')
 >>> print(st) # doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-BO.AKT013..EW | 1996-08-10T18:12:24.. - 1996-08-10T... | 100.0 Hz, 5900 samples
+BO.AKT013..EW | 1996-08-10T... - 1996-08-10T... | 100.0 Hz, 5900 samples
 
 Note that K-NET/KiK-net station names are 6 characters long. This will cause
 problems if you want to write MiniSEED as it only allows 5 character station
@@ -75,14 +75,15 @@ Additional header entries from are written to an additional dictionary called
    sampling_rate: 100.0
            delta: 0.01
             npts: 5900
-           calib: 2.38418579102e-06
+           calib: 2.3841857...e-06
          _format: KNET
-            knet: AttribDict({u'comment': u'A dummy comment', u'stla': 39.6069,
-            u'stlo': 140.3213, u'stel': 34.0,
-            u'last correction': UTCDateTime(1996, 8, 10, 18, 0),
-            u'evla': 38.92, u'mag': 5.9, u'accmax': 4.383, u'duration': 59.0,
-            u'evdp': 7.0, u'evot': UTCDateTime(1996, 8, 10, 18, 12),
-            u'evlo': 140.63})
+            knet: AttribDict(...)
+
+>>> print(st[0].stats.knet.stlo)
+140.3213
+
+>>> print(st[0].stats.knet.comment)
+A dummy comment
 
 The meaning of the entries in the 'knet' dictionary is as follows:
     ==================== ==================================================

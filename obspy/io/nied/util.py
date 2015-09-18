@@ -10,6 +10,7 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     divides a year into 26^6 intervals assigning each a unique combination of
     characters.
 
+    >>> from obspy import UTCDateTime
     >>> print(gen_sc3_id(UTCDateTime(2015, 8, 18, 10, 55, 51, 367580)))
     2015qffasl
     """
