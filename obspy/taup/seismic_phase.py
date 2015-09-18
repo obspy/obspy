@@ -1388,9 +1388,9 @@ class SeismicPhase(object):
         except (IndexError, LookupError) as e:
             raise RuntimeError('Should not happen: ' + str(e))
 
-        incident_angle = np.degrees(math.asin(
-            incident_velocity * ray_param /
-            (self.tMod.radiusOfEarth - self.receiver_depth)))
+        incident_angle = np.degrees(math.asin(np.clip(
+                incident_velocity * ray_param /
+                (self.tMod.radiusOfEarth - self.receiver_depth), -1.0, 1.0)))
         if self.downGoing[-1]:
             incident_angle = 180 - incident_angle
 
