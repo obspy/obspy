@@ -64,7 +64,7 @@ def _is_knet_ascii(filename_or_buf):
         return _buffer_proxy(filename_or_buf, __is_knet_ascii, reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
-    except (OSError):
+    except (OSError, UnicodeDecodeError):
         return False
 
 
