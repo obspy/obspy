@@ -693,7 +693,7 @@ class WaveformPlotting(object):
                 # convert seconds of relative sample times to days and add
                 # start time of trace.
                 x_values = ((trace.times() / SECONDS_PER_DAY) +
-                            date2num(trace.stats.starttime))
+                            date2num(trace.stats.starttime.datetime))
             ax.plot(x_values, trace.data, color=self.color,
                     linewidth=self.linewidth, linestyle=self.linestyle)
         # Write to self.ids
@@ -1430,7 +1430,7 @@ class WaveformPlotting(object):
             if self.type == 'relative':
                 return t - self.reftime
             else:
-                return date2num(t)
+                return date2num(t.datetime)
 
 
 if __name__ == '__main__':

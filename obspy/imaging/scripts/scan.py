@@ -98,8 +98,8 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
     for tr in stream:
         _id = tr.getId()
         data_dict.setdefault(_id, [])
-        data_dict[_id].append([date2num(tr.stats.starttime),
-                               date2num(tr.stats.endtime)])
+        data_dict[_id].append([date2num(tr.stats.starttime.datetime),
+                               date2num(tr.stats.endtime.datetime)])
         try:
             samp_int_dict.setdefault(_id, [])
             samp_int_dict[_id].\
@@ -255,27 +255,26 @@ def main(argv=None):
 
     # Plot vertical lines if option 'event_times' was specified
     if args.event_time:
-        times = map(date2num, args.event_time)
+        times = [date2num(t.datetime) for t in args.event_time]
         for time in times:
             ax.axvline(time, color='k')
     # Deprecated version (don't plot twice)
     if args.event_times and not args.event_time:
         times = args.event_times.split(',')
-        times = map(UTCDateTime, times)
-        times = map(date2num, times)
+        times = [date2num(UTCDateTime(t).datetime) for t in times]
         for time in times:
             ax.axvline(time, color='k')
 
     if args.start_time:
-        args.start_time = date2num(args.start_time)
+        args.start_time = date2num(args.start_time.datetime)
     elif args.starttime:
         # Deprecated version
-        args.start_time = date2num(args.starttime)
+        args.start_time = date2num(args.starttime.datetime)
     if args.end_time:
-        args.end_time = date2num(args.end_time)
+        args.end_time = date2num(args.end_time.datetime)
     elif args.endtime:
         # Deprecated version
-        args.end_time = date2num(args.endtime)
+        args.end_time = date2num(args.endtime.datetime)
 
     # Generate dictionary containing nested lists of start and end times per
     # station
