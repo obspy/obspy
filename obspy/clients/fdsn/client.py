@@ -118,6 +118,13 @@ class Client(object):
                    "Please change to 'Client('SCEDC')'. This re-routing will "
                    "be removed in a future release.")
             warnings.warn(msg)
+        # NIEP was misspelled for a while.
+        elif base_url.upper() == "NEIP":
+            base_url = "NIEP"
+            msg = ("FDSN short-URL 'NEIP' has been replaced by 'NIEP'. "
+                   "Please change to 'Client('NIEP')'. This re-routing will "
+                   "be removed in a future release.")
+            warnings.warn(msg)
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
 
