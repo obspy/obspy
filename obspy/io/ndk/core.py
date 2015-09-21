@@ -177,7 +177,6 @@ def _read_ndk(filename, *args, **kwargs):  # @UnusedVariable
             prev_line = next_line
         if len(data) > prev_line + 1:
             yield data[prev_line + 1:]
-        raise StopIteration
 
     # Use one Flinn Engdahl object for all region determinations.
     fe = FlinnEngdahl()

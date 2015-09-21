@@ -2,6 +2,7 @@ master:
  - General:
    * Requirements have been increased to reflect latest distributions:
      * Removed support for Python 2.6.
+     * Added support for Python 3.5.
      * matplotlib >= 1.1.0 is now required.
      * numpy >= 1.6.1 is now required
      * scipy >= 0.9.0 is now required
