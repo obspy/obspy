@@ -13,6 +13,9 @@ import sphinx_bootstrap_theme
 
 import obspy
 
+
+READ_THE_DOCS = os.environ.get('READTHEDOCS', None) == 'True'
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -183,6 +186,8 @@ html_context = {
     # Whether to use local files or files on ObsPy servers
     'use_local_assets': True,
 }
+if READ_THE_DOCS:
+    html_context['use_local_assets'] = False
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
