@@ -57,12 +57,10 @@ dtiny = np.finfo(0.0).tiny
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 NPZ_STORE_KEYS = [
-    'hist_stack',
     '_times_data',
     '_times_gaps',
     '_times_used',
-    'xedges',
-    'yedges',
+    '_spec_octaves',
     'channel',
     'delta',
     'freq',
@@ -380,7 +378,7 @@ class PPSD(object):
         self._times_used = []
         self._times_data = []
         self._times_gaps = []
-        self.hist_stack = None
+        self._spec_octaves = []
         self.__setup_bins()
         # set up the binning for the db scale
         num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
@@ -462,14 +460,21 @@ class PPSD(object):
             return False
         return True
 
-    def __insert_used_time(self, utcdatetime):
+    def __insert_processed_data(self, utcdatetime, spectrum):
         """
-        Inserts the given UTCDateTime at the right position in the list keeping
-        the order intact.
+        Inserts the given UTCDateTime and processed/octave-binned spectrum at
+        the right position in the lists, keeping the order intact.
+
+        Replaces old :meth:`PPSD.__insert_used_time()` private method and the
+        addition ot the histogram stack that was performed directly in
+        :meth:`PPSD.__process()`.
 
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type spectrum: :class:`numpy.ndarray`
         """
-        bisect.insort(self._times_used, utcdatetime.timestamp)
+        ind = bisect.bisect(self._times_used, utcdatetime.timestamp)
+        self._times_used.insert(ind, utcdatetime.timestamp)
+        self._spec_octaves.insert(ind, spectrum)
 
     def __insert_gap_times(self, stream):
         """
@@ -572,7 +577,6 @@ class PPSD(object):
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
                     if success:
-                        self.__insert_used_time(t1)
                         if verbose:
                             print(t1)
                         changed = True
@@ -679,19 +683,52 @@ class PPSD(object):
             spec_center = specs.mean()
             spec_octaves.append(spec_center)
         spec_octaves = np.array(spec_octaves)
-
-        hist, self.xedges, self.yedges = np.histogram2d(
-            self.per_octaves,
-            spec_octaves, bins=(self.period_bins, self.spec_bins))
-
-        try:
-            # we have to make sure manually that the bins are always the same!
-            # this is done with the various assert() statements above.
-            self.hist_stack += hist
-        except TypeError:
-            # only during first run initialize stack with first histogram
-            self.hist_stack = hist
+        self.__insert_processed_data(tr.stats.starttime, spec_octaves)
         return True
+
+    @property
+    @deprecated("PPSD attribute 'hist_stack' is deprecated, please use new "
+                "'get_histogram()' method with improved functionality "
+                "instead to compute a histogram stack dynamically.")
+    def hist_stack(self):
+        return self.get_histogram()[0]
+
+    def get_histogram(self, starttime=None, endtime=None):
+        hist_stack = None
+        hist_count = 0
+        for spec_octaves in self._spec_octaves:
+            hist, xedges, yedges = np.histogram2d(
+                self.per_octaves,
+                spec_octaves, bins=(self.period_bins, self.spec_bins))
+            try:
+                # we have to make sure manually that the bins are always the
+                # same!  this is done with the various assert() statements
+                # above.
+                hist_stack += hist
+            except TypeError:
+                # only during first run initialize stack with first histogram
+                hist_stack = hist
+            hist_count += 1
+
+        return hist_stack, hist_count, xedges, yedges
+
+    @staticmethod
+    def _cumulative_histogram(hist):
+        """
+        Returns the histogram in a cumulative version normalized per period
+        column, i.e. going from 0 to 1 from low to high psd values for every
+        period column.
+        """
+        # sum up the columns to cumulative entries
+        hist = hist.cumsum(axis=1)
+        # normalize every column with its overall number of entries
+        # (can vary from the number of self.times because of values outside
+        #  the histogram db ranges)
+        norm = hist[:, -1].copy()
+        # avoid zero division
+        norm[norm == 0] = 1
+        hist = (hist.T / norm).T
+        return hist
 
     def _get_response(self, tr):
         # check type of metadata and use the correct subroutine
@@ -756,15 +793,13 @@ class PPSD(object):
         :type percentile: int
         :param percentile: percentile for which to return approximate psd
                 value. (e.g. a value of 50 is equal to the median.)
-        :type hist_cum: :class:`numpy.ndarray`, optional
-        :param hist_cum: if it was already computed beforehand, the normalized
-                cumulative histogram can be provided here (to avoid computing
-                it again), otherwise it is computed from the currently stored
-                histogram.
+        :type hist_cum: :class:`numpy.ndarray`
+        :param hist_cum: normalized cumulative histogram
         :returns: (periods, percentile_values)
         """
         if hist_cum is None:
-            hist_cum = self.__get_normalized_cumulative_histogram()
+            hist_cum, _, _, _ = self.get_histogram()
+            hist_cum = self._cumulative_histogram(hist_cum)
         # go to percent
         percentile = percentile / 100.0
         if percentile == 0:
@@ -779,45 +814,31 @@ class PPSD(object):
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
 
-    def get_mode(self):
+    def get_mode(self, hist=None):
         """
         Returns periods and mode psd values (i.e. for each frequency the psd
         value with the highest probability is selected).
 
         :returns: (periods, psd mode values)
         """
+        if hist is None:
+            hist, hist_count, _, _ = self.get_histogram()
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mode = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        mode = db_bin_centers[hist.argmax(axis=1)]
         return (self.period_bin_centers, mode)
 
-    def get_mean(self):
+    def get_mean(self, hist=None, hist_count=None):
         """
         Returns periods and mean psd values (i.e. for each frequency the mean
         psd value is selected).
 
         :returns: (periods, psd mean values)
         """
+        if hist is None:
+            hist, hist_count, _, _ = self.get_histogram()
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mean = (self.hist_stack * db_bin_centers /
-                len(self._times_used)).sum(axis=1)
+        mean = (hist * db_bin_centers / hist_count).sum(axis=1)
         return (self.period_bin_centers, mean)
-
-    def __get_normalized_cumulative_histogram(self):
-        """
-        Returns the current histogram in a cumulative version normalized per
-        period column, i.e. going from 0 to 1 from low to high psd values for
-        every period column.
-        """
-        # sum up the columns to cumulative entries
-        hist_cum = self.hist_stack.cumsum(axis=1)
-        # normalize every column with its overall number of entries
-        # (can vary from the number of self.times because of values outside
-        #  the histogram db ranges)
-        norm = hist_cum[:, -1].copy()
-        # avoid zero division
-        norm[norm == 0] = 1
-        hist_cum = (hist_cum.T / norm).T
-        return hist_cum
 
     @deprecated("Old save/load mechanism based on pickle module is not "
                 "working well across versions, so please use new "
@@ -967,13 +988,15 @@ class PPSD(object):
         :param cumulative_number_of_colors: Number of discrete color shades to
             use, `None` for a continuous colormap.
         """
+        hist_stack, hist_count, xedges, yedges = \
+            self.get_histogram()
         # check if any data has been added yet
-        if self.hist_stack is None:
+        if not hist_count:
             msg = 'No data to plot'
             raise Exception(msg)
 
-        X, Y = np.meshgrid(self.xedges, self.yedges)
-        hist_stack = self.hist_stack * 100.0 / len(self._times_used)
+        X, Y = np.meshgrid(xedges, yedges)
+        hist_stack_percent = hist_stack * 100.0 / hist_count
 
         fig = plt.figure()
 
@@ -985,7 +1008,7 @@ class PPSD(object):
 
         if show_histogram:
             label = "[%]"
-            data = hist_stack
+            data = hist_stack_percent
             if cumulative:
                 data = data.cumsum(axis=1)
                 data = np.multiply(data.T, 100.0/data.max(axis=1)).T
@@ -1011,7 +1034,7 @@ class PPSD(object):
                 ax.grid(b=grid, which="minor")
 
         if show_percentiles:
-            hist_cum = self.__get_normalized_cumulative_histogram()
+            hist_cum = self._cumulative_histogram(hist_stack_percent)
             # for every period look up the approximate place of the percentiles
             for percentile in percentiles:
                 periods, percentile_values = \
@@ -1020,11 +1043,11 @@ class PPSD(object):
                 ax.plot(periods, percentile_values, color="black")
 
         if show_mode:
-            periods, mode_ = self.get_mode()
+            periods, mode_ = self.get_mode(hist_stack)
             ax.plot(periods, mode_, color="black")
 
         if show_mean:
-            periods, mean_ = self.get_mean()
+            periods, mean_ = self.get_mean(hist_stack, hist_count)
             ax.plot(periods, mean_, color="black")
 
         if show_noise_models:

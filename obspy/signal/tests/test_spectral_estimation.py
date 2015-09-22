@@ -6,6 +6,7 @@ The psd test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import gzip
 import os
@@ -281,15 +282,23 @@ class PsdTestCase(unittest.TestCase):
         inv = read_inventory(os.path.join(self.path, 'IUANMO.xml'))
 
         # load expected results, for both only PAZ and full response
-        results_paz = np.load(os.path.join(self.path, 'IUANMO_ppsd_paz.npz'))
-        results_full = np.load(os.path.join(self.path,
-                                            'IUANMO_ppsd_fullresponse.npz'))
-        arrays_to_check = ['hist_stack', 'spec_bins', 'period_bins']
+        filename_paz = os.path.join(self.path, 'IUANMO_ppsd_paz.npz')
+        results_paz = np.load(filename_paz)
+        filename_full = os.path.join(self.path, 'IUANMO_ppsd_fullresponse.npz')
+        results_full = np.load(filename_full)
+        arrays_to_check = ['_times_data', '_times_used', '_times_gaps',
+                           '_spec_octaves', 'per_octaves', 'per_octaves_right',
+                           'per_octaves_left', 'period_bin_centers',
+                           'spec_bins', 'period_bins']
+        arrays_to_check = [native_str(key) for key in arrays_to_check]
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
         ppsd = PPSD(st[0].stats, paz)
         ppsd.add(st)
+        # commented code to generate the test data:
+        # ## np.savez(filename_paz,
+        # ##          **dict([(k, getattr(ppsd, k)) for k in arrays_to_check]))
         for key in arrays_to_check:
             self.assertTrue(np.allclose(
                 getattr(ppsd, key), results_paz[key], rtol=1e-5))
@@ -301,6 +310,10 @@ class PsdTestCase(unittest.TestCase):
             ppsd = PPSD(st[0].stats, parser=metadata)
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
+            # commented code to generate the test data:
+            # ## np.savez(filename_full,
+            # ##          **dict([(k, getattr(ppsd, k))
+            # ##                  for k in arrays_to_check]))
             for key in arrays_to_check:
                 self.assertTrue(np.allclose(
                     getattr(ppsd, key), results_full[key], rtol=1e-5))
