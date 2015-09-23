@@ -803,7 +803,7 @@ class ClientDownloadHelper(object):
             except utils.ERRORS as e:
                 msg = ("Client '%s' - " % args[1]) + str(e)
                 if "no data available" in msg.lower():
-                    self.logger.info(msg)
+                    self.logger.info(msg.split("Detailed response")[0].strip())
                 else:
                     self.logger.error(msg)
                 return []

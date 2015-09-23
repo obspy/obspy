@@ -19,6 +19,7 @@ with standard_library.hooks():
 
 import csv
 import io
+import warnings
 
 import obspy
 from obspy.core.inventory import (Inventory, Network, Station, Channel,
@@ -52,9 +53,10 @@ channel_components = ("network", "station", "location", "channel", "latitude",
                       "longitude", "elevation", "depth", "azimuth", "dip",
                       "sensordescription", "scale", "scalefreq", "scaleunits",
                       "samplerate", "starttime", "endtime")
-channel_types = (str, str, str, str, float, float, float, float, float,
-                 float, str, float_or_none, float_or_none, str, float,
-                 obspy.UTCDateTime, utcdatetime_or_none)
+channel_types = (str, str, str, str, float, float, float, float_or_none,
+                 float_or_none, float_or_none, str, float_or_none,
+                 float_or_none, str, float_or_none, obspy.UTCDateTime,
+                 utcdatetime_or_none)
 all_components = (network_components, station_components, channel_components)
 
 
@@ -229,10 +231,18 @@ def read_FDSN_station_text_file(path_or_file_object):
                         input_units=scale_units, output_units=None))
             else:
                 resp = None
-            channel = Channel(
-                code=chan, location_code=loc, latitude=lat, longitude=lng,
-                elevation=ele, depth=dep, azimuth=azi, dip=dip, sensor=sensor,
-                sample_rate=s_r, start_date=st, end_date=et, response=resp)
+            try:
+                channel = Channel(
+                    code=chan, location_code=loc, latitude=lat, longitude=lng,
+                    elevation=ele, depth=dep, azimuth=azi, dip=dip,
+                    sensor=sensor, sample_rate=s_r, start_date=st,
+                    end_date=et, response=resp)
+            except Exception as e:
+                warnings.warn(
+                    "Failed to parse channel %s.%s.%s.%s due to: %s" % (
+                        net, sta, loc, chan, str(e)),
+                    UserWarning)
+                continue
             stations[(net, sta)].channels.append(channel)
         inv.networks.extend(list(networks.values()))
     else:

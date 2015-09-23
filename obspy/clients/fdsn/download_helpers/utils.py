@@ -28,7 +28,7 @@ from socket import timeout as SocketTimeout
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn.client import FDSNException
-from obspy.io.mseed.util import getRecordInformation
+from obspy.io.mseed.util import get_record_information
 
 
 # Different types of errors that can happen when downloading data via the
@@ -228,7 +228,7 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                 while True:
                     if fh.tell() >= (file_size - 256):
                         break
-                    info = getRecordInformation(fh)
+                    info = get_record_information(fh)
                     channel_id = (info["network"], info["station"],
                                   info["location"], info["channel"])
 

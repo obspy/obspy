@@ -1231,6 +1231,12 @@ class Client(object):
                                 server_info)
         elif code == 503:
             raise FDSNException("Service temporarily unavailable", server_info)
+        elif code is None:
+            if "timeout" in str(data).lower():
+                raise FDSNException("Timed Out")
+            else:
+                raise FDSNException("Unknown Error (%s): %s" % (
+                    (str(data.__class__.__name__), str(data))))
         # Catch any non 200 codes.
         elif code != 200:
             raise FDSNException("Unknown HTTP code: %i" % code, server_info)

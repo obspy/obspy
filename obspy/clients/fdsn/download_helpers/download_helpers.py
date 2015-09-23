@@ -74,6 +74,10 @@ class DownloadHelper(object):
                 _p.append("IRIS")
                 del providers["IRIS"]
 
+            if "ODC" in providers:
+                providers["ORFEUS"] = providers["ODC"]
+                del providers["ODC"]
+
             orfeus = False
             if "ORFEUS" in providers:
                 orfeus = providers["ORFEUS"]
