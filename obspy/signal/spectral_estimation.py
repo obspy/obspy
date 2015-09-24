@@ -59,7 +59,7 @@ NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
 NPZ_STORE_KEYS = [
     '_times_data',
     '_times_gaps',
-    '_times_used',
+    '_times_processed',
     '_spec_octaves',
     'channel',
     'delta',
@@ -375,7 +375,7 @@ class PPSD(object):
         self.nfft = prev_pow_2(self.nfft)
         #  - use 75% overlap (we end up with a little more than 13 segments..)
         self.nlap = int(0.75 * self.nfft)
-        self._times_used = []
+        self._times_processed = []
         self._times_data = []
         self._times_gaps = []
         self._spec_octaves = []
@@ -384,14 +384,27 @@ class PPSD(object):
         num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
         self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
                                      endpoint=True)
+        self._current_hist_stack = None
+        self._current_hist_stack_cumulative = None
+        self._current_hist_stack_xedges = None
+        self._current_hist_stack_yedges = None
+        self._current_times_used = None
 
     @property
+    @deprecated("PPSD attribute 'times' is deprecated, please use "
+                "'times_processed', 'times_data' and 'times_gaps' instead.")
     def times(self):
-        return list(map(UTCDateTime, self._times_used))
+        return list(map(UTCDateTime, self._times_processed))
 
     @property
+    def times_processed(self):
+        return list(map(UTCDateTime, self._times_processed))
+
+    @property
+    @deprecated("PPSD attribute 'times_used' is deprecated, please use "
+                "'current_times_used' or 'times_processed' instead.")
     def times_used(self):
-        return list(map(UTCDateTime, self._times_used))
+        return self.current_times_used
 
     @property
     def times_data(self):
@@ -402,6 +415,22 @@ class PPSD(object):
     def times_gaps(self):
         return [(UTCDateTime(t1), UTCDateTime(t2))
                 for t1, t2 in self._times_gaps]
+
+    @property
+    def current_histogram(self):
+        return self._current_hist_stack
+
+    @property
+    def current_histogram_cumulative(self):
+        return self._current_hist_stack_cumulative
+
+    @property
+    def current_histogram_count(self):
+        return len(self._current_times_used)
+
+    @property
+    def current_times_used(self):
+        return list(map(UTCDateTime, self._current_times_used))
 
     def __setup_bins(self):
         """
@@ -472,8 +501,8 @@ class PPSD(object):
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :type spectrum: :class:`numpy.ndarray`
         """
-        ind = bisect.bisect(self._times_used, utcdatetime.timestamp)
-        self._times_used.insert(ind, utcdatetime.timestamp)
+        ind = bisect.bisect(self._times_processed, utcdatetime.timestamp)
+        self._times_processed.insert(ind, utcdatetime.timestamp)
         self._spec_octaves.insert(ind, spectrum)
 
     def __insert_gap_times(self, stream):
@@ -506,14 +535,17 @@ class PPSD(object):
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self._times_used, utcdatetime.timestamp)
-        index2 = bisect.bisect_right(self._times_used,
+        index1 = bisect.bisect_left(self._times_processed,
+                                    utcdatetime.timestamp)
+        index2 = bisect.bisect_right(self._times_processed,
                                      utcdatetime.timestamp + self.ppsd_length)
         if index1 != index2:
             return True
         else:
             return False
 
+    @deprecated("Support for old pickled PPSD objects will be dropped. "
+                "Please use new 'save_npz'/'load_npz' mechanism.")
     def __check_ppsd_length(self):
         """
         Adds ppsd_length and overlap attributes if not existing.
@@ -588,14 +620,14 @@ class PPSD(object):
 
     def __process(self, tr):
         """
-        Processes a segment of data and adds the information to the
-        PPSD histogram. If Trace is compatible (station, channel, ...) has to
+        Processes a segment of data and save the psd information.
+        Whether `Trace` is compatible (station, channel, ...) has to
         checked beforehand.
 
         :type tr: :class:`~obspy.core.trace.Trace`
         :param tr: Compatible Trace with data of one PPSD segment
-        :returns: True if segment was successfully added to histogram, False
-                otherwise.
+        :returns: `True` if segment was successfully processed,
+            `False` otherwise.
         """
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
@@ -688,15 +720,108 @@ class PPSD(object):
 
     @property
     @deprecated("PPSD attribute 'hist_stack' is deprecated, please use new "
-                "'get_histogram()' method with improved functionality "
-                "instead to compute a histogram stack dynamically.")
+                "'calculate_histogram()' method with improved functionality "
+                "instead to compute a histogram stack dynamically and then "
+                "'current_histogram' attribute to access the current "
+                "histogram stack.")
     def hist_stack(self):
-        return self.get_histogram()[0]
+        self.calculate_histogram()
+        return self.current_histogram
 
-    def get_histogram(self, starttime=None, endtime=None):
+    def calculate_histogram(self, starttime=None, endtime=None,
+                            time_of_day=None, callback=None):
+        """
+        Calculate and set current 2D histogram stack, optionally with start-
+        and endtime and time of day restrictions.
+
+        .. note::
+            Note that all time restrictions are specified in UTC, so actual
+            time in local time zone might not be the same across start/end date
+            of daylight saving time periods.
+            Also note that time restrictions only check the starttime of the
+            individual psd pieces.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: If set, data before the specified time is excluded
+            from the returned stack.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: If set, data after the specified time is excluded
+            from the returned stack.
+        :type time_of_day: list of tuples of two float
+        :param time_of_day: If set, restricts the data that is included
+            in the stack by time of day. For example, when using
+            `time_of_day=[(0, 2), (22, 24)]`, only individual spectra
+            that have a starttime in between 10pm and 2am are used in the stack
+            (restrictive night time stack). Note that time of day is specified
+            in UTC (time of day might have to be adapted to daylight saving
+            time). Also note that this setting filters only by starttime of the
+            used psd time slice, so the length of individual slices (set at
+            initialization:
+            :meth:`PPSD(..., ppsd_length=XXX, ...) <PPSD.__init__>` in seconds)
+            has to be taken into consideration (e.g. with a `ppsd_length` of
+            one hour and a `time_of_day` restriction to 10pm-2am
+            actually includes data from 10pm-3am).
+        :type callback: func
+        :param callback: Custom user defined callback function that can be used
+            for more complex scenarios to specify whether an individual psd
+            piece should be included in the stack or not. The function will be
+            passed the starttime of the psd piece (as a POSIX timestamp that
+            can be used to initialize a
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object) and
+            should return `True` (include in stack) or `False` (exclude from
+            stack). Note that even when callback returns `True` the psd piece
+            will be excluded if it does not match the other criteria (e.g.
+            `starttime`).
+        :rtype: None
+        """
+        self._current_hist_stack = None
+        self._current_hist_stack_xedges = None
+        self._current_hist_stack_yedges = None
+        self._current_hist_stack_cumulative = None
+        self._current_times_used = None
+
         hist_stack = None
-        hist_count = 0
-        for spec_octaves in self._spec_octaves:
+        times_used = []
+
+        # set up a list with all checker routines that will be run, whether to
+        # include an individual psd piece or not
+        check_includes = []
+        if starttime is not None:
+            def _check(time):
+                if time < starttime.timestamp:
+                    return False
+                return True
+            check_includes.append(_check)
+        if endtime is not None:
+            def _check(time):
+                if time > endtime.timestamp:
+                    return False
+                return True
+            check_includes.append(_check)
+        if time_of_day is not None:
+            def _check(time):
+                for start, end in time_of_day:
+                    time_utcdt = UTCDateTime(time)
+                    cur_time_of_day = (time_utcdt.hour +
+                                       time_utcdt.minute / 60.0 +
+                                       time_utcdt.second / 3600.0 +
+                                       time_utcdt.microsecond / 3600.0 / 1e6)
+                    if cur_time_of_day >= start and cur_time_of_day <= end:
+                        return True
+                return False
+            check_includes.append(_check)
+        if callback is not None:
+            check_includes.append(callback)
+
+        for time, spec_octaves in zip(self._times_processed,
+                                      self._spec_octaves):
+            # check if psd piece should be used or not,
+            # based on starttime of psd piece
+            if not all([func_(time) for func_ in check_includes]):
+                continue
+
+            # XXX TODO could be vectorized, first check which indices should be
+            # stacked then only use one call to numpy histogram2D
             hist, xedges, yedges = np.histogram2d(
                 self.per_octaves,
                 spec_octaves, bins=(self.period_bins, self.spec_bins))
@@ -708,27 +833,26 @@ class PPSD(object):
             except TypeError:
                 # only during first run initialize stack with first histogram
                 hist_stack = hist
-            hist_count += 1
+            times_used.append(time)
 
-        return hist_stack, hist_count, xedges, yedges
-
-    @staticmethod
-    def _cumulative_histogram(hist):
-        """
-        Returns the histogram in a cumulative version normalized per period
-        column, i.e. going from 0 to 1 from low to high psd values for every
-        period column.
-        """
+        # calculate and set the cumulative version (i.e. going from 0 to 1 from
+        # low to high psd values for every period column) of the current
+        # histogram stack.
         # sum up the columns to cumulative entries
-        hist = hist.cumsum(axis=1)
+        hist_stack_cumul = hist_stack.cumsum(axis=1)
         # normalize every column with its overall number of entries
         # (can vary from the number of self.times because of values outside
         #  the histogram db ranges)
-        norm = hist[:, -1].copy()
+        norm = hist_stack_cumul[:, -1].copy()
         # avoid zero division
         norm[norm == 0] = 1
-        hist = (hist.T / norm).T
-        return hist
+        hist_stack_cumul = (hist_stack_cumul.T / norm).T
+        # set everything that was calculated
+        self._current_hist_stack = hist_stack
+        self._current_hist_stack_xedges = xedges
+        self._current_hist_stack_yedges = yedges
+        self._current_hist_stack_cumulative = hist_stack_cumul
+        self._current_times_used = times_used
 
     def _get_response(self, tr):
         # check type of metadata and use the correct subroutine
@@ -786,20 +910,18 @@ class PPSD(object):
                         units="VEL", freq=False, debug=False)
         return resp
 
-    def get_percentile(self, percentile=50, hist_cum=None):
+    def get_percentile(self, percentile=50):
         """
         Returns periods and approximate psd values for given percentile value.
 
         :type percentile: int
         :param percentile: percentile for which to return approximate psd
                 value. (e.g. a value of 50 is equal to the median.)
-        :type hist_cum: :class:`numpy.ndarray`
-        :param hist_cum: normalized cumulative histogram
         :returns: (periods, percentile_values)
         """
+        hist_cum = self.current_histogram_cumulative
         if hist_cum is None:
-            hist_cum, _, _, _ = self.get_histogram()
-            hist_cum = self._cumulative_histogram(hist_cum)
+            return None
         # go to percent
         percentile = percentile / 100.0
         if percentile == 0:
@@ -814,28 +936,31 @@ class PPSD(object):
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
 
-    def get_mode(self, hist=None):
+    def get_mode(self):
         """
         Returns periods and mode psd values (i.e. for each frequency the psd
         value with the highest probability is selected).
 
         :returns: (periods, psd mode values)
         """
+        hist = self.current_histogram
         if hist is None:
-            hist, hist_count, _, _ = self.get_histogram()
+            return None
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
         mode = db_bin_centers[hist.argmax(axis=1)]
         return (self.period_bin_centers, mode)
 
-    def get_mean(self, hist=None, hist_count=None):
+    def get_mean(self):
         """
         Returns periods and mean psd values (i.e. for each frequency the mean
         psd value is selected).
 
         :returns: (periods, psd mean values)
         """
+        hist = self.current_histogram
         if hist is None:
-            hist, hist_count, _, _ = self.get_histogram()
+            return None
+        hist_count = self.current_histogram_count
         db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
         mean = (hist * db_bin_centers / hist_count).sum(axis=1)
         return (self.period_bin_centers, mean)
@@ -918,7 +1043,9 @@ class PPSD(object):
         compressed numpy binary in npz format, written with
         :meth:`~PPSD.write_npz`).
         Metadata have to be specified again during loading because they are not
-        stored in the npz format.
+        stored in the npz format. If no additional data will be
+        added (i.e. only visualizing an existing ppsd stored on
+        disk) just set `metadata=None`.
 
         :type filename: str
         :param filename: Name of numpy .npz file with stored PPSD data
@@ -988,8 +1115,11 @@ class PPSD(object):
         :param cumulative_number_of_colors: Number of discrete color shades to
             use, `None` for a continuous colormap.
         """
-        hist_stack, hist_count, xedges, yedges = \
-            self.get_histogram()
+        hist_stack = self.current_histogram
+        hist_stack_cumul = self.current_histogram_cumulative
+        hist_count = self.current_histogram_count
+        xedges = self._current_hist_stack_xedges
+        yedges = self._current_hist_stack_yedges
         # check if any data has been added yet
         if not hist_count:
             msg = 'No data to plot'
@@ -1010,8 +1140,8 @@ class PPSD(object):
             label = "[%]"
             data = hist_stack_percent
             if cumulative:
-                data = data.cumsum(axis=1)
-                data = np.multiply(data.T, 100.0/data.max(axis=1)).T
+                data = hist_stack_cumul
+                # XXX data = np.multiply(data.T, 100.0/data.max(axis=1)).T
                 if max_percentage is not None:
                     msg = ("Parameter 'max_percentage' is ignored when "
                            "'cumulative=True'.")
@@ -1034,20 +1164,18 @@ class PPSD(object):
                 ax.grid(b=grid, which="minor")
 
         if show_percentiles:
-            hist_cum = self._cumulative_histogram(hist_stack_percent)
             # for every period look up the approximate place of the percentiles
             for percentile in percentiles:
                 periods, percentile_values = \
-                    self.get_percentile(percentile=percentile,
-                                        hist_cum=hist_cum)
+                    self.get_percentile(percentile=percentile)
                 ax.plot(periods, percentile_values, color="black")
 
         if show_mode:
-            periods, mode_ = self.get_mode(hist_stack)
+            periods, mode_ = self.get_mode()
             ax.plot(periods, mode_, color="black")
 
         if show_mean:
-            periods, mean_ = self.get_mean(hist_stack, hist_count)
+            periods, mean_ = self.get_mean()
             ax.plot(periods, mean_, color="black")
 
         if show_noise_models:
@@ -1062,12 +1190,7 @@ class PPSD(object):
         ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id,
-                         UTCDateTime(self._times_used[0]).date,
-                         UTCDateTime(self._times_used[-1]).date,
-                         len(self._times_used))
-        ax.set_title(title)
+        ax.set_title(self._get_plot_title())
 
         if show_coverage:
             self.__plot_coverage(ax2)
@@ -1082,6 +1205,17 @@ class PPSD(object):
             plt.close()
         elif show:
             plt.show()
+        else:
+            return fig
+
+    def _get_plot_title(self):
+        title = "%s   %s -- %s  (%i/%i segments)"
+        title = title % (self.id,
+                         UTCDateTime(self._times_processed[0]).date,
+                         UTCDateTime(self._times_processed[-1]).date,
+                         self.current_histogram_count,
+                         len(self._times_processed))
+        return title
 
     def plot_coverage(self, filename=None):
         """
@@ -1097,12 +1231,7 @@ class PPSD(object):
 
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
-        title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id,
-                         UTCDateTime(self._times_used[0]).date,
-                         UTCDateTime(self._times_used[-1]).date,
-                         len(self._times_used))
-        ax.set_title(title)
+        ax.set_title(self._get_plot_title())
 
         plt.draw()
         if filename is not None:
@@ -1121,22 +1250,27 @@ class PPSD(object):
         ax.xaxis_date()
         ax.set_yticks([])
 
-        # plot data coverage
-        starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t + self.ppsd_length).datetime)
-                for t in self.times_used]
-        for start, end in zip(starts, ends):
-            ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
-        # plot data
+        # plot data used in histogram stack
+        used_times = [UTCDateTime(t) for t in self._times_processed
+                      if t in self._current_times_used]
+        unused_times = [UTCDateTime(t) for t in self._times_processed
+                        if t not in self._current_times_used]
+        for times, color in zip((used_times, unused_times), ("b", "0.6")):
+            starts = [date2num(t.datetime) for t in times]
+            ends = [date2num((t + self.ppsd_length).datetime)
+                    for t in times]
+            for start, end in zip(starts, ends):
+                ax.axvspan(start, end, 0, 0.6, fc=color, alpha=0.5, lw=0)
+        # plot data that was fed to PPSD
         for start, end in self.times_data:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="g", lw=0)
-        # plot gaps
+            ax.axvspan(start, end, 0.6, 1, facecolor="g", lw=0)
+        # plot gaps in data fed to PPSD
         for start, end in self.times_gaps:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="r", lw=0)
+            ax.axvspan(start, end, 0.6, 1, facecolor="r", lw=0)
 
         ax.autoscale_view()
 

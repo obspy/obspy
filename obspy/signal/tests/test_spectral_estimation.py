@@ -229,6 +229,7 @@ class PsdTestCase(unittest.TestCase):
         # Make an empty PPSD and add the data
         ppsd = PPSD(st[0].stats, paz)
         ppsd.add(st)
+        ppsd.calculate_histogram()
 
         # Get the 50th percentile from the PPSD
         (per, perval) = ppsd.get_percentile(percentile=50)
@@ -286,7 +287,7 @@ class PsdTestCase(unittest.TestCase):
         results_paz = np.load(filename_paz)
         filename_full = os.path.join(self.path, 'IUANMO_ppsd_fullresponse.npz')
         results_full = np.load(filename_full)
-        arrays_to_check = ['_times_data', '_times_used', '_times_gaps',
+        arrays_to_check = ['_times_data', '_times_processed', '_times_gaps',
                            '_spec_octaves', 'per_octaves', 'per_octaves_right',
                            'per_octaves_left', 'period_bin_centers',
                            'spec_bins', 'period_bins']
