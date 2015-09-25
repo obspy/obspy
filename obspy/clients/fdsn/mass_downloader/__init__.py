@@ -66,7 +66,7 @@ ObsPy knows of and combine it into one data set.
 
     import obspy
     from obspy.clients.fdsn.download_helpers import CircularDomain, \\
-        Restrictions, DownloadHelper
+        Restrictions, MassDownloader
 
     origin_time = obspy.UTCDateTime(2011, 3, 11, 5, 47, 32)
 
@@ -103,7 +103,7 @@ ObsPy knows of and combine it into one data set.
         location_priorities=("", "00", "10"))
 
     # No specified providers will result in all known ones being queried.
-    dlh = DownloadHelper()
+    dlh = MassDownloader()
     # The data will be downloaded to ``./waveforms/`` ans ``./stations`` with
     # autmatically chosen names.
     dlh.download(domain, restrictions, mseed_storage="waveforms",
@@ -124,7 +124,7 @@ centers and split up the files again if required.
 
     import obspy
     from obspy.clients.fdsn.download_helpers import RectangularDomain, \\
-        Restrictions, DownloadHelper
+        Restrictions, MassDownloader
 
     # Rectangular domain containing parts of southern Germany.
     domain = RectangularDomain(minlatitude=30, maxlatitude=50,
@@ -152,7 +152,7 @@ centers and split up the files again if required.
     # Restrict the number of providers if you know which serve the desired
     # data. If in doubt just don't specify - then all providers will be
     # queried.
-    dlh = DownloadHelper(providers=["ORFEUS", "GFZ"])
+    dlh = MassDownloader(providers=["ORFEUS", "GFZ"])
     dlh.download(domain, restrictions, mseed_storage="waveforms",
                  stationxml_storage="stations")
 
@@ -193,7 +193,7 @@ construction of arbitrary complex domains. Please see the
 Instances of these classes will later be passed to the function sparking the
 downloading process. A rectangular domain for example is defined like this:
 
->>> from obspy.clients.fdsn.download_helpers.domain import RectangularDomain
+>>> from obspy.clients.fdsn.mass_downloader.domain import RectangularDomain
 >>> domain = RectangularDomain(minlatitude=-10, maxlatitude=10,
                                minlongitude=-10, maxlongitude=10)
 
@@ -204,7 +204,7 @@ class. Please refer to its documentation for a more detailed explanation of
 the parameters.
 
 >>> from obspy import UTCDateTime
->>> from obspy.clients.fdsn.download_helpers import Restrictions
+>>> from obspy.clients.fdsn.mass_downloader import Restrictions
 >>> restrict = Restrictions(
 ...     starttime=UTCDateTime(2012, 1, 1),
 ...     endtime=UTCDateTime(2012, 1, 1, 1),
@@ -232,9 +232,9 @@ Storing MiniSEED waveforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
-:meth:`~obspy.clients.fdsn.download_helpers.download_helpers.DownloadHelper.download`
+:meth:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader.download`
 method of the
-:class:`~obspy.clients.fdsn.download_helpers.download_helpers.DownloadHelper`
+:class:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader`
 class
 
 
@@ -307,9 +307,9 @@ Storing StationXML files
 
 The same logic applies to the StationXML files. This time the rules are set by
 the ``stationxml_storage`` argument of the
-:func:`~obspy.clients.fdsn.download_helpers.download_helpers.DownloadHelper.download`
+:func:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader.download`
 method of the
-:class:`~obspy.clients.fdsn.download_helpers.download_helpers.DownloadHelper` class.
+:class:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader` class.
 StationXML files will be downloaded on a per-station basis thus all channels
 and locations from one station will end up in the same StationXML file.
 
@@ -390,7 +390,7 @@ value in agreement with some data centers.
 
 .. code-block:: python
 
-    >>> dlh = DownloadHelper()
+    >>> dlh = MassDownloader()
     >>> dlh.download(domain, restrictions, chunk_size_in_mb=50,
     ...              threads_per_client=3, mseed_storage=mseed_storage,
     ...              stationxml_storage=stationxml_storage)
@@ -470,7 +470,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .download_helpers import DownloadHelper
+from .mass_downloader import MassDownloader
 from .restrictions import Restrictions
 from .domain import Domain, RectangularDomain, CircularDomain, GlobalDomain
 

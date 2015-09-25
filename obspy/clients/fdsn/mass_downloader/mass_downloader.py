@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-FDSN web services download helpers.
+Helpers to download potentially big data sets across a number of FDSN web
+services in an automated fashion.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
@@ -12,6 +13,10 @@ FDSN web services download helpers.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+
+with standard_library.hooks():
+    from collections import OrderedDict
 
 import collections
 import logging
@@ -19,16 +24,15 @@ from multiprocessing.pool import ThreadPool
 import os
 import warnings
 
-from obspy.core.util.obspy_types import OrderedDict
 from obspy.clients.fdsn.header import URL_MAPPINGS, FDSNException
 from obspy.clients.fdsn.client import Client
 
 from . import utils
-from .download_status import ClientDownloadHelper, STATUS
+from .download_helpers import ClientDownloadHelper, STATUS
 
 
 # Setup the logger.
-logger = logging.getLogger("obspy.clients.fdsn.download_helpers")
+logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
 logger.setLevel(logging.DEBUG)
 # Prevent propagating to higher loggers.
 logger.propagate = 0
@@ -42,17 +46,17 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
-class FDSNDownloadHelperException(FDSNException):
+class FDSNMassDownloaderException(FDSNException):
     """
     Base exception raised by the download helpers.
     """
     pass
 
 
-class DownloadHelper(object):
+class MassDownloader(object):
     """
     Class facilitating data acquisition across all FDSN web service
-    implementation.
+    implementations.
 
     :param providers: List of FDSN client names or service URLS. Will use
         all FDSN implementations known to ObsPy if set to None. The order
@@ -64,7 +68,7 @@ class DownloadHelper(object):
     def __init__(self, providers=None):
         if providers is None:
             providers = dict(URL_MAPPINGS.items())
-            # In that case make sure IRIS is first, and Orfeus last! The
+            # In that case make sure IRIS is first, and ORFEUS last! The
             # remaining items will be sorted alphabetically to make it
             # deterministic at least to a certain extent.
             # Orfeus is last as it currently returns StationXML for all

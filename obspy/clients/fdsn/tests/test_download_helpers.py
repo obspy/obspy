@@ -26,13 +26,13 @@ import numpy as np
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.clients.fdsn.download_helpers import (domain, Restrictions,
-                                                 DownloadHelper)
-from obspy.clients.fdsn.download_helpers.utils import (
+from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
+                                                MassDownloader)
+from obspy.clients.fdsn.mass_downloader.utils import (
     filter_channel_priority, get_stationxml_filename, get_mseed_filename,
     get_stationxml_contents, SphericalNearestNeighbour, safe_delete,
     download_stationxml, download_and_split_mseed_bulk)
-from obspy.clients.fdsn.download_helpers.download_status import (
+from obspy.clients.fdsn.mass_downloader.download_helpers import (
     Channel, TimeInterval, Station, STATUS, ClientDownloadHelper)
 
 
@@ -172,7 +172,6 @@ class RestrictionsTestCase(unittest.TestCase):
         # Fine if they are equal with both.
         Restrictions(starttime=start, endtime=start + 10,
                      station_starttime=start, station_endtime=start + 10)
-
 
 
 class DownloadHelpersUtilTestCase(unittest.TestCase):
@@ -589,8 +588,8 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
                  obspy.UTCDateTime(4E5), os.path.join(tmpdir, "file_4.mseed")],
                 ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(4E5),
                  obspy.UTCDateTime(5E5), os.path.join(tmpdir, "file_5.mseed")],
-                 ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(6E5),
-                  obspy.UTCDateTime(7E5), os.path.join(tmpdir, "file_6.mseed")]
+                ["BW", "ALTM", "", "EHE", obspy.UTCDateTime(6E5),
+                 obspy.UTCDateTime(7E5), os.path.join(tmpdir, "file_6.mseed")]
             ]
             ret_val = download_and_split_mseed_bulk(
                 client=client, client_name=client_name, chunks=chunks,
@@ -618,7 +617,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             # away.
             call_args = client.get_waveforms_bulk.call_args[0][0]
             self.assertEqual(
-                call_args,[
+                call_args, [
                     ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(0),
                      obspy.UTCDateTime(5E5)],
                     ['BW', 'ALTM', '', 'EHE', obspy.UTCDateTime(6E5),
@@ -712,30 +711,6 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
 
         finally:
             shutil.rmtree(tmpdir)
-
-
-    # def test_merge_station_lists(self):
-    #     """
-    #     Tests the merging of two stations.
-    #     """
-    #     list_one = [
-    #         Station("11", "11", 0, 0, 0, [], None),
-    #         Station("11", "11", 0, 0, 500, [], None),
-    #         Station("11", "11", 0, 0, 1500, [], None),
-    #     ]
-    #     list_two = [
-    #         Station("11", "11", 0, 0, 10, [], None),
-    #         Station("11", "11", 0, 0, 505, [], None),
-    #         Station("11", "11", 0, 0, 1505, [], None),
-    #     ]
-    #     new_list = filter_based_on_interstation_distance(list_one, list_two,
-    #                                                      20)
-    #     self.assertEqual(new_list, list_one)
-    #     new_list = filter_based_on_interstation_distance(list_one, list_two, 2)
-    #     self.assertEqual(new_list, list_one + list_two)
-    #     new_list = filter_based_on_interstation_distance(list_one, list_two, 8)
-    #     self.assertEqual(new_list, list_one + [
-    #         Station("11", "11", 0, 0, 10, [], None)])
 
     def test_stationxml_filename_helper(self):
         """
@@ -1078,7 +1053,7 @@ class StationTestCase(unittest.TestCase):
         with mock.patch("os.path.exists") as exists_mock:
             exists_mock.return_value = True
 
-            with mock.patch("obspy.clients.fdsn.download_helpers"
+            with mock.patch("obspy.clients.fdsn.mass_downloader"
                             ".utils.safe_delete") as p:
                 # All status are NONE thus nothing should be deleted.
                 station.remove_files(logger)
@@ -1149,7 +1124,7 @@ class StationTestCase(unittest.TestCase):
 
         logger = mock.MagicMock()
 
-        with mock.patch("obspy.clients.fdsn.download_helpers"
+        with mock.patch("obspy.clients.fdsn.mass_downloader"
                         ".utils.safe_delete") as p:
             # By default, nothing will happen.
             station.sanitize_downloads(logger)
@@ -1329,7 +1304,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.mass_downloader.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability("TA", "A001", "", "BHZ",
@@ -1361,7 +1336,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.mass_downloader.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability("TA", "A001", "", "BHZ",
@@ -1389,7 +1364,7 @@ class StationTestCase(unittest.TestCase):
                     ti.status = STATUS.DOWNLOADED
             with mock.patch("os.path.exists") as exists_p:
                 exists_p.return_value = True
-                with mock.patch("obspy.clients.fdsn.download_helpers.utils."
+                with mock.patch("obspy.clients.fdsn.mass_downloader.utils."
                                 "get_stationxml_contents") as c_patch:
                     c_patch.return_value = [
                         ChannelAvailability(
@@ -1911,10 +1886,10 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.assertEqual([("B", "B"), ("X", "X"), ("Y", "Y")],
                          sorted(rej.keys()))
 
-    @mock.patch("obspy.clients.fdsn.download_helpers."
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_and_split_mseed_bulk")
-    @mock.patch("obspy.clients.fdsn.download_helpers."
-                "download_status.ClientDownloadHelper._check_downloaded_data")
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
+                "download_helpers.ClientDownloadHelper._check_downloaded_data")
     def test_download_mseed(self, patch_check_data, patch_download_mseed):
         """
         Test the MiniSEED downloading from a client helper object.
@@ -2036,9 +2011,9 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         # is just an info message.
         self.assertEqual(c.logger.error.call_count, 0)
 
-    @mock.patch("obspy.clients.fdsn.download_helpers."
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.download_stationxml")
-    @mock.patch("obspy.clients.fdsn.download_helpers."
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
                 "utils.get_stationxml_contents")
     @mock.patch("os.makedirs")
     @mock.patch("os.path.getsize")
@@ -2158,15 +2133,15 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
 
 class DownloadHelperTestCase(unittest.TestCase):
     """
-    Test cases for the DownloadHelper class.
+    Test cases for the MassDownloader class.
     """
-    @mock.patch("obspy.clients.fdsn.download_helpers.download_helpers."
-                "DownloadHelper._initialize_clients")
+    @mock.patch("obspy.clients.fdsn.mass_downloader.mass_downloader."
+                "MassDownloader._initialize_clients")
     def test_initialization(self, patch):
         """
-        Tests the initialization of the DownloadHelper object.
+        Tests the initialization of the MassDownloader object.
         """
-        d = DownloadHelper()
+        d = MassDownloader()
         self.assertEqual(patch.call_count, 1)
         # The amount of services is variable and more and more get added.
         # Assert its larger then 8 and contains a couple stable ones.
@@ -2175,7 +2150,7 @@ class DownloadHelperTestCase(unittest.TestCase):
         self.assertTrue("ORFEUS" in d.providers)
         patch.reset_mock()
 
-        d = DownloadHelper(providers=["A", "B", "IRIS"])
+        d = MassDownloader(providers=["A", "B", "IRIS"])
         self.assertEqual(patch.call_count, 1)
         self.assertEqual(d.providers, ("A", "B", "IRIS"))
         patch.reset_mock()
@@ -2197,7 +2172,7 @@ class DownloadHelperTestCase(unittest.TestCase):
 
         patch.side_effect = side_effect
 
-        d = DownloadHelper()
+        d = MassDownloader()
         self.assertTrue(len(d._initialized_clients) > 10)
         self.assertFalse("IRIS" in d._initialized_clients)
         self.assertFalse("RESIF" in d._initialized_clients)
@@ -2206,13 +2181,13 @@ class DownloadHelperTestCase(unittest.TestCase):
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)
-    @mock.patch("obspy.clients.fdsn.download_helpers."
-                "download_status.ClientDownloadHelper.get_availability",
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
+                "download_helpers.ClientDownloadHelper.get_availability",
                 autospec=True)
-    @mock.patch("obspy.clients.fdsn.download_helpers."
-                "download_status.ClientDownloadHelper.download_mseed")
-    @mock.patch("obspy.clients.fdsn.download_helpers."
-                "download_status.ClientDownloadHelper.download_stationxml")
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
+                "download_helpers.ClientDownloadHelper.download_mseed")
+    @mock.patch("obspy.clients.fdsn.mass_downloader."
+                "download_helpers.ClientDownloadHelper.download_stationxml")
     @mock.patch("os.makedirs")
     @mock.patch("logging.Logger.info")
     @mock.patch("logging.Logger.warning")
@@ -2236,12 +2211,12 @@ class DownloadHelperTestCase(unittest.TestCase):
             endtime=obspy.UTCDateTime(10))
 
         # No availability for all.
-        d = DownloadHelper()
+        d = MassDownloader()
         d.download(domain=dom, restrictions=restrictions,
                    mseed_storage="mseed", stationxml_storage="stationxml")
 
         # Availability for all.
-        d = DownloadHelper()
+        d = MassDownloader()
 
         def avail(self):
             if self.client_name == "IRIS":
@@ -2276,21 +2251,21 @@ class DownloadHelperTestCase(unittest.TestCase):
                    mseed_storage="mseed", stationxml_storage="stationxml")
 
         # Discard all stations.
-        with mock.patch("obspy.clients.fdsn.download_helpers.download_status."
+        with mock.patch("obspy.clients.fdsn.mass_downloader.download_helpers."
                         "ClientDownloadHelper.discard_stations",
                         autospec=True) as p:
             def temp(self, *args, **kwargs):
                 self.stations = {}
             p.side_effect = temp
 
-            d = DownloadHelper()
+            d = MassDownloader()
 
             d.download(domain=dom, restrictions=restrictions,
                        mseed_storage="mseed", stationxml_storage="stationxml")
 
         # Filter all.
         # Discard all stations.
-        with mock.patch("obspy.clients.fdsn.download_helpers.download_status."
+        with mock.patch("obspy.clients.fdsn.mass_downloader.download_helpers."
                         "ClientDownloadHelper"
                         ".filter_stations_based_on_minimum_distance",
                         autospec=True) as p:
@@ -2298,7 +2273,7 @@ class DownloadHelperTestCase(unittest.TestCase):
                 self.stations = {}
             p.side_effect = temp
 
-            d = DownloadHelper()
+            d = MassDownloader()
             d.download(domain=dom, restrictions=restrictions,
                        mseed_storage="mseed", stationxml_storage="stationxml")
 
