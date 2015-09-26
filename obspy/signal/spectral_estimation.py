@@ -814,27 +814,20 @@ class PPSD(object):
         if callback is not None:
             check_includes.append(callback)
 
-        for time, spec_octaves in zip(self._times_processed,
-                                      self._spec_octaves):
+        used_indices = []
+        for index, (time, spec_octaves) in enumerate(zip(self._times_processed,
+                                                         self._spec_octaves)):
             # check if psd piece should be used or not,
             # based on starttime of psd piece
             if not all([func_(time) for func_ in check_includes]):
                 continue
-
-            # XXX TODO could be vectorized, first check which indices should be
-            # stacked then only use one call to numpy histogram2D
-            hist, xedges, yedges = np.histogram2d(
-                self.per_octaves,
-                spec_octaves, bins=(self.period_bins, self.spec_bins))
-            try:
-                # we have to make sure manually that the bins are always the
-                # same!  this is done with the various assert() statements
-                # above.
-                hist_stack += hist
-            except TypeError:
-                # only during first run initialize stack with first histogram
-                hist_stack = hist
+            used_indices.append(index)
             times_used.append(time)
+
+        hist_stack, xedges, yedges = np.histogram2d(
+            np.tile(self.per_octaves, len(used_indices)),
+            np.hstack([self._spec_octaves[i] for i in used_indices]),
+            bins=(self.period_bins, self.spec_bins))
 
         # calculate and set the cumulative version (i.e. going from 0 to 1 from
         # low to high psd values for every period column) of the current
