@@ -815,6 +815,7 @@ class PPSD(object):
             check_includes.append(callback)
 
         used_indices = []
+        inds_arange = np.arange(self.period_bins.shape[0] - 1)
         for index, (time, spec_octaves) in enumerate(zip(self._times_processed,
                                                          self._spec_octaves)):
             # check if psd piece should be used or not,
@@ -822,12 +823,19 @@ class PPSD(object):
             if not all([func_(time) for func_ in check_includes]):
                 continue
             used_indices.append(index)
-            times_used.append(time)
 
-        hist_stack, xedges, yedges = np.histogram2d(
-            np.tile(self.per_octaves, len(used_indices)),
-            np.hstack([self._spec_octaves[i] for i in used_indices]),
-            bins=(self.period_bins, self.spec_bins))
+            try:
+                # we have to make sure manually that the bins are always the
+                # same!  this is done with the various assert() statements
+                # above.
+                inds = self.spec_bins.searchsorted(spec_octaves[:-1])
+                hist_stack[inds_arange, inds] += 1
+            except TypeError:
+                # only during first run initialize stack with first histogram
+                hist_stack, xedges, yedges = np.histogram2d(
+                    self.per_octaves, spec_octaves,
+                    bins=(self.period_bins, self.spec_bins))
+            times_used.append(time)
 
         # calculate and set the cumulative version (i.e. going from 0 to 1 from
         # low to high psd values for every period column) of the current
