@@ -824,8 +824,15 @@ class PPSD(object):
                                                          self._spec_octaves)):
             # check if psd piece should be used or not,
             # based on starttime of psd piece
-            if not all([func_(time) for func_ in check_includes]):
-                continue
+            if check_includes:
+                use = True
+                for func_ in check_includes:
+                    if not func_(time):
+                        use = False
+                        break
+                if not use:
+                    continue
+
             used_indices.append(index)
 
             times_used.append(time)
