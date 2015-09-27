@@ -1168,7 +1168,7 @@ class PPSD(object):
              show_noise_models=True, grid=True, show=True,
              max_percentage=30, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
-             cumulative_number_of_colors=20):
+             cumulative_number_of_colors=20, xaxis_frequency=False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -1217,6 +1217,9 @@ class PPSD(object):
         :type cumulative_number_of_colors: int
         :param cumulative_number_of_colors: Number of discrete color shades to
             use, `None` for a continuous colormap.
+        :type xaxis_frequency: bool
+        :param xaxis_frequency: If set to `True`, the x axis will be frequency
+            in Hertz as opposed to the default of period in seconds.
         """
         # check if any data has been added yet
         if not self.current_histogram_count:
@@ -1231,6 +1234,27 @@ class PPSD(object):
             ax2 = fig.add_axes([0.15, 0.17, 0.7, 0.04])
         else:
             ax = fig.add_subplot(111)
+
+        if show_percentiles:
+            # for every period look up the approximate place of the percentiles
+            for percentile in percentiles:
+                periods, percentile_values = \
+                    self.get_percentile(percentile=percentile)
+                ax.plot(periods, percentile_values, color="black", zorder=8)
+
+        if show_mode:
+            periods, mode_ = self.get_mode()
+            ax.plot(periods, mode_, color="black", zorder=9)
+
+        if show_mean:
+            periods, mean_ = self.get_mean()
+            ax.plot(periods, mean_, color="black", zorder=9)
+
+        if show_noise_models:
+            for periods, noise_model in (get_NHNM(), get_NLNM()):
+                if xaxis_frequency:
+                    periods = 1.0 / periods
+                ax.plot(periods, noise_model, '0.4', linewidth=2, zorder=10)
 
         if show_histogram:
             label = "[%]"
@@ -1251,37 +1275,20 @@ class PPSD(object):
             fig.ppsd.label = label
             fig.ppsd.max_percentage = max_percentage
             fig.ppsd.grid = grid
+            fig.ppsd.xaxis_frequency = xaxis_frequency
             if max_percentage is not None:
                 color_limits = (0, max_percentage)
                 fig.ppsd.color_limits = color_limits
 
             self._plot_histogram(fig=fig)
 
-        if show_percentiles:
-            # for every period look up the approximate place of the percentiles
-            for percentile in percentiles:
-                periods, percentile_values = \
-                    self.get_percentile(percentile=percentile)
-                ax.plot(periods, percentile_values, color="black")
-
-        if show_mode:
-            periods, mode_ = self.get_mode()
-            ax.plot(periods, mode_, color="black")
-
-        if show_mean:
-            periods, mean_ = self.get_mean()
-            ax.plot(periods, mean_, color="black")
-
-        if show_noise_models:
-            model_periods, high_noise = get_NHNM()
-            ax.plot(model_periods, high_noise, '0.4', linewidth=2)
-            model_periods, low_noise = get_NLNM()
-            ax.plot(model_periods, low_noise, '0.4', linewidth=2)
-
         ax.semilogx()
         ax.set_xlim(period_lim)
         ax.set_ylim(self.spec_bins[0], self.spec_bins[-1])
-        ax.set_xlabel('Period [s]')
+        if xaxis_frequency:
+            ax.set_xlabel('Frequency [Hz]')
+        else:
+            ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         ax.set_title(self._get_plot_title())
@@ -1324,10 +1331,14 @@ class PPSD(object):
                 self.current_histogram * 100.0 / self.current_histogram_count)
 
         if "meshgrid" not in fig.ppsd:
-            fig.ppsd.meshgrid = np.meshgrid(self._current_hist_stack_xedges,
+            if fig.ppsd.xaxis_frequency:
+                xedges = 1.0 / self._current_hist_stack_xedges
+            else:
+                xedges = self._current_hist_stack_xedges
+            fig.ppsd.meshgrid = np.meshgrid(xedges,
                                             self._current_hist_stack_yedges)
         X, Y = fig.ppsd.meshgrid
-        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap)
+        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap, zorder=-1)
         fig.ppsd.quadmesh = ppsd
 
         if "colorbar" not in fig.ppsd:
@@ -1342,6 +1353,8 @@ class PPSD(object):
         if fig.ppsd.grid:
             ax.grid(b=True, which="major")
             ax.grid(b=True, which="minor")
+
+        ax.set_xlim(*sorted([xedges[0], xedges[-1]]))
 
         if filename is not None:
             plt.savefig(filename)
