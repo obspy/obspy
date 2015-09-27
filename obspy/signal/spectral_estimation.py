@@ -41,7 +41,6 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compressStartend
 from obspy.core.inventory import Inventory
-from obspy.core.utcdatetime import _timestamp_to_hours_after_midnight
 from obspy.core.util import get_matplotlib_version, AttribDict
 from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
@@ -391,7 +390,7 @@ class PPSD(object):
         self._current_hist_stack_xedges = None
         self._current_hist_stack_yedges = None
         self._current_times_used = []
-        self._current_times_all_time_of_weekday = []
+        self._current_times_all_details = []
 
     @property
     @deprecated("PPSD attribute 'times' is deprecated, please use "
@@ -731,18 +730,55 @@ class PPSD(object):
         self.calculate_histogram()
         return self.current_histogram
 
+    def _get_times_all_details(self):
+        # check if we can reuse a previously cached array of all times as
+        # day of week as int and time of day in float hours
+        if len(self._current_times_all_details) == len(self._times_processed):
+            return self._current_times_all_details
+        # otherwise compute it and store it for subsequent stacks on the
+        # same data (has to be recomputed when additional data gets added)
+        else:
+            dtype = np.dtype([(native_str('time_of_day'), np.float32),
+                              (native_str('iso_weekday'), np.int8),
+                              (native_str('iso_week'), np.int8),
+                              (native_str('year'), np.int16),
+                              (native_str('month'), np.int8)])
+            times_all_details = np.empty(shape=len(self._times_processed),
+                                         dtype=dtype)
+            utc_times_all = [UTCDateTime(t) for t in self._times_processed]
+            times_all_details['time_of_day'][:] = \
+                [t._get_hours_after_midnight() for t in utc_times_all]
+            times_all_details['iso_weekday'][:] = \
+                [t.isoweekday() for t in utc_times_all]
+            times_all_details['iso_week'][:] = \
+                [t.isocalendar()[1] for t in utc_times_all]
+            times_all_details['year'][:] = \
+                [t.year for t in utc_times_all]
+            times_all_details['month'][:] = [t.month for t in utc_times_all]
+            self._current_times_all_details = times_all_details
+            return times_all_details
+
     def calculate_histogram(self, starttime=None, endtime=None,
-                            time_of_weekday=None, callback=None):
+                            time_of_weekday=None, year=None, month=None,
+                            isoweek=None, callback=None):
         """
         Calculate and set current 2D histogram stack, optionally with start-
         and endtime and time of day restrictions.
 
         .. note::
-            Note that all time restrictions are specified in UTC, so actual
-            time in local time zone might not be the same across start/end date
-            of daylight saving time periods.
-            Also note that time restrictions only check the starttime of the
-            individual psd pieces.
+            All restrictions to the stack are evaluated as a logical AND, i.e.
+            only individual psd pieces are included in the stack that match
+            *all* of the specified restrictions (e.g. `isoweek=40, month=2` can
+            never match any data).
+
+        .. note::
+            All time restrictions are specified in UTC, so actual time in local
+            time zone might not be the same across start/end date of daylight
+            saving time periods.
+
+        .. note::
+            Time restrictions only check the starttime of the individual psd
+            pieces.
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: If set, data before the specified time is excluded
@@ -752,8 +788,8 @@ class PPSD(object):
             from the returned stack.
         :type time_of_weekday: list of (int, float, float) 3-tuples
         :param time_of_weekday: If set, restricts the data that is included
-            in the stack by time of day and weekday. Monday is `0`, Sunday is
-            `6`, `-1` for no restriction of week day. For example, using
+            in the stack by time of day and weekday. Monday is `1`, Sunday is
+            `7`, `-1` for any day of week. For example, using
             `time_of_weekday=[(-1, 0, 2), (-1, 22, 24)]` only individual
             spectra that have a starttime in between 10pm and 2am are used in
             the stack for all days of week, using
@@ -768,6 +804,22 @@ class PPSD(object):
             has to be taken into consideration (e.g. with a `ppsd_length` of
             one hour and a `time_of_weekday` restriction to 10pm-2am
             actually includes data from 10pm-3am).
+        :type year: list of int
+        :param year: If set, restricts the data that is included in the stack
+            by year. For example, using `year=[2015]` only individual spectra
+            from year 2015 are used in the stack, using `year=[2013, 2015]`
+            only spectra from exactly year 2013 or exactly year 2015 are used.
+        :type month: list of int
+        :param month: If set, restricts the data that is included in the stack
+            by month of year. For example, using `month=[2]` only individual
+            spectra from February are used in the stack, using `month=[4, 7]`
+            only spectra from exactly April or exactly July are used.
+        :type isoweek: list of int
+        :param isoweek: If set, restricts the data that is included in the
+            stack by ISO week number of year. For example, using `isoweek=[2]`
+            only individual spectra from 2nd ISO week of any year are used in
+            the stack, using `isoweek=[4, 7]` only spectra from exactly 4th ISO
+            week or exactly 7th ISO week are used.
         :type callback: func
         :param callback: Custom user defined callback function that can be used
             for more complex scenarios to specify whether an individual psd
@@ -797,24 +849,7 @@ class PPSD(object):
         if endtime is not None:
             selected &= times_all < endtime.timestamp
         if time_of_weekday is not None:
-            # check if we can reuse a previously cached array of all times as
-            # day of week as int and time of day in float hours
-            if len(self._current_times_all_time_of_weekday) == len(times_all):
-                times_all_time_of_weekday = \
-                    self._current_times_all_time_of_weekday
-            # otherwise compute it and store it for subsequent stacks on the
-            # same data (has to be recomputed when additional data gets added)
-            else:
-                dtype = np.dtype([(native_str('day_of_week'), np.int8),
-                                  (native_str('time_of_day'), np.float32)])
-                times_all_time_of_weekday = np.empty(shape=len(times_all),
-                                                     dtype=dtype)
-                times_all_time_of_weekday['time_of_day'][:] = \
-                    [_timestamp_to_hours_after_midnight(t) for t in times_all]
-                times_all_time_of_weekday['day_of_week'][:] = \
-                    [UTCDateTime(t).weekday for t in times_all]
-                self._current_times_all_time_of_weekday = \
-                    times_all_time_of_weekday
+            times_all_details = self._get_times_all_details()
             # we need to do a logical OR over all different user specified time
             # windows, so we start with an array of False and set all matching
             # pieces True for the final logical AND against the previous
@@ -825,11 +860,29 @@ class PPSD(object):
                     selected_ = np.ones(len(times_all), dtype=np.bool)
                 else:
                     selected_ = (
-                        times_all_time_of_weekday['day_of_week'] == weekday)
-                selected_ &= times_all_time_of_weekday['time_of_day'] > start
-                selected_ &= times_all_time_of_weekday['time_of_day'] < end
+                        times_all_details['iso_weekday'] == weekday)
+                selected_ &= times_all_details['time_of_day'] > start
+                selected_ &= times_all_details['time_of_day'] < end
                 selected_time_of_weekday |= selected_
             selected &= selected_time_of_weekday
+        if year is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['year'] == year[0]
+            for year_ in year[1:]:
+                selected_ |= times_all_details['year'] == year_
+            selected &= selected_
+        if month is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['month'] == month[0]
+            for month_ in month[1:]:
+                selected_ |= times_all_details['month'] == month_
+            selected &= selected_
+        if isoweek is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['isoweek'] == isoweek[0]
+            for isoweek_ in isoweek[1:]:
+                selected_ |= times_all_details['isoweek'] == isoweek_
+            selected &= selected_
         if callback is not None:
             selected &= callback(times_all)
         used_indices = selected.nonzero()[0]
