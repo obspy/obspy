@@ -390,8 +390,8 @@ class PPSD(object):
         self._current_hist_stack_cumulative = None
         self._current_hist_stack_xedges = None
         self._current_hist_stack_yedges = None
-        self._current_times_used = None
-        self._current_times_all_time_of_day = []
+        self._current_times_used = []
+        self._current_times_all_time_of_weekday = []
 
     @property
     @deprecated("PPSD attribute 'times' is deprecated, please use "
@@ -732,7 +732,7 @@ class PPSD(object):
         return self.current_histogram
 
     def calculate_histogram(self, starttime=None, endtime=None,
-                            time_of_day=None, callback=None):
+                            time_of_weekday=None, callback=None):
         """
         Calculate and set current 2D histogram stack, optionally with start-
         and endtime and time of day restrictions.
@@ -750,19 +750,23 @@ class PPSD(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: If set, data after the specified time is excluded
             from the returned stack.
-        :type time_of_day: list of tuples of two float
-        :param time_of_day: If set, restricts the data that is included
-            in the stack by time of day. For example, when using
-            `time_of_day=[(0, 2), (22, 24)]`, only individual spectra
-            that have a starttime in between 10pm and 2am are used in the stack
-            (restrictive night time stack). Note that time of day is specified
-            in UTC (time of day might have to be adapted to daylight saving
-            time). Also note that this setting filters only by starttime of the
-            used psd time slice, so the length of individual slices (set at
-            initialization:
+        :type time_of_weekday: list of (int, float, float) 3-tuples
+        :param time_of_weekday: If set, restricts the data that is included
+            in the stack by time of day and weekday. Monday is `0`, Sunday is
+            `6`, `-1` for no restriction of week day. For example, using
+            `time_of_weekday=[(-1, 0, 2), (-1, 22, 24)]` only individual
+            spectra that have a starttime in between 10pm and 2am are used in
+            the stack for all days of week, using
+            `time_of_weekday=[(5, 22, 24), (6, 0, 2), (6, 22, 24), (7, 0, 2)]`
+            only spectra with a starttime in between Friday 10pm to Saturdays
+            2am and Saturday 10pm to Sunday 2am are used.
+            Note that time of day is specified in UTC (time of day might have
+            to be adapted to daylight saving time). Also note that this setting
+            filters only by starttime of the used psd time slice, so the length
+            of individual slices (set at initialization:
             :meth:`PPSD(..., ppsd_length=XXX, ...) <PPSD.__init__>` in seconds)
             has to be taken into consideration (e.g. with a `ppsd_length` of
-            one hour and a `time_of_day` restriction to 10pm-2am
+            one hour and a `time_of_weekday` restriction to 10pm-2am
             actually includes data from 10pm-3am).
         :type callback: func
         :param callback: Custom user defined callback function that can be used
@@ -782,35 +786,58 @@ class PPSD(object):
         self._current_hist_stack_xedges = None
         self._current_hist_stack_yedges = None
         self._current_hist_stack_cumulative = None
-        self._current_times_used = None
+        self._current_times_used = []
 
         # determine which psd pieces should be used in the stack,
         # based on the starttime and the selection criteria specified by user
-        selected = np.ones(len(self._spec_octaves), dtype=np.bool)
         times_all = np.array(self._times_processed)
+        selected = np.ones(len(times_all), dtype=np.bool)
         if starttime is not None:
             selected &= times_all > starttime.timestamp
         if endtime is not None:
             selected &= times_all < endtime.timestamp
-        if time_of_day is not None:
+        if time_of_weekday is not None:
             # check if we can reuse a previously cached array of all times as
-            # time of day in float hours
-            if len(self._current_times_all_time_of_day) == len(times_all):
-                times_all_time_of_day = self._current_times_all_time_of_day
+            # day of week as int and time of day in float hours
+            if len(self._current_times_all_time_of_weekday) == len(times_all):
+                times_all_time_of_weekday = \
+                    self._current_times_all_time_of_weekday
             # otherwise compute it and store it for subsequent stacks on the
             # same data (has to be recomputed when additional data gets added)
             else:
-                times_all_time_of_day = np.array(
-                    [_timestamp_to_hours_after_midnight(t) for t in times_all])
-                self._current_times_all_time_of_day = times_all_time_of_day
-            for start, end in time_of_day:
-                selected &= times_all_time_of_day > start
-                selected &= times_all_time_of_day < end
+                dtype = np.dtype([(native_str('day_of_week'), np.int8),
+                                  (native_str('time_of_day'), np.float32)])
+                times_all_time_of_weekday = np.empty(shape=len(times_all),
+                                                     dtype=dtype)
+                times_all_time_of_weekday['time_of_day'][:] = \
+                    [_timestamp_to_hours_after_midnight(t) for t in times_all]
+                times_all_time_of_weekday['day_of_week'][:] = \
+                    [UTCDateTime(t).weekday for t in times_all]
+                self._current_times_all_time_of_weekday = \
+                    times_all_time_of_weekday
+            # we need to do a logical OR over all different user specified time
+            # windows, so we start with an array of False and set all matching
+            # pieces True for the final logical AND against the previous
+            # restrictions
+            selected_time_of_weekday = np.zeros(len(times_all), dtype=np.bool)
+            for weekday, start, end in time_of_weekday:
+                if weekday == -1:
+                    selected_ = np.ones(len(times_all), dtype=np.bool)
+                else:
+                    selected_ = (
+                        times_all_time_of_weekday['day_of_week'] == weekday)
+                selected_ &= times_all_time_of_weekday['time_of_day'] > start
+                selected_ &= times_all_time_of_weekday['time_of_day'] < end
+                selected_time_of_weekday |= selected_
+            selected &= selected_time_of_weekday
         if callback is not None:
             selected &= callback(times_all)
         used_indices = selected.nonzero()[0]
         used_count = len(used_indices)
         used_times = times_all[used_indices]
+
+        if not used_count:
+            return
 
         # inital setup of 2D histogram
         hist_stack, xedges, yedges = np.histogram2d(
