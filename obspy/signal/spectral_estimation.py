@@ -41,6 +41,7 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compressStartend
 from obspy.core.inventory import Inventory
+from obspy.core.utcdatetime import _timestamp_to_hours_after_midnight
 from obspy.core.util import get_matplotlib_version
 from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
@@ -390,6 +391,7 @@ class PPSD(object):
         self._current_hist_stack_xedges = None
         self._current_hist_stack_yedges = None
         self._current_times_used = None
+        self._current_times_all_time_of_day = []
 
     @property
     @deprecated("PPSD attribute 'times' is deprecated, please use "
@@ -766,13 +768,14 @@ class PPSD(object):
         :param callback: Custom user defined callback function that can be used
             for more complex scenarios to specify whether an individual psd
             piece should be included in the stack or not. The function will be
-            passed the starttime of the psd piece (as a POSIX timestamp that
-            can be used to initialize a
+            passed an array with the starttimes of all psd pieces (as a POSIX
+            timestamp that can be used as a single argument to initialize a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object) and
-            should return `True` (include in stack) or `False` (exclude from
-            stack). Note that even when callback returns `True` the psd piece
-            will be excluded if it does not match the other criteria (e.g.
-            `starttime`).
+            should return a boolean array specifying which psd pieces should be
+            included in the stack (`True`) and which should be excluded
+            (`False`). Note that even when callback returns `True` the psd
+            piece will be excluded if it does not match all other criteria
+            (e.g. `starttime`).
         :rtype: None
         """
         self._current_hist_stack = None
@@ -781,69 +784,53 @@ class PPSD(object):
         self._current_hist_stack_cumulative = None
         self._current_times_used = None
 
-        hist_stack = None
-        times_used = []
-
-        # set up a list with all checker routines that will be run, whether to
-        # include an individual psd piece or not
-        check_includes = []
+        # determine which psd pieces should be used in the stack,
+        # based on the starttime and the selection criteria specified by user
+        selected = np.ones(len(self._spec_octaves), dtype=np.bool)
+        times_all = np.array(self._times_processed)
         if starttime is not None:
-            def _check(time):
-                if time < starttime.timestamp:
-                    return False
-                return True
-            check_includes.append(_check)
+            selected &= times_all > starttime.timestamp
         if endtime is not None:
-            def _check(time):
-                if time > endtime.timestamp:
-                    return False
-                return True
-            check_includes.append(_check)
+            selected &= times_all < endtime.timestamp
         if time_of_day is not None:
-            def _check(time):
-                for start, end in time_of_day:
-                    time_utcdt = UTCDateTime(time)
-                    cur_time_of_day = (time_utcdt.hour +
-                                       time_utcdt.minute / 60.0 +
-                                       time_utcdt.second / 3600.0 +
-                                       time_utcdt.microsecond / 3600.0 / 1e6)
-                    if cur_time_of_day >= start and cur_time_of_day <= end:
-                        return True
-                return False
-            check_includes.append(_check)
+            # check if we can reuse a previously cached array of all times as
+            # time of day in float hours
+            if len(self._current_times_all_time_of_day) == len(times_all):
+                times_all_time_of_day = self._current_times_all_time_of_day
+            # otherwise compute it and store it for subsequent stacks on the
+            # same data (has to be recomputed when additional data gets added)
+            else:
+                times_all_time_of_day = np.array(
+                    [_timestamp_to_hours_after_midnight(t) for t in times_all])
+                self._current_times_all_time_of_day = times_all_time_of_day
+            for start, end in time_of_day:
+                selected &= times_all_time_of_day > start
+                selected &= times_all_time_of_day < end
         if callback is not None:
-            check_includes.append(callback)
+            selected &= callback(times_all)
+        used_indices = selected.nonzero()[0]
+        used_count = len(used_indices)
+        used_times = times_all[used_indices]
 
-        used_indices = []
+        # inital setup of 2D histogram
         hist_stack, xedges, yedges = np.histogram2d(
             self.per_octaves, self._spec_octaves[0],
             bins=(self.period_bins, self.spec_bins))
         hist_stack.fill(0)
 
-        for index, (time, spec_octaves) in enumerate(zip(self._times_processed,
-                                                         self._spec_octaves)):
-            # check if psd piece should be used or not,
-            # based on starttime of psd piece
-            if check_includes:
-                use = True
-                for func_ in check_includes:
-                    if not func_(time):
-                        use = False
-                        break
-                if not use:
-                    continue
-
-            used_indices.append(index)
-
-            times_used.append(time)
-
         # concatenate all used spectra, evaluate index of amplitude bin each
         # value belongs to
         inds = np.hstack([self._spec_octaves[i][:-1] for i in used_indices])
-        inds = self.spec_bins.searchsorted(inds)
+        # we need minus one because searchsorted returns the insertion index in
+        # the array of bin edges which is the index of the corresponding bin
+        # plus one
+        inds = self.spec_bins.searchsorted(inds, side="left") - 1
+        # values that are left of first bin edge have to be moved back into the
+        # binning
+        inds[inds == -1] = 0
         # reshape such that we can iterate over the array, extracting for
         # each period bin an array of all amplitude bins we have hit
-        inds = inds.reshape((len(times_used), len(self.period_bins) - 1)).T
+        inds = inds.reshape((used_count, len(self.period_bins) - 1)).T
         for i, inds_ in enumerate(inds):
             # count how often each bin has been hit for this period bin,
             # set the current 2D histogram column accordingly
@@ -867,7 +854,7 @@ class PPSD(object):
         self._current_hist_stack_xedges = xedges
         self._current_hist_stack_yedges = yedges
         self._current_hist_stack_cumulative = hist_stack_cumul
-        self._current_times_used = times_used
+        self._current_times_used = used_times
 
     def _get_response(self, tr):
         # check type of metadata and use the correct subroutine
@@ -1072,7 +1059,13 @@ class PPSD(object):
         data = np.load(filename)
         ppsd = PPSD(Stats(), metadata=metadata)
         for key in NPZ_STORE_KEYS:
-            setattr(ppsd, key, data[key])
+            # where the real data is stored we have to convert
+            # back to lists, so that additionally processed data
+            # can be appended/inserted later.
+            data_ = data[key]
+            if key.startswith("_"):
+                data_ = [d for d in data_]
+            setattr(ppsd, key, data_)
         return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,

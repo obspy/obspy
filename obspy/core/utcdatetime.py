@@ -1445,6 +1445,22 @@ class UTCDateTime(object):
         return UTCDateTime()
 
 
+def _timestamp_to_hours_after_midnight(timestamp):
+    """
+    Calculate foating point hours after midnight of POSIX timestamp
+
+    >>> hour, minute, second, microsecond = 3, 16, 12, 123456
+    >>> t = UTCDateTime(2015, 9, 27, 3, 16, 12, 123456)
+    >>> _timestamp_to_hours_after_midnight(t)
+    3.270034293333333
+    """
+    t = UTCDateTime(timestamp)
+    timedelta = (
+        t.datetime -
+        t.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
+    return timedelta.total_seconds() / 3600.0
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
