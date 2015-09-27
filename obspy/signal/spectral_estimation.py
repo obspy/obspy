@@ -42,7 +42,7 @@ from obspy.core import Stats
 from obspy.imaging.scripts.scan import compressStartend
 from obspy.core.inventory import Inventory
 from obspy.core.utcdatetime import _timestamp_to_hours_after_midnight
-from obspy.core.util import get_matplotlib_version
+from obspy.core.util import get_matplotlib_version, AttribDict
 from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
@@ -1123,20 +1123,13 @@ class PPSD(object):
         :param cumulative_number_of_colors: Number of discrete color shades to
             use, `None` for a continuous colormap.
         """
-        hist_stack = self.current_histogram
-        hist_stack_cumul = self.current_histogram_cumulative
-        hist_count = self.current_histogram_count
-        xedges = self._current_hist_stack_xedges
-        yedges = self._current_hist_stack_yedges
         # check if any data has been added yet
-        if not hist_count:
+        if not self.current_histogram_count:
             msg = 'No data to plot'
             raise Exception(msg)
 
-        X, Y = np.meshgrid(xedges, yedges)
-        hist_stack_percent = hist_stack * 100.0 / hist_count
-
         fig = plt.figure()
+        fig.ppsd = AttribDict()
 
         if show_coverage:
             ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
@@ -1146,30 +1139,28 @@ class PPSD(object):
 
         if show_histogram:
             label = "[%]"
-            data = hist_stack_percent
             if cumulative:
-                data = hist_stack_cumul
-                # XXX data = np.multiply(data.T, 100.0/data.max(axis=1)).T
+                label = "non-exceedance (cumulative) [%]"
                 if max_percentage is not None:
                     msg = ("Parameter 'max_percentage' is ignored when "
                            "'cumulative=True'.")
                     warnings.warn(msg)
                 max_percentage = 100
-                label = "non-exceedance (cumulative) [%]"
                 if cumulative_number_of_colors is not None:
                     cmap = LinearSegmentedColormap(
                         name=cmap.name, segmentdata=cmap._segmentdata,
                         N=cumulative_number_of_colors)
-            ppsd = ax.pcolormesh(X, Y, data.T, cmap=cmap)
-            cb = plt.colorbar(ppsd, ax=ax)
-            cb.set_label(label)
+
+            fig.ppsd.cumulative = cumulative
+            fig.ppsd.cmap = cmap
+            fig.ppsd.label = label
+            fig.ppsd.max_percentage = max_percentage
+            fig.ppsd.grid = grid
             if max_percentage is not None:
                 color_limits = (0, max_percentage)
-                ppsd.set_clim(*color_limits)
-                cb.set_clim(*color_limits)
-            if grid:
-                ax.grid(b=grid, which="major")
-                ax.grid(b=grid, which="minor")
+                fig.ppsd.color_limits = color_limits
+
+            self._plot_histogram(fig=fig)
 
         if show_percentiles:
             # for every period look up the approximate place of the percentiles
@@ -1207,14 +1198,61 @@ class PPSD(object):
                 label.set_ha("right")
                 label.set_rotation(30)
 
-        plt.draw()
         if filename is not None:
             plt.savefig(filename)
             plt.close()
         elif show:
+            plt.draw()
             plt.show()
         else:
+            plt.draw()
             return fig
+
+    def _plot_histogram(self, fig, draw=False, filename=None):
+        """
+        Reuse a previously created figure returned by :meth:`plot(show=False)`
+        and plot the current histogram stack (pre-computed using
+        :meth:`calculate_histogram()`) into the figure. If a filename is
+        provided, the figure will be saved to a local file.
+        Note that many aspects of the plot are statically set during the first
+        :meth:`plot()` call, so this routine can only be used to update with
+        data from a new stack.
+        """
+        ax = fig.axes[0]
+        if "quadmesh" in fig.ppsd:
+            ax.collections.remove(fig.ppsd.pop("quadmesh"))
+
+        if fig.ppsd.cumulative:
+            data = self.current_histogram_cumulative * 100.0
+        else:
+            data = (
+                self.current_histogram * 100.0 / self.current_histogram_count)
+
+        if "meshgrid" not in fig.ppsd:
+            fig.ppsd.meshgrid = np.meshgrid(self._current_hist_stack_xedges,
+                                            self._current_hist_stack_yedges)
+        X, Y = fig.ppsd.meshgrid
+        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap)
+        fig.ppsd.quadmesh = ppsd
+
+        if "colorbar" not in fig.ppsd:
+            cb = plt.colorbar(ppsd, ax=ax)
+            cb.set_clim(*fig.ppsd.color_limits)
+            cb.set_label(fig.ppsd.label)
+            fig.ppsd.colorbar = cb
+
+        if fig.ppsd.max_percentage is not None:
+            ppsd.set_clim(*fig.ppsd.color_limits)
+
+        if fig.ppsd.grid:
+            ax.grid(b=True, which="major")
+            ax.grid(b=True, which="minor")
+
+        if filename is not None:
+            plt.savefig(filename)
+        elif draw:
+            plt.draw()
+        return fig
 
     def _get_plot_title(self):
         title = "%s   %s -- %s  (%i/%i segments)"
