@@ -758,6 +758,60 @@ class PPSD(object):
             self._current_times_all_details = times_all_details
             return times_all_details
 
+    def _stack_selection(self, starttime, endtime, time_of_weekday, year,
+                         month, isoweek, callback):
+        """
+        For details on restrictions see :meth:`calculate_histogram`.
+
+        :rtype: :class:`numpy.ndarray` of bool
+        :returns: Boolean array of which psd pieces should be included in the
+            stack.
+        """
+        times_all = np.array(self._times_processed)
+        selected = np.ones(len(times_all), dtype=np.bool)
+        if starttime is not None:
+            selected &= times_all > starttime.timestamp
+        if endtime is not None:
+            selected &= times_all < endtime.timestamp
+        if time_of_weekday is not None:
+            times_all_details = self._get_times_all_details()
+            # we need to do a logical OR over all different user specified time
+            # windows, so we start with an array of False and set all matching
+            # pieces True for the final logical AND against the previous
+            # restrictions
+            selected_time_of_weekday = np.zeros(len(times_all), dtype=np.bool)
+            for weekday, start, end in time_of_weekday:
+                if weekday == -1:
+                    selected_ = np.ones(len(times_all), dtype=np.bool)
+                else:
+                    selected_ = (
+                        times_all_details['iso_weekday'] == weekday)
+                selected_ &= times_all_details['time_of_day'] > start
+                selected_ &= times_all_details['time_of_day'] < end
+                selected_time_of_weekday |= selected_
+            selected &= selected_time_of_weekday
+        if year is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['year'] == year[0]
+            for year_ in year[1:]:
+                selected_ |= times_all_details['year'] == year_
+            selected &= selected_
+        if month is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['month'] == month[0]
+            for month_ in month[1:]:
+                selected_ |= times_all_details['month'] == month_
+            selected &= selected_
+        if isoweek is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['isoweek'] == isoweek[0]
+            for isoweek_ in isoweek[1:]:
+                selected_ |= times_all_details['isoweek'] == isoweek_
+            selected &= selected_
+        if callback is not None:
+            selected &= callback(times_all)
+        return selected
+
     def calculate_histogram(self, starttime=None, endtime=None,
                             time_of_weekday=None, year=None, month=None,
                             isoweek=None, callback=None):
@@ -841,53 +895,14 @@ class PPSD(object):
         self._current_times_used = []
 
         # determine which psd pieces should be used in the stack,
-        # based on the starttime and the selection criteria specified by user
-        times_all = np.array(self._times_processed)
-        selected = np.ones(len(times_all), dtype=np.bool)
-        if starttime is not None:
-            selected &= times_all > starttime.timestamp
-        if endtime is not None:
-            selected &= times_all < endtime.timestamp
-        if time_of_weekday is not None:
-            times_all_details = self._get_times_all_details()
-            # we need to do a logical OR over all different user specified time
-            # windows, so we start with an array of False and set all matching
-            # pieces True for the final logical AND against the previous
-            # restrictions
-            selected_time_of_weekday = np.zeros(len(times_all), dtype=np.bool)
-            for weekday, start, end in time_of_weekday:
-                if weekday == -1:
-                    selected_ = np.ones(len(times_all), dtype=np.bool)
-                else:
-                    selected_ = (
-                        times_all_details['iso_weekday'] == weekday)
-                selected_ &= times_all_details['time_of_day'] > start
-                selected_ &= times_all_details['time_of_day'] < end
-                selected_time_of_weekday |= selected_
-            selected &= selected_time_of_weekday
-        if year is not None:
-            times_all_details = self._get_times_all_details()
-            selected_ = times_all_details['year'] == year[0]
-            for year_ in year[1:]:
-                selected_ |= times_all_details['year'] == year_
-            selected &= selected_
-        if month is not None:
-            times_all_details = self._get_times_all_details()
-            selected_ = times_all_details['month'] == month[0]
-            for month_ in month[1:]:
-                selected_ |= times_all_details['month'] == month_
-            selected &= selected_
-        if isoweek is not None:
-            times_all_details = self._get_times_all_details()
-            selected_ = times_all_details['isoweek'] == isoweek[0]
-            for isoweek_ in isoweek[1:]:
-                selected_ |= times_all_details['isoweek'] == isoweek_
-            selected &= selected_
-        if callback is not None:
-            selected &= callback(times_all)
+        # based on all selection criteria specified by user
+        selected = self._stack_selection(
+            starttime=starttime, endtime=endtime,
+            time_of_weekday=time_of_weekday, year=year, month=month,
+            isoweek=isoweek, callback=callback)
         used_indices = selected.nonzero()[0]
         used_count = len(used_indices)
-        used_times = times_all[used_indices]
+        used_times = np.array(self._times_processed)[used_indices]
 
         if not used_count:
             return
