@@ -1056,7 +1056,7 @@ class StationTestCase(unittest.TestCase):
             with mock.patch("obspy.clients.fdsn.mass_downloader"
                             ".utils.safe_delete") as p:
                 # All status are NONE thus nothing should be deleted.
-                station.remove_files(logger)
+                station.remove_files(logger, reason="testing")
                 self.assertEqual(p.call_count, 0)
                 self.assertEqual(exists_mock.call_count, 0)
 
@@ -1071,7 +1071,7 @@ class StationTestCase(unittest.TestCase):
                 # Set the status of the file to DOWNLOADED. It should now be
                 # downloaded.
                 station.stationxml_status = STATUS.DOWNLOADED
-                station.remove_files(logger)
+                station.remove_files(logger, reason="testing")
                 self.assertEqual(p.call_count, 1)
                 self.assertEqual(p.call_args[0][0], filename)
                 self.assertEqual(exists_mock.call_args[0][0], filename)
@@ -1083,7 +1083,7 @@ class StationTestCase(unittest.TestCase):
                 station.stationxml_status = STATUS.NONE
                 c1.intervals[0].filename = filename
                 c1.intervals[0].status = STATUS.DOWNLOADED
-                station.remove_files(logger)
+                station.remove_files(logger, reason="testing")
                 self.assertEqual(exists_mock.call_count, 1)
                 self.assertEqual(p.call_count, 1)
                 self.assertEqual(p.call_args[0][0], filename)
