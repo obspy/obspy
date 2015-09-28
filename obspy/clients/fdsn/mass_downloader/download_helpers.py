@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Class representing the current status of a download in progress.
+Helpers for the mass downloader.
 
-Intended to simplify and stabilize the logic of the download helpers and make
+Intended to simplify and stabilize the logic of the mass downloader and make
 it understandable in the first place.
 
 :copyright:
@@ -59,7 +59,7 @@ class Station(object):
     :type stationxml_filename: str
     :param stationxml_status: The current status of the station.
     :type stationxml_filename:
-        :class:`~obspy.fdsn.download_helpers.download_status.STATUS`
+        :class:`~.STATUS`
     """
     __slots__ = ["network", "station", "latitude", "longitude", "channels",
                  "_stationxml_filename", "want_station_information",
@@ -445,9 +445,9 @@ class ClientDownloadHelper(object):
     :param client: An initialized FDSN client.
     :type client_name: str
     :param client_name: The name of the client. Only used for logging.
-    :type restrictions: :class:`obspy.fdsn.download_helpers.Restrictions`
+    :type restrictions: :class:`~.restrictions.Restrictions`
     :param restrictions: The non-domain related restrictions for the query.
-    :type domain: :class:`obspy.fdsn.download_helpers.Domain` subclass
+    :type domain: :class:`~.domain.Domain` subclass
     :param domain: The domain definition.
     :param mseed_storage: The MiniSEED storage settings.
     :param stationxml_storage: THe StationXML storage settings.

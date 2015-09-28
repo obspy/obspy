@@ -485,12 +485,9 @@ Further Documentation
 
 Further functionality of this module is documented at a couple of other places:
 
-* :mod:`~obspy.clients.fdsn.mass_downloader.domain` module
-* :class:`~obspy.clients.fdsn.mass_downloader.restrictions.Restrictions` class
-* :class:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader`
-  class
-* :func:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader.download`
-  method
+* :mod:`~.domain` module
+* :class:`~.restrictions.Restrictions` class
+* :class:`~.mass_downloader.MassDownloader` class
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

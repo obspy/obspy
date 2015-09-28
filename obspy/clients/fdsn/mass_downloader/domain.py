@@ -70,7 +70,8 @@ class Domain(with_metaclass(ABCMeta)):
                         "maxlongitude": self.b[2]}
 
             def is_in_domain(self, latitude, longitude):
-                if self.shape.contains(shapely.geometry.Point(longitude, latitude)):
+                if self.shape.contains(shapely.geometry.Point(longitude,
+                                                              latitude)):
                     return True
                 return False
 
