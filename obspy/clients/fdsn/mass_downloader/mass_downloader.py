@@ -63,34 +63,41 @@ class MassDownloader(object):
         in the list also determines their priority, if data is available at
         more then one provider it will always be downloaded from the
         provider that comes first in the list.
+    :param debug: Debug flag passed to the underlying FDSN web service clients.
     :type providers: list of str
     """
-    def __init__(self, providers=None):
+    def __init__(self, providers=None, debug=False):
+        self.debug = debug
+        # If not given, use all providers ObsPy knows. They will be sorted
+        # alphabetically except that ORFEUS is second to last and IRIS last.
+        # The reason for this order is that smaller data centers can be
+        # expected to have more up-to-date meta information about their own
+        # data and thus should be prioritized when downloading data.
         if providers is None:
             providers = dict(URL_MAPPINGS.items())
-            # In that case make sure IRIS is first, and ORFEUS last! The
-            # remaining items will be sorted alphabetically to make it
-            # deterministic at least to a certain extent.
-            # Orfeus is last as it currently returns StationXML for all
-            # European stations without actually containing the data.
             _p = []
+
             if "IRIS" in providers:
-                _p.append("IRIS")
+                has_iris = True
                 del providers["IRIS"]
+            else:
+                has_iris = False
 
             if "ODC" in providers:
                 providers["ORFEUS"] = providers["ODC"]
                 del providers["ODC"]
 
-            orfeus = False
             if "ORFEUS" in providers:
-                orfeus = providers["ORFEUS"]
+                has_orfeus = True
                 del providers["ORFEUS"]
+            else:
+                has_orfeus = False
 
-            _p.extend(sorted(providers))
-
-            if orfeus:
+            _p = sorted(providers)
+            if has_orfeus:
                 _p.append("ORFEUS")
+            if has_iris:
+                _p.append("IRIS")
 
             providers = _p
 
@@ -107,25 +114,25 @@ class MassDownloader(object):
         Launch the actual data download.
 
         :param domain: The download domain.
-        :type domain: :class:`~obspy.fdsn.download_helpers.domain.Domain`
-            subclass
+        :type domain: :class:`~.domain.Domain`
         :param restrictions: Non-spatial downloading restrictions.
-        :type restrictions:
-            :class:`~obspy.fdsn.download_helpers.restrictions.Restrictions`
+        :type restrictions: :class:`~.restrictions.Restrictions`
         :param mseed_storage: Where to store the waveform files. See
-            the :module:~obspy.fdsn.download_helpers` for more details.
+            the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
+            more details.
         :type mseed_storage: str or fct
         :param stationxml_storage: Where to store the StationXML files. See
-            the :module:~obspy.fdsn.download_helpers` for more details.
+            the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
+            more details.
         :type stationxml_storage: str of fct
         :param download_chunk_size_in_mb: MiniSEED data will be downloaded
             in bulk chunks. This settings limits the chunk size. A higher
             numbers means that less total download requests will be send,
             but each individual download request will be larger.
-        :type download_chunk_size_in_mb: float, optional
+        :type download_chunk_size_in_mb: float
         :param threads_per_client: The number of download threads launched
             per client.
-        :type threads_per_client: int, optional
+        :type threads_per_client: int
         """
         # The downloads from each client will be handled separately.
         # Nonetheless collect all in this dictionary.
@@ -276,7 +283,7 @@ class MassDownloader(object):
 
         def _get_client(client_name):
             try:
-                this_client = Client(client_name)
+                this_client = Client(client_name, debug=self.debug)
             except utils.ERRORS as e:
                 if "timeout" in str(e).lower():
                     extra = " (timeout)"

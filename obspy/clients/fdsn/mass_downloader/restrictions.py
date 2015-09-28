@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Download restrictions.
+Non-geographical restrictions and constraints for the mass downloader.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
@@ -18,7 +18,7 @@ import obspy
 
 class Restrictions(object):
     """
-    Class storing non-domain restrictions of a query. This is best explained
+    Class storing non-domain restrictions for a query. This is best explained
     with two examples. See the list below for a more detailed explanation
     of the parameters. The first set of restrictions is useful for event
     based earthquake set queries.
@@ -27,8 +27,8 @@ class Restrictions(object):
     >>> restrictions = Restrictions(
     ...     # Get data from 5 minutes before the event to one hours after the
     ...     # event.
-    ...     starttime=obspy.UTCDateTime(2012, 1, 1)
-    ...     endtime=obspy.UTCDateTime(2012, 1, 2)
+    ...     starttime=obspy.UTCDateTime(2012, 1, 1),
+    ...     endtime=obspy.UTCDateTime(2012, 1, 2),
     ...     # You might not want to deal with gaps in the data.
     ...     reject_channels_with_gaps=True,
     ...     # And you might only want waveform that have data for at least
@@ -54,7 +54,7 @@ class Restrictions(object):
     ...     starttime=obspy.UTCDateTime(2012, 1, 1),
     ...     endtime=obspy.UTCDateTime(2013, 1, 1),
     ...     # Chunk it to have one file per day.
-    ...     chunklength=86400,
+    ...     chunklength_in_sec=86400,
     ...     # Considering the enormous amount of data associated with
     ...     # continuous requests, you might want to limit the data based on
     ...     # SEED identifiers. If the location code is specified, the
@@ -83,7 +83,7 @@ class Restrictions(object):
     :param station_starttime: The start time of the station files. If not
         given, the ``starttime`` argument will be used. This is useful when
         trying to incorporate multiple waveform datasets with a central
-        station file archive as stationxml files can be downloaded once and
+        station file archive as StationXML files can be downloaded once and
         for the whole time span.
     :type station_starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param station_endtime: The endtime of the station files. Analogous to
@@ -91,38 +91,38 @@ class Restrictions(object):
     :type station_endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param chunklength_in_sec: The length of one chunk in seconds. If set,
         the time between ``starttime`` and ``endtime`` will be divided into
-        segments of ``chunklength`` seconds. Useful for continuous data
+        segments of ``chunklength_in_sec`` seconds. Useful for continuous data
         requests. Set to ``None`` if one piece of data is desired between
         ``starttime`` and ``endtime`` (the default).
-    :type chunklength_in_sec: float, optional
+    :type chunklength_in_sec: float
     :param network: The network code. Can contain wildcards.
-    :type network: str, optional
+    :type network: str
     :param station: The station code. Can contain wildcards.
-    :type station: str, optional
+    :type station: str
     :param location: The location code. Can contain wildcards.
-    :type location: str, optional
+    :type location: str
     :param channel: The channel code. Can contain wildcards.
-    :type channel: str, optional
+    :type channel: str
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
         gaps and/or overlaps will be rejected.
-    :type reject_channels_with_gaps: boolean, optional
+    :type reject_channels_with_gaps: bool
     :param minimum_length: The minimum length of the data as a fraction of
         the requested time frame. After a channel has been downloaded it
         will be checked that its total length is at least that fraction of
         the requested time span. Will be rejected otherwise. Must be between
         ``0.0`` and ``1.0``, defaults to ``0.9``.
-    :type minimum_length: float, optional
+    :type minimum_length: float
     :param sanitize: Sanitize makes sure that each MiniSEED file also has an
          associated StationXML file, otherwise the MiniSEED files will be
          deleted afterwards. This is potentially not desirable for large noise
          data sets.
-    :type sanitize: bool, optional
+    :type sanitize: bool
     :param minimum_interstation_distance_in_m: The minimum inter-station
         distance. Data from any new station closer to any existing station
         will not be downloaded. Also used for duplicate station detection as
         sometimes stations have different names for different webservice
         providers. Defaults to `1000 m`.
-    :type minimum_interstation_distance_in_m: float, optional
+    :type minimum_interstation_distance_in_m: float
     :param channel_priorities: Priority list for the channels. Will not be
         used if the ``channel`` argument is used.
     :type channel_priorities: list of str

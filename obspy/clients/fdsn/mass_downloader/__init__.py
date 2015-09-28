@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Data Acquisition Helpers for FDSN Compliant Web Services
-========================================================
+Mass Downloader for FDSN Compliant Web Services
+===============================================
 
 This package contains functionality to query and integrate data from any number
 of `FDSN web service <http://www.fdsn.org/webservices/>`_ providers
-simultaneously. It can be used by itself or as a library component integrated
-into a bigger project.
+simultaneously. The package aims to formulate download requests in a way that
+is convenient for seismologists without having to worry about political and
+technical data center issues. It can be used by itself or as a library
+component integrated into a bigger project.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
@@ -23,26 +25,34 @@ Directly using the FDSN web services for example via the
 :mod:`obspy.clients.fdsn` client is fine for small amounts of data but quickly
 becomes cumbersome for larger data sets. Many data centers do provide tools to
 easily download larger amounts of data but that is usually only from one data
-center. Now most seismologist don't really care where the data they download
-originates from too much - they just want the data for their use case and
+center. Now most seismologist don't really care a lot where the data they
+download originates from - they just want the data for their use case and
 oftentimes they want as much data as they can get. As the number of FDSN
-compliant web services increases this becomes more and more cumbersome.  That's
-where this module comes in. You specify
+compliant web services increases this becomes more and more cumbersome.  That
+is where this module comes in. You
 
-1. the geographical and temporal constraints of the data you want,
-2. where to store the downloaded data, and
-3. which providers to download from.
+1. specify the **geographical region** from which to download data,
+2. define a number of **other restrictions** (temporal, data quality, ...),
+3. and launch the download.
 
-The download helper module will loop over each desired data provider and
 
-1. figure out what stations each provider offers,
-2. download MiniSEED and associated StationXML meta information in an efficient
-   manner, and
+The mass downloader module will acquire all waveforms and associated station
+information across all known FDSN web service implementations producing a
+**clean data set** ready for further use.  It works by
+
+1. figuring out what stations each provider offers,
+2. downloading MiniSEED and associated StationXML meta information in an
+   efficient and data center friendly manner, and
 3. deal with all the nasty real-world data issues like missing or incomplete
-   data, duplicate data across data centers, ...
+   data, duplicate data across data centers, e.g.
 
-resulting in a **clean data set** ready for further use.
-
+   * Basic optional automatic quality control by assuring that the data has
+     no-gaps/overlaps or is available for a certain percentage of the requested
+     time span.
+   * It can relaunch download to acquire missing pieces which might happen for
+     example if a data center has been offline.
+   * It can assure that there always is a corresponding StationXML file for the
+     waveforms.
 
 Usage Examples
 --------------
@@ -65,7 +75,7 @@ ObsPy knows of and combine it into one data set.
 .. code-block:: python
 
     import obspy
-    from obspy.clients.fdsn.download_helpers import CircularDomain, \\
+    from obspy.clients.fdsn.mass_downloader import CircularDomain, \\
         Restrictions, MassDownloader
 
     origin_time = obspy.UTCDateTime(2011, 3, 11, 5, 47, 32)
@@ -103,17 +113,17 @@ ObsPy knows of and combine it into one data set.
         location_priorities=("", "00", "10"))
 
     # No specified providers will result in all known ones being queried.
-    dlh = MassDownloader()
+    mdl = MassDownloader()
     # The data will be downloaded to ``./waveforms/`` ans ``./stations`` with
     # autmatically chosen names.
-    dlh.download(domain, restrictions, mseed_storage="waveforms",
+    mdl.download(domain, restrictions, mseed_storage="waveforms",
                  stationxml_storage="stations")
 
 
 Continuous Request
 ~~~~~~~~~~~~~~~~~~
 
-Another case requiring massive amounts of data are noise studies. Ambient
+Another use case requiring massive amounts of data are noise studies. Ambient
 seismic noise correlations require continuous recordings from stations over a
 large time span. This example downloads data, from within a certain
 geographical domain, for a whole year. Individual MiniSEED files will be split
@@ -123,24 +133,24 @@ centers and split up the files again if required.
 .. code-block:: python
 
     import obspy
-    from obspy.clients.fdsn.download_helpers import RectangularDomain, \\
+    from obspy.clients.fdsn.mass_downloader import RectangularDomain, \\
         Restrictions, MassDownloader
 
     # Rectangular domain containing parts of southern Germany.
     domain = RectangularDomain(minlatitude=30, maxlatitude=50,
-                               minlongitude=5, maxlongitude=25)
+                               minlongitude=5, maxlongitude=35)
 
     restrictions = Restrictions(
         # Get data for a whole year.
         starttime=obspy.UTCDateTime(2012, 1, 1),
         endtime=obspy.UTCDateTime(2013, 1, 1),
         # Chunk it to have one file per day.
-        chunklength=86400,
+        chunklength_in_sec=86400,
         # Considering the enormous amount of data associated with continuous
         # requests, you might want to limit the data based on SEED identifiers.
         # If the location code is specified, the location priority list is not
         # used; the same is true for the channel argument and priority list.
-        network="BW", station="A*", location="", channel="BH*",
+        network="BW", station="A*", location="", channel="EH*",
         # The typical use case for such a data set are noise correlations where
         # gaps are dealt with at a later stage.
         reject_channels_with_gaps=False,
@@ -152,10 +162,9 @@ centers and split up the files again if required.
     # Restrict the number of providers if you know which serve the desired
     # data. If in doubt just don't specify - then all providers will be
     # queried.
-    dlh = MassDownloader(providers=["ORFEUS", "GFZ"])
-    dlh.download(domain, restrictions, mseed_storage="waveforms",
+    mdl = MassDownloader(providers=["LMU", "GFZ"])
+    mdl.download(domain, restrictions, mseed_storage="waveforms",
                  stationxml_storage="stations")
-
 
 
 Usage
@@ -177,19 +186,19 @@ Step 1: Data Selection
 
 Data set selection serves the purpose to limit the data to be downloaded to
 data useful for the purpose at hand. It is handled by two objects:
-subclasses of the  :class:`~obspy.clients.fdsn.download_helpers.domain.Domain`
+subclasses of the  :class:`~obspy.clients.fdsn.mass_downloader.domain.Domain`
 object and the
-:class:`~obspy.clients.fdsn.download_helpers.restrictions.Restrictions` class.
+:class:`~obspy.clients.fdsn.mass_downloader.restrictions.Restrictions` class.
 
-The :class:`~obspy.clients.fdsn.download_helpers.domain` module currently
+The :class:`~obspy.clients.fdsn.mass_downloader.domain` module currently
 defines three different domain types used to limit the geographical extent of
 the queried data:
-:class:`~obspy.clients.fdsn.download_helpers.domain.RectangularDomain`,
-:class:`~obspy.clients.fdsn.download_helpers.domain.CircularDomain`, and
-:class:`~obspy.clients.fdsn.download_helpers.domain.GlobalDomain`. Subclassing
-:class:`~obspy.clients.fdsn.download_helpers.domain.Domain` enables the
+:class:`~obspy.clients.fdsn.mass_downloader.domain.RectangularDomain`,
+:class:`~obspy.clients.fdsn.mass_downloader.domain.CircularDomain`, and
+:class:`~obspy.clients.fdsn.mass_downloader.domain.GlobalDomain`. Subclassing
+:class:`~obspy.clients.fdsn.mass_downloader.domain.Domain` enables the
 construction of arbitrary complex domains. Please see the
-:class:`~obspy.clients.fdsn.download_helpers.domain` module for more details.
+:class:`~obspy.clients.fdsn.mass_downloader.domain` module for more details.
 Instances of these classes will later be passed to the function sparking the
 downloading process. A rectangular domain for example is defined like this:
 
@@ -199,7 +208,7 @@ downloading process. A rectangular domain for example is defined like this:
 
 Additional restrictions like temporal bounds, SEED identifier wildcards,
 and other things are set with the help of
-the :class:`~obspy.clients.fdsn.download_helpers.restrictions.Restrictions`
+the :class:`~obspy.clients.fdsn.mass_downloader.restrictions.Restrictions`
 class. Please refer to its documentation for a more detailed explanation of
 the parameters.
 
@@ -232,9 +241,9 @@ Storing MiniSEED waveforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The MiniSEED storage rules are set by the ``mseed_storage`` argument of the
-:meth:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader.download`
+:meth:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader.download`
 method of the
-:class:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader`
+:class:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader`
 class
 
 
@@ -307,11 +316,12 @@ Storing StationXML files
 
 The same logic applies to the StationXML files. This time the rules are set by
 the ``stationxml_storage`` argument of the
-:func:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader.download`
+:func:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader.download`
 method of the
-:class:`~obspy.clients.fdsn.download_helpers.download_helpers.MassDownloader` class.
-StationXML files will be downloaded on a per-station basis thus all channels
-and locations from one station will end up in the same StationXML file.
+:class:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader`
+class. StationXML files will be downloaded on a per-station basis thus all
+channels and locations from one station will end up in the same StationXML
+file.
 
 **Option 1: Folder Name**
 
@@ -390,8 +400,8 @@ value in agreement with some data centers.
 
 .. code-block:: python
 
-    >>> dlh = MassDownloader()
-    >>> dlh.download(domain, restrictions, chunk_size_in_mb=50,
+    >>> mdl = MassDownloader()
+    >>> mdl.download(domain, restrictions, chunk_size_in_mb=50,
     ...              threads_per_client=3, mseed_storage=mseed_storage,
     ...              stationxml_storage=stationxml_storage)
 
@@ -399,17 +409,21 @@ value in agreement with some data centers.
 How it Works
 ------------
 
+At a high level the mass downloader works by looping over each FDSN web service
+and downloading whatever it offers. A bit more detail:
+
 1. Loop over all passed or known FDSN web service implementations and
    auto-discover if they are available and what they can do. If an
-   implementation has a *dataselect* and a *station* service it will be part of
-   the following steps. Otherwise it will be discarded.
+   implementation has a ``dataselect`` and a ``station`` service it will be
+   part of the following steps. Otherwise it will be discarded.
 
 2. For each web service client:
 
    a) Request the availability for the given time and domain settings. It will
-      request a text file from the *station* service at the channel level. If
-      the service supports the *matchtimeseries* parameter it will be used and
-      the availability is considered to be *"reliable"* for the further stages.
+      request a text file from the ``station`` service at the channel level. If
+      the service supports the ``matchtimeseries`` parameter it will be used
+      and the availability is considered to be *"reliable"* for the further
+      stages.
 
    b) Channel and location priorities are applied resulting in a single
       instrument per station.
@@ -427,9 +441,9 @@ How it Works
 
    e) Download the MiniSEED data - this is threaded and it will use a bulk
       request honoring the desired ``chunk_size_in_mb`` setting. Afterwards it
-      split the MiniSEED files again to match the desired restrictions. The
-      split happens at the record thus no information available in the original
-      MiniSEED records is lost.
+      splits the MiniSEED files again to match the desired restrictions. The
+      split happens at the record level thus no information available in the
+      original MiniSEED records is lost.
 
    f) Any MiniSEED files not fulfilling the minimum length or no/gap overlap
       restrictions will be deleted. Faulty MiniSEED files as well.
@@ -444,7 +458,7 @@ How it Works
    g) If the availability information is not reliable, perform the minimum
       interstation distance filtering now. This is a bit unfortunate but many
       client do return pretty terrible availability information (or interpret
-      the *station* service differently) so there is no way around that for
+      the ``station`` service differently) so there is no way around that for
       now.
 
    h) Rinse and repeat for all remaining FDSN web service implementations.
@@ -452,7 +466,6 @@ How it Works
 
 Logging
 ~~~~~~~
-
 
 The download helpers utilizes Python's `logging facilities
 <https://docs.python.org/2/library/logging.html>`__. By default it will log to
@@ -463,16 +476,31 @@ the corresponding logger after you import the download helpers module:
 .. code:: python
 
     >>> import logging
-    >>> logger = logging.getLogger("obspy.clients.fdsn.download_helpers")
+    >>> logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
     >>> logger.setLevel(logging.DEBUG)
+
+
+Further Documentation
+~~~~~~~~~~~~~~~~~~~~~
+
+Further functionality of this module is documented at a couple of other places:
+
+* :mod:`~obspy.clients.fdsn.mass_downloader.domain` module
+* :class:`~obspy.clients.fdsn.mass_downloader.restrictions.Restrictions` class
+* :class:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader`
+  class
+* :func:`~obspy.clients.fdsn.mass_downloader.mass_downloader.MassDownloader.download`
+  method
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .mass_downloader import MassDownloader
-from .restrictions import Restrictions
-from .domain import Domain, RectangularDomain, CircularDomain, GlobalDomain
+# Convenience imports.
+from .mass_downloader import MassDownloader  # NOQA
+from .restrictions import Restrictions  # NOQA
+from .domain import (Domain, RectangularDomain,  # NOQA
+                     CircularDomain, GlobalDomain)  # NOQA
 
 
 if __name__ == '__main__':

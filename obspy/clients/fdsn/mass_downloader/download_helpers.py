@@ -113,7 +113,7 @@ class Station(object):
                     return True
         return False
 
-    def remove_files(self, logger):
+    def remove_files(self, logger, reason):
         """
         Delete all files under it. Only delete stuff that actually has been
         downloaded!
@@ -123,14 +123,15 @@ class Station(object):
                 if ti.status != STATUS.DOWNLOADED or not ti.filename:
                     continue
                 if os.path.exists(ti.filename):
-                    logger.info("Deleting MiniSEED file '%s'." % ti.filename)
+                    logger.info("Deleting MiniSEED file '%s'. Reason: %s" % (
+                        ti.filename, reason))
                     utils.safe_delete(ti.filename)
 
         if self.stationxml_status == STATUS.DOWNLOADED and \
                 self.stationxml_filename and \
                 os.path.exists(self.stationxml_filename):
-            logger.info("Deleting StationXMl file '%s'." %
-                        self.stationxml_filename)
+            logger.info("Deleting StationXMl file '%s'. Reason: %s" %
+                        (self.stationxml_filename, reason))
             utils.safe_delete(self.stationxml_filename)
 
     @property
@@ -598,7 +599,8 @@ class ClientDownloadHelper(object):
         # Now actually delete the files and everything of the rejected
         # stations.
         for station in rejected_stations:
-            station.remove_files(logger=self.logger)
+            station.remove_files(logger=self.logger,
+                                 reason="Minimum distance filtering.")
         self.stations = {}
         for station in remaining_stations:
             self.stations[(station.network, station.station)] = station
