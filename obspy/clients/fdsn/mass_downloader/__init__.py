@@ -204,7 +204,7 @@ downloading process. A rectangular domain for example is defined like this:
 
 >>> from obspy.clients.fdsn.mass_downloader.domain import RectangularDomain
 >>> domain = RectangularDomain(minlatitude=-10, maxlatitude=10,
-                               minlongitude=-10, maxlongitude=10)
+...                            minlongitude=-10, maxlongitude=10)
 
 Additional restrictions like temporal bounds, SEED identifier wildcards,
 and other things are set with the help of
@@ -398,12 +398,11 @@ requested per thread, client and request. ``threads_per_clients`` control how
 many threads are used to download data in parallel per data center - 3 is a
 value in agreement with some data centers.
 
-.. code-block:: python
 
-    >>> mdl = MassDownloader()
-    >>> mdl.download(domain, restrictions, chunk_size_in_mb=50,
-    ...              threads_per_client=3, mseed_storage=mseed_storage,
-    ...              stationxml_storage=stationxml_storage)
+>>> mdl = MassDownloader()  # doctest: +SKIP
+>>> mdl.download(domain, restrictions, chunk_size_in_mb=50,
+...              threads_per_client=3, mseed_storage=mseed_storage,
+...              stationxml_storage=stationxml_storage)  # doctest: +SKIP
 
 
 How it Works
@@ -473,11 +472,10 @@ stdout at the ``logging.INFO`` level which provides a fair amount of detail. If
 you want to change the log level or setup a different stream handler, just get
 the corresponding logger after you import the download helpers module:
 
-.. code:: python
 
-    >>> import logging
-    >>> logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
-    >>> logger.setLevel(logging.DEBUG)
+>>> import logging
+>>> logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
+>>> logger.setLevel(logging.DEBUG)  # doctest: +SKIP
 
 
 Further Documentation
