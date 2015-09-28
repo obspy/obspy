@@ -40,7 +40,7 @@ URL_MAPPINGS = {
     "KOERI": "http://eida.koeri.boun.edu.tr",
     "LMU": "http://erde.geophysik.uni-muenchen.de",
     "NCEDC": "http://service.ncedc.org",
-    "NEIP": "http://eida-sc3.infp.ro",
+    "NIEP": "http://eida-sc3.infp.ro",
     "NERIES": "http://www.seismicportal.eu",
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",

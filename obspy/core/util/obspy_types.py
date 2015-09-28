@@ -49,7 +49,7 @@ class Enum(object):
         >>> units.xxx  # doctest: +ELLIPSIS
         Traceback (most recent call last):
         ...
-        KeyError: 'xxx'
+        AttributeError: 'xxx'
 
     Changing enum values will not work:
 
@@ -99,8 +99,11 @@ class Enum(object):
             return self._Enum__replace[key.lower()]
         return self.__enums.__getitem__(key.lower())
 
-    __getattr__ = get
-    __getitem__ = get
+    def __getattr__(self, name):
+        try:
+            return self.get(name)
+        except KeyError:
+            raise AttributeError("'%s'" % (name, ))
 
     def __setattr__(self, name, value):
         if name == '_Enum__enums':
@@ -111,6 +114,7 @@ class Enum(object):
             return
         raise NotImplementedError
 
+    __getitem__ = get
     __setitem__ = __setattr__
 
     def __contains__(self, value):

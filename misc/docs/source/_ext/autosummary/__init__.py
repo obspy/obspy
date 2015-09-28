@@ -63,6 +63,7 @@ from docutils.parsers.rst import directives
 from docutils.statemachine import ViewList
 from docutils import nodes
 
+import sphinx
 from sphinx import addnodes
 from sphinx.util.compat import Directive
 
@@ -144,7 +145,7 @@ def get_documenter(obj, parent):
     belongs to.
     """
     from sphinx.ext.autodoc import AutoDirective, DataDocumenter, \
-         ModuleDocumenter
+        ModuleDocumenter
 
     if inspect.ismodule(obj):
         # ModuleDocumenter.can_document_member always returns False
@@ -205,15 +206,22 @@ class Autosummary(Directive):
         nodes = self.get_table(items)
 
         if 'toctree' in self.options:
-            suffix = env.config.source_suffix
+            suffixes = env.config.source_suffix
+            # adapt to a change with sphinx 1.3:
+            # for sphinx >= 1.3 env.config.source_suffix is a list
+            # see sphinx-doc/sphinx@bf3bdcc7f505a2761c0e83c9b1550e7206929f74
+            if map(int, sphinx.__version__.split(".")[:2]) < [1, 3]:
+                suffixes = [suffixes]
             dirname = posixpath.dirname(env.docname)
 
             tree_prefix = self.options['toctree'].strip()
             docnames = []
             for name, sig, summary, real_name in items:
                 docname = posixpath.join(tree_prefix, real_name)
-                if docname.endswith(suffix):
-                    docname = docname[:-len(suffix)]
+                for suffix in suffixes:
+                    if docname.endswith(suffix):
+                        docname = docname[:-len(suffix)]
+                        break
                 docname = posixpath.normpath(posixpath.join(dirname, docname))
                 if docname not in env.found_docs:
                     self.warn('toctree references unknown document %r'
@@ -222,7 +230,7 @@ class Autosummary(Directive):
 
             tocnode = addnodes.toctree()
             tocnode['includefiles'] = docnames
-            tocnode['entries'] = [(None, docname) for docname in docnames]
+            tocnode['entries'] = [(None, docname_) for docname_ in docnames]
             tocnode['maxdepth'] = -1
             tocnode['glob'] = None
 

@@ -17,6 +17,7 @@ except ImportError:
     has_GDAL = False
 else:
     has_GDAL = True
+    no_filecmp = gdal.VersionInfo() >= '2000000'
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
@@ -37,8 +38,9 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
                 self.assertTrue(
-                    filecmp.cmp("catalog" + suffix,
-                                self.catalog_shape_basename + suffix),
+                    no_filecmp or filecmp.cmp(
+                        "catalog" + suffix,
+                        self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
 
     @unittest.skipIf(not has_GDAL, "GDAL not installed")
@@ -49,8 +51,9 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("catalog" + suffix))
                 self.assertTrue(
-                    filecmp.cmp("catalog" + suffix,
-                                self.catalog_shape_basename + suffix),
+                    no_filecmp or filecmp.cmp(
+                        "catalog" + suffix,
+                        self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
 
     @unittest.skipIf(not has_GDAL, "GDAL not installed")
@@ -61,8 +64,9 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
                 self.assertTrue(
-                    filecmp.cmp("inventory" + suffix,
-                                self.inventory_shape_basename + suffix),
+                    no_filecmp or filecmp.cmp(
+                        "inventory" + suffix,
+                        self.inventory_shape_basename + suffix),
                     msg="%s not binary equal." % ("inventory" + suffix))
 
     @unittest.skipIf(not has_GDAL, "GDAL not installed")
@@ -73,8 +77,9 @@ class ShapefileTestCase(unittest.TestCase):
             for suffix in SHAPEFILE_SUFFIXES:
                 self.assertTrue(os.path.isfile("inventory" + suffix))
                 self.assertTrue(
-                    filecmp.cmp("inventory" + suffix,
-                                self.inventory_shape_basename + suffix),
+                    no_filecmp or filecmp.cmp(
+                        "inventory" + suffix,
+                        self.inventory_shape_basename + suffix),
                     msg="%s not binary equal." % ("inventory" + suffix))
 
 

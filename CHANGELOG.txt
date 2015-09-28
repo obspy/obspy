@@ -2,6 +2,7 @@ master:
  - General:
    * Requirements have been increased to reflect latest distributions:
      * Removed support for Python 2.6.
+     * Added support for Python 3.5.
      * matplotlib >= 1.1.0 is now required.
      * numpy >= 1.6.1 is now required
      * scipy >= 0.9.0 is now required
@@ -21,6 +22,9 @@ master:
      (see #860)
    * Stream/Trace.slice() now has the optional `nearest_sample` argument from
      Stream/Trace.trim().
+   * Trace.remove_response() now has `plot` option to show/output a plot of all
+     individual steps of instrument response removal in frequency domain
+     (see #1116).
  - obspy.clients.fdsn:
    * Now requests gzipped data for the XML files. Much smaller files!
    * The station service can now also be used to download files in the text

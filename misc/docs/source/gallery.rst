@@ -50,6 +50,10 @@ Gallery
     :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
+.. gallery-plot:: tutorial/code_snippets/seismometer_correction_simulation_5.py
+    :target: tutorial/code_snippets/seismometer_correction_simulation.html
+    :alt: Seismometer Correction/Simulation
+
 .. gallery-plot:: tutorial/code_snippets/plotting_spectrograms.py
     :target: tutorial/code_snippets/plotting_spectrograms.html
     :alt: Plotting Spectrograms
@@ -106,6 +110,10 @@ Gallery
     :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
+.. gallery-plot:: tutorial/code_snippets/probabilistic_power_spectral_density3.py
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
+    :alt: Visualizing Probabilistic Power Spectral Densities
+
 .. gallery-plot:: tutorial/code_snippets/array_response_function.py
     :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
@@ -147,7 +155,7 @@ Gallery
     :alt: Cross Correlation Pick Correction
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap preview plot of Inventory class
 
     from obspy import read_inventory
@@ -155,7 +163,7 @@ Gallery
     inv.plot(projection="local", color_per_network={'GR': 'blue', 'BW': 'green'})
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.network.Network.plot.html
+    :target: packages/autogen/obspy.core.inventory.network.Network.plot.html
     :alt: Basemap preview plot of Network class
 
     from obspy import read_inventory
@@ -171,7 +179,7 @@ Gallery
     cat.plot()
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.inventory.Inventory.plot_response.html
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot_response.html
     :alt: Bode plot of Inventory class
 
     from obspy import read_inventory
@@ -179,12 +187,22 @@ Gallery
     inv.plot_response(0.001, station="RJOB")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.station.response.Response.plot.html
+    :target: packages/autogen/obspy.core.inventory.response.Response.plot.html
     :alt: Bode plot of Response class
 
     from obspy import read_inventory
     resp = read_inventory()[0][0][0].response
     resp.plot(0.001, output="VEL")
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
+    :alt: Basemap plot of station and event data together
+
+    from obspy import read_inventory, read_events
+    inv = read_inventory()
+    cat = read_events()
+    fig = inv.plot(show=False)
+    cat.plot(fig=fig)
 
 .. raw:: html
 

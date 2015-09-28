@@ -24,7 +24,7 @@ from .taup_time import TauP_Time
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
 cmap = plt.get_cmap('Paired', lut=12)
-COLORS = ['#%02x%02x%02x' % tuple(col * 255 for col in cmap(i)[:3])
+COLORS = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
           for i in range(12)]
 COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
 

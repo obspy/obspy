@@ -11,9 +11,10 @@ from copy import deepcopy
 import numpy as np
 import numpy.ma as ma
 
-from obspy import Stream, Trace, UTCDateTime, __version__, read
+from obspy import Stream, Trace, UTCDateTime, __version__, read, read_inventory
 from obspy.core import Stats
 from obspy.core.compatibility import mock
+from obspy.core.util.testing import ImageComparison
 from obspy.io.xseed import Parser
 
 
@@ -2141,6 +2142,21 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(patch.call_count, 4)
         for arg in patch.call_args_list:
             self.assertFalse(arg[1]["nearest_sample"])
+
+    def test_remove_response_plot(self):
+        """
+        Tests the plotting option of remove_response().
+        """
+        tr = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")[0]
+        inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
+        tr.attach_response(inv)
+
+        pre_filt = [0.001, 0.005, 10, 20]
+
+        image_dir = os.path.join(os.path.dirname(__file__), 'images')
+        with ImageComparison(image_dir, "trace_remove_response.png") as ic:
+            tr.remove_response(pre_filt=pre_filt, output="DISP",
+                               water_level=60, end_stage=None, plot=ic.name)
 
 
 def suite():

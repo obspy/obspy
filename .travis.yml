@@ -3,6 +3,7 @@ python:
   - 2.7
   - 3.3
   - 3.4
+  - 3.5
 sudo: false
 install:
   - lsb_release -a # get info on the operating system
@@ -19,12 +20,23 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy==1.8.2 scipy==0.14.0 matplotlib==1.3.1 basemap==1.0.7 flake8 future lxml sqlalchemy mock nose gdal
+  - |
+      if [[ "${TRAVIS_PYTHON_VERSION:0:1}" == '3' ]]; then
+        NUMPY_VERSION=1.9.2
+        SCIPY_VERSION=0.16.0
+        MPL_VERSION=1.4.3
+        BASEMAP_VERSION=1.0.7
+      else
+        NUMPY_VERSION=1.8.2
+        SCIPY_VERSION=0.14.0
+        MPL_VERSION=1.3.1
+        BASEMAP_VERSION=1.0.7
+      fi
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION matplotlib=$MPL_VERSION basemap=$BASEMAP_VERSION flake8 future lxml sqlalchemy mock nose gdal pyproj
   - source activate test-environment
   # install packages not available via conda
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master pyproj
   - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
   - pip install geographiclib
   # current pyimgur stable release has a py2.6 incompatibility
