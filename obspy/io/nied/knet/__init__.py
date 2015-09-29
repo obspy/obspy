@@ -1,5 +1,5 @@
 """
-obspy.io.knet - K-NET and KiK-net ASCII format support for ObsPy
+obspy.io.nied.knet - K-NET and KiK-net ASCII format support for ObsPy
 ================================================================
 
 This module provides read support for the ASCII format for waveforms from the

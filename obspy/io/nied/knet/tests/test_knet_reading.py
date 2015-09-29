@@ -7,7 +7,7 @@ import os
 import io
 import unittest
 from obspy import read
-from obspy.io.knet.core import _is_knet_ascii
+from obspy.io.nied.knet.core import _is_knet_ascii
 import numpy as np
 
 

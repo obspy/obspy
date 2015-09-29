@@ -1,10 +1,11 @@
 """
-obspy.io.nied - NIED's moment tensors TEXT format support for ObsPy
+obspy.io.nied.fnetmt - F-net's moment tensors TEXT format support for ObsPy
 ===================================================================
 
 This module provides read support for the moment tensor files (TEXT format)
-provided by the National Research Institute for Earth Science and Disaster
-Prevention in Japan (NIED; http://www.fnet.bosai.go.jp/).
+provided for the F-net broadband seismograph network operated by the National
+Research Institute for Earth Science and Disaster Prevention in Japan
+(NIED; http://www.fnet.bosai.go.jp/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -18,7 +19,7 @@ Example
 It works by utilizing ObsPy's :func:`~obspy.core.event.read_events` function.
 
 >>> import obspy
->>> cat = obspy.read_events("/path/to/NIEDCATALOG")
+>>> cat = obspy.read_events("/path/to/FNETMTCATALOG")
 >>> print(cat)
 1 Event(s) in Catalog:
 2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 9.0 ML

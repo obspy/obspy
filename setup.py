@@ -157,7 +157,7 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
-        'KNET = obspy.io.knet.core'
+        'KNET = obspy.io.nied.knet.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -256,8 +256,8 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.ah.core:_read_ah',
         ],
     'obspy.plugin.waveform.KNET': [
-        'isFormat = obspy.io.knet.core:_is_knet_ascii',
-        'readFormat = obspy.io.knet.core:_read_knet_ascii',
+        'isFormat = obspy.io.nied.knet.core:_is_knet_ascii',
+        'readFormat = obspy.io.nied.knet.core:_read_knet_ascii',
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
@@ -272,6 +272,7 @@ ENTRY_POINTS = {
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'NIED = obspy.io.nied.core'
+        'FNETMT = obspy.io.nied.fnetmt.core'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -309,9 +310,9 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
-    'obspy.plugin.event.NIED': [
-        'isFormat = obspy.io.nied.core:_is_nied_catalog',
-        'readFormat = obspy.io.nied.core:_read_nied_catalog',
+    'obspy.plugin.event.FNETMT': [
+        'isFormat = obspy.io.nied.fnetmt.core:_is_fnetmt_catalog',
+        'readFormat = obspy.io.nied.fnetmt.core:_read_fnetmt_catalog',
         ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',

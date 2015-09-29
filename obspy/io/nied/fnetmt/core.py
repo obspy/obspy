@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-NIED moment tensor file format support for ObsPy.
+F-net moment tensor file format support for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) and Yannik Behr
@@ -22,7 +22,7 @@ from obspy.core.event import (Catalog, Comment, Event,
 from . import util
 
 
-class NIEDException(Exception):
+class FNETMTxception(Exception):
     pass
 
 
@@ -30,7 +30,7 @@ def _get_resource_id(name, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/nied/%s/%s" % (name, res_type)
+    res_id = "smi:local/fnetmt/%s/%s" % (name, res_type)
     if tag is not None:
         res_id += "#" + tag
     return res_id
@@ -67,24 +67,24 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
             return function(fh, *args, **kwargs)
 
 
-def _is_nied_catalog(filename_or_buf):
+def _is_fnetmt_catalog(filename_or_buf):
     """
-    Checks if the file is a NIED moment tensor file.
+    Checks if the file is a F-net moment tensor file.
 
     :param filename_or_buf: File to test.
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_nied_catalog, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, __is_fnetmt_catalog, reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError):
         return False
 
 
-def __is_nied_catalog(buf):
+def __is_fnetmt_catalog(buf):
     """
-    Test whether file is an NIED moment tensor catalog file by reading the
+    Test whether file is an F-net moment tensor catalog file by reading the
     header and the first data line. Reads at most 40 lines.
 
     :param buf: File to read.
@@ -118,20 +118,20 @@ def __is_nied_catalog(buf):
         return True
 
 
-def _read_nied_catalog(filename_or_buf, **kwargs):
+def _read_fnetmt_catalog(filename_or_buf, **kwargs):
     """
-    Reads an NIED moment tensor catalog file to a
+    Reads an F-net moment tensor catalog file to a
     :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_nied_catalog, **kwargs)
+    return _buffer_proxy(filename_or_buf, __read_fnetmt_catalog, **kwargs)
 
 
-def __read_nied_catalog(buf, **kwargs):
+def __read_fnetmt_catalog(buf, **kwargs):
     """
-    Reads an NIED moment tensor catalog file to a
+    Reads an F-net moment tensor catalog file to a
     :class:`~obspy.core.event.Catalog` object.
 
     :param buf: File to read.
@@ -169,21 +169,21 @@ def __read_nied_catalog(buf, **kwargs):
         # read the next event.
         if line:
             buf.seek(cur_pos, 0)
-            events.append(__read_single_nied_entry(buf))
+            events.append(__read_single_fnetmt_entry(buf))
         cur_pos = buf.tell()
 
     # Consistency check
     if len(events) != nevents:
-        raise NIEDException('Parsing failed! Expected %d events but read %d.'
+        raise FNETMTException('Parsing failed! Expected %d events but read %d.'
                             % (nevents, len(cat)))
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                    events=events, description=headerlines[:-1])
 
 
-def __read_single_nied_entry(buf, **kwargs):
+def __read_single_fnetmt_entry(buf, **kwargs):
     """
-    Reads a single NIED moment tensor solution to a
+    Reads a single F-net moment tensor solution to a
     :class:`~obspy.core.event.Event` object.
 
     :param buf: File to read.
