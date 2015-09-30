@@ -75,7 +75,8 @@ def _is_fnetmt_catalog(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_fnetmt_catalog, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, __is_fnetmt_catalog,
+                             reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError):
@@ -169,7 +170,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
     # Consistency check
     if len(events) != nevents:
         raise FNETMTException('Parsing failed! Expected %d events but read %d.'
-                            % (nevents, len(cat)))
+                              % (nevents, len(events)))
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                    events=events, description=headerlines[:-1])

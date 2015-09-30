@@ -61,7 +61,7 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
 
         # Non F-net file names.
         non_fnetmt_filenames = ['test_fnetmt_reading.py',
-                              '__init__.py']
+                                '__init__.py']
         # Loop over F-net files
         for _i in fnetmt_filenames:
             filename = os.path.join(self.path, 'data', _i)
