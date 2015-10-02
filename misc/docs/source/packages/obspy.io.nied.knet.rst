@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.io.nied
-.. automodule:: obspy.io.nied
+.. currentmodule:: obspy.io.nied.knet
+.. automodule:: obspy.io.nied.knet
 
     .. comment to end block
 
