@@ -395,8 +395,8 @@
    * new client module to access servers based on the FDSN web service
      definition (http://www.fdsn.org/webservices/)
  - obspy.gse2:
-   * read/write STA2 header line which is officialy mandatory but in pratice
-     often not used
+   * read/write STA2 header line which is officially mandatory but in
+     pratice often not used
  - obspy.imaging:
    * more options to customize day plots
    * dayplot now plots matching picks (station, network, location) if a list
