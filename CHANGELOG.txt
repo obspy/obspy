@@ -31,6 +31,8 @@ master:
      format. This has limited information but is much faster.
    * New mass downloader to assist in downloading data across a large number
      of FDSN web services.
+ - obspy.clients.filesystem.sds:
+   * New client to read data from local SDS directory structure (see #1135).
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.

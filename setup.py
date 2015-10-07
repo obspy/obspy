@@ -92,7 +92,7 @@ KEYWORDS = [
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'response file', 'RT', 'SAC', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
     'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',

@@ -89,6 +89,7 @@ The functionality is provided through the following packages:
    obspy.clients.arclink
    obspy.clients.earthworm
    obspy.clients.fdsn
+   obspy.clients.filesystem
    obspy.clients.iris
    obspy.clients.neic
    obspy.clients.seedlink
