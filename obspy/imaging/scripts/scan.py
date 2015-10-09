@@ -98,17 +98,17 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         sys.stdout.flush()
     for tr in stream:
         _id = tr.getId()
-        data_dict.setdefault(_id, [])
-        data_dict[_id].append([date2num(tr.stats.starttime.datetime),
-                               date2num(tr.stats.endtime.datetime)])
+        _samp_int_list = samp_int_dict.setdefault(_id, [])
         try:
-            samp_int_dict.setdefault(_id, [])
-            samp_int_dict[_id].\
+            _samp_int_list.\
                 append(1. / (24 * 3600 * tr.stats.sampling_rate))
         except ZeroDivisionError:
             if verbose or not quiet:
                 print("Skipping file with zero samlingrate: %s" % (file))
             return counter
+        _data_list = data_dict.setdefault(_id, [])
+        _data_list.append([date2num(tr.stats.starttime.datetime),
+                           date2num(tr.stats.endtime.datetime)])
     return (counter + 1)
 
 
@@ -309,17 +309,25 @@ def main(argv=None):
         print('\n')
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
-        data[_id].sort()
+        # sort data list and sampling rate list
         startend = np.array(data[_id])
+        _samp_int = np.array(samp_int[_id])
+        indices = np.lexsort((startend[:, 1], startend[:, 0]))
+        startend = startend[indices]
+        _samp_int = _samp_int[indices]
         if len(startend) == 0:
             continue
         # restrict plotting of results to given start/end time
         if args.start_time:
-            startend = startend[startend[:, 1] > args.start_time]
+            indices = startend[:, 1] > args.start_time
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
         if len(startend) == 0:
             continue
-        if args.start_time:
-            startend = startend[startend[:, 0] < args.end_time]
+        if args.end_time:
+            indices = startend[:, 0] < args.end_time
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
         if len(startend) == 0:
             continue
         timerange = startend[:, 1].max() - startend[:, 0].min()
@@ -339,7 +347,7 @@ def main(argv=None):
         gapsum = diffs[diffs > 0].sum()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
+        gap_indices = diffs > 1.8 * _samp_int[:-1]
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
             # don't handle last end time as start of gap
