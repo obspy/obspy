@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 5),
  python (>= 2.7), python-dev (>= 2.7), python3-all-dev,
  python-support (>= 0.7.1), dh-python, python-numpy, python3-numpy,
  python-setuptools (>=0.6.21), python3-setuptools, gcc, gfortran, help2man,
- quilt
+ quilt, python-future (>= 0.12.4), python3-future (>= 0.12.4)
 Standards-Version: 3.9.3
 Vcs-Git: git://github.com/obspy/obspy.git
 Vcs-Browser: https://github.com/obspy/obspy
