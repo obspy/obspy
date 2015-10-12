@@ -18,9 +18,7 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
     x = (((((dt.julday - 1) * 24) + dt.hour) * 60 + dt.minute) *
          60 + dt.second) * 1000 + dt.microsecond / 1000
     dx = (((370 * 24) * 60) * 60) * 1000
-    rng = 1
-    for _ in range(numenc):
-        rng *= numsym
+    rng = numsym ** numenc
     w = int(dx / rng)
     if w == 0:
         w = 1
@@ -31,8 +29,7 @@ def gen_sc3_id(dt, numenc=6, sym="abcdefghijklmnopqrstuvwxyz"):
         x = x * int(rng / dx)
     enc = ''
     for _ in range(numenc):
-        d = int(x / numsym)
         r = x % numsym
         enc += sym[r]
-        x = d
+        x = int(x / numsym)
     return '%d%s' % (dt.year, enc[::-1])
