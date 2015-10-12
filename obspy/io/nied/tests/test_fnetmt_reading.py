@@ -6,6 +6,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import os
 import io
 import unittest
+
 from obspy.core.event import read_events
 from obspy.io.nied.fnetmt.core import _is_fnetmt_catalog
 

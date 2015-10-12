@@ -6,9 +6,11 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import os
 import io
 import unittest
+
+import numpy as np
+
 from obspy import read
 from obspy.io.nied.knet.core import _is_knet_ascii
-import numpy as np
 
 
 class KnetReadingTestCase(unittest.TestCase):

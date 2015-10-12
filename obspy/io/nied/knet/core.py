@@ -7,11 +7,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import re
+
+import numpy as np
+
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
-from datetime import datetime
-import re
-import numpy as np
 
 
 class KnetFormatError(Exception):
@@ -120,7 +121,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     # Event information
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
-    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
     # All times are in Japanese standard time which is 9 hours ahead of GMT
     dt -= 9 * 3600.
     hdrdict['knet']['evot'] = dt
@@ -181,7 +182,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     dt = flds[2] + ' ' + flds[3]
     # A 15 s delay is added to the record time by the
     # the K-NET and KiK-Net data logger
-    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S')) - 15.0
+    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S') - 15.0
     # All times are in Japanese standard time which is 9 hours ahead of GMT
     dt -= 9 * 3600.
     hdrdict['starttime'] = dt
@@ -225,7 +226,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     _i += 1
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
-    dt = UTCDateTime(datetime.strptime(dt, '%Y/%m/%d %H:%M:%S'))
+    dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
     # All times are in Japanese standard time which is 9 hours ahead of GMT
     dt -= 9 * 3600.
     hdrdict['knet']['last correction'] = dt
