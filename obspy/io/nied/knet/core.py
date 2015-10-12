@@ -277,9 +277,7 @@ def __read_knet_ascii(buf, **kwargs):
 
     # First read the headerlines
     headerlines = []
-    while True:
-        if buf.tell() >= size:
-            break
+    while buf.tell() < size:
         line = buf.readline().decode()
         if line.startswith('Memo'):
             headerlines.append(line)
@@ -287,9 +285,7 @@ def __read_knet_ascii(buf, **kwargs):
             break
         headerlines.append(line)
 
-    while True:
-        if buf.tell() >= size:
-            break
+    while buf.tell() < size:
         line = buf.readline()
         parts = line.strip().split()
         data += [float(p) for p in parts]
