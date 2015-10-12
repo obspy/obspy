@@ -118,7 +118,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
     dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
-    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['knet']['evot'] = dt
 
@@ -155,8 +155,8 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
         location = stnm[-2:]
         stnm = stnm[:-2]
     if len(stnm) > 7:
-        raise KNETException("Station name can't be more than 7 characters\
-        long!")
+        raise KNETException(
+            "Station name can't be more than 7 characters long!")
     hdrdict['station'] = stnm
     hdrdict['location'] = location
 
@@ -179,7 +179,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     # A 15 s delay is added to the record time by the
     # the K-NET and KiK-Net data logger
     dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S') - 15.0
-    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['starttime'] = dt
 
@@ -188,8 +188,6 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     freqstr = flds[2]
     m = re.search('[0-9]*', freqstr)
     freq = int(m.group())
-    delta = 1.0 / freq
-    hdrdict['delta'] = delta
     hdrdict['sampling_rate'] = freq
 
     _i += 1
@@ -223,7 +221,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     flds = _prep_hdr_line(hdrnames[_i], hdrlines[_i])
     dt = flds[2] + ' ' + flds[3]
     dt = UTCDateTime().strptime(dt, '%Y/%m/%d %H:%M:%S')
-    # All times are in Japanese standard time which is 9 hours ahead of GMT
+    # All times are in Japanese standard time which is 9 hours ahead of UTC
     dt -= 9 * 3600.
     hdrdict['knet']['last correction'] = dt
 
@@ -276,11 +274,10 @@ def __read_knet_ascii(buf, **kwargs):
     headerlines = []
     while buf.tell() < size:
         line = buf.readline().decode()
+        headerlines.append(line)
         if line.startswith('Memo'):
-            headerlines.append(line)
             hdrdict = _read_knet_hdr(headerlines, **kwargs)
             break
-        headerlines.append(line)
 
     while buf.tell() < size:
         line = buf.readline()
@@ -288,8 +285,6 @@ def __read_knet_ascii(buf, **kwargs):
         data += [float(p) for p in parts]
 
     hdrdict['npts'] = len(data)
-    elapsed = float(hdrdict['npts']) / float(hdrdict['sampling_rate'])
-    hdrdict['endtime'] = hdrdict['starttime'] + elapsed
     # The FDSN network code for the National Research Institute for Earth
     # Science and Disaster Prevention (NEID JAPAN) is BO (Bosai-Ken Network)
     hdrdict['network'] = 'BO'
