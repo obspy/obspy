@@ -55,15 +55,15 @@ Note that K-NET/KiK-net station names are 6 characters long. This will cause
 problems if you want to write MiniSEED as it only allows 5 character station
 names. In this case you can opt to write the last 2 characters of the station
 name into the location field. This is possible because the location is encoded
-in the channel name (s.o.).
+in the channel name (see table above).
 
 >>> st = read('/path/to/test.knet',convert_stnm=True)
 >>> print(st) # doctest: +ELLIPSIS
 1 Trace(s) in Stream:
 BO.AKT0.13.EW | 1996-08-10T18:12... - 1996-08-10T... | 100.0 Hz, 5900 samples
 
-Additional header entries from are written to an additional dictionary called
-'knet':
+Additional header entries from the K-NET/KiK-net file are written to a
+dictionary called 'knet':
 
 >>> print(st[0].stats) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
          network: BO
