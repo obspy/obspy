@@ -22,7 +22,7 @@ from obspy.core.event import (Catalog, Comment, Event,
 from . import util
 
 
-class FNETMTxception(Exception):
+class FNETMTException(Exception):
     pass
 
 
@@ -164,9 +164,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
         # If there is something, jump back to the beginning of the line and
         # read the next event.
         if line:
-            buf.seek(cur_pos, 0)
-            events.append(__read_single_fnetmt_entry(buf))
-        cur_pos = buf.tell()
+            events.append(__read_single_fnetmt_entry(line.decode()))
 
     # Consistency check
     if len(events) != nevents:
@@ -177,16 +175,15 @@ def __read_fnetmt_catalog(buf, **kwargs):
                    events=events, description=headerlines[:-1])
 
 
-def __read_single_fnetmt_entry(buf, **kwargs):
+def __read_single_fnetmt_entry(line, **kwargs):
     """
     Reads a single F-net moment tensor solution to a
     :class:`~obspy.core.event.Event` object.
 
-    :param buf: File to read.
-    :type buf: Open file or open file like object.
+    :param line: String containing moment tensor information.
+    :type line: str.
     """
 
-    line = buf.readline().decode()
     a = line.split()
     try:
         ot = UTCDateTime().strptime(a[0], '%Y/%m/%d,%H:%M:%S.%f')
