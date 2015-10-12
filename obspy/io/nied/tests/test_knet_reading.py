@@ -49,7 +49,7 @@ class KnetReadingTestCase(unittest.TestCase):
 
     def test_read_knet_ascii_from_bytes_io(self):
         """
-        Tests that reading an NIED moment tensor file from an BytesIO objects
+        Tests that reading an NIED moment tensor file from a BytesIO object
         works.
         """
         testfile = os.path.join(self.path, 'data', 'test.knet')
@@ -68,7 +68,7 @@ class KnetReadingTestCase(unittest.TestCase):
 
     def test_station_name_hack(self):
         """
-        Station names in K-NET and KiK-net are 6 characters long which is not
+        Station names in K-NET and KiK-net are 6 characters long which does not
         conform with the SEED standard. Test hack to write the last 2
         characters of the station name into the location field.
         """

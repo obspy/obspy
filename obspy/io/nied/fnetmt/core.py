@@ -69,7 +69,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
 
 def _is_fnetmt_catalog(filename_or_buf):
     """
-    Checks if the file is a F-net moment tensor file.
+    Checks if the file is an F-net moment tensor file.
 
     :param filename_or_buf: File to test.
     :type filename_or_buf: str or file-like object.
