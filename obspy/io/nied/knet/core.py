@@ -15,11 +15,7 @@ from obspy import UTCDateTime, Stream, Trace
 from obspy.core.trace import Stats
 
 
-class KnetFormatError(Exception):
-    pass
-
-
-class KnetDataError(Exception):
+class KNETException(Exception):
     pass
 
 
@@ -95,7 +91,7 @@ def _prep_hdr_line(name, line):
     :type line: str
     """
     if not line.startswith(name):
-        raise KnetFormatError("Expected line to start with %s but got %s "
+        raise KNETException("Expected line to start with %s but got %s "
                               % (name, line))
     else:
         return line.split()
@@ -159,7 +155,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
         location = stnm[-2:]
         stnm = stnm[:-2]
     if len(stnm) > 7:
-        raise KnetFormatError("Station name can't be more than 7 characters\
+        raise KNETException("Station name can't be more than 7 characters\
         long!")
     hdrdict['station'] = stnm
     hdrdict['location'] = location
@@ -238,7 +234,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
         hdrdict['knet']['comment'] = ' '.join(flds[1:])
 
     if len(hdrlines) != _i + 1:
-        raise KnetFormatError("Expected %d header lines but got %d"
+        raise KNETException("Expected %d header lines but got %d"
                               % (_i + 1, len(hdrlines)))
     return hdrdict
 
