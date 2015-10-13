@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Catalog</name>
+    <Style id="earthquake">
+      <IconStyle>
+        <scale>0.5</scale>
+        <Icon>
+          <href>https://maps.google.com/mapfiles/kml/shapes/earthquake.png</href>
+        </Icon>
+        <hotSpot x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
+      </IconStyle>
+      <LabelStyle>
+        <color>ff0000ff</color>
+        <scale>0.8</scale>
+      </LabelStyle>
+    </Style>
+    <Folder>
+      <name>Catalog</name>
+      <open>1</open>
+      <description>3 Event(s) in Catalog:
+2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual</description>
+      <Style>
+        <ListStyle>
+          <listItemType>check</listItemType>
+          <bgColor>00ffffff</bgColor>
+          <maxSnippetLines>5</maxSnippetLines>
+        </ListStyle>
+      </Style>
+      <Placemark>
+        <name>2012-04-04 4.4</name>
+        <styleUrl>#earthquake</styleUrl>
+        <Style>
+          <IconStyle>
+            <scale>2.12994</scale>
+          </IconStyle>
+          <ListStyle>
+            <maxSnippetLines>5</maxSnippetLines>
+          </ListStyle>
+        </Style>
+        <Point>
+          <coordinates>79.689000,41.818000,0</coordinates>
+        </Point>
+        <description>Event:	2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+
+	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000041")
+	         event_type: 'not reported'
+	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	---------
+	 event_descriptions: 1 Elements
+	            origins: 1 Elements
+	         magnitudes: 1 Elements</description>
+        <TimeStamp>2012-04-04T14:21:42.300000Z</TimeStamp>
+      </Placemark>
+      <Placemark>
+        <name>2012-04-04 4.3</name>
+        <styleUrl>#earthquake</styleUrl>
+        <Style>
+          <IconStyle>
+            <scale>2.10943</scale>
+          </IconStyle>
+          <ListStyle>
+            <maxSnippetLines>5</maxSnippetLines>
+          </ListStyle>
+        </Style>
+        <Point>
+          <coordinates>41.044000,39.342000,0</coordinates>
+        </Point>
+        <description>Event:	2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+
+	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000038")
+	         event_type: 'not reported'
+	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	---------
+	 event_descriptions: 1 Elements
+	            origins: 1 Elements
+	         magnitudes: 1 Elements</description>
+        <TimeStamp>2012-04-04T14:18:37.000000Z</TimeStamp>
+      </Placemark>
+      <Placemark>
+        <name>2012-04-04 3.0</name>
+        <styleUrl>#earthquake</styleUrl>
+        <Style>
+          <IconStyle>
+            <scale>1.80489</scale>
+          </IconStyle>
+          <ListStyle>
+            <maxSnippetLines>5</maxSnippetLines>
+          </ListStyle>
+        </Style>
+        <Point>
+          <coordinates>37.736000,38.017000,0</coordinates>
+        </Point>
+        <description>Event:	2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+
+	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000039")
+	         event_type: 'not reported'
+	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	---------
+	 event_descriptions: 1 Elements
+	            origins: 1 Elements
+	         magnitudes: 1 Elements</description>
+        <TimeStamp>2012-04-04T14:08:46.000000Z</TimeStamp>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

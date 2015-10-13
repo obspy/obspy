@@ -254,7 +254,7 @@ def catalog_to_kml_string(
         icon_style = SubElement(style, "IconStyle")
         liststyle = SubElement(style, "ListStyle")
         SubElement(liststyle, "maxSnippetLines").text = "5"
-        SubElement(icon_style, "scale").text = str(icon_size_func(event))
+        SubElement(icon_style, "scale").text = "%.5f" % icon_size_func(event)
         if origin:
             if origin.longitude is not None and origin.latitude is not None:
                 point = SubElement(placemark, "Point")
