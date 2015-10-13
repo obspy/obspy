@@ -11,8 +11,10 @@ Header files for the FDSN webservice.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import platform
+import sys
 
 from obspy import UTCDateTime, __version__
 
@@ -52,10 +54,14 @@ URL_MAPPINGS = {
 
 FDSNWS = ("dataselect", "event", "station")
 
+if PY2:
+    platform_ = platform.platform().decode("ascii", "ignore")
+else:
+    encoding = sys.getdefaultencoding() or "UTF-8"
+    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
 # The default User Agent that will be sent with every request.
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
-                                                   platform.platform(),
-                                                   platform.python_version())
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (
+    __version__, platform_, platform.python_version())
 
 
 # The default parameters. Different services can choose to add more. It always
