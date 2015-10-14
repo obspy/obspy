@@ -1342,8 +1342,7 @@ class Response(ComparingObject):
         """
         # extract paz
         paz = self.get_paz()
-        sensitivity = self.instrument_sensitivity.value
-        return paz_to_sacpz_string(paz, sensitivity)
+        return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
 
 def paz_to_sacpz_string(paz, instrument_sensitivity):
