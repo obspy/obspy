@@ -337,7 +337,10 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 return ret_str + "()"
 
             def get_value_repr(key):
-                repr_str = getattr(self, key).__repr__()
+                value = getattr(self, key)
+                if isinstance(value, (str, native_str)):
+                    value = native_str(value)
+                repr_str = value.__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\

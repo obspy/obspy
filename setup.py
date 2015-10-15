@@ -89,7 +89,7 @@ KEYWORDS = [
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
+    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
     'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
@@ -265,6 +265,7 @@ ENTRY_POINTS = {
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
+        'KML = obspy.io.kml.core',
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -305,11 +306,15 @@ ENTRY_POINTS = {
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
         ],
+    'obspy.plugin.event.KML': [
+        'writeFormat = obspy.io.kml.core:_write_kml',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
+        'KML = obspy.io.kml.core',
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -324,6 +329,9 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
+        ],
+    'obspy.plugin.inventory.KML': [
+        'writeFormat = obspy.io.kml.core:_write_kml',
         ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',

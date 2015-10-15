@@ -31,6 +31,11 @@ master:
      argument to functions that plot maps to select between Basemap or Cartopy.
    * New default colormap for all plots. A backport of the new viridis colormap
      from matplotlib is available for those using older matplotlib releases.
+ - obspy.io.kml:
+   * New module for Google KML output of Inventory and Catalog objects
+     (e.g. for use in Google Earth)
+ - obspy.io.mseed:
+   * Upgrade to libmseed 2.16
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
  - obspy.signal:
