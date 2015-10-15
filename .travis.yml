@@ -1,17 +1,20 @@
 language: c
 
-env:
-  matrix:
-    - PYTHON_VERSION=2.7
-    - PYTHON_VERSION=3.3
-    - PYTHON_VERSION=3.4
-    - PYTHON_VERSION=3.5
-  global:
-    - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="
+matrix:
+  include:
+    - os: linux
+      env: PYTHON_VERSION=2.7
+    - os: linux
+      env: PYTHON_VERSION=3.3
+    - os: linux
+      env: PYTHON_VERSION=3.4
+    - os: linux
+      env: PYTHON_VERSION=3.5
 
-os:
-  - linux
-  - osx
+    - os: osx
+      env: PYTHON_VERSION=2.7
+    - os: osx
+      env: PYTHON_VERSION=3.5
 
 sudo: false
 
@@ -119,3 +122,7 @@ after_success:
 
 notifications:
     email: false
+
+env:
+  global:
+    - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="
