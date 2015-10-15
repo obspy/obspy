@@ -37,10 +37,10 @@ The FDSN Web Services
 If you want to requests waveforms, or station/event meta information **you will
 most likely want to use the** :mod:`obspy.fdsn` **module**. It is able to
 request data from any data center implementing the `FDSN web services
-<http://www.fdsn.org/webservices/>`_. By now a large number of data centers do
-that. Examples include IRIS/ORFEUS/INGV/ETH/GFZ/RESIF/... - a curated list
-can be found `here <http://www.fdsn.org/webservices/datacenters/>`_. As a
-further advantage it returns data in the most modern and future proof formats.
+<http://www.fdsn.org/webservices/>`_. Example data centers include
+IRIS/ORFEUS/INGV/ETH/GFZ/RESIF/... - a curated list can be found `here
+<http://www.fdsn.org/webservices/datacenters/>`_. As a further advantage it
+returns data in the most modern and future proof formats.
 
 -------
 ArcLink
