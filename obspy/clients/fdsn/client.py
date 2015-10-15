@@ -25,6 +25,7 @@ import warnings
 
 with standard_library.hooks():
     import queue
+    import urllib.error
     import urllib.parse
     import urllib.request
     from collections import OrderedDict
@@ -40,6 +41,36 @@ from .wadl_parser import WADLParser
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+
+
+class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Custom redirection handler to also do it for POST requests which the
+    standard library does not do by default.
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        # Force the same behaviour for GET, HEAD, and POST.
+        m = req.get_method()
+        if (not (code in (301, 302, 303, 307) and
+                 m in ("GET", "HEAD", "POST"))):
+            raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
+
+        # be conciliant with URIs containing a space
+        newurl = newurl.replace(' ', '%20')
+        CONTENT_HEADERS = ("content-length", "content-type")
+        newheaders = dict((k, v) for k, v in req.headers.items()
+                          if k.lower() not in CONTENT_HEADERS)
+
+        # Also redirect the data of the request which the standard library
+        # interestingly enough does not do.
+        return urllib.request.Request(
+            newurl, headers=newheaders,
+            data=req.data,
+            origin_req_host=req.origin_req_host,
+            unverifiable=True)
 
 
 class Client(object):
@@ -132,15 +163,19 @@ class Client(object):
         base_url = base_url.strip("/")
         self.base_url = base_url
 
-        # Authentication
+        # Only add the authentication handler if required.
+        handlers = []
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(auth_handler)
-            # install globally
-            urllib.request.install_opener(opener)
+            handlers.append(urllib.request.HTTPDigestAuthHandler(password_mgr))
+
+        # Always add the redirection handler.
+        handlers.append(CustomRedirectHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib.request.build_opener(*handlers)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -1192,8 +1227,9 @@ class Client(object):
 
     def _download(self, url, return_string=False, data=None):
         code, data = download_url(
-            url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data, timeout=self.timeout)
+            url, opener=self._url_opener, headers=self.request_headers,
+            debug=self.debug, return_string=return_string, data=data,
+            timeout=self.timeout)
         # get detailed server response message
         if code != 200:
             try:
@@ -1280,14 +1316,16 @@ class Client(object):
 
         headers = self.request_headers
         debug = self.debug
+        opener = self._url_opener
 
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
                     # Catch 404s.
                     try:
-                        code, data = download_url(url, headers=headers,
-                                                  debug=debug)
+                        code, data = download_url(
+                            url, opener=opener, headers=headers,
+                            debug=debug)
                         if code == 200:
                             wadl_queue.put((url, data))
                         else:
@@ -1485,7 +1523,7 @@ def build_url(base_url, service, major_version, resource_type,
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False,
+def download_url(url, opener, timeout=10, headers={}, debug=False,
                  return_string=True, data=None):
     """
     Returns a pair of tuples.
@@ -1503,7 +1541,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = urllib.request.urlopen(
+        url_obj = opener.open(
             urllib.request.Request(url=url, headers=headers),
             timeout=timeout,
             data=data)
