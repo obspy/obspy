@@ -42,12 +42,10 @@ install:
         MPL_VERSION=1.3.1
         BASEMAP_VERSION=1.0.7
       fi
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION matplotlib=$MPL_VERSION basemap=$BASEMAP_VERSION flake8 future lxml sqlalchemy mock nose gdal pyproj
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION matplotlib=$MPL_VERSION basemap=$BASEMAP_VERSION flake8 future lxml sqlalchemy mock nose gdal pyproj docopt coverage requests
   - source activate test-environment
   # install packages not available via conda
-  - pip install wheel
-  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
+  - pip install coveralls
   - pip install geographiclib
   # current pyimgur stable release has a py2.6 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py26.zip
