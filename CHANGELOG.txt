@@ -95,6 +95,10 @@ master:
       (see #1096)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
+  - obspy.imaging:
+    * fix some bugs in `obspy-scan` (see #1138)
+  - obspy.io.zmap
+    * Add support for time values with sub-second precision (see #1093)
   - obspy.mseed:
     * Blockette 100 is now only written for Traces that need it. Previously
       it was written or not for all Traces, depending on whether the last
@@ -121,8 +125,6 @@ master:
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
     * Calculating arrivals for underside reflections now works (see #1089)
-  - obspy.io.zmap
-    * Add support for time values with sub-second precision (see #1093)
 
 0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
@@ -476,8 +478,8 @@ master:
    * new client module to access servers based on the FDSN web service
      definition (http://www.fdsn.org/webservices/)
  - obspy.gse2:
-   * read/write STA2 header line which is officialy mandatory but in pratice
-     often not used
+   * read/write STA2 header line which is officially mandatory but in
+     pratice often not used
  - obspy.imaging:
    * more options to customize day plots
    * dayplot now plots matching picks (station, network, location) if a list
