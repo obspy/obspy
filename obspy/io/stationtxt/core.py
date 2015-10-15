@@ -247,7 +247,7 @@ def read_FDSN_station_text_file(path_or_file_object):
         inv.networks.extend(list(networks.values()))
     else:
         # Cannot really happen - just a safety measure.
-        raise NotImplementedError
+        raise NotImplementedError("Unkown level: " + str(level))
     return inv
 
 

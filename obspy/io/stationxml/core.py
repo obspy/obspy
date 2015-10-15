@@ -734,7 +734,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         don't trust ObsPy. Defaults to False.
     """
     # Check if any of the channels has a data availability element. In that
-    # case the namespaces needs to be adjusted.
+    # case the namespaces need to be adjusted.
     data_availability = False
     for net in inventory:
         for sta in net:

@@ -215,10 +215,10 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
     bulk = list(itertools.chain.from_iterable(bulk_channels.values()))
 
     # Save first to a temporary file, then cut the file into separate files.
-    temp_filename = NamedTemporaryFile().name
+    with NamedTemporaryFile() as tf:
+        temp_filename = tf.name
+        open_files = {}
 
-    open_files = {}
-    try:
         client.get_waveforms_bulk(bulk, filename=temp_filename)
         # If that succeeds, split the old file into multiple new ones.
         file_size = os.path.getsize(temp_filename)
@@ -253,11 +253,6 @@ def download_and_split_mseed_bulk(client, client_name, chunks, logger):
                         f.close()
                     except:
                         pass
-    finally:
-        try:
-            os.remove(temp_filename)
-        except:
-            pass
     logger.info("Client '%s' - Successfully downloaded %i channels (of %i)" % (
         client_name, len(open_files), original_bulk_length))
     return sorted(open_files.keys())
@@ -276,16 +271,10 @@ class SphericalNearestNeighbour(object):
     def query(self, points):
         points = self.spherical2cartesian(points)
         d, i = self.kd_tree.query(points)
-        new_d, new_i = [], []
 
         # Filter NaNs. Happens when not enough points are available.
-        for _d, _i in zip(d, i):
-            if not np.isfinite(_d):
-                continue
-            new_d.append(_d)
-            new_i.append(_i)
-
-        return np.array([new_d]), np.array([new_i])
+        m = np.isfinite(d)
+        return d[m], i[m]
 
     def query_pairs(self, maximum_distance):
         return self.kd_tree.query_pairs(maximum_distance)
@@ -296,11 +285,11 @@ class SphericalNearestNeighbour(object):
         Converts a list of :class:`~obspy.fdsn.download_status.Station`
         objects to an array of shape(len(list), 3) containing x/y/z in meters.
         """
-        # Create three arrays containing lat/lng/elevation.
+        # Create three arrays containing lat/lng/radius.
         shape = len(data)
         lat = np.array([_i.latitude for _i in data], dtype=np.float64)
         lon = np.array([_i.longitude for _i in data], dtype=np.float64)
-        r = np.array([EARTH_RADIUS for _i in data], dtype=np.float64)
+        r = np.array([EARTH_RADIUS for _ in data], dtype=np.float64)
         # Convert data from lat/lng to x/y/z.
         colat = 90.0 - lat
         cart_data = np.empty((shape, 3), dtype=np.float64)
@@ -329,7 +318,7 @@ def filter_channel_priority(channels, key, priorities=None):
     :param priorities: The desired channels with descending priority. Channels
     will be matched by fnmatch.fnmatch() so wildcards and sequences are
     supported. The advisable form to request the three standard components
-    of a channel is "HH[Z,N,E]" to avoid getting e.g. rotated components.
+    of a channel is "HH[ZNE]" to avoid getting e.g. rotated components.
     :returns: A new list containing only the filtered channels.
     """
     if priorities is None:
@@ -435,8 +424,8 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     :param endtime: The end time.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
 
-    The rules are simple, if it is a function, network, station, channels,
-    starttime, and endtime are passed as arguments.
+    The rules are simple, if it is a function, then the network, station,
+    channels, start time, and end time parameters are passed to it.
 
     If it is a string, and it contains ``"{network}"``, and ``"{station}"``
     formatting specifiers, ``str.format()`` is called.
@@ -450,10 +439,10 @@ def get_stationxml_filename(str_or_fct, network, station, channels,
     # Call if possible.
     if callable(str_or_fct):
         path = str_or_fct(network, station, channels, starttime, endtime)
-    # Check if its a format template.
+    # Check if it's a format template.
     elif ("{network}" in str_or_fct) and ("{station}" in str_or_fct):
         path = str_or_fct.format(network=network, station=station)
-    # Otherwise assume its a path.
+    # Otherwise assume it's a path.
     else:
         path = os.path.join(str_or_fct, "{network}.{station}.xml".format(
             network=network, station=station))
@@ -487,10 +476,10 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     """
     Helper function getting the filename of a MiniSEED file.
 
-    The rules are simple, if it is a function, network, station, location,
-    channel, starttime, and endtime are passed as arguments and the resulting
-    string is returned. If the return values is ``True``, the particular
-    time interval will be ignored.
+    The rules are simple, if it is a function, then the network, station,
+    location, channel, start time, and end time parameters are passed to it
+    and the resulting string is returned. If the return values is ``True``,
+    the particular time interval will be ignored.
 
     If it is a string, and it contains ``"{network}"``,  ``"{station}"``,
     ``"{location}"``, ``"{channel}"``, ``"{starttime}"``, and ``"{endtime}"``
@@ -501,9 +490,9 @@ def get_mseed_filename(str_or_fct, network, station, location, channel,
     ``"FOLDER_NAME/NET.STA.LOC.CHAN__STARTTIME__ENDTIME.mseed"``
 
     In the last two cases, the times will be formatted with
-    ``"%Y-%m-%dT%H-%M-%SZ"``.
+    ``"%Y%m%dT%H%M%SZ"``.
     """
-    strftime = "%Y-%m-%dT%H-%M-%SZ"
+    strftime = "%Y%m%dT%H%M%SZ"
     if callable(str_or_fct):
         path = str_or_fct(network, station, location, channel, starttime,
                           endtime)

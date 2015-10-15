@@ -199,17 +199,17 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
-                "HH[Z,N,E]", "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]",
-                "LH[Z,N,E]"])
+                "HH[ZNE]", "BH[ZNE]", "MH[ZNE]", "EH[ZNE]",
+                "LH[ZNE]"])
         self.assertEqual(filtered_channels, [c4])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
-                "BH[Z,N,E]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+                "BH[ZNE]", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
         self.assertEqual(filtered_channels, [c1, c3])
 
         filtered_channels = filter_channel_priority(
-            channels, key="channel", priorities=["LH[Z,N,E]"])
+            channels, key="channel", priorities=["LH[ZNE]"])
         self.assertEqual(filtered_channels, [])
 
         filtered_channels = filter_channel_priority(
@@ -218,12 +218,12 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
-                "BH*", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+                "BH*", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
         self.assertEqual(filtered_channels, [c1, c3])
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
-                "BH[N,Z]", "MH[Z,N,E]", "EH[Z,N,E]", "LH[Z,N,E]"])
+                "BH[NZ]", "MH[ZNE]", "EH[ZNE]", "LH[ZNE]"])
         self.assertEqual(filtered_channels, [c3])
 
         filtered_channels = filter_channel_priority(
@@ -344,7 +344,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         """
         Mock test for the StationXML downloading.
 
-        Does not do much and is not a proper test but its something and
+        Does not do much and is not a proper test but it's something and
         makes sure there is not obvious logic error.
         """
         bulk = [
@@ -595,7 +595,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
                 client=client, client_name=client_name, chunks=chunks,
                 logger=logger)
 
-            # Nof five files but all the same channel.
+            # Now five files but all the same channel.
             contents = [("file_1.mseed", "BW.ALTM..EHE"),
                         ("file_2.mseed", "BW.ALTM..EHE"),
                         ("file_3.mseed", "BW.ALTM..EHE"),
@@ -706,7 +706,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             # Record length of 512.
             self.assertTrue(
                 abs(tr.stats.starttime - obspy.UTCDateTime(1.6E5)) < 512)
-            # Endtime is exact again as no more overlaps occur.
+            # End time is exact again as no more overlaps occur.
             self.assertEqual(tr.stats.endtime, obspy.UTCDateTime(2.2E5))
 
         finally:
@@ -749,7 +749,7 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
             get_name, network="BW", station="FURT", channels=channels,
             starttime=starttime, endtime=endtime), "network__FURT")
 
-        # A dictionary with certain keys are also acceptable.
+        # A dictionary with certain keys is also acceptable.
         def get_name(network, station, channels, starttime, endtime):
             return {"missing_channels": [c1],
                     "available_channels": [c2],
@@ -807,27 +807,27 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
                                location="", channel="BHE",
                                starttime=starttime, endtime=endtime),
             os.path.join(
-                "FOLDER", "BW.FURT..BHE__2014-01-02T03-04-05Z__"
-                "2014-02-03T04-05-06Z.mseed"))
+                "FOLDER", "BW.FURT..BHE__20140102T030405Z__"
+                "20140203T040506Z.mseed"))
         self.assertEqual(
             get_mseed_filename("waveforms", network="BW", station="FURT",
                                location="00", channel="BHE",
                                starttime=starttime, endtime=endtime),
-            os.path.join("waveforms", "BW.FURT.00.BHE__2014-01-02T03-04-05Z__"
-                         "2014-02-03T04-05-06Z.mseed"))
+            os.path.join("waveforms", "BW.FURT.00.BHE__20140102T030405Z__"
+                         "20140203T040506Z.mseed"))
 
         # Passing a format string causes it to be used.
         self.assertEqual(get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
             "{starttime}_{endtime}.ms", network="BW", station="FURT",
             location="", channel="BHE", starttime=starttime, endtime=endtime),
-            "BW_FURT__BHE_2014-01-02T03-04-05Z_2014-02-03T04-05-06Z.ms")
+            "BW_FURT__BHE_20140102T030405Z_20140203T040506Z.ms")
         self.assertEqual(get_mseed_filename(
             "{network}_{station}_{location}_{channel}_"
             "{starttime}_{endtime}.ms", network="BW", station="FURT",
             location="00", channel="BHE", starttime=starttime,
             endtime=endtime),
-            "BW_FURT_00_BHE_2014-01-02T03-04-05Z_2014-02-03T04-05-06Z.ms")
+            "BW_FURT_00_BHE_20140102T030405Z_20140203T040506Z.ms")
 
         # A passed function will be executed.
         def get_name(network, station, location, channel, starttime, endtime):
@@ -969,7 +969,7 @@ class StationTestCase(unittest.TestCase):
     """
     def test_has_existing_or_downloaded_time_intervals(self):
         """
-        Tests for the property testing for existing or downloaded time
+        Tests for the property that tests for existing or downloaded time
         intervals.
         """
         st = obspy.UTCDateTime(2015, 1, 1)
@@ -990,7 +990,7 @@ class StationTestCase(unittest.TestCase):
         station.channels[0].intervals[0].status = STATUS.DOWNLOADED
         self.assertTrue(station.has_existing_or_downloaded_time_intervals)
 
-        # Some with EXISTS.
+        # Same with EXISTS.
         station.channels[0].intervals[0].status = STATUS.EXISTS
         self.assertTrue(station.has_existing_or_downloaded_time_intervals)
 
@@ -1000,7 +1000,7 @@ class StationTestCase(unittest.TestCase):
 
     def test_has_existing_time_intervals(self):
         """
-        Tests for the property testing for existing time intervals.
+        Tests for the property that tests for existing time intervals.
         """
         st = obspy.UTCDateTime(2015, 1, 1)
         time_intervals = [
@@ -1011,7 +1011,7 @@ class StationTestCase(unittest.TestCase):
                      intervals=copy.copy(time_intervals))
         channels = [c1, c2]
 
-        # False per default.
+        # False by default.
         station = Station(network="TA", station="A001", latitude=1,
                           longitude=2, channels=channels)
         self.assertFalse(station.has_existing_time_intervals)
@@ -1092,7 +1092,6 @@ class StationTestCase(unittest.TestCase):
     def test_temporal_bounds(self):
         """
         Tests the temporal bounds property.
-        :return:
         """
         st = obspy.UTCDateTime(2015, 1, 1)
         time_intervals = [
@@ -1141,7 +1140,7 @@ class StationTestCase(unittest.TestCase):
             c1.intervals[1].status = STATUS.DOWNLOADED
             c1.intervals[1].filename = filename
 
-            # Right no channel has been marked missing, thus nothing should
+            # Right now no channel has been marked missing, thus nothing should
             # happen.
             station.sanitize_downloads(logger)
             self.assertEqual(p.call_count, 0)
@@ -1262,7 +1261,7 @@ class StationTestCase(unittest.TestCase):
             p.reset_mock()
 
             # Now the get_stationxml_filename() function will return a
-            # string and the filename does not yet exists. All time
+            # string and the filename does not yet exist. All time
             # intervals require station information.
             station = _create_station()
             for cha in station.channels:
@@ -1272,6 +1271,7 @@ class StationTestCase(unittest.TestCase):
                 exists_p.return_value = False
                 station.prepare_stationxml_download(
                     stationxml_storage="random", logger=logger)
+            self.assertEqual(p.call_count, 1)
             # Called twice, once for the directory, once for the file. Both
             # return False as enforced with the mock.
             self.assertEqual(exists_p.call_count, 2)
@@ -1315,8 +1315,9 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
-            # thats needed is already available.
+            # that's needed is already available.
             self.assertEqual(station.stationxml_status, STATUS.EXISTS)
             self.assertEqual(station.miss_station_information, {})
             self.assertEqual(station.want_station_information,
@@ -1344,8 +1345,9 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
-            # thats needed is already available.
+            # that's needed is already available.
             self.assertEqual(station.stationxml_status,
                              STATUS.NEEDS_DOWNLOADING)
             self.assertEqual(station.have_station_information, {})
@@ -1376,8 +1378,9 @@ class StationTestCase(unittest.TestCase):
                                             obspy.UTCDateTime(2016, 1, 1), "")]
                     station.prepare_stationxml_download(
                         stationxml_storage="random", logger=logger)
+                    self.assertEqual(p.call_count, 0)
             # It then should not attempt to download anything as everything
-            # thats needed is already available.
+            # that's needed is already available.
             self.assertEqual(STATUS.NEEDS_DOWNLOADING,
                              station.stationxml_status)
             self.assertEqual({}, station.have_station_information)
@@ -1425,7 +1428,7 @@ class StationTestCase(unittest.TestCase):
                     "available_channels": [],
                     "filename": os.path.join("random", "TA.AA01_.xml")
                 }
-                pass
+
             station = _create_station()
             for cha in station.channels:
                 for ti in cha.intervals:
@@ -1454,7 +1457,7 @@ class StationTestCase(unittest.TestCase):
                     "available_channels": channels[:],
                     "filename": os.path.join("random", "TA.AA01_.xml")
                 }
-                pass
+
             station = _create_station()
             for cha in station.channels:
                 for ti in cha.intervals:
@@ -1485,14 +1488,14 @@ class StationTestCase(unittest.TestCase):
                         [_i for _i in channels if _i[0] == ""],
                     "filename": os.path.join("random", "TA.AA01_.xml")
                 }
-                pass
+
             station = _create_station()
             for cha in station.channels:
                 for ti in cha.intervals:
                     ti.status = STATUS.DOWNLOADED
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
-            # The directory should have been created if it does not exists.
+            # The directory should have been created if it does not exist.
             self.assertEqual(p.call_count, 1)
             self.assertEqual(p.call_args[0][0], "random")
             self.assertEqual(station.stationxml_status,
@@ -1521,14 +1524,14 @@ class StationTestCase(unittest.TestCase):
                     "available_channels": [],
                     "filename": os.path.join("random", "TA.AA01_.xml")
                 }
-                pass
+
             station = _create_station()
             for cha in station.channels:
                 for ti in cha.intervals:
                     ti.status = STATUS.DOWNLOADED
             station.prepare_stationxml_download(
                 stationxml_storage=stationxml_storage, logger=logger)
-            # The directory should have been created if it does not exists.
+            # The directory should have been created if it does not exist.
             self.assertEqual(p.call_count, 1)
             self.assertEqual(p.call_args[0][0], "random")
             self.assertEqual(station.stationxml_status,
@@ -1658,7 +1661,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.assertFalse(bool(c))
         self.assertEqual(len(c), 0)
 
-        # Only the one at longitude 200 should be removed as it is the only one
+        # Only the one at depth 200 should be removed as it is the only one
         # that has two neighbours inside the filter radius.
         c.stations = {
             ("A", "A"): Station("A", "A", 0, 0, []),
@@ -1892,7 +1895,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
                 "download_helpers.ClientDownloadHelper._check_downloaded_data")
     def test_download_mseed(self, patch_check_data, patch_download_mseed):
         """
-        Test the MiniSEED downloading from a client helper object.
+        Test the helper object that downloads from a client.
         """
         patch_check_data.return_value = (20, 5)
 
@@ -2021,10 +2024,11 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
                                  patch_get_stationxml_contents,
                                  patch_download_stationxml):
         """
-        Test the StationXML downloading from a client helper object.
+        Tests the helper objects that downloads station information from a
+        client.
 
         This (like some others) is a bit of a silly test as it is largely
-        mocked but at least it makes sure everything can executed.
+        mocked but at least it makes sure everything can be executed.
         """
         patch_getsize.return_value = 100
 
@@ -2086,15 +2090,13 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
 
     def test_parse_miniseed_filenames(self):
         """
-        Tests the parse MiniSEED filesnames.
+        Tests the MiniSEED filename parsing of the helper objects.
         """
         c = self._init_client()
 
-        tf = NamedTemporaryFile()
-        tf.close()
-        filename = tf.name
-
-        try:
+        with NamedTemporaryFile() as tf:
+            tf.close()
+            filename = tf.name
             tr = obspy.read()[0]
             tr.write(filename, format="mseed")
             result = c._parse_miniseed_filenames([filename], self.restrictions)
@@ -2124,11 +2126,12 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             result = c._parse_miniseed_filenames([filename], self.restrictions)
             self.assertEqual(len(result), 0)
 
-        finally:
-            try:
-                os.remove(filename)
-            except OSError:
-                pass
+            # File no longer exists.
+            assert os.path.exists(filename) is False
+
+            # Write something to make sure the context manager works.
+            with open(filename, "w") as buf:
+                buf.write("obspy")
 
 
 class DownloadHelperTestCase(unittest.TestCase):
@@ -2144,7 +2147,7 @@ class DownloadHelperTestCase(unittest.TestCase):
         d = MassDownloader()
         self.assertEqual(patch.call_count, 1)
         # The amount of services is variable and more and more get added.
-        # Assert its larger then 8 and contains a couple stable ones.
+        # Assert it's larger then 8 and contains a couple stable ones.
         self.assertTrue(len(d.providers) > 8)
         self.assertTrue("IRIS" in d.providers)
         self.assertTrue("ORFEUS" in d.providers)

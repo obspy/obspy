@@ -29,7 +29,7 @@ master:
    * Now requests gzipped data for the XML files. Much smaller files!
    * The station service can now also be used to download files in the text
      format. This has limited information but is much faster.
-   * New mass downloader to assist in downloading data across a larg number
+   * New mass downloader to assist in downloading data across a large number
      of FDSN web services.
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN

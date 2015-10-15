@@ -25,13 +25,13 @@ class Restrictions(object):
 
     >>> import obspy
     >>> restrictions = Restrictions(
-    ...     # Get data from 5 minutes before the event to one hours after the
+    ...     # Get data from 5 minutes before the event to one hour after the
     ...     # event.
     ...     starttime=obspy.UTCDateTime(2012, 1, 1),
     ...     endtime=obspy.UTCDateTime(2012, 1, 2),
     ...     # You might not want to deal with gaps in the data.
     ...     reject_channels_with_gaps=True,
-    ...     # And you might only want waveform that have data for at least
+    ...     # And you might only want waveforms that have data for at least
     ...     # 95 % of the requested time span.
     ...     minimum_length=0.95,
     ...     # No two stations should be closer than 10 km to each other.
@@ -39,8 +39,8 @@ class Restrictions(object):
     ...     # Only HH or BH channels. If a station has HH channels,
     ...     # those will be downloaded, otherwise the BH. Nothing will be
     ...     # downloaded if it has neither.
-    ...     channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]"),
-    ...     # Locations codes are arbitrary and there is no rule which
+    ...     channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+    ...     # Location codes are arbitrary and there is no rule as to which
     ...     # location is best.
     ...     location_priorities=("", "00", "10"))
 
@@ -78,7 +78,7 @@ class Restrictions(object):
 
     :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: The endtime of the data.
+    :param endtime: The end time of the data.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param station_starttime: The start time of the station files. If not
         given, the ``starttime`` argument will be used. This is useful when
@@ -86,8 +86,8 @@ class Restrictions(object):
         station file archive as StationXML files can be downloaded once and
         for the whole time span.
     :type station_starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param station_endtime: The endtime of the station files. Analogous to
-        the the ``station_starttime`` argument.
+    :param station_endtime: The end time of the station files. Analogous to
+        the ``station_starttime`` argument.
     :type station_endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param chunklength_in_sec: The length of one chunk in seconds. If set,
         the time between ``starttime`` and ``endtime`` will be divided into
@@ -136,9 +136,9 @@ class Restrictions(object):
                  network=None, station=None, location=None, channel=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
-                 channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]",
-                                     "MH[Z,N,E]", "EH[Z,N,E]",
-                                     "LH[Z,N,E]"),
+                 channel_priorities=("HH[ZNE]", "BH[ZNE]",
+                                     "MH[ZNE]", "EH[ZNE]",
+                                     "LH[ZNE]"),
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)

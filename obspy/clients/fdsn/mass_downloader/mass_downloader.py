@@ -120,14 +120,14 @@ class MassDownloader(object):
         :param mseed_storage: Where to store the waveform files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type mseed_storage: str or fct
+        :type mseed_storage: str or function
         :param stationxml_storage: Where to store the StationXML files. See
             the :mod:`~obspy.clients.fdsn.mass_downloader` documentation for
             more details.
-        :type stationxml_storage: str of fct
+        :type stationxml_storage: str or function
         :param download_chunk_size_in_mb: MiniSEED data will be downloaded
             in bulk chunks. This settings limits the chunk size. A higher
-            numbers means that less total download requests will be send,
+            number means that less total download requests will be sent,
             but each individual download request will be larger.
         :type download_chunk_size_in_mb: float
         :param threads_per_client: The number of download threads launched
@@ -213,7 +213,7 @@ class MassDownloader(object):
                 helper.sanitize_downloads()
 
             # Filter afterwards if availability information is not reliable.
-            # This unfortunately results in already downloaded data to be
+            # This unfortunately results in already downloaded data being
             # discarded but it is the only currently feasible way.
             if not helper.is_availability_reliable:
                 helper.filter_stations_based_on_minimum_distance(
@@ -309,8 +309,8 @@ class MassDownloader(object):
             clients = p.map(_get_client, self.providers)
         p.close()
         for warning in w:
-            logger.debug("Warning during initializing one of the clients: " +
-                         str(warning.message))
+            logger.debug("Warning during initialization of one of the "
+                         "clients: " + str(warning.message))
 
         clients = {key: value for key, value in clients if value is not None}
         # Write to initialized clients dictionary preserving order.

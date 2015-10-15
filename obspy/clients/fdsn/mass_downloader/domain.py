@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Domain definitions for the the download helpers.
+Domain definitions for the download helpers.
 
 Subclass the :class:`~obspy.clients.fdsn.mass_downloader.domain.Domain` class
 to define custom and potentially more complex domains. See its documentation
@@ -25,7 +25,7 @@ class Domain(with_metaclass(ABCMeta)):
     """
     Abstract base class defining a domain - subclass it to define a new domain.
 
-    Each subclass has to implement the :meth:`~.get_query_parameters`
+    Each subclass must implement the :meth:`~.get_query_parameters`
     method and optionally the :meth:`~.is_in_domain` method which enables
     the construction of arbitrarily complex domains. The
     :meth:`~.get_query_parameters` method must return the query parameters to
@@ -97,7 +97,7 @@ class Domain(with_metaclass(ABCMeta)):
         * ``minlongitude``
         * ``maxlongitude``
 
-        For cirular queries:
+        For circular queries:
 
         * ``latitude``
         * ``longitude``

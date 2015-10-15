@@ -846,9 +846,9 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.side_effect = custom_side_effects
 
         # Some custom urls
-        base_url_event = "http://other_url.com/beta/event_service/11"
-        base_url_station = "http://some_url.com/beta2/station/7"
-        base_url_ds = "http://new_url.com/beta3/dataselect/8"
+        base_url_event = "http://example.com/beta/event_service/11"
+        base_url_station = "http://example.org/beta2/station/7"
+        base_url_ds = "http://example.edu/beta3/dataselect/8"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.

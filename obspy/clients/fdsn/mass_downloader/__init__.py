@@ -25,8 +25,8 @@ Directly using the FDSN web services for example via the
 :mod:`obspy.clients.fdsn` client is fine for small amounts of data but quickly
 becomes cumbersome for larger data sets. Many data centers do provide tools to
 easily download larger amounts of data but that is usually only from one data
-center. Now most seismologist don't really care a lot where the data they
-download originates from - they just want the data for their use case and
+center. Now most seismologists don't really care a lot where the data they
+download originates - they just want the data for their use case and
 oftentimes they want as much data as they can get. As the number of FDSN
 compliant web services increases this becomes more and more cumbersome.  That
 is where this module comes in. You
@@ -43,7 +43,7 @@ information across all known FDSN web service implementations producing a
 1. figuring out what stations each provider offers,
 2. downloading MiniSEED and associated StationXML meta information in an
    efficient and data center friendly manner, and
-3. deal with all the nasty real-world data issues like missing or incomplete
+3. dealing with all the nasty real-world data issues like missing or incomplete
    data, duplicate data across data centers, e.g.
 
    * Basic optional automatic quality control by assuring that the data has
@@ -64,7 +64,7 @@ annotated examples. They can serve as templates for your own needs.
 Earthquake Data
 ~~~~~~~~~~~~~~~
 
-The classic seismological data set is consisting of waveform recordings for a
+The classic seismological data set consists of waveform recordings for a
 certain earthquake. This example downloads all data it can find for the
 Tohoku-Oki Earthquake from 5 minutes before the earthquake centroid time to 1
 hour after.  It will furthermore only download data with an epicentral distance
@@ -88,11 +88,11 @@ ObsPy knows of and combine it into one data set.
                             minradius=70.0, maxradius=90.0)
 
     restrictions = Restrictions(
-        # Get data from 5 minutes before the event to one hours after the
+        # Get data from 5 minutes before the event to one hour after the
         # event. This defines the temporal bounds of the waveform data.
         starttime=origin_time - 5 * 60,
         endtime=origin_time + 3600,
-        # You might not want to deal with gaps in the data. If this settings is
+        # You might not want to deal with gaps in the data. If this setting is
         # True, any trace with a gap/overlap will be discarded.
         reject_channels_with_gaps=True,
         # And you might only want waveforms that have data for at least 95 % of
@@ -101,21 +101,21 @@ ObsPy knows of and combine it into one data set.
         minimum_length=0.95,
         # No two stations should be closer than 10 km to each other. This is
         # useful to for example filter out stations that are part of different
-        # networks but at the same physical station. Settings this to zero or
-        # None will disable that filtering.
+        # networks but at the same physical station. Settings this option to
+        # zero or None will disable that filtering.
         minimum_interstation_distance_in_m=10E3,
         # Only HH or BH channels. If a station has HH channels, those will be
         # downloaded, otherwise the BH. Nothing will be downloaded if it has
         # neither. You can add more/less patterns if you like.
-        channel_priorities=("HH[Z,N,E]", "BH[Z,N,E]"),
-        # Locations codes are arbitrary and there is no rule which location is
-        # best. Same logic as for the previous setting.
+        channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+        # Location codes are arbitrary and there is no rule as to which
+        # location is best. Same logic as for the previous setting.
         location_priorities=("", "00", "10"))
 
     # No specified providers will result in all known ones being queried.
     mdl = MassDownloader()
-    # The data will be downloaded to ``./waveforms/`` ans ``./stations`` with
-    # autmatically chosen names.
+    # The data will be downloaded to the ``./waveforms/`` and ``./stations/``
+    # folders with automatically chosen file names.
     mdl.download(domain, restrictions, mseed_storage="waveforms",
                  stationxml_storage="stations")
 
@@ -197,7 +197,7 @@ the queried data:
 :class:`~obspy.clients.fdsn.mass_downloader.domain.CircularDomain`, and
 :class:`~obspy.clients.fdsn.mass_downloader.domain.GlobalDomain`. Subclassing
 :class:`~obspy.clients.fdsn.mass_downloader.domain.Domain` enables the
-construction of arbitrary complex domains. Please see the
+construction of arbitrarily complex domains. Please see the
 :class:`~obspy.clients.fdsn.mass_downloader.domain` module for more details.
 Instances of these classes will later be passed to the function sparking the
 downloading process. A rectangular domain for example is defined like this:
@@ -221,21 +221,23 @@ the parameters.
 ...     reject_channels_with_gaps=True,
 ...     minimum_length=0.9,
 ...     minimum_interstation_distance_in_m=1000,
-...     channel_priorities=["HH[Z,N,E]", "BH[Z,N,E]"],
+...     channel_priorities=["HH[ZNE]", "BH[ZNE]"],
 ...     location_priorities=["", "00", "01"])
 
 
 Step 2: Storage Options
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-After determining what to download, the helpers must know where to store the to
-be downloaded data. This requires some flexibility in case this is integrated
-as a component into a bigger system. An example of this is a toolbox that has a
-database to manage its data. A major concern is to not download already
-existing data. In order to enable such a use case the download helpers can be
-given functions that are evaluated when determining the filenames of the to be
-downloaded data.  Depending on the return value, the helper class will download
-the whole, only parts, or even nothing, of that particular piece of data.
+After determining what to download, the helpers must know where to store the
+requested data. That requires some flexibility in case the mass downloader
+is to be integrated as a component into a bigger system. An example is
+a toolbox that has a database to manage its data.
+
+A major concern is to not download pre-existing data. In order to enable such
+a use case the download helpers can be given functions that are evaluated when
+determining the file names of the requested data. Depending on the return
+value, the helper class will download the whole, part, or even none, of that
+particular piece of data.
 
 Storing MiniSEED waveforms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -259,7 +261,7 @@ This will cause all MiniSEED files to be stored as
 
 An example of this is
 
-``waveforms/BW.FURT..BHZ__2014-10-27T16-37-23Z__2014-10-27T16-37-33Z.mseed``
+``waveforms/BW.FURT..BHZ__20141027T163723Z__20141027T163733Z.mseed``
 
 which is rather general but also quite long.
 
@@ -269,15 +271,15 @@ For more control use the second possibility and provide a string containing
 ``{network}``, ``{station}``, ``{location}``, ``{channel}``, ``{starttime}``,
 and ``{endtime}`` format specifiers. These values will be interpolated to
 acquire the final filename. The start and end times will be formatted with
-``strftime()`` with the specifier ``'%Y-%m-%dT%H-%M-%SZ'`` in an effort to
-avoid colons which are troublesome in filenames on many systems.
+``strftime()`` with the specifier ``"%Y%m%dT%H%M%SZ"`` in an effort to
+avoid colons which are troublesome in file names on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
 ...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
 
 results in
 
-``some_folder/BW/FURT/.BHZ.2014-10-27T16-37-23Z.2014-10-27T16-37-33Z.mseed``.
+``some_folder/BW/FURT/.BHZ.20141027T163723Z.20141027T163733Z.mseed``.
 
 The download helpers will create any non-existing folders along the path.
 
@@ -300,8 +302,8 @@ filename.
 ...     if is_in_db(network, station, location, channel, starttime, endtime):
 ...         return True
 ...     # If a string is returned the file will be saved in that location.
-...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed." % (network, station,
-...                                                       location, channel))
+...     return os.path.join(ROOT, "%s.%s.%s.%s.mseed" % (network, station,
+...                                                      location, channel))
 >>> mseed_storage = get_mseed_storage
 
 .. note::
@@ -346,22 +348,23 @@ to ``"some_folder/BW/FURT.xml"``.
     the file. In case it does not contain all necessary channels, it will be
     deleted and **only those channels needed in the current run will be
     downloaded again**. Pass a custom function to the ``stationxml_path``
-    argument if you require different behavior as documented in the following.
+    argument if you require different behavior as documented in the
+    following section.
 
 **Option 3: Custom Function**
 
 As with the waveform data, the StationXML paths can also be set with the help
-of a function. The function in this case is a bit more complex then for the
+of a function. The function in this case is a bit more complex than for the
 waveform case. It has to return a dictionary with three keys:
 ``"available_channels"``, ``"missing_channels"``, and ``"filename"``.
-``"available_channel"`` is a list of channels that are already available as
+``"available_channels"`` is a list of channels that are already available as
 station information and that require no new download. Make sure to include all
 already available channels; this information is later used to discard
 MiniSEED files that have no corresponding station information.
 ``"missing_channels"`` is a list of channels for that particular station that
 must be downloaded and ``"filename"`` determines where to save these. Please
 note that in this particular case the StationXML file will be overwritten if it
-already exists and the ``"missing_channels"`` will be downloaded to it,
+already exists and only the ``"missing_channels"`` will be downloaded to it,
 independent of what already exists in the file.
 
 Alternatively the function can also return a string and the behaviour is the

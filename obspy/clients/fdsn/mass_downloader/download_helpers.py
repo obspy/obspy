@@ -93,11 +93,10 @@ class Station(object):
         "DOWNLOADED" or "EXISTS". Otherwise it returns False meaning it does
         not have to be considered anymore.
         """
-        status = []
+        status = set()
         for chan in self.channels:
             for ti in chan.intervals:
-                status.append(ti.status)
-        status = list(set(status))
+                status.add(ti.status)
         if STATUS.EXISTS in status or STATUS.DOWNLOADED in status:
             return True
         return False
@@ -141,7 +140,8 @@ class Station(object):
     @stationxml_filename.setter
     def stationxml_filename(self, value):
         """
-        Setter creating the directory for the file if does not already exist.
+        Setter creating the directory for the file if it does not already
+        exist.
         """
         self._stationxml_filename = value
         if not value:
@@ -179,7 +179,7 @@ class Station(object):
             lat=self.latitude,
             lng=self.longitude,
             filename=self.stationxml_filename,
-            status="exist" if (self.stationxml_filename and os.path.exists(
+            status="exists" if (self.stationxml_filename and os.path.exists(
                 self.stationxml_filename)) else "does not yet exist",
             want=", ".join(["%s.%s" % (_i[0], _i[1]) for _i in
                             self.want_station_information.keys()]),
@@ -293,7 +293,7 @@ class Station(object):
             self.stationxml_filename = storage["filename"]
 
             # Raise a warning if something is missing, but do not raise an
-            # exception or halt the programm at this point.
+            # exception or halt the program at this point.
             have_channels = set(self.have_station_information.keys())
             miss_channels = set(self.miss_station_information.keys())
             want_channels = set(self.want_station_information.keys())
@@ -319,8 +319,8 @@ class Station(object):
 
         A MiniSEED interval will be ignored, if the `mseed_storage` function
         returns `True`.
-        Possible statuses after this the method execution are IGNORE, EXISTS,
-        and NEEDS_DOWNLOADING.
+        Possible statuses after method execution are IGNORE, EXISTS, and
+        NEEDS_DOWNLOADING.
 
         :param mseed_storage:
         """
@@ -381,7 +381,7 @@ class Channel(object):
         """
         Determine if the channel requires any station information.
 
-        As soon as at the status of at least one interval is either
+        As soon as the status of at least one interval is either
         ``DOWNLOADED`` or ``EXISTS`` the whole channel will be thought of as
         requiring station information. This does not yet mean that station
         information will be downloaded. That is decided at a later stage.
@@ -450,7 +450,7 @@ class ClientDownloadHelper(object):
     :type domain: :class:`~.domain.Domain` subclass
     :param domain: The domain definition.
     :param mseed_storage: The MiniSEED storage settings.
-    :param stationxml_storage: THe StationXML storage settings.
+    :param stationxml_storage: The StationXML storage settings.
     :param logger: An active logger instance.
     """
     def __init__(self, client, client_name, restrictions, domain,
@@ -473,7 +473,6 @@ class ClientDownloadHelper(object):
             None: "Unknown reliability of availability information",
             True: "Reliable availability information",
             False: "Non-reliable availability information"
-
         }
         reliability = avail_map[self.is_availability_reliable]
         return (
@@ -551,14 +550,12 @@ class ClientDownloadHelper(object):
 
             # Remove these indices this results in a set of stations we wish to
             # keep.
-            remaining_stations.extend(
-                set([_i[1] for _i in itertools.filterfalse(
-                    lambda x: x[0] in indexes_to_remove,
-                    enumerate(stations))]))
-            rejected_stations.extend(
-                set([_i[1] for _i in filter(
-                    lambda x: x[0] in indexes_to_remove,
-                    enumerate(stations))]))
+            remaining_stations.extend(set(
+                _i[1] for _i in enumerate(stations)
+                if _i[0] not in indexes_to_remove))
+            rejected_stations.extend(set(
+                _i[1] for _i in enumerate(stations)
+                if _i[0] in indexes_to_remove))
         # Otherwise it will add new stations approximating a Poisson disk
         # distribution.
         else:
@@ -568,13 +565,13 @@ class ClientDownloadHelper(object):
                     existing_stations)
                 # Now we have to get the distance to the closest existing
                 # station for all new stations.
-                distances = np.ma.array(existing_kd_tree.query(stations)[0][0])
+                distances = np.ma.array(existing_kd_tree.query(stations)[0])
                 if np.isinf(distances[0]):
                     break
                 distances.mask = False
 
                 # Step one is to get rid of all stations that are closer
-                # then the minimum distance to any existing station.
+                # than the minimum distance to any existing station.
                 remove = np.where(
                     distances <
                     self.restrictions.minimum_interstation_distance_in_m)[0]
@@ -709,7 +706,7 @@ class ClientDownloadHelper(object):
             else:
                 station.stationxml_status = STATUS.DOWNLOADED
 
-        # Now loop over all stations and that the status of the ones that
+        # Now loop over all stations and set the status of the ones that
         # still need downloading to download failed.
         for station in self.stations.values():
             if station.stationxml_status == STATUS.NEEDS_DOWNLOADING:
@@ -726,9 +723,10 @@ class ClientDownloadHelper(object):
         """
         Actually download MiniSEED data.
 
-        :param chunk_size_in_mb:
-        :param threads_per_client:
-        :return:
+        :param chunk_size_in_mb: Attempt to download data in chunks of this
+            size.
+        :param threads_per_client: Threads to launch per client. 3 seems to
+            be a value in agreement with some data centers.
         """
         # Estimate the download size to have equally sized chunks.
         channel_sampling_rate = {
@@ -870,7 +868,7 @@ class ClientDownloadHelper(object):
 
     def _check_downloaded_data(self):
         """
-        Read the downloaded data, set the proper status flags and a remove
+        Read the downloaded data, set the proper status flags and remove
         data that does not meet the QC criteria. It just checks the
         downloaded data for minimum length and gaps/overlaps.
 
@@ -882,7 +880,7 @@ class ClientDownloadHelper(object):
             for cha in sta.channels:
                 for interval in cha.intervals:
                     # The status of the interval should not have changed if
-                    # it did not require doenloading in the first place.
+                    # it did not require downloading in the first place.
                     if interval.status != STATUS.NEEDS_DOWNLOADING:
                         continue
 
@@ -925,9 +923,10 @@ class ClientDownloadHelper(object):
                     # If user did not want gappy files, remove them.
                     if self.restrictions.reject_channels_with_gaps is True and\
                             len(st) > 1:
-                        self.logger.info("File '%s' contains %i traces. Will "
-                                         "be deleted." % (interval.filename,
-                                                          len(st)))
+                        self.logger.info(
+                            "File '%s' has %i traces and thus contains "
+                            "gaps or overlaps. Will be deleted." % (
+                                interval.filename, len(st)))
                         utils.safe_delete(interval.filename)
                         discarded_bytes += size
                         interval.status = STATUS.DOWNLOAD_REJECTED
@@ -1014,7 +1013,7 @@ class ClientDownloadHelper(object):
 
     def get_availability(self):
         """
-        Queries the current client for information of what stations are
+        Queries the current client for information on what stations are
         available given the spatial and temporal restrictions.
         """
         # Check if stations needs to be filtered after downloading or if the
@@ -1041,7 +1040,7 @@ class ClientDownloadHelper(object):
 
         # Check the capabilities of the service and see what is the most
         # appropriate way of acquiring availability information. Some services
-        # right now require manual overwriting of what they claim to be
+        # right now require manual overriding of what they claim to be
         # capable of.
         if "matchtimeseries" in self.client.services["station"]:
             arguments["matchtimeseries"] = True
