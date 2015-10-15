@@ -25,6 +25,7 @@ import warnings
 
 with standard_library.hooks():
     import queue
+    import urllib.error
     import urllib.parse
     import urllib.request
     from collections import OrderedDict
@@ -36,11 +37,56 @@ from obspy import UTCDateTime, read_inventory
 from obspy.fdsn.header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                                OPTIONAL_PARAMETERS, PARAMETER_ALIASES,
                                URL_MAPPINGS, WADL_PARAMETERS_NOT_TO_BE_PARSED,
-                               FDSNException)
+                               FDSNException, FDSNRedirectException)
 from obspy.fdsn.wadl_parser import WADLParser
 
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+
+
+class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Custom redirection handler to also do it for POST requests which the
+    standard library does not do by default.
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        # Force the same behaviour for GET, HEAD, and POST.
+        m = req.get_method()
+        if (not (code in (301, 302, 303, 307) and
+                 m in ("GET", "HEAD", "POST"))):
+            raise urllib.error.HTTPError(req.full_url, code, msg, headers, fp)
+
+        # be conciliant with URIs containing a space
+        newurl = newurl.replace(' ', '%20')
+        CONTENT_HEADERS = ("content-length", "content-type")
+        newheaders = dict((k, v) for k, v in req.headers.items()
+                          if k.lower() not in CONTENT_HEADERS)
+
+        # Also redirect the data of the request which the standard library
+        # interestingly enough does not do.
+        return urllib.request.Request(
+            newurl, headers=newheaders,
+            data=req.data,
+            origin_req_host=req.origin_req_host,
+            unverifiable=True)
+
+
+class NoRedirectionHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Handler that does not direct!
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        raise FDSNRedirectException(
+            "Requests with credentials (username, password) are not being "
+            "redirected by default to improve security. To force redirects "
+            "and if you trust the data center, set `force_redirect` to True "
+            "when initializing the Client.")
 
 
 class Client(object):
@@ -55,7 +101,7 @@ class Client(object):
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None):
+                 timeout=120, service_mappings=None, force_redirect=False):
         """
         Initializes an FDSN Web Service client.
 
@@ -103,6 +149,13 @@ class Client(object):
             indicated by ``base_url`` and ``major_versions`` will be used. Any
             service that is manually specified as ``None`` (e.g.
             ``service_mappings={'event': None}``) will be deactivated.
+        :type force_redirect: bool
+        :param force_redirect: By default the client will follow all HTTP
+            redirects as long as no credentials (username and password)
+            are given. If credentials are given it will raise an exception
+            when a redirect is discovered. This is done to improve security.
+            Settings this flag to ``True`` will force all redirects to be
+            followed even if credentials are given.
         """
         self.debug = debug
         self.user = user
@@ -119,15 +172,23 @@ class Client(object):
         base_url = base_url.strip("/")
         self.base_url = base_url
 
-        # Authentication
+        # Only add the authentication handler if required.
+        handlers = []
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
             password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            auth_handler = urllib.request.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib.request.build_opener(auth_handler)
-            # install globally
-            urllib.request.install_opener(opener)
+            handlers.append(urllib.request.HTTPDigestAuthHandler(password_mgr))
+
+        if (user is None and password is None) or force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
+
+        # Don't install globally to not mess with other codes.
+        self._url_opener = urllib.request.build_opener(*handlers)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -1179,8 +1240,9 @@ class Client(object):
 
     def _download(self, url, return_string=False, data=None):
         code, data = download_url(
-            url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data, timeout=self.timeout)
+            url, opener=self._url_opener, headers=self.request_headers,
+            debug=self.debug, return_string=return_string, data=data,
+            timeout=self.timeout)
         # get detailed server response message
         if code != 200:
             try:
@@ -1267,15 +1329,21 @@ class Client(object):
 
         headers = self.request_headers
         debug = self.debug
+        opener = self._url_opener
 
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
                     # Catch 404s.
                     try:
-                        code, data = download_url(url, headers=headers,
-                                                  debug=debug)
+                        code, data = download_url(
+                            url, opener=opener, headers=headers,
+                            debug=debug)
                         if code == 200:
+                            wadl_queue.put((url, data))
+                        # Pass on the redirect exception.
+                        elif code is None and isinstance(
+                                data, FDSNRedirectException):
                             wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
@@ -1293,11 +1361,21 @@ class Client(object):
             thread.join(15)
 
         self.services = {}
+
+        # Collect the redirection exceptions to be able to raise nicer
+        # exceptions.
+        redirect_messages = set()
+
         for _ in range(wadl_queue.qsize()):
             item = wadl_queue.get()
             url, wadl = item
+
             if wadl is None:
                 continue
+            elif isinstance(wadl, FDSNRedirectException):
+                redirect_messages.add(str(wadl))
+                continue
+
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1326,6 +1404,9 @@ class Client(object):
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
+            if redirect_messages:
+                raise FDSNRedirectException(", ".join(redirect_messages))
+
             msg = ("No FDSN services could be discovered at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
@@ -1472,7 +1553,7 @@ def build_url(base_url, service, major_version, resource_type,
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False,
+def download_url(url, opener, timeout=10, headers={}, debug=False,
                  return_string=True, data=None):
     """
     Returns a pair of tuples.
@@ -1490,7 +1571,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print("Downloading %s" % url)
 
     try:
-        url_obj = urllib.request.urlopen(
+        url_obj = opener.open(
             urllib.request.Request(url=url, headers=headers),
             timeout=timeout,
             data=data)

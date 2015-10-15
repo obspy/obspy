@@ -19,6 +19,7 @@
       as negative integers (see #1151)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
+    * Follows redirects for POST requests (see #1143)
   - obspy.imaging:
     * fix some bugs in `obspy-scan` (see #1138)
   - obspy.mseed:

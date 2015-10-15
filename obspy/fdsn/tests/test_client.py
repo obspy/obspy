@@ -26,7 +26,8 @@ from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
-from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.fdsn.header import (DEFAULT_USER_AGENT, FDSNException,
+                               FDSNRedirectException)
 from obspy.station import Response
 
 
@@ -900,6 +901,139 @@ class ClientTestCase(unittest.TestCase):
             pass
         self.assertTrue(
             base_url_event in download_url_mock.call_args_list[0][0][0])
+
+    def test_redirection(self):
+        """
+        Tests the redirection of GET and POST requests. We redirect
+        everything if not authentication is used.
+
+        IRIS runs three services to test it:
+            http://ds.iris.edu/files/redirect/307/station/1
+            http://ds.iris.edu/files/redirect/307/dataselect/1
+            http://ds.iris.edu/files/redirect/307/event/1
+        """
+        c = Client("IRIS", service_mappings={
+            "station":
+                "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect":
+                "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event":
+                "http://ds.iris.edu/files/redirect/307/event/1"},
+                   user_agent=USER_AGENT)
+
+        st = c.get_waveforms(
+            network="IU", station="ANMO", location="00", channel="BHZ",
+            starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+            endtime=UTCDateTime("2010-02-27T06:30:01.000"))
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        inv = c.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"),
+            network="IU", station="ANMO", level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+        cat = c.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
+                           endtime=UTCDateTime("2001-01-07T01:05:00"),
+                           catalog="ISC")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(cat)))
+
+        # Also test the bulk requests which are done using POST requests.
+        bulk = (("TA", "A25A", "", "BHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")),
+                ("TA", "A25A", "", "BHE",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")))
+        st = c.get_waveforms_bulk(bulk, quality="B", longestonly=False)
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+        ]
+        inv = c.get_stations_bulk(bulk, level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+    def test_redirection_auth(self):
+        """
+        Tests the redirection of GET and POST requests using authentication.
+
+        By default these should not redirect and an exception is raised.
+        """
+        # Clear the cache.
+        Client._Client__service_discovery_cache.clear()
+
+        # The error will already be raised during the initialization in most
+        # cases.
+        self.assertRaises(
+            FDSNRedirectException,
+            Client, "IRIS", service_mappings={
+                "station": "http://ds.iris.edu/files/redirect/307/station/1",
+                "dataselect":
+                    "http://ds.iris.edu/files/redirect/307/dataselect/1",
+                "event": "http://ds.iris.edu/files/redirect/307/event/1"},
+            user="nobody@iris.edu", password="anonymous",
+            user_agent=USER_AGENT)
+
+        # The force_redirect flag overwrites that behaviour.
+        c_auth = Client("IRIS", service_mappings={
+            "station":
+                "http://ds.iris.edu/files/redirect/307/station/1",
+            "dataselect":
+                "http://ds.iris.edu/files/redirect/307/dataselect/1",
+            "event":
+                "http://ds.iris.edu/files/redirect/307/event/1"},
+            user="nobody@iris.edu", password="anonymous",
+            user_agent=USER_AGENT, force_redirect=True)
+
+        st = c_auth.get_waveforms(
+            network="IU", station="ANMO", location="00", channel="BHZ",
+            starttime=UTCDateTime("2010-02-27T06:30:00.000"),
+            endtime=UTCDateTime("2010-02-27T06:30:01.000"))
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        inv = c_auth.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"),
+            network="IU", station="ANMO", level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
+
+        cat = c_auth.get_events(starttime=UTCDateTime("2001-01-07T01:00:00"),
+                                endtime=UTCDateTime("2001-01-07T01:05:00"),
+                                catalog="ISC")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(cat)))
+
+        # Also test the bulk requests which are done using POST requests.
+        bulk = (("TA", "A25A", "", "BHZ",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")),
+                ("TA", "A25A", "", "BHE",
+                 UTCDateTime("2010-03-25T00:00:00"),
+                 UTCDateTime("2010-03-25T00:00:01")))
+        st = c_auth.get_waveforms_bulk(bulk, quality="B", longestonly=False)
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(st)))
+
+        starttime = UTCDateTime(1990, 1, 1)
+        endtime = UTCDateTime(1990, 1, 1) + 10
+        bulk = [
+            ["IU", "ANMO", "", "BHE", starttime, endtime],
+            ["IU", "CCM", "", "BHZ", starttime, endtime],
+        ]
+        inv = c_auth.get_stations_bulk(bulk, level="network")
+        # Just make sure something is being downloaded.
+        self.assertTrue(bool(len(inv.networks)))
 
 
 def suite():

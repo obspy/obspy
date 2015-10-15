@@ -6,7 +6,7 @@
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=6680830</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1305312</preferredOriginID>
-    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1305312" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="2274406" iris:contributorEventId="1047281">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1305312" iris:contributorOriginId="2274406" iris:contributor="ISC" iris:contributorEventId="1047281" iris:catalog="ISC">
         <time>
             <value>1997-10-14T09:53:11.0700</value>
         </time>

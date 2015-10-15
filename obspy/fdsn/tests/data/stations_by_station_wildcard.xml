@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:iris="http://www.fdsn.org/xml/station/1/iris">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.10</Module>
@@ -10,7 +10,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>268</TotalNumberStations>
   <SelectedNumberStations>4</SelectedNumberStations>
-  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_ANSS,_ANSS-BB,.EARTHSCOPE,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_STS-1,.UNRESTRICTED,_US-ALL,_US-REF">
+  <Station code="ADK" startDate="1995-08-20T00:00:00" endDate="2009-02-14T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_US-REF,_STS-1,_FDSN,_GSN-BROADBAND,_US-ALL,_ANSS,.EARTHSCOPE,_ANSS-BB,_FDSN-ALL,_REALTIME,.UNRESTRICTED,_GSN">
    <Comment>
     <Value>TEST DATA:  Calibration, and testing in progress.</Value>
     <BeginEffectiveTime>1995-08-24T00:00:00</BeginEffectiveTime>
@@ -56,7 +56,7 @@
    <TotalNumberChannels>74</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="AFI" startDate="1993-08-24T00:00:00" endDate="2009-05-11T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,_SPACIFIC,.SPACIFIC,_STS-1,.UNRESTRICTED">
+  <Station code="AFI" startDate="1993-08-24T00:00:00" endDate="2009-05-11T00:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_STS-1,_FDSN,_GSN-BROADBAND,_SPACIFIC,.SPACIFIC,_FDSN-ALL,.UNRESTRICTED,_GSN">
    <Comment>
     <Value>TEST DATA:  Calibration, and testing in progress.</Value>
     <BeginEffectiveTime>1993-08-24T00:00:00</BeginEffectiveTime>
@@ -82,7 +82,7 @@
    <TotalNumberChannels>95</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes=".CEUSN-CONTRIB,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,.TEST,.UNRESTRICTED">
+  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME,.UNRESTRICTED,_GSN,.TEST">
    <Comment>
     <Value>Time Uncertain.</Value>
     <BeginEffectiveTime>1996-05-20T19:20:00</BeginEffectiveTime>
@@ -98,7 +98,7 @@
    <TotalNumberChannels>172</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes=".CEUSN-CONTRIB,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,.TEST,.UNRESTRICTED">
+  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME,.UNRESTRICTED,_GSN,.TEST">
    <Comment>
     <Value>Station Maintenance.  Tests may be in progress.</Value>
     <BeginEffectiveTime>2001-04-25T14:00:00</BeginEffectiveTime>
