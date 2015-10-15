@@ -89,7 +89,7 @@ def is_FDSN_station_text_file(path_or_file_object):
             cur_pos = path_or_file_object.tell()
             first_line = path_or_file_object.readline()
         else:
-            with open(path_or_file_object, "rt") as fh:
+            with open(path_or_file_object, "rt", encoding="utf8") as fh:
                 first_line = fh.readline()
     except:
         return False
@@ -157,7 +157,8 @@ def read_FDSN_station_text_file(path_or_file_object):
     if hasattr(path_or_file_object, "read"):
         content = _read(path_or_file_object)
     else:
-        with open(path_or_file_object, "rt", newline="") as fh:
+        with open(path_or_file_object, "rt", newline="",
+                  encoding="utf8") as fh:
             content = _read(fh)
 
     # Figure out the type.
