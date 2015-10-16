@@ -162,48 +162,51 @@ seisuk_instrument_resp_removal.pdf
     else:
         is_filename = False
 
-    while True:
-        line = paz_file.readline()
-        if not line:
-            break
-        # lines starting with * are comments
-        if line.startswith('*'):
-            continue
-        if line.find('ZEROS') != -1:
-            a = line.split()
-            noz = int(a[1])
-            for _k in range(noz):
-                line = paz_file.readline()
+    try:
+        while True:
+            line = paz_file.readline()
+            if not line:
+                break
+            # lines starting with * are comments
+            if line.startswith('*'):
+                continue
+            if line.find('ZEROS') != -1:
                 a = line.split()
-                if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or \
-                   line.startswith('*') or not line:
-                    while len(zeros) < noz:
-                        zeros.append(complex(0, 0j))
-                    break
-                else:
-                    zeros.append(complex(float(a[0]), float(a[1])))
+                noz = int(a[1])
+                for _k in range(noz):
+                    line = paz_file.readline()
+                    a = line.split()
+                    if line.find('POLES') != -1 or \
+                       line.find('CONSTANT') != -1 or \
+                       line.startswith('*') or not line:
+                        while len(zeros) < noz:
+                            zeros.append(complex(0, 0j))
+                        break
+                    else:
+                        zeros.append(complex(float(a[0]), float(a[1])))
 
-        if line.find('POLES') != -1:
-            a = line.split()
-            nop = int(a[1])
-            for _k in range(nop):
-                line = paz_file.readline()
+            if line.find('POLES') != -1:
                 a = line.split()
-                if line.find('CONSTANT') != -1 or line.find('ZEROS') != -1 or \
-                   line.startswith('*') or not line:
-                    while len(poles) < nop:
-                        poles.append(complex(0, 0j))
-                    break
-                else:
-                    poles.append(complex(float(a[0]), float(a[1])))
-        if line.find('CONSTANT') != -1:
-            a = line.split()
-            # in the observatory this is the seismometer gain [muVolt/nm/s]
-            # the A0_normalization_factor is hardcoded to 1.0
-            constant = float(a[1])
-
-    if is_filename:
-        paz_file.close()
+                nop = int(a[1])
+                for _k in range(nop):
+                    line = paz_file.readline()
+                    a = line.split()
+                    if line.find('CONSTANT') != -1 or \
+                       line.find('ZEROS') != -1 or \
+                       line.startswith('*') or not line:
+                        while len(poles) < nop:
+                            poles.append(complex(0, 0j))
+                        break
+                    else:
+                        poles.append(complex(float(a[0]), float(a[1])))
+            if line.find('CONSTANT') != -1:
+                a = line.split()
+                # in the observatory this is the seismometer gain [muVolt/nm/s]
+                # the A0_normalization_factor is hardcoded to 1.0
+                constant = float(a[1])
+    finally:
+        if is_filename:
+            paz_file.close()
 
     # To convert the velocity response to the displacement response,
     # multiplication with jw is used. This is equivalent to one more
