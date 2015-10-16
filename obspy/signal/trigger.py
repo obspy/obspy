@@ -349,7 +349,8 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     # determine the indices where charfct falls below off-threshold
     ind2_ = np.empty_like(ind2, dtype=bool)
     ind2_[:-1] = np.diff(ind2) > 1
-    ind2_[-1] = False
+    # last occurence is missed by the diff, add it manually
+    ind2_[-1] = True
     of.extend(ind2[ind2_].tolist())
     on.extend(ind1[np.where(np.diff(ind1) > 1)[0] + 1].tolist())
     # include last pick if trigger is on or drop it
