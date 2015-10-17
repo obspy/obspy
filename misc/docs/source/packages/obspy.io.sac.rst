@@ -11,6 +11,7 @@
 
        core
        sacpz
+       pysac
        pysac.sactrace
        pysac.util
        pysac.arrayio
