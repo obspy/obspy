@@ -23,7 +23,7 @@ class TDDTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_(self):
+    def test_deconvolve_volt_to_velocity(self):
         """
         Test case for ctypes version of recursive_STALTA
         """
@@ -49,9 +49,13 @@ class TDDTestCase(unittest.TestCase):
             os.path.join(self.path, "tdd_deconvolved.npy"))
         deconvolved_got = deconvolve_volt_to_velocity(
             raw_in_volts, dpz, filter_low=0.05, filter_high=None,
-            bitweight=None, dec=None)
+            bitweight=None, dec=None, demean=True)
+        # we need to add absolute tolerance, otherwise we get a fail because of
+        # a zero crossing of the expected values (expected value array is
+        # -1e-10 at index 11480 in the array). standard deviation of expected
+        # array is 7.9e-07, so 1e-9 is really small.
         self.assertTrue(np.allclose(
-            deconvolved_got, deconvolved_expected, atol=0, rtol=1e-4))
+            deconvolved_got, deconvolved_expected, atol=1e-9, rtol=1e-4))
 
 
 def suite():
