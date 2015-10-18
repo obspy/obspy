@@ -1,16 +1,33 @@
-language: python
-python:
-  - 2.7
-  - 3.3
-  - 3.4
-  - 3.5
+language: c
+
+matrix:
+  include:
+    - os: linux
+      env: PYTHON_VERSION=2.7
+    - os: linux
+      env: PYTHON_VERSION=3.3
+    - os: linux
+      env: PYTHON_VERSION=3.4
+    - os: linux
+      env: PYTHON_VERSION=3.5
+
+    - os: osx
+      env: PYTHON_VERSION=2.7
+    - os: osx
+      env: PYTHON_VERSION=3.5
+
 sudo: false
+
 install:
-  - lsb_release -a # get info on the operating system
-  - if [[ "${TRAVIS_PYTHON_VERSION:0:1}" == '2' ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      export OS="MacOSX";
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+      export OS="Linux";
+    fi
+  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda-latest-${OS}-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-${OS}-x86_64.sh -O miniconda.sh;
     fi
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -19,9 +36,8 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  # Replace dep1 dep2 ... with your dependencies
   - |
-      if [[ "${TRAVIS_PYTHON_VERSION:0:1}" == '3' ]]; then
+      if [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
         NUMPY_VERSION=1.9.2
         SCIPY_VERSION=0.16.0
         MPL_VERSION=1.4.3
@@ -32,12 +48,26 @@ install:
         MPL_VERSION=1.3.1
         BASEMAP_VERSION=1.0.7
       fi
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION matplotlib=$MPL_VERSION basemap=$BASEMAP_VERSION flake8 future lxml sqlalchemy mock nose gdal pyproj
+  - conda create -q -n test-environment
+        python=$PYTHON_VERSION
+        numpy=$NUMPY_VERSION
+        scipy=$SCIPY_VERSION
+        matplotlib=$MPL_VERSION
+        basemap=$BASEMAP_VERSION
+        flake8
+        future
+        lxml
+        sqlalchemy
+        mock
+        nose
+        gdal
+        pyproj
+        docopt
+        coverage
+        requests
   - source activate test-environment
   # install packages not available via conda
-  - pip install wheel
-  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - pip install --use-wheel --find-links=/tmp/wheelhouse-master coveralls
+  - pip install coveralls
   - pip install geographiclib
   # current pyimgur stable release has a py2.6 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py26.zip
@@ -74,6 +104,7 @@ install:
   - git remote -vv
   - pip install --no-deps .
   - git status
+
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see
@@ -82,13 +113,16 @@ script:
   - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
   - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r
+
 after_success:
   - mv .coverage ../.coverage.empty
   - cd ..
   - coverage combine
   - coveralls
+
 notifications:
     email: false
+
 env:
   global:
     - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="
