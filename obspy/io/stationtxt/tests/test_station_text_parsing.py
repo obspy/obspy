@@ -61,11 +61,11 @@ class StationTextTestCase(unittest.TestCase):
 
         # Text with open files in text mode.
         for filename in txt_files:
-            with open(filename, "rt") as fh:
+            with open(filename, "rt", encoding="utf8") as fh:
                 self.assertTrue(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
         for filename in non_txt_files:
-            with open(filename, "rt") as fh:
+            with open(filename, "rt", encoding="utf8") as fh:
                 self.assertFalse(is_FDSN_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
 
@@ -83,12 +83,12 @@ class StationTextTestCase(unittest.TestCase):
 
         # Text with StringIO.
         for filename in txt_files:
-            with open(filename, "rt") as fh:
+            with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
                     self.assertTrue(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
         for filename in non_txt_files:
-            with open(filename, "rt") as fh:
+            with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
                     self.assertFalse(is_FDSN_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
@@ -125,7 +125,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from open file in text mode.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
@@ -145,7 +145,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from StringIO.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 inv = read_FDSN_station_text_file(buf)
@@ -210,7 +210,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from open file in text mode.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
@@ -230,7 +230,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from StringIO.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 inv = read_FDSN_station_text_file(buf)
@@ -416,7 +416,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from open file in text mode.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
@@ -436,7 +436,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from StringIO.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 inv = read_FDSN_station_text_file(buf)
@@ -486,7 +486,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from open file in text mode.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
@@ -506,7 +506,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from StringIO.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 inv = read_FDSN_station_text_file(buf)
@@ -576,7 +576,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from open file in text mode.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             inv = read_FDSN_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
@@ -596,7 +596,7 @@ class StationTextTestCase(unittest.TestCase):
         self.assertEqual(inv_obs, expected_inv)
 
         # Read from StringIO.
-        with open(filename, "rt") as fh:
+        with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
                 inv = read_FDSN_station_text_file(buf)
