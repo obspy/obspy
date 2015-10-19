@@ -11,6 +11,8 @@ import os
 
 import numpy as np
 
+import re
+
 from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
                              evaluateVelocityAt)
 
@@ -488,27 +490,27 @@ class VelocityModel(object):
         """
         This method reads in a velocity model from a "nd" ASCII text file, the
         format used by Xgbm. The name of the model file for model "modelname"
-        should be "modelname.nd". 
-        The format of the file is: 
-        depth pVel sVel Density Qp Qs 
-        depth pVel sVel Density Qp Qs 
-        . . . with each major boundary separated with a line with "mantle", 
-        "outer-core" or "inner-core". "moho", "cmb" and "icocb" are allowed 
+        should be "modelname.nd".
+        The format of the file is:
+        depth pVel sVel Density Qp Qs
+        depth pVel sVel Density Qp Qs
+        . . . with each major boundary separated with a line with "mantle",
+        "outer-core" or "inner-core". "moho", "cmb" and "icocb" are allowed
         as synonyms respectively.
 
         This feature makes phase interpretation much easier to
         code. Also, as they are not needed for travel time calculations, the
         density, Qp and Qs may be omitted.
-      
+
         The velocities are assumed to be linear between sample points. Because
         this type of model file doesn't give complete information we make the
-        following assumptions: 
-     
-        modelname - from the filename, with ".nd" dropped, if present 
-     
+        following assumptions:
+
+        modelname - from the filename, with ".nd" dropped, if present
+
         radiusOfEarth - the largest depth in the model
-     
-        Comments are allowed. # signifies that the rest of the 
+
+        Comments are allowed. # signifies that the rest of the
         line is a comment.  If # is the first character in a line, the line is
         ignored
 
@@ -529,32 +531,32 @@ class VelocityModel(object):
         # Loop through to fill data array and locate named discontinuities
         ii = 0
         for line in lines:
-            if line[0] == '#': # Skip lines starting with '#'
+            # Strip off anything after '#'
+            line = line.split('#')[0]
+            if len(line.split()) == 0:  # Skip empty or comment lines
                 continue
             if ii == 0:
                 data = []
                 for item in line.split():
-                    if item[0] == '#':
-                        break
-                    data = np.append(data, float(item))
+                    data.append(float(item))
+                data = np.array(data)
                 ii = ii + 1
             else:
-                if ((line.split()[0].lower() == 'mantle') or 
-                    (line.split()[0].lower() == 'moho')):
-                    mohoDepth = data[ii - 1,0]
-                elif ((line.split()[0].lower() == 'outer-core') or
-                      (line.split()[0].lower() == 'cmb')):
-                    cmbDepth = data[ii - 1,0]
-                elif ((line.split()[0].lower() == 'inner-core') or
-                      (line.split()[0].lower() == 'iocb')):
-                    iocbDepth = data[ii - 1,0]
+                if re.match('[a-zA-Z]', line.split()[0]):
+                    if ((line.split()[0].lower() == 'mantle') or
+                          (line.split()[0].lower() == 'moho')):
+                        mohoDepth = data[ii - 1, 0]
+                    elif ((line.split()[0].lower() == 'outer-core') or
+                          (line.split()[0].lower() == 'cmb')):
+                        cmbDepth = data[ii - 1, 0]
+                    elif ((line.split()[0].lower() == 'inner-core') or
+                          (line.split()[0].lower() == 'iocb')):
+                        iocbDepth = data[ii - 1, 0]
                 else:
                     row = []
                     for item in line.split():
-                        if item[0] == '#':
-                            break
-                        row = np.append(row, float(item))
-                    data = np.vstack((data, row))
+                        row.append(float(item))
+                    data = np.vstack((data, np.array(row)))
                     ii = ii + 1
 
         # Check if density is present.

@@ -20,7 +20,7 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
 
 class TauPyVelocityModelTestCase(unittest.TestCase):
     def test_read_velocity_model(self):
-        for filename in ['iasp91.tvel', 'iasp91_w_comment.tvel', 'iasp91.nd', 
+        for filename in ['iasp91.tvel', 'iasp91_w_comment.tvel', 'iasp91.nd',
                          'iasp91_w_comment.nd']:
             velocity_model = os.path.join(DATA, filename)
             test2 = VelocityModel.readVelocityFile(velocity_model)
