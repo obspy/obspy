@@ -279,6 +279,26 @@ class Equipment(ComparingObject):
                 return
             self._removal_date = UTCDateTime(value)
 
+    def __str__(self):
+        ret = ("Equipment:\n"
+               "\tType: {type}\n"
+               "\tDescription: {description}\n"
+               "\tManufacturer: {manufacturer}\n"
+               "\tVendor: {vendor}\n"
+               "\tModel: {model}\n"
+               "\tSerial number: {serial_number}\n"
+               "\tInstallation date: {installation_date}\n"
+               "\tRemoval date: {removal_date}\n"
+               "\tResource id: {resource_id}\n"
+               "\tCalibration Dates:\n")
+        for calib_date in self.calibration_dates:
+            ret += "\t\t%s\n" % calib_date
+        ret = ret.format(**self.__dict__)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Operator(ComparingObject):
     """

@@ -1438,6 +1438,20 @@ class InstrumentSensitivity(ComparingObject):
         self.frequency_range_end = frequency_range_end
         self.frequency_range_DB_variation = frequency_range_DB_variation
 
+    def __str__(self):
+        ret = ("Instrument Sensitivity:\n"
+               "\tValue: {value}\n"
+               "\tFrequency: {frequency}\n"
+               "\tInput units: {input_units}\n"
+               "\tInput units description: {input_units_description}\n"
+               "\tOutput units: {output_units}\n"
+               "\tOutput units description: {output_units_description}\n")
+        ret = ret.format(**self.__dict__)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 # XXX duplicated code, PolynomialResponseStage could probably be implemented by
 # XXX inheriting from both InstrumentPolynomial and ResponseStage
