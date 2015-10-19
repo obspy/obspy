@@ -598,8 +598,8 @@ class VelocityModel(object):
         modelName = os.path.splitext(os.path.basename(filename))[0]
         # I assume that this is a whole earth model
         # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
-                             cls.default_cmb, cls.default_iocb, 0,
+        return VelocityModel(modelName, radiusOfEarth, mohoDepth,
+                             cmbDepth, iocbDepth, 0,
                              maxRadius, True, layers)
 
     def fixDisconDepths(self):
