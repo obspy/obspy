@@ -20,14 +20,17 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(
 
 class TauPyVelocityModelTestCase(unittest.TestCase):
     def test_read_velocity_model(self):
-        for i in range(0, 2):
+        for i in range(0, 4):
             if i == 0:
                 # read ./data/iasp91.tvel
                 velocity_model = os.path.join(DATA, "iasp91.tvel")
-            else:
+            elif i == 1:
                 velocity_model = os.path.join(DATA, "iasp91_w_comment.tvel")
+            elif i == 2:
+                velocity_model = os.path.join(DATA, "iasp91.nd")
+            else:
+                velocity_model = os.path.join(DATA, "iasp91_w_comment.nd")
 
-            # test_file.tvel is shorter
             test2 = VelocityModel.readVelocityFile(velocity_model)
 
             self.assertEqual(len(test2.layers), 129)

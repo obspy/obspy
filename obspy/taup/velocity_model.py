@@ -395,8 +395,7 @@ class VelocityModel(object):
         :raises ValueError: If the file extension is not ``.tvel``.
         """
         if filename.endswith(".nd"):
-            raise NotImplementedError(".nd files are not currently supported. "
-                                      "Sorry.")
+            vMod = cls.readNDFile(filename)
         elif filename.endswith(".tvel"):
             vMod = cls.readTVelFile(filename)
         else:
@@ -438,6 +437,125 @@ class VelocityModel(object):
         # Read all lines in the file. Each Layer needs top and bottom values,
         # i.e. info from two lines.
         data = np.genfromtxt(filename, skip_header=2, comments='#')
+
+        # Check if density is present.
+        if data.shape[1] < 4:
+            raise ValueError("Top density not specified.")
+
+        # Check that relative speed are sane.
+        mask = data[:, 2] > data[:, 1]
+        if np.any(mask):
+            raise ValueError(
+                "S velocity is greater than the P velocity\n" +
+                str(data[mask]))
+
+        layers = np.empty(data.shape[0] - 1, dtype=VelocityLayer)
+
+        layers['topDepth'] = data[:-1, 0]
+        layers['botDepth'] = data[1:, 0]
+
+        layers['topPVelocity'] = data[:-1, 1]
+        layers['botPVelocity'] = data[1:, 1]
+
+        layers['topSVelocity'] = data[:-1, 2]
+        layers['botSVelocity'] = data[1:, 2]
+
+        layers['topDensity'] = data[:-1, 3]
+        layers['botDensity'] = data[1:, 3]
+
+        # We do not at present support varying attenuation
+        layers['topQp'].fill(DEFAULT_QP)
+        layers['botQp'].fill(DEFAULT_QP)
+        layers['topQs'].fill(DEFAULT_QS)
+        layers['botQs'].fill(DEFAULT_QS)
+
+        # Don't use zero thickness layers; first order discontinuities are
+        # taken care of by storing top and bottom depths.
+        mask = layers['topDepth'] == layers['botDepth']
+        layers = layers[~mask]
+
+        radiusOfEarth = data[-1, 0]
+        maxRadius = data[-1, 0]
+        modelName = os.path.splitext(os.path.basename(filename))[0]
+        # I assume that this is a whole earth model
+        # so the maximum depth ==  maximum radius == earth radius.
+        return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
+                             cls.default_cmb, cls.default_iocb, 0,
+                             maxRadius, True, layers)
+
+    @classmethod
+    def readNDFile(cls, filename):
+        """
+        This method reads in a velocity model from a "nd" ASCII text file, the
+        format used by Xgbm. The name of the model file for model "modelname"
+        should be "modelname.nd". 
+        The format of the file is: 
+        depth pVel sVel Density Qp Qs 
+        depth pVel sVel Density Qp Qs 
+        . . . with each major boundary separated with a line with "mantle", 
+        "outer-core" or "inner-core". "moho", "cmb" and "icocb" are allowed 
+        as synonyms respectively.
+
+        This feature makes phase interpretation much easier to
+        code. Also, as they are not needed for travel time calculations, the
+        density, Qp and Qs may be omitted.
+      
+        The velocities are assumed to be linear between sample points. Because
+        this type of model file doesn't give complete information we make the
+        following assumptions: 
+     
+        modelname - from the filename, with ".nd" dropped, if present 
+     
+        radiusOfEarth - the largest depth in the model
+     
+        Comments are allowed. # signifies that the rest of the 
+        line is a comment.  If # is the first character in a line, the line is
+        ignored
+
+        :param filename: The name of the file to read.
+        :type filename: str
+
+        :raises ValueError: If model file is in error.
+        """
+        mohoDepth = cls.default_moho
+        cmbDepth = cls.default_cmb
+        iocbDepth = cls.default_iocb
+
+        # Read all lines from file to enable identifying top and bottom values
+        # for each layer and find named discontinuities if present        
+        with open(filename) as modfile:
+            lines = modfile.readlines()
+
+        # Loop through to fill data array and locate named discontinuities
+        ii = 0
+        for line in lines:
+            if line[0] == '#': # Skip lines starting with '#'
+                continue
+            if ii == 0:
+                data = []
+                for item in line.split():
+                    if item[0] == '#':
+                        break
+                    data = np.append(data, float(item))
+                ii = ii + 1
+            else:
+                if ((line.split()[0].lower() == 'mantle') or 
+                    (line.split()[0].lower() == 'moho')):
+                    mohoDepth = data[ii - 1,0]
+                elif ((line.split()[0].lower() == 'outer-core') or
+                      (line.split()[0].lower() == 'cmb')):
+                    cmbDepth = data[ii - 1,0]
+                elif ((line.split()[0].lower() == 'inner-core') or
+                      (line.split()[0].lower() == 'iocb')):
+                    iocbDepth = data[ii - 1,0]
+                else:
+                    row = []
+                    for item in line.split():
+                        if item[0] == '#':
+                            break
+                        row = np.append(row, float(item))
+                    data = np.vstack((data, row))
+                    ii = ii + 1
 
         # Check if density is present.
         if data.shape[1] < 4:
