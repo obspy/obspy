@@ -397,7 +397,7 @@ class VelocityModel(object):
         :raises ValueError: If the file extension is not ``.tvel``.
         """
         if filename.endswith(".nd"):
-            vMod = cls.readNDFile(filename)
+            vMod = cls.read_nd_file(filename)
         elif filename.endswith(".tvel"):
             vMod = cls.readTVelFile(filename)
         else:
@@ -486,7 +486,7 @@ class VelocityModel(object):
                              maxRadius, True, layers)
 
     @classmethod
-    def readNDFile(cls, filename):
+    def read_nd_file(cls, filename):
         """
         This method reads in a velocity model from a "nd" ASCII text file, the
         format used by Xgbm. The name of the model file for model "modelname"
@@ -519,12 +519,12 @@ class VelocityModel(object):
 
         :raises ValueError: If model file is in error.
         """
-        mohoDepth = cls.default_moho
-        cmbDepth = cls.default_cmb
-        iocbDepth = cls.default_iocb
+        moho_depth = cls.default_moho
+        cmb_depth = cls.default_cmb
+        iocb_depth = cls.default_iocb
 
         # Read all lines from file to enable identifying top and bottom values
-        # for each layer and find named discontinuities if present        
+        # for each layer and find named discontinuities if present
         with open(filename) as modfile:
             lines = modfile.readlines()
 
@@ -532,29 +532,31 @@ class VelocityModel(object):
         ii = 0
         for line in lines:
             # Strip off anything after '#'
-            line = line.split('#')[0]
-            if len(line.split()) == 0:  # Skip empty or comment lines
+            line = line.split('#')[0].split()
+            if not line:  # Skip empty or comment lines
                 continue
             if ii == 0:
                 data = []
-                for item in line.split():
+                for item in line:
                     data.append(float(item))
                 data = np.array(data)
                 ii = ii + 1
             else:
-                if re.match('[a-zA-Z]', line.split()[0]):
-                    if ((line.split()[0].lower() == 'mantle') or
-                          (line.split()[0].lower() == 'moho')):
-                        mohoDepth = data[ii - 1, 0]
-                    elif ((line.split()[0].lower() == 'outer-core') or
-                          (line.split()[0].lower() == 'cmb')):
-                        cmbDepth = data[ii - 1, 0]
-                    elif ((line.split()[0].lower() == 'inner-core') or
-                          (line.split()[0].lower() == 'iocb')):
-                        iocbDepth = data[ii - 1, 0]
+                if re.match('[a-zA-Z]', line[0]):
+                    if ((line[0].lower() == 'mantle') or (line[0].lower() ==
+                                                          'moho')):
+                        moho_depth = data[ii - 1, 0]
+                    elif ((line[0].lower() == 'outer-core') or
+                          (line[0].lower() == 'cmb')):
+                        cmb_depth = data[ii - 1, 0]
+                    elif ((line[0].lower() == 'inner-core') or
+                          (line[0].lower() == 'iocb')):
+                        iocb_depth = data[ii - 1, 0]
+                    else:
+                        raise ValueError("Unrecognized discontinuity name")
                 else:
                     row = []
-                    for item in line.split():
+                    for item in line:
                         row.append(float(item))
                     data = np.vstack((data, np.array(row)))
                     ii = ii + 1
@@ -600,8 +602,8 @@ class VelocityModel(object):
         modelName = os.path.splitext(os.path.basename(filename))[0]
         # I assume that this is a whole earth model
         # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, mohoDepth,
-                             cmbDepth, iocbDepth, 0,
+        return VelocityModel(modelName, radiusOfEarth, moho_depth,
+                             cmb_depth, iocb_depth, 0,
                              maxRadius, True, layers)
 
     def fixDisconDepths(self):
