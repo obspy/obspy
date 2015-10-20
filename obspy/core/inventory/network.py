@@ -12,6 +12,7 @@ Provides the Network class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
@@ -24,6 +25,7 @@ from .station import Station
 from .util import BaseNode
 
 
+@python_2_unicode_compatible
 class Network(BaseNode):
     """
     From the StationXML definition:

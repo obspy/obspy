@@ -10,7 +10,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>268</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
-  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes=".CEUSN-CONTRIB,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,.TEST,.UNRESTRICTED">
+  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,.TEST,.CEUSN-CONTRIB,_REALTIME,_GSN,_FDSN-ALL,.UNRESTRICTED,_FDSN">
    <Comment>
     <Value>Time Uncertain.</Value>
     <BeginEffectiveTime>1996-05-20T19:20:00</BeginEffectiveTime>
@@ -26,7 +26,7 @@
    <TotalNumberChannels>172</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes=".CEUSN-CONTRIB,_FDSN,_FDSN-ALL,_GSN,_GSN-BROADBAND,_REALTIME,.TEST,.UNRESTRICTED">
+  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,.TEST,.CEUSN-CONTRIB,_REALTIME,_GSN,_FDSN-ALL,.UNRESTRICTED,_FDSN">
    <Comment>
     <Value>Station Maintenance.  Tests may be in progress.</Value>
     <BeginEffectiveTime>2001-04-25T14:00:00</BeginEffectiveTime>

@@ -225,7 +225,7 @@ class ClientTestCase(unittest.TestCase):
                  "endbefore", "endafter", "network", "station", "location",
                  "channel", "minlatitude", "maxlatitude", "minlongitude",
                  "maxlongitude", "latitude", "longitude", "minradius",
-                 "maxradius", "level", "includerestricted",
+                 "maxradius", "level", "includerestricted", "format",
                  "includeavailability", "updatedafter", "matchtimeseries")))
         self.assertEqual(
             set(client.services["event"].keys()),
@@ -233,7 +233,7 @@ class ClientTestCase(unittest.TestCase):
                  "minlongitude", "maxlongitude", "latitude", "longitude",
                  "maxradius", "minradius", "mindepth", "maxdepth",
                  "minmagnitude", "maxmagnitude",
-                 "magnitudetype",
+                 "magnitudetype", "format",
                  "catalog", "contributor", "limit", "offset", "orderby",
                  "updatedafter", "includeallorigins", "includeallmagnitudes",
                  "includearrivals", "eventid",
@@ -338,7 +338,8 @@ class ClientTestCase(unittest.TestCase):
             dict(latitude=-56.1, longitude=-26.7, maxradius=15),
             dict(startafter=UTCDateTime("2003-01-07"),
                  endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
-                 maxlatitude=55, minlongitude=170, maxlongitude=-170),
+                 maxlatitude=55, minlongitude=170, maxlongitude=-170,
+                 network="IM"),
             dict(starttime=UTCDateTime("2000-01-01"),
                  endtime=UTCDateTime("2001-01-01"), net="IU",
                  sta="ANMO"),
@@ -845,9 +846,9 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.side_effect = custom_side_effects
 
         # Some custom urls
-        base_url_event = "http://other_url.com/beta/event_service/11"
-        base_url_station = "http://some_url.com/beta2/station/7"
-        base_url_ds = "http://new.com/beta3/dataselect/8"
+        base_url_event = "http://example.com/beta/event_service/11"
+        base_url_station = "http://example.org/beta2/station/7"
+        base_url_ds = "http://example.edu/beta3/dataselect/8"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.

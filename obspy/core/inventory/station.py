@@ -12,6 +12,7 @@ Provides the Station class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
@@ -24,6 +25,7 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
 
 
+@python_2_unicode_compatible
 class Station(BaseNode):
     """
     From the StationXML definition:

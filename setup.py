@@ -314,7 +314,8 @@ ENTRY_POINTS = {
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
-        'KML = obspy.io.kml.core',
+        'STATIONTXT = obspy.io.stationtxt.core',
+        'KML = obspy.io.kml.core'
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -329,6 +330,11 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
+        ],
+    'obspy.plugin.inventory.STATIONTXT': [
+        'isFormat = obspy.io.stationtxt.core:is_FDSN_station_text_file',
+        'readFormat = '
+        'obspy.io.stationtxt.core:read_FDSN_station_text_file',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',

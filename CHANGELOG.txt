@@ -15,6 +15,8 @@ master:
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
      - ESRI shapefile write support, useful in GIS applications (see #1066)
+   * Support for additional station data format:
+     - The FDSN web service station text format can now be read.
  - obspy.core:
    * New method for generating sliding windows from Stream/Trace windows.
      (see #860)
@@ -23,6 +25,12 @@ master:
    * Trace.remove_response() now has `plot` option to show/output a plot of all
      individual steps of instrument response removal in frequency domain
      (see #1116).
+ - obspy.clients.fdsn:
+   * Now requests gzipped data for the XML files. Much smaller files!
+   * The station service can now also be used to download files in the text
+     format. This has limited information but is much faster.
+   * New mass downloader to assist in downloading data across a large number
+     of FDSN web services.
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
@@ -38,6 +46,8 @@ master:
    * Upgrade to libmseed 2.16
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
+ - obspy.io.stationtxt:
+   * New module reading the FDSN station files.
  - obspy.signal:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-File dealing with the StationXML format.
+Functions dealing with reading and writing StationXML.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -46,30 +46,46 @@ def _is_stationxml(path_or_file_object):
     Simple function checking if the passed object contains a valid StationXML
     1.0 file. Returns True of False.
 
-    This is simply done by validating against the StationXML schema.
+    The test is not exhaustive - it only checks the root tag but that should
+    be good enough for most real world use cases. If the schema is used to
+    test for a StationXML file, many real world files are false negatives as
+    they don't adhere to the standard.
 
     :param path_or_file_object: File name or file like object.
     """
-    if isinstance(path_or_file_object, etree._Element):
-        xmldoc = path_or_file_object
-    else:
-        try:
-            xmldoc = etree.parse(path_or_file_object)
-        except etree.XMLSyntaxError:
-            return False
+    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
+                                                        "seek"):
+        current_position = path_or_file_object.tell()
+
     try:
+        if isinstance(path_or_file_object, etree._Element):
+            xmldoc = path_or_file_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_file_object)
+            except etree.XMLSyntaxError:
+                return False
         root = xmldoc.getroot()
-    except:
-        return False
-    # check tag of root element
-    try:
-        match = re.match(
-            r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
-            root.tag)
-        assert match is not None
-    except:
-        return False
-    return True
+        try:
+            match = re.match(
+                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+                root.tag)
+            assert match is not None
+        except:
+            return False
+        # Convert schema number to a float to have positive comparisons
+        # between, e.g "1" and "1.0".
+        if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
+            warnings.warn("The StationXML file has version %s, ObsPy can "
+                          "deal with version %s. Proceed with caution." % (
+                              root.attrib["schemaVersion"], SCHEMA_VERSION))
+        return True
+    finally:
+        # Make sure to reset file pointer position.
+        try:
+            path_or_file_object.seek(current_position, 0)
+        except:
+            pass
 
 
 def validate_StationXML(path_or_object):
@@ -626,6 +642,9 @@ def _read_operator(operator_element, _ns):
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
+    # Recovery from empty Extent tags.
+    if extent is None:
+        return extent
     start = obspy.UTCDateTime(extent.get("start"))
     end = obspy.UTCDateTime(extent.get("end"))
     return obspy.core.inventory.util.DataAvailability(start=start, end=end)

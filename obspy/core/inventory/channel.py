@@ -12,12 +12,14 @@ Provides the Channel class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 from obspy.core.util.obspy_types import FloatWithUncertainties
 from . import BaseNode
 from .util import Azimuth, ClockDrift, Dip, Distance, Latitude, Longitude
 
 
+@python_2_unicode_compatible
 class Channel(BaseNode):
     """
     From the StationXML definition:

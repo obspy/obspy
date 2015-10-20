@@ -10,7 +10,7 @@
   <Description>International Miscellaneous Stations</Description>
   <TotalNumberStations>275</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
-  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_AFTAC,_GSN,.UNRESTRICTED,_US-BB+A,_US-REGIONAL">
+  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_AFTAC,_US-BB+A,_INT-NON_FDSN,_GSN,_US-REGIONAL,.UNRESTRICTED">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>
@@ -21,7 +21,7 @@
    <TotalNumberChannels>2</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_AFTAC,.EARTHSCOPE,_GSN,_GSN-BROADBAND,.UNRESTRICTED,_US-ALL,_US-BB,_US-BB+A,_US-REF,_US-REGIONAL">
+  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,_US-ALL,_AFTAC,_US-BB+A,_INT-NON_FDSN,_GSN,.EARTHSCOPE,_US-REGIONAL,_US-REF,.UNRESTRICTED,_US-BB">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>
