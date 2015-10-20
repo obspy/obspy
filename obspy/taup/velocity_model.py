@@ -11,8 +11,6 @@ import os
 
 import numpy as np
 
-import re
-
 from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
                              evaluateVelocityAt)
 
@@ -542,7 +540,7 @@ class VelocityModel(object):
                 data = np.array(data)
                 ii = ii + 1
             else:
-                if re.match('[a-zA-Z]', line[0]):
+                if len(line) == 1:  # Named discontinuity
                     if ((line[0].lower() == 'mantle') or (line[0].lower() ==
                                                           'moho')):
                         moho_depth = data[ii - 1, 0]
