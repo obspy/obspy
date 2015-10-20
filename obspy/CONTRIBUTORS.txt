@@ -39,6 +39,7 @@ Tobias Megies
 Alberto Michelini
 Bernhard Morgenstern
 Nathaniel C. Miller
+Mark P. Panning
 Celso Reyes
 Tom Richter
 Adam Ringler

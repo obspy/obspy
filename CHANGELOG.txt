@@ -73,6 +73,10 @@ master:
      - new option `PPSD.plot(..., cumulative=True)` for a cumulative plot of
        the histogram, i.e. a non-exceedence percentage visualization, similar
        to the `percentile` option.
+ - obspy.taup
+   * Added support for nd file format for input velocity models.  Allows for 
+     named discontinuities at arbitrary depths allowing for less Earth like
+     models.
 
 0.10.x:
   - obspy.core:
