@@ -551,7 +551,8 @@ class VelocityModel(object):
                           (line[0].lower() == 'iocb')):
                         iocb_depth = data[ii - 1, 0]
                     else:
-                        raise ValueError("Unrecognized discontinuity name")
+                        raise ValueError("Unrecognized discontinuity name: " +
+                                         str(line[0]))
                 else:
                     row = []
                     for item in line:
