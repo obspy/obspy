@@ -486,12 +486,18 @@ class VelocityModel(object):
     @classmethod
     def read_nd_file(cls, filename):
         """
+        Method to read in a velocity model from a "nd" ASCII text file.
+
         This method reads in a velocity model from a "nd" ASCII text file, the
         format used by Xgbm. The name of the model file for model "modelname"
         should be "modelname.nd".
+
         The format of the file is:
+
         depth pVel sVel Density Qp Qs
+
         depth pVel sVel Density Qp Qs
+
         . . . with each major boundary separated with a line with "mantle",
         "outer-core" or "inner-core". "moho", "cmb" and "icocb" are allowed
         as synonyms respectively.
