@@ -816,6 +816,8 @@ class Stream(object):
             # Number of missing samples
             nsamples = int(compatibility.round_away(math.fabs(delta) *
                                                     stats['sampling_rate']))
+            if delta < 0:
+                nsamples = -nsamples
             # skip if is equal to delta (1 / sampling rate)
             if same_sampling_rate and nsamples == 0:
                 continue
