@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 from obspy import read
-from obspy.io.nied.knet.core import _is_knet_ascii
+from obspy.io.nied.knet import _is_knet_ascii
 
 
 class KnetReadingTestCase(unittest.TestCase):

@@ -8,7 +8,7 @@ import io
 import unittest
 
 from obspy.core.event import read_events
-from obspy.io.nied.fnetmt.core import _is_fnetmt_catalog
+from obspy.io.nied.fnetmt import _is_fnetmt_catalog
 
 
 class FNETMTCatalogReadingTestCase(unittest.TestCase):
