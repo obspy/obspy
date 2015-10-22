@@ -795,9 +795,9 @@ class Stream(object):
                 continue
             # different sampling rates should always result in a gap or overlap
             if self.traces[_i].stats.delta == self.traces[_i + 1].stats.delta:
-                flag = True
+                same_sampling_rate = True
             else:
-                flag = False
+                same_sampling_rate = False
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
@@ -819,7 +819,7 @@ class Stream(object):
             nsamples = int(compatibility.round_away(math.fabs(delta) *
                                                     stats['sampling_rate']))
             # skip if is equal to delta (1 / sampling rate)
-            if flag and nsamples == 0:
+            if same_sampling_rate and nsamples == 0:
                 continue
             gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
