@@ -49,9 +49,9 @@ class FNETMTCatalogReadingTestCase(unittest.TestCase):
 
     def test_is_fnetmt_catalog(self):
         """
-        This tests the _is_fnetmt_catalog method by validating that each file in
-        the data directory is an F-net catalog file and each file in the working
-        directory is not.
+        This tests the _is_fnetmt_catalog method by validating that each file
+        in the data directory is an F-net catalog file and each file in the
+        working directory is not.
 
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
