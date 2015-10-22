@@ -211,7 +211,7 @@ def __read_single_fnetmt_entry(line, **kwargs):
                    depth=depjma, depth_type="from location",
                    region=region)
     o_jma.resource_id = _get_resource_id(event_name,
-                                         'orgin', 'JMA')
+                                         'origin', 'JMA')
     m_jma = Magnitude(mag=magjma, magnitude_type='ML',
                       origin_id=o_jma.resource_id)
     m_jma.resource_id = _get_resource_id(event_name,
@@ -221,7 +221,7 @@ def __read_single_fnetmt_entry(line, **kwargs):
                   depth=depmt, region=region,
                   depth_type="from moment tensor inversion")
     o_mt.resource_id = _get_resource_id(event_name,
-                                        'orgin', 'MT')
+                                        'origin', 'MT')
     m_mt = Magnitude(mag=magmt, magnitude_type='Mw',
                      origin_id=o_mt.resource_id)
     m_mt.resource_id = _get_resource_id(event_name,
