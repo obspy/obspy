@@ -801,7 +801,9 @@ class Stream(object):
             stats = self.traces[_i].stats
             stime = stats['endtime']
             etime = self.traces[_i + 1].stats['starttime']
-            delta = etime.timestamp - stime.timestamp
+            # last sample of earlier trace represents data up to time of last
+            # sample (stats.endtime) plus one delta
+            delta = etime.timestamp - (stime.timestamp + stats.delta)
             # Check that any overlap is not larger than the trace coverage
             if delta < 0:
                 temp = self.traces[_i + 1].stats['endtime'].timestamp - \
@@ -817,12 +819,8 @@ class Stream(object):
             nsamples = int(compatibility.round_away(math.fabs(delta) *
                                                     stats['sampling_rate']))
             # skip if is equal to delta (1 / sampling rate)
-            if flag and nsamples == 1:
+            if flag and nsamples == 0:
                 continue
-            elif delta > 0:
-                nsamples -= 1
-            else:
-                nsamples += 1
             gap_list.append([stats['network'], stats['station'],
                              stats['location'], stats['channel'],
                              stime, etime, delta, nsamples])

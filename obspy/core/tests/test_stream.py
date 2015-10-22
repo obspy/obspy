@@ -311,15 +311,15 @@ class StreamTestCase(unittest.TestCase):
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 1, 970000),
              UTCDateTime(2008, 1, 1, 0, 0, 4, 35000),
-             2.0649999999999999, 412.0),
+             2.0599999999999999, 412.0),
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 8, 150000),
              UTCDateTime(2008, 1, 1, 0, 0, 10, 215000),
-             2.0649999999999999, 412.0),
+             2.0599999999999999, 412.0),
             ('BW', 'BGLD', '', 'EHE',
              UTCDateTime(2008, 1, 1, 0, 0, 14, 330000),
              UTCDateTime(2008, 1, 1, 0, 0, 18, 455000),
-             4.125, 824.0)]
+             4.120, 824.0)]
         # Assert the number of gaps.
         self.assertEqual(len(mseed_gap_list), len(gap_list))
         for _i in range(len(mseed_gap_list)):
