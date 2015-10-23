@@ -97,22 +97,28 @@ def get_start_and_end_time(file_or_file_object):
 
 def get_timing_and_data_quality(file_or_file_object):
     """
-    Counts all data quality flags of the given Mini-SEED file and returns
+    Counts all data quality, I/O and activity flags
+    of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
+
 
     :type file_or_file_object: str or file
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
-
+    :type str or UTCDateTime
+    :param starttime: ISO8601 string
+    :type str or UTCDateTime
+    :param endtime: ISO8601 string
     :return: Dictionary with information about the timing quality and the data
-        quality flags.
+        quality, I/O and activity flags.
 
     .. rubric:: Data quality
 
-    This method will count all set data quality flag bits in the fixed section
+    This method will count all set flag bits in the fixed section
     of the data header in a Mini-SEED file and returns the total count for each
     flag type.
 
+    Data quality flags
     ========  =================================================
     Bit       Description
     ========  =================================================
@@ -125,6 +131,30 @@ def get_timing_and_data_quality(file_or_file_object):
     [Bit 6]   A digital filter may be charging
     [Bit 7]   Time tag is questionable
     ========  =================================================
+
+    Activity flags
+    ========  =================================================
+    Bit       Description
+    ========  =================================================
+    [Bit 0]   Calibration signals present
+    [Bit 1]   Time correction applied
+    [Bit 2]   Beginning of an event, station trigger
+    [Bit 3]   End of the event, station detriggers
+    [Bit 4]   A positive leap second happened during this record (A 61 second minute)
+    [Bit 5]   A negative leap second happened during this record (A 59 second minute
+    [Bit 6]   Event in progress
+
+    I/O and clock flags
+    ========  =================================================
+    Bit       Description
+    ========  =================================================
+    [Bit 0]   Station volume parity error possibly present
+    [Bit 1]   Long record read (possibly no problem)
+    [Bit 2]   Short record read (record padded)
+    [Bit 3]   Start of time series
+    [Bit 4]   End of time series
+    [Bit 5]   Clock locked
+
 
     .. rubric:: Timing quality
 
@@ -224,32 +254,77 @@ def get_timing_and_data_quality(file_or_file_object):
     # Read the first record to get a starting point and.
     info = get_record_information(file_or_file_object)
     # Keep track of the extracted information.
-    quality_count = [0, 0, 0, 0, 0, 0, 0, 0]
+    quality_count = collections.OrderedDict(
+        amplifier_saturation_detected=0,
+        digitizer_clipping_detected=0,
+        spikes_detected=0,
+        glitches_detected=0,
+        missing_data_present=0,
+        telemetry_sync_error=0,
+        digital_filter_charging=0,
+        time_tag_uncertain=0)
+    activity_count = collections.OrderedDict(
+        calibration_signals_present=0,
+        time_correction_applied=0,
+        beginning_event=0,
+        end_event=0,
+        positive_leap=0,
+        negative_leap=0,
+        clock_locked=0)
+    io_count = collections.OrderedDict(
+        station_volume_parity_error=0,
+        long_record_read=0,
+        short_record_read=0,
+        start_time_series=0,
+        end_time_series=0,
+        clock_locked=0)
     timing_quality = []
     offset = 0
-
-    # Loop over each record. A valid record needs to have a record length of at
-    # least 256 bytes.
+    if starttime is not None:
+        starttime = UTCDateTime(starttime)
+    if endtime is not None:
+        endtime = UTCDateTime(endtime)
+    # Loop over each record. A valid record needs to have a record
+    # length of at least 256 bytes.
     while offset <= (info['filesize'] - 256):
         this_info = get_record_information(file_or_file_object, offset)
+        if starttime is not None and this_info["endtime"] < starttime:
+            break
+        if endtime is not None and this_info["starttime"] > endtime:
+            break
+        if(io_flags):
+            # Add the value of each bit to the io_count.
+            for _i, key in enumerate(io_count):
+                if (this_info['io_and_clock_flags'] & (1 << _i)) != 0:
+                    io_count[key] += 1
+        if(activity_flags):
+            # Add the value of each bit to the activity_count.
+            for _i, key in enumerate(activity_count):
+                if (this_info['activity_flags'] & (1 << _i)) != 0:
+                    activity_count[key] += 1
         # Add the timing quality.
         if 'timing_quality' in this_info:
             timing_quality.append(float(this_info['timing_quality']))
         # Add the value of each bit to the quality_count.
-        for _i in range(8):
-            if (this_info['data_quality_flags'] & (1 << _i)) != 0:
-                quality_count[_i] += 1
+        for _i, key in enumerate(quality_count):
+                if (this_info['data_quality_flags'] & (1 << _i)) != 0:
+                    quality_count[key] += 1
         offset += this_info['record_length']
-
     # Collect the results in a dictionary.
-    result = {'data_quality_flags': quality_count}
-
+    result = {'data_quality_flags': list(quality_count.values())}
+    if(activity_flags):
+        result.update({'activity_flags': list(activity_count.values())})
+    if(io_flags):
+        result.update({'io_and_clock_flags': list(io_count.values())})
     # Parse of the timing quality list.
     count = len(timing_quality)
     timing_quality = sorted(timing_quality)
     # If no timing_quality was collected just return an empty dictionary.
     if count == 0:
         return result
+    # if full time quality requested
+    if(t_quality):
+        result.update({'timing_quality': timing_quality})
     # Otherwise calculate some statistical values from the timing quality.
     result['timing_quality_min'] = min(timing_quality)
     result['timing_quality_max'] = max(timing_quality)

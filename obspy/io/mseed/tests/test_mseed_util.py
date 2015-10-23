@@ -39,6 +39,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.swap = 1
         else:
             self.swap = 0
+        self.nperr = np.geterr()
+        np.seterr(all='ignore')
 
     def test_convert_date_time(self):
         """
@@ -136,6 +138,35 @@ class MSEEDUtilTestCase(unittest.TestCase):
         result = util.get_timing_and_data_quality(filename)
         self.assertEqual(result,
                          {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
+
+    def test_get_flags(self):
+        """
+        This test reads a real Mini-SEED file which has been
+        modified ad hoc
+        """
+        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
+        result = util.get_flags(filename)
+        self.assertEqual(result['data_quality_flags'],
+                         [0, 672, 0, 663, 0, 663, 804, 8])
+        self.assertEqual(result['activity_flags'],
+                         [0, 0, 0, 2253, 0, 11, 0])
+        self.assertEqual(result['io_and_clock_flags'],
+                         [0, 1033, 0, 0, 0, 11258])
+        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
+        starttime = '2015-10-16T00:00:00'
+        result = util.get_flags(filename, starttime=starttime)
+        self.assertEqual(result['data_quality_flags'],
+                         [0, 672, 0, 663, 0, 663, 804, 8])
+        starttime = '2015-10-17T00:00:00'
+        result = util.get_flags(filename, starttime=starttime)
+        self.assertEqual(result['data_quality_flags'],
+                         [0, 0, 0, 0, 0, 0, 0, 0])
+        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.290')
+        starttime = '2015-10-17T00:00:00'
+        endtime = '2015-10-17T23:59:00'
+        result = util.get_flags(filename, starttime=starttime, endtime=endtime)
+        self.assertEqual(result['data_quality_flags'],
+                         [0, 0, 0, 0, 0, 0, 0, 6])
 
     def test_get_start_and_end_time(self):
         """
@@ -842,6 +873,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         # Move the file_bfr to where it was before
         file_bfr.seek(prev_pos, os.SEEK_SET)
+
+    def tearDown(self):
+        np.seterr(**self.nperr)
 
 
 def suite():
