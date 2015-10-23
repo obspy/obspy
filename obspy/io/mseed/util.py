@@ -316,6 +316,7 @@ def get_timing_and_data_quality(file_or_file_object):
         result.update({'activity_flags': list(activity_count.values())})
     if(io_flags):
         result.update({'io_and_clock_flags': list(io_count.values())})
+
     # Parse of the timing quality list.
     count = len(timing_quality)
     timing_quality = sorted(timing_quality)
