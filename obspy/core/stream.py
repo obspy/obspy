@@ -739,7 +739,7 @@ class Stream(object):
             raise TypeError(msg)
         return self
 
-    def getGaps(self, min_gap=None, max_gap=None):
+    def getGaps(self, min_gap=None, max_gap=None, return_indices=False):
         """
         Determine all trace gaps/overlaps of the Stream object.
 
@@ -747,10 +747,19 @@ class Stream(object):
             value is assumed to be in seconds. Defaults to None.
         :param max_gap: All gaps larger than this value will be omitted. The
             value is assumed to be in seconds. Defaults to None.
+        :param return_indices: If True, returns the indices of the original
+            traces separated by each gap. The Stream must be sorted before
+            calling the getGaps method, otherwise indices will not be properly
+            defined. Defaults to False.
 
         The returned list contains one item in the following form for each gap/
-        overlap: [network, station, location, channel, starttime of the gap,
+        overlap: [network, station, location, channel, start time of the gap,
         end time of the gap, duration of the gap, number of missing samples]
+
+        Note, if `return_indices` is True, the returned list is in the
+        following form: [network, station, location, channel, start time of the
+        gap, end time of the gap, duration of the gap, number of missing
+        samples, id of the trace before the gap, id of the trace after the gap]
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start and end times of the
@@ -825,9 +834,14 @@ class Stream(object):
                 nsamples -= 1
             else:
                 nsamples += 1
-            gap_list.append([stats['network'], stats['station'],
-                             stats['location'], stats['channel'],
-                             stime, etime, delta, nsamples])
+            if return_indices:
+                gap_list.append([stats['network'], stats['station'],
+                                 stats['location'], stats['channel'],
+                                 stime, etime, delta, nsamples, _i, _i+1])
+            else:
+                gap_list.append([stats['network'], stats['station'],
+                                 stats['location'], stats['channel'],
+                                 stime, etime, delta, nsamples])
         # Set the original traces to not alter the stream object.
         self.traces = copied_traces
         return gap_list
