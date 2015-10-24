@@ -19,7 +19,7 @@ from .taup_create import TauP_Create
 from .taup_path import TauP_Path
 from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
-
+from .taup_geo import calc_dist, add_geo_to_arrivals
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
@@ -378,6 +378,117 @@ class TauPyModel(object):
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
                         model=self.model)
+
+    def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
+                          source_longitude_in_deg, station_latitude_in_deg,
+                          station_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return travel times of every given phase given geographical data.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source location latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source location longitue in degrees
+        :type source_longitude_in_deg: float
+        :param station_latitude_in_deg: Station location latitude in degrees
+        :type station_latitude_in_deg: float
+        :param station_longitude_in_deg: Station location longitude in degrees
+        :type station_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg, 
+            source_longitude_in_deg, station_latitude_in_deg, 
+            station_longitude_in_deg, self.model.radiusOfEarth,
+            self.model.flatteningOfEarth)
+        arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
+                                      phase_list)
+        return arrivals
+
+    def get_pierce_points_geo(self, source_depth_in_km, source_latitude_in_deg,
+                              source_longitude_in_deg, station_latitude_in_deg,
+                              station_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source location latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source location longitue in degrees
+        :type source_longitude_in_deg: float
+        :param station_latitude_in_deg: Station location latitude in degrees
+        :type station_latitude_in_deg: float
+        :param station_longitude_in_deg: Station location longitude in degrees
+        :type station_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg, 
+            source_longitude_in_deg, station_latitude_in_deg, 
+            station_longitude_in_deg, self.model.radiusOfEarth,
+            self.model.flatteningOfEarth)
+
+        arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
+                                      phase_list)
+
+        arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+            source_longitude_in_deg, station_latitude_in_deg,
+            station_longitude_in_deg, self.model.radiusOfEarth,
+            self.model.flatteningOfEarth)
+
+        return arrivals
+
+    def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
+                          source_longitude_in_deg, station_latitude_in_deg,
+                          station_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source location latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source location longitue in degrees
+        :type source_longitude_in_deg: float
+        :param station_latitude_in_deg: Station location latitude in degrees
+        :type station_latitude_in_deg: float
+        :param station_longitude_in_deg: Station location longitude in degrees
+        :type station_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg, 
+            source_longitude_in_deg, station_latitude_in_deg, 
+            station_longitude_in_deg, self.model.radiusOfEarth,
+            self.model.flatteningOfEarth)
+
+        arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
+                                      phase_list)
+
+        arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+            source_longitude_in_deg, station_latitude_in_deg,
+            station_longitude_in_deg, self.model.radiusOfEarth,
+            self.model.flatteningOfEarth)
+ 
+        return arrivals
 
 
 def create_taup_model(model_name, output_dir, input_dir):

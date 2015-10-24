@@ -107,6 +107,28 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
+    def test_p_iasp91_geo_manua(self):
+        """
+        Manual test for P phase in IASP91 given geographical input.
+        """
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
+                                          source_latitude_in_deg=20.0,
+                                          source_longitude_in_deg=33.0,
+                                          station_latitude_in_deg=55.0,
+                                          station_longitude_in_deg=33.0,
+                                          phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+        p_arrival = arrivals[0]
+
+        self.assertEqual(p_arrival.name, "P")
+        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
+        self.assertEqual(p_arrival.purist_name, "P")
+
     def test_p_iasp91(self):
         """
         Test P phase arrival against TauP output in in model IASP91.
@@ -175,6 +197,33 @@ class TauPyModelTestCase(unittest.TestCase):
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
+
+    def test_pierce_p_iasp91_geo(self):
+        """
+        Test single pierce point against output from TauP given geographical data.
+        """
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
+                                           source_latitude_in_deg=-45.0,
+                                           source_longitude_in_deg=-50.0,
+                                           station_latitude_in_deg=-80.0,
+                                           station_longitude_in_deg=-50.0,
+                                           phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+        p_arr = arrivals[0]
+
+        # Open test file.
+        filename = os.path.join(DATA, "taup_pierce_-h_10_-ph_P_-deg_35")
+
+        expected = np.genfromtxt(filename, skip_header=1)
+
+        np.testing.assert_almost_equal(expected[:, 0],
+                                       np.degrees(p_arr.pierce['dist']), 2)
+        np.testing.assert_almost_equal(expected[:, 1],
+                                       p_arr.pierce['depth'], 1)
+        np.testing.assert_almost_equal(expected[:, 2],
+                                       p_arr.pierce['time'], 1)
+
 
     def test_vs_java_iasp91(self):
         """
@@ -291,6 +340,40 @@ class TauPyModelTestCase(unittest.TestCase):
         m = TauPyModel(model="iasp91")
         arrivals = m.get_ray_paths(source_depth_in_km=10.0,
                                    distance_in_degree=35.0, phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+
+        # Interpolate both paths to 100 samples and make sure they are
+        # approximately equal.
+        sample_points = np.linspace(0, 35, 100)
+
+        interpolated_expected = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 1])
+
+        interpolated_actual = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(6371 - arrivals[0].path['depth'], 2))
+
+        self.assertTrue(np.allclose(interpolated_actual,
+                                    interpolated_expected, rtol=1E-4, atol=0))
+
+    def test_single_path_geo_iasp91(self):
+        """
+        Test the raypath for a single phase given geographical input.
+        """
+        filename = os.path.join(DATA,
+                                "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
+        expected = np.genfromtxt(filename, comments='>')
+
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
+                                       source_latitude_in_deg=-80.0,
+                                       source_longitude_in_deg=-60.0,
+                                       station_latitude_in_deg=-45.0,
+                                       station_longitude_in_deg=-60.0,
+                                       phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
 
         # Interpolate both paths to 100 samples and make sure they are
