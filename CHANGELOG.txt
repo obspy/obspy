@@ -44,6 +44,7 @@
       format will correctly detect more files as StationXML that have very
       slight breaches of the schema but still can be interpreted as
       StationXML.
+    * fix saving `xcorrPickCorrection()` results to an image file (see #1154)
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
     * Calculating arrivals for underside reflections now works (see #1089)

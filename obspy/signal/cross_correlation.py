@@ -425,7 +425,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         ax2.legend(loc="lower right", prop={'size': "x-small"})
         # plt.legend(loc="lower left")
         if filename:
-            fig.savefig(fname=filename)
+            fig.savefig(filename)
         else:
             plt.show()
 
