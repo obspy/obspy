@@ -542,6 +542,76 @@ def get_window_times(starttime, endtime, window_length, step, offset,
     return [(t(_i[0]), t(_i[1])) for _i in windows]
 
 
+class MatplotlibBackend(object):
+    """
+    A helper class for switching the matplotlib backend.
+
+    Can be used as a context manager to temporarily switch the backend or by
+    using the :meth:`~MatplotlibBackend.switch_backend` staticmethod.
+
+    The context manager has no effect when setting ``backend=None``.
+
+    :type backend: str
+    :param backend: Name of matplotlib backend to switch to.
+    :type sloppy: bool
+    :param sloppy: If ``True``, uses :func:`matplotlib.pyplot.switch_backend`
+        and no warning will be shown if the backend was not switched
+        successfully. If ``False``, additionally tries to use
+        :func:`matplotlib.use` first and also shows a warning if the backend
+        was not switched successfully.
+    """
+    def __init__(self, backend, sloppy=True):
+        self.temporary_backend = backend
+        self.sloppy = sloppy
+        import matplotlib
+        self.previous_backend = matplotlib.get_backend()
+
+    def __enter__(self):
+        if self.temporary_backend is None:
+            return
+        self.switch_backend(backend=self.temporary_backend, sloppy=self.sloppy)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        if self.temporary_backend is None:
+            return
+        self.switch_backend(backend=self.previous_backend, sloppy=self.sloppy)
+
+    @staticmethod
+    def switch_backend(backend, sloppy=True):
+        """
+        Switch matplotlib backend.
+
+        :type backend: str
+        :param backend: Name of matplotlib backend to switch to.
+        :type sloppy: bool
+        :param sloppy: If ``True``, only uses
+            :func:`matplotlib.pyplot.switch_backend` and no warning will be
+            shown if the backend was not switched successfully. If ``False``,
+            additionally tries to use :func:`matplotlib.use` first and also
+            shows a warning if the backend was not switched successfully.
+        """
+        import matplotlib
+        # sloppy. only do a `plt.switch_backend(..)`
+        if sloppy:
+            import matplotlib.pyplot as plt
+            plt.switch_backend(backend)
+        else:
+            # check if `matplotlib.use(..)` is emitting a warning
+            try:
+                with warnings.catch_warnings(record=True):
+                    warnings.simplefilter("error", UserWarning)
+                    matplotlib.use(backend)
+            # if that's the case, follow up with `plt.switch_backend(..)`
+            except UserWarning:
+                import matplotlib.pyplot as plt
+                plt.switch_backend(backend)
+            # finally check if the switch was successful,
+            # show a warning if not
+            if matplotlib.get_backend().upper() != backend.upper():
+                msg = "Unable to change matplotlib backend to '%s'" % backend
+                warnings.warn(msg)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
