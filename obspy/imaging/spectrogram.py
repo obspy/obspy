@@ -205,6 +205,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
             fig.savefig(outfile, format=fmt)
         else:
             fig.savefig(outfile)
+        plt.close(fig)
     elif show:
         plt.show()
     else:

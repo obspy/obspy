@@ -425,6 +425,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
             # plt.legend(loc="lower left")
             if filename:
                 fig.savefig(filename)
+                plt.close(fig)
             else:
                 plt.show()
 

@@ -625,6 +625,7 @@ class Inventory(ComparingObject):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()
@@ -743,6 +744,7 @@ class Inventory(ComparingObject):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()

@@ -462,6 +462,7 @@ class Station(BaseNode):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()

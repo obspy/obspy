@@ -476,6 +476,7 @@ class Network(BaseNode):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()
@@ -587,6 +588,7 @@ class Network(BaseNode):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()
