@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 
 from obspy import Stream, __version__, read
 from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.misc import MatplotlibBackend
 
 
 def main(argv=None):
@@ -29,8 +30,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     if args.outfile is not None:
-        import matplotlib
-        matplotlib.use("agg")
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
 
     st = Stream()
     for f in args.files:
