@@ -46,4 +46,4 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r"
+  - "python -m obspy.scripts.runtests -n appveyor-ci -r --keep-images"
