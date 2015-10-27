@@ -62,6 +62,7 @@ NPZ_STORE_KEYS = [
     '_times_gaps',
     '_times_processed',
     '_spec_octaves',
+    'frequency_bin_width_octaves',
     'id',
     'overlap',
     'per',
@@ -259,8 +260,9 @@ class PPSD(object):
     @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
                           'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
-                 db_bins=(-200, -50, 1.), ppsd_length=3600., overlap=0.5,
-                 special_handling=None, **kwargs):
+                 db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
+                 special_handling=None, frequency_bin_width_octaves=0.125,
+                 **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -324,6 +326,10 @@ class PPSD(object):
             (no instrument correction, just division by
             `metadata["sensitivity"]` of provided metadata dictionary),
             'hydrophone' (no differentiation after instrument correction).
+        :type frequency_bin_width_octaves: float
+        :param frequency_bin_width_octaves: Width of bins on frequency axis in
+            fraction of octaves (default of ``0.125`` means 1/8 octave as
+            bin width).
         """
         # remove after release of 0.11.0
         if kwargs.pop("is_rotational_data", None) is True:
@@ -343,6 +349,7 @@ class PPSD(object):
         self.overlap = overlap
         self.metadata = metadata
         self.skip_on_gaps = skip_on_gaps
+        self.frequency_bin_width_octaves = frequency_bin_width_octaves
         self.ppsd_version = 1
         self.obspy_version = __version__
         self.matplotlib_version = MATPLOTLIB_VERSION
@@ -526,11 +533,12 @@ class PPSD(object):
         per_octaves_left = [per_left]
         per_octaves_right = [per_right]
         per_octaves = [per_center]
-        # we move through the period range at 1/8 octave steps
-        factor_eighth_octave = 2 ** 0.125
+        # we move through the period range at step width controlled by
+        # self.frequency_bin_width_octaves (default 1/8 octave)
+        frequency_step_factor = 2 ** self.frequency_bin_width_octaves
         # do this for the whole period range and append the values to our lists
         while per_right < per[-1]:
-            per_left *= factor_eighth_octave
+            per_left *= frequency_step_factor
             per_right = 2 * per_left
             per_center = math.sqrt(per_left * per_right)
             per_octaves_left.append(per_left)
