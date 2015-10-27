@@ -112,7 +112,7 @@ script:
   - mkdir empty
   - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r --keep-images
+  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r
 
 after_success:
   - mv .coverage ../.coverage.empty
@@ -125,4 +125,4 @@ notifications:
 
 env:
   global:
-    - secure: "qZzgI89uD606mP/l2IDLFmocZ8YFhXRngtWR1wroirhodKzdg89Qax8+UxkdmAyYKgl4+mLA8ZYMpHtojO2l2v96cOJemf/vhdp3Y+HnIURVwoPnPGXCFdC5SlQe6GB+zGqP7EBSRnsib8aexnHY7WFZAb+DOgpKi2gLs2AZeQo="
+    - OBSPY_KEEP_IMAGES=""

@@ -8,13 +8,11 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\misc\\appveyor\\run_with_env.cmd"
     PYTHON: "C:\\conda"
     MINICONDA_VERSION: "3.7.0"
+    OBSPY_KEEP_IMAGES: ""
 
   matrix:
     - PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "64"
-
-  OBSPY_IMGUR_CLIENTID:
-    secure: IFmM8yZtweFuupN5ClF3aQ==
 
 platform:
   - x64
@@ -46,4 +44,4 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r --keep-images"
+  - "python -m obspy.scripts.runtests -n appveyor-ci -r"
