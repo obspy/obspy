@@ -236,7 +236,6 @@ class MSEEDMetadata():
         Returns the msmeta dictionary previously populated
         :return: Dictionary with MSEED metadata
         """
-        return self.__msmeta__
 
     def populate_metadata(self, files, starttime=None, endtime=None,
                           c_seg=True, **kwargs):
@@ -266,6 +265,7 @@ class MSEEDMetadata():
         :return: JSON containing the MSEED metadata
         """
         return json.dumps(self.__msmeta__, cls=NumPyEncoder)
+
 
 if __name__ == '__main__':
     import doctest
