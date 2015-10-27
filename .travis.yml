@@ -122,7 +122,3 @@ after_success:
 
 notifications:
     email: false
-
-env:
-  global:
-    - OBSPY_KEEP_IMAGES=""
