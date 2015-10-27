@@ -480,20 +480,12 @@ class ImageComparison(NamedTemporaryFile):
         :returns: ``dict`` with links to uploaded images or ``str`` with
             message if upload failed
         """
-        # try to import pyimgur
         try:
             import pyimgur
-        except ImportError:
-            msg = ("Upload to imgur not possible (python package "
-                   "'pyimgur' not installed).")
-            return msg
-        # try to import requests
-        try:
             import requests
-        except ImportError:
-            msg = ("Upload to imgur not possible (python package "
-                   "'requests' not installed).")
-            return msg
+        except Exception as e:
+            msg = ("Upload to imgur failed (caught %s: %s).")
+            return msg % (e.__class__.__name__, str(e))
         # try to get imgur client id from environment
         imgur_clientid = \
             os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
