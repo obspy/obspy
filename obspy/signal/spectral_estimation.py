@@ -37,7 +37,7 @@ from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
 from obspy.imaging.scripts.scan import compressStartend
 from obspy.core.inventory import Inventory
@@ -70,6 +70,9 @@ NPZ_STORE_KEYS = [
     'skip_on_gaps',
     'spec_bins',
     'special_handling',
+    'obspy_version',
+    'matplotlib_version',
+    'ppsd_version',
     ]
 CACHED_ATTRIBUTES = ['_len', '_merge_method', '_nlap', '_nfft']
 
@@ -340,6 +343,9 @@ class PPSD(object):
         self.overlap = overlap
         self.metadata = metadata
         self.skip_on_gaps = skip_on_gaps
+        self.ppsd_version = 1
+        self.obspy_version = __version__
+        self.matplotlib_version = MATPLOTLIB_VERSION
 
         self._setup()
         self._setup_db_bins(db_bins)
