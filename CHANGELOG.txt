@@ -104,12 +104,15 @@ master:
       initializing with floating point seconds, i.e. with microseconds,
       that could lead to microseconds being off by 1 microsecond
       (see #1096)
+    * Correct gap/overlap time returned by Stream.getGaps() and printed
+      by Stream.printGaps() which was incorrect by one time the sampling
+      interval (see #1151)
+    * Stream.getGaps(): return overlaps specified in units of samples
+      as negative integers (see #1151)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
   - obspy.imaging:
     * fix some bugs in `obspy-scan` (see #1138)
-  - obspy.io.zmap
-    * Add support for time values with sub-second precision (see #1093)
   - obspy.mseed:
     * Blockette 100 is now only written for Traces that need it. Previously
       it was written or not for all Traces, depending on whether the last
@@ -136,9 +139,14 @@ master:
       format will correctly detect more files as StationXML that have very
       slight breaches of the schema but still can be interpreted as
       StationXML.
+    * fix saving `xcorrPickCorrection()` results to an image file (see #1154)
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
     * Calculating arrivals for underside reflections now works (see #1089)
+  - obspy.y:
+    * correct misspelled name of a Y specific header field (see #1127)
+  - obspy.zmap
+    * Add support for time values with sub-second precision (see #1093)
 
 0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
