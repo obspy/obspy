@@ -162,7 +162,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
                 # extra
                 params = AttribDict()
                 params.network_id = parts[3].rstrip('\x00')
-                params.side_name = parts[4].rstrip('\x00')
+                params.site_name = parts[4].rstrip('\x00')
                 params.comment = parts[5].rstrip('\x00')
                 params.sensor_type = parts[6].rstrip('\x00')
                 params.data_format = parts[7].rstrip('\x00')

@@ -53,6 +53,8 @@
   - obspy.taup:
     * Calculating arrival times for surface waves now works (see #1055)
     * Calculating arrivals for underside reflections now works (see #1089)
+  - obspy.y:
+    * correct misspelled name of a Y specific header field (see #1127)
 
 0.10.2: (doi: 10.5281/zenodo.17641)
  - obspy.core:
