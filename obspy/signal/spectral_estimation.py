@@ -62,29 +62,16 @@ NPZ_STORE_KEYS = [
     '_times_gaps',
     '_times_processed',
     '_spec_octaves',
-    'channel',
-    'delta',
-    'freq',
     'id',
-    'len',
-    'location',
-    'merge_method',
-    'network',
-    'nfft',
-    'nlap',
     'overlap',
     'per',
-    'per_octaves',
-    'per_octaves_left',
-    'per_octaves_right',
-    'period_bin_centers',
-    'period_bins',
     'ppsd_length',
     'sampling_rate',
+    'skip_on_gaps',
     'spec_bins',
     'special_handling',
-    'station',
     ]
+CACHED_ATTRIBUTES = ['_len', '_merge_method', '_nlap', '_nfft']
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -343,12 +330,7 @@ class PPSD(object):
             special_handling = "ringlaser"
 
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
-        self.network = stats.network
-        self.station = stats.station
-        self.location = stats.location
-        self.channel = stats.channel
         self.sampling_rate = stats.sampling_rate
-        self.delta = 1.0 / self.sampling_rate
         self.special_handling = special_handling and special_handling.lower()
         if self.special_handling not in (None, "ringlaser", "hydrophone"):
             msg = "Unsupported value for 'special_handling' parameter: %s"
@@ -356,41 +338,117 @@ class PPSD(object):
             raise ValueError(msg)
         self.ppsd_length = ppsd_length
         self.overlap = overlap
-        # trace length for one segment
-        self.len = int(self.sampling_rate * ppsd_length)
         self.metadata = metadata
+        self.skip_on_gaps = skip_on_gaps
 
-        if skip_on_gaps:
-            self.merge_method = -1
-        else:
-            self.merge_method = 0
-        # nfft is determined mimicking the fft setup in McNamara&Buland paper:
-        # (they take 13 segments overlapping 75% and truncate to next lower
-        #  power of 2)
-        #  - take number of points of whole ppsd segment (default 1 hour)
-        self.nfft = ppsd_length * self.sampling_rate
-        #  - make 13 single segments overlapping by 75%
-        #    (1 full segment length + 25% * 12 full segment lengths)
-        self.nfft = self.nfft / 4.0
-        #  - go to next smaller power of 2 for nfft
-        self.nfft = prev_pow_2(self.nfft)
-        #  - use 75% overlap (we end up with a little more than 13 segments..)
-        self.nlap = int(0.75 * self.nfft)
+        self._setup()
+        self._setup_db_bins(db_bins)
+
         self._times_processed = []
         self._times_data = []
         self._times_gaps = []
         self._spec_octaves = []
-        self.__setup_bins()
-        # set up the binning for the db scale
-        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
-        self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
-                                     endpoint=True)
         self._current_hist_stack = None
         self._current_hist_stack_cumulative = None
         self._current_hist_stack_xedges = None
         self._current_hist_stack_yedges = None
         self._current_times_used = []
         self._current_times_all_details = []
+
+    @property
+    def network(self):
+        return self.id.split(".")[0]
+
+    @property
+    def station(self):
+        return self.id.split(".")[1]
+
+    @property
+    def location(self):
+        return self.id.split(".")[2]
+
+    @property
+    def channel(self):
+        return self.id.split(".")[3]
+
+    @property
+    def delta(self):
+        return 1.0 / self.sampling_rate
+
+    @property
+    def len(self):
+        """
+        Trace length for one psd segment.
+        """
+        try:
+            return self._len
+        except AttributeError:
+            self._len = int(self.sampling_rate * self.ppsd_length)
+        return self._len
+
+    @property
+    def nfft(self):
+        try:
+            return self._nfft
+        except AttributeError:
+            # nfft is determined mimicking the fft setup in McNamara&Buland
+            # paper:
+            # (they take 13 segments overlapping 75% and truncate to next lower
+            #  power of 2)
+            #  - take number of points of whole ppsd segment (default 1 hour)
+            nfft = self.ppsd_length * self.sampling_rate
+            #  - make 13 single segments overlapping by 75%
+            #    (1 full segment length + 25% * 12 full segment lengths)
+            nfft = nfft / 4.0
+            #  - go to next smaller power of 2 for nfft
+            nfft = prev_pow_2(nfft)
+            self._nfft = nfft
+        return self._nfft
+
+    @property
+    def nlap(self):
+        try:
+            return self._nlap
+        except AttributeError:
+            #  - use 75% overlap
+            #    (we end up with a little more than 13 segments..)
+            self._nlap = int(0.75 * self.nfft)
+        return self._nlap
+
+    @property
+    def merge_method(self):
+        try:
+            return self._merge_method
+        except AttributeError:
+            if self.skip_on_gaps:
+                self._merge_method = -1
+            else:
+                self._merge_method = 0
+        return self._merge_method
+
+    @property
+    def freq(self):
+        return 1.0 / self.per[::-1]
+
+    @property
+    def per_octaves_left(self):
+        return self._per_octaves_left
+
+    @property
+    def per_octaves_right(self):
+        return self._per_octaves_right
+
+    @property
+    def per_octaves(self):
+        return self._per_octaves
+
+    @property
+    def period_bins(self):
+        return self.per_octaves
+
+    @property
+    def period_bin_centers(self):
+        return self._period_bin_centers
 
     @property
     @deprecated("PPSD attribute 'times' is deprecated, please use "
@@ -434,20 +492,23 @@ class PPSD(object):
     def current_times_used(self):
         return list(map(UTCDateTime, self._current_times_used))
 
-    def __setup_bins(self):
+    def _setup(self):
         """
-        Makes an initial dummy psd and thus sets up the bins and all the rest.
-        Should be able to do it without a dummy psd..
+        Set up periods, period binning etc.
         """
-        dummy = np.ones(self.len)
-        _spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
-                               noverlap=self.nlap)
-
+        # unset some base variables before recomputing all dependend variables
+        # this is needed for load_npz()
+        for key in CACHED_ATTRIBUTES:
+            try:
+                delattr(self, key)
+            except AttributeError:
+                pass
+        # make an initial dummy psd and to get the array of periods
+        _, freq = mlab.psd(np.ones(self.len), self.nfft, self.sampling_rate,
+                           noverlap=self.nlap)
         # leave out first entry (offset)
         freq = freq[1:]
-
         per = 1.0 / freq[::-1]
-        self.freq = freq
         self.per = per
         # calculate left/right edge of first period bin,
         # width of bin is one octave
@@ -469,14 +530,21 @@ class PPSD(object):
             per_octaves_left.append(per_left)
             per_octaves_right.append(per_right)
             per_octaves.append(per_center)
-        self.per_octaves_left = np.array(per_octaves_left)
-        self.per_octaves_right = np.array(per_octaves_right)
-        self.per_octaves = np.array(per_octaves)
-
-        self.period_bins = per_octaves
+        self._per_octaves_left = np.array(per_octaves_left)
+        self._per_octaves_right = np.array(per_octaves_right)
+        self._per_octaves = np.array(per_octaves)
         # mid-points of all the period bins
-        self.period_bin_centers = np.mean((self.period_bins[:-1],
-                                           self.period_bins[1:]), axis=0)
+        self._period_bin_centers = np.mean((self._per_octaves[:-1],
+                                            self._per_octaves[1:]), axis=0)
+
+    def _setup_db_bins(self, db_bins):
+        """
+        Set up the binning for the db scale. Not needed when loading a npz, as
+        we store the spectral binning in it.
+        """
+        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
+        self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
+                                     endpoint=True)
 
     def __sanity_check(self, trace):
         """
@@ -1161,6 +1229,7 @@ class PPSD(object):
             if key.startswith("_"):
                 data_ = [d for d in data_]
             setattr(ppsd, key, data_)
+        ppsd._setup()
         return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
