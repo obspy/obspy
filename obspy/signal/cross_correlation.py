@@ -407,10 +407,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         ax1.set_xlabel("time [s]")
         ax1.set_ylabel("norm. amplitude")
         ax2 = fig.add_subplot(212)
-        ax2.plot(cc_t, cc_convex, ls="", marker=".", c="k",
-                 label="xcorr (convex)")
-        ax2.plot(cc_t, cc_concave, ls="", marker=".", c="0.7",
-                 label="xcorr (concave)")
+        ax2.plot(cc_t, cc_convex, ls="", marker=".", color="k",
+                    label="xcorr (convex)")
+        ax2.plot(cc_t, cc_concave, ls="", marker=".", color="0.7",
+                    label="xcorr (concave)")
         ax2.plot(cc_t[first_sample:last_sample + 1],
                  cc[first_sample:last_sample + 1], "b.",
                  label="used for fitting")
