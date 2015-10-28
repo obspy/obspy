@@ -69,8 +69,8 @@ install:
   # install packages not available via conda
   - pip install coveralls
   - pip install geographiclib
-  # current pyimgur stable release has a py2.6 incompatibility
-  - pip install https://github.com/megies/PyImgur/archive/py26.zip
+  # current pyimgur stable release has a py3 incompatibility
+  - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
   - conda list
   # done installing dependencies
