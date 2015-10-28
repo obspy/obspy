@@ -29,7 +29,8 @@ from lxml import etree
 import numpy as np
 
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
-from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
+from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
+    MatplotlibBackend
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -309,7 +310,9 @@ class ImageComparison(NamedTemporaryFile):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import font_manager, get_backend, rcParams, rcdefaults
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+
+        from matplotlib import font_manager, rcParams, rcdefaults
         import locale
 
         try:
@@ -321,14 +324,6 @@ class ImageComparison(NamedTemporaryFile):
             except:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
-                warnings.warn(msg)
-
-        if get_backend().upper() != 'AGG':
-            import matplotlib
-            try:
-                matplotlib.use('AGG', warn=False)
-            except TypeError:
-                msg = "Image comparison requires matplotlib backend 'AGG'"
                 warnings.warn(msg)
 
         # set matplotlib builtin default settings for testing
