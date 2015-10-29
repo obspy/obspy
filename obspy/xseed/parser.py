@@ -25,6 +25,7 @@ import zipfile
 with standard_library.hooks():
     import urllib.request  # @UnresolvedImport
 
+from lxml import etree
 from lxml.etree import parse as xmlparse
 from lxml.etree import Element, SubElement, tostring
 import numpy as np
@@ -190,7 +191,17 @@ class Parser(object):
             self._format = 'SEED'
         elif first_byte == b'<':
             # XML files should always starts with an '<'
-            self._parseXSEED(data)
+            try:
+                self._parseXSEED(data)
+            except Exception as e:
+                # if it looks like the XML is not XSEED, tell the user
+                if not is_XSEED(data):
+                    msg = ("Encountered an error during parsing XSEED file "
+                           "(%s: %s). Note that the XSEED parser can not "
+                           "parse StationXML. Please contact developers if "
+                           "your file really is XML-SEED.")
+                    raise Exception(msg % (e.__class__.__name__, str(e)))
+                raise
             self._format = 'XSEED'
         else:
             raise IOError("First byte of data must be in [0-9<]")
@@ -1229,3 +1240,43 @@ class Parser(object):
         tr_e.stats.channel += "E"
 
         return Stream(traces=[tr_z, tr_n, tr_e])
+
+
+def is_XSEED(path_or_file_object):
+    """
+    Simple function checking if the passed object contains a XML-SEED file.
+    Returns True of False. Only checks the name of the root tag, which should
+    be "xseed".
+
+    >>> from obspy.core.util import getExampleFile
+    >>> xseed_file = getExampleFile("dataless.seed.BW_FURT.xml")
+    >>> is_XSEED(xseed_file)
+    True
+    >>> stationxml_file = getExampleFile("IU_ANMO_00_BHZ.xml")
+    >>> is_XSEED(stationxml_file)
+    False
+
+    :param path_or_file_object: File name or file like object.
+    """
+    if isinstance(path_or_file_object, etree._Element):
+        xmldoc = path_or_file_object
+    else:
+        try:
+            xmldoc = etree.parse(path_or_file_object)
+        except etree.XMLSyntaxError:
+            return False
+    try:
+        root = xmldoc.getroot()
+    except:
+        return False
+    # check tag of root element
+    try:
+        assert root.tag == "xseed"
+    except:
+        return False
+    return True
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
