@@ -46,8 +46,6 @@ def is_StationXML(path_or_file_object):
     Simple function checking if the passed object contains a valid StationXML
     1.0 file. Returns True of False.
 
-    This is simply done by validating against the StationXML schema.
-
     :param path_or_file_object: File name or file like object.
     """
     if isinstance(path_or_file_object, etree._Element):
