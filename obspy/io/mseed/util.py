@@ -101,7 +101,6 @@ def get_timing_and_data_quality(file_or_file_object):
     of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
 
-
     :type file_or_file_object: str or file
     :param file_or_file_object: Mini-SEED file name or open file-like object
         containing a Mini-SEED record.
@@ -140,8 +139,8 @@ def get_timing_and_data_quality(file_or_file_object):
     [Bit 1]   Time correction applied
     [Bit 2]   Beginning of an event, station trigger
     [Bit 3]   End of the event, station detriggers
-    [Bit 4]   A positive leap second happened during this record (A 61 second minute)
-    [Bit 5]   A negative leap second happened during this record (A 59 second minute
+    [Bit 4]   A positive leap second happened during this record
+    [Bit 5]   A negative leap second happened during this record
     [Bit 6]   Event in progress
 
     I/O and clock flags
