@@ -332,6 +332,112 @@ def locations2degrees(lat1, long1, lat2, long2):
     return gd
 
 
+def locations2degreesazi(lat1, long1, lat2, long2):
+    """
+    Convenience function to calculate the great circle distance, forward and
+    backward azimuth between two points on a spherical Earth.
+
+    This method uses triangles on a sphere. For more accurate values use the
+    geodesic distance calculations of geopy (https://github.com/geopy/geopy).
+
+    http://en.wikipedia.org/wiki/Great-circle_navigation#Course_and_distance
+    http://en.wikipedia.org/wiki/Great-circle_navigation#cite_note-2
+
+    :type lat1: float
+    :param lat1: Latitude of point 1 in degrees
+    :type long1: float
+    :param long1: Longitude of point 1 in degrees
+    :type lat2: float
+    :param lat2: Latitude of point 2 in degrees
+    :type long2: float
+    :param long2: Longitude of point 2 in degrees
+    :rtype: tuple of 3 floats
+    :return: Distance in degrees, forward and backward azimuth as floating point
+             numbers.
+    """
+    # Convert to radians.
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    long1 = math.radians(long1)
+    long2 = math.radians(long2)
+    long_diff = long2 - long1
+    gd = math.degrees(
+        math.atan2(
+            math.sqrt((
+                math.cos(lat2) * math.sin(long_diff)) ** 2 +
+                (math.cos(lat1) * math.sin(lat2) - math.sin(lat1) *
+                    math.cos(lat2) * math.cos(long_diff)) ** 2),
+            math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) *
+            math.cos(long_diff)))
+    az = math.degrees(
+        math.atan2(
+            math.sin(long_diff),
+            math.cos(lat1) * math.tan(lat2) - math.sin(lat1) * math.cos(long_diff)
+        ))
+    az2 = math.degrees(
+        math.atan2(
+            math.sin(long_diff),
+            - math.cos(lat2) * math.tan(lat1) + math.sin(lat2) * math.cos(long_diff)
+        ))
+    baz = az2 + 180.
+    if az < 0:
+        az += 360.
+    if baz < 0:
+        baz += 360.
+    return gd, az, baz
+
+
+def degreesazi2location(lat1, long1, dist, azi):
+    """
+    Convenience function to calculate a location on a spherical Earth
+    given a starting location, distance and azimuth.
+
+    This method uses triangles on a sphere.
+
+    http://en.wikipedia.org/wiki/Great-circle_navigation#cite_note-7
+
+    :type lat1: float
+    :param lat1: Latitude of point 1 in degrees
+    :type long1: float
+    :param long1: Longitude of point 1 in degrees
+    :type dist: float
+    :param dist: distance of point 2 in degrees
+    :type azi: float
+    :param azi: azimuth towards point 2 in degrees
+    :rtype: tuple of 2 floats
+    :return: Latitude and Longitude of point 2
+    """
+
+    # Convert to radians.
+    lat1 = math.radians(lat1)
+    long1 = math.radians(long1)
+    dist = math.radians(dist)
+    azi = math.radians(azi)
+
+    lat2 = math.degrees(
+        math.atan2(
+            math.sin(lat1) * math.cos(dist) + math.cos(lat1) * math.sin(dist) * math.cos(azi),
+            math.sqrt(
+                (math.cos(lat1) * math.cos(dist) - math.sin(lat1) * math.sin(dist) * math.cos(azi)) ** 2
+                + (math.sin(dist) * math.sin(azi)) ** 2
+            )
+        ))
+
+    long_diff = math.atan2(
+            math.sin(dist) * math.sin(azi),
+            math.cos(lat1) * math.cos(dist) - math.sin(lat1) * math.sin(dist) * math.cos(azi)
+        )
+
+    long2 = math.degrees(long_diff + long1)
+
+    if long2 > 180.:
+        long2 -= 360.
+    elif long2 < -180.:
+        long2 += 360.
+
+    return lat2, long2
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
