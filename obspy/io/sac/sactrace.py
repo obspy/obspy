@@ -314,12 +314,14 @@ Convert to/from ObsPy Traces
                 npts: 3000
                calib: 1.0
                  sac: AttribDict({'cmpaz': 0.0, 'nzyear': 2009, 'nzjday': 236,
-                 'iztype': 9, 'evla': 0.0, 'nzhour': 0, 'lcalda': 0, 'evlo': 0.0,
-                 'scale': 1.0, 'nvhdr': 6, 'depmin': -1515.8131, 'kcmpnm': 'EHZ',
-                 'nzsec': 3, 'internal0': 2.0, 'depmen': -4.495563, 'cmpinc': 0.0,
-                 'depmax': 1293.771, 'iftype': 1, 'delta': 0.0099999998, 'nzmsec':
-                 0, 'lpspol': 1, 'b': 0.0, 'e': 29.99, 'leven': 1, 'kstnm': 'RJOB',
-                 'nzmin': 20, 'lovrok': 1, 'npts': 3000, 'knetwk': 'BW'})
+                 'iztype': 9, 'evla': 0.0, 'nzhour': 0, 'lcalda': 0,
+                 'evlo': 0.0, 'scale': 1.0, 'nvhdr': 6, 'depmin': -1515.8131,
+                 'kcmpnm': 'EHZ', 'nzsec': 3, 'internal0': 2.0,
+                 'depmen': -4.495563, 'cmpinc': 0.0,
+                 'depmax': 1293.771, 'iftype': 1, 'delta': 0.0099999998,
+                 'nzmsec': 0, 'lpspol': 1, 'b': 0.0, 'e': 29.99, 'leven': 1,
+                 'kstnm': 'RJOB', 'nzmin': 20, 'lovrok': 1, 'npts': 3000,
+                 'knetwk': 'BW'})
 
 
 """
