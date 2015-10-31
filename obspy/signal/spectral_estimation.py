@@ -1219,7 +1219,7 @@ class PPSD(object):
         :param filename: Name of numpy .npz output file
         """
         out = dict([(key, getattr(self, key)) for key in NPZ_STORE_KEYS])
-        np.savez(filename, **out)
+        np.savez_compressed(filename, **out)
 
     @staticmethod
     def load_npz(filename, metadata=None):
