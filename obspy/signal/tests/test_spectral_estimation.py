@@ -71,6 +71,7 @@ def _get_ppsd():
     st = Stream([tr])
     ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
     ppsd.add(st)
+    ppsd.calculate_histogram()
     return ppsd
 
 
@@ -166,13 +167,13 @@ class PsdTestCase(unittest.TestCase):
         self.assertEqual(len(ppsd.times), 4)
         self.assertEqual(ppsd.nfft, 65536)
         self.assertEqual(ppsd.nlap, 49152)
-        np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
+        np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
         # add the same data a second time (which should do nothing at all) and
         # test again - but it will raise UserWarnings, which we omit for now
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             ppsd.add(st)
-            np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
         # test the binning arrays
         binning = np.load(file_binning)
         np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
@@ -188,26 +189,17 @@ class PsdTestCase(unittest.TestCase):
         np.testing.assert_array_equal(mean, result_mode_mean['mean'])
 
         # test saving and loading of the PPSD (using a temporary file)
-        with NamedTemporaryFile() as tf:
+        with NamedTemporaryFile(suffix=".npz") as tf:
             filename = tf.name
-            # test saving and loading an uncompressed file
-            ppsd.save(filename, compress=False)
-            ppsd_loaded = PPSD.load(filename)
+            # test saving and loading to npz
+            ppsd.save_npz(filename)
+            ppsd_loaded = PPSD.load_npz(filename)
+            ppsd_loaded.calculate_histogram()
             self.assertEqual(len(ppsd_loaded.times), 4)
             self.assertEqual(ppsd_loaded.nfft, 65536)
             self.assertEqual(ppsd_loaded.nlap, 49152)
-            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
-            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
-                                          binning['spec_bins'])
-            np.testing.assert_array_equal(ppsd_loaded.period_bins,
-                                          binning['period_bins'])
-            # test saving and loading a compressed file
-            ppsd.save(filename, compress=True)
-            ppsd_loaded = PPSD.load(filename)
-            self.assertEqual(len(ppsd_loaded.times), 4)
-            self.assertEqual(ppsd_loaded.nfft, 65536)
-            self.assertEqual(ppsd_loaded.nlap, 49152)
-            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.current_histogram,
+                                          result_hist)
             np.testing.assert_array_equal(ppsd_loaded.spec_bins,
                                           binning['spec_bins'])
             np.testing.assert_array_equal(ppsd_loaded.period_bins,
