@@ -85,6 +85,11 @@ master:
      - new option `PPSD.plot(..., cumulative=True)` for a cumulative plot of
        the histogram, i.e. a non-exceedence percentage visualization, similar
        to the `percentile` option.
+     - changes to special handling of rotational: now handled by kwarg
+       `special_handling="ringlaser"` (kwarg `is_rotational_data` is
+       deprecated, see #916)
+     - special handling option for hydrophone data (no differentiation, see
+       #916)
  - obspy.taup
    * Added support for nd file format for input velocity models. Allows for 
      named discontinuities at arbitrary depths allowing for less Earth like
