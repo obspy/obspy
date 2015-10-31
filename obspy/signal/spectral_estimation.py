@@ -998,6 +998,7 @@ class PPSD(object):
         hist_stack, xedges, yedges = np.histogram2d(
             self.per_octaves, self._spec_octaves[0],
             bins=(self.period_bins, self.spec_bins))
+        hist_stack = hist_stack.astype(np.uint64)
         hist_stack.fill(0)
 
         # concatenate all used spectra, evaluate index of amplitude bin each
@@ -1027,7 +1028,7 @@ class PPSD(object):
         # normalize every column with its overall number of entries
         # (can vary from the number of self.times because of values outside
         #  the histogram db ranges)
-        norm = hist_stack_cumul[:, -1].copy()
+        norm = hist_stack_cumul[:, -1].copy().astype(np.float64)
         # avoid zero division
         norm[norm == 0] = 1
         hist_stack_cumul = (hist_stack_cumul.T / norm).T
