@@ -11,9 +11,9 @@
 
        core
        sacpz
-       pysac
-       pysac.sactrace
-       pysac.util
-       pysac.arrayio
+       header
+       arrayio
+       sactrace
+       util
 
     .. comment to end block

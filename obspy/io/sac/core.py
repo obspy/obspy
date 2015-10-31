@@ -3,7 +3,7 @@
 SAC bindings to ObsPy core module.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon
+    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -18,7 +18,7 @@ import struct
 
 from obspy import Stream
 from obspy.core.compatibility import is_bytes_buffer
-from .pysac import SACTrace
+from .sactrace import SACTrace
 
 
 def _is_sac(filename):

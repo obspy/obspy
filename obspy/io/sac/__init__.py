@@ -11,6 +11,12 @@ defined by IRIS (http://www.iris.edu/files/sac-manual/).
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
+The SAC implementation in ObsPy is a modified version of ``PySac``
+(https://github.com/LANL-Seismoacoustics/pysac), developed under U.S.
+Government contract DE-AC52-06NA25396 for Los Alamos National Laboratory
+(LANL) and copyrighted for Los Alamos National Security, LLC under
+LA-CC-15-051.
+
 Reading
 -------
 Similar to reading any other waveform data format using
@@ -70,8 +76,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from .sacpz import attach_paz, attach_resp
-from .pysac.util import SacError, SacIOError
-from .pysac import SACTrace
+from .util import SacError, SacIOError
+from .sactrace import SACTrace
 
 
 if __name__ == '__main__':
