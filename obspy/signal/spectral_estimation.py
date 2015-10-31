@@ -656,6 +656,11 @@ class PPSD(object):
         :returns: True if appropriate data were found and the ppsd statistics
                 were changed, False otherwise.
         """
+        if self.metadata is None:
+            msg = ("PPSD instance has no metadata attached, which are needed "
+                   "for processing the data. When using 'PPSD.load_npz()' use "
+                   "'metadata' kwarg to provide metadata.")
+            raise Exception(msg)
         self.__check_ppsd_length()
         # return later if any changes were applied to the ppsd statistics
         changed = False
@@ -1216,15 +1221,16 @@ class PPSD(object):
         np.savez(filename, **out)
 
     @staticmethod
-    def load_npz(filename, metadata):
+    def load_npz(filename, metadata=None):
         """
-        Loads previously computed PPSD results (from a
+        Load previously computed PPSD results.
+
+        Load previously computed PPSD results from a
         compressed numpy binary in npz format, written with
-        :meth:`~PPSD.write_npz`).
-        Metadata have to be specified again during loading because they are not
-        stored in the npz format. If no additional data will be
-        added (i.e. only visualizing an existing ppsd stored on
-        disk) just set `metadata=None`.
+        :meth:`~PPSD.write_npz`.
+        If more data are to be added and processed, metadata have to be
+        specified again during loading because they are not
+        stored in the npz format.
 
         :type filename: str
         :param filename: Name of numpy .npz file with stored PPSD data
