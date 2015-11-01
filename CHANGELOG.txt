@@ -54,7 +54,7 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
    * New Lanczos interpolation/resampling (see #1101)
-   * PPSD (see #931 and #1108):
+   * PPSD (see #931, #1108, #1130):
      - Algorithm for PSD computation was improved, especially affecting results
        at long periods (for detailed discussion see #931 and #1108).
      - Keywords `paz` and `parser` were removed in favor of new keyword
@@ -75,6 +75,11 @@ master:
        Parser object). When using a poles and zeros dictionary response
        calculation is unchanged (as no information on other stages is
        available, of course).
+     - PPSD now stores the psd for each time segment that gets processed,
+       instead of only storing the stacked histogram. That way, differing
+       custom stacks with various selection criteria (e.g. time of day, by
+       weekday, etc.) can now be made from the same processed data
+       (see #1130).
      - New save/load mechanism using numpy .npz binary format that circumvents
        some problems with the old pickle mechanism:
        `PPSD.save_npz()` and `PPSD.load_npz()`
@@ -85,11 +90,16 @@ master:
      - new option `PPSD.plot(..., cumulative=True)` for a cumulative plot of
        the histogram, i.e. a non-exceedence percentage visualization, similar
        to the `percentile` option.
+     - x axis in `PPSD.plot()` can be switched to frequency in Hz with
+       `PPSD.plot(..., xaxis_frequency=True)` (see #1130)
      - changes to special handling of rotational: now handled by kwarg
        `special_handling="ringlaser"` (kwarg `is_rotational_data` is
        deprecated, see #916)
      - special handling option for hydrophone data (no differentiation, see
        #916)
+     - bin width on frequency axis can now be controlled using
+       `PPSD(..., frequency_bin_width_octaves=...)` (in fractions of octaves,
+       default is the old fixed setting of 1/8 octaves as in PQLX)
  - obspy.taup
    * Added support for nd file format for input velocity models. Allows for 
      named discontinuities at arbitrary depths allowing for less Earth like
