@@ -26,7 +26,7 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
     return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
-def calc_vincenty_inverse(lat1, lon1, lat2, lon2):
+def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=None, f=None):
     """
     Vincenty Inverse Solution of Geodesics on the Ellipsoid.
 
@@ -41,6 +41,8 @@ def calc_vincenty_inverse(lat1, lon1, lat2, lon2):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
+    :param a: Radius of Earth in m. If None WGS84 is assumed.
+    :param f: Flattening of Earth. If None WGS84 is assumed.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
     :raises: This method may have no solution between two nearly antipodal
@@ -194,7 +196,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     return gps2dist_azimuth(lat1, lon1, lat2, lon2)
 
 
-def gps2dist_azimuth(lat1, lon1, lat2, lon2):
+def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=None, f=None):
     """
     Computes the distance between two geographic points on the WGS84
     ellipsoid and the forward and backward azimuths between these points.
@@ -207,6 +209,8 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
+    :param a: Radius of Earth in m. If None WGS84 is assumed.
+    :param f: Flattening of Earth. If None WGS84 is assumed.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
 
@@ -223,7 +227,10 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2):
     try:
         # try using geographiclib
         from geographiclib.geodesic import Geodesic
-        result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
+        if ((a is None) and (f is None)):
+            result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
+        else:
+            result = Geodesic(a=a, f=f).Inverse(lat1, lon1, lat2, lon2)
         azim = result['azi1']
         if azim < 0:
             azim += 360
@@ -232,7 +239,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2):
     except ImportError:
         pass
     try:
-        values = calc_vincenty_inverse(lat1, lon1, lat2, lon2)
+        values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
         if np.alltrue(np.isnan(values)):
             raise StopIteration
         return values

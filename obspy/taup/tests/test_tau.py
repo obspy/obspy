@@ -200,7 +200,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
     def test_pierce_p_iasp91_geo(self):
         """
-        Test single pierce point against output from TauP given geographical data.
+        Test single pierce point against output from TauP using geo data.
         """
         m = TauPyModel(model="iasp91")
         arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
@@ -223,7 +223,6 @@ class TauPyModelTestCase(unittest.TestCase):
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
-
 
     def test_vs_java_iasp91(self):
         """

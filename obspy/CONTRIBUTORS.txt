@@ -56,6 +56,7 @@ Benjamin Sullivan
 Chad Trabant
 Tommaso Fabbri
 Leonardo Uieda
+Andrew Walker
 Marcus Walther
 Joachim Wassermann
 Mark C. Williams

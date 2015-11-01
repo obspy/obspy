@@ -380,8 +380,8 @@ class TauPyModel(object):
                         model=self.model)
 
     def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
-                          source_longitude_in_deg, station_latitude_in_deg,
-                          station_longitude_in_deg, phase_list=("ttall",)):
+                             source_longitude_in_deg, station_latitude_in_deg,
+                             station_longitude_in_deg, phase_list=("ttall",)):
         """
         Return travel times of every given phase given geographical data.
 
@@ -404,10 +404,12 @@ class TauPyModel(object):
             attributes.
         :rtype: :class:`Arrivals`
         """
-        distance_in_deg = calc_dist(source_latitude_in_deg, 
-            source_longitude_in_deg, station_latitude_in_deg, 
-            station_longitude_in_deg, self.model.radiusOfEarth,
-            self.model.flatteningOfEarth)
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    station_latitude_in_deg,
+                                    station_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.model.flatteningOfEarth)
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
                                       phase_list)
         return arrivals
@@ -436,18 +438,22 @@ class TauPyModel(object):
             attributes.
         :rtype: :class:`Arrivals`
         """
-        distance_in_deg = calc_dist(source_latitude_in_deg, 
-            source_longitude_in_deg, station_latitude_in_deg, 
-            station_longitude_in_deg, self.model.radiusOfEarth,
-            self.model.flatteningOfEarth)
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    station_latitude_in_deg,
+                                    station_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.model.flatteningOfEarth)
 
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
-                                      phase_list)
+                                          phase_list)
 
         arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-            source_longitude_in_deg, station_latitude_in_deg,
-            station_longitude_in_deg, self.model.radiusOfEarth,
-            self.model.flatteningOfEarth)
+                                       source_longitude_in_deg,
+                                       station_latitude_in_deg,
+                                       station_longitude_in_deg,
+                                       self.model.radiusOfEarth,
+                                       self.model.flatteningOfEarth)
 
         return arrivals
 
@@ -475,19 +481,23 @@ class TauPyModel(object):
             attributes.
         :rtype: :class:`Arrivals`
         """
-        distance_in_deg = calc_dist(source_latitude_in_deg, 
-            source_longitude_in_deg, station_latitude_in_deg, 
-            station_longitude_in_deg, self.model.radiusOfEarth,
-            self.model.flatteningOfEarth)
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    station_latitude_in_deg,
+                                    station_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.model.flatteningOfEarth)
 
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
                                       phase_list)
 
         arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-            source_longitude_in_deg, station_latitude_in_deg,
-            station_longitude_in_deg, self.model.radiusOfEarth,
-            self.model.flatteningOfEarth)
- 
+                                       source_longitude_in_deg,
+                                       station_latitude_in_deg,
+                                       station_longitude_in_deg,
+                                       self.model.radiusOfEarth,
+                                       self.model.flatteningOfEarth)
+
         return arrivals
 
 
