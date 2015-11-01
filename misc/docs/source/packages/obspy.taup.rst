@@ -27,6 +27,7 @@
        tau_branch
        tau_model
        taup_create
+       taup_geo
        taup_path
        taup_pierce
        taup
