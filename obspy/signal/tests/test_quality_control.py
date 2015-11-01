@@ -54,10 +54,12 @@ class QualityControlTestCase(unittest.TestCase):
             files.append(os.path.join(self.path, _i))
         start_time = '1989-06-22T00:00:00'
         end_time = '1989-06-22T23:59:59'
+        # start_time = '2015-10-17T00:00:00'
+        # end_time = '2015-10-18T00:00:00'
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time,
                                          end_time, c_seg=False)
-        # print(mseed_metadata.get_json_meta())
+        print(mseed_metadata.get_json_meta())
         self.assertEqual(mseed_metadata.msmeta['num_gaps'], 1)
         self.assertNotIn("c_segments", mseed_metadata.msmeta)
         mseed_more_filenames = ['NA.SEUT..BHZ.D.2015.289',
