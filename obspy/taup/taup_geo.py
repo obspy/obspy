@@ -22,6 +22,12 @@ import warnings
 import numpy as np
 
 from .helper_classes import TimeDistGeo
+from ..geodetics import gps2dist_azimuth, kilometer2degrees
+from ..geodetics.base import HAS_GEOGRAPHICLIB
+
+
+if HAS_GEOGRAPHICLIB:
+    from geographiclib.geodesic import Geodesic
 
 
 def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
@@ -46,19 +52,17 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
     :return: distance_in_deg
     :rtype: float
     """
-    try:
-        import geographiclib.geodesic as geod
-        ellipsoid = geod.Geodesic(a=radius_of_earth_in_km*1000.0,
-                                  f=flattening_of_earth)
+    if HAS_GEOGRAPHICLIB:
+        ellipsoid = Geodesic(a=radius_of_earth_in_km*1000.0,
+                             f=flattening_of_earth)
         g = ellipsoid.Inverse(source_latitude_in_deg,
                               source_longitude_in_deg,
                               station_latitude_in_deg,
                               station_longitude_in_deg)
         distance_in_deg = g['a12']
 
-    except ImportError:
+    else:
         # geographiclib is not installed - use obspy/geodetics
-        from ..geodetics import gps2dist_azimuth, kilometer2degrees
         values = gps2dist_azimuth(source_latitude_in_deg,
                                   source_longitude_in_deg,
                                   station_latitude_in_deg,
@@ -102,10 +106,9 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
         attributes.
     :rtype: :class:`Arrivals`
     """
-    try:
-        import geographiclib.geodesic as geod
-        ellipsoid = geod.Geodesic(a=radius_of_earth_in_km * 1000.0,
-                                  f=flattening_of_earth)
+    if HAS_GEOGRAPHICLIB:
+        ellipsoid = Geodesic(a=radius_of_earth_in_km * 1000.0,
+                             f=flattening_of_earth)
         g = ellipsoid.Inverse(source_latitude_in_deg, source_longitude_in_deg,
                               station_latitude_in_deg,
                               station_longitude_in_deg)
@@ -146,12 +149,12 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                     pathList.append(diffTDG)
                 arrival.path = np.concatenate(pathList)
 
-    except ImportError:
+    else:
         # geographiclib is not installed ...
         # and  obspy/geodetics does not help much
         msg = "Not able to evaluate positions on path or pierce points. " + \
               "Arrivals object will not be modified. " + \
               "Install the Python module 'geographiclib' to solve this issue."
-        warnings.warn(msg)
+        raise ImportError(msg)
 
     return arrivals

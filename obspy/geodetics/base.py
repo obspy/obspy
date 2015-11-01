@@ -20,6 +20,15 @@ import numpy as np
 from obspy.core.util.decorator import deprecated
 
 
+# checking for geographiclib
+try:
+    import geographiclib  # @UnusedImport # NOQA
+    from geographiclib.geodesic import Geodesic
+    HAS_GEOGRAPHICLIB = True
+except ImportError:
+    HAS_GEOGRAPHICLIB = False
+
+
 @deprecated("'calcVincentyInverse' has been renamed to "
             "'calc_vincenty_inverse'. Use that instead.")
 def calcVincentyInverse(lat1, lon1, lat2, lon2):
@@ -224,9 +233,7 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=None, f=None):
         has known limitations for two nearly antipodal points and is ca. 4x
         slower.
     """
-    try:
-        # try using geographiclib
-        from geographiclib.geodesic import Geodesic
+    if HAS_GEOGRAPHICLIB:
         if ((a is None) and (f is None)):
             result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
         else:
@@ -236,22 +243,22 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=None, f=None):
             azim += 360
         bazim = result['azi2'] + 180
         return (result['s12'], azim, bazim)
-    except ImportError:
-        pass
-    try:
-        values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
-        if np.alltrue(np.isnan(values)):
-            raise StopIteration
-        return values
-    except StopIteration:
-        msg = "Catching unstable calculation on antipodes. " + \
-              "The currently used Vincenty's Inverse formulae " + \
-              "has known limitations for two nearly antipodal points. " + \
-              "Install the Python module 'geographiclib' to solve this issue."
-        warnings.warn(msg)
-        return (20004314.5, 0.0, 0.0)
-    except ValueError as e:
-        raise e
+    else:
+        try:
+            values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
+            if np.alltrue(np.isnan(values)):
+                raise StopIteration
+            return values
+        except StopIteration:
+            msg = ("Catching unstable calculation on antipodes. "
+                   "The currently used Vincenty's Inverse formulae "
+                   "has known limitations for two nearly antipodal points. "
+                   "Install the Python module 'geographiclib' to solve this "
+                   "issue.")
+            warnings.warn(msg)
+            return (20004314.5, 0.0, 0.0)
+        except ValueError as e:
+            raise e
 
 
 def kilometer2degrees(kilometer, radius=6371):

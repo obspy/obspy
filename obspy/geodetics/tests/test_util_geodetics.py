@@ -10,13 +10,7 @@ import warnings
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
                              gps2dist_azimuth, kilometer2degrees,
                              locations2degrees)
-
-# checking for geographiclib
-try:
-    import geographiclib  # @UnusedImport # NOQA
-    HAS_GEOGRAPHICLIB = True
-except ImportError:
-    HAS_GEOGRAPHICLIB = False
+from obspy.geodetics.base import HAS_GEOGRAPHICLIB
 
 
 class UtilGeodeticsTestCase(unittest.TestCase):
