@@ -1047,7 +1047,7 @@ class SlownessModel(object):
                                              sLayer['topP'],
                                              currWaveType) is False):
                     # Don't calculate prevTD if we can avoid it
-                    if isCurrOK:
+                    if isCurrOK and currTD is not None:
                         if isPrevOK:
                             prevPrevTD = prevTD
                         else:
@@ -1075,7 +1075,10 @@ class SlownessModel(object):
                         self.addSlowness(p, self.PWAVE)
                         self.addSlowness(p, self.SWAVE)
                         currTD = prevTD
+                        isCurrOK = isPrevOK
                         prevTD = prevPrevTD
+                        prevPrevTD = None
+                        isPrevOK = prevTD is not None
                     else:
                         # Make guess as to error estimate due to linear
                         # interpolation if it is not ok, then we split both
@@ -1121,6 +1124,7 @@ class SlownessModel(object):
                             self.addSlowness(p2, self.PWAVE)
                             self.addSlowness(p2, self.SWAVE)
                             currTD = prevPrevTD
+                            isCurrOK = currTD is not None
                             isPrevOK = False
                             if j > 0:
                                 # Back up one step unless we are at the
