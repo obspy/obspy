@@ -155,6 +155,6 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
         msg = "Not able to evaluate positions on path or pierce points. " + \
               "Arrivals object will not be modified. " + \
               "Install the Python module 'geographiclib' to solve this issue."
-        raise ImportError(msg)
+        warnings.warn(msg)
 
     return arrivals
