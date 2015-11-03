@@ -11,5 +11,6 @@
 
        core
        sacio
+       sacpz
 
     .. comment to end block
