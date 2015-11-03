@@ -16,7 +16,9 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
+from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
                                               welch_window, NPZ_STORE_KEYS)
@@ -82,6 +84,7 @@ class PsdTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = PATH
+        self.path_images = os.path.join(PATH, os.pardir, "images")
 
     def test_obspy_psd_vs_pitsa(self):
         """
@@ -328,6 +331,94 @@ class PsdTestCase(unittest.TestCase):
         for key in NPZ_STORE_KEYS:
             np.testing.assert_equal(getattr(ppsd, key),
                                     getattr(ppsd_loaded, key))
+
+    def test_PPSD_restricted_stacks(self):
+        """
+        Test PPSD.calculate_histogram() with restrictions to what data should
+        be stacked. Also includes image tests.
+        """
+        # set up a bogus PPSD, with fixed random psds but with real start times
+        # of psd pieces, to facilitate testing the stack selection.
+        ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
+                    db_bins=(-200, -50, 20.), frequency_bin_width_octaves=1.4)
+        ppsd._times_processed = np.load(
+            os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        np.random.seed(1234)
+        ppsd._spec_octaves = [
+            arr for arr in np.random.uniform(
+                -200, -50,
+                (len(ppsd._times_processed), len(ppsd.per_octaves)))]
+
+        # Test callback function that selects a fixed random set of the
+        # timestamps.  Also checks that we get passed the type we expect,
+        # which is 1D numpy ndarray of float type.
+        def callback(t_array):
+            self.assertIsInstance(t_array, np.ndarray)
+            self.assertEqual(t_array.shape, (len(ppsd._times_processed),))
+            self.assertEqual(t_array.dtype, np.float64)
+            np.random.seed(1234)
+            res = np.random.random_integers(0, 1, len(t_array)).astype(np.bool)
+            return res
+
+        # test several different sets of stack criteria, should cover
+        # everything, even with lots of combined criteria
+        stack_criteria_list = [
+            dict(starttime=UTCDateTime(2015, 3, 8), month=[2, 3, 5, 7, 8]),
+            dict(endtime=UTCDateTime(2015, 6, 7), year=[2015],
+                 time_of_weekday=[(1, 0, 24), (2, 0, 24), (-1, 0, 11)]),
+            dict(year=[2013, 2014, 2016, 2017], month=[2, 3, 4]),
+            dict(month=[1, 2, 5, 6, 8], year=2015),
+            dict(isoweek=[4, 5, 6, 13, 22, 23, 24, 44, 45]),
+            dict(time_of_weekday=[(5, 22, 24), (6, 0, 2), (6, 22, 24)]),
+            dict(callback=callback, month=[1, 3, 5, 7]),
+            dict(callback=callback),
+            ]
+        expected_selections = np.load(
+            os.path.join(self.path, "ppsd_stack_selections.npy"))
+
+        # test every set of criteria
+        for stack_criteria, expected_selection in zip(
+                stack_criteria_list, expected_selections):
+            selection_got = ppsd._stack_selection(**stack_criteria)
+            np.testing.assert_array_equal(selection_got, expected_selection)
+
+        # test one particular selection as an image test
+        plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
+                           period_lim=(0.01, 50))
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            ppsd.plot(filename=ic.name, show=False, **plot_kwargs)
+
+        # test it again, checking that updating an existing plot with different
+        # stack selection works..
+        #  a) we start with the stack for the expected image and test that it
+        #     matches (like above):
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            fig = ppsd.plot(show=False, **plot_kwargs)
+            fig.savefig(ic.name)
+        #  b) now reuse figure and set the histogram with a different stack,
+        #     image test should fail:
+        ppsd.calculate_histogram(**stack_criteria_list[3])
+        try:
+            with ImageComparison(self.path_images,
+                                 'ppsd_restricted_stack.png') as ic:
+                ppsd._plot_histogram(fig=fig, draw=True)
+                fig.savefig(ic.name)
+        except ImageComparisonException:
+            pass
+        else:
+            msg = "Expected ImageComparisonException was not raised."
+            self.fail(msg)
+        #  c) now reuse figure and set the original histogram stack again,
+        #     image test should pass agin:
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            ppsd._plot_histogram(fig=fig, draw=True)
+            fig.savefig(ic.name)
 
 
 def suite():
