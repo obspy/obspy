@@ -845,8 +845,9 @@ class PPSD(object):
             self._current_times_all_details = times_all_details
             return times_all_details
 
-    def _stack_selection(self, starttime, endtime, time_of_weekday, year,
-                         month, isoweek, callback):
+    def _stack_selection(self, starttime=None, endtime=None,
+                         time_of_weekday=None, year=None, month=None,
+                         isoweek=None, callback=None):
         """
         For details on restrictions see :meth:`calculate_histogram`.
 
@@ -878,12 +879,20 @@ class PPSD(object):
                 selected_time_of_weekday |= selected_
             selected &= selected_time_of_weekday
         if year is not None:
+            try:
+                year[0]
+            except TypeError:
+                year = [year]
             times_all_details = self._get_times_all_details()
             selected_ = times_all_details['year'] == year[0]
             for year_ in year[1:]:
                 selected_ |= times_all_details['year'] == year_
             selected &= selected_
         if month is not None:
+            try:
+                month[0]
+            except TypeError:
+                month = [month]
             times_all_details = self._get_times_all_details()
             selected_ = times_all_details['month'] == month[0]
             for month_ in month[1:]:
@@ -891,9 +900,9 @@ class PPSD(object):
             selected &= selected_
         if isoweek is not None:
             times_all_details = self._get_times_all_details()
-            selected_ = times_all_details['isoweek'] == isoweek[0]
+            selected_ = times_all_details['iso_week'] == isoweek[0]
             for isoweek_ in isoweek[1:]:
-                selected_ |= times_all_details['isoweek'] == isoweek_
+                selected_ |= times_all_details['iso_week'] == isoweek_
             selected &= selected_
         if callback is not None:
             selected &= callback(times_all)
@@ -975,12 +984,6 @@ class PPSD(object):
             (e.g. `starttime`).
         :rtype: None
         """
-        self._current_hist_stack = None
-        self._current_hist_stack_xedges = None
-        self._current_hist_stack_yedges = None
-        self._current_hist_stack_cumulative = None
-        self._current_times_used = []
-
         # determine which psd pieces should be used in the stack,
         # based on all selection criteria specified by user
         selected = self._stack_selection(
@@ -991,15 +994,22 @@ class PPSD(object):
         used_count = len(used_indices)
         used_times = np.array(self._times_processed)[used_indices]
 
-        if not used_count:
-            return
-
         # inital setup of 2D histogram
         hist_stack, xedges, yedges = np.histogram2d(
             self.per_octaves, self._spec_octaves[0],
             bins=(self.period_bins, self.spec_bins))
         hist_stack = hist_stack.astype(np.uint64)
         hist_stack.fill(0)
+
+        # empty selection, set all zero histogram stacks
+        if not used_count:
+            self._current_hist_stack = hist_stack
+            self._current_hist_stack_xedges = xedges
+            self._current_hist_stack_yedges = yedges
+            self._current_hist_stack_cumulative = np.zeros_like(
+                hist_stack, dtype=np.float32)
+            self._current_times_used = used_times
+            return
 
         # concatenate all used spectra, evaluate index of amplitude bin each
         # value belongs to
@@ -1312,9 +1322,12 @@ class PPSD(object):
             in Hertz as opposed to the default of period in seconds.
         """
         # check if any data has been added yet
-        if not self.current_histogram_count:
-            msg = 'No data to plot'
-            raise Exception(msg)
+        if self._current_hist_stack is None:
+            if self._times_processed:
+                self.calculate_histogram()
+            else:
+                msg = 'No data to plot'
+                raise Exception(msg)
 
         fig = plt.figure()
         fig.ppsd = AttribDict()
@@ -1411,20 +1424,24 @@ class PPSD(object):
         data from a new stack.
         """
         ax = fig.axes[0]
+        xlim = ax.get_xlim()
         if "quadmesh" in fig.ppsd:
             ax.collections.remove(fig.ppsd.pop("quadmesh"))
 
         if fig.ppsd.cumulative:
             data = self.current_histogram_cumulative * 100.0
         else:
+            # avoid divison with zero in case of empty stack
             data = (
-                self.current_histogram * 100.0 / self.current_histogram_count)
+                self.current_histogram * 100.0 /
+                (self.current_histogram_count or 1))
+
+        if fig.ppsd.xaxis_frequency:
+            xedges = 1.0 / self._current_hist_stack_xedges
+        else:
+            xedges = self._current_hist_stack_xedges
 
         if "meshgrid" not in fig.ppsd:
-            if fig.ppsd.xaxis_frequency:
-                xedges = 1.0 / self._current_hist_stack_xedges
-            else:
-                xedges = self._current_hist_stack_xedges
             fig.ppsd.meshgrid = np.meshgrid(xedges,
                                             self._current_hist_stack_yedges)
         X, Y = fig.ppsd.meshgrid
@@ -1444,7 +1461,7 @@ class PPSD(object):
             ax.grid(b=True, which="major")
             ax.grid(b=True, which="minor")
 
-        ax.set_xlim(*sorted([xedges[0], xedges[-1]]))
+        ax.set_xlim(*xlim)
 
         if filename is not None:
             plt.savefig(filename)
@@ -1500,6 +1517,9 @@ class PPSD(object):
         unused_times = [UTCDateTime(t) for t in self._times_processed
                         if t not in self._current_times_used]
         for times, color in zip((used_times, unused_times), ("b", "0.6")):
+            # skip on empty lists (i.e. all data used, or none used in stack)
+            if not times:
+                continue
             starts = [date2num(t.datetime) for t in times]
             ends = [date2num((t + self.ppsd_length).datetime)
                     for t in times]
