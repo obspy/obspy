@@ -340,7 +340,7 @@ class PsdTestCase(unittest.TestCase):
         # set up a bogus PPSD, with fixed random psds but with real start times
         # of psd pieces, to facilitate testing the stack selection.
         ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
-                    db_bins=(-200, -50, 20.), frequency_bin_width_octaves=1.4)
+                    db_bins=(-200, -50, 20.), period_step_octaves=1.4)
         ppsd._times_processed = np.load(
             os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
         np.random.seed(1234)

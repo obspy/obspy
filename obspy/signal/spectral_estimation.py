@@ -62,7 +62,8 @@ NPZ_STORE_KEYS = [
     '_times_gaps',
     '_times_processed',
     '_spec_octaves',
-    'frequency_bin_width_octaves',
+    'period_smoothing_width_octaves',
+    'period_step_octaves',
     'id',
     'overlap',
     'per',
@@ -261,8 +262,8 @@ class PPSD(object):
                           'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
-                 special_handling=None, frequency_bin_width_octaves=0.125,
-                 **kwargs):
+                 special_handling=None, period_smoothing_width_octaves=1.0,
+                 period_step_octaves=0.125, **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -326,10 +327,16 @@ class PPSD(object):
             (no instrument correction, just division by
             `metadata["sensitivity"]` of provided metadata dictionary),
             'hydrophone' (no differentiation after instrument correction).
-        :type frequency_bin_width_octaves: float
-        :param frequency_bin_width_octaves: Width of bins on frequency axis in
-            fraction of octaves (default of ``0.125`` means 1/8 octave as
-            bin width).
+        :type period_smoothing_width_octaves: float
+        :param period_smoothing_width_octaves: Determines over what
+            period/frequency range the psd is smoothed around every central
+            period/frequency. Given in fractions of octaves (default of ``1``
+            means the psd is averaged over a full octave at each central
+            frequency).
+        :type period_step_octaves: float
+        :param period_step_octaves: Step length on frequency axis in fraction
+            of octaves (default of ``0.125`` means one smoothed psd value on
+            the frequency axis is measured every 1/8 of an octave).
         """
         # remove after release of 0.11.0
         if kwargs.pop("is_rotational_data", None) is True:
@@ -349,7 +356,8 @@ class PPSD(object):
         self.overlap = overlap
         self.metadata = metadata
         self.skip_on_gaps = skip_on_gaps
-        self.frequency_bin_width_octaves = frequency_bin_width_octaves
+        self.period_smoothing_width_octaves = period_smoothing_width_octaves
+        self.period_step_octaves = period_step_octaves
         self.ppsd_version = 1
         self.obspy_version = __version__
         self.matplotlib_version = MATPLOTLIB_VERSION
@@ -523,23 +531,29 @@ class PPSD(object):
         freq = freq[1:]
         per = 1.0 / freq[::-1]
         self.per = per
+        # we step through the period range at step width controlled by
+        # self.period_step_octaves (default 1/8 octave)
+        period_step_factor = 2 ** self.period_step_octaves
+        # the width of frequencies we average over for every bin is controlled
+        # by self.period_smoothing_width_octaves (default one full octave)
+        period_smoothing_width_factor = \
+            2 ** self.period_smoothing_width_octaves
         # calculate left/right edge of first period bin,
         # width of bin is one octave
         per_left = per[0] / 2
-        per_right = 2 * per_left
+        per_right = per_left * period_smoothing_width_factor
         # calculate center period of first period bin
         per_center = math.sqrt(per_left * per_right)
-        # calculate mean of all spectral values in the first bin
         per_octaves_left = [per_left]
         per_octaves_right = [per_right]
         per_octaves = [per_center]
-        # we move through the period range at step width controlled by
-        # self.frequency_bin_width_octaves (default 1/8 octave)
-        frequency_step_factor = 2 ** self.frequency_bin_width_octaves
         # do this for the whole period range and append the values to our lists
         while per_right < per[-1]:
-            per_left *= frequency_step_factor
-            per_right = 2 * per_left
+            # move left edge of smoothing bin further
+            per_left *= period_step_factor
+            # determine right edge of smoothing bin
+            per_right = per_left * period_smoothing_width_factor
+            # remember center period
             per_center = math.sqrt(per_left * per_right)
             per_octaves_left.append(per_left)
             per_octaves_right.append(per_right)
@@ -1299,7 +1313,9 @@ class PPSD(object):
         :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats, optional
-        :param period_lim: Period limits to show in histogram.
+        :param period_lim: Period limits to show in histogram. When setting
+            ``xaxis_frequency=True``, this is expected to be frequency range in
+            Hz.
         :type show_mode: bool, optional
         :param show_mode: Enable/disable plotting of mode psd values.
         :type show_mean: bool, optional
