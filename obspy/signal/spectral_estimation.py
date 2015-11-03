@@ -539,8 +539,7 @@ class PPSD(object):
         period_smoothing_width_factor = \
             2 ** self.period_smoothing_width_octaves
         # calculate left/right edge of first period bin,
-        # width of bin is one octave
-        per_left = per[0] / 2
+        per_left = per[0]
         per_right = per_left * period_smoothing_width_factor
         # calculate center period of first period bin
         per_center = math.sqrt(per_left * per_right)
