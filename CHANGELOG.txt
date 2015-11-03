@@ -90,9 +90,9 @@ master:
      named discontinuities at arbitrary depths allowing for less Earth like
      models (see #1147).
    * Added three methods (`get_travel_times_geo()`, `get_pierce_points_geo()`
-     and `get_get_ray_paths_geo()`) to `TauPyModel` to handle station and
+     and `get_ray_paths_geo()`) to `TauPyModel` to handle station and
      event location data as latitude and longitude, instead of the source to
-     station distance in degrees. In addition `get_get_ray_paths_geo()` and
+     station distance in degrees. In addition `get_ray_paths_geo()` and
      `get_pierce_points_geo()` decorate the returned pierce points and ray
      paths with the latitude and longitude of each point. Some functionality
      needs the `geographiclib` module to be installed. (See #1164.)

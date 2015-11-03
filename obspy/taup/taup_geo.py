@@ -71,9 +71,10 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
                                   f=flattening_of_earth)
         distance_in_km = values[0]/1000.0
         # NB - km2deg assumes spherical Earth... generate a warning
-        msg = "Assuming spherical Earth when calculating angle. " + \
-              "Install the Python module 'geographiclib' to solve this issue."
-        warnings.warn(msg)
+        if flattening_of_earth != 0.0:
+            msg = "Assuming spherical Earth when calculating angle. " + \
+                  "Install the Python module 'geographiclib' to solve this."
+            warnings.warn(msg)
         distance_in_deg = kilometer2degrees(distance_in_km,
                                             radius=radius_of_earth_in_km)
     return distance_in_deg
@@ -152,9 +153,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     else:
         # geographiclib is not installed ...
         # and  obspy/geodetics does not help much
-        msg = "Not able to evaluate positions on path or pierce points. " + \
-              "Arrivals object will not be modified. " + \
-              "Install the Python module 'geographiclib' to solve this issue."
-        warnings.warn(msg)
+        msg = "You need to install the Python module 'geographiclib'."
+        raise ImportError(msg)
 
     return arrivals

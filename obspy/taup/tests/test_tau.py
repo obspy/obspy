@@ -17,9 +17,10 @@ import numpy as np
 
 from obspy.taup import TauPyModel
 # We need HAS_GEOGRAPHICLIB, but we need to be able to set
-# in both places!
+# in all three places... there must be a better way!
 import obspy.geodetics.base as geobase
 import obspy.taup.taup_geo as taup_geo
+import obspy.taup.tau as tau
 
 
 # Most generic way to get the data folder path.
@@ -147,6 +148,7 @@ class TauPyModelTestCase(unittest.TestCase):
         has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
         geobase.HAS_GEOGRAPHICLIB = False
         taup_geo.HAS_GEOGRAPHICLIB = False
+        tau.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
         arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
                                           source_latitude_in_deg=20.0,
@@ -156,6 +158,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                           phase_list=["P"])
         geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
         taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
         self.assertEqual(len(arrivals), 1)
         p_arrival = arrivals[0]
 
@@ -259,6 +262,8 @@ class TauPyModelTestCase(unittest.TestCase):
 
         expected = np.genfromtxt(filename, skip_header=1)
 
+        # NB: we should check pierce['lat'] and pierce['lon']
+        # here, but as yet we do not have a reference for comparison.
         np.testing.assert_almost_equal(expected[:, 0],
                                        np.degrees(p_arr.pierce['dist']), 2)
         np.testing.assert_almost_equal(expected[:, 1],
@@ -276,6 +281,7 @@ class TauPyModelTestCase(unittest.TestCase):
         has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
         geobase.HAS_GEOGRAPHICLIB = False
         taup_geo.HAS_GEOGRAPHICLIB = False
+        tau.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
         arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
                                            source_latitude_in_deg=-45.0,
@@ -285,6 +291,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                            phase_list=["P"])
         geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
         taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
 
@@ -293,6 +300,9 @@ class TauPyModelTestCase(unittest.TestCase):
 
         expected = np.genfromtxt(filename, skip_header=1)
 
+        # NB: we do not check pierce['lat'] and pierce['lon']
+        # here, as these are not calculated when geographiclib
+        # is not installed.
         np.testing.assert_almost_equal(expected[:, 0],
                                        np.degrees(p_arr.pierce['dist']), 2)
         np.testing.assert_almost_equal(expected[:, 1],
@@ -469,6 +479,8 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
+        # NB: we should check path['lat'] and path['lon']
+        # here, but as yet we do not have a reference for comparison.
         self.assertTrue(np.allclose(interpolated_actual,
                                     interpolated_expected, rtol=1E-4, atol=0))
 
@@ -482,6 +494,7 @@ class TauPyModelTestCase(unittest.TestCase):
         has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
         geobase.HAS_GEOGRAPHICLIB = False
         taup_geo.HAS_GEOGRAPHICLIB = False
+        tau.HAS_GEOGRAPHICLIB = False
         filename = os.path.join(DATA,
                                 "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
         expected = np.genfromtxt(filename, comments='>')
@@ -495,6 +508,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                        phase_list=["P"])
         geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
         taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
         self.assertEqual(len(arrivals), 1)
 
         # Interpolate both paths to 100 samples and make sure they are
@@ -511,6 +525,9 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
+        # NB: we do not check path['lat'] and path['lon']
+        # here, as these are not calculated when geographiclib
+        # is not installed.
         self.assertTrue(np.allclose(interpolated_actual,
                                     interpolated_expected, rtol=1E-4, atol=0))
 

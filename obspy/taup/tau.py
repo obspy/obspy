@@ -8,6 +8,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
+import warnings
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ from .taup_path import TauP_Path
 from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
 from .taup_geo import calc_dist, add_geo_to_arrivals
+from ..geodetics.base import HAS_GEOGRAPHICLIB
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
@@ -448,12 +450,19 @@ class TauPyModel(object):
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
                                           phase_list)
 
-        arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-                                       source_longitude_in_deg,
-                                       station_latitude_in_deg,
-                                       station_longitude_in_deg,
-                                       self.model.radiusOfEarth,
-                                       self.model.flatteningOfEarth)
+        if HAS_GEOGRAPHICLIB:
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           station_latitude_in_deg,
+                                           station_longitude_in_deg,
+                                           self.model.radiusOfEarth,
+                                           self.model.flatteningOfEarth)
+        else:
+            msg = "Not able to evaluate positions of pierce points. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
 
         return arrivals
 
@@ -491,12 +500,19 @@ class TauPyModel(object):
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
                                       phase_list)
 
-        arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-                                       source_longitude_in_deg,
-                                       station_latitude_in_deg,
-                                       station_longitude_in_deg,
-                                       self.model.radiusOfEarth,
-                                       self.model.flatteningOfEarth)
+        if HAS_GEOGRAPHICLIB:
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           station_latitude_in_deg,
+                                           station_longitude_in_deg,
+                                           self.model.radiusOfEarth,
+                                           self.model.flatteningOfEarth)
+        else:
+            msg = "Not able to evaluate positions of points on path. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
 
         return arrivals
 
