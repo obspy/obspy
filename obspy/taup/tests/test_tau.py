@@ -258,18 +258,22 @@ class TauPyModelTestCase(unittest.TestCase):
         p_arr = arrivals[0]
 
         # Open test file.
-        filename = os.path.join(DATA, "taup_pierce_-h_10_-ph_P_-deg_35")
+        filename = os.path.join(DATA,
+                                "taup_pierce_-mod_isp91_ph_P_-h_10_-evt_" +
+                                "-45_-50_-sta_-80_-50")
 
         expected = np.genfromtxt(filename, skip_header=1)
 
-        # NB: we should check pierce['lat'] and pierce['lon']
-        # here, but as yet we do not have a reference for comparison.
         np.testing.assert_almost_equal(expected[:, 0],
                                        np.degrees(p_arr.pierce['dist']), 2)
         np.testing.assert_almost_equal(expected[:, 1],
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
+        np.testing.assert_almost_equal(expected[:, 3],
+                                       p_arr.pierce['lat'], 1)
+        np.testing.assert_almost_equal(expected[:, 4],
+                                       p_arr.pierce['lon'], 1)
 
     def test_pierce_p_iasp91_fallback_geo(self):
         """
@@ -453,7 +457,8 @@ class TauPyModelTestCase(unittest.TestCase):
         This tests the case when geographiclib is installed.
         """
         filename = os.path.join(DATA,
-                                "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
+                                "taup_path_-mod_iasp91_-o_stdout_-h_10_" +
+                                "-ph_P_-sta_-45_-60_evt_-80_-60")
         expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="iasp91")
@@ -469,20 +474,41 @@ class TauPyModelTestCase(unittest.TestCase):
         # approximately equal.
         sample_points = np.linspace(0, 35, 100)
 
-        interpolated_expected = np.interp(
+        interpolated_expected_depth = np.interp(
             sample_points,
             expected[:, 0],
             expected[:, 1])
+        interpolated_expected_lat = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 2])
+        interpolated_expected_lon = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 3])
 
-        interpolated_actual = np.interp(
+        interpolated_actual_depth = np.interp(
             sample_points,
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
+        interpolated_actual_lat = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(arrivals[0].path['lat'], 2))
+        interpolated_actual_lon = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(arrivals[0].path['lon'], 2))
 
-        # NB: we should check path['lat'] and path['lon']
-        # here, but as yet we do not have a reference for comparison.
-        self.assertTrue(np.allclose(interpolated_actual,
-                                    interpolated_expected, rtol=1E-4, atol=0))
+        self.assertTrue(np.allclose(interpolated_actual_depth,
+                                    interpolated_expected_depth,
+                                    rtol=1E-4, atol=0))
+        self.assertTrue(np.allclose(interpolated_actual_lat,
+                                    interpolated_expected_lat,
+                                    rtol=1E-4, atol=0))
+        self.assertTrue(np.allclose(interpolated_actual_lon,
+                                    interpolated_expected_lon,
+                                    rtol=1E-4, atol=0))
 
     def test_single_path_geo_fallback_iasp91(self):
         """
