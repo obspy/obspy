@@ -19,7 +19,8 @@ from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 
 from .base import (calc_vincenty_inverse, degrees2kilometers, gps2dist_azimuth,
-                   kilometer2degrees, locations2degrees)
+                   kilometer2degrees, locations2degrees, locations2degreesazi,
+                   degreesazi2location)
 from .flinnengdahl import FlinnEngdahl
 
 

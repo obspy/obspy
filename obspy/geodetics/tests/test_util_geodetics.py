@@ -7,9 +7,12 @@ import math
 import unittest
 import warnings
 
+import numpy as np
+
 from obspy.geodetics import (calc_vincenty_inverse, degrees2kilometers,
                              gps2dist_azimuth, kilometer2degrees,
-                             locations2degrees)
+                             locations2degrees, locations2degreesazi,
+                             degreesazi2location)
 
 # checking for geographiclib
 try:
@@ -198,6 +201,58 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         _, azim, bazim = gps2dist_azimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
+
+    def test_location2degreeazi(self):
+
+        def assertLoc(lat1, long1, lat2, long2, dist_ref, az_ref, baz_ref):
+            dist, az, baz = locations2degreesazi(lat1, long1, lat2, long2)
+            np.testing.assert_approx_equal(dist_ref, dist)
+            np.testing.assert_approx_equal(az_ref, az)
+            np.testing.assert_approx_equal(baz_ref, baz)
+
+        # easy examples:
+        assertLoc(0., 0., 0., 90., 90., 90., 270.)
+        assertLoc(0., 0., 0., -90., 90., 270., 90.)
+
+        # extreme values (actually the inverse problem is not well defined for
+        # azimuth and backazimuth at the antipode on the sphere)
+        assertLoc(0., 0., 0., 180., 180., 90., 270.)
+        assertLoc(0., 0., 0., 180. + 1e-10, 180., 270., 90.)
+        assertLoc(0., 0., 0., 180. - 1e-10, 180., 90., 270.)
+
+        # with values from the Great Circle Calculator:
+        #   http://williams.best.vwh.net/gccalc.htm
+        # make sure to use planet with 6731 km radius
+
+        dist = kilometer2degrees(1544.7575610296103)
+        assertLoc(10., -30., 20., -40., dist,
+                  317.1859315422566, 134.58168775356438)
+        assertLoc(10., 30., 20., 40., dist,
+                  360 - 317.1859315422566, 360 - 134.58168775356438)
+
+        dist = kilometer2degrees(14915.969621185166)
+        assertLoc(37., 94., -12., -43., dist,
+                  291.6262987361543, 49.37643107566005)
+
+    def test_degreeazi2location(self):
+
+        def assertLoc(lat1, long1, dist, az, lat2_ref, long2_ref):
+            lat2, long2 = degreesazi2location(lat1, long1, dist, az)
+            np.testing.assert_approx_equal(lat2_ref, lat2)
+            np.testing.assert_approx_equal(long2_ref, long2)
+
+        # easy example:
+        assertLoc(0., 0., 90., 0., 90., 0.)
+
+        # with values from the Great Circle Calculator:
+        #   http://williams.best.vwh.net/gccalc.htm
+        # make sure to use planet with 6731 km radius
+
+        dist = kilometer2degrees(11345)
+        assertLoc(13., 67., dist, 17., 59.82113, -147.66887)
+
+        dist = kilometer2degrees(23766)
+        assertLoc(58., 17., dist, 273., -46.10974333, 143.87875)
 
 
 def suite():
