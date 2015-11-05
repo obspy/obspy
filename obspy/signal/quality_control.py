@@ -236,6 +236,7 @@ class MSEEDMetadata():
         Returns the msmeta dictionary previously populated
         :return: Dictionary with MSEED metadata
         """
+        return self.__msmeta__
 
     def populate_metadata(self, files, starttime=None, endtime=None,
                           c_seg=True, **kwargs):

@@ -72,7 +72,7 @@ class QualityControlTestCase(unittest.TestCase):
                                           end_time, c_seg=False)
         self.assertEqual(mseed_metadata2.msmeta['telemetry_sync_error'], 0)
         self.assertEqual(mseed_metadata2.msmeta['suspect_time_tag'], 6)
-        # self.assertEqual(mseed_metadata2.msmeta['digitizer_clipping'], 1)
+        self.assertEqual(mseed_metadata2.msmeta['digitizer_clipping'], 1)
         print(mseed_metadata2.msmeta)
 
     def test_get_json_meta_no_tq(self):
