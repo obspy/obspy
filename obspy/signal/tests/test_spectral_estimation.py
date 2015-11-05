@@ -6,7 +6,6 @@ The psd test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
 
 import gzip
 import os
@@ -21,7 +20,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window, NPZ_STORE_KEYS)
+                                              welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -280,14 +279,10 @@ class PsdTestCase(unittest.TestCase):
 
         # load expected results, for both only PAZ and full response
         filename_paz = os.path.join(self.path, 'IUANMO_ppsd_paz.npz')
-        results_paz = np.load(filename_paz)
-        filename_full = os.path.join(self.path, 'IUANMO_ppsd_fullresponse.npz')
-        results_full = np.load(filename_full)
-        arrays_to_check = ['_times_data', '_times_processed', '_times_gaps',
-                           '_spec_octaves', 'per_octaves', 'per_octaves_right',
-                           'per_octaves_left', 'period_bin_centers',
-                           'spec_bins', 'period_bins']
-        arrays_to_check = [native_str(key) for key in arrays_to_check]
+        results_paz = PPSD.load_npz(filename_paz, metadata=None)
+        filename_full = os.path.join(self.path,
+                                     'IUANMO_ppsd_fullresponse.npz')
+        results_full = PPSD.load_npz(filename_full, metadata=None)
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
@@ -295,10 +290,17 @@ class PsdTestCase(unittest.TestCase):
         ppsd.add(st)
         # commented code to generate the test data:
         # ## np.savez(filename_paz,
-        # ##          **dict([(k, getattr(ppsd, k)) for k in arrays_to_check]))
-        for key in arrays_to_check:
-            self.assertTrue(np.allclose(
-                getattr(ppsd, key), results_paz[key], rtol=1e-5))
+        # ##          **dict([(k, getattr(ppsd, k))
+        # ##                  for k in PPSD.NPZ_STORE_KEYS]))
+        for key in PPSD.NPZ_STORE_KEYS_ARRAY_TYPES:
+            np.testing.assert_allclose(
+                getattr(ppsd, key), getattr(results_paz, key), rtol=1e-5)
+        for key in PPSD.NPZ_STORE_KEYS_LIST_TYPES:
+            for got, expected in zip(getattr(ppsd, key),
+                                     getattr(results_paz, key)):
+                np.testing.assert_allclose(got, expected, rtol=1e-5)
+        for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+            self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
         # (also test various means of initialization, basically testing the
         #  decorator that maps the deprecated keywords)
@@ -310,10 +312,17 @@ class PsdTestCase(unittest.TestCase):
             # commented code to generate the test data:
             # ## np.savez(filename_full,
             # ##          **dict([(k, getattr(ppsd, k))
-            # ##                  for k in arrays_to_check]))
-            for key in arrays_to_check:
-                self.assertTrue(np.allclose(
-                    getattr(ppsd, key), results_full[key], rtol=1e-5))
+            # ##                  for k in PPSD.NPZ_STORE_KEYS]))
+            for key in PPSD.NPZ_STORE_KEYS_ARRAY_TYPES:
+                np.testing.assert_allclose(
+                    getattr(ppsd, key), getattr(results_full, key), rtol=1e-5)
+            for key in PPSD.NPZ_STORE_KEYS_LIST_TYPES:
+                for got, expected in zip(getattr(ppsd, key),
+                                         getattr(results_full, key)):
+                    np.testing.assert_allclose(got, expected, rtol=1e-5)
+            for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                self.assertEqual(getattr(ppsd, key),
+                                 getattr(results_full, key))
 
     def test_PPSD_save_and_load_npz(self):
         """
@@ -329,9 +338,12 @@ class PsdTestCase(unittest.TestCase):
             ppsd.save_npz(filename)
             ppsd_loaded = PPSD.load_npz(filename, metadata=paz)
 
-        for key in NPZ_STORE_KEYS:
-            np.testing.assert_equal(getattr(ppsd, key),
-                                    getattr(ppsd_loaded, key))
+        for key in PPSD.NPZ_STORE_KEYS:
+            if isinstance(getattr(ppsd, key), np.ndarray):
+                np.testing.assert_equal(getattr(ppsd, key),
+                                        getattr(ppsd_loaded, key))
+            else:
+                self.assertEqual(getattr(ppsd, key), getattr(ppsd_loaded, key))
 
     def test_PPSD_restricted_stacks(self):
         """
