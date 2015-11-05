@@ -1104,17 +1104,29 @@ class PPSD(object):
 
         # concatenate all used spectra, evaluate index of amplitude bin each
         # value belongs to
-        inds = np.hstack([self._spec_octaves[i][:-1] for i in used_indices])
+        inds = np.hstack([self._binned_psds[i] for i in used_indices])
+        # for "inds" now a number of ..
+        #   - 0 means below lowest bin (bin index 0)
+        #   - 1 means, hit lowest bin (bin index 0)
+        #   - ..
+        #   - len(self.spec_bins) means above top bin
         # we need minus one because searchsorted returns the insertion index in
         # the array of bin edges which is the index of the corresponding bin
         # plus one
         inds = self.spec_bins.searchsorted(inds, side="left") - 1
+        # for "inds" now a number of ..
+        #   - -1 means below lowest bin (bin index 0)
+        #   - 0 means, hit lowest bin (bin index 0)
+        #   - ..
+        #   - (len(self.spec_bins)-1) means above top bin
         # values that are left of first bin edge have to be moved back into the
         # binning
         inds[inds == -1] = 0
+        # same goes for values right of last bin edge
+        inds[inds == len(self.spec_bins) - 1] -= 1
         # reshape such that we can iterate over the array, extracting for
         # each period bin an array of all amplitude bins we have hit
-        inds = inds.reshape((used_count, len(self.period_bin_centers) - 1)).T
+        inds = inds.reshape((used_count, len(self.period_bin_centers))).T
         for i, inds_ in enumerate(inds):
             # count how often each bin has been hit for this period bin,
             # set the current 2D histogram column accordingly
