@@ -57,26 +57,43 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-NPZ_STORE_KEYS = [
+NPZ_STORE_KEYS_LIST_TYPES = [
+    # things related to processed data
     '_times_data',
     '_times_gaps',
     '_times_processed',
-    '_spec_octaves',
+    '_binned_psds',
+    # version numbers
+    'matplotlib_version',
+    ]
+NPZ_STORE_KEYS_SIMPLE_TYPES = [
+    # things related to Stats passed at __init__
+    'id',
+    'sampling_rate',
+    # kwargs passed during __init__
+    'skip_on_gaps',
+    'ppsd_length',
+    'overlap',
+    'special_handling',
     'period_smoothing_width_octaves',
     'period_step_octaves',
-    'id',
-    'overlap',
-    'per',
-    'ppsd_length',
-    'sampling_rate',
-    'skip_on_gaps',
-    'spec_bins',
-    'special_handling',
-    'obspy_version',
-    'matplotlib_version',
+    # version numbers
     'ppsd_version',
+    'obspy_version',
+    'numpy_version',
+    # attributes derived during __init__
+    '_len',
+    '_nlap',
+    '_nfft',
     ]
-CACHED_ATTRIBUTES = ['_len', '_merge_method', '_nlap', '_nfft']
+NPZ_STORE_KEYS_ARRAY_TYPES = [
+    # attributes derived during __init__
+    '_db_bin_edges',
+    ]
+NPZ_STORE_KEYS = (
+    NPZ_STORE_KEYS_ARRAY_TYPES +
+    NPZ_STORE_KEYS_LIST_TYPES +
+    NPZ_STORE_KEYS_SIMPLE_TYPES)
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -345,30 +362,58 @@ class PPSD(object):
             warnings.warn(msg, ObsPyDeprecationWarning)
             special_handling = "ringlaser"
 
+        # save things related to args
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.sampling_rate = stats.sampling_rate
+        self.metadata = metadata
+
+        # save things related to kwargs
+        self.skip_on_gaps = skip_on_gaps
+        self.db_bins = db_bins
+        self.ppsd_length = ppsd_length
+        self.overlap = overlap
         self.special_handling = special_handling and special_handling.lower()
         if self.special_handling not in (None, "ringlaser", "hydrophone"):
             msg = "Unsupported value for 'special_handling' parameter: %s"
             msg = msg % self.special_handling
             raise ValueError(msg)
-        self.ppsd_length = ppsd_length
-        self.overlap = overlap
-        self.metadata = metadata
-        self.skip_on_gaps = skip_on_gaps
         self.period_smoothing_width_octaves = period_smoothing_width_octaves
         self.period_step_octaves = period_step_octaves
+
+        # save version numbers
         self.ppsd_version = 1
         self.obspy_version = __version__
         self.matplotlib_version = MATPLOTLIB_VERSION
+        self.numpy_version = np.__version__
 
-        self._setup()
-        self._setup_db_bins(db_bins)
+        # calculate derived attributes
+        # nfft is determined mimicking the fft setup in McNamara&Buland
+        # paper:
+        # (they take 13 segments overlapping 75% and truncate to next lower
+        #  power of 2)
+        #  - take number of points of whole ppsd segment (default 1 hour)
+        nfft = self.ppsd_length * self.sampling_rate
+        #  - make 13 single segments overlapping by 75%
+        #    (1 full segment length + 25% * 12 full segment lengths)
+        nfft = nfft / 4.0
+        #  - go to next smaller power of 2 for nfft
+        self._nfft = prev_pow_2(nfft)
+        #  - use 75% overlap
+        #    (we end up with a little more than 13 segments..)
+        self._nlap = int(0.75 * self.nfft)
+        # Trace length for one psd segment.
+        self._len = int(self.sampling_rate * self.ppsd_length)
 
+        self._setup_period_binning()
+        self._db_bin_edges = self._db_binning(db_bins)
+
+        # lists related to persistent processed data
         self._times_processed = []
         self._times_data = []
         self._times_gaps = []
-        self._spec_octaves = []
+        self._binned_psds = []
+
+        # internal attributes for stacks on processed data
         self._current_hist_stack = None
         self._current_hist_stack_cumulative = None
         self._current_hist_stack_xedges = None
@@ -401,75 +446,121 @@ class PPSD(object):
         """
         Trace length for one psd segment.
         """
-        try:
-            return self._len
-        except AttributeError:
-            self._len = int(self.sampling_rate * self.ppsd_length)
         return self._len
 
     @property
     def nfft(self):
-        try:
-            return self._nfft
-        except AttributeError:
-            # nfft is determined mimicking the fft setup in McNamara&Buland
-            # paper:
-            # (they take 13 segments overlapping 75% and truncate to next lower
-            #  power of 2)
-            #  - take number of points of whole ppsd segment (default 1 hour)
-            nfft = self.ppsd_length * self.sampling_rate
-            #  - make 13 single segments overlapping by 75%
-            #    (1 full segment length + 25% * 12 full segment lengths)
-            nfft = nfft / 4.0
-            #  - go to next smaller power of 2 for nfft
-            nfft = prev_pow_2(nfft)
-            self._nfft = nfft
         return self._nfft
 
     @property
     def nlap(self):
-        try:
-            return self._nlap
-        except AttributeError:
-            #  - use 75% overlap
-            #    (we end up with a little more than 13 segments..)
-            self._nlap = int(0.75 * self.nfft)
         return self._nlap
 
     @property
     def merge_method(self):
-        try:
-            return self._merge_method
-        except AttributeError:
-            if self.skip_on_gaps:
-                self._merge_method = -1
-            else:
-                self._merge_method = 0
-        return self._merge_method
+        if self.skip_on_gaps:
+            return -1
+        else:
+            return 0
 
     @property
+    @deprecated("PPSD attribute 'spec_bins' is deprecated, please use "
+                "'db_bin_edges' instead.")
+    def spec_bins(self):
+        return self.db_bin_edges
+
+    @property
+    def db_bin_edges(self):
+        return self._db_bin_edges
+
+    @staticmethod
+    def _db_binning(db_bins):
+        # Set up the binning for the db scale.
+        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
+        return np.linspace(db_bins[0], db_bins[1], num_bins + 1, endpoint=True)
+
+    @property
+    def psd_periods(self):
+        # make an initial dummy psd and to get the array of periods
+        _, freq = mlab.psd(np.ones(self.len), self.nfft,
+                           self.sampling_rate, noverlap=self.nlap)
+        # leave out first entry (offset)
+        freq = freq[1:]
+        return 1.0 / freq[::-1]
+
+    @property
+    @deprecated("PPSD attribute 'per' is deprecated, please use "
+                "'psd_periods' instead.")
+    def per(self):
+        return self.psd_periods
+
+    @property
+    @deprecated("PPSD attribute 'freq' is deprecated, please use "
+                "'psd_periods' instead.")
     def freq(self):
         return 1.0 / self.per[::-1]
 
     @property
+    @deprecated("PPSD attribute 'per_octaves_left' is deprecated, please use "
+                "'period_bin_left_edges' instead.")
     def per_octaves_left(self):
-        return self._per_octaves_left
+        return self.period_bin_left_edges
 
     @property
+    @deprecated("PPSD attribute 'per_octaves_right' is deprecated, please use "
+                "'period_bin_right_edges' instead.")
     def per_octaves_right(self):
-        return self._per_octaves_right
+        return self.period_bin_right_edges
 
     @property
+    @deprecated("PPSD attribute 'per_octaves' is deprecated, please use "
+                "'period_bin_centers' instead.")
     def per_octaves(self):
-        return self._per_octaves
+        return self.period_bin_centers
 
     @property
+    @deprecated("PPSD attribute 'period_bins' is deprecated, please use "
+                "'period_bin_centers' instead.")
     def period_bins(self):
-        return self.per_octaves
+        return self.period_bin_centers
 
     @property
     def period_bin_centers(self):
-        return self._period_bin_centers
+        """
+        Return centers of period bins (geometric mean of left and right edge of
+        period smoothing ranges).
+        """
+        return self._per_octaves_center
+
+    @property
+    def period_xedges(self):
+        """
+        Returns edges of period histogram bins (one element longer than number
+        of bins). These are the edges of the plotted histogram/pcolormesh, but
+        not the edges used for smoothing along the period axis of the psd
+        (before binning).
+        """
+        return self._period_xedges
+
+    @property
+    def period_bin_left_edges(self):
+        """
+        Returns left edges of period bins (same length as number of bins).
+        These are the edges used for smoothing along the period axis of the psd
+        (before binning), not the edges of the histogram/pcolormesh in the
+        plot.
+        """
+        return self._per_octaves_left
+
+    @property
+    def period_bin_right_edges(self):
+        """
+        Returns right edges of period bins (same length as number of bins).
+        These are the edges used for smoothing along the period axis of the psd
+        (before binning), not the edges of the histogram/pcolormesh in the
+        plot.
+        """
+        return self._per_octaves_right
 
     @property
     @deprecated("PPSD attribute 'times' is deprecated, please use "
@@ -513,24 +604,10 @@ class PPSD(object):
     def current_times_used(self):
         return list(map(UTCDateTime, self._current_times_used))
 
-    def _setup(self):
+    def _setup_period_binning(self):
         """
-        Set up periods, period binning etc.
+        Set up period binning.
         """
-        # unset some base variables before recomputing all dependend variables
-        # this is needed for load_npz()
-        for key in CACHED_ATTRIBUTES:
-            try:
-                delattr(self, key)
-            except AttributeError:
-                pass
-        # make an initial dummy psd and to get the array of periods
-        _, freq = mlab.psd(np.ones(self.len), self.nfft, self.sampling_rate,
-                           noverlap=self.nlap)
-        # leave out first entry (offset)
-        freq = freq[1:]
-        per = 1.0 / freq[::-1]
-        self.per = per
         # we step through the period range at step width controlled by
         # self.period_step_octaves (default 1/8 octave)
         period_step_factor = 2 ** self.period_step_octaves
@@ -538,40 +615,33 @@ class PPSD(object):
         # by self.period_smoothing_width_octaves (default one full octave)
         period_smoothing_width_factor = \
             2 ** self.period_smoothing_width_octaves
-        # calculate left/right edge of first period bin,
-        per_left = per[0]
+        # calculate left/right edge and center of first period bin
+        per_left = self.psd_periods[0]
         per_right = per_left * period_smoothing_width_factor
-        # calculate center period of first period bin
         per_center = math.sqrt(per_left * per_right)
+        # build up lists
         per_octaves_left = [per_left]
         per_octaves_right = [per_right]
-        per_octaves = [per_center]
+        per_octaves_center = [per_center]
         # do this for the whole period range and append the values to our lists
-        while per_right < per[-1]:
+        while per_right < self.psd_periods[-1]:
             # move left edge of smoothing bin further
             per_left *= period_step_factor
             # determine right edge of smoothing bin
             per_right = per_left * period_smoothing_width_factor
-            # remember center period
+            # determine center period of smoothing/binning
             per_center = math.sqrt(per_left * per_right)
+            # append to lists
             per_octaves_left.append(per_left)
             per_octaves_right.append(per_right)
-            per_octaves.append(per_center)
+            per_octaves_center.append(per_center)
         self._per_octaves_left = np.array(per_octaves_left)
         self._per_octaves_right = np.array(per_octaves_right)
-        self._per_octaves = np.array(per_octaves)
-        # mid-points of all the period bins
-        self._period_bin_centers = np.mean((self._per_octaves[:-1],
-                                            self._per_octaves[1:]), axis=0)
-
-    def _setup_db_bins(self, db_bins):
-        """
-        Set up the binning for the db scale. Not needed when loading a npz, as
-        we store the spectral binning in it.
-        """
-        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
-        self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
-                                     endpoint=True)
+        self._per_octaves_center = np.array(per_octaves_center)
+        # calculate the xedges around the center frequencies for plotting
+        self._period_xedges = np.concatenate(
+            (self._per_octaves_center[:1] / period_step_factor,
+             self._per_octaves_center[:] * period_step_factor))
 
     def __sanity_check(self, trace):
         """
@@ -600,7 +670,7 @@ class PPSD(object):
         """
         ind = bisect.bisect(self._times_processed, utcdatetime.timestamp)
         self._times_processed.insert(ind, utcdatetime.timestamp)
-        self._spec_octaves.insert(ind, spectrum)
+        self._binned_psds.insert(ind, spectrum)
 
     def __insert_gap_times(self, stream):
         """
@@ -641,8 +711,6 @@ class PPSD(object):
         else:
             return False
 
-    @deprecated("Support for old pickled PPSD objects will be dropped. "
-                "Please use new 'save_npz'/'load_npz' mechanism.")
     def __check_ppsd_length(self):
         """
         Adds ppsd_length and overlap attributes if not existing.
@@ -811,9 +879,10 @@ class PPSD(object):
 
         spec_octaves = []
         # do this for the whole period range and append the values to our lists
-        for per_left, per_right in zip(self.per_octaves_left,
-                                       self.per_octaves_right):
-            specs = spec[(per_left <= self.per) & (self.per <= per_right)]
+        for per_left, per_right in zip(self.period_bin_left_edges,
+                                       self.period_bin_right_edges):
+            specs = spec[(per_left <= self.psd_periods) &
+                         (self.psd_periods <= per_right)]
             spec_center = specs.mean()
             spec_octaves.append(spec_center)
         spec_octaves = np.array(spec_octaves)
@@ -997,6 +1066,15 @@ class PPSD(object):
             (e.g. `starttime`).
         :rtype: None
         """
+        # no data at all
+        if not self._times_processed:
+            self._current_hist_stack = None
+            self._current_hist_stack_xedges = None
+            self._current_hist_stack_yedges = None
+            self._current_hist_stack_cumulative = None
+            self._current_times_used = []
+            return
+
         # determine which psd pieces should be used in the stack,
         # based on all selection criteria specified by user
         selected = self._stack_selection(
@@ -1007,14 +1085,14 @@ class PPSD(object):
         used_count = len(used_indices)
         used_times = np.array(self._times_processed)[used_indices]
 
-        # inital setup of 2D histogram
+        # initial setup of 2D histogram
         hist_stack, xedges, yedges = np.histogram2d(
-            self.per_octaves, self._spec_octaves[0],
-            bins=(self.period_bins, self.spec_bins))
+            self.period_bin_centers, self._binned_psds[0],
+            bins=(self.period_xedges, self.spec_bins))
         hist_stack = hist_stack.astype(np.uint64)
         hist_stack.fill(0)
 
-        # empty selection, set all zero histogram stacks
+        # empty selection, set all histogram stacks to zeros
         if not used_count:
             self._current_hist_stack = hist_stack
             self._current_hist_stack_xedges = xedges
@@ -1036,7 +1114,7 @@ class PPSD(object):
         inds[inds == -1] = 0
         # reshape such that we can iterate over the array, extracting for
         # each period bin an array of all amplitude bins we have hit
-        inds = inds.reshape((used_count, len(self.period_bins) - 1)).T
+        inds = inds.reshape((used_count, len(self.period_bin_centers) - 1)).T
         for i, inds_ in enumerate(inds):
             # count how often each bin has been hit for this period bin,
             # set the current 2D histogram column accordingly
@@ -1264,16 +1342,20 @@ class PPSD(object):
             :meth:`PPSD.__init__` for details.
         """
         data = np.load(filename)
+        # the information regarding stats is set from the npz
         ppsd = PPSD(Stats(), metadata=metadata)
         for key in NPZ_STORE_KEYS:
-            # where the real data is stored we have to convert
-            # back to lists, so that additionally processed data
+            # data is stored as arrays in the npz.
+            # we have to convert those back to lists,
+            # so that additionally processed data
             # can be appended/inserted later.
             data_ = data[key]
-            if key.startswith("_"):
+            # restore original types
+            if key in NPZ_STORE_KEYS_LIST_TYPES:
                 data_ = [d for d in data_]
+            elif key in NPZ_STORE_KEYS_SIMPLE_TYPES:
+                data_ = data_.item()
             setattr(ppsd, key, data_)
-        ppsd._setup()
         return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,

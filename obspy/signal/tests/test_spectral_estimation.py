@@ -179,8 +179,9 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
         # test the binning arrays
         binning = np.load(file_binning)
-        np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
-        np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
+        np.testing.assert_array_equal(ppsd.db_bin_edges, binning['spec_bins'])
+        np.testing.assert_array_equal(ppsd.period_bin_centers,
+                                      binning['period_bins'])
 
         # test the mode/mean getter functions
         per_mode, mode = ppsd.get_mode()
@@ -344,10 +345,10 @@ class PsdTestCase(unittest.TestCase):
         ppsd._times_processed = np.load(
             os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
         np.random.seed(1234)
-        ppsd._spec_octaves = [
+        ppsd._binned_psds = [
             arr for arr in np.random.uniform(
                 -200, -50,
-                (len(ppsd._times_processed), len(ppsd.per_octaves)))]
+                (len(ppsd._times_processed), len(ppsd.period_bin_centers)))]
 
         # Test callback function that selects a fixed random set of the
         # timestamps.  Also checks that we get passed the type we expect,
