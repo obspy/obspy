@@ -289,6 +289,7 @@ class TauPyModelTestCase(unittest.TestCase):
         tau.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
                                                source_latitude_in_deg=-45.0,
                                                source_longitude_in_deg=-50.0,
@@ -535,6 +536,7 @@ class TauPyModelTestCase(unittest.TestCase):
 
         m = TauPyModel(model="iasp91")
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
                                            source_latitude_in_deg=-80.0,
                                            source_longitude_in_deg=-60.0,
