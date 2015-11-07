@@ -20,6 +20,7 @@ from .taup_create import TauP_Create
 from .taup_path import TauP_Path
 from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
+
 from .taup_geo import calc_dist, add_geo_to_arrivals
 from ..geodetics.base import HAS_GEOGRAPHICLIB
 
@@ -382,21 +383,21 @@ class TauPyModel(object):
                         model=self.model)
 
     def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
-                             source_longitude_in_deg, station_latitude_in_deg,
-                             station_longitude_in_deg, phase_list=("ttall",)):
+                             source_longitude_in_deg, receiver_latitude_in_deg,
+                             receiver_longitude_in_deg, phase_list=("ttall",)):
         """
         Return travel times of every given phase given geographical data.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
-        :param source_latitude_in_deg: Source location latitude in degrees
+        :param source_latitude_in_deg: Source latitude in degrees
         :type source_latitude_in_deg: float
-        :param source_longitude_in_deg: Source location longitue in degrees
+        :param source_longitude_in_deg: Source longitude in degrees
         :type source_longitude_in_deg: float
-        :param station_latitude_in_deg: Station location latitude in degrees
-        :type station_latitude_in_deg: float
-        :param station_longitude_in_deg: Station location longitude in degrees
-        :type station_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
@@ -408,30 +409,32 @@ class TauPyModel(object):
         """
         distance_in_deg = calc_dist(source_latitude_in_deg,
                                     source_longitude_in_deg,
-                                    station_latitude_in_deg,
-                                    station_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
                                     self.model.radiusOfEarth,
                                     self.model.flatteningOfEarth)
-        arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
-                                      phase_list)
+        arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
+                                         phase_list)
         return arrivals
 
     def get_pierce_points_geo(self, source_depth_in_km, source_latitude_in_deg,
-                              source_longitude_in_deg, station_latitude_in_deg,
-                              station_longitude_in_deg, phase_list=("ttall",)):
+                              source_longitude_in_deg,
+                              receiver_latitude_in_deg,
+                              receiver_longitude_in_deg,
+                              phase_list=("ttall",)):
         """
         Return ray paths of every given phase with geographical info.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
-        :param source_latitude_in_deg: Source location latitude in degrees
+        :param source_latitude_in_deg: Source latitude in degrees
         :type source_latitude_in_deg: float
-        :param source_longitude_in_deg: Source location longitue in degrees
+        :param source_longitude_in_deg: Source longitue in degrees
         :type source_longitude_in_deg: float
-        :param station_latitude_in_deg: Station location latitude in degrees
-        :type station_latitude_in_deg: float
-        :param station_longitude_in_deg: Station location longitude in degrees
-        :type station_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
@@ -442,8 +445,8 @@ class TauPyModel(object):
         """
         distance_in_deg = calc_dist(source_latitude_in_deg,
                                     source_longitude_in_deg,
-                                    station_latitude_in_deg,
-                                    station_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
                                     self.model.radiusOfEarth,
                                     self.model.flatteningOfEarth)
 
@@ -453,8 +456,8 @@ class TauPyModel(object):
         if HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                                            source_longitude_in_deg,
-                                           station_latitude_in_deg,
-                                           station_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
                                            self.model.radiusOfEarth,
                                            self.model.flatteningOfEarth)
         else:
@@ -467,21 +470,21 @@ class TauPyModel(object):
         return arrivals
 
     def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
-                          source_longitude_in_deg, station_latitude_in_deg,
-                          station_longitude_in_deg, phase_list=("ttall",)):
+                          source_longitude_in_deg, receiver_latitude_in_deg,
+                          receiver_longitude_in_deg, phase_list=("ttall",)):
         """
         Return ray paths of every given phase with geographical info.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
-        :param source_latitude_in_deg: Source location latitude in degrees
+        :param source_latitude_in_deg: Source latitude in degrees
         :type source_latitude_in_deg: float
-        :param source_longitude_in_deg: Source location longitue in degrees
+        :param source_longitude_in_deg: Source longitue in degrees
         :type source_longitude_in_deg: float
-        :param station_latitude_in_deg: Station location latitude in degrees
-        :type station_latitude_in_deg: float
-        :param station_longitude_in_deg: Station location longitude in degrees
-        :type station_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
         :param phase_list: List of phases for which travel times should be
             calculated. If this is empty, all phases will be used.
         :type phase_list: list of str
@@ -492,8 +495,8 @@ class TauPyModel(object):
         """
         distance_in_deg = calc_dist(source_latitude_in_deg,
                                     source_longitude_in_deg,
-                                    station_latitude_in_deg,
-                                    station_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
                                     self.model.radiusOfEarth,
                                     self.model.flatteningOfEarth)
 
@@ -503,8 +506,8 @@ class TauPyModel(object):
         if HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                                            source_longitude_in_deg,
-                                           station_latitude_in_deg,
-                                           station_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
                                            self.model.radiusOfEarth,
                                            self.model.flatteningOfEarth)
         else:

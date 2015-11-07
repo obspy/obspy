@@ -54,8 +54,8 @@ def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
-    :param a: Radius of Earth in m. If ``None``, the value for WGS84 is used.
-    :param f: Flattening of Earth. If ``None``, the value for WGS84 is used.
+    :param a: Radius of Earth in m. Uses the value for WGS84 by default.
+    :param f: Flattening of Earth. Uses the value for WGS84 by default.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
     :raises: This method may have no solution between two nearly antipodal
@@ -219,8 +219,8 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
-    :param a: Radius of Earth in m. If ``None`` WGS84 is assumed.
-    :param f: Flattening of Earth. If ``None`` WGS84 is assumed.
+    :param a: Radius of Earth in m. Uses the value for WGS84 by default.
+    :param f: Flattening of Earth. Uses the value for WGS84 by default.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
 

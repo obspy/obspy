@@ -112,21 +112,19 @@ class UtilGeodeticsTestCase(unittest.TestCase):
     def test_calcVincentyInverseTabulated(self):
         """ Tabulated results for Vincenty Inverse
 
-        Table II of Vincenty's paper (T. Vincenty 1975, "Direct
-        and inverse solutions of geodesics on the ellipsoid with
-        application of nested equations" Survey Review XXII
-        pp.88-93) has five test examples for the forward and inverse
-        problem (with results rounded to 0.00001 seconds of arc and
-        1 mm). The inverse versions of these are implemented here. Note
-        the non-standard (old) ellipsoid usage. Here we test that we
-        match these examples for the inverse problem.
-        """
+        Table II of Vincenty's paper (T. Vincenty 1975, "Direct and inverse
+        solutions of geodesics on the ellipsoid with application of nested
+        equations" Survey Review XXII pp.88-93) has five test examples for
+        the forward and inverse problem (with results rounded to 0.00001
+        seconds of arc and 1 mm). The inverse versions of these are implemented
+        here. Note the non-standard (old) ellipsoid usage. Here we test that
+        we match these examples for the inverse problem. """
         # Row "A"
         # NB: for this case there seems to be a typo in
         #     the tabulated data. Tabulated data is commented
-        #     out and values from geographiclib are used in there place
-        # dist = 14110.526170
-        dist = 14039.003954192352
+        #     out and values from geographiclib are used in their place
+        # dist = 14110526.170
+        dist = 14039003.954192352
         # azi1 = dms2dec(96.0, 36.0, 8.79960)
         azi1 = 95.88145755849257
         # azi2 = dms2dec(137.0, 52.0, 22.01454)
@@ -135,43 +133,43 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         lat1 = dms2dec(55.0, 45.0, 0.0)
         lat2 = dms2dec(-33.0, 26.0, 0.0)
         lon2 = dms2dec(108.0, 13.0, 0.0)
-        a = 6377.397155
+        a = 6377397.155
         f = 1.0/299.1528128
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 5)
+        self.assertAlmostEqual(dist, calc_dist, 2)
         self.assertAlmostEqual(azi1, calc_azi1, 5)
         self.assertAlmostEqual(bazi, calc_bazi, 5)
 
         # Row "B"
-        dist = 4085.966703
+        dist = 4085966.703
         azi1 = dms2dec(95.0, 27.0, 59.63089)
         azi2 = dms2dec(118, 5.0, 58.96161)
         bazi = azi2 + 180.0
         lat1 = dms2dec(37.0, 19.0, 54.95367)
         lat2 = dms2dec(26.0, 7.0, 42.83946)
         lon2 = dms2dec(41.0, 28.0, 35.50729)
-        a = 6378.388000
+        a = 6378388.000
         f = 1.0/297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 5)
+        self.assertAlmostEqual(dist, calc_dist, 2)
         self.assertAlmostEqual(azi1, calc_azi1, 5)
         self.assertAlmostEqual(bazi, calc_bazi, 5)
 
         # Row "C"
-        dist = 8084.823839
+        dist = 8084823.839
         azi1 = dms2dec(15.0, 44.0, 23.74850)
         azi2 = dms2dec(144.0, 55.0, 39.92147)
         bazi = azi2 + 180.0
         lat1 = dms2dec(35.0, 16.0, 11.24862)
         lat2 = dms2dec(67.0, 22.0, 14.77638)
         lon2 = dms2dec(137.0, 47.0, 28.31435)
-        a = 6378.388000
+        a = 6378388.000
         f = 1.0/297.0
         calc_dist, calc_azi1, calc_bazi = calc_vincenty_inverse(
             lat1, 0.0, lat2, lon2, a, f)
-        self.assertAlmostEqual(dist, calc_dist, 5)
+        self.assertAlmostEqual(dist, calc_dist, 2)
         self.assertAlmostEqual(azi1, calc_azi1, 5)
         self.assertAlmostEqual(bazi, calc_bazi, 5)
 

@@ -12,6 +12,7 @@ import collections
 import inspect
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -124,8 +125,8 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
                                           source_latitude_in_deg=20.0,
                                           source_longitude_in_deg=33.0,
-                                          station_latitude_in_deg=55.0,
-                                          station_longitude_in_deg=33.0,
+                                          receiver_latitude_in_deg=55.0,
+                                          receiver_longitude_in_deg=33.0,
                                           phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
         p_arrival = arrivals[0]
@@ -153,8 +154,8 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
                                           source_latitude_in_deg=20.0,
                                           source_longitude_in_deg=33.0,
-                                          station_latitude_in_deg=55.0,
-                                          station_longitude_in_deg=33.0,
+                                          receiver_latitude_in_deg=55.0,
+                                          receiver_longitude_in_deg=33.0,
                                           phase_list=["P"])
         geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
         taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
@@ -251,8 +252,8 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
                                            source_latitude_in_deg=-45.0,
                                            source_longitude_in_deg=-50.0,
-                                           station_latitude_in_deg=-80.0,
-                                           station_longitude_in_deg=-50.0,
+                                           receiver_latitude_in_deg=-80.0,
+                                           receiver_longitude_in_deg=-50.0,
                                            phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
@@ -287,15 +288,18 @@ class TauPyModelTestCase(unittest.TestCase):
         taup_geo.HAS_GEOGRAPHICLIB = False
         tau.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
-                                           source_latitude_in_deg=-45.0,
-                                           source_longitude_in_deg=-50.0,
-                                           station_latitude_in_deg=-80.0,
-                                           station_longitude_in_deg=-50.0,
-                                           phase_list=["P"])
-        geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        with warnings.catch_warnings(record=True) as w:
+            arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
+                                               source_latitude_in_deg=-45.0,
+                                               source_longitude_in_deg=-50.0,
+                                               receiver_latitude_in_deg=-80.0,
+                                               receiver_longitude_in_deg=-50.0,
+                                               phase_list=["P"])
+            geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            assert issubclass(w[-1].category, UserWarning)
+
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
 
@@ -304,15 +308,19 @@ class TauPyModelTestCase(unittest.TestCase):
 
         expected = np.genfromtxt(filename, skip_header=1)
 
-        # NB: we do not check pierce['lat'] and pierce['lon']
-        # here, as these are not calculated when geographiclib
-        # is not installed.
         np.testing.assert_almost_equal(expected[:, 0],
                                        np.degrees(p_arr.pierce['dist']), 2)
         np.testing.assert_almost_equal(expected[:, 1],
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
+        # NB: we do not check pierce['lat'] and pierce['lon'] here, as these
+        # are not calculated when geographiclib is not installed. We check
+        # that they are not present.
+        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
+                                 'lat')
+        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
+                                 'lon')
 
     def test_vs_java_iasp91(self):
         """
@@ -465,8 +473,8 @@ class TauPyModelTestCase(unittest.TestCase):
         arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
                                        source_latitude_in_deg=-80.0,
                                        source_longitude_in_deg=-60.0,
-                                       station_latitude_in_deg=-45.0,
-                                       station_longitude_in_deg=-60.0,
+                                       receiver_latitude_in_deg=-45.0,
+                                       receiver_longitude_in_deg=-60.0,
                                        phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
 
@@ -500,15 +508,15 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(arrivals[0].path['lon'], 2))
 
-        self.assertTrue(np.allclose(interpolated_actual_depth,
-                                    interpolated_expected_depth,
-                                    rtol=1E-4, atol=0))
-        self.assertTrue(np.allclose(interpolated_actual_lat,
-                                    interpolated_expected_lat,
-                                    rtol=1E-4, atol=0))
-        self.assertTrue(np.allclose(interpolated_actual_lon,
-                                    interpolated_expected_lon,
-                                    rtol=1E-4, atol=0))
+        np.testing.assert_allclose(interpolated_actual_depth,
+                                   interpolated_expected_depth,
+                                   rtol=1E-4, atol=0)
+        np.testing.assert_allclose(interpolated_actual_lat,
+                                   interpolated_expected_lat,
+                                   rtol=1E-4, atol=0)
+        np.testing.assert_allclose(interpolated_actual_lon,
+                                   interpolated_expected_lon,
+                                   rtol=1E-4, atol=0)
 
     def test_single_path_geo_fallback_iasp91(self):
         """
@@ -526,15 +534,18 @@ class TauPyModelTestCase(unittest.TestCase):
         expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
-                                       source_latitude_in_deg=-80.0,
-                                       source_longitude_in_deg=-60.0,
-                                       station_latitude_in_deg=-45.0,
-                                       station_longitude_in_deg=-60.0,
-                                       phase_list=["P"])
-        geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        with warnings.catch_warnings(record=True) as w:
+            arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
+                                           source_latitude_in_deg=-80.0,
+                                           source_longitude_in_deg=-60.0,
+                                           receiver_latitude_in_deg=-45.0,
+                                           receiver_longitude_in_deg=-60.0,
+                                           phase_list=["P"])
+            geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            assert issubclass(w[-1].category, UserWarning)
+
         self.assertEqual(len(arrivals), 1)
 
         # Interpolate both paths to 100 samples and make sure they are
@@ -551,11 +562,16 @@ class TauPyModelTestCase(unittest.TestCase):
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
 
-        # NB: we do not check path['lat'] and path['lon']
-        # here, as these are not calculated when geographiclib
-        # is not installed.
-        self.assertTrue(np.allclose(interpolated_actual,
-                                    interpolated_expected, rtol=1E-4, atol=0))
+        np.testing.assert_allclose(interpolated_actual, interpolated_expected,
+                                   rtol=1E-4, atol=0)
+
+        # NB: we do not check path['lat'] and path['lon'] here, as these
+        # are not calculated when geographiclib is not installed. We check
+        # that they are not present.
+        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
+                                 'lat')
+        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
+                                 'lon')
 
     def test_single_path_ak135(self):
         """
