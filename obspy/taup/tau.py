@@ -22,7 +22,7 @@ from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
 
 from .taup_geo import calc_dist, add_geo_to_arrivals
-from ..geodetics.base import HAS_GEOGRAPHICLIB
+import obspy.geodetics.base as geodetics
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
@@ -453,7 +453,7 @@ class TauPyModel(object):
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
                                           phase_list)
 
-        if HAS_GEOGRAPHICLIB:
+        if geodetics.HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,
@@ -503,7 +503,7 @@ class TauPyModel(object):
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
                                       phase_list)
 
-        if HAS_GEOGRAPHICLIB:
+        if geodetics.HAS_GEOGRAPHICLIB:
             arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,

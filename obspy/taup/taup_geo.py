@@ -21,10 +21,10 @@ import numpy as np
 
 from .helper_classes import TimeDistGeo
 from ..geodetics import gps2dist_azimuth, kilometer2degrees
-from ..geodetics.base import HAS_GEOGRAPHICLIB
+import obspy.geodetics.base as geodetics
 
 
-if HAS_GEOGRAPHICLIB:
+if geodetics.HAS_GEOGRAPHICLIB:
     from geographiclib.geodesic import Geodesic
 
 
@@ -50,7 +50,7 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
     :return: distance_in_deg
     :rtype: float
     """
-    if HAS_GEOGRAPHICLIB:
+    if geodetics.HAS_GEOGRAPHICLIB:
         ellipsoid = Geodesic(a=radius_of_earth_in_km*1000.0,
                              f=flattening_of_earth)
         g = ellipsoid.Inverse(source_latitude_in_deg,
@@ -106,7 +106,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
         attributes.
     :rtype: :class:`Arrivals`
     """
-    if HAS_GEOGRAPHICLIB:
+    if geodetics.HAS_GEOGRAPHICLIB:
         ellipsoid = Geodesic(a=radius_of_earth_in_km * 1000.0,
                              f=flattening_of_earth)
         g = ellipsoid.Inverse(source_latitude_in_deg, source_longitude_in_deg,

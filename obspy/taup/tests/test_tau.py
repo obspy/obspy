@@ -17,11 +17,7 @@ import warnings
 import numpy as np
 
 from obspy.taup import TauPyModel
-# We need HAS_GEOGRAPHICLIB, but we need to be able to set
-# in all three places... there must be a better way!
-import obspy.geodetics.base as geobase
-import obspy.taup.taup_geo as taup_geo
-import obspy.taup.tau as tau
+import obspy.geodetics.base as geodetics
 
 
 # Most generic way to get the data folder path.
@@ -113,7 +109,7 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
-    @unittest.skipIf(not geobase.HAS_GEOGRAPHICLIB,
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
     def test_p_iasp91_geo_manual(self):
         """
@@ -146,10 +142,8 @@ class TauPyModelTestCase(unittest.TestCase):
         This version of the test checks that things still work when
         geographiclib is not installed.
         """
-        has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
-        geobase.HAS_GEOGRAPHICLIB = False
-        taup_geo.HAS_GEOGRAPHICLIB = False
-        tau.HAS_GEOGRAPHICLIB = False
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
         arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
                                           source_latitude_in_deg=20.0,
@@ -157,9 +151,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                           receiver_latitude_in_deg=55.0,
                                           receiver_longitude_in_deg=33.0,
                                           phase_list=["P"])
-        geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
-        tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
         self.assertEqual(len(arrivals), 1)
         p_arrival = arrivals[0]
 
@@ -240,7 +232,7 @@ class TauPyModelTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
 
-    @unittest.skipIf(not geobase.HAS_GEOGRAPHICLIB,
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
     def test_pierce_p_iasp91_geo(self):
         """
@@ -283,10 +275,8 @@ class TauPyModelTestCase(unittest.TestCase):
         This version of the test checks that things still work when
         geographiclib is not installed.
         """
-        has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
-        geobase.HAS_GEOGRAPHICLIB = False
-        taup_geo.HAS_GEOGRAPHICLIB = False
-        tau.HAS_GEOGRAPHICLIB = False
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
         m = TauPyModel(model="iasp91")
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
@@ -296,9 +286,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                                receiver_latitude_in_deg=-80.0,
                                                receiver_longitude_in_deg=-50.0,
                                                phase_list=["P"])
-            geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
             assert issubclass(w[-1].category, UserWarning)
 
         self.assertEqual(len(arrivals), 1)
@@ -457,7 +445,7 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(interpolated_actual,
                                     interpolated_expected, rtol=1E-4, atol=0))
 
-    @unittest.skipIf(not geobase.HAS_GEOGRAPHICLIB,
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
     def test_single_path_geo_iasp91(self):
         """
@@ -526,10 +514,8 @@ class TauPyModelTestCase(unittest.TestCase):
         This version of the test checks that things still work when
         geographiclib is not installed.
         """
-        has_geographiclib_real = geobase.HAS_GEOGRAPHICLIB
-        geobase.HAS_GEOGRAPHICLIB = False
-        taup_geo.HAS_GEOGRAPHICLIB = False
-        tau.HAS_GEOGRAPHICLIB = False
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
         filename = os.path.join(DATA,
                                 "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
         expected = np.genfromtxt(filename, comments='>')
@@ -543,9 +529,7 @@ class TauPyModelTestCase(unittest.TestCase):
                                            receiver_latitude_in_deg=-45.0,
                                            receiver_longitude_in_deg=-60.0,
                                            phase_list=["P"])
-            geobase.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            taup_geo.HAS_GEOGRAPHICLIB = has_geographiclib_real
-            tau.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
             assert issubclass(w[-1].category, UserWarning)
 
         self.assertEqual(len(arrivals), 1)
