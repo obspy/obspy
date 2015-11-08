@@ -17,6 +17,7 @@ import warnings
 import numpy as np
 
 from obspy.taup import TauPyModel
+from obspy.taup.taup_geo import calc_dist
 import obspy.geodetics.base as geodetics
 
 
@@ -108,6 +109,33 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
+
+    def test_taup_geo_calc_dist(self):
+        """Test for calc_dist"""
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=55.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=20.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=-55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=-55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6.371,
+                               flattening_of_earth=0.0), 35.0, 5)
 
     @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')

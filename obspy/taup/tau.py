@@ -20,9 +20,9 @@ from .taup_create import TauP_Create
 from .taup_path import TauP_Path
 from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
-
 from .taup_geo import calc_dist, add_geo_to_arrivals
 import obspy.geodetics.base as geodetics
+
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
