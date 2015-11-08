@@ -123,25 +123,21 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
 
             if arrival.pierce is not None:
                 geo_pierce = np.empty(arrival.pierce.shape, dtype=TimeDistGeo)
-                i = 0
-                for pierce_point in arrival.pierce:
+                for i, pierce_point in enumerate(arrival.pierce):
                     pos = line.ArcPosition(np.degrees(pierce_point['dist']))
                     geo_pierce[i] = (pierce_point['p'], pierce_point['time'],
                                      pierce_point['dist'],
                                      pierce_point['depth'],
                                      pos['lat2'], pos['lon2'])
-                    i = i + 1
                 arrival.pierce = geo_pierce
 
             if arrival.path is not None:
                 geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
-                i = 0
-                for path_point in arrival.path:
+                for i, path_point in enumerate(arrival.path):
                     pos = line.ArcPosition(np.degrees(path_point['dist']))
                     geo_path[i] = (path_point['p'], path_point['time'],
                                    path_point['dist'], path_point['depth'],
                                    pos['lat2'], pos['lon2'])
-                    i = i + 1
                 arrival.path = geo_path
 
     else:
