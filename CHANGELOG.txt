@@ -96,7 +96,7 @@ master:
      `get_pierce_points_geo()` decorate the returned pierce points and ray
      paths with the latitude and longitude of each point. Some functionality
      needs the `geographiclib` module to be installed. (See #1164.)
-     
+
 0.10.x:
   - obspy.core:
     * Fix reading of multiple catalog files using globs (see #1065).
