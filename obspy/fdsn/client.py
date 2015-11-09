@@ -91,7 +91,8 @@ class Client(object):
         :param debug: Debug flag.
         :type timeout: float
         :param timeout: Maximum time (in seconds) to wait for a single request
-            to finish (after which an exception is raised).
+            to receive the first byte of the response (after which an exception
+            is raised).
         :type service_mappings: dict
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
