@@ -248,4 +248,7 @@ def __read_single_fnetmt_entry(line, **kwargs):
     e.origins = [o_jma, o_mt]
     e.magnitudes = [m_jma, m_mt]
     e.focal_mechanisms = [foc_mec]
+    e.preferred_magnitude_id = m_mt.resource_id.id
+    e.preferred_origin_id = o_mt.resource_id.id
+    e.preferred_focal_mechanism_id = foc_mec.resource_id.id
     return e
