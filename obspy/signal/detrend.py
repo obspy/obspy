@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 from scipy.interpolate import LSQUnivariateSpline
+import matplotlib.pyplot as plt
 
 
 def simple(data):
@@ -30,7 +31,33 @@ def simple(data):
     return data - (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
 
 
-def polynomial(data, order):
+def __plotting_helper(data, fit, plot):
+    fig = plt.figure(figsize=(8.0, 5.0))
+    plt.subplots_adjust(hspace=0)
+    plt.subplot(211)
+    plt.plot(data, color="k", label="Original Data")
+    plt.plot(fit, color="red", lw=2, label="Fitted Trend")
+    plt.legend(loc="best")
+    plt.gca().label_outer()
+    plt.yticks(plt.yticks()[0][1:])
+
+    plt.subplot(212)
+    plt.plot(data - fit, color="k", label="Result")
+    plt.legend(loc="best")
+    plt.gca().label_outer()
+    plt.yticks(plt.yticks()[0][:-1])
+    plt.xlabel("Samples")
+
+    plt.tight_layout(h_pad=0)
+
+    if plot is True:
+        plt.show()
+    else:
+        plt.savefig(plot)
+        plt.close(fig)
+
+
+def polynomial(data, order, plot=False):
     """
     Remove a polynomial trend from the data.
 
@@ -38,20 +65,25 @@ def polynomial(data, order):
     :type data: :class:`numpy.ndarray`
     :param order: The order of the polynomial to fit.
     :type order: int
+    :param plot: If True, a plot of the operation happening will be shown.
+        If a string is given that plot will be saved to the given file.
+    :type plot: bool or string
     """
     # Convert data if its not a floating point type.
     if not np.issubdtype(data.dtype, float):
         data = np.require(data, dtype=np.float32)
 
     x = np.arange(len(data))
-    coefs = np.polyfit(x, data, deg=order)
+    fit = np.polyval(np.polyfit(x, data, deg=order), x)
 
-    data -= np.polyval(coefs, x)
+    if plot:
+        __plotting_helper(data, fit, plot)
 
+    data -= fit
     return data
 
 
-def spline(data, order, dspline):
+def spline(data, order, dspline, plot=False):
     """
     Remove trend with a spline.
 
@@ -62,6 +94,9 @@ def spline(data, order, dspline):
     :type order: int
     :param dspline: The distance in samples between two spline nodes.
     :type dspline: int
+    :param plot: If True, a plot of the operation happening will be shown.
+        If a string is given that plot will be saved to the given file.
+    :type plot: bool or string
     """
     # Convert data if its not a floating point type.
     if not np.issubdtype(data.dtype, float):
@@ -72,7 +107,12 @@ def spline(data, order, dspline):
                          dspline)
 
     spl = LSQUnivariateSpline(x=x, y=data, t=splknots)
-    data -= spl(x)
+    fit = spl(x)
+
+    if plot:
+        __plotting_helper(data, fit, plot)
+
+    data -= fit
     return data
 
 
