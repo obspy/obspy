@@ -30,7 +30,6 @@ class TauModel(object):
     # Depth for which tau model as constructed.
     source_depth = 0.0
     radiusOfEarth = 6371.0
-    flatteningOfEarth = 0.0
     # Branch with the source at its top.
     sourceBranch = 0
     # Depths that should not have reflections or phase conversions. For
