@@ -1890,6 +1890,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'constant'`` or ``'demean'``
             Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
+
+        ``'polynomial'``
+            Subtracts a polynomial of a given order.
+            (uses :func:`obspy.signal.detrend.polynomial`).
+
+        ``'spline'``
+            Subtracts a spline of a given order with a given number of
+            samples between spline nodes.
+            (uses :func:`obspy.signal.detrend.spline`).
         """
         type = type.lower()
         # retrieve function call from entry points
