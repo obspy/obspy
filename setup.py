@@ -344,6 +344,8 @@ ENTRY_POINTS = {
         'constant = scipy.signal:detrend',
         'demean = scipy.signal:detrend',
         'simple = obspy.signal.detrend:simple',
+        'polynomial = obspy.signal.detrend:polynomial',
+        'spline = obspy.signal.detrend:spline'
         ],
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
