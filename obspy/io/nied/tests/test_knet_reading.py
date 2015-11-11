@@ -49,8 +49,8 @@ class KnetReadingTestCase(unittest.TestCase):
 
     def test_read_knet_ascii_from_bytes_io(self):
         """
-        Tests that reading an NIED moment tensor file from a BytesIO object
-        works.
+        Tests that reading of K-NET and KiK-net ASCII format files from a
+        BytesIO object works.
         """
         testfile = os.path.join(self.path, 'data', 'test.knet')
         with open(testfile, "rb") as fh:
