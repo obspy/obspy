@@ -659,11 +659,11 @@ class PPSD(object):
             # left edge of smoothing (for calculating the bin value from psd
             per_octaves_left,
             # left xedge of bin (for plotting)
-            per_octaves_center / period_step_factor,
+            per_octaves_center / (period_step_factor ** 0.5),
             # bin center (for plotting)
             per_octaves_center,
             # right xedge of bin (for plotting)
-            per_octaves_center * period_step_factor,
+            per_octaves_center * (period_step_factor ** 0.5),
             # right edge of smoothing (for calculating the bin value from psd
             per_octaves_right])
 
