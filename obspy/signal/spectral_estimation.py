@@ -1377,7 +1377,10 @@ class PPSD(object):
             # additionally processed data can be appended/inserted later.
             data_ = data[key]
             if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
-                data_ = [d for d in data_]
+                if key in ['_times_data', '_times_gaps']:
+                    data_ = data_.tolist()
+                else:
+                    data_ = [d for d in data_]
             elif key in ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES:
                 data_ = data_.item()
             setattr(ppsd, key, data_)

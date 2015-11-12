@@ -358,7 +358,8 @@ class PsdTestCase(unittest.TestCase):
             ppsd_loaded = PPSD.load_npz(filename, metadata=paz)
 
         for key in PPSD.NPZ_STORE_KEYS:
-            if isinstance(getattr(ppsd, key), np.ndarray):
+            if isinstance(getattr(ppsd, key), np.ndarray) or \
+                    key == '_binned_psds':
                 np.testing.assert_equal(getattr(ppsd, key),
                                         getattr(ppsd_loaded, key))
             else:
