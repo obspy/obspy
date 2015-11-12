@@ -1462,11 +1462,19 @@ class PPSD(object):
 
         if show_mode:
             periods, mode_ = self.get_mode()
-            ax.plot(periods, mode_, color="black", zorder=9)
+            if cmap.name == "viridis":
+                color = "0.8"
+            else:
+                color = "black"
+            ax.plot(periods, mode_, color=color, zorder=9)
 
         if show_mean:
             periods, mean_ = self.get_mean()
-            ax.plot(periods, mean_, color="black", zorder=9)
+            if cmap.name == "viridis":
+                color = "0.8"
+            else:
+                color = "black"
+            ax.plot(periods, mean_, color=color, zorder=9)
 
         if show_noise_models:
             for periods, noise_model in (get_NHNM(), get_NLNM()):
@@ -1508,7 +1516,7 @@ class PPSD(object):
         else:
             ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
-        ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+        ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
         ax.set_title(self._get_plot_title())
 
         if show_coverage:
@@ -1571,8 +1579,12 @@ class PPSD(object):
             ppsd.set_clim(*fig.ppsd.color_limits)
 
         if fig.ppsd.grid:
-            ax.grid(b=True, which="major")
-            ax.grid(b=True, which="minor")
+            if fig.ppsd.cmap.name == "viridis":
+                color = {"color": "0.7"}
+            else:
+                color = {}
+            ax.grid(b=True, which="major", **color)
+            ax.grid(b=True, which="minor", **color)
 
         ax.set_xlim(*xlim)
 
