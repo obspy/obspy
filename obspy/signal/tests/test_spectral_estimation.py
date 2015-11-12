@@ -300,6 +300,8 @@ class PsdTestCase(unittest.TestCase):
                                      getattr(results_paz, key)):
                 np.testing.assert_allclose(got, expected, rtol=1e-5)
         for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+            if key in ["obspy_version", "numpy_version", "matplotlib_version"]:
+                continue
             self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
         # (also test various means of initialization, basically testing the
@@ -321,6 +323,9 @@ class PsdTestCase(unittest.TestCase):
                                          getattr(results_full, key)):
                     np.testing.assert_allclose(got, expected, rtol=1e-5)
             for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                if key in ["obspy_version", "numpy_version",
+                           "matplotlib_version"]:
+                    continue
                 self.assertEqual(getattr(ppsd, key),
                                  getattr(results_full, key))
 
