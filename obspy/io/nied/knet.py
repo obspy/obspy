@@ -92,7 +92,7 @@ def _prep_hdr_line(name, line):
     """
     if not line.startswith(name):
         raise KNETException("Expected line to start with %s but got %s "
-                              % (name, line))
+                            % (name, line))
     else:
         return line.split()
 
@@ -233,7 +233,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
 
     if len(hdrlines) != _i + 1:
         raise KNETException("Expected %d header lines but got %d"
-                              % (_i + 1, len(hdrlines)))
+                            % (_i + 1, len(hdrlines)))
     return hdrdict
 
 
