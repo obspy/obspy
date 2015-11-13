@@ -406,7 +406,14 @@ class PsdTestCase(unittest.TestCase):
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
                              'ppsd_restricted_stack.png') as ic:
-            ppsd.plot(filename=ic.name, show=False, **plot_kwargs)
+            fig = ppsd.plot(show=False, **plot_kwargs)
+            # some matplotlib/Python version combinations lack the left-most
+            # tick/label "Jan 2015". Try to circumvent and get the (otherwise
+            # OK) test by changing the left x limit a bit further out (by two
+            # days, axis is in mpl days). See e.g.
+            # http://tests.obspy.org/30657/#1
+            fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
+            fig.savefig(ic.name)
 
         # test it again, checking that updating an existing plot with different
         # stack selection works..
@@ -416,6 +423,12 @@ class PsdTestCase(unittest.TestCase):
         with ImageComparison(self.path_images,
                              'ppsd_restricted_stack.png') as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
+            # some matplotlib/Python version combinations lack the left-most
+            # tick/label "Jan 2015". Try to circumvent and get the (otherwise
+            # OK) test by changing the left x limit a bit further out (by two
+            # days, axis is in mpl days). See e.g.
+            # http://tests.obspy.org/30657/#1
+            fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
             fig.savefig(ic.name)
         #  b) now reuse figure and set the histogram with a different stack,
         #     image test should fail:
