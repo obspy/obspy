@@ -6,10 +6,16 @@ This module provides read and write support for ASCII and binary SAC-files as
 defined by IRIS (http://www.iris.edu/files/sac-manual/).
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org) & C. J. Annon
+    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
+
+The SAC implementation in ObsPy is a modified version of ``PySac``
+(https://github.com/LANL-Seismoacoustics/pysac), developed under U.S.
+Government contract DE-AC52-06NA25396 for Los Alamos National Laboratory
+(LANL) and copyrighted for Los Alamos National Security, LLC under
+LA-CC-15-051.
 
 Reading
 -------
@@ -17,7 +23,7 @@ Similar to reading any other waveform data format using
 :func:`~obspy.core.stream.read()`:
 
 >>> from obspy import read
->>> st = read('/path/to/test.sac')
+>>> st = read('/path/to/test.sac', debug_headers=True)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +ELLIPSIS
@@ -69,7 +75,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .sacio import (SacError, SacIO, SacIOError, attach_paz, attach_resp)
+from .sacpz import attach_paz, attach_resp
+from .util import SacError, SacIOError
+from .sactrace import SACTrace
 
 
 if __name__ == '__main__':

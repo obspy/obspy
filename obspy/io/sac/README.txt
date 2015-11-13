@@ -5,11 +5,12 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2009-2014 by:
+Copyright (c) 2009-2015 by:
     * Yannik Behr
     * Moritz Beyreuther
     * C. J. Ammon
     * C. Satriano
+    * J. MacCarthy
 
 
 Overview
