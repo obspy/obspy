@@ -356,7 +356,12 @@ class PPSD(object):
             the frequency axis is measured every 1/8 of an octave).
         :type period_limits: tuple/list of two float
         :param period_limits: Set custom lower and upper end of period range
-            (e.g. ``(0.01, 100)``).
+            (e.g. ``(0.01, 100)``). The specified lower end of period range
+            will be set as the central period of the first bin (geometric mean
+            of left/right edges of smoothing interval). At the upper end of the
+            specified period range, no more additional bins will be added after
+            the bin whose center frequency exceeds the given upper end for the
+            first time.
         """
         # remove after release of 0.11.0
         if kwargs.pop("is_rotational_data", None) is True:
@@ -490,6 +495,10 @@ class PPSD(object):
         return (self.db_bin_edges[:-1] + self.db_bin_edges[1:]) / 2.0
 
     @property
+    def psd_frequencies(self):
+        return 1.0 / self.psd_periods[::-1]
+
+    @property
     def psd_periods(self):
         return self._psd_periods
 
@@ -501,9 +510,9 @@ class PPSD(object):
 
     @property
     @deprecated("PPSD attribute 'freq' is deprecated, please use "
-                "'psd_periods' instead.")
+                "'psd_frequencies' instead.")
     def freq(self):
-        return 1.0 / self.psd_periods[::-1]
+        return self.psd_frequencies
 
     @property
     @deprecated("PPSD attribute 'per_octaves_left' is deprecated, please use "
@@ -544,14 +553,9 @@ class PPSD(object):
         of bins). These are the edges of the plotted histogram/pcolormesh, but
         not the edges used for smoothing along the period axis of the psd
         (before binning).
-        For the left-most and right-most bin edges we use the edges of the
-        smoothing bins instead of the generic spacing between bin centers, so
-        that the outer limits of the plot reflect the outer edges of data that
-        is included in the plot.
         """
-        return np.concatenate([self._period_binning[0:1, 0],
-                               self._period_binning[3, :-1],
-                               self._period_binning[4:5, -1]])
+        return np.concatenate([self._period_binning[1, 0:1],
+                               self._period_binning[3, :]])
 
     @property
     def period_bin_left_edges(self):
@@ -628,7 +632,11 @@ class PPSD(object):
         period_smoothing_width_factor = \
             2 ** period_smoothing_width_octaves
         # calculate left/right edge and center of first period bin
-        per_left = period_limits[0]
+        # set first smoothing bin's left edge such that the center frequency is
+        # the lower limit specified by the user (or the lowest period in the
+        # psd)
+        per_left = (period_limits[0] /
+                    (period_smoothing_width_factor ** 0.5))
         per_right = per_left * period_smoothing_width_factor
         per_center = math.sqrt(per_left * per_right)
         # build up lists
@@ -636,7 +644,7 @@ class PPSD(object):
         per_octaves_right = [per_right]
         per_octaves_center = [per_center]
         # do this for the whole period range and append the values to our lists
-        while per_right < period_limits[1]:
+        while per_center < period_limits[1]:
             # move left edge of smoothing bin further
             per_left *= period_step_factor
             # determine right edge of smoothing bin
@@ -887,16 +895,15 @@ class PPSD(object):
         spec = np.log10(spec)
         spec *= 10
 
-        spec_octaves = []
+        smoothed_psd = []
         # do this for the whole period range and append the values to our lists
         for per_left, per_right in zip(self.period_bin_left_edges,
                                        self.period_bin_right_edges):
             specs = spec[(per_left <= self.psd_periods) &
                          (self.psd_periods <= per_right)]
-            spec_center = specs.mean()
-            spec_octaves.append(spec_center)
-        spec_octaves = np.array(spec_octaves, dtype=np.float32)
-        self.__insert_processed_data(tr.stats.starttime, spec_octaves)
+            smoothed_psd.append(specs.mean())
+        smoothed_psd = np.array(smoothed_psd, dtype=np.float32)
+        self.__insert_processed_data(tr.stats.starttime, smoothed_psd)
         return True
 
     @property
