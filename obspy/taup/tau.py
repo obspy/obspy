@@ -399,12 +399,12 @@ class TauPyModel(object):
 
         .. note::
 
-        Note that the conversion from source and receiver latitudes and
-        longitudes to epicentral distances respects the model's flattening
-        parameter, so this calculation can be performed for a ellipsoidal
-        or spherical Earth. However, the actual traveltime and raypath
-        calculations are performed on a spherical Earth. Ellipticity
-        corrections of e.g. [Dziewonski1976]_ are not made.
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
@@ -445,12 +445,12 @@ class TauPyModel(object):
 
         .. note::
 
-        Note that the conversion from source and receiver latitudes and
-        longitudes to epicentral distances respects the model's flattening
-        parameter, so this calculation can be performed for a ellipsoidal
-        or spherical Earth. However, the actual traveltime and raypath
-        calculations are performed on a spherical Earth. Ellipticity
-        corrections of e.g. [Dziewonski1976]_ are not made.
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
@@ -504,12 +504,12 @@ class TauPyModel(object):
 
         .. note::
 
-        Note that the conversion from source and receiver latitudes and
-        longitudes to epicentral distances respects the model's flattening
-        parameter, so this calculation can be performed for a ellipsoidal
-        or spherical Earth. However, the actual traveltime and raypath
-        calculations are performed on a spherical Earth. Ellipticity
-        corrections of e.g. [Dziewonski1976]_ are not made.
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
         :type source_depth_in_km: float
