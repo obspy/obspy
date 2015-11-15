@@ -8,6 +8,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import copy
+import warnings
 
 import matplotlib.cbook
 import matplotlib.pyplot as plt
@@ -19,6 +20,8 @@ from .taup_create import TauP_Create
 from .taup_path import TauP_Path
 from .taup_pierce import TauP_Pierce
 from .taup_time import TauP_Time
+from .taup_geo import calc_dist, add_geo_to_arrivals
+import obspy.geodetics.base as geodetics
 
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
@@ -283,12 +286,20 @@ class TauPyModel(object):
     Representation of a seismic model and methods for ray paths through it.
     """
 
-    def __init__(self, model="iasp91", verbose=False):
+    def __init__(self, model="iasp91", verbose=False, earth_flattening=0.0):
         """
         Loads an already created TauPy model.
 
         :param model: The model name. Either an internal TauPy model or a
             filename in the case of custom models.
+        :param earth_flattening: Flattening parameter for Earth's ellipsoid
+            (i.e. a-b/a, where a is the semimajor equatorial radius and b is
+            the semiminor polar radius). A value of 0 (the default) gives a
+            spherical Earth. Note that this is only used to convert from
+            geographical positions (source and receiver latitudes and
+            longitudes) to epicentral distances - the actual traveltime and
+            raypath calculations are performed on a spherical Earth.
+        :type earth_flattening: float
 
         Usage:
 
@@ -303,6 +314,7 @@ class TauPyModel(object):
         """
         self.verbose = verbose
         self.model = TauModel.from_file(model)
+        self.earth_flattening = earth_flattening
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
                          phase_list=("ttall",)):
@@ -378,6 +390,170 @@ class TauPyModel(object):
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
                         model=self.model)
+
+    def get_travel_times_geo(self, source_depth_in_km, source_latitude_in_deg,
+                             source_longitude_in_deg, receiver_latitude_in_deg,
+                             receiver_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return travel times of every given phase given geographical data.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitude in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.earth_flattening)
+        arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
+                                         phase_list)
+        return arrivals
+
+    def get_pierce_points_geo(self, source_depth_in_km, source_latitude_in_deg,
+                              source_longitude_in_deg,
+                              receiver_latitude_in_deg,
+                              receiver_longitude_in_deg,
+                              phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitue in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.earth_flattening)
+
+        arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
+                                          phase_list)
+
+        if geodetics.HAS_GEOGRAPHICLIB:
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radiusOfEarth,
+                                           self.earth_flattening)
+        else:
+            msg = "Not able to evaluate positions of pierce points. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
+
+        return arrivals
+
+    def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
+                          source_longitude_in_deg, receiver_latitude_in_deg,
+                          receiver_longitude_in_deg, phase_list=("ttall",)):
+        """
+        Return ray paths of every given phase with geographical info.
+
+        .. note::
+
+            Note that the conversion from source and receiver latitudes and
+            longitudes to epicentral distances respects the model's flattening
+            parameter, so this calculation can be performed for a ellipsoidal
+            or spherical Earth. However, the actual traveltime and raypath
+            calculations are performed on a spherical Earth. Ellipticity
+            corrections of e.g. [Dziewonski1976]_ are not made.
+
+        :param source_depth_in_km: Source depth in km
+        :type source_depth_in_km: float
+        :param source_latitude_in_deg: Source latitude in degrees
+        :type source_latitude_in_deg: float
+        :param source_longitude_in_deg: Source longitue in degrees
+        :type source_longitude_in_deg: float
+        :param receiver_latitude_in_deg: Receiver latitude in degrees
+        :type receiver_latitude_in_deg: float
+        :param receiver_longitude_in_deg: Receiver longitude in degrees
+        :type receiver_longitude_in_deg: float
+        :param phase_list: List of phases for which travel times should be
+            calculated. If this is empty, all phases will be used.
+        :type phase_list: list of str
+        :return: List of ``Arrival`` objects, each of which has the time,
+            corresponding phase name, ray parameter, takeoff angle, etc. as
+            attributes.
+        :rtype: :class:`Arrivals`
+        """
+        distance_in_deg = calc_dist(source_latitude_in_deg,
+                                    source_longitude_in_deg,
+                                    receiver_latitude_in_deg,
+                                    receiver_longitude_in_deg,
+                                    self.model.radiusOfEarth,
+                                    self.earth_flattening)
+
+        arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
+                                      phase_list)
+
+        if geodetics.HAS_GEOGRAPHICLIB:
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radiusOfEarth,
+                                           self.earth_flattening)
+        else:
+            msg = "Not able to evaluate positions of points on path. " + \
+                  "Arrivals object will not be modified. " + \
+                  "Install the Python module 'geographiclib' to solve " + \
+                  "this issue."
+            warnings.warn(msg)
+
+        return arrivals
 
 
 def create_taup_model(model_name, output_dir, input_dir):
