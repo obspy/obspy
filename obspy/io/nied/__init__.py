@@ -1,6 +1,6 @@
 """
 obspy.io.nied.fnetmt - F-net's moment tensors TEXT format support for ObsPy
-===================================================================
+===========================================================================
 
 This module provides read support for the moment tensor files (TEXT format)
 provided for the F-net broadband seismograph network operated by the National
@@ -37,7 +37,7 @@ Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7 Mw
                magnitudes: 2 Elements
 
 obspy.io.nied.knet - K-NET and KiK-net ASCII format support for ObsPy
-================================================================
+=====================================================================
 
 This module provides read support for the ASCII format for waveforms from the
 K-NET and KiK-net strong-motion seismograph networks operated by the National
