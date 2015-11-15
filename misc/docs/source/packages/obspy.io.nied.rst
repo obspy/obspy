@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       core
+       fnetmt
+       knet
 
     .. comment to end block
