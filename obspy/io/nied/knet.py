@@ -104,7 +104,7 @@ def _read_knet_hdr(hdrlines, convert_stnm=False, **kwargs):
     :param hdrlines: List of the header lines of a a K-NET/KiK-net ASCII file
     :type hdrlines: list
     :param convert_stnm: For station names with 6 letters write the last two
-    letters of the station code to the 'location' field
+        letters of the station code to the 'location' field
     :type convert_stnm: bool
     """
     hdrdict = {'knet': {}}
