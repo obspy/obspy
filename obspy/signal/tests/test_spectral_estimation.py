@@ -6,6 +6,7 @@ The psd test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import gzip
 import os
@@ -222,41 +223,54 @@ class PsdTestCase(unittest.TestCase):
                          -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
 
         # Make an empty PPSD and add the data
-        ppsd = PPSD(st[0].stats, paz)
+        # use highest frequency given by IRIS Mustang noise-pdf web service
+        # (0.475683 Hz == 2.10224036 s) as center of first bin, so that we
+        # end up with the same bins.
+        ppsd = PPSD(st[0].stats, paz, period_limits=(2.10224036, 1400))
         ppsd.add(st)
         ppsd.calculate_histogram()
 
         # Get the 50th percentile from the PPSD
         (per, perval) = ppsd.get_percentile(percentile=50)
+        perinv = 1 / per
 
         # Read in the results obtained from a Mustang flat file
         file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
-        freq, power, hits = np.genfromtxt(file_dataIRIS, comments='#',
-                                          delimiter=',', unpack=True)
+        data = np.genfromtxt(
+            file_dataIRIS, comments='#', delimiter=',',
+            dtype=[(native_str("freq"), np.float64),
+                   (native_str("power"), np.int32),
+                   (native_str("hits"), np.int32)])
+        freq = data["freq"]
+        power = data["power"]
+        hits = data["hits"]
+        # cut data to same period range as in the ppsd we computed
+        # (Mustang returns more long periods, probably due to some zero padding
+        # or longer nfft in psd)
+        num_periods = len(ppsd.period_bin_centers)
+        freqdistinct = np.array(sorted(set(freq), reverse=True)[:num_periods])
+        # just make sure that we compare the same periods in the following
+        # (as we access both frequency arrays by indices from now on)
+        np.testing.assert_allclose(freqdistinct, 1 / ppsd.period_bin_centers,
+                                   rtol=1e-4)
 
         # For each frequency pair we want to compare the mean of the bands
         for fre in fres:
             pervalGoodOBSPY = []
 
-            # Get the values for the bands from the PPSD
-            perinv = 1 / per
+            # determine which bins we want to compare
             mask = (fre[0] < perinv) & (perinv < fre[1])
+
+            # Get the values for the bands from the PPSD
             pervalGoodOBSPY = perval[mask]
 
-            # Now we sort out all of the data from the IRIS flat file
-            mask = (fre[0] < freq) & (freq < fre[1])
-            triples = list(zip(freq[mask], hits[mask], power[mask]))
-            # We now have all of the frequency values of interest
-            # We will get the distinct frequency values
-            freqdistinct = sorted(list(set(freq[mask])), reverse=True)
             percenlist = []
+            # Now we sort out all of the data from the IRIS flat file
             # We will loop through the frequency values and compute a
             # 50th percentile
-            for curfreq in freqdistinct:
-                tempvalslist = []
-                for triple in triples:
-                    if np.isclose(curfreq, triple[0], atol=1e-3, rtol=0.0):
-                        tempvalslist += [int(triple[2])] * int(triple[1])
+            for curfreq in freqdistinct[mask]:
+                mask_ = curfreq == freq
+                tempvalslist = np.repeat(power[mask_], hits[mask_])
                 percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
             np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
