@@ -274,7 +274,7 @@ class PsdTestCase(unittest.TestCase):
                 percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
             np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
-                                       np.mean(percenlist), rtol=0.0, atol=1.0)
+                                       np.mean(percenlist), rtol=0.0, atol=1.2)
 
     def test_PPSD_w_IRIS_against_obspy_results(self):
         """
