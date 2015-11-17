@@ -331,6 +331,8 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
+    email_pattern = re.compile("[\w\.\-_]+@[\w\.\-_]+")
+
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
         :type names: list of str, optional
@@ -378,6 +380,11 @@ class Person(ComparingObject):
         if not hasattr(values, "__iter__"):
             msg = "emails needs to be iterable, e.g. a list."
             raise ValueError(msg)
+        for value in values:
+            if re.match(self.email_pattern, value) is None:
+                msg = ("emails needs to match the pattern "
+                       "'[\w\.\-_]+@[\w\.\-_]+'")
+                raise ValueError(msg)
         self._emails = values
 
     @property
