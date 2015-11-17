@@ -1594,7 +1594,7 @@ class TraceTestCase(unittest.TestCase):
         tr.resample(400)
         tr.differentiate()
         tr.integrate()
-        tr.taper()
+        tr.taper(max_percentage=0.1)
 
     def test_issue_695(self):
         x = np.zeros(12)

@@ -106,7 +106,8 @@ INSTALL_REQUIRES = [
     'matplotlib>=1.1.0',
     'lxml',
     'setuptools',
-    'sqlalchemy']
+    'sqlalchemy',
+    'decorator']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],

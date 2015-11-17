@@ -57,6 +57,7 @@ install:
         flake8
         future
         lxml
+        decorator
         sqlalchemy
         mock
         nose
