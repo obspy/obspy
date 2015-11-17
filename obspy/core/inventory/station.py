@@ -121,6 +121,28 @@ class Station(BaseNode):
             historical_code=historical_code,
             data_availability=data_availability)
 
+    @property
+    def total_number_of_channels(self):
+        return self._total_number_of_channels
+
+    @total_number_of_channels.setter
+    def total_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "total_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._total_number_of_channels = value
+
+    @property
+    def selected_number_of_channels(self):
+        return self._selected_number_of_channels
+
+    @selected_number_of_channels.setter
+    def selected_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "selected_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._selected_number_of_channels = value
+
     def __str__(self):
         contents = self.get_contents()
         ret = ("Station {station_name}\n"

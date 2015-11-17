@@ -83,6 +83,28 @@ class Network(BaseNode):
             historical_code=historical_code,
             data_availability=data_availability)
 
+    @property
+    def total_number_of_stations(self):
+        return self._total_number_of_stations
+
+    @total_number_of_stations.setter
+    def total_number_of_stations(self, value):
+        if value is not None and value < 0:
+            msg = "total_number_of_stations cannot be negative."
+            raise ValueError(msg)
+        self._total_number_of_stations = value
+
+    @property
+    def selected_number_of_stations(self):
+        return self._selected_number_of_stations
+
+    @selected_number_of_stations.setter
+    def selected_number_of_stations(self, value):
+        if value is not None and value < 0:
+            msg = "selected_number_of_stations cannot be negative."
+            raise ValueError(msg)
+        self._selected_number_of_stations = value
+
     def __getitem__(self, index):
         return self.stations[index]
 
