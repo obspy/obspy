@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import functools
 import inspect
 import os
 import socket
@@ -65,39 +66,43 @@ def deprecated_keywords(keywords):
     :type keywords: dict
     :param keywords: old/new keyword names as key/value pairs.
     """
-    msg = "Deprecated keyword %s in %s() call - please use %s instead."
-    msg2 = "Deprecated keyword %s in %s() call - ignoring."
-    msg3 = ("Conflicting deprecated keywords (%s) in %s() call"
-            " - please use new '%s' keyword instead.")
+    def fdec(func):
+        fname = func.__name__
+        msg = "Deprecated keyword %s in %s() call - please use %s instead."
+        msg2 = "Deprecated keyword %s in %s() call - ignoring."
+        msg3 = ("Conflicting deprecated keywords (%s) in %s() call"
+                " - please use new '%s' keyword instead.")
 
-    @decorator
-    def _deprecated_keywords(func, *args, **kwargs):
-        # check if multiple deprecated keywords get mapped to the same new
-        # keyword
-        new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
-        for key, new_key in keywords.items():
-            if key in kwargs:
-                new_keyword_appearance_counts[new_key] += 1
-        for key_ in keywords.values():
-            if new_keyword_appearance_counts[key_] > 1:
-                conflicting_keys = ", ".join(
-                    [old_key for old_key, new_key in keywords.items()
-                     if new_key == key_])
-                raise Exception(msg3 % (conflicting_keys, fname, new_key))
-        # map deprecated keywords to new keywords
-        for kw in kwargs.keys():
-            if kw in keywords:
-                nkw = keywords[kw]
-                if nkw is None:
-                    warnings.warn(msg2 % (kw, fname),
-                                  category=ObsPyDeprecationWarning)
-                else:
-                    warnings.warn(msg % (kw, fname, nkw),
-                                  category=ObsPyDeprecationWarning)
-                    kwargs[nkw] = kwargs[kw]
-                del(kwargs[kw])
-        return func(*args, **kwargs)
-    return _deprecated_keywords
+        @functools.wraps(func)
+        def echo_func(*args, **kwargs):
+            # check if multiple deprecated keywords get mapped to the same new
+            # keyword
+            new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
+            for key, new_key in keywords.items():
+                if key in kwargs:
+                    new_keyword_appearance_counts[new_key] += 1
+            for key_ in keywords.values():
+                if new_keyword_appearance_counts[key_] > 1:
+                    conflicting_keys = ", ".join(
+                        [old_key for old_key, new_key in keywords.items()
+                         if new_key == key_])
+                    raise Exception(msg3 % (conflicting_keys, fname, new_key))
+            # map deprecated keywords to new keywords
+            for kw in kwargs.keys():
+                if kw in keywords:
+                    nkw = keywords[kw]
+                    if nkw is None:
+                        warnings.warn(msg2 % (kw, fname),
+                                      category=ObsPyDeprecationWarning)
+                    else:
+                        warnings.warn(msg % (kw, fname, nkw),
+                                      category=ObsPyDeprecationWarning)
+                        kwargs[nkw] = kwargs[kw]
+                    del(kwargs[kw])
+            return func(*args, **kwargs)
+        return echo_func
+
+    return fdec
 
 
 @decorator
