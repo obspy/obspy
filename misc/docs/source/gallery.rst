@@ -94,10 +94,6 @@ Gallery
     :target: tutorial/code_snippets/beamforming_fk_analysis.html
     :alt: Beamforming - FK Analysis
 
-.. gallery-plot:: tutorial/code_snippets/beamforming_fk_analysis_2.py
-    :target: tutorial/code_snippets/beamforming_fk_analysis.html
-    :alt: Beamforming - FK Analysis
-
 .. gallery-plot:: tutorial/code_snippets/hierarchical_clustering.py
     :target: tutorial/code_snippets/hierarchical_clustering.html
     :alt: Hierarchical Clustering
