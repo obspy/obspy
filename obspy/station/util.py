@@ -598,8 +598,8 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     :type datum: str
     :param datum: Datum for latitude coordinate
     """
-    _minimum = -180
-    _maximum = 180
+    _minimum = -90
+    _maximum = 90
     _unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
