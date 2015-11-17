@@ -16,10 +16,12 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
+from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window, NPZ_STORE_KEYS)
+                                              welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -82,6 +84,7 @@ class PsdTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = PATH
+        self.path_images = os.path.join(PATH, os.pardir, "images")
 
     def test_obspy_psd_vs_pitsa(self):
         """
@@ -176,8 +179,9 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
         # test the binning arrays
         binning = np.load(file_binning)
-        np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
-        np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
+        np.testing.assert_array_equal(ppsd.db_bin_edges, binning['spec_bins'])
+        np.testing.assert_array_equal(ppsd.period_bin_centers,
+                                      binning['period_bins'])
 
         # test the mode/mean getter functions
         per_mode, mode = ppsd.get_mode()
@@ -219,45 +223,58 @@ class PsdTestCase(unittest.TestCase):
                          -0.0048004, -0.073199], 'sensitivity': 3.3554*10**9}
 
         # Make an empty PPSD and add the data
-        ppsd = PPSD(st[0].stats, paz)
+        # use highest frequency given by IRIS Mustang noise-pdf web service
+        # (0.475683 Hz == 2.10224036 s) as center of first bin, so that we
+        # end up with the same bins.
+        ppsd = PPSD(st[0].stats, paz, period_limits=(2.10224036, 1400))
         ppsd.add(st)
         ppsd.calculate_histogram()
 
         # Get the 50th percentile from the PPSD
         (per, perval) = ppsd.get_percentile(percentile=50)
+        perinv = 1 / per
 
         # Read in the results obtained from a Mustang flat file
         file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
-        freq, power, hits = np.genfromtxt(file_dataIRIS, comments='#',
-                                          delimiter=',', unpack=True)
+        data = np.genfromtxt(
+            file_dataIRIS, comments='#', delimiter=',',
+            dtype=[(native_str("freq"), np.float64),
+                   (native_str("power"), np.int32),
+                   (native_str("hits"), np.int32)])
+        freq = data["freq"]
+        power = data["power"]
+        hits = data["hits"]
+        # cut data to same period range as in the ppsd we computed
+        # (Mustang returns more long periods, probably due to some zero padding
+        # or longer nfft in psd)
+        num_periods = len(ppsd.period_bin_centers)
+        freqdistinct = np.array(sorted(set(freq), reverse=True)[:num_periods])
+        # just make sure that we compare the same periods in the following
+        # (as we access both frequency arrays by indices from now on)
+        np.testing.assert_allclose(freqdistinct, 1 / ppsd.period_bin_centers,
+                                   rtol=1e-4)
 
         # For each frequency pair we want to compare the mean of the bands
         for fre in fres:
             pervalGoodOBSPY = []
 
-            # Get the values for the bands from the PPSD
-            perinv = 1 / per
+            # determine which bins we want to compare
             mask = (fre[0] < perinv) & (perinv < fre[1])
+
+            # Get the values for the bands from the PPSD
             pervalGoodOBSPY = perval[mask]
 
-            # Now we sort out all of the data from the IRIS flat file
-            mask = (fre[0] < freq) & (freq < fre[1])
-            triples = list(zip(freq[mask], hits[mask], power[mask]))
-            # We now have all of the frequency values of interest
-            # We will get the distinct frequency values
-            freqdistinct = sorted(list(set(freq[mask])), reverse=True)
             percenlist = []
+            # Now we sort out all of the data from the IRIS flat file
             # We will loop through the frequency values and compute a
             # 50th percentile
-            for curfreq in freqdistinct:
-                tempvalslist = []
-                for triple in triples:
-                    if np.isclose(curfreq, triple[0], atol=1e-3, rtol=0.0):
-                        tempvalslist += [int(triple[2])] * int(triple[1])
+            for curfreq in freqdistinct[mask]:
+                mask_ = curfreq == freq
+                tempvalslist = np.repeat(power[mask_], hits[mask_])
                 percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
             np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
-                                       np.mean(percenlist), rtol=0.0, atol=1.0)
+                                       np.mean(percenlist), rtol=0.0, atol=1.2)
 
     def test_PPSD_w_IRIS_against_obspy_results(self):
         """
@@ -276,14 +293,10 @@ class PsdTestCase(unittest.TestCase):
 
         # load expected results, for both only PAZ and full response
         filename_paz = os.path.join(self.path, 'IUANMO_ppsd_paz.npz')
-        results_paz = np.load(filename_paz)
-        filename_full = os.path.join(self.path, 'IUANMO_ppsd_fullresponse.npz')
-        results_full = np.load(filename_full)
-        arrays_to_check = ['_times_data', '_times_processed', '_times_gaps',
-                           '_spec_octaves', 'per_octaves', 'per_octaves_right',
-                           'per_octaves_left', 'period_bin_centers',
-                           'spec_bins', 'period_bins']
-        arrays_to_check = [native_str(key) for key in arrays_to_check]
+        results_paz = PPSD.load_npz(filename_paz, metadata=None)
+        filename_full = os.path.join(self.path,
+                                     'IUANMO_ppsd_fullresponse.npz')
+        results_full = PPSD.load_npz(filename_full, metadata=None)
 
         # Calculate the PPSDs and test against expected results
         # first: only PAZ
@@ -291,10 +304,19 @@ class PsdTestCase(unittest.TestCase):
         ppsd.add(st)
         # commented code to generate the test data:
         # ## np.savez(filename_paz,
-        # ##          **dict([(k, getattr(ppsd, k)) for k in arrays_to_check]))
-        for key in arrays_to_check:
-            self.assertTrue(np.allclose(
-                getattr(ppsd, key), results_paz[key], rtol=1e-5))
+        # ##          **dict([(k, getattr(ppsd, k))
+        # ##                  for k in PPSD.NPZ_STORE_KEYS]))
+        for key in PPSD.NPZ_STORE_KEYS_ARRAY_TYPES:
+            np.testing.assert_allclose(
+                getattr(ppsd, key), getattr(results_paz, key), rtol=1e-5)
+        for key in PPSD.NPZ_STORE_KEYS_LIST_TYPES:
+            for got, expected in zip(getattr(ppsd, key),
+                                     getattr(results_paz, key)):
+                np.testing.assert_allclose(got, expected, rtol=1e-5)
+        for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+            if key in ["obspy_version", "numpy_version", "matplotlib_version"]:
+                continue
+            self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
         # (also test various means of initialization, basically testing the
         #  decorator that maps the deprecated keywords)
@@ -306,10 +328,20 @@ class PsdTestCase(unittest.TestCase):
             # commented code to generate the test data:
             # ## np.savez(filename_full,
             # ##          **dict([(k, getattr(ppsd, k))
-            # ##                  for k in arrays_to_check]))
-            for key in arrays_to_check:
-                self.assertTrue(np.allclose(
-                    getattr(ppsd, key), results_full[key], rtol=1e-5))
+            # ##                  for k in PPSD.NPZ_STORE_KEYS]))
+            for key in PPSD.NPZ_STORE_KEYS_ARRAY_TYPES:
+                np.testing.assert_allclose(
+                    getattr(ppsd, key), getattr(results_full, key), rtol=1e-5)
+            for key in PPSD.NPZ_STORE_KEYS_LIST_TYPES:
+                for got, expected in zip(getattr(ppsd, key),
+                                         getattr(results_full, key)):
+                    np.testing.assert_allclose(got, expected, rtol=1e-5)
+            for key in PPSD.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                if key in ["obspy_version", "numpy_version",
+                           "matplotlib_version"]:
+                    continue
+                self.assertEqual(getattr(ppsd, key),
+                                 getattr(results_full, key))
 
     def test_PPSD_save_and_load_npz(self):
         """
@@ -325,9 +357,114 @@ class PsdTestCase(unittest.TestCase):
             ppsd.save_npz(filename)
             ppsd_loaded = PPSD.load_npz(filename, metadata=paz)
 
-        for key in NPZ_STORE_KEYS:
-            np.testing.assert_equal(getattr(ppsd, key),
-                                    getattr(ppsd_loaded, key))
+        for key in PPSD.NPZ_STORE_KEYS:
+            if isinstance(getattr(ppsd, key), np.ndarray) or \
+                    key == '_binned_psds':
+                np.testing.assert_equal(getattr(ppsd, key),
+                                        getattr(ppsd_loaded, key))
+            else:
+                self.assertEqual(getattr(ppsd, key), getattr(ppsd_loaded, key))
+
+    def test_PPSD_restricted_stacks(self):
+        """
+        Test PPSD.calculate_histogram() with restrictions to what data should
+        be stacked. Also includes image tests.
+        """
+        # set up a bogus PPSD, with fixed random psds but with real start times
+        # of psd pieces, to facilitate testing the stack selection.
+        ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
+                    db_bins=(-200, -50, 20.), period_step_octaves=1.4)
+        ppsd._times_processed = np.load(
+            os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        np.random.seed(1234)
+        ppsd._binned_psds = [
+            arr for arr in np.random.uniform(
+                -200, -50,
+                (len(ppsd._times_processed), len(ppsd.period_bin_centers)))]
+
+        # Test callback function that selects a fixed random set of the
+        # timestamps.  Also checks that we get passed the type we expect,
+        # which is 1D numpy ndarray of float type.
+        def callback(t_array):
+            self.assertIsInstance(t_array, np.ndarray)
+            self.assertEqual(t_array.shape, (len(ppsd._times_processed),))
+            self.assertEqual(t_array.dtype, np.float64)
+            np.random.seed(1234)
+            res = np.random.random_integers(0, 1, len(t_array)).astype(np.bool)
+            return res
+
+        # test several different sets of stack criteria, should cover
+        # everything, even with lots of combined criteria
+        stack_criteria_list = [
+            dict(starttime=UTCDateTime(2015, 3, 8), month=[2, 3, 5, 7, 8]),
+            dict(endtime=UTCDateTime(2015, 6, 7), year=[2015],
+                 time_of_weekday=[(1, 0, 24), (2, 0, 24), (-1, 0, 11)]),
+            dict(year=[2013, 2014, 2016, 2017], month=[2, 3, 4]),
+            dict(month=[1, 2, 5, 6, 8], year=2015),
+            dict(isoweek=[4, 5, 6, 13, 22, 23, 24, 44, 45]),
+            dict(time_of_weekday=[(5, 22, 24), (6, 0, 2), (6, 22, 24)]),
+            dict(callback=callback, month=[1, 3, 5, 7]),
+            dict(callback=callback),
+            ]
+        expected_selections = np.load(
+            os.path.join(self.path, "ppsd_stack_selections.npy"))
+
+        # test every set of criteria
+        for stack_criteria, expected_selection in zip(
+                stack_criteria_list, expected_selections):
+            selection_got = ppsd._stack_selection(**stack_criteria)
+            np.testing.assert_array_equal(selection_got, expected_selection)
+
+        # test one particular selection as an image test
+        plot_kwargs = dict(max_percentage=15, xaxis_frequency=True,
+                           period_lim=(0.01, 50))
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            fig = ppsd.plot(show=False, **plot_kwargs)
+            # some matplotlib/Python version combinations lack the left-most
+            # tick/label "Jan 2015". Try to circumvent and get the (otherwise
+            # OK) test by changing the left x limit a bit further out (by two
+            # days, axis is in mpl days). See e.g.
+            # http://tests.obspy.org/30657/#1
+            fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
+            fig.savefig(ic.name)
+
+        # test it again, checking that updating an existing plot with different
+        # stack selection works..
+        #  a) we start with the stack for the expected image and test that it
+        #     matches (like above):
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            fig = ppsd.plot(show=False, **plot_kwargs)
+            # some matplotlib/Python version combinations lack the left-most
+            # tick/label "Jan 2015". Try to circumvent and get the (otherwise
+            # OK) test by changing the left x limit a bit further out (by two
+            # days, axis is in mpl days). See e.g.
+            # http://tests.obspy.org/30657/#1
+            fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
+            fig.savefig(ic.name)
+        #  b) now reuse figure and set the histogram with a different stack,
+        #     image test should fail:
+        ppsd.calculate_histogram(**stack_criteria_list[3])
+        try:
+            with ImageComparison(self.path_images,
+                                 'ppsd_restricted_stack.png') as ic:
+                ppsd._plot_histogram(fig=fig, draw=True)
+                fig.savefig(ic.name)
+        except ImageComparisonException:
+            pass
+        else:
+            msg = "Expected ImageComparisonException was not raised."
+            self.fail(msg)
+        #  c) now reuse figure and set the original histogram stack again,
+        #     image test should pass agin:
+        ppsd.calculate_histogram(**stack_criteria_list[1])
+        with ImageComparison(self.path_images,
+                             'ppsd_restricted_stack.png') as ic:
+            ppsd._plot_histogram(fig=fig, draw=True)
+            fig.savefig(ic.name)
 
 
 def suite():
