@@ -12,11 +12,15 @@ master:
      functions having different names. Most things that worked with ObsPy 0.10
      will continue to work with this version, but starting with the next
      version they will fail. Pay attention to the deprecation warnings.
+   * Support for additional waveform data formats:
+     - Read support for the ASCII format for waveforms from the K-NET and
+       KiK-net strong-motion seismograph networks.
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
      - ESRI shapefile write support, useful in GIS applications (see #1066)
    * Support for additional station data format:
      - The FDSN web service station text format can now be read.
+     - Read support for the NIED's moment tensor TEXT format (see #1125)
  - obspy.core:
    * New method for generating sliding windows from Stream/Trace windows.
      (see #860)
