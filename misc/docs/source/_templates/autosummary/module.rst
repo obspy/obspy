@@ -33,6 +33,10 @@
    {% if private_functions %}
    .. rubric:: Private Functions
 
+   .. warning::
+
+       Private functions are mainly for internal/developer use and their API might change without notice.
+
    .. autosummary::
      :toctree: .
      :nosignatures:
