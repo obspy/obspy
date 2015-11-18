@@ -36,7 +36,8 @@ import obspy
 from obspy import UTCDateTime, read_inventory
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
-                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException)
+                     WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
+                     FDSNRedirectException)
 from .wadl_parser import WADLParser
 
 
@@ -73,6 +74,21 @@ class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
             unverifiable=True)
 
 
+class NoRedirectionHandler(urllib.request.HTTPRedirectHandler):
+    """
+    Handler that does not direct!
+    """
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        """
+        Copied and modified from the standard library.
+        """
+        raise FDSNRedirectException(
+            "Requests with credentials (username, password) are not being "
+            "redirected by default to improve security. To force redirects "
+            "and if you trust the data center, set `force_redirect` to True "
+            "when initializing the Client.")
+
+
 class Client(object):
     """
     FDSN Web service request client.
@@ -86,7 +102,7 @@ class Client(object):
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
-                 timeout=120, service_mappings=None):
+                 timeout=120, service_mappings=None, force_redirect=False):
         """
         Initializes an FDSN Web Service client.
 
@@ -133,6 +149,13 @@ class Client(object):
             indicated by ``base_url`` and ``major_versions`` will be used. Any
             service that is manually specified as ``None`` (e.g.
             ``service_mappings={'event': None}``) will be deactivated.
+        :type force_redirect: bool
+        :param force_redirect: By default the client will follow all HTTP
+            redirects as long as no credentials (username and password)
+            are given. If credentials are given it will raise an exception
+            when a redirect is discovered. This is done to improve security.
+            Settings this flag to ``True`` will force all redirects to be
+            followed even if credentials are given.
         """
         self.debug = debug
         self.user = user
@@ -171,8 +194,12 @@ class Client(object):
             password_mgr.add_password(None, base_url, user, password)
             handlers.append(urllib.request.HTTPDigestAuthHandler(password_mgr))
 
-        # Always add the redirection handler.
-        handlers.append(CustomRedirectHandler())
+        if (user is None and password is None) or force_redirect is True:
+            # Redirect if no credentials are given or the force_redirect
+            # flag is True.
+            handlers.append(CustomRedirectHandler())
+        else:
+            handlers.append(NoRedirectionHandler())
 
         # Don't install globally to not mess with other codes.
         self._url_opener = urllib.request.build_opener(*handlers)
@@ -1328,6 +1355,10 @@ class Client(object):
                             debug=debug)
                         if code == 200:
                             wadl_queue.put((url, data))
+                        # Pass on the redirect exception.
+                        elif code is None and isinstance(
+                                data, FDSNRedirectException):
+                            wadl_queue.put((url, data))
                         else:
                             wadl_queue.put((url, None))
                     except urllib.request.HTTPError as e:
@@ -1344,11 +1375,21 @@ class Client(object):
             thread.join(15)
 
         self.services = {}
+
+        # Collect the redirection exceptions to be able to raise nicer
+        # exceptions.
+        redirect_messages = set()
+
         for _ in range(wadl_queue.qsize()):
             item = wadl_queue.get()
             url, wadl = item
+
             if wadl is None:
                 continue
+            elif isinstance(wadl, FDSNRedirectException):
+                redirect_messages.add(str(wadl))
+                continue
+
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
@@ -1377,6 +1418,9 @@ class Client(object):
                     msg = "Could not parse the contributors at '%s'." % url
                     warnings.warn(msg)
         if not self.services:
+            if redirect_messages:
+                raise FDSNRedirectException(", ".join(redirect_messages))
+
             msg = ("No FDSN services could be discovered at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
