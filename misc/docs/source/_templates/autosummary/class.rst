@@ -46,6 +46,10 @@
   {% if private_methods %}
   .. rubric:: Private Methods
 
+  .. warning::
+
+       Private methods are mainly for internal/developer use and their API might change without notice.
+
   .. autosummary::
     :toctree: .
     :nosignatures:
