@@ -976,8 +976,8 @@ class ClientTestCase(unittest.TestCase):
                 "dataselect":
                     "http://ds.iris.edu/files/redirect/307/dataselect/1",
                 "event": "http://ds.iris.edu/files/redirect/307/event/1"},
-             user="nobody@iris.edu", password="anonymous",
-             user_agent=USER_AGENT)
+            user="nobody@iris.edu", password="anonymous",
+            user_agent=USER_AGENT)
 
         # The force_redirect flag overwrites that behaviour.
         c_auth = Client("IRIS", service_mappings={
