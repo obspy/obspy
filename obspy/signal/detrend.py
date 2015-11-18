@@ -59,7 +59,7 @@ def __plotting_helper(data, fit, plot):
 
 def polynomial(data, order, plot=False):
     """
-    Remove a polynomial trend from the data.
+    Removes a polynomial trend from the data.
 
     :param data: The data to detrend. Will be modified in-place.
     :type data: :class:`numpy.ndarray`
@@ -68,6 +68,39 @@ def polynomial(data, order, plot=False):
     :param plot: If True, a plot of the operation happening will be shown.
         If a string is given that plot will be saved to the given file.
     :type plot: bool or string
+
+    .. note::
+
+        In a real world application please make sure to use the convenience
+        :meth:`obspy.core.trace.Trace.detrend` method.
+
+
+    .. rubric:: Example
+
+    >>> import obspy
+    >>> from obspy.signal.detrend import polynomial
+
+    Prepare some example data.
+
+    >>> tr = obspy.read()[0].filter("highpass", freq=2)
+    >>> tr.data += 6000 + 4 * tr.times() ** 2
+    >>> tr.data -= 0.1 * tr.times() ** 3 + 0.00001 * tr.times() ** 5
+    >>> data = tr.data
+
+    Remove the trend.
+
+    >>> polynomial(data, order=3, plot=True)  # doctest: +SKIP
+
+    .. plot::
+
+        import obspy
+        from obspy.signal.detrend import polynomial
+
+        tr = obspy.read()[0].filter("highpass", freq=2)
+        tr.data += 6000 + 4 * tr.times() ** 2 - 0.1 * tr.times() ** 3 - \
+            0.00001 * tr.times() ** 5
+
+        polynomial(tr.data, order=3, plot=True)
     """
     # Convert data if its not a floating point type.
     if not np.issubdtype(data.dtype, float):
@@ -85,7 +118,7 @@ def polynomial(data, order, plot=False):
 
 def spline(data, order, dspline, plot=False):
     """
-    Remove trend with a spline.
+    Remove a trend by fitting splines.
 
     :param data: The data to detrend. Will be modified in-place.
     :type data: :class:`numpy.ndarray`
@@ -97,6 +130,40 @@ def spline(data, order, dspline, plot=False):
     :param plot: If True, a plot of the operation happening will be shown.
         If a string is given that plot will be saved to the given file.
     :type plot: bool or string
+
+
+    .. note::
+
+        In a real world application please make sure to use the convenience
+        :meth:`obspy.core.trace.Trace.detrend` method.
+
+
+    .. rubric:: Example
+
+    >>> import obspy
+    >>> from obspy.signal.detrend import spline
+
+    Prepare some example data.
+
+    >>> tr = obspy.read()[0].filter("highpass", freq=2)
+    >>> tr.data += 6000 + 4 * tr.times() ** 2
+    >>> tr.data -= 0.1 * tr.times() ** 3 + 0.00001 * tr.times() ** 5
+    >>> data = tr.data
+
+    Remove the trend.
+
+    >>> spline(data, order=2, dspline=1000, plot=True)  # doctest: +SKIP
+
+    .. plot::
+
+        import obspy
+        from obspy.signal.detrend import polynomial
+
+        tr = obspy.read()[0].filter("highpass", freq=2)
+        tr.data += 6000 + 4 * tr.times() ** 2 - 0.1 * tr.times() ** 3 - \
+            0.00001 * tr.times() ** 5
+
+        polynomial(tr.data, order=3, plot=True)
     """
     # Convert data if its not a floating point type.
     if not np.issubdtype(data.dtype, float):
