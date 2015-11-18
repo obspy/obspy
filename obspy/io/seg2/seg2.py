@@ -173,13 +173,19 @@ class SEG2(object):
 
         # Get the time information from the file header.
         # XXX: Need some more generic date/time parsers.
-        time = self.stream.stats.seg2.ACQUISITION_TIME
-        date = self.stream.stats.seg2.ACQUISITION_DATE
-        time = time.strip().split(':')
-        date = date.strip().split('/')
-        hour, minute, second = int(time[0]), int(time[1]), float(time[2])
-        day, month, year = int(date[0]), MONTHS[date[1].lower()], int(date[2])
-        self.starttime = UTCDateTime(year, month, day, hour, minute, second)
+        if "ACQUISITION_TIME" in self.stream.stats.seg2 \
+                and "ACQUISITION_DATE" in self.stream.stats.seg2:
+            time = self.stream.stats.seg2.ACQUISITION_TIME
+            date = self.stream.stats.seg2.ACQUISITION_DATE
+            time = time.strip().split(':')
+            date = date.strip().split('/')
+            hour, minute, second = int(time[0]), int(time[1]), float(time[2])
+            day, month, year = int(date[0]), MONTHS[date[1].lower()], \
+                int(date[2])
+            self.starttime = UTCDateTime(year, month, day, hour, minute,
+                                         second)
+        else:
+            self.starttime = UTCDateTime(0)
 
     def parse_next_trace(self):
         """
@@ -235,7 +241,10 @@ class SEG2(object):
                       "to a wrong starttime of the Trace. Please contact " + \
                       "the ObsPy developers with a sample file."
                 warnings.warn(msg)
-        header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
+
+        if "DESCALING_FACTOR" in header["seg2"]:
+            header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
+
         # Unpack the data.
         data = np.fromstring(
             self.file_pointer.read(number_of_samples_in_data_block *
