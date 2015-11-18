@@ -6,7 +6,7 @@
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227894</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896815</preferredOriginID>
-    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896815" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4071866" iris:contributorEventId="3043941">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896815" iris:contributorOriginId="4071866" iris:contributor="ISC" iris:contributorEventId="3043941" iris:catalog="ISC">
         <time>
             <value>2001-01-07T01:04:31.5000</value>
         </time>
@@ -40,7 +40,7 @@
     </description>
     <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=7227879</preferredMagnitudeID>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896800</preferredOriginID>
-    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896800" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4071865" iris:contributorEventId="3043939">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896800" iris:contributorOriginId="4071865" iris:contributor="ISC" iris:contributorEventId="3043939" iris:catalog="ISC">
         <time>
             <value>2001-01-07T01:04:17.6000</value>
         </time>
@@ -73,7 +73,7 @@
         <text>CHIAPAS, MEXICO</text>
     </description>
     <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1896788</preferredOriginID>
-    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896788" iris:contributor="ISC" iris:catalog="ISC" iris:contributorOriginId="4278142" iris:contributorEventId="3345775">
+    <origin xmlns:iris="http://service.iris.edu/fdsnws/event/1/" publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1896788" iris:contributorOriginId="4278142" iris:contributor="ISC" iris:contributorEventId="3345775" iris:catalog="ISC">
         <time>
             <value>2001-01-07T01:02:18.4000</value>
         </time>
