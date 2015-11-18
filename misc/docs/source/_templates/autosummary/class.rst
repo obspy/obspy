@@ -11,7 +11,7 @@
 
   .. autosummary::
   {% for item in attributes %}
-     {{ item }}
+     ~{{ name }}.{{ item }}
   {%- endfor %}
   {% endif %}
   {% endblock %}
@@ -39,7 +39,7 @@
     :toctree: .
     :nosignatures:
   {% for item in public_methods %}
-     {{ item }}
+     ~{{ name }}.{{ item }}
   {%- endfor %}
   {% endif %}
 
@@ -50,7 +50,7 @@
     :toctree: .
     :nosignatures:
   {% for item in private_methods %}
-     {{ item }}
+     ~{{ name }}.{{ item }}
   {%- endfor %}
   {% endif %}
 
@@ -61,7 +61,7 @@
     :toctree: .
     :nosignatures:
   {% for item in special_methods %}
-     {{ item }}
+     ~{{ name }}.{{ item }}
   {%- endfor %}
   {% endif %}
 
