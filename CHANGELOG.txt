@@ -105,7 +105,7 @@ master:
        `PPSD(..., frequency_bin_width_octaves=...)` (in fractions of octaves,
        default is the old fixed setting of 1/8 octaves as in PQLX)
  - obspy.taup
-   * Added support for nd file format for input velocity models. Allows for 
+   * Added support for nd file format for input velocity models. Allows for
      named discontinuities at arbitrary depths allowing for less Earth like
      models (see #1147).
    * Added three methods (`get_travel_times_geo()`, `get_pierce_points_geo()`
@@ -137,6 +137,7 @@ master:
       as negative integers (see #1151)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
+    * Follows redirects for POST requests (see #1143)
   - obspy.imaging:
     * fix some bugs in `obspy-scan` (see #1138)
   - obspy.mseed:

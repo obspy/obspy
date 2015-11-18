@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:iris="http://www.fdsn.org/xml/station/1/iris">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.10</Module>
@@ -10,7 +10,7 @@
   <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
   <TotalNumberStations>268</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
-  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,.TEST,.CEUSN-CONTRIB,_REALTIME,_GSN,_FDSN-ALL,.UNRESTRICTED,_FDSN">
+  <Station code="ANMO" startDate="1995-07-14T00:00:00" endDate="2000-10-19T16:00:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME,.UNRESTRICTED,_GSN,.TEST">
    <Comment>
     <Value>Time Uncertain.</Value>
     <BeginEffectiveTime>1996-05-20T19:20:00</BeginEffectiveTime>
@@ -26,7 +26,7 @@
    <TotalNumberChannels>172</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,.TEST,.CEUSN-CONTRIB,_REALTIME,_GSN,_FDSN-ALL,.UNRESTRICTED,_FDSN">
+  <Station code="ANMO" startDate="2000-10-19T16:00:00" endDate="2002-11-19T21:07:00" restrictedStatus="open" iris:alternateNetworkCodes="_FDSN,_GSN-BROADBAND,.CEUSN-CONTRIB,_FDSN-ALL,_REALTIME,.UNRESTRICTED,_GSN,.TEST">
    <Comment>
     <Value>Station Maintenance.  Tests may be in progress.</Value>
     <BeginEffectiveTime>2001-04-25T14:00:00</BeginEffectiveTime>

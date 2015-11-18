@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<FDSNStationXML xmlns:iris="http://www.fdsn.org/xml/station/1/iris" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+<FDSNStationXML xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:iris="http://www.fdsn.org/xml/station/1/iris">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
  <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.10</Module>
@@ -10,7 +10,7 @@
   <Description>International Miscellaneous Stations</Description>
   <TotalNumberStations>275</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
-  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_AFTAC,_US-BB+A,_INT-NON_FDSN,_GSN,_US-REGIONAL,.UNRESTRICTED">
+  <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_AFTAC,_US-BB+A,_INT-NON_FDSN,_US-REGIONAL,.UNRESTRICTED,_GSN">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>
@@ -21,7 +21,7 @@
    <TotalNumberChannels>2</TotalNumberChannels>
    <SelectedNumberChannels>0</SelectedNumberChannels>
   </Station>
-  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_GSN-BROADBAND,_US-ALL,_AFTAC,_US-BB+A,_INT-NON_FDSN,_GSN,.EARTHSCOPE,_US-REGIONAL,_US-REF,.UNRESTRICTED,_US-BB">
+  <Station code="ATTUB" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open" iris:alternateNetworkCodes="_US-BB,_US-REF,_AFTAC,_GSN-BROADBAND,_US-ALL,.EARTHSCOPE,_US-BB+A,_INT-NON_FDSN,_US-REGIONAL,.UNRESTRICTED,_GSN">
    <Latitude>52.882099</Latitude>
    <Longitude>173.164307</Longitude>
    <Elevation>250.0</Elevation>
