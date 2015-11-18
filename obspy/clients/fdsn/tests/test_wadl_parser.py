@@ -125,8 +125,6 @@ class WADLParserTestCase(unittest.TestCase):
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
-        # Same for the format attribute.
-        self.assertFalse("format" in params)
 
         self.assertEqual(
             params["magnitudetype"]["doc_title"],
@@ -139,8 +137,7 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Tests the parsing of a station wadl.
         """
-        filename = os.path.join(self.data_path, "station.wadl")
-        parser, w = self._parse_wadl_file(filename)
+        parser, w = self._parse_wadl_file("station.wadl")
         params = parser.parameters
 
         self.assertIn("starttime", params)
@@ -169,8 +166,6 @@ class WADLParserTestCase(unittest.TestCase):
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
-        # Same for the format attribute.
-        self.assertFalse("format" in params)
 
         self.assertEqual(
             params["endbefore"]["doc_title"],
@@ -184,8 +179,7 @@ class WADLParserTestCase(unittest.TestCase):
         """
         Tests the reading of WADL files that have no type.
         """
-        filename = os.path.join(self.data_path, "station_no_types.wadl")
-        parser, w = self._parse_wadl_file(filename)
+        parser, w = self._parse_wadl_file("station_no_types.wadl")
         params = parser.parameters
 
         # Assert that types have been assigned.
@@ -342,7 +336,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_iris_event.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
                     'includeallmagnitudes', 'includeallorigins',
                     'includearrivals', 'latitude', 'limit', 'longitude',
                     'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
@@ -355,7 +349,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_iris_station.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
                     'includeavailability', 'includerestricted', 'latitude',
                     'level', 'location', 'longitude', 'matchtimeseries',
                     'maxlatitude', 'maxlongitude', 'maxradius', 'minlatitude',
@@ -381,7 +375,8 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
         # Check parsed parameters
         expected = ['alertlevel', 'callback', 'catalog', 'contributor',
-                    'endtime', 'eventid', 'eventtype', 'includeallmagnitudes',
+                    'endtime', 'eventid', 'eventtype',
+                    'format', 'includeallmagnitudes',
                     'includeallorigins', 'includearrivals', 'kmlanimated',
                     'kmlcolorby', 'latitude', 'limit', 'longitude',
                     'magnitudetype', 'maxcdi', 'maxdepth', 'maxgap',
@@ -402,7 +397,7 @@ class WADLParserTestCase(unittest.TestCase):
         params = parser.parameters
         # Check parsed parameters
         expected = ['callback', 'catalog', 'contributor', 'endtime', 'eventid',
-                    'includeallmagnitudes', 'includeallorigins',
+                    'format', 'includeallmagnitudes', 'includeallorigins',
                     'includearrivals', 'latitude', 'limit', 'longitude',
                     'magtype', 'maxdepth', 'maxlatitude', 'maxlongitude',
                     'maxmagnitude', 'maxradius', 'mindepth', 'minlatitude',
@@ -443,7 +438,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_event.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['catalog', 'contributor', 'endtime', 'eventid',
+        expected = ['catalog', 'contributor', 'endtime', 'eventid', 'format',
                     'includeallmagnitudes', 'includearrivals',
                     'includemechanisms', 'latitude', 'limit', 'longitude',
                     'magnitudetype', 'maxdepth', 'maxlatitude', 'maxlongitude',
@@ -456,7 +451,7 @@ class WADLParserTestCase(unittest.TestCase):
         parser, w = self._parse_wadl_file("2014-01-07_ncedc_station.wadl")
         params = parser.parameters
         # Check parsed parameters
-        expected = ['channel', 'endafter', 'endbefore', 'endtime',
+        expected = ['channel', 'endafter', 'endbefore', 'endtime', 'format',
                     'includeavailability', 'latitude', 'level', 'location',
                     'longitude', 'maxlatitude', 'maxlongitude', 'maxradius',
                     'minlatitude', 'minlongitude', 'minradius', 'network',

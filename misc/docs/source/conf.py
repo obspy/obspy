@@ -13,8 +13,12 @@ import sphinx_bootstrap_theme
 
 import obspy
 
-
 READ_THE_DOCS = os.environ.get('READTHEDOCS', None) == 'True'
+
+# Force the use the agg backend which somehow on some systems is not selected
+# by the sphinx plotting routine.
+import matplotlib.pyplot as plt
+plt.switch_backend("agg")
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -333,3 +337,6 @@ autoclass_content = 'class'
 # 'undoc-members', 'private-members', 'special-members', 'inherited-members' an
 # 'show-inheritance'. Don't set it to anything !
 autodoc_default_flags = ['show-inheritance']
+
+# warn about *all* references where the target cannot be found
+nitpicky = True

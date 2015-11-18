@@ -12,6 +12,7 @@ Provides the Station class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
@@ -24,6 +25,7 @@ from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
 
 
+@python_2_unicode_compatible
 class Station(BaseNode):
     """
     From the StationXML definition:
@@ -118,6 +120,28 @@ class Station(BaseNode):
             restricted_status=restricted_status, alternate_code=alternate_code,
             historical_code=historical_code,
             data_availability=data_availability)
+
+    @property
+    def total_number_of_channels(self):
+        return self._total_number_of_channels
+
+    @total_number_of_channels.setter
+    def total_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "total_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._total_number_of_channels = value
+
+    @property
+    def selected_number_of_channels(self):
+        return self._selected_number_of_channels
+
+    @selected_number_of_channels.setter
+    def selected_number_of_channels(self, value):
+        if value is not None and value < 0:
+            msg = "selected_number_of_channels cannot be negative."
+            raise ValueError(msg)
+        self._selected_number_of_channels = value
 
     def __str__(self):
         contents = self.get_contents()

@@ -15,7 +15,7 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.sac import SacError, SacIO, SacIOError
+from obspy.io.sac import SacError, SACTrace, SacIOError
 from obspy.io.sac.core import (_is_sac, _is_sacXY, _read_sac, _read_sacXY,
                                _write_sac, _write_sacXY)
 
@@ -243,7 +243,7 @@ class CoreTestCase(unittest.TestCase):
         sod_file = os.path.join(self.path, 'data', 'dis.G.SCZ.__.BHE_short')
         tr = read(sod_file)[0]
         with open(sod_file, "rb") as fh:
-            sac = SacIO(fh)
+            sac = SACTrace.read(fh)
         t1 = tr.stats.starttime - float(tr.stats.sac.b)
         t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
@@ -252,8 +252,8 @@ class CoreTestCase(unittest.TestCase):
             tempfile = tf.name
             tr.write(tempfile, format="SAC")
             with open(tempfile, "rb") as fh:
-                sac2 = SacIO(fh)
-        self.assertEqual(sac2.iztype, 11)
+                sac2 = SACTrace.read(fh)
+        self.assertEqual(sac2._header['iztype'], 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
 
@@ -266,7 +266,7 @@ class CoreTestCase(unittest.TestCase):
     def test_referenceTime(self):
         """
         Test case for bug #107. The SAC reference time is specified by the
-        iztype. However is seems no matter what iztype is given, the
+        iztype. However it seems no matter what iztype is given, the
         starttime of the seismogram is calculated by adding the B header
         (in seconds) to the SAC reference time.
         """
@@ -303,7 +303,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime.timestamp, 269596810.0)
         self.assertEqual(tr.stats.sac.b, 10.0)
         with open(self.file, 'rb') as fh:
-            sac_ref_time = SacIO(fh).reftime
+            sac_ref_time = SACTrace.read(fh).reftime
         self.assertEqual(sac_ref_time.timestamp, 269596800.0)
         # change b to undefined and write (same case as if b == 0.0)
         # now sac reference time and reftime of seismogram must be the
@@ -314,10 +314,10 @@ class CoreTestCase(unittest.TestCase):
             tr.write(tmpfile, format="SAC")
             tr2 = read(tmpfile)[0]
             self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
-            self.assertEqual(tr2.stats.sac.b, -12345.0)
+            self.assertEqual(tr2.stats.sac.b, 10.0)
             with open(tmpfile, "rb") as fh:
-                sac_ref_time2 = SacIO(fh).reftime
-        self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
+                sac_ref_time2 = SACTrace.read(fh).reftime
+        self.assertEqual(sac_ref_time2.timestamp, 269596800.0)
 
     def test_issue156(self):
         """

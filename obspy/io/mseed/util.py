@@ -299,17 +299,21 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     ...     print(k, v)
     activity_flags 0
     byteorder >
+    channel BHZ
     data_quality_flags 0
     encoding 11
     endtime 2003-05-29T02:15:51.518400Z
     excess_bytes 0
     filesize 8192
     io_and_clock_flags 0
+    location 00
+    network NL
     npts 5980
     number_of_records 2
     record_length 4096
     samp_rate 40.0
     starttime 2003-05-29T02:13:22.043400Z
+    station HGN
     """
     if isinstance(file_or_file_object, (str, native_str)):
         with open(file_or_file_object, 'rb') as f:
@@ -381,6 +385,14 @@ def _get_record_information(file_object, offset=0, endian=None):
         while file_object.read(7)[6:7] not in [b'D', b'R', b'Q', b'M']:
             record_start += rec_len
             file_object.seek(record_start, 0)
+
+    # Jump to the network, station, location and channel codes.
+    file_object.seek(record_start + 8, 0)
+    data = file_object.read(12)
+    info["station"] = data[:5].strip().decode()
+    info["location"] = data[5:7].strip().decode()
+    info["channel"] = data[7:10].strip().decode()
+    info["network"] = data[10:12].strip().decode()
 
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)

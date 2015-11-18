@@ -7,17 +7,40 @@
    .. comment to end block
 
    {% block functions %}
-   {% if functions %}
-   .. rubric:: Functions
+
+   {% set public_functions = [] %}
+   {% set private_functions = [] %}
+   {% for m in all_functions %}
+   {% if m in functions %}
+   {% do public_functions.append(m) %}
+   {% else %}
+   {% do private_functions.append(m) %}
+   {% endif %}
+   {%- endfor %}
+
+   {% if public_functions %}
+   .. rubric:: Public Functions
 
    .. autosummary::
       :toctree: .
       :nosignatures:
 
-   {% for item in functions %}
+   {% for item in public_functions %}
       {{ item }}
    {%- endfor %}
    {% endif %}
+
+   {% if private_functions %}
+   .. rubric:: Private Functions
+
+   .. autosummary::
+     :toctree: .
+     :nosignatures:
+   {% for item in private_functions %}
+       {{ item }}
+   {%- endfor %}
+   {% endif %}
+
    {% endblock %}
 
    {% block classes %}

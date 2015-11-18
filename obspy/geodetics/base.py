@@ -20,13 +20,26 @@ import numpy as np
 from obspy.core.util.decorator import deprecated
 
 
+# checking for geographiclib
+try:
+    import geographiclib  # @UnusedImport # NOQA
+    from geographiclib.geodesic import Geodesic
+    HAS_GEOGRAPHICLIB = True
+except ImportError:
+    HAS_GEOGRAPHICLIB = False
+
+
+WGS84_A = 6378137.0
+WGS84_F = 1 / 298.257223563
+
+
 @deprecated("'calcVincentyInverse' has been renamed to "
             "'calc_vincenty_inverse'. Use that instead.")
 def calcVincentyInverse(lat1, lon1, lat2, lon2):
     return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
-def calc_vincenty_inverse(lat1, lon1, lat2, lon2):
+def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Vincenty Inverse Solution of Geodesics on the Ellipsoid.
 
@@ -41,6 +54,8 @@ def calc_vincenty_inverse(lat1, lon1, lat2, lon2):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
+    :param a: Radius of Earth in m. Uses the value for WGS84 by default.
+    :param f: Flattening of Earth. Uses the value for WGS84 by default.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
     :raises: This method may have no solution between two nearly antipodal
@@ -93,19 +108,16 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     while lon2 < -180:
         lon2 += 360
 
-    # Data on the WGS84 reference ellipsoid:
-    a = 6378137.0          # semimajor axis in m
-    f = 1 / 298.257223563  # flattening
-    b = a * (1 - f)        # semiminor axis
+    b = a * (1 - f)  # semiminor axis
 
     if (abs(lat1 - lat2) < 1e-8) and (abs(lon1 - lon2) < 1e-8):
         return 0.0, 0.0, 0.0
 
     # convert latitudes and longitudes to radians:
-    lat1 = lat1 * 2.0 * math.pi / 360.
-    lon1 = lon1 * 2.0 * math.pi / 360.
-    lat2 = lat2 * 2.0 * math.pi / 360.
-    lon2 = lon2 * 2.0 * math.pi / 360.
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
 
     TanU1 = (1 - f) * math.tan(lat1)
     TanU2 = (1 - f) * math.tan(lat2)
@@ -194,7 +206,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     return gps2dist_azimuth(lat1, lon1, lat2, lon2)
 
 
-def gps2dist_azimuth(lat1, lon1, lat2, lon2):
+def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
     """
     Computes the distance between two geographic points on the WGS84
     ellipsoid and the forward and backward azimuths between these points.
@@ -207,6 +219,8 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
+    :param a: Radius of Earth in m. Uses the value for WGS84 by default.
+    :param f: Flattening of Earth. Uses the value for WGS84 by default.
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
 
@@ -220,31 +234,29 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2):
         has known limitations for two nearly antipodal points and is ca. 4x
         slower.
     """
-    try:
-        # try using geographiclib
-        from geographiclib.geodesic import Geodesic
-        result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
+    if HAS_GEOGRAPHICLIB:
+        result = Geodesic(a=a, f=f).Inverse(lat1, lon1, lat2, lon2)
         azim = result['azi1']
         if azim < 0:
             azim += 360
         bazim = result['azi2'] + 180
         return (result['s12'], azim, bazim)
-    except ImportError:
-        pass
-    try:
-        values = calc_vincenty_inverse(lat1, lon1, lat2, lon2)
-        if np.alltrue(np.isnan(values)):
-            raise StopIteration
-        return values
-    except StopIteration:
-        msg = "Catching unstable calculation on antipodes. " + \
-              "The currently used Vincenty's Inverse formulae " + \
-              "has known limitations for two nearly antipodal points. " + \
-              "Install the Python module 'geographiclib' to solve this issue."
-        warnings.warn(msg)
-        return (20004314.5, 0.0, 0.0)
-    except ValueError as e:
-        raise e
+    else:
+        try:
+            values = calc_vincenty_inverse(lat1, lon1, lat2, lon2, a, f)
+            if np.alltrue(np.isnan(values)):
+                raise StopIteration
+            return values
+        except StopIteration:
+            msg = ("Catching unstable calculation on antipodes. "
+                   "The currently used Vincenty's Inverse formulae "
+                   "has known limitations for two nearly antipodal points. "
+                   "Install the Python module 'geographiclib' to solve this "
+                   "issue.")
+            warnings.warn(msg)
+            return (20004314.5, 0.0, 0.0)
+        except ValueError as e:
+            raise e
 
 
 def kilometer2degrees(kilometer, radius=6371):

@@ -1444,6 +1444,19 @@ class UTCDateTime(object):
         """
         return UTCDateTime()
 
+    def _get_hours_after_midnight(self):
+        """
+        Calculate foating point hours after midnight.
+
+        >>> t = UTCDateTime("2015-09-27T03:16:12.123456Z")
+        >>> t._get_hours_after_midnight()
+        3.270034293333333
+        """
+        timedelta = (
+            self.datetime -
+            self.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
+        return timedelta.total_seconds() / 3600.0
+
 
 if __name__ == '__main__':
     import doctest

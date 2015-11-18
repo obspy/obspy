@@ -108,8 +108,7 @@ class Client(object):
     * IPGP:  eida.ipgp.fr:18001
     * USP:   seisrequest.iag.usp.br:18001
     """
-    # : Delay in seconds between each status request
-    status_delay = 0.5
+    max_status_requests = MAX_REQUESTS
 
     def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
@@ -313,9 +312,10 @@ class Client(object):
             else:
                 _loops = 0
                 _old_xml_doc = xml_doc
-            # if we hit MAX_REQUESTS equal status break the loop
-            if _loops > MAX_REQUESTS:
-                msg = 'MAX_REQUESTS exceeded - breaking current request loop'
+            # if we hit max_status_requests equal status break the loop
+            if _loops > self.max_status_requests:
+                msg = ('max_status_requests (%s) exceeded - breaking current '
+                       'request loop') % self.max_status_requests
                 warnings.warn(msg, UserWarning)
                 break
             # wait a bit

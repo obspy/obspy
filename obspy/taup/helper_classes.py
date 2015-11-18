@@ -42,6 +42,20 @@ TimeDist = np.dtype([
 
 
 """
+Holds the ray parameter, time and distance increments, and optionally a
+depth, latitude and longitude for a ray passing through some layer.
+"""
+TimeDistGeo = np.dtype([
+    (native_str('p'), np.float_),
+    (native_str('time'), np.float_),
+    (native_str('dist'), np.float_),
+    (native_str('depth'), np.float_),
+    (native_str('lat'), np.float_),
+    (native_str('lon'), np.float_)
+])
+
+
+"""
 Tracks critical points (discontinuities or reversals in slowness gradient)
 within slowness and velocity models.
 """

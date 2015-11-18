@@ -4,11 +4,15 @@
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/obspy)
 [![PEP8 Status](http://docs.obspy.org/master/_images/pep8.svg)](http://pep8.obspy.org)
 [![Coverage Status](https://img.shields.io/coveralls/obspy/obspy.svg)](https://coveralls.io/r/obspy/obspy?branch=master)
-[![PyPI Version](https://pypip.in/v/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
-[![Downloads](https://pypip.in/d/obspy/badge.svg?style=flat)](https://crate.io/packages/obspy/)
+[![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
+[![Downloads](https://img.shields.io/pypi/dm/obspy.svg)](https://pypi.python.org/pypi/obspy)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/obspy.svg)](https://pypi.python.org/pypi/obspy/)
+[![License](https://img.shields.io/pypi/l/obspy.svg)](https://pypi.python.org/pypi/obspy/)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17641.svg)](http://dx.doi.org/10.5281/zenodo.17641)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
+
+
 
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats, clients to access data centers and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838)).
@@ -20,6 +24,10 @@ ObsPy is licensed under the GNU Lesser General Public License (LGPL) v3.0.
 A one-hour introduction to ObsPy is [available at YouTube](https://www.youtube.com/watch?v=kFwdjfiK4gk).
 
 [Read more](https://github.com/obspy/obspy/wiki)
+
+### Changelog
+
+The **detailed changelog** is available [here](CHANGELOG.txt).
 
 ### References
 

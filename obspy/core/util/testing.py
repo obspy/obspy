@@ -29,7 +29,8 @@ from lxml import etree
 import numpy as np
 
 from obspy.core.util.base import NamedTemporaryFile, get_matplotlib_version
-from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git
+from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
+    MatplotlibBackend
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -309,7 +310,9 @@ class ImageComparison(NamedTemporaryFile):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import font_manager, get_backend, rcParams, rcdefaults
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+
+        from matplotlib import font_manager, rcParams, rcdefaults
         import locale
 
         try:
@@ -321,14 +324,6 @@ class ImageComparison(NamedTemporaryFile):
             except:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"
-                warnings.warn(msg)
-
-        if get_backend().upper() != 'AGG':
-            import matplotlib
-            try:
-                matplotlib.use('AGG', warn=False)
-            except TypeError:
-                msg = "Image comparison requires matplotlib backend 'AGG'"
                 warnings.warn(msg)
 
         # set matplotlib builtin default settings for testing
@@ -367,10 +362,13 @@ class ImageComparison(NamedTemporaryFile):
         # images
         except ValueError as e:
             failed = True
-            msg = str(e)
             if "operands could not be broadcast together" in msg:
-                upload_msg = self._upload_images()
-                raise ImageComparisonException("\n".join([msg, upload_msg]))
+                msg = str(e) + "\n"
+                upload_links = self._upload_images()
+                msg += ("\tExpected:  {expected}\n"
+                        "\tActual:    {actual}\n"
+                        "\tDiff:      {diff}\n").format(**upload_links)
+                raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
         except:
@@ -380,28 +378,31 @@ class ImageComparison(NamedTemporaryFile):
         # message back or the test passed if we get an empty message
         else:
             if msg:
+                failed = True
+            else:
+                failed = False
+            if failed:
+                # base message on deviation of baseline and actual image
                 msg = ("Image comparision failed.\n"
                        "\tRMS:       {rms}\n"
                        "\tTolerance: {tol}\n").format(**msg)
-                upload_links = self._upload_images()
-                failed = True
-                if self.keep_output and not (self.keep_only_failed and not
-                                             failed):
-                    self._copy_tempfiles()
+                # optionally, copy failed images from /tmp and append
+                # the local paths
+                if self.keep_output:
                     ff = self._get_final_filenames()
                     msg += ("\tExpected:  {expected}\n"
                             "\tActual:    {actual}\n"
                             "\tDiff:      {diff}\n").format(**ff)
-                if upload_links:
+                # try to upload to imgur, if successful append links to message
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
                     msg += ("\tExpected:  {expected}\n"
                             "\tActual:    {actual}\n"
-                            "\tDiff:      {diff}\n").format(**upload_links)
+                            "\tDiff:      {diff}\n").format(**upload_result)
                 else:
-                    msg += ("Set the OBSPY_KEEP_IMAGES env variable to keep "
-                            "the test images.")
+                    msg += upload_result
                 msg = msg.rstrip()
                 raise ImageComparisonException(msg)
-            failed = False
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
@@ -410,7 +411,7 @@ class ImageComparison(NamedTemporaryFile):
             self._fileobj.close()
             plt.close()
             if self.keep_output:
-                if not (self.keep_only_failed and not failed):
+                if failed or not self.keep_only_failed:
                     self._copy_tempfiles()
             # delete temporary files
             os.remove(self.name)
@@ -448,46 +449,45 @@ class ImageComparison(NamedTemporaryFile):
         """
         Copies created images from tempfiles to a subfolder of baseline images.
         """
-        filenames = self._get_final_filenames()
-        directory = self.output_path
-        if os.path.exists(directory) and not os.path.isdir(directory):
-            msg = "Could not keep output image, target directory exists:" + \
-                  directory
+        try:
+            filenames = self._get_final_filenames()
+            directory = self.output_path
+            if os.path.exists(directory):
+                if not os.path.isdir(directory):
+                    msg = ("Could not keep output image, target directory "
+                           "exists but is no directory: %s") % directory
+                    warnings.warn(msg)
+                    return
+            else:
+                os.mkdir(directory)
+            if os.path.isfile(self.diff_filename):
+                shutil.copy(self.diff_filename, filenames["diff"])
+            shutil.copy(self.name, filenames["actual"])
+        except Exception as e:
+            msg = ("Failed to copy images from temporary directory "
+                   "(caught %s: %s).") % (e.__class__.__name__, str(e))
             warnings.warn(msg)
-            return
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        if os.path.isfile(self.diff_filename):
-            shutil.copy(self.diff_filename, filenames["diff"])
-        shutil.copy(self.name, filenames["actual"])
 
     def _upload_images(self):
         """
         Uploads images to imgur.
+
+        :returns: ``dict`` with links to uploaded images or ``str`` with
+            message if upload failed
         """
-        # try to import pyimgur
         try:
             import pyimgur
-        except ImportError:
-            msg = ("Upload to imgur not possible (python package "
-                   "'pyimgur' not installed).")
-            warnings.warn(msg)
-            return None
-        # requests package should be installed since it is a dependency of
-        # pyimgur
-        import requests
+            import requests
+        except Exception as e:
+            msg = ("Upload to imgur failed (caught %s: %s).")
+            return msg % (e.__class__.__name__, str(e))
         # try to get imgur client id from environment
-        imgur_clientid = os.environ.get("OBSPY_IMGUR_CLIENTID",
-                                        "53b182544dc5d89")
-        if imgur_clientid is None:
-            msg = ("Upload to imgur not possible (environment "
-                   "variable OBSPY_IMGUR_CLIENTID not set).")
-            warnings.warn(msg)
-            return None
+        imgur_clientid = \
+            os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
         # upload images and return urls
-        imgur = pyimgur.Imgur(imgur_clientid)
         links = {}
         try:
+            imgur = pyimgur.Imgur(imgur_clientid)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
                 links['expected'] = up.link
@@ -498,14 +498,9 @@ class ImageComparison(NamedTemporaryFile):
                 up = imgur.upload_image(self.diff_filename,
                                         title=self.diff_filename)
                 links['diff'] = up.link
-        except requests.exceptions.SSLError as e:
-            msg = ("Upload to imgur not possible (caught SSLError: %s).")
-            warnings.warn(msg % str(e))
-            return None
-        except ValueError as e:
-            msg = ("Upload to imgur failed (caught ValueError: %s).")
-            warnings.warn(msg % str(e))
-            return None
+        except (requests.exceptions.SSLError, Exception) as e:
+            msg = ("Upload to imgur failed (caught %s: %s).")
+            return msg % (e.__class__.__name__, str(e))
         return links
 
 

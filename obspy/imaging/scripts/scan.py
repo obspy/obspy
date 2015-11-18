@@ -41,11 +41,12 @@ import numpy as np
 
 from obspy import UTCDateTime, __version__, read
 from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action
+from obspy.core.util.misc import MatplotlibBackend
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
 
-def compressStartend(x, stop_iteration):
+def compressStartend(x, stop_iteration, merge_overlaps=False):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
     by merging overlapping and exactly fitting pieces into one.
@@ -54,6 +55,8 @@ def compressStartend(x, stop_iteration):
     The maximum number of iterations can be specified.
     """
     diffs = x[1:, 0] - x[:-1, 1]
+    if merge_overlaps:
+        diffs[diffs < 0] = 0
     inds = np.concatenate([(diffs <= 0), [False]])
     i = 0
     while any(inds):
@@ -72,6 +75,8 @@ def compressStartend(x, stop_iteration):
         inds_del = np.nonzero(inds_next)
         x = np.delete(x, inds_del, 0)
         diffs = x[1:, 0] - x[:-1, 1]
+        if merge_overlaps:
+            diffs[diffs < 0] = 0
         inds = np.concatenate([(diffs <= 0), [False]])
     return x
 
@@ -231,6 +236,9 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
 
+    if args.output is not None:
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+
     # Print help and exit if no arguments are given
     if len(args.paths) == 0 and args.load is None:
         parser.error('No paths specified.')
@@ -241,9 +249,6 @@ def main(argv=None):
     else:
         parse_func = parse_file_to_dict
 
-    if args.output is not None:
-        import matplotlib
-        matplotlib.use("agg")
     from matplotlib.dates import date2num, num2date
     from matplotlib.ticker import FuncFormatter
     from matplotlib.patches import Rectangle

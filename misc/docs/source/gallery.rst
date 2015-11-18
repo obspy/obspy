@@ -74,10 +74,6 @@ Gallery
     :target: tutorial/code_snippets/frequency_response.html
     :alt: Poles and Zeros, Frequency Response
 
-.. gallery-plot:: tutorial/code_snippets/retrieving_data_from_datacenters_1.py
-    :target: tutorial/code_snippets/retrieving_data_from_datacenters.html
-    :alt: Retrieving Data via ArcLink
-
 .. gallery-plot:: tutorial/code_snippets/beachball_plot.py
     :target: tutorial/code_snippets/beachball_plot.html
     :alt: Beachball Plot

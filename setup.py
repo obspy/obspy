@@ -89,10 +89,10 @@ KEYWORDS = [
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
     'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
+    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'response file', 'RT', 'SAC', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
     'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
@@ -106,7 +106,8 @@ INSTALL_REQUIRES = [
     'matplotlib>=1.1.0',
     'lxml',
     'setuptools',
-    'sqlalchemy']
+    'sqlalchemy',
+    'decorator']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],
@@ -157,6 +158,7 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
+        'KNET = obspy.io.nied.knet'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -254,6 +256,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.ah.core:_is_ah',
         'readFormat = obspy.io.ah.core:_read_ah',
         ],
+    'obspy.plugin.waveform.KNET': [
+        'isFormat = obspy.io.nied.knet:_is_knet_ascii',
+        'readFormat = obspy.io.nied.knet:_read_knet_ascii',
+        ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
         'ZMAP = obspy.io.zmap.core',
@@ -265,6 +271,8 @@ ENTRY_POINTS = {
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
+        'KML = obspy.io.kml.core',
+        'FNETMT = obspy.io.nied.fnetmt'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -302,14 +310,23 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
+    'obspy.plugin.event.FNETMT': [
+        'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
+        'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
+        ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
+        ],
+    'obspy.plugin.event.KML': [
+        'writeFormat = obspy.io.kml.core:_write_kml',
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
+        'STATIONTXT = obspy.io.stationtxt.core',
+        'KML = obspy.io.kml.core'
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
@@ -324,6 +341,14 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
+        ],
+    'obspy.plugin.inventory.STATIONTXT': [
+        'isFormat = obspy.io.stationtxt.core:is_FDSN_station_text_file',
+        'readFormat = '
+        'obspy.io.stationtxt.core:read_FDSN_station_text_file',
+        ],
+    'obspy.plugin.inventory.KML': [
+        'writeFormat = obspy.io.kml.core:_write_kml',
         ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',

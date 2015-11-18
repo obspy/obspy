@@ -33,12 +33,14 @@ Thomas Lecocq
 John Leeman
 Philippe Lesage
 Anthony Lomax
+Jonathan MacCarthy
 Alessia Maggi
 Henri Martin
 Tobias Megies
 Alberto Michelini
 Bernhard Morgenstern
 Nathaniel C. Miller
+Mark P. Panning
 Celso Reyes
 Tom Richter
 Adam Ringler
@@ -55,6 +57,7 @@ Benjamin Sullivan
 Chad Trabant
 Tommaso Fabbri
 Leonardo Uieda
+Andrew Walker
 Marcus Walther
 Joachim Wassermann
 Mark C. Williams

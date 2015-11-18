@@ -211,7 +211,7 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
                 # extra
                 params = AttribDict()
                 params.network_id = parts[3]
-                params.side_name = parts[4]
+                params.site_name = parts[4]
                 params.comment = parts[5]
                 params.sensor_type = parts[6]
                 params.data_format = parts[7]

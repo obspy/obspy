@@ -37,10 +37,11 @@ from matplotlib.dates import date2num
 from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
-from obspy import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
+from obspy.imaging.scripts.scan import compressStartend
 from obspy.core.inventory import Inventory
-from obspy.core.util import get_matplotlib_version
+from obspy.core.util import get_matplotlib_version, AttribDict
 from obspy.core.util.decorator import deprecated_keywords, deprecated
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
@@ -56,36 +57,6 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-NPZ_STORE_KEYS = [
-    'hist_stack',
-    '_times_data',
-    '_times_gaps',
-    '_times_used',
-    'xedges',
-    'yedges',
-    'channel',
-    'delta',
-    'freq',
-    'id',
-    'is_rotational_data',
-    'len',
-    'location',
-    'merge_method',
-    'network',
-    'nfft',
-    'nlap',
-    'overlap',
-    'per',
-    'per_octaves',
-    'per_octaves_left',
-    'per_octaves_right',
-    'period_bin_centers',
-    'period_bins',
-    'ppsd_length',
-    'sampling_rate',
-    'spec_bins',
-    'station',
-    ]
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -267,11 +238,49 @@ class PPSD(object):
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
+    NPZ_STORE_KEYS_LIST_TYPES = [
+        # things related to processed data
+        '_times_data',
+        '_times_gaps',
+        '_times_processed',
+        '_binned_psds',
+        ]
+    NPZ_STORE_KEYS_SIMPLE_TYPES = [
+        # things related to Stats passed at __init__
+        'id',
+        'sampling_rate',
+        # kwargs passed during __init__
+        'skip_on_gaps',
+        'ppsd_length',
+        'overlap',
+        'special_handling',
+        # version numbers
+        'ppsd_version',
+        'obspy_version',
+        'numpy_version',
+        'matplotlib_version',
+        # attributes derived during __init__
+        '_len',
+        '_nlap',
+        '_nfft',
+        ]
+    NPZ_STORE_KEYS_ARRAY_TYPES = [
+        # attributes derived during __init__
+        '_db_bin_edges',
+        '_psd_periods',
+        '_period_binning',
+        ]
+    NPZ_STORE_KEYS = (
+        NPZ_STORE_KEYS_ARRAY_TYPES +
+        NPZ_STORE_KEYS_LIST_TYPES +
+        NPZ_STORE_KEYS_SIMPLE_TYPES)
+
     @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
                           'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
-                 is_rotational_data=False, db_bins=(-200, -50, 1.),
-                 ppsd_length=3600., overlap=0.5, **kwargs):
+                 db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
+                 special_handling=None, period_smoothing_width_octaves=1.0,
+                 period_step_octaves=0.125, period_limits=None, **kwargs):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -292,10 +301,8 @@ class PPSD(object):
           is changing over the timespans that are added to the PPSD.
           Use with caution!
 
-        :note: When using `is_rotational_data=True` the applied processing
-               steps are changed (and it is assumed that a dictionary is
-               provided as `metadata`).
-               Differentiation of data (converting velocity
+        :note: When using `special_handling="ringlaser"` the applied processing
+               steps are changed. Differentiation of data (converting velocity
                to acceleration data) will be omitted and a flat instrument
                response is assumed, leaving away response removal and only
                dividing by `metadata['sensitivity']` specified in the provided
@@ -317,9 +324,6 @@ class PPSD(object):
                 `skip_on_gaps=True` for not filling gaps with zeros which might
                 result in some data segments shorter than `ppsd_length` not
                 used in the PPSD.
-        :type is_rotational_data: bool, optional
-        :param is_rotational_data: If set to True adapt processing of data to
-                rotational data. See note for details.
         :type db_bins: tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
@@ -334,54 +338,260 @@ class PPSD(object):
                 values between 0 and 1 and is given as fraction of the length
                 of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
                 result in an overlap of 1800s of the segments.
+        :type special_handling: str, optional
+        :param special_handling: Switches on customized handling for
+            data other than seismometer recordings. Can be one of: 'ringlaser'
+            (no instrument correction, just division by
+            `metadata["sensitivity"]` of provided metadata dictionary),
+            'hydrophone' (no differentiation after instrument correction).
+        :type period_smoothing_width_octaves: float
+        :param period_smoothing_width_octaves: Determines over what
+            period/frequency range the psd is smoothed around every central
+            period/frequency. Given in fractions of octaves (default of ``1``
+            means the psd is averaged over a full octave at each central
+            frequency).
+        :type period_step_octaves: float
+        :param period_step_octaves: Step length on frequency axis in fraction
+            of octaves (default of ``0.125`` means one smoothed psd value on
+            the frequency axis is measured every 1/8 of an octave).
+        :type period_limits: tuple/list of two float
+        :param period_limits: Set custom lower and upper end of period range
+            (e.g. ``(0.01, 100)``). The specified lower end of period range
+            will be set as the central period of the first bin (geometric mean
+            of left/right edges of smoothing interval). At the upper end of the
+            specified period range, no more additional bins will be added after
+            the bin whose center frequency exceeds the given upper end for the
+            first time.
         """
+        # remove after release of 0.11.0
+        if kwargs.pop("is_rotational_data", None) is True:
+            msg = ("Keyword 'is_rotational_data' is deprecated. Please use "
+                   "'special_handling=\"ringlaser\"' instead.")
+            warnings.warn(msg, ObsPyDeprecationWarning)
+            special_handling = "ringlaser"
+
+        # save things related to args
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
-        self.network = stats.network
-        self.station = stats.station
-        self.location = stats.location
-        self.channel = stats.channel
         self.sampling_rate = stats.sampling_rate
-        self.delta = 1.0 / self.sampling_rate
-        self.is_rotational_data = is_rotational_data
-        self.ppsd_length = ppsd_length
-        self.overlap = overlap
-        # trace length for one segment
-        self.len = int(self.sampling_rate * ppsd_length)
         self.metadata = metadata
 
-        if skip_on_gaps:
-            self.merge_method = -1
-        else:
-            self.merge_method = 0
-        # nfft is determined mimicking the fft setup in McNamara&Buland paper:
+        # save things related to kwargs
+        self.skip_on_gaps = skip_on_gaps
+        self.db_bins = db_bins
+        self.ppsd_length = ppsd_length
+        self.overlap = overlap
+        self.special_handling = special_handling and special_handling.lower()
+        if self.special_handling not in (None, "ringlaser", "hydrophone"):
+            msg = "Unsupported value for 'special_handling' parameter: %s"
+            msg = msg % self.special_handling
+            raise ValueError(msg)
+
+        # save version numbers
+        self.ppsd_version = 1
+        self.obspy_version = __version__
+        self.matplotlib_version = ".".join(map(str, MATPLOTLIB_VERSION))
+        self.numpy_version = np.__version__
+
+        # calculate derived attributes
+        # nfft is determined mimicking the fft setup in McNamara&Buland
+        # paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
         #  - take number of points of whole ppsd segment (default 1 hour)
-        self.nfft = ppsd_length * self.sampling_rate
+        nfft = self.ppsd_length * self.sampling_rate
         #  - make 13 single segments overlapping by 75%
         #    (1 full segment length + 25% * 12 full segment lengths)
-        self.nfft = self.nfft / 4.0
+        nfft = nfft / 4.0
         #  - go to next smaller power of 2 for nfft
-        self.nfft = prev_pow_2(self.nfft)
-        #  - use 75% overlap (we end up with a little more than 13 segments..)
-        self.nlap = int(0.75 * self.nfft)
-        self._times_used = []
+        self._nfft = prev_pow_2(nfft)
+        #  - use 75% overlap
+        #    (we end up with a little more than 13 segments..)
+        self._nlap = int(0.75 * self.nfft)
+        # Trace length for one psd segment.
+        self._len = int(self.sampling_rate * self.ppsd_length)
+        # make an initial dummy psd and to get the array of periods
+        _, freq = mlab.psd(np.ones(self.len), self.nfft,
+                           self.sampling_rate, noverlap=self.nlap)
+        # leave out first entry (offset)
+        freq = freq[1:]
+        self._psd_periods = 1.0 / freq[::-1]
+
+        if period_limits is None:
+            period_limits = (self.psd_periods[0], self.psd_periods[-1])
+        self._setup_period_binning(
+            period_smoothing_width_octaves, period_step_octaves, period_limits)
+        # setup db binning
+        # Set up the binning for the db scale.
+        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
+        self._db_bin_edges = np.linspace(db_bins[0], db_bins[1],
+                                         num_bins + 1, endpoint=True)
+
+        # lists related to persistent processed data
+        self._times_processed = []
         self._times_data = []
         self._times_gaps = []
-        self.hist_stack = None
-        self.__setup_bins()
-        # set up the binning for the db scale
-        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
-        self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
-                                     endpoint=True)
+        self._binned_psds = []
+
+        # internal attributes for stacks on processed data
+        self._current_hist_stack = None
+        self._current_hist_stack_cumulative = None
+        self._current_times_used = []
+        self._current_times_all_details = []
 
     @property
+    def network(self):
+        return self.id.split(".")[0]
+
+    @property
+    def station(self):
+        return self.id.split(".")[1]
+
+    @property
+    def location(self):
+        return self.id.split(".")[2]
+
+    @property
+    def channel(self):
+        return self.id.split(".")[3]
+
+    @property
+    def delta(self):
+        return 1.0 / self.sampling_rate
+
+    @property
+    def len(self):
+        """
+        Trace length for one psd segment.
+        """
+        return self._len
+
+    @property
+    def nfft(self):
+        return self._nfft
+
+    @property
+    def nlap(self):
+        return self._nlap
+
+    @property
+    def merge_method(self):
+        if self.skip_on_gaps:
+            return -1
+        else:
+            return 0
+
+    @property
+    @deprecated("PPSD attribute 'spec_bins' is deprecated, please use "
+                "'db_bin_edges' instead.")
+    def spec_bins(self):
+        return self.db_bin_edges
+
+    @property
+    def db_bin_edges(self):
+        return self._db_bin_edges
+
+    @property
+    def db_bin_centers(self):
+        return (self.db_bin_edges[:-1] + self.db_bin_edges[1:]) / 2.0
+
+    @property
+    def psd_frequencies(self):
+        return 1.0 / self.psd_periods[::-1]
+
+    @property
+    def psd_periods(self):
+        return self._psd_periods
+
+    @property
+    @deprecated("PPSD attribute 'per' is deprecated, please use "
+                "'psd_periods' instead.")
+    def per(self):
+        return self.psd_periods
+
+    @property
+    @deprecated("PPSD attribute 'freq' is deprecated, please use "
+                "'psd_frequencies' instead.")
+    def freq(self):
+        return self.psd_frequencies
+
+    @property
+    @deprecated("PPSD attribute 'per_octaves_left' is deprecated, please use "
+                "'period_bin_left_edges' instead.")
+    def per_octaves_left(self):
+        return self.period_bin_left_edges
+
+    @property
+    @deprecated("PPSD attribute 'per_octaves_right' is deprecated, please use "
+                "'period_bin_right_edges' instead.")
+    def per_octaves_right(self):
+        return self.period_bin_right_edges
+
+    @property
+    @deprecated("PPSD attribute 'per_octaves' is deprecated, please use "
+                "'period_bin_centers' instead.")
+    def per_octaves(self):
+        return self.period_bin_centers
+
+    @property
+    @deprecated("PPSD attribute 'period_bins' is deprecated, please use "
+                "'period_bin_centers' instead.")
+    def period_bins(self):
+        return self.period_bin_centers
+
+    @property
+    def period_bin_centers(self):
+        """
+        Return centers of period bins (geometric mean of left and right edge of
+        period smoothing ranges).
+        """
+        return self._period_binning[2, :]
+
+    @property
+    def period_xedges(self):
+        """
+        Returns edges of period histogram bins (one element longer than number
+        of bins). These are the edges of the plotted histogram/pcolormesh, but
+        not the edges used for smoothing along the period axis of the psd
+        (before binning).
+        """
+        return np.concatenate([self._period_binning[1, 0:1],
+                               self._period_binning[3, :]])
+
+    @property
+    def period_bin_left_edges(self):
+        """
+        Returns left edges of period bins (same length as number of bins).
+        These are the edges used for smoothing along the period axis of the psd
+        (before binning), not the edges of the histogram/pcolormesh in the
+        plot.
+        """
+        return self._period_binning[0, :]
+
+    @property
+    def period_bin_right_edges(self):
+        """
+        Returns right edges of period bins (same length as number of bins).
+        These are the edges used for smoothing along the period axis of the psd
+        (before binning), not the edges of the histogram/pcolormesh in the
+        plot.
+        """
+        return self._period_binning[4, :]
+
+    @property
+    @deprecated("PPSD attribute 'times' is deprecated, please use "
+                "'times_processed', 'times_data' and 'times_gaps' instead.")
     def times(self):
-        return list(map(UTCDateTime, self._times_used))
+        return list(map(UTCDateTime, self._times_processed))
 
     @property
+    def times_processed(self):
+        return list(map(UTCDateTime, self._times_processed))
+
+    @property
+    @deprecated("PPSD attribute 'times_used' is deprecated, please use "
+                "'current_times_used' or 'times_processed' instead.")
     def times_used(self):
-        return list(map(UTCDateTime, self._times_used))
+        return self.current_times_used
 
     @property
     def times_data(self):
@@ -393,49 +603,77 @@ class PPSD(object):
         return [(UTCDateTime(t1), UTCDateTime(t2))
                 for t1, t2 in self._times_gaps]
 
-    def __setup_bins(self):
-        """
-        Makes an initial dummy psd and thus sets up the bins and all the rest.
-        Should be able to do it without a dummy psd..
-        """
-        dummy = np.ones(self.len)
-        _spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
-                               noverlap=self.nlap)
+    @property
+    def current_histogram(self):
+        return self._current_hist_stack
 
-        # leave out first entry (offset)
-        freq = freq[1:]
+    @property
+    def current_histogram_cumulative(self):
+        return self._current_hist_stack_cumulative
 
-        per = 1.0 / freq[::-1]
-        self.freq = freq
-        self.per = per
-        # calculate left/right edge of first period bin,
-        # width of bin is one octave
-        per_left = per[0] / 2
-        per_right = 2 * per_left
-        # calculate center period of first period bin
+    @property
+    def current_histogram_count(self):
+        return len(self._current_times_used)
+
+    @property
+    def current_times_used(self):
+        return list(map(UTCDateTime, self._current_times_used))
+
+    def _setup_period_binning(self, period_smoothing_width_octaves,
+                              period_step_octaves, period_limits):
+        """
+        Set up period binning.
+        """
+        # we step through the period range at step width controlled by
+        # period_step_octaves (default 1/8 octave)
+        period_step_factor = 2 ** period_step_octaves
+        # the width of frequencies we average over for every bin is controlled
+        # by period_smoothing_width_octaves (default one full octave)
+        period_smoothing_width_factor = \
+            2 ** period_smoothing_width_octaves
+        # calculate left/right edge and center of first period bin
+        # set first smoothing bin's left edge such that the center frequency is
+        # the lower limit specified by the user (or the lowest period in the
+        # psd)
+        per_left = (period_limits[0] /
+                    (period_smoothing_width_factor ** 0.5))
+        per_right = per_left * period_smoothing_width_factor
         per_center = math.sqrt(per_left * per_right)
-        # calculate mean of all spectral values in the first bin
+        # build up lists
         per_octaves_left = [per_left]
         per_octaves_right = [per_right]
-        per_octaves = [per_center]
-        # we move through the period range at 1/8 octave steps
-        factor_eighth_octave = 2 ** 0.125
+        per_octaves_center = [per_center]
         # do this for the whole period range and append the values to our lists
-        while per_right < per[-1]:
-            per_left *= factor_eighth_octave
-            per_right = 2 * per_left
+        while per_center < period_limits[1]:
+            # move left edge of smoothing bin further
+            per_left *= period_step_factor
+            # determine right edge of smoothing bin
+            per_right = per_left * period_smoothing_width_factor
+            # determine center period of smoothing/binning
             per_center = math.sqrt(per_left * per_right)
+            # append to lists
             per_octaves_left.append(per_left)
             per_octaves_right.append(per_right)
-            per_octaves.append(per_center)
-        self.per_octaves_left = np.array(per_octaves_left)
-        self.per_octaves_right = np.array(per_octaves_right)
-        self.per_octaves = np.array(per_octaves)
-
-        self.period_bins = per_octaves
-        # mid-points of all the period bins
-        self.period_bin_centers = np.mean((self.period_bins[:-1],
-                                           self.period_bins[1:]), axis=0)
+            per_octaves_center.append(per_center)
+        per_octaves_left = np.array(per_octaves_left)
+        per_octaves_right = np.array(per_octaves_right)
+        per_octaves_center = np.array(per_octaves_center)
+        valid = per_octaves_right > self.psd_periods[0]
+        valid &= per_octaves_left < self.psd_periods[-1]
+        per_octaves_left = per_octaves_left[valid]
+        per_octaves_right = per_octaves_right[valid]
+        per_octaves_center = per_octaves_center[valid]
+        self._period_binning = np.vstack([
+            # left edge of smoothing (for calculating the bin value from psd
+            per_octaves_left,
+            # left xedge of bin (for plotting)
+            per_octaves_center / (period_step_factor ** 0.5),
+            # bin center (for plotting)
+            per_octaves_center,
+            # right xedge of bin (for plotting)
+            per_octaves_center * (period_step_factor ** 0.5),
+            # right edge of smoothing (for calculating the bin value from psd
+            per_octaves_right])
 
     def __sanity_check(self, trace):
         """
@@ -450,14 +688,21 @@ class PPSD(object):
             return False
         return True
 
-    def __insert_used_time(self, utcdatetime):
+    def __insert_processed_data(self, utcdatetime, spectrum):
         """
-        Inserts the given UTCDateTime at the right position in the list keeping
-        the order intact.
+        Inserts the given UTCDateTime and processed/octave-binned spectrum at
+        the right position in the lists, keeping the order intact.
+
+        Replaces old :meth:`PPSD.__insert_used_time()` private method and the
+        addition ot the histogram stack that was performed directly in
+        :meth:`PPSD.__process()`.
 
         :type utcdatetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type spectrum: :class:`numpy.ndarray`
         """
-        bisect.insort(self._times_used, utcdatetime.timestamp)
+        ind = bisect.bisect(self._times_processed, utcdatetime.timestamp)
+        self._times_processed.insert(ind, utcdatetime.timestamp)
+        self._binned_psds.insert(ind, spectrum)
 
     def __insert_gap_times(self, stream):
         """
@@ -489,26 +734,14 @@ class PPSD(object):
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
-        index1 = bisect.bisect_left(self._times_used, utcdatetime.timestamp)
-        index2 = bisect.bisect_right(self._times_used,
+        index1 = bisect.bisect_left(self._times_processed,
+                                    utcdatetime.timestamp)
+        index2 = bisect.bisect_right(self._times_processed,
                                      utcdatetime.timestamp + self.ppsd_length)
         if index1 != index2:
             return True
         else:
             return False
-
-    def __check_ppsd_length(self):
-        """
-        Adds ppsd_length and overlap attributes if not existing.
-        This ensures compatibility with pickled objects without these
-        attributes.
-        """
-        try:
-            self.ppsd_length
-            self.overlap
-        except AttributeError:
-            self.ppsd_length = 3600.
-            self.overlap = 0.5
 
     def add(self, stream, verbose=False):
         """
@@ -523,7 +756,11 @@ class PPSD(object):
         :returns: True if appropriate data were found and the ppsd statistics
                 were changed, False otherwise.
         """
-        self.__check_ppsd_length()
+        if self.metadata is None:
+            msg = ("PPSD instance has no metadata attached, which are needed "
+                   "for processing the data. When using 'PPSD.load_npz()' use "
+                   "'metadata' kwarg to provide metadata.")
+            raise Exception(msg)
         # return later if any changes were applied to the ppsd statistics
         changed = False
         # prepare the list of traces to go through
@@ -560,7 +797,6 @@ class PPSD(object):
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
                     if success:
-                        self.__insert_used_time(t1)
                         if verbose:
                             print(t1)
                         changed = True
@@ -572,14 +808,14 @@ class PPSD(object):
 
     def __process(self, tr):
         """
-        Processes a segment of data and adds the information to the
-        PPSD histogram. If Trace is compatible (station, channel, ...) has to
+        Processes a segment of data and save the psd information.
+        Whether `Trace` is compatible (station, channel, ...) has to
         checked beforehand.
 
         :type tr: :class:`~obspy.core.trace.Trace`
         :param tr: Compatible Trace with data of one PPSD segment
-        :returns: True if segment was successfully added to histogram, False
-                otherwise.
+        :returns: `True` if segment was successfully processed,
+            `False` otherwise.
         """
         # XXX DIRTY HACK!!
         if len(tr) == self.len + 1:
@@ -621,9 +857,11 @@ class PPSD(object):
         # Here we remove the response using the same conventions
         # since the power is squared we want to square the sensitivity
         # we can also convert to acceleration if we have non-rotational data
-        if self.is_rotational_data:
+        if self.special_handling == "ringlaser":
             # in case of rotational data just remove sensitivity
             spec /= self.metadata['sensitivity'] ** 2
+        # special_handling "hydrophone" does instrument correction same as
+        # "normal" data
         else:
             # determine instrument response from metadata
             try:
@@ -644,7 +882,11 @@ class PPSD(object):
             w = 2.0 * math.pi * _freq[1:]
             w = w[::-1]
             # Here we do the response removal
-            spec = (w ** 2) * spec / respamp
+            # Do not differentiate when `special_handling="hydrophone"`
+            if self.special_handling == "hydrophone":
+                spec = spec / respamp
+            else:
+                spec = (w ** 2) * spec / respamp
         # avoid calculating log of zero
         idx = spec < dtiny
         spec[idx] = dtiny
@@ -653,27 +895,271 @@ class PPSD(object):
         spec = np.log10(spec)
         spec *= 10
 
-        spec_octaves = []
+        smoothed_psd = []
         # do this for the whole period range and append the values to our lists
-        for per_left, per_right in zip(self.per_octaves_left,
-                                       self.per_octaves_right):
-            specs = spec[(per_left <= self.per) & (self.per <= per_right)]
-            spec_center = specs.mean()
-            spec_octaves.append(spec_center)
-        spec_octaves = np.array(spec_octaves)
-
-        hist, self.xedges, self.yedges = np.histogram2d(
-            self.per_octaves,
-            spec_octaves, bins=(self.period_bins, self.spec_bins))
-
-        try:
-            # we have to make sure manually that the bins are always the same!
-            # this is done with the various assert() statements above.
-            self.hist_stack += hist
-        except TypeError:
-            # only during first run initialize stack with first histogram
-            self.hist_stack = hist
+        for per_left, per_right in zip(self.period_bin_left_edges,
+                                       self.period_bin_right_edges):
+            specs = spec[(per_left <= self.psd_periods) &
+                         (self.psd_periods <= per_right)]
+            smoothed_psd.append(specs.mean())
+        smoothed_psd = np.array(smoothed_psd, dtype=np.float32)
+        self.__insert_processed_data(tr.stats.starttime, smoothed_psd)
         return True
+
+    @property
+    @deprecated("PPSD attribute 'hist_stack' is deprecated, please use new "
+                "'calculate_histogram()' method with improved functionality "
+                "instead to compute a histogram stack dynamically and then "
+                "'current_histogram' attribute to access the current "
+                "histogram stack.")
+    def hist_stack(self):
+        self.calculate_histogram()
+        return self.current_histogram
+
+    def _get_times_all_details(self):
+        # check if we can reuse a previously cached array of all times as
+        # day of week as int and time of day in float hours
+        if len(self._current_times_all_details) == len(self._times_processed):
+            return self._current_times_all_details
+        # otherwise compute it and store it for subsequent stacks on the
+        # same data (has to be recomputed when additional data gets added)
+        else:
+            dtype = np.dtype([(native_str('time_of_day'), np.float32),
+                              (native_str('iso_weekday'), np.int8),
+                              (native_str('iso_week'), np.int8),
+                              (native_str('year'), np.int16),
+                              (native_str('month'), np.int8)])
+            times_all_details = np.empty(shape=len(self._times_processed),
+                                         dtype=dtype)
+            utc_times_all = [UTCDateTime(t) for t in self._times_processed]
+            times_all_details['time_of_day'][:] = \
+                [t._get_hours_after_midnight() for t in utc_times_all]
+            times_all_details['iso_weekday'][:] = \
+                [t.isoweekday() for t in utc_times_all]
+            times_all_details['iso_week'][:] = \
+                [t.isocalendar()[1] for t in utc_times_all]
+            times_all_details['year'][:] = \
+                [t.year for t in utc_times_all]
+            times_all_details['month'][:] = [t.month for t in utc_times_all]
+            self._current_times_all_details = times_all_details
+            return times_all_details
+
+    def _stack_selection(self, starttime=None, endtime=None,
+                         time_of_weekday=None, year=None, month=None,
+                         isoweek=None, callback=None):
+        """
+        For details on restrictions see :meth:`calculate_histogram`.
+
+        :rtype: :class:`numpy.ndarray` of bool
+        :returns: Boolean array of which psd pieces should be included in the
+            stack.
+        """
+        times_all = np.array(self._times_processed)
+        selected = np.ones(len(times_all), dtype=np.bool)
+        if starttime is not None:
+            selected &= times_all > starttime.timestamp
+        if endtime is not None:
+            selected &= times_all < endtime.timestamp
+        if time_of_weekday is not None:
+            times_all_details = self._get_times_all_details()
+            # we need to do a logical OR over all different user specified time
+            # windows, so we start with an array of False and set all matching
+            # pieces True for the final logical AND against the previous
+            # restrictions
+            selected_time_of_weekday = np.zeros(len(times_all), dtype=np.bool)
+            for weekday, start, end in time_of_weekday:
+                if weekday == -1:
+                    selected_ = np.ones(len(times_all), dtype=np.bool)
+                else:
+                    selected_ = (
+                        times_all_details['iso_weekday'] == weekday)
+                selected_ &= times_all_details['time_of_day'] > start
+                selected_ &= times_all_details['time_of_day'] < end
+                selected_time_of_weekday |= selected_
+            selected &= selected_time_of_weekday
+        if year is not None:
+            try:
+                year[0]
+            except TypeError:
+                year = [year]
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['year'] == year[0]
+            for year_ in year[1:]:
+                selected_ |= times_all_details['year'] == year_
+            selected &= selected_
+        if month is not None:
+            try:
+                month[0]
+            except TypeError:
+                month = [month]
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['month'] == month[0]
+            for month_ in month[1:]:
+                selected_ |= times_all_details['month'] == month_
+            selected &= selected_
+        if isoweek is not None:
+            times_all_details = self._get_times_all_details()
+            selected_ = times_all_details['iso_week'] == isoweek[0]
+            for isoweek_ in isoweek[1:]:
+                selected_ |= times_all_details['iso_week'] == isoweek_
+            selected &= selected_
+        if callback is not None:
+            selected &= callback(times_all)
+        return selected
+
+    def calculate_histogram(self, starttime=None, endtime=None,
+                            time_of_weekday=None, year=None, month=None,
+                            isoweek=None, callback=None):
+        """
+        Calculate and set current 2D histogram stack, optionally with start-
+        and endtime and time of day restrictions.
+
+        .. note::
+            All restrictions to the stack are evaluated as a logical AND, i.e.
+            only individual psd pieces are included in the stack that match
+            *all* of the specified restrictions (e.g. `isoweek=40, month=2` can
+            never match any data).
+
+        .. note::
+            All time restrictions are specified in UTC, so actual time in local
+            time zone might not be the same across start/end date of daylight
+            saving time periods.
+
+        .. note::
+            Time restrictions only check the starttime of the individual psd
+            pieces.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: If set, data before the specified time is excluded
+            from the returned stack.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: If set, data after the specified time is excluded
+            from the returned stack.
+        :type time_of_weekday: list of (int, float, float) 3-tuples
+        :param time_of_weekday: If set, restricts the data that is included
+            in the stack by time of day and weekday. Monday is `1`, Sunday is
+            `7`, `-1` for any day of week. For example, using
+            `time_of_weekday=[(-1, 0, 2), (-1, 22, 24)]` only individual
+            spectra that have a starttime in between 10pm and 2am are used in
+            the stack for all days of week, using
+            `time_of_weekday=[(5, 22, 24), (6, 0, 2), (6, 22, 24), (7, 0, 2)]`
+            only spectra with a starttime in between Friday 10pm to Saturdays
+            2am and Saturday 10pm to Sunday 2am are used.
+            Note that time of day is specified in UTC (time of day might have
+            to be adapted to daylight saving time). Also note that this setting
+            filters only by starttime of the used psd time slice, so the length
+            of individual slices (set at initialization:
+            :meth:`PPSD(..., ppsd_length=XXX, ...) <PPSD.__init__>` in seconds)
+            has to be taken into consideration (e.g. with a `ppsd_length` of
+            one hour and a `time_of_weekday` restriction to 10pm-2am
+            actually includes data from 10pm-3am).
+        :type year: list of int
+        :param year: If set, restricts the data that is included in the stack
+            by year. For example, using `year=[2015]` only individual spectra
+            from year 2015 are used in the stack, using `year=[2013, 2015]`
+            only spectra from exactly year 2013 or exactly year 2015 are used.
+        :type month: list of int
+        :param month: If set, restricts the data that is included in the stack
+            by month of year. For example, using `month=[2]` only individual
+            spectra from February are used in the stack, using `month=[4, 7]`
+            only spectra from exactly April or exactly July are used.
+        :type isoweek: list of int
+        :param isoweek: If set, restricts the data that is included in the
+            stack by ISO week number of year. For example, using `isoweek=[2]`
+            only individual spectra from 2nd ISO week of any year are used in
+            the stack, using `isoweek=[4, 7]` only spectra from exactly 4th ISO
+            week or exactly 7th ISO week are used.
+        :type callback: func
+        :param callback: Custom user defined callback function that can be used
+            for more complex scenarios to specify whether an individual psd
+            piece should be included in the stack or not. The function will be
+            passed an array with the starttimes of all psd pieces (as a POSIX
+            timestamp that can be used as a single argument to initialize a
+            :class:`~obspy.core.utcdatetime.UTCDateTime` object) and
+            should return a boolean array specifying which psd pieces should be
+            included in the stack (`True`) and which should be excluded
+            (`False`). Note that even when callback returns `True` the psd
+            piece will be excluded if it does not match all other criteria
+            (e.g. `starttime`).
+        :rtype: None
+        """
+        # no data at all
+        if not self._times_processed:
+            self._current_hist_stack = None
+            self._current_hist_stack_cumulative = None
+            self._current_times_used = []
+            return
+
+        # determine which psd pieces should be used in the stack,
+        # based on all selection criteria specified by user
+        selected = self._stack_selection(
+            starttime=starttime, endtime=endtime,
+            time_of_weekday=time_of_weekday, year=year, month=month,
+            isoweek=isoweek, callback=callback)
+        used_indices = selected.nonzero()[0]
+        used_count = len(used_indices)
+        used_times = np.array(self._times_processed)[used_indices]
+
+        num_period_bins = len(self.period_bin_centers)
+        num_db_bins = len(self.db_bin_centers)
+
+        # initial setup of 2D histogram
+        hist_stack = np.zeros((num_period_bins, num_db_bins), dtype=np.uint64)
+
+        # empty selection, set all histogram stacks to zeros
+        if not used_count:
+            self._current_hist_stack = hist_stack
+            self._current_hist_stack_cumulative = np.zeros_like(
+                hist_stack, dtype=np.float32)
+            self._current_times_used = used_times
+            return
+
+        # concatenate all used spectra, evaluate index of amplitude bin each
+        # value belongs to
+        inds = np.hstack([self._binned_psds[i] for i in used_indices])
+        # for "inds" now a number of ..
+        #   - 0 means below lowest bin (bin index 0)
+        #   - 1 means, hit lowest bin (bin index 0)
+        #   - ..
+        #   - len(self.db_bin_edges) means above top bin
+        # we need minus one because searchsorted returns the insertion index in
+        # the array of bin edges which is the index of the corresponding bin
+        # plus one
+        inds = self.db_bin_edges.searchsorted(inds, side="left") - 1
+        # for "inds" now a number of ..
+        #   - -1 means below lowest bin (bin index 0)
+        #   - 0 means, hit lowest bin (bin index 0)
+        #   - ..
+        #   - (len(self.db_bin_edges)-1) means above top bin
+        # values that are left of first bin edge have to be moved back into the
+        # binning
+        inds[inds == -1] = 0
+        # same goes for values right of last bin edge
+        inds[inds == num_db_bins] -= 1
+        # reshape such that we can iterate over the array, extracting for
+        # each period bin an array of all amplitude bins we have hit
+        inds = inds.reshape((used_count, num_period_bins)).T
+        for i, inds_ in enumerate(inds):
+            # count how often each bin has been hit for this period bin,
+            # set the current 2D histogram column accordingly
+            hist_stack[i, :] = np.bincount(inds_, minlength=num_db_bins)
+
+        # calculate and set the cumulative version (i.e. going from 0 to 1 from
+        # low to high psd values for every period column) of the current
+        # histogram stack.
+        # sum up the columns to cumulative entries
+        hist_stack_cumul = hist_stack.cumsum(axis=1)
+        # normalize every column with its overall number of entries
+        # (can vary from the number of self.times because of values outside
+        #  the histogram db ranges)
+        norm = hist_stack_cumul[:, -1].copy().astype(np.float64)
+        # avoid zero division
+        norm[norm == 0] = 1
+        hist_stack_cumul = (hist_stack_cumul.T / norm).T
+        # set everything that was calculated
+        self._current_hist_stack = hist_stack
+        self._current_hist_stack_cumulative = hist_stack_cumul
+        self._current_times_used = used_times
 
     def _get_response(self, tr):
         # check type of metadata and use the correct subroutine
@@ -731,22 +1217,18 @@ class PPSD(object):
                         units="VEL", freq=False, debug=False)
         return resp
 
-    def get_percentile(self, percentile=50, hist_cum=None):
+    def get_percentile(self, percentile=50):
         """
         Returns periods and approximate psd values for given percentile value.
 
         :type percentile: int
         :param percentile: percentile for which to return approximate psd
                 value. (e.g. a value of 50 is equal to the median.)
-        :type hist_cum: :class:`numpy.ndarray`, optional
-        :param hist_cum: if it was already computed beforehand, the normalized
-                cumulative histogram can be provided here (to avoid computing
-                it again), otherwise it is computed from the currently stored
-                histogram.
         :returns: (periods, percentile_values)
         """
+        hist_cum = self.current_histogram_cumulative
         if hist_cum is None:
-            hist_cum = self.__get_normalized_cumulative_histogram()
+            return None
         # go to percent
         percentile = percentile / 100.0
         if percentile == 0:
@@ -758,7 +1240,7 @@ class PPSD(object):
         percentile_values = [col.searchsorted(percentile, side=side)
                              for col in hist_cum]
         # map to power db values
-        percentile_values = self.spec_bins[percentile_values]
+        percentile_values = self.db_bin_edges[percentile_values]
         return (self.period_bin_centers, percentile_values)
 
     def get_mode(self):
@@ -768,8 +1250,10 @@ class PPSD(object):
 
         :returns: (periods, psd mode values)
         """
-        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mode = db_bin_centers[self.hist_stack.argmax(axis=1)]
+        hist = self.current_histogram
+        if hist is None:
+            return None
+        mode = self.db_bin_centers[hist.argmax(axis=1)]
         return (self.period_bin_centers, mode)
 
     def get_mean(self):
@@ -779,27 +1263,12 @@ class PPSD(object):
 
         :returns: (periods, psd mean values)
         """
-        db_bin_centers = (self.spec_bins[:-1] + self.spec_bins[1:]) / 2.0
-        mean = (self.hist_stack * db_bin_centers /
-                len(self._times_used)).sum(axis=1)
+        hist = self.current_histogram
+        if hist is None:
+            return None
+        hist_count = self.current_histogram_count
+        mean = (hist * self.db_bin_centers / hist_count).sum(axis=1)
         return (self.period_bin_centers, mean)
-
-    def __get_normalized_cumulative_histogram(self):
-        """
-        Returns the current histogram in a cumulative version normalized per
-        period column, i.e. going from 0 to 1 from low to high psd values for
-        every period column.
-        """
-        # sum up the columns to cumulative entries
-        hist_cum = self.hist_stack.cumsum(axis=1)
-        # normalize every column with its overall number of entries
-        # (can vary from the number of self.times because of values outside
-        #  the histogram db ranges)
-        norm = hist_cum[:, -1].copy()
-        # avoid zero division
-        norm[norm == 0] = 1
-        hist_cum = (hist_cum.T / norm).T
-        return hist_cum
 
     @deprecated("Old save/load mechanism based on pickle module is not "
                 "working well across versions, so please use new "
@@ -850,6 +1319,22 @@ class PPSD(object):
             with open(filename, 'rb') as file_:
                 ppsd = pickle.load(file_)
 
+        # some workarounds for older PPSD pickle files
+        if hasattr(ppsd, "is_rotational_data"):
+            if ppsd.is_rotational_data is True:
+                ppsd.special_handling = "ringlaser"
+            delattr(ppsd, "is_rotational_data")
+        if not hasattr(ppsd, "special_handling"):
+            ppsd.special_handling = None
+        # Adds ppsd_length and overlap attributes if not existing. This
+        # ensures compatibility with pickled objects without these attributes.
+        try:
+            self.ppsd_length
+            self.overlap
+        except AttributeError:
+            self.ppsd_length = 3600.
+            self.overlap = 0.5
+
         return ppsd
 
     def save_npz(self, filename):
@@ -861,16 +1346,19 @@ class PPSD(object):
         :type filename: str
         :param filename: Name of numpy .npz output file
         """
-        out = dict([(key, getattr(self, key)) for key in NPZ_STORE_KEYS])
-        np.savez(filename, **out)
+        out = dict([(key, getattr(self, key)) for key in self.NPZ_STORE_KEYS])
+        np.savez_compressed(filename, **out)
 
     @staticmethod
-    def load_npz(filename, metadata):
+    def load_npz(filename, metadata=None):
         """
-        Loads previously computed PPSD results (from a
+        Load previously computed PPSD results.
+
+        Load previously computed PPSD results from a
         compressed numpy binary in npz format, written with
-        :meth:`~PPSD.write_npz`).
-        Metadata have to be specified again during loading because they are not
+        :meth:`~PPSD.write_npz`.
+        If more data are to be added and processed, metadata have to be
+        specified again during loading because they are not
         stored in the npz format.
 
         :type filename: str
@@ -881,9 +1369,21 @@ class PPSD(object):
             :meth:`PPSD.__init__` for details.
         """
         data = np.load(filename)
+        # the information regarding stats is set from the npz
         ppsd = PPSD(Stats(), metadata=metadata)
-        for key in NPZ_STORE_KEYS:
-            setattr(ppsd, key, data[key])
+        for key in ppsd.NPZ_STORE_KEYS:
+            # data is stored as arrays in the npz.
+            # we have to convert those back to lists (or simple types), so that
+            # additionally processed data can be appended/inserted later.
+            data_ = data[key]
+            if key in ppsd.NPZ_STORE_KEYS_LIST_TYPES:
+                if key in ['_times_data', '_times_gaps']:
+                    data_ = data_.tolist()
+                else:
+                    data_ = [d for d in data_]
+            elif key in ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES:
+                data_ = data_.item()
+            setattr(ppsd, key, data_)
         return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
@@ -891,7 +1391,7 @@ class PPSD(object):
              show_noise_models=True, grid=True, show=True,
              max_percentage=30, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
-             cumulative_number_of_colors=20):
+             cumulative_number_of_colors=20, xaxis_frequency=False):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -922,7 +1422,9 @@ class PPSD(object):
         :type max_percentage: float, optional
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats, optional
-        :param period_lim: Period limits to show in histogram.
+        :param period_lim: Period limits to show in histogram. When setting
+            ``xaxis_frequency=True``, this is expected to be frequency range in
+            Hz.
         :type show_mode: bool, optional
         :param show_mode: Enable/disable plotting of mode psd values.
         :type show_mean: bool, optional
@@ -940,16 +1442,20 @@ class PPSD(object):
         :type cumulative_number_of_colors: int
         :param cumulative_number_of_colors: Number of discrete color shades to
             use, `None` for a continuous colormap.
+        :type xaxis_frequency: bool
+        :param xaxis_frequency: If set to `True`, the x axis will be frequency
+            in Hertz as opposed to the default of period in seconds.
         """
         # check if any data has been added yet
-        if self.hist_stack is None:
-            msg = 'No data to plot'
-            raise Exception(msg)
-
-        X, Y = np.meshgrid(self.xedges, self.yedges)
-        hist_stack = self.hist_stack * 100.0 / len(self._times_used)
+        if self._current_hist_stack is None:
+            if self._times_processed:
+                self.calculate_histogram()
+            else:
+                msg = 'No data to plot'
+                raise Exception(msg)
 
         fig = plt.figure()
+        fig.ppsd = AttribDict()
 
         if show_coverage:
             ax = fig.add_axes([0.12, 0.3, 0.90, 0.6])
@@ -957,68 +1463,71 @@ class PPSD(object):
         else:
             ax = fig.add_subplot(111)
 
+        if show_percentiles:
+            # for every period look up the approximate place of the percentiles
+            for percentile in percentiles:
+                periods, percentile_values = \
+                    self.get_percentile(percentile=percentile)
+                ax.plot(periods, percentile_values, color="black", zorder=8)
+
+        if show_mode:
+            periods, mode_ = self.get_mode()
+            if cmap.name == "viridis":
+                color = "0.8"
+            else:
+                color = "black"
+            ax.plot(periods, mode_, color=color, zorder=9)
+
+        if show_mean:
+            periods, mean_ = self.get_mean()
+            if cmap.name == "viridis":
+                color = "0.8"
+            else:
+                color = "black"
+            ax.plot(periods, mean_, color=color, zorder=9)
+
+        if show_noise_models:
+            for periods, noise_model in (get_NHNM(), get_NLNM()):
+                if xaxis_frequency:
+                    periods = 1.0 / periods
+                ax.plot(periods, noise_model, '0.4', linewidth=2, zorder=10)
+
         if show_histogram:
             label = "[%]"
-            data = hist_stack
             if cumulative:
-                data = data.cumsum(axis=1)
-                data = np.multiply(data.T, 100.0/data.max(axis=1)).T
+                label = "non-exceedance (cumulative) [%]"
                 if max_percentage is not None:
                     msg = ("Parameter 'max_percentage' is ignored when "
                            "'cumulative=True'.")
                     warnings.warn(msg)
                 max_percentage = 100
-                label = "non-exceedance (cumulative) [%]"
                 if cumulative_number_of_colors is not None:
                     cmap = LinearSegmentedColormap(
                         name=cmap.name, segmentdata=cmap._segmentdata,
                         N=cumulative_number_of_colors)
-            ppsd = ax.pcolormesh(X, Y, data.T, cmap=cmap)
-            cb = plt.colorbar(ppsd, ax=ax)
-            cb.set_label(label)
+
+            fig.ppsd.cumulative = cumulative
+            fig.ppsd.cmap = cmap
+            fig.ppsd.label = label
+            fig.ppsd.max_percentage = max_percentage
+            fig.ppsd.grid = grid
+            fig.ppsd.xaxis_frequency = xaxis_frequency
             if max_percentage is not None:
                 color_limits = (0, max_percentage)
-                ppsd.set_clim(*color_limits)
-                cb.set_clim(*color_limits)
-            if grid:
-                ax.grid(b=grid, which="major")
-                ax.grid(b=grid, which="minor")
+                fig.ppsd.color_limits = color_limits
 
-        if show_percentiles:
-            hist_cum = self.__get_normalized_cumulative_histogram()
-            # for every period look up the approximate place of the percentiles
-            for percentile in percentiles:
-                periods, percentile_values = \
-                    self.get_percentile(percentile=percentile,
-                                        hist_cum=hist_cum)
-                ax.plot(periods, percentile_values, color="black")
-
-        if show_mode:
-            periods, mode_ = self.get_mode()
-            ax.plot(periods, mode_, color="black")
-
-        if show_mean:
-            periods, mean_ = self.get_mean()
-            ax.plot(periods, mean_, color="black")
-
-        if show_noise_models:
-            model_periods, high_noise = get_NHNM()
-            ax.plot(model_periods, high_noise, '0.4', linewidth=2)
-            model_periods, low_noise = get_NLNM()
-            ax.plot(model_periods, low_noise, '0.4', linewidth=2)
+            self._plot_histogram(fig=fig)
 
         ax.semilogx()
         ax.set_xlim(period_lim)
-        ax.set_ylim(self.spec_bins[0], self.spec_bins[-1])
-        ax.set_xlabel('Period [s]')
+        ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
+        if xaxis_frequency:
+            ax.set_xlabel('Frequency [Hz]')
+        else:
+            ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
-        ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id,
-                         UTCDateTime(self._times_used[0]).date,
-                         UTCDateTime(self._times_used[-1]).date,
-                         len(self._times_used))
-        ax.set_title(title)
+        ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
+        ax.set_title(self._get_plot_title())
 
         if show_coverage:
             self.__plot_coverage(ax2)
@@ -1027,12 +1536,82 @@ class PPSD(object):
                 label.set_ha("right")
                 label.set_rotation(30)
 
-        plt.draw()
         if filename is not None:
             plt.savefig(filename)
             plt.close()
         elif show:
+            plt.draw()
             plt.show()
+        else:
+            plt.draw()
+            return fig
+
+    def _plot_histogram(self, fig, draw=False, filename=None):
+        """
+        Reuse a previously created figure returned by :meth:`plot(show=False)`
+        and plot the current histogram stack (pre-computed using
+        :meth:`calculate_histogram()`) into the figure. If a filename is
+        provided, the figure will be saved to a local file.
+        Note that many aspects of the plot are statically set during the first
+        :meth:`plot()` call, so this routine can only be used to update with
+        data from a new stack.
+        """
+        ax = fig.axes[0]
+        xlim = ax.get_xlim()
+        if "quadmesh" in fig.ppsd:
+            ax.collections.remove(fig.ppsd.pop("quadmesh"))
+
+        if fig.ppsd.cumulative:
+            data = self.current_histogram_cumulative * 100.0
+        else:
+            # avoid divison with zero in case of empty stack
+            data = (
+                self.current_histogram * 100.0 /
+                (self.current_histogram_count or 1))
+
+        xedges = self.period_xedges
+        if fig.ppsd.xaxis_frequency:
+            xedges = 1.0 / xedges
+
+        if "meshgrid" not in fig.ppsd:
+            fig.ppsd.meshgrid = np.meshgrid(xedges, self.db_bin_edges)
+        X, Y = fig.ppsd.meshgrid
+        ppsd = ax.pcolormesh(X, Y, data.T, cmap=fig.ppsd.cmap, zorder=-1)
+        fig.ppsd.quadmesh = ppsd
+
+        if "colorbar" not in fig.ppsd:
+            cb = plt.colorbar(ppsd, ax=ax)
+            cb.set_clim(*fig.ppsd.color_limits)
+            cb.set_label(fig.ppsd.label)
+            fig.ppsd.colorbar = cb
+
+        if fig.ppsd.max_percentage is not None:
+            ppsd.set_clim(*fig.ppsd.color_limits)
+
+        if fig.ppsd.grid:
+            if fig.ppsd.cmap.name == "viridis":
+                color = {"color": "0.7"}
+            else:
+                color = {}
+            ax.grid(b=True, which="major", **color)
+            ax.grid(b=True, which="minor", **color)
+
+        ax.set_xlim(*xlim)
+
+        if filename is not None:
+            plt.savefig(filename)
+        elif draw:
+            plt.draw()
+        return fig
+
+    def _get_plot_title(self):
+        title = "%s   %s -- %s  (%i/%i segments)"
+        title = title % (self.id,
+                         UTCDateTime(self._times_processed[0]).date,
+                         UTCDateTime(self._times_processed[-1]).date,
+                         self.current_histogram_count,
+                         len(self._times_processed))
+        return title
 
     def plot_coverage(self, filename=None):
         """
@@ -1048,12 +1627,7 @@ class PPSD(object):
 
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
-        title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id,
-                         UTCDateTime(self._times_used[0]).date,
-                         UTCDateTime(self._times_used[-1]).date,
-                         len(self._times_used))
-        ax.set_title(title)
+        ax.set_title(self._get_plot_title())
 
         plt.draw()
         if filename is not None:
@@ -1066,28 +1640,38 @@ class PPSD(object):
         """
         Helper function to plot coverage into given axes.
         """
-        self.__check_ppsd_length()
         ax.figure
         ax.clear()
         ax.xaxis_date()
         ax.set_yticks([])
 
-        # plot data coverage
-        starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t + self.ppsd_length).datetime)
-                for t in self.times_used]
-        for start, end in zip(starts, ends):
-            ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
-        # plot data
+        # plot data used in histogram stack
+        used_times = [UTCDateTime(t) for t in self._times_processed
+                      if t in self._current_times_used]
+        unused_times = [UTCDateTime(t) for t in self._times_processed
+                        if t not in self._current_times_used]
+        for times, color in zip((used_times, unused_times), ("b", "0.6")):
+            # skip on empty lists (i.e. all data used, or none used in stack)
+            if not times:
+                continue
+            starts = [date2num(t.datetime) for t in times]
+            ends = [date2num((t + self.ppsd_length).datetime)
+                    for t in times]
+            startends = np.array([starts, ends])
+            startends = compressStartend(startends.T, 20, merge_overlaps=True)
+            starts, ends = startends[:, 0], startends[:, 1]
+            for start, end in zip(starts, ends):
+                ax.axvspan(start, end, 0, 0.6, fc=color, lw=0)
+        # plot data that was fed to PPSD
         for start, end in self.times_data:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="g", lw=0)
-        # plot gaps
+            ax.axvspan(start, end, 0.6, 1, facecolor="g", lw=0)
+        # plot gaps in data fed to PPSD
         for start, end in self.times_gaps:
             start = date2num(start.datetime)
             end = date2num(end.datetime)
-            ax.axvspan(start, end, 0.7, 1, facecolor="r", lw=0)
+            ax.axvspan(start, end, 0.6, 1, facecolor="r", lw=0)
 
         ax.autoscale_view()
 

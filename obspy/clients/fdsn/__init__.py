@@ -36,11 +36,12 @@ GFZ     http://geofon.gfz-potsdam.de
 INGV    http://webservices.rm.ingv.it
 IPGP    http://eida.ipgp.fr
 IRIS    http://service.iris.edu
+ISC     http://isc-mirror.iris.washington.edu
 KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
-NEIP    http://eida-sc3.infp.ro
 NERIES  http://www.seismicportal.eu
+NIEP    http://eida-sc3.infp.ro
 ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr

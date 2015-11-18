@@ -279,6 +279,26 @@ class Equipment(ComparingObject):
                 return
             self._removal_date = UTCDateTime(value)
 
+    def __str__(self):
+        ret = ("Equipment:\n"
+               "\tType: {type}\n"
+               "\tDescription: {description}\n"
+               "\tManufacturer: {manufacturer}\n"
+               "\tVendor: {vendor}\n"
+               "\tModel: {model}\n"
+               "\tSerial number: {serial_number}\n"
+               "\tInstallation date: {installation_date}\n"
+               "\tRemoval date: {removal_date}\n"
+               "\tResource id: {resource_id}\n"
+               "\tCalibration Dates:\n")
+        for calib_date in self.calibration_dates:
+            ret += "\t\t%s\n" % calib_date
+        ret = ret.format(**self.__dict__)
+        return ret
+
+    def _repr_pretty_(self, p, cycle):
+        p.text(str(self))
+
 
 class Operator(ComparingObject):
     """
@@ -331,6 +351,8 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
+    email_pattern = re.compile("[\w\.\-_]+@[\w\.\-_]+")
+
     def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
         :type names: list of str, optional
@@ -378,6 +400,11 @@ class Person(ComparingObject):
         if not hasattr(values, "__iter__"):
             msg = "emails needs to be iterable, e.g. a list."
             raise ValueError(msg)
+        for value in values:
+            if re.match(self.email_pattern, value) is None:
+                msg = ("emails needs to match the pattern "
+                       "'[\w\.\-_]+@[\w\.\-_]+'")
+                raise ValueError(msg)
         self._emails = values
 
     @property
@@ -591,8 +618,8 @@ class Latitude(FloatWithUncertaintiesFixedUnit):
     :type datum: str
     :param datum: Datum for latitude coordinate
     """
-    _minimum = -180
-    _maximum = 180
+    _minimum = -90
+    _maximum = 90
     _unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,

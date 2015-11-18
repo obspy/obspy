@@ -17,8 +17,10 @@ from future.utils import PY2, native_str
 
 import collections
 import copy
+import gzip
 import io
 import os
+from socket import timeout as SocketTimeout
 import textwrap
 import threading
 import warnings
@@ -138,7 +140,8 @@ class Client(object):
         :param debug: Debug flag.
         :type timeout: float
         :param timeout: Maximum time (in seconds) to wait for a single request
-            to finish (after which an exception is raised).
+            to receive the first byte of the response (after which an exception
+            is raised).
         :type service_mappings: dict
         :param service_mappings: For advanced use only. Allows the direct
             setting of the endpoints of the different services. (e.g.
@@ -377,7 +380,7 @@ class Client(object):
                      minradius=None, maxradius=None, level=None,
                      includerestricted=None, includeavailability=None,
                      updatedafter=None, matchtimeseries=None, filename=None,
-                     **kwargs):
+                     format="xml", **kwargs):
         """
         Query the station service of the FDSN client.
 
@@ -533,6 +536,11 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :type format: str
+        :param format: The format in which to request station information.
+            ``"xml"`` (StationXML) or ``"text"`` (FDSN station test format).
+            XML has more information but text is much faster.
+
         :rtype: :class:`~obspy.core.inventory.inventory.Inventory`
         :returns: Inventory with requested station information.
 
@@ -558,7 +566,8 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            inventory = read_inventory(data_stream, format="STATIONXML")
+            # This works with XML and StationXML data.
+            inventory = read_inventory(data_stream)
             data_stream.close()
             return inventory
 
@@ -667,7 +676,9 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
-        data_stream = self._download(url)
+        # Gzip not worth it for MiniSEED and most likely disabled for this
+        # route in any case.
+        data_stream = self._download(url, use_gzip=False)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -1011,7 +1022,6 @@ class Client(object):
             return inv
 
     def _get_bulk_string(self, bulk, arguments):
-        locs = locals()
         # If its an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for 'read' as well
         if isinstance(bulk, collections.Iterable) \
@@ -1252,11 +1262,11 @@ class Client(object):
 
         print("\n".join(msg))
 
-    def _download(self, url, return_string=False, data=None):
+    def _download(self, url, return_string=False, data=None, use_gzip=True):
         code, data = download_url(
             url, opener=self._url_opener, headers=self.request_headers,
             debug=self.debug, return_string=return_string, data=data,
-            timeout=self.timeout)
+            timeout=self.timeout, use_gzip=use_gzip)
         # get detailed server response message
         if code != 200:
             try:
@@ -1264,7 +1274,6 @@ class Client(object):
                     line for line in data.read().splitlines() if line])
             except:
                 server_info = None
-
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.", server_info)
@@ -1291,6 +1300,12 @@ class Client(object):
                                 server_info)
         elif code == 503:
             raise FDSNException("Service temporarily unavailable", server_info)
+        elif code is None:
+            if "timeout" in str(data).lower():
+                raise FDSNException("Timed Out")
+            else:
+                raise FDSNException("Unknown Error (%s): %s" % (
+                    (str(data.__class__.__name__), str(data))))
         # Catch any non 200 codes.
         elif code != 200:
             raise FDSNException("Unknown HTTP code: %i" % code, server_info)
@@ -1362,10 +1377,14 @@ class Client(object):
                         else:
                             wadl_queue.put((url, None))
                     except urllib.request.HTTPError as e:
-                        if e.code == 404:
+                        if e.code in [404, 502]:
                             wadl_queue.put((url, None))
                         else:
                             raise
+                    except urllib.error.URLError as e:
+                        wadl_queue.put((url, "timeout"))
+                    except SocketTimeout as e:
+                        wadl_queue.put((url, "timeout"))
             return ThreadURL()
 
         threads = list(map(get_download_thread, urls))
@@ -1389,6 +1408,8 @@ class Client(object):
             elif isinstance(wadl, FDSNRedirectException):
                 redirect_messages.add(str(wadl))
                 continue
+            elif wadl == "timeout":
+                raise FDSNException("Timeout while requesting '%s'." % url)
 
             if "dataselect" in url:
                 self.services["dataselect"] = WADLParser(wadl).parameters
@@ -1568,7 +1589,7 @@ def build_url(base_url, service, major_version, resource_type,
 
 
 def download_url(url, opener, timeout=10, headers={}, debug=False,
-                 return_string=True, data=None):
+                 return_string=True, data=None, use_gzip=True):
     """
     Returns a pair of tuples.
 
@@ -1582,13 +1603,16 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
-        print("Downloading %s" % url)
+        print("Downloading %s %s requesting gzip compression" % (
+            url, "with" if use_gzip else "without"))
 
     try:
-        url_obj = opener.open(
-            urllib.request.Request(url=url, headers=headers),
-            timeout=timeout,
-            data=data)
+        request = urllib.request.Request(url=url, headers=headers)
+        # Request gzip encoding if desired.
+        if use_gzip:
+            request.add_header("Accept-encoding", "gzip")
+
+        url_obj = opener.open(request, timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib.request.HTTPError as e:
         if debug is True:
@@ -1602,10 +1626,23 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
         return None, e
 
     code = url_obj.getcode()
-    if return_string is False:
-        data = io.BytesIO(url_obj.read())
+
+    # Unpack gzip if necessary.
+    if url_obj.info().get("Content-Encoding") == "gzip":
+        if debug is True:
+            print("Uncompressing gzipped response for %s" % url)
+        # Cannot directly stream to gzip from urllib!
+        # http://www.enricozini.org/2011/cazzeggio/python-gzip/
+        buf = io.BytesIO(url_obj.read())
+        buf.seek(0, 0)
+        f = gzip.GzipFile(fileobj=buf)
     else:
-        data = url_obj.read()
+        f = url_obj
+
+    if return_string is False:
+        data = io.BytesIO(f.read())
+    else:
+        data = f.read()
 
     if debug is True:
         print("Downloaded %s with HTTP code: %i" % (url, code))

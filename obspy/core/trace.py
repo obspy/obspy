@@ -13,7 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import functools
 import inspect
 import math
 import warnings
@@ -21,6 +20,7 @@ from copy import copy, deepcopy
 
 import numpy as np
 import matplotlib.pyplot as plt
+from decorator import decorator
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
@@ -206,40 +206,34 @@ class Stats(AttribDict):
         p.text(str(self))
 
 
-def _add_processing_info(func):
+@decorator
+def _add_processing_info(func, *args, **kwargs):
     """
     This is a decorator that attaches information about a processing call as a
     string to the Trace.stats.processing list.
     """
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        callargs = inspect.getcallargs(func, *args, **kwargs)
-        callargs.pop("self")
-        kwargs_ = callargs.pop("kwargs", {})
-        from obspy import __version__
-        info = "ObsPy {version}: {function}(%s)".format(
-            version=__version__,
-            function=func.__name__)
-        arguments = []
-        arguments += \
-            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
-             "%s='%s'" % (k, v) for k, v in callargs.items()]
-        arguments += \
-            ["%s=%s" % (k, v) if not isinstance(v, native_str) else
-             "%s='%s'" % (k, v) for k, v in kwargs_.items()]
-        arguments.sort()
-        info = info % "::".join(arguments)
-        self = args[0]
-        result = func(*args, **kwargs)
-        # Attach after executing the function to avoid having it attached
-        # while the operation failed.
-        self._addProcessingInfo(info)
-        return result
-
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
+    callargs = inspect.getcallargs(func, *args, **kwargs)
+    callargs.pop("self")
+    kwargs_ = callargs.pop("kwargs", {})
+    from obspy import __version__
+    info = "ObsPy {version}: {function}(%s)".format(
+        version=__version__,
+        function=func.__name__)
+    arguments = []
+    arguments += \
+        ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+         "%s='%s'" % (k, v) for k, v in callargs.items()]
+    arguments += \
+        ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+         "%s='%s'" % (k, v) for k, v in kwargs_.items()]
+    arguments.sort()
+    info = info % "::".join(arguments)
+    self = args[0]
+    result = func(*args, **kwargs)
+    # Attach after executing the function to avoid having it attached
+    # while the operation failed.
+    self._addProcessingInfo(info)
+    return result
 
 
 class Trace(object):
@@ -1788,8 +1782,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return self.data.std()
 
-    @deprecated_keywords({'type': 'method'})
     @skip_if_no_data
+    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
@@ -1824,8 +1818,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = func(self.data, self.stats.delta, **options)
         return self
 
-    @deprecated_keywords({'type': 'method'})
     @skip_if_no_data
+    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
         """

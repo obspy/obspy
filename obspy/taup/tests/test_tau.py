@@ -12,10 +12,13 @@ import collections
 import inspect
 import os
 import unittest
+import warnings
 
 import numpy as np
 
 from obspy.taup import TauPyModel
+from obspy.taup.taup_geo import calc_dist
+import obspy.geodetics.base as geodetics
 
 
 # Most generic way to get the data folder path.
@@ -107,6 +110,87 @@ class TauPyModelTestCase(unittest.TestCase):
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
+    def test_taup_geo_calc_dist(self):
+        """Test for calc_dist"""
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=55.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=20.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=-55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6371.0,
+                               flattening_of_earth=0.0), 35.0, 5)
+        self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
+                               source_longitude_in_deg=33.0,
+                               receiver_latitude_in_deg=-55.0,
+                               receiver_longitude_in_deg=33.0,
+                               radius_of_earth_in_km=6.371,
+                               flattening_of_earth=0.0), 35.0, 5)
+
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'Module geographiclib is not installed')
+    def test_p_iasp91_geo_manual(self):
+        """
+        Manual test for P phase in IASP91 given geographical input.
+
+        This version of the test is used when geographiclib is installed
+        """
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
+                                          source_latitude_in_deg=20.0,
+                                          source_longitude_in_deg=33.0,
+                                          receiver_latitude_in_deg=55.0,
+                                          receiver_longitude_in_deg=33.0,
+                                          phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+        p_arrival = arrivals[0]
+
+        self.assertEqual(p_arrival.name, "P")
+        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
+        self.assertEqual(p_arrival.purist_name, "P")
+
+    def test_p_iasp91_geo_fallback_manual(self):
+        """
+        Manual test for P phase in IASP91 given geographical input.
+
+        This version of the test checks that things still work when
+        geographiclib is not installed.
+        """
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_travel_times_geo(source_depth_in_km=10.0,
+                                          source_latitude_in_deg=20.0,
+                                          source_longitude_in_deg=33.0,
+                                          receiver_latitude_in_deg=55.0,
+                                          receiver_longitude_in_deg=33.0,
+                                          phase_list=["P"])
+        geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
+        self.assertEqual(len(arrivals), 1)
+        p_arrival = arrivals[0]
+
+        self.assertEqual(p_arrival.name, "P")
+        self.assertAlmostEqual(p_arrival.time, 412.43, 2)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
+        self.assertEqual(p_arrival.purist_name, "P")
+
     def test_p_iasp91(self):
         """
         Test P phase arrival against TauP output in in model IASP91.
@@ -175,6 +259,85 @@ class TauPyModelTestCase(unittest.TestCase):
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
+
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'Module geographiclib is not installed')
+    def test_pierce_p_iasp91_geo(self):
+        """
+        Test single pierce point against output from TauP using geo data.
+
+        This version of the test is used when geographiclib is installed
+        """
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
+                                           source_latitude_in_deg=-45.0,
+                                           source_longitude_in_deg=-50.0,
+                                           receiver_latitude_in_deg=-80.0,
+                                           receiver_longitude_in_deg=-50.0,
+                                           phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+        p_arr = arrivals[0]
+
+        # Open test file.
+        filename = os.path.join(DATA,
+                                "taup_pierce_-mod_isp91_ph_P_-h_10_-evt_" +
+                                "-45_-50_-sta_-80_-50")
+
+        expected = np.genfromtxt(filename, skip_header=1)
+
+        np.testing.assert_almost_equal(expected[:, 0],
+                                       np.degrees(p_arr.pierce['dist']), 2)
+        np.testing.assert_almost_equal(expected[:, 1],
+                                       p_arr.pierce['depth'], 1)
+        np.testing.assert_almost_equal(expected[:, 2],
+                                       p_arr.pierce['time'], 1)
+        np.testing.assert_almost_equal(expected[:, 3],
+                                       p_arr.pierce['lat'], 1)
+        np.testing.assert_almost_equal(expected[:, 4],
+                                       p_arr.pierce['lon'], 1)
+
+    def test_pierce_p_iasp91_fallback_geo(self):
+        """
+        Test single pierce point against output from TauP using geo data.
+
+        This version of the test checks that things still work when
+        geographiclib is not installed.
+        """
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
+        m = TauPyModel(model="iasp91")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
+                                               source_latitude_in_deg=-45.0,
+                                               source_longitude_in_deg=-50.0,
+                                               receiver_latitude_in_deg=-80.0,
+                                               receiver_longitude_in_deg=-50.0,
+                                               phase_list=["P"])
+            geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            assert issubclass(w[-1].category, UserWarning)
+
+        self.assertEqual(len(arrivals), 1)
+        p_arr = arrivals[0]
+
+        # Open test file.
+        filename = os.path.join(DATA, "taup_pierce_-h_10_-ph_P_-deg_35")
+
+        expected = np.genfromtxt(filename, skip_header=1)
+
+        np.testing.assert_almost_equal(expected[:, 0],
+                                       np.degrees(p_arr.pierce['dist']), 2)
+        np.testing.assert_almost_equal(expected[:, 1],
+                                       p_arr.pierce['depth'], 1)
+        np.testing.assert_almost_equal(expected[:, 2],
+                                       p_arr.pierce['time'], 1)
+        # NB: we do not check pierce['lat'] and pierce['lon'] here, as these
+        # are not calculated when geographiclib is not installed. We check
+        # that they are not present.
+        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
+                                 'lat')
+        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
+                                 'lon')
 
     def test_vs_java_iasp91(self):
         """
@@ -309,6 +472,120 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self.assertTrue(np.allclose(interpolated_actual,
                                     interpolated_expected, rtol=1E-4, atol=0))
+
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'Module geographiclib is not installed')
+    def test_single_path_geo_iasp91(self):
+        """
+        Test the raypath for a single phase given geographical input.
+
+        This tests the case when geographiclib is installed.
+        """
+        filename = os.path.join(DATA,
+                                "taup_path_-mod_iasp91_-o_stdout_-h_10_" +
+                                "-ph_P_-sta_-45_-60_evt_-80_-60")
+        expected = np.genfromtxt(filename, comments='>')
+
+        m = TauPyModel(model="iasp91")
+        arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
+                                       source_latitude_in_deg=-80.0,
+                                       source_longitude_in_deg=-60.0,
+                                       receiver_latitude_in_deg=-45.0,
+                                       receiver_longitude_in_deg=-60.0,
+                                       phase_list=["P"])
+        self.assertEqual(len(arrivals), 1)
+
+        # Interpolate both paths to 100 samples and make sure they are
+        # approximately equal.
+        sample_points = np.linspace(0, 35, 100)
+
+        interpolated_expected_depth = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 1])
+        interpolated_expected_lat = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 2])
+        interpolated_expected_lon = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 3])
+
+        interpolated_actual_depth = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(6371 - arrivals[0].path['depth'], 2))
+        interpolated_actual_lat = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(arrivals[0].path['lat'], 2))
+        interpolated_actual_lon = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(arrivals[0].path['lon'], 2))
+
+        np.testing.assert_allclose(interpolated_actual_depth,
+                                   interpolated_expected_depth,
+                                   rtol=1E-4, atol=0)
+        np.testing.assert_allclose(interpolated_actual_lat,
+                                   interpolated_expected_lat,
+                                   rtol=1E-4, atol=0)
+        np.testing.assert_allclose(interpolated_actual_lon,
+                                   interpolated_expected_lon,
+                                   rtol=1E-4, atol=0)
+
+    def test_single_path_geo_fallback_iasp91(self):
+        """
+        Test the raypath for a single phase given geographical input.
+
+        This version of the test checks that things still work when
+        geographiclib is not installed.
+        """
+        has_geographiclib_real = geodetics.HAS_GEOGRAPHICLIB
+        geodetics.HAS_GEOGRAPHICLIB = False
+        filename = os.path.join(DATA,
+                                "taup_path_-o_stdout_-h_10_-ph_P_-deg_35")
+        expected = np.genfromtxt(filename, comments='>')
+
+        m = TauPyModel(model="iasp91")
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
+                                           source_latitude_in_deg=-80.0,
+                                           source_longitude_in_deg=-60.0,
+                                           receiver_latitude_in_deg=-45.0,
+                                           receiver_longitude_in_deg=-60.0,
+                                           phase_list=["P"])
+            geodetics.HAS_GEOGRAPHICLIB = has_geographiclib_real
+            assert issubclass(w[-1].category, UserWarning)
+
+        self.assertEqual(len(arrivals), 1)
+
+        # Interpolate both paths to 100 samples and make sure they are
+        # approximately equal.
+        sample_points = np.linspace(0, 35, 100)
+
+        interpolated_expected = np.interp(
+            sample_points,
+            expected[:, 0],
+            expected[:, 1])
+
+        interpolated_actual = np.interp(
+            sample_points,
+            np.round(np.degrees(arrivals[0].path['dist']), 2),
+            np.round(6371 - arrivals[0].path['depth'], 2))
+
+        np.testing.assert_allclose(interpolated_actual, interpolated_expected,
+                                   rtol=1E-4, atol=0)
+
+        # NB: we do not check path['lat'] and path['lon'] here, as these
+        # are not calculated when geographiclib is not installed. We check
+        # that they are not present.
+        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
+                                 'lat')
+        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
+                                 'lon')
 
     def test_single_path_ak135(self):
         """
