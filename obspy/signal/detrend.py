@@ -106,7 +106,7 @@ def spline(data, order, dspline, plot=False):
     splknots = np.arange(dspline / 2.0, len(data) - dspline / 2.0 + 2,
                          dspline)
 
-    spl = LSQUnivariateSpline(x=x, y=data, t=splknots)
+    spl = LSQUnivariateSpline(x=x, y=data, t=splknots, k=order)
     fit = spl(x)
 
     if plot:
