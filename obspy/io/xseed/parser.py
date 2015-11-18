@@ -1294,11 +1294,11 @@ def is_XSEED(path_or_file_object):
     Returns True of False. Only checks the name of the root tag, which should
     be "xseed".
 
-    >>> from obspy.core.util import getExampleFile
-    >>> xseed_file = getExampleFile("dataless.seed.BW_FURT.xml")
+    >>> from obspy.core.util import get_example_file
+    >>> xseed_file = get_example_file("dataless.seed.BW_FURT.xml")
     >>> is_XSEED(xseed_file)
     True
-    >>> stationxml_file = getExampleFile("IU_ANMO_00_BHZ.xml")
+    >>> stationxml_file = get_example_file("IU_ANMO_00_BHZ.xml")
     >>> is_XSEED(stationxml_file)
     False
 
