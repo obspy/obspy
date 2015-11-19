@@ -30,11 +30,13 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import path as mplpath
 from matplotlib import collections, patches, transforms
+from decorator import decorator
 
 from obspy.core.util.decorator import deprecated
 
@@ -44,11 +46,41 @@ R2D = 180 / np.pi
 EPSILON = 0.00001
 
 
+@decorator
+def mopad_fallback(func, *args, **kwargs):
+    try:
+        result = func(*args, **kwargs)
+    except IndexError:
+        msg = "Encountered an exception while plotting the beachball. " \
+              "Falling back to the mopad wrapper which is slower but more " \
+              "stable."
+        warnings.warn(msg)
+
+        # Could be done with the inspect module but this wrapper is only a
+        # single purpose wrapper and thus KISS.
+        arguments = ["fm", "linewidth", "facecolor", "bgcolor", "edgecolor",
+                     "alpha", "xy", "width", "size", "nofill", "zorder",
+                     "axes"]
+
+        final_kwargs = {}
+        for _i, arg in enumerate(args):
+            final_kwargs[arguments[_i]] = arg
+
+        final_kwargs.update(kwargs)
+
+        from .mopad_wrapper import beach as _mopad_beach
+
+        result = _mopad_beach(**final_kwargs)
+
+    return result
+
+
 @deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
 def Beach(*args, **kwargs):
     return beach(*args, **kwargs)
 
 
+@mopad_fallback
 def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
           alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, axes=None):
