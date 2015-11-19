@@ -39,8 +39,9 @@ Advanced Examples
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
 >>> cha_ids = client.waveform.getChannelIds(network='BW', station='MANZ')
->>> sorted(cha_ids)
-['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
+>>> sorted(cha_ids)  # doctest: #NORMALIZE_WHITESPACE
+['AEX', 'AEY', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN', 'EHZ', 'HHE', 'HHN', 'HHZ',
+ 'LOG', 'SHE', 'SHN', 'SHZ']
 
 >>> paz = client.station.getPAZ('BW.MANZ..EHZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
