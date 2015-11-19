@@ -1228,7 +1228,12 @@ class WaveformPlotting(object):
 
     def __sect_init_time(self):
         """
-        Define the time vector for each trace
+        Define the time vector for each trace \n
+        If you have supplied negative distances will compute the vred
+        using -vred (e.g. if vred=XXX, positive direction vred=XXX,
+        negative direction vred=-XXX) \n
+        Used for example, to plot a section plot when the earthquake occurs 
+        in the middle of the array
         """
         reftime = self.sect_reftime or min(self._tr_starttimes)
         self._tr_times = []
@@ -1237,7 +1242,12 @@ class WaveformPlotting(object):
                 (np.arange(self._tr_npts[_tr]) +
                  (self._tr_starttimes[_tr] - reftime)) * self._tr_delta[_tr])
             if self.sect_vred:
-                self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
+                if self._tr_offsets[_tr] > 0.0:
+                    self._tr_times[-1] -= self._tr_offsets[_tr] / \
+                        self.sect_vred
+                elif self._tr_offsets[_tr] < 0.0:
+                    self._tr_times[-1] += self._tr_offsets[_tr] / \
+                        self.sect_vred
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
