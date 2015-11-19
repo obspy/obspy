@@ -306,6 +306,8 @@ class BeachballTestCase(unittest.TestCase):
         mt = [0.000, -1.232e25, 1.233e25, 0.141e25, -0.421e25, 2.531e25]
 
         with warnings.catch_warnings(record=True) as w:
+            # Always raise warning.
+            warnings.simplefilter("always")
             with ImageComparison(self.path, 'mopad_fallback.png') as ic:
                 beachball(mt, outfile=ic.name)
 
