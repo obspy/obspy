@@ -919,7 +919,7 @@ class ClientTestCase(unittest.TestCase):
                 "http://ds.iris.edu/files/redirect/307/dataselect/1",
             "event":
                 "http://ds.iris.edu/files/redirect/307/event/1"},
-                   user_agent=USER_AGENT)
+            user_agent=USER_AGENT)
 
         st = c.get_waveforms(
             network="IU", station="ANMO", location="00", channel="BHZ",
