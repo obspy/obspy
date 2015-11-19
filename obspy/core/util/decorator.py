@@ -16,6 +16,7 @@ from future.utils import native_str
 import functools
 import inspect
 import os
+import re
 import socket
 import unittest
 import warnings
@@ -279,10 +280,10 @@ def map_example_filename(arg_kwarg_name):
             # check kwargs
             if arg_kwarg_name in kwargs:
                 if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
-                    if kwargs[arg_kwarg_name].startswith(prefix):
+                    arg_ = kwargs[arg_kwarg_name]
+                    if re.match(prefix, arg_):
                         try:
-                            kwargs[arg_kwarg_name] = \
-                                getExampleFile(kwargs[arg_kwarg_name][9:])
+                            kwargs[arg_kwarg_name] = getExampleFile(arg_[9:])
                         # file not found by getExampleFile:
                         except IOError:
                             pass
@@ -295,11 +296,12 @@ def map_example_filename(arg_kwarg_name):
                 else:
                     if ind < len(args) and isinstance(args[ind], (str,
                                                                   native_str)):
+                        arg_ = args[ind]
                         # need to check length of args from inspect
-                        if args[ind].startswith(prefix):
+                        if re.match(prefix, arg_):
                             try:
                                 args = list(args)
-                                args[ind] = getExampleFile(args[ind][9:])
+                                args[ind] = getExampleFile(arg_[9:])
                                 args = tuple(args)
                             # file not found by getExampleFile:
                             except IOError:
