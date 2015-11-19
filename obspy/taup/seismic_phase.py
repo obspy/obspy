@@ -1241,7 +1241,7 @@ class SeismicPhase(object):
                     return self.linear_interp_arrival(degrees, search_dist,
                                                       left_estimate, shoot)
                 else:
-                    return self._refine_arrival(left_estimate, shoot,
+                    return self._refine_arrival(degrees, left_estimate, shoot,
                                                 search_dist, tolerance,
                                                 recursion_limit - 1)
             else:
@@ -1251,7 +1251,7 @@ class SeismicPhase(object):
                     return self.linear_interp_arrival(degrees, search_dist,
                                                       shoot, right_estimate)
                 else:
-                    return self._refine_arrival(shoot, right_estimate,
+                    return self._refine_arrival(degrees, shoot, right_estimate,
                                                 search_dist, tolerance,
                                                 recursion_limit - 1)
         except (IndexError, LookupError, SlownessModelError) as e:
