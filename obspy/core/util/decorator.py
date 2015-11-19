@@ -11,7 +11,7 @@ Decorator used in ObsPy.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str, native_bytes
+from future.utils import native_str
 
 import functools
 import inspect
@@ -281,14 +281,7 @@ def map_example_filename(arg_kwarg_name):
             if arg_kwarg_name in kwargs:
                 if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
                     arg_ = kwargs[arg_kwarg_name]
-                    if isinstance(arg_, (bytes, native_bytes)):
-                        # try to find encoding specified in document
-                        match = re.match(r'[^>]* encoding=(["\'])(.+?)\1',
-                                         arg_)
-                        # use detected encoding or default of UTF-8
-                        encoding = match and match.group(2) or "UTF-8"
-                        arg_ = arg_.decode(encoding)
-                    if arg_.startswith(prefix):
+                    if re.match(prefix, arg_):
                         try:
                             kwargs[arg_kwarg_name] = getExampleFile(arg_[9:])
                         # file not found by getExampleFile:
@@ -304,15 +297,8 @@ def map_example_filename(arg_kwarg_name):
                     if ind < len(args) and isinstance(args[ind], (str,
                                                                   native_str)):
                         arg_ = args[ind]
-                        if isinstance(arg_, (bytes, native_bytes)):
-                            # try to find encoding specified in document
-                            match = re.match(r'[^>]* encoding=(["\'])(.+?)\1',
-                                             arg_)
-                            # use detected encoding or default of UTF-8
-                            encoding = match and match.group(2) or "UTF-8"
-                            arg_ = arg_.decode(encoding)
                         # need to check length of args from inspect
-                        if arg_.startswith(prefix):
+                        if re.match(prefix, arg_):
                             try:
                                 args = list(args)
                                 args[ind] = getExampleFile(arg_[9:])
