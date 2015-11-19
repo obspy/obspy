@@ -1278,8 +1278,8 @@ class SeismicPhase(object):
 
         # counter for passes through each branch. 0 is P and 1 is S.
         timesBranches = self.calc_branch_mult(tMod)
-        time = 0.0
-        dist = 0.0
+        time = np.zeros(1)
+        dist = np.zeros(1)
         ray_param = np.array([ray_param])
 
         # Sum the branches with the appropriate multiplier.
@@ -1289,7 +1289,7 @@ class SeismicPhase(object):
                 top_layer = sMod.layerNumberBelow(br.topDepth, sMod.PWAVE)
                 bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.PWAVE)
                 td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
-                                     True)
+                                     allow_turn_in_layer=True)
 
                 time += timesBranches[0, j] * td['time']
                 dist += timesBranches[0, j] * td['dist']
@@ -1299,12 +1299,12 @@ class SeismicPhase(object):
                 top_layer = sMod.layerNumberBelow(br.topDepth, sMod.SWAVE)
                 bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.SWAVE)
                 td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
-                                     True)
+                                     allow_turn_in_layer=True)
 
                 time += timesBranches[1, j] * td['time']
                 dist += timesBranches[1, j] * td['dist']
 
-        return Arrival(self, degrees, time, dist, ray_param[0],
+        return Arrival(self, degrees, time[0], dist[0], ray_param[0],
                        ray_param_index, self.name, self.puristName,
                        self.source_depth, self.receiver_depth)
 
