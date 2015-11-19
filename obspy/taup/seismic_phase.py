@@ -1233,10 +1233,11 @@ class SeismicPhase(object):
 
         try:
             shoot = self.shoot_ray(degrees, new_estimate.ray_param)
-            if ((left_estimate.distance - search_dist) *
-                    (search_dist - shoot.distance)) > 0:
+            if ((left_estimate.purist_dist - search_dist) *
+                    (search_dist - shoot.purist_dist)) > 0:
                 # search between left and shoot
-                if abs(shoot.distance - new_estimate.distance) < tolerance:
+                if abs(shoot.purist_dist -
+                       new_estimate.purist_dist) < tolerance:
                     return self.linear_interp_arrival(degrees, search_dist,
                                                       left_estimate, shoot)
                 else:
@@ -1245,7 +1246,8 @@ class SeismicPhase(object):
                                                 recursion_limit - 1)
             else:
                 # search between shoot and right
-                if abs(shoot.distance - new_estimate.distance) < tolerance:
+                if abs(shoot.purist_dist -
+                       new_estimate.purist_dist) < tolerance:
                     return self.linear_interp_arrival(degrees, search_dist,
                                                       shoot, right_estimate)
                 else:
@@ -1313,21 +1315,21 @@ class SeismicPhase(object):
                            self.ray_param[0], 0, self.name, self.puristName,
                            self.source_depth, self.receiver_depth, 0, 0)
 
-        if left.distance == search_dist:
+        if left.purist_dist == search_dist:
             return left
 
-        arrival_time = ((search_dist - left.distance) /
-                        (right.distance - left.distance) *
+        arrival_time = ((search_dist - left.purist_dist) /
+                        (right.purist_dist - left.purist_dist) *
                         (right.time - left.time)) + left.time
         if math.isnan(arrival_time):
             msg = ('Time is NaN, search=%f leftDist=%f leftTime=%f '
                    'rightDist=%f rightTime=%f')
-            raise RuntimeError(msg % (search_dist, left.distance, left.time,
-                                      right.distance, right.time))
+            raise RuntimeError(msg % (search_dist, left.purist_dist, left.time,
+                                      right.purist_dist, right.time))
 
-        ray_param = ((search_dist - right.distance) *
-                     (left.ray_param - right.ray_param) /
-                     (left.distance - right.distance)) + right.ray_param
+        ray_param = ((search_dist - right.purist_dist) /
+                     (left.purist_dist - right.purist_dist) *
+                     (left.ray_param - right.ray_param)) + right.ray_param
         return Arrival(self, degrees, arrival_time, search_dist, ray_param,
                        left.ray_param_index, self.name, self.puristName,
                        self.source_depth, self.receiver_depth)

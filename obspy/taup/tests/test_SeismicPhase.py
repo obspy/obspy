@@ -39,7 +39,7 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
         phase = SeismicPhase(phase_name, self.tMod)
         for i, ray_param in enumerate(phase.ray_param):
             maxRPArrival = phase.shoot_ray(-1, ray_param)
-            self.assertAlmostEqual(phase.dist[i], maxRPArrival.dist,
+            self.assertAlmostEqual(phase.dist[i], maxRPArrival.purist_dist,
                                    delta=0.0001)
             self.assertAlmostEqual(phase.time[i], maxRPArrival.time,
                                    delta=0.0001)
@@ -50,11 +50,11 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
             rp = (phase.ray_param[i] + phase.ray_param[i + 1]) / 2
             timeTol = abs(phase.time[i] - phase.time[i + 1])
             maxRPArrival = phase.shoot_ray(-1, rp)
-            self.assertAlmostEqual(phase.dist[i], maxRPArrival.dist,
+            self.assertAlmostEqual(phase.dist[i], maxRPArrival.purist_dist,
                                    delta=0.1)
             self.assertAlmostEqual(phase.time[i], maxRPArrival.time,
                                    delta=timeTol)
-            self.assertAlmostEqual(phase.dist[i + 1], maxRPArrival.dist,
+            self.assertAlmostEqual(phase.dist[i + 1], maxRPArrival.purist_dist,
                                    delta=0.1)
             self.assertAlmostEqual(phase.time[i + 1], maxRPArrival.time,
                                    delta=timeTol)
