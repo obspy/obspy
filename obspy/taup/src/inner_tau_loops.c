@@ -16,7 +16,6 @@
 // Simple macros for easy array access.
 // Be careful as these naturally apply to all function in this module.
 #define RAY_PARAMS(I, J) ray_params[(I) * max_j + (J)]
-#define MASK(I, J) mask[(I) * max_j + (J)]
 #define TIME(I, J) time[(I) * max_j + (J)]
 #define DIST(I, J) dist[(I) * max_j + (J)]
 #define TIME_DIST(I, J) time_dist[(I) * 4 + (J)]
@@ -56,9 +55,9 @@ for i, p in enumerate(ray_params[:, 0]):
                     "Ray turns in the middle of this layer!")
 */
 void tau_branch_calc_time_dist_inner_loop(
-    double *ray_params, int *mask, double *time, double *dist,
+    double *ray_params, double *time, double *dist,
     double *layer, double *time_dist, int max_i, int max_j,
-    double max_ray_param) {
+    double max_ray_param, int allow_turn) {
 
     int i, j;
     int m;
@@ -74,12 +73,19 @@ void tau_branch_calc_time_dist_inner_loop(
         dist_sum = 0.0;
 
         for (j=0; j < max_j; j++) {
-            m = MASK(i, j);
-            if (m == 0) {
-                continue;
+            if (p > LAYER(j, SL_TOP_P) || p > LAYER(j, SL_BOT_P)) {
+                break;
             }
             time_sum += TIME(i, j);
             dist_sum += DIST(i, j);
+        }
+
+        /* Check if the last element includes a turn. */
+        if (j < max_j && allow_turn) {
+            if ((LAYER(j, SL_TOP_P) - p) * (p - LAYER(j, SL_BOT_P)) > 0) {
+                time_sum += TIME(i, j);
+                dist_sum += DIST(i, j);
+            }
         }
 
         TIME_DIST(i, TD_TIME) = time_sum;
