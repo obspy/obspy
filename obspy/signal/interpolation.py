@@ -357,13 +357,16 @@ def calculate_lanczos_kernel(x, a, window):
     return ret_val
 
 
-def plot_lanczos_windows(a):
+def plot_lanczos_windows(a, filename=None):
     """
     Helper function producing a plot of all available tapers of the sinc
     function and their response for the Lanczos interpolation.
 
     :type a: int
     :param a: The width of the window in samples on either side.
+    :type filename: str
+    :param filename: The file name to save to. The plot will be shown if it is
+        not given.
 
     .. code-block:: python
 
@@ -431,7 +434,12 @@ def plot_lanczos_windows(a):
 
     plt.suptitle("Different windows for sinc interpolation with a=%i"
                  % a, fontsize="large")
-    plt.show()
+
+    if not filename:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
 if __name__ == '__main__':
