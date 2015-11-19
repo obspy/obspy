@@ -191,6 +191,16 @@ Gallery
     resp.plot(0.001, output="VEL")
 
 .. gallery-plot::
+    :target: packages/autogen/obspy.signal.interpolation.plot_lanczos_windows.html
+    :alt: Plot the Lanczos windows.
+
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(10, 12))
+    from obspy.signal.interpolation import plot_lanczos_windows
+    plot_lanczos_windows(a=20)
+
+.. gallery-plot::
     :target: packages/autogen/obspy.core.inventory.inventory.Inventory.plot.html
     :alt: Basemap plot of station and event data together
 
