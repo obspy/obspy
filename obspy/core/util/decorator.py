@@ -16,6 +16,7 @@ from future.utils import native_str
 import functools
 import inspect
 import os
+import re
 import socket
 import tarfile
 import unittest
@@ -247,7 +248,7 @@ def map_example_filename(arg_kwarg_name):
         # check kwargs
         if arg_kwarg_name in kwargs:
             if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
-                if kwargs[arg_kwarg_name].startswith(prefix):
+                if re.match(prefix, kwargs[arg_kwarg_name]):
                     try:
                         kwargs[arg_kwarg_name] = \
                             get_example_file(kwargs[arg_kwarg_name][9:])
@@ -271,7 +272,7 @@ def map_example_filename(arg_kwarg_name):
                 if ind < len(args) and isinstance(args[ind], (str,
                                                               native_str)):
                     # need to check length of args from inspect
-                    if args[ind].startswith(prefix):
+                    if re.match(prefix, args[ind]):
                         try:
                             args = list(args)
                             args[ind] = get_example_file(args[ind][9:])

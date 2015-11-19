@@ -19,6 +19,7 @@ import datetime
 import io
 import math
 import os
+import re
 import warnings
 import zipfile
 
@@ -159,7 +160,7 @@ class Parser(object):
             self.__init__()
         # try to transform everything into BytesIO object
         if isinstance(data, (str, native_str)):
-            if "://" in data:
+            if re.search(r"://", data) is not None:
                 # some URL
                 data = urllib.request.urlopen(data).read()
                 data = io.BytesIO(data)
