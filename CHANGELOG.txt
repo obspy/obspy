@@ -58,6 +58,7 @@ master:
    * Switch to second-order sections for filters; backported from SciPy 0.16.0
      (see #1028)
    * New Lanczos interpolation/resampling (see #1101)
+   * Higher order detrending methods (see #1173)
    * PPSD (see #931, #1108, #1130):
      - Algorithm for PSD computation was improved, especially affecting results
        at long periods (for detailed discussion see #931 and #1108).
