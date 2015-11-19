@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+import warnings
 
 import matplotlib.pyplot as plt
 
@@ -297,6 +298,26 @@ class BeachballTestCase(unittest.TestCase):
         self.collection_aspect(axis=[-100, 100, -10000, 10000],
                                filename_width='bb_aspect_y.png',
                                filename_width_height='bb_aspect_y_height.png')
+
+    def test_mopad_fallback(self):
+        """
+        Test the fallback to mopad.
+        """
+        mt = [0.000, -1.232e25, 1.233e25, 0.141e25, -0.421e25, 2.531e25]
+
+        with warnings.catch_warnings(record=True) as w:
+            # Always raise warning.
+            warnings.simplefilter("always")
+            with ImageComparison(self.path, 'mopad_fallback.png') as ic:
+                beachball(mt, outfile=ic.name)
+
+        # Make sure the appropriate warnings has been raised.
+        self.assertTrue(w)
+        # Filter
+        w = [_i.message.args[0] for _i in w]
+        w = [_i for _i in w
+             if "falling back to the mopad wrapper" in _i.lower()]
+        self.assertTrue(w)
 
 
 def suite():
