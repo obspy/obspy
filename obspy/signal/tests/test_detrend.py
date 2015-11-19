@@ -42,7 +42,7 @@ class DetrendTestCase(unittest.TestCase):
             # Make sure the maximum amplitude is reduced by some orders of
             # magnitude. It should almost be reduced to zero as we detrend a
             # polynomial with a polynomial...
-            self.assertTrue(np.ptp(detrended) * 1E10 < original_ptp)
+            self.assertLess(np.ptp(detrended) * 1E10, original_ptp)
 
     def test_spline_detrend(self):
         """
@@ -59,7 +59,7 @@ class DetrendTestCase(unittest.TestCase):
             # This should be very very similar.
             detrended = spline(d, order=len(c) - 1, dspline=10)
             # Not as good as for the polynomial detrending.
-            self.assertTrue(np.ptp(detrended) * 1E4 < original_ptp)
+            self.assertLess(np.ptp(detrended) * 1E4, original_ptp)
 
     def test_polynomial_detrend_plotting(self):
         """
@@ -80,7 +80,7 @@ class DetrendTestCase(unittest.TestCase):
         tr.data += 6000 + 4 * tr.times() ** 2 - 0.1 * tr.times() ** 3 - \
             0.00001 * tr.times() ** 5
 
-        # Use an order zero spline to see a difference to the polynomial
+        # Use an first order spline to see a difference to the polynomial
         # picture.
         with ImageComparison(self.path_images,
                              'degree_1_spline_detrend.png') as ic:

@@ -32,21 +32,19 @@ def simple(data):
 
 
 def __plotting_helper(data, fit, plot):
-    fig = plt.figure(figsize=(8.0, 5.0))
+    fig, axes = plt.subplots(2, 1, figsize=(8, 5))
     plt.subplots_adjust(hspace=0)
-    plt.subplot(211)
-    plt.plot(data, color="k", label="Original Data")
-    plt.plot(fit, color="red", lw=2, label="Fitted Trend")
-    plt.legend(loc="best")
-    plt.gca().label_outer()
-    plt.yticks(plt.yticks()[0][1:])
+    axes[0].plot(data, color="k", label="Original Data")
+    axes[0].plot(fit, color="red", lw=2, label="Fitted Trend")
+    axes[0].legend(loc="best")
+    axes[0].label_outer()
+    axes[0].set_yticks(axes[0].get_yticks()[1:])
 
-    plt.subplot(212)
-    plt.plot(data - fit, color="k", label="Result")
-    plt.legend(loc="best")
-    plt.gca().label_outer()
-    plt.yticks(plt.yticks()[0][:-1])
-    plt.xlabel("Samples")
+    axes[1].plot(data - fit, color="k", label="Result")
+    axes[1].legend(loc="best")
+    axes[1].label_outer()
+    axes[1].set_yticks(axes[1].get_yticks()[:-1])
+    axes[1].set_xlabel("Samples")
 
     plt.tight_layout(h_pad=0)
 
@@ -66,8 +64,8 @@ def polynomial(data, order, plot=False):
     :param order: The order of the polynomial to fit.
     :type order: int
     :param plot: If True, a plot of the operation happening will be shown.
-        If a string is given that plot will be saved to the given file.
-    :type plot: bool or string
+        If a string is given that plot will be saved to the given file name.
+    :type plot: bool or str
 
     .. note::
 
@@ -102,7 +100,7 @@ def polynomial(data, order, plot=False):
 
         polynomial(tr.data, order=3, plot=True)
     """
-    # Convert data if its not a floating point type.
+    # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
         data = np.require(data, dtype=np.float32)
 
@@ -128,8 +126,8 @@ def spline(data, order, dspline, plot=False):
     :param dspline: The distance in samples between two spline nodes.
     :type dspline: int
     :param plot: If True, a plot of the operation happening will be shown.
-        If a string is given that plot will be saved to the given file.
-    :type plot: bool or string
+        If a string is given that plot will be saved to the given file name.
+    :type plot: bool or str
 
 
     .. note::
@@ -157,15 +155,15 @@ def spline(data, order, dspline, plot=False):
     .. plot::
 
         import obspy
-        from obspy.signal.detrend import polynomial
+        from obspy.signal.detrend import spline
 
         tr = obspy.read()[0].filter("highpass", freq=2)
         tr.data += 6000 + 4 * tr.times() ** 2 - 0.1 * tr.times() ** 3 - \
             0.00001 * tr.times() ** 5
 
-        polynomial(tr.data, order=3, plot=True)
+        spline(tr.data, order=2, dspline=1000, plot=True)
     """
-    # Convert data if its not a floating point type.
+    # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
         data = np.require(data, dtype=np.float32)
 
