@@ -51,13 +51,13 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
     for itype in arrays:
         if itype == 'float':
             # null float header array
-            hf = np.full(70, fill_value=HD.FNULL,
-                         dtype=native_str(byteorder + 'f4'))
+            hf = np.empty(70, dtype=native_str(byteorder + 'f4'))
+            hf.fill(HD.FNULL)
             out.append(hf)
         elif itype == 'int':
             # null integer header array
-            hi = np.full(40, fill_value=HD.INULL,
-                         dtype=native_str(byteorder + 'i4'))
+            hi = np.empty(40, dtype=native_str(byteorder + 'i4'))
+            hi.fill(HD.INULL)
             # set logicals to 0, not -1234whatever
             for i, hdr in enumerate(HD.INTHDRS):
                 if hdr.startswith('l'):
@@ -68,7 +68,8 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
             out.append(hi)
         elif itype == 'str':
             # null string header array
-            hs = np.full(24, fill_value=HD.SNULL, dtype=native_str('|S8'))
+            hs = np.empty(24, dtype=native_str('|S8'))
+            hs.fill(HD.SNULL)
             out.append(hs)
         else:
             raise ValueError("Unrecognized header array type {}".format(itype))
