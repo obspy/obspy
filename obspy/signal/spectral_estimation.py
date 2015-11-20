@@ -24,6 +24,7 @@ from future.utils import native_str
 
 import bisect
 import bz2
+import glob
 import math
 import os
 import pickle
@@ -245,6 +246,13 @@ class PPSD(object):
         '_times_processed',
         '_binned_psds',
         ]
+    NPZ_STORE_KEYS_VERSION_NUMBERS = [
+        # version numbers
+        'ppsd_version',
+        'obspy_version',
+        'numpy_version',
+        'matplotlib_version',
+        ]
     NPZ_STORE_KEYS_SIMPLE_TYPES = [
         # things related to Stats passed at __init__
         'id',
@@ -254,11 +262,6 @@ class PPSD(object):
         'ppsd_length',
         'overlap',
         'special_handling',
-        # version numbers
-        'ppsd_version',
-        'obspy_version',
-        'numpy_version',
-        'matplotlib_version',
         # attributes derived during __init__
         '_len',
         '_nlap',
@@ -273,7 +276,8 @@ class PPSD(object):
     NPZ_STORE_KEYS = (
         NPZ_STORE_KEYS_ARRAY_TYPES +
         NPZ_STORE_KEYS_LIST_TYPES +
-        NPZ_STORE_KEYS_SIMPLE_TYPES)
+        NPZ_STORE_KEYS_SIMPLE_TYPES +
+        NPZ_STORE_KEYS_VERSION_NUMBERS)
 
     @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
                           'water_level': None})
@@ -1381,10 +1385,77 @@ class PPSD(object):
                     data_ = data_.tolist()
                 else:
                     data_ = [d for d in data_]
-            elif key in ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES:
+            elif key in (ppsd.NPZ_STORE_KEYS_SIMPLE_TYPES +
+                         ppsd.NPZ_STORE_KEYS_VERSION_NUMBERS):
                 data_ = data_.item()
             setattr(ppsd, key, data_)
         return ppsd
+
+    def add_npz(self, filename):
+        """
+        Add previously computed PPSD results to current PPSD instance.
+
+        Load previously computed PPSD results from a
+        compressed numpy binary in npz format, written with
+        :meth:`~PPSD.write_npz` and add the information to the current PPSD
+        instance.
+        Before adding the data it is checked if the data was computed with the
+        same settings, then any time periods that are not yet covered are added
+        to the current PPSD (a warning is emitted if any segments are omitted).
+
+        :type filename: str
+        :param filename: Name of numpy .npz file(s) with stored PPSD data.
+            Wildcards are possible and will be expanded using
+            :py:func:`glob.glob`.
+        """
+        for filename in glob.glob(filename):
+            self._add_npz(filename)
+
+    def _add_npz(self, filename):
+        """
+        See :meth:`PPSD.add_npz()`.
+        """
+        data = np.load(filename)
+        # check if all metadata agree
+        for key in self.NPZ_STORE_KEYS_SIMPLE_TYPES:
+            if getattr(self, key) != data[key].item():
+                msg = ("Mismatch in '%s' attribute.\n\tCurrent:\n\t%s\n\t"
+                       "Loaded:\n\t%s")
+                msg = msg % (key, getattr(self, key), data[key].item())
+                raise AssertionError(msg)
+        for key in self.NPZ_STORE_KEYS_ARRAY_TYPES:
+            try:
+                np.testing.assert_array_equal(getattr(self, key), data[key])
+            except AssertionError as e:
+                msg = ("Mismatch in '%s' attribute.\n") % key
+                raise AssertionError(msg + str(e))
+        # load new psd data
+        for key in self.NPZ_STORE_KEYS_VERSION_NUMBERS:
+            if getattr(self, key) != data[key].item():
+                msg = ("Mismatch in version numbers (%s) between current data "
+                       "(%s) and loaded data (%s).") % (
+                            key, getattr(self, key), data[key].item())
+                warnings.warn(msg)
+        _times_data = data["_times_data"].tolist()
+        _times_gaps = data["_times_gaps"].tolist()
+        _times_processed = [d_ for d_ in data["_times_processed"]]
+        _binned_psds = [d_ for d_ in data["_binned_psds"]]
+        # add new data
+        self._times_data.extend(_times_data)
+        self._times_gaps.extend(_times_gaps)
+        duplicates = 0
+        for t, psd in zip(_times_processed, _binned_psds):
+            t = UTCDateTime(t)
+            if self.__check_time_present(t):
+                duplicates += 1
+                continue
+            self.__insert_processed_data(t, psd)
+        # warn if some segments were omitted
+        if duplicates:
+            msg = ("%d/%d segments omitted in file '%s' "
+                   "(time ranges already covered).")
+            msg = msg % (duplicates, len(_times_processed), filename)
+            warnings.warn(msg)
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
