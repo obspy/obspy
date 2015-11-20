@@ -2,6 +2,11 @@ language: c
 
 matrix:
   include:
+    # do one build run with our minimum dependencies
+    # (or, well, at least the lowest version number that is available through
+    #  anaconda..)
+    - os: linux
+      env: PYTHON_VERSION=2.7 MINIMUM_DEPENDENCIES="True"
     - os: linux
       env: PYTHON_VERSION=2.7
     - os: linux
@@ -37,23 +42,34 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
   - |
-      if [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
+      if [[ "$MINIMUM_DEPENDENCIES" == 'True' ]]; then
+        NUMPY_VERSION=1.6.2
+        SCIPY_VERSION=0.11.0
+        MPL_VERSION=1.1.1
+        # no basemap version works with this old numpy, so leave out
+        BASEMAP=""
+        # ancient matplotlib needs to be turned to AGG before anything else,
+        # otherwise it tries to import incompatible version of Qt as a backend
+        # and hick-ups..
+        mkdir -p $HOME/.matplotlib
+        echo 'backend:AGG' > $HOME/.matplotlib/matplotlibrc
+      elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
         NUMPY_VERSION=1.9.2
         SCIPY_VERSION=0.16.0
         MPL_VERSION=1.4.3
-        BASEMAP_VERSION=1.0.7
+        BASEMAP="basemap=1.0.7"
       else
         NUMPY_VERSION=1.8.2
         SCIPY_VERSION=0.14.0
         MPL_VERSION=1.3.1
-        BASEMAP_VERSION=1.0.7
+        BASEMAP="basemap=1.0.7"
       fi
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
         numpy=$NUMPY_VERSION
         scipy=$SCIPY_VERSION
         matplotlib=$MPL_VERSION
-        basemap=$BASEMAP_VERSION
+        $BASEMAP
         flake8
         future
         lxml
