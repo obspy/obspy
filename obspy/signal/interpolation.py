@@ -427,7 +427,7 @@ def plot_lanczos_windows(a, filename=None):
         plt.title(key.capitalize() + " Response")
         plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
                  color="0.1")
-        plt.plot(np.abs(np.fft.rfftfreq(len(x), dx)[:len(x) // 2 + 1]),
+        plt.plot(np.abs(np.fft.fftfreq(len(x), dx)[:len(x) // 2 + 1]),
                  arrays[key]["fft"])
         plt.xlim(0.2, 0.8)
         plt.ylim(-0.1, 1.1)
