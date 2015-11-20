@@ -357,13 +357,16 @@ def calculate_lanczos_kernel(x, a, window):
     return ret_val
 
 
-def plot_lanczos_windows(a):
+def plot_lanczos_windows(a, filename=None):
     """
     Helper function producing a plot of all available tapers of the sinc
     function and their response for the Lanczos interpolation.
 
     :type a: int
     :param a: The width of the window in samples on either side.
+    :type filename: str
+    :param filename: The file name to save to. The plot will be shown if it is
+        not given.
 
     .. code-block:: python
 
@@ -403,7 +406,7 @@ def plot_lanczos_windows(a):
     plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
              color="0.1", label="Ideal")
     for key in sorted(arrays.keys()):
-        plt.plot(np.fft.rfftfreq(len(x), dx),
+        plt.plot(np.abs(np.fft.fftfreq(len(x), dx)[:len(x) // 2 + 1]),
                  arrays[key]["fft"], label=key.capitalize())
     plt.xlim(0.2, 0.8)
     plt.ylim(-0.1, 1.1)
@@ -424,14 +427,19 @@ def plot_lanczos_windows(a):
         plt.title(key.capitalize() + " Response")
         plt.plot([0.0, 0.5, 0.5, 1000], [1.0, 1.0, 0.0, 0.0], "--",
                  color="0.1")
-        plt.plot(np.fft.rfftfreq(len(x), dx),
+        plt.plot(np.abs(np.fft.fftfreq(len(x), dx)[:len(x) // 2 + 1]),
                  arrays[key]["fft"])
         plt.xlim(0.2, 0.8)
         plt.ylim(-0.1, 1.1)
 
     plt.suptitle("Different windows for sinc interpolation with a=%i"
                  % a, fontsize="large")
-    plt.show()
+
+    if not filename:
+        plt.show()
+    else:
+        plt.savefig(filename)
+        plt.close()
 
 
 if __name__ == '__main__':

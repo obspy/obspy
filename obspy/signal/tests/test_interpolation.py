@@ -7,17 +7,27 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import unittest
 
 import numpy as np
+import matplotlib.pyplot as plt
+
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.interpolation import (lanczos_interpolation,
-                                        calculate_lanczos_kernel)
+                                        calculate_lanczos_kernel,
+                                        plot_lanczos_windows)
 
 
 class InterpolationTestCase(unittest.TestCase):
     """
     Interpolation test case
     """
+    def setUp(self):
+        # directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path_images = os.path.join(os.path.dirname(__file__), 'images')
+
     def test_calculate_lanczos_kernel(self):
         """
         Tests the kernels implemented in C against their numpy counterpart.
@@ -115,6 +125,15 @@ class InterpolationTestCase(unittest.TestCase):
 
         np.testing.assert_allclose(data[220:620], output[200:600], atol=1E-4,
                                    rtol=1E-4)
+
+    def test_plot_lanczos_window(self):
+        """
+        Tests the plot_lanczos_window function.
+        """
+        with ImageComparison(self.path_images,
+                             'plot_lanczos_window.png') as ic:
+            plt.figure(figsize=(8, 12))
+            plot_lanczos_windows(a=20, filename=ic.name)
 
 
 def suite():
