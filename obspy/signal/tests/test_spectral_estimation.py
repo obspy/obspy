@@ -18,7 +18,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.testing import ImageComparison, ImageComparisonException
+from obspy.core.util.testing import (
+    ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
 from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
                                               welch_window)
@@ -451,6 +452,10 @@ class PsdTestCase(unittest.TestCase):
         try:
             with ImageComparison(self.path_images,
                                  'ppsd_restricted_stack.png') as ic:
+                # rms of the valid comparison above is ~31,
+                # rms of the invalid comparison we test here is ~36
+                if MATPLOTLIB_VERSION == [1, 1, 1]:
+                    ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
                 fig.savefig(ic.name)
         except ImageComparisonException:
