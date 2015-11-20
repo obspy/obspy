@@ -92,7 +92,8 @@ class SlownessModel(object):
             "\n highSlownessLayerDepthsS.size()=",
             str(len(self.highSlownessLayerDepthsS)),
             "\n criticalDepths.size()=",
-            (str(len(self.criticalDepths)) if self.criticalDepths else 'N/A'),
+            (str(len(self.criticalDepths))
+             if self.criticalDepths is not None else 'N/A'),
             "\n"])
         desc += "**** Critical Depth Layers ************************\n"
         desc += str(self.criticalDepths)
