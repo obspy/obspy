@@ -1525,7 +1525,10 @@ class PPSD(object):
             ax.set_xlabel('Frequency [Hz]')
         else:
             ax.set_xlabel('Period [s]')
-        ax.set_ylabel('Amplitude [dB]')
+        if self.special_handling is None:
+            ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        else:
+            ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%g"))
         ax.set_title(self._get_plot_title())
 
