@@ -25,5 +25,5 @@ kwargs2 = dict(
 results = the_array.fk_analysis(st, **kwargs2)
 
 # Make plots:
-results.plot_bf_results_over_time(show_immediately=False)
+results.plot_bf_results_over_time(show=False)
 results.plot_baz_hist()
