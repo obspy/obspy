@@ -101,7 +101,7 @@ class TauBranch(object):
         # are masked out later.
         with np.errstate(divide='ignore', invalid='ignore'):
             time, dist = sMod.layerTimeDist(ray_params, layerNum, self.isPWave,
-                                            check=False)
+                                            check=False, allow_turn=True)
 
         clibtau.tau_branch_calc_time_dist_inner_loop(
             ray_params, time, dist, layer, timeDist, ray_params.shape[0],

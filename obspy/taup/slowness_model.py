@@ -1234,7 +1234,8 @@ class SlownessModel(object):
             td['dist'] = 2 * np.sum(dist)
         return td
 
-    def layerTimeDist(self, sphericalRayParam, layerNum, isPWave, check=True):
+    def layerTimeDist(self, sphericalRayParam, layerNum, isPWave, check=True,
+                      allow_turn=False):
         """
         Calculate time and distance for a ray passing through a layer.
 
@@ -1259,6 +1260,9 @@ class SlownessModel(object):
         :type isPWave: bool
         :param check: Whether to perform checks of input consistency.
         :type check: bool
+        :param allow_turn: Whether to allow the ray to turn in the middle of a
+            layer.
+        :type allow_turn: bool
 
         :returns: The time (in s) and distance (in rad) increments for the
             specified ray(s) and layer(s).
@@ -1271,23 +1275,9 @@ class SlownessModel(object):
             bypassed by specifying ``check=False``.
         """
         sphericalLayer = self.getSlownessLayer(layerNum, isPWave)
-
-        # First make sure that a ray with this ray param can propagate
-        # within this layer and doesn't turn in the middle of the layer. If
-        # not, raise error.
-        if check and sphericalRayParam > max(np.max(sphericalLayer['topP']),
-                                             np.max(sphericalLayer['botP'])):
-            raise SlownessModelError("Ray cannot propagate within this layer, "
-                                     "given ray param too large.")
-        if np.any(sphericalRayParam < 0):
-            raise SlownessModelError("Ray parameter must not be negative!")
-        if check and sphericalRayParam > min(np.min(sphericalLayer['topP']),
-                                             np.min(sphericalLayer['botP'])):
-            raise SlownessModelError("Ray turns in the middle of this layer! "
-                                     "layerNum = " + str(layerNum))
-
         pdim = np.ndim(sphericalRayParam)
         ldim = np.ndim(layerNum)
+
         if ldim == 1 and pdim == 0:
             time = np.empty(shape=layerNum.shape, dtype=np.float_)
             dist = np.empty(shape=layerNum.shape, dtype=np.float_)
@@ -1301,6 +1291,100 @@ class SlownessModel(object):
         else:
             raise TypeError('Either sphericalRayParam or layerNum must be 0D, '
                             'or they must have the same shape.')
+
+        # First make sure that a ray with this ray param can propagate
+        # within this layer and doesn't turn in the middle of the layer. If
+        # not, raise error.
+        if check:
+            if not allow_turn:
+                minp = np.minimum(sphericalLayer['topP'],
+                                  sphericalLayer['botP'])
+                if np.any(sphericalRayParam > minp):
+                    raise SlownessModelError(
+                        'Ray turns in the middle of this layer! '
+                        'layerNum = %d' % (layerNum, ))
+
+            if np.any(sphericalRayParam > sphericalLayer['topP']):
+                raise SlownessModelError('Ray cannot propagate within this '
+                                         ' layer, given ray param too large.')
+        if np.any(sphericalRayParam < 0):
+            raise SlownessModelError("Ray parameter must not be negative!")
+
+        turning_layers = sphericalRayParam > sphericalLayer['botP']
+        if np.any(turning_layers):
+            if ldim == 1 and pdim == 0:
+                # Turn in a layer, create temp layers with p at bottom.
+                for i in np.where(turning_layers)[0]:
+                    try:
+                        turn_depth = bullenDepthFor(sphericalLayer[i],
+                                                    sphericalRayParam,
+                                                    self.radiusOfEarth)
+                    except SlownessModelError:
+                        if check:
+                            raise
+                        else:
+                            turn_depth = np.nan
+                    sphericalLayer['botP'][i] = sphericalRayParam
+                    sphericalLayer['botDepth'][i] = turn_depth
+
+            elif ldim == 0 and pdim == 1:
+                # Turn in layer, create temp layers with each p at bottom.
+                # Expand layer array so that each one turns at correct depth.
+                ldim = 1
+                new_layers = np.empty(shape=sphericalRayParam.shape,
+                                      dtype=SlownessLayer)
+                for i in np.where(turning_layers)[0]:
+                    try:
+                        turn_depth = bullenDepthFor(sphericalLayer,
+                                                    sphericalRayParam[i],
+                                                    self.radiusOfEarth)
+                    except SlownessModelError:
+                        if check:
+                            raise
+                        else:
+                            turn_depth = np.nan
+                    new_layers[i] = (
+                        sphericalLayer['topP'],
+                        sphericalLayer['topDepth'],
+                        sphericalRayParam[i],
+                        turn_depth)
+                sphericalLayer = new_layers
+
+            elif ldim == pdim == 0:
+                # Turn in layer, create temp layer with p at bottom.
+                try:
+                    turn_depth = bullenDepthFor(sphericalLayer,
+                                                sphericalRayParam,
+                                                self.radiusOfEarth)
+                except SlownessModelError:
+                    if check:
+                        raise
+                    else:
+                        turn_depth = np.nan
+                sphericalLayer['botP'] = sphericalRayParam
+                sphericalLayer['botDepth'] = turn_depth
+
+            else:
+                # Turn in layer, create temp layers with each p at bottom.
+                for i in np.transpose(np.where(turning_layers)):
+                    index = tuple(i)
+                    try:
+                        turn_depth = bullenDepthFor(sphericalLayer[index],
+                                                    sphericalRayParam[index],
+                                                    self.radiusOfEarth)
+                    except SlownessModelError:
+                        if check:
+                            raise
+                        else:
+                            turn_depth = np.nan
+                    sphericalLayer['botP'][index] = sphericalRayParam[index]
+                    sphericalLayer['botDepth'][index] = turn_depth
+
+        if check and np.any(
+                sphericalRayParam > np.maximum(sphericalLayer['topP'],
+                                               sphericalLayer['botP'])):
+            raise SlownessModelError("Ray cannot propagate within this layer, "
+                                     "given ray param too large.")
 
         # Check to see if this layer has zero thickness, if so then it is
         # from a critically reflected slowness sample. That means just
