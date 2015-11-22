@@ -24,7 +24,7 @@ class TauBranch(object):
     """
     DEBUG = False
 
-    def __init__(self, topDepth=0, botDepth=0, isPWave=0):
+    def __init__(self, topDepth=0, botDepth=0, isPWave=False):
         self.topDepth = topDepth
         self.botDepth = botDepth
         self.isPWave = isPWave
@@ -436,7 +436,7 @@ class TauBranch(object):
         dtypes = [(native_str('DEBUG'), np.bool_),
                   (native_str('botDepth'), np.float_),
                   (native_str('dist'), np.float_, self.dist.shape),
-                  (native_str('isPWave'), np.float_),
+                  (native_str('isPWave'), np.bool_),
                   (native_str('maxRayParam'), np.float_),
                   (native_str('minRayParam'), np.float_),
                   (native_str('minTurnRayParam'),  np.float_),
