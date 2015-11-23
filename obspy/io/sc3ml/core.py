@@ -909,10 +909,3 @@ def _read_floattype_variable(elem, cls, unit=False, datum=False, additional_mapp
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, key2)
     return obj
-
-from obspy import read_inventory
-inventory = _read_sc3ml("./tests/data/EB_response_sc3ml")
-inventory2 = read_inventory("./tests/data/EB_response_stationXML")
-print(inventory[0][0][0].response)
-print(inventory2[0][0][0].response)
-

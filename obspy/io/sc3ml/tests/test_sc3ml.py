@@ -27,6 +27,7 @@ import unittest
 
 import obspy
 from obspy.core.inventory import read_inventory, Inventory, Network
+from obspy.core.inventory.response import PolesZerosResponseStage, CoefficientsTypeResponseStage, FIRResponseStage
 
 class sc3mlTestCase(unittest.TestCase):
 
@@ -34,8 +35,12 @@ class sc3mlTestCase(unittest.TestCase):
         """
         Read example stationXML/sc3ml format to Inventory
         """
-        self.stationxml_inventory = read_inventory("./data/EB_response_stationXML", format="STATIONXML")
-        self.sc3ml_inventory = read_inventory("./data/EB_response_sc3ml", format="SC3ML")
+        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data")
+        stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
+        sc3ml_path = os.path.join(self.data_dir, "EB_response_sc3ml")
+        self.stationxml_inventory = read_inventory(stationxml_path, format="STATIONXML")
+        self.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
 
     def test_compareXML(self):
         """
@@ -115,9 +120,6 @@ class sc3mlTestCase(unittest.TestCase):
 
                 for sc3ml_cha, stationxml_cha in zip(sc3ml_sta, stationxml_sta):
 
-                    for kk, jj in zip(sc3ml_cha.__dict__.items(), stationxml_cha.__dict__.items()):
-                        self.assertEqual(kk, jj)
-
                     self.assertEqual(sc3ml_cha.code, stationxml_cha.code)
                     self.assertEqual(sc3ml_cha.latitude, stationxml_cha.latitude)
                     self.assertEqual(sc3ml_cha.longitude, stationxml_cha.longitude)
@@ -132,7 +134,6 @@ class sc3mlTestCase(unittest.TestCase):
                         self.assertEqual(sc3ml_sensor, stationxml_sensor)
                         
 
-
                     self.assertEqual(sc3ml_cha.sample_rate, stationxml_cha.sample_rate)
                     self.assertEqual(sc3ml_cha.clock_drift_in_seconds_per_sample, stationxml_cha.clock_drift_in_seconds_per_sample)
 
@@ -143,7 +144,20 @@ class sc3mlTestCase(unittest.TestCase):
                     self.assertEqual(len(sc3ml_cha.response.response_stages), len(stationxml_cha.response.response_stages))
                     for sc3ml_stage, stationxml_stage in zip(sc3ml_cha.response.response_stages, stationxml_cha.response.response_stages):
                         self.assertEqual(sc3ml_stage.stage_gain, stationxml_stage.stage_gain)
-            
+                        self.assertEqual(sc3ml_stage.stage_sequence_number, stationxml_stage.stage_sequence_number)
+
+                        """ 
+                        We skip checking this stage, because the input sample rates may not match
+                        StationXML gives a sample rate of 10e-310 (0) for some channels
+                        While this should be the sample rate after stage 1 (never 0)
+                        """  
+                        if isinstance(sc3ml_stage, CoefficientsTypeResponseStage):
+                            continue
+
+                        if isinstance(sc3ml_stage, FIRResponseStage):
+                            for sc3ml_FIR, stationxml_FIR in zip(sc3ml_stage.__dict__.items(), stationxml_stage.__dict__.items()):
+                                self.assertEqual(sc3ml_FIR, stationxml_FIR)
+                                                         
                     """ Check poles / zeros """
                     sc3ml_paz = sc3ml_cha.response.get_paz()
                     stationxml_paz = stationxml_cha.response.get_paz()
