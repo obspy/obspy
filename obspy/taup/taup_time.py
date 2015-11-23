@@ -18,7 +18,7 @@ class TauP_Time(object):
     between known slowness samples.
     """
     def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
-        self.depth = depth
+        self.source_depth = depth
         self.receiver_depth = receiver_depth
         self.degrees = degrees
         self.arrivals = []
@@ -35,7 +35,7 @@ class TauP_Time(object):
         Do all the calculations and print the output if told to. The resulting
         arrival times will be in self.arrivals.
         """
-        self.depth_correct(self.depth, self.receiver_depth)
+        self.depth_correct(self.source_depth, self.receiver_depth)
         self.calculate(self.degrees)
 
     def depth_correct(self, depth, receiver_depth=None):
@@ -49,11 +49,13 @@ class TauP_Time(object):
                 self.depth_corrected_model.source_depth != depth:
             self.depth_corrected_model = self.model.depth_correct(depth)
             self.arrivals = []
-            self.recalc_phases()
-        # If already split on reciever depth this does nothing.
-        self.depth_corrected_model = self.depth_corrected_model.splitBranch(
-            receiver_depth)
+        if receiver_depth != depth:
+            # If already split on receiver depth this does nothing.
+            self.depth_corrected_model = \
+                self.depth_corrected_model.splitBranch(receiver_depth)
+            self.arrivals = []
         self.source_depth = depth
+        self.receiver_depth = receiver_depth
 
     def recalc_phases(self):
         """
@@ -66,7 +68,7 @@ class TauP_Time(object):
                 pass
                 # if seismic_phase.name == temp_phase_name:
                 #     self.phases.pop(phase_num)
-                #     if (seismic_phase.source_depth == self.depth and
+                #     if (seismic_phase.source_depth == self.source_depth and
                 #            seismic_phase.tMod == self.depth_corrected_model):
                 #         # OK so copy to new_phases:
                 #         new_phases.append(seismic_phase)
