@@ -28,6 +28,7 @@ class StationXMLTestCase(unittest.TestCase):
     """
     """
     def setUp(self):
+        print("WOW")
         self.maxDiff = 10000
         # Most generic way to get the actual data directory.
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(

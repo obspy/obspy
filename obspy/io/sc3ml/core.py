@@ -911,11 +911,3 @@ def _read_floattype_variable(elem, cls, unit=False, datum=False, additional_mapp
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, key2)
     return obj
-
-
-
-from obspy import read, read_inventory, UTCDateTime
-inventory = _read_sc3ml("./sc3ml")
-#inventory.plot_response(0.001)
-inventory.write("KEK", "stationXML")
-
