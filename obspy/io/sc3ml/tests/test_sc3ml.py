@@ -31,8 +31,8 @@ from obspy.core.inventory import read_inventory, Inventory, Network
 class sc3mlTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.stationxml_inventory = read_inventory("./data/NL_response_stationXML", format="STATIONXML")
-        self.sc3ml_inventory = read_inventory("./data/NL_response_sc3ml", format="SC3ML")
+        self.stationxml_inventory = read_inventory("./data/EB_response_stationXML", format="STATIONXML")
+        self.sc3ml_inventory = read_inventory("./data/EB_response_sc3ml", format="SC3ML")
 
     def test_compareXML(self):
         sc3ml_bytes = io.BytesIO()
