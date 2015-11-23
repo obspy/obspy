@@ -121,6 +121,12 @@ master:
      needs the `geographiclib` module to be installed. (See #1164.)
    * ObsPy now ships with a bunch of new velocity models in addition to the
      existing ones: `prem`, `sp6`, `1066a,b`, `herrin` (See #1196).
+   * Add support for buried receivers (see #1103.)
+   * Port more accurate calculation of ray parameter from Java. The effect is
+     stronger for longer phases, but also corrects issues with shorter body and
+     surface waves (see #986.)
+   * Fix incorrect branch splitting which also caused issues for extremely
+     shallow phases (see #1057.)
 
 0.10.x:
   - obspy.core:
