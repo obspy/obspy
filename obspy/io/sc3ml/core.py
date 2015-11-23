@@ -488,7 +488,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     frequency = _tag2obj(cha_element, _ns("gainFrequency"), float)
 
     input_units_name = _tag2obj(sen_element, _ns("unit"), str) 
-    output_units_name = None
+    output_units_name = str(None)
 
     sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
         value=gain, frequency=frequency,
@@ -631,8 +631,6 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
     elem_type = stage.tag.split("}")[1]
 
     stage_sequence_number = stage_number
-    input_units = input_units
-    output_units = output_units
 
     """ 
     Obtain the stage gain and frequency
@@ -911,3 +909,10 @@ def _read_floattype_variable(elem, cls, unit=False, datum=False, additional_mapp
     for key1, key2 in additional_mapping.items():
         setattr(obj, key1, key2)
     return obj
+
+from obspy import read_inventory
+inventory = _read_sc3ml("./tests/data/EB_response_sc3ml")
+inventory2 = read_inventory("./tests/data/EB_response_stationXML")
+print(inventory[0][0][0].response)
+print(inventory2[0][0][0].response)
+

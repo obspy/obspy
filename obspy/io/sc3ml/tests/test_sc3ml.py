@@ -31,10 +31,17 @@ from obspy.core.inventory import read_inventory, Inventory, Network
 class sc3mlTestCase(unittest.TestCase):
 
     def setUp(self):
+        """
+        Read example stationXML/sc3ml format to Inventory
+        """
         self.stationxml_inventory = read_inventory("./data/EB_response_stationXML", format="STATIONXML")
         self.sc3ml_inventory = read_inventory("./data/EB_response_sc3ml", format="SC3ML")
 
     def test_compareXML(self):
+        """
+        Easiest way to compare is to write both Inventories back
+        to stationXML format and compare line by line
+        """
         sc3ml_bytes = io.BytesIO()
         self.sc3ml_inventory.write(sc3ml_bytes, "STATIONXML")
         sc3ml_bytes.seek(0, 0)
@@ -74,7 +81,10 @@ class sc3mlTestCase(unittest.TestCase):
                 assert(tag in excluded_tags)
 
     def test_compareUpperLevel(self):
-        """ Assert the top-level contents of the two dictionaries """
+        """
+        Assert the top-level contents of the two dictionaries
+        Networks, channels, stations, locations
+        """
         stationxml_content = self.stationxml_inventory.get_contents()
         sc3ml_content = self.sc3ml_inventory.get_contents()
         for sc3ml, stationxml in zip(stationxml_content, sc3ml_content):
@@ -82,11 +92,46 @@ class sc3mlTestCase(unittest.TestCase):
 
     def test_compareResponse(self):
         """
-        More self.assertEqualion checks
+        More assertions in the actual response info
         """
         for sc3ml_net, stationxml_net in zip(self.sc3ml_inventory, self.stationxml_inventory):
+
+            self.assertEqual(sc3ml_net.code, stationxml_net.code)
+            self.assertEqual(sc3ml_net.description, stationxml_net.description)
+            self.assertEqual(sc3ml_net.start_date, stationxml_net.start_date)
+            self.assertEqual(sc3ml_net.end_date, stationxml_net.end_date)
+            self.assertEqual(sc3ml_net.restricted_status, stationxml_net.restricted_status)
+
             for sc3ml_sta, stationxml_sta in zip(sc3ml_net, stationxml_net):
+                
+                self.assertEqual(sc3ml_sta.latitude, stationxml_sta.latitude)
+                self.assertEqual(sc3ml_sta.longitude, stationxml_sta.longitude)
+                self.assertEqual(sc3ml_sta.elevation, stationxml_sta.elevation)
+                self.assertEqual(sc3ml_sta.creation_date, stationxml_sta.creation_date)
+                self.assertEqual(sc3ml_sta.termination_date, stationxml_sta.termination_date)
+
+                for sc3ml_site, stationxml_site in zip(stationxml_sta.site.__dict__.items(), sc3ml_sta.site.__dict__.items()):
+                    self.assertEqual(sc3ml_site, stationxml_site)
+
                 for sc3ml_cha, stationxml_cha in zip(sc3ml_sta, stationxml_sta):
+
+                    for kk, jj in zip(sc3ml_cha.__dict__.items(), stationxml_cha.__dict__.items()):
+                        self.assertEqual(kk, jj)
+
+                    self.assertEqual(sc3ml_cha.code, stationxml_cha.code)
+                    self.assertEqual(sc3ml_cha.latitude, stationxml_cha.latitude)
+                    self.assertEqual(sc3ml_cha.longitude, stationxml_cha.longitude)
+                    self.assertEqual(sc3ml_cha.elevation, stationxml_cha.elevation)
+                    self.assertEqual(sc3ml_cha.azimuth, stationxml_cha.azimuth)
+                    self.assertEqual(sc3ml_cha.dip, stationxml_cha.dip)
+                    self.assertEqual(sc3ml_cha.storage_format, stationxml_cha.storage_format)
+
+                    for sc3ml_logger, stationxml_logger in zip(stationxml_cha.data_logger.__dict__.items(), sc3ml_cha.data_logger.__dict__.items()):
+                        self.assertEqual(sc3ml_logger, stationxml_logger)
+                    for sc3ml_sensor, stationxml_sensor in zip(stationxml_cha.sensor.__dict__.items(), sc3ml_cha.sensor.__dict__.items()):
+                        self.assertEqual(sc3ml_sensor, stationxml_sensor)
+                        
+
 
                     self.assertEqual(sc3ml_cha.sample_rate, stationxml_cha.sample_rate)
                     self.assertEqual(sc3ml_cha.clock_drift_in_seconds_per_sample, stationxml_cha.clock_drift_in_seconds_per_sample)
