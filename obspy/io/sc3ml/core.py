@@ -3,19 +3,18 @@
 """
 ObsPy implementation for parsing sc3ml format to Inventory
 
-Modified after obspy.io.stationXML 
+Modified after obspy.io.stationXML
     > obspy.obspy.io.stationxml.core.py
 
-:author: 
+:author:
     Mathijs Koymans (koymans@knmi.nl), 11.2015 - [Jollyfant@GitHub]
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from future.builtins import * # NOQA
+from future.builtins import *  # NOQA
 
 import inspect
 import io
@@ -28,8 +27,8 @@ import obspy
 from lxml import etree
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
-from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  
-                                  Distance, Frequency, Latitude, 
+from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,
+                                  Distance, Frequency, Latitude,
                                   Longitude, SampleRate)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   CoefficientWithUncertainties,
@@ -42,6 +41,7 @@ from obspy.io.stationxml.core import _read_floattype, _read_floattype_list
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = "0.7"
+
 
 def _is_sc3ml(path_or_file_object):
     """
@@ -68,8 +68,8 @@ def _is_sc3ml(path_or_file_object):
         root = xmldoc.getroot()
         try:
             match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?[0-9]*\.?[0-9]+}',
-                root.tag)
+                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
+                '[0-9]*\.?[0-9]+}', root.tag)
             assert match is not None
         except:
             return False
@@ -85,7 +85,8 @@ def _is_sc3ml(path_or_file_object):
         try:
             path_or_file_object.seek(current_position, 0)
         except:
-            pass 
+            pass
+
 
 def validate_sc3ml(path_or_object):
     """
@@ -120,6 +121,7 @@ def validate_sc3ml(path_or_object):
         return (False, xmlschema.error_log)
     return (True, ())
 
+
 def _read_sc3ml(path_or_file_object):
     """
     Function for reading a stationXML file.
@@ -136,8 +138,8 @@ def _read_sc3ml(path_or_file_object):
         return "{%s}%s" % (namespace, tagname)
 
     """
-    This needs to be tested, did not find an inventory 
-    with the journal entry. 
+    This needs to be tested, did not find an inventory
+    with the journal entry.
     """
     journal = root.find(_ns("Journaling"))
     if journal is not None:
@@ -156,13 +158,14 @@ def _read_sc3ml(path_or_file_object):
 
     """ Collect all networks from the sc3ml inventory  """
     networks = []
-    inv_element  = root.find(_ns("Inventory"))
+    inv_element = root.find(_ns("Inventory"))
     for net_element in inv_element.findall(_ns("network")):
         networks.append(_read_network(inv_element, net_element, _ns))
 
     return obspy.core.inventory.Inventory(networks=networks, source=source,
                                           sender=sender, created=created,
                                           module=module, module_uri=module_uri)
+
 
 def _tag2obj(element, tag, convert):
 
@@ -197,8 +200,8 @@ def _read_network(inventory_root, net_element, _ns):
     There is no further information in the attributes of <network>
     Start and end date are included as tags
     """
-    network.start_date = _tag2obj(net_element, _ns("start"), obspy.UTCDateTime) 
-    network.end_date = _tag2obj(net_element, _ns("end"), obspy.UTCDateTime) 
+    network.start_date = _tag2obj(net_element, _ns("start"), obspy.UTCDateTime)
+    network.end_date = _tag2obj(net_element, _ns("end"), obspy.UTCDateTime)
     network.description = _tag2obj(net_element, _ns("description"), str)
 
     """
@@ -231,11 +234,12 @@ def _get_restricted_status(element, _ns):
     else:
         return 'closed'
 
+
 def _read_station(inventory_root, sta_element, _ns):
 
     """
     Reads the station structure
- 
+
     :param inventory_root: base inventory element of sc3ml
     :param sta_element: station element to be read
     :param _ns: name space
@@ -261,8 +265,10 @@ def _read_station(inventory_root, sta_element, _ns):
     """
     station.start_date = _tag2obj(sta_element, _ns("start"), obspy.UTCDateTime)
     station.end_date = _tag2obj(sta_element, _ns("end"), obspy.UTCDateTime)
-    station.creation_date = _tag2obj(sta_element, _ns("start"), obspy.UTCDateTime)
-    station.termination_date = _tag2obj(sta_element, _ns("end"), obspy.UTCDateTime)
+    station.creation_date = _tag2obj(sta_element, _ns("start"),
+                                     obspy.UTCDateTime)
+    station.termination_date = _tag2obj(sta_element, _ns("end"),
+                                        obspy.UTCDateTime)
 
     """
     get the restricted_status (boolean)
@@ -283,12 +289,13 @@ def _read_station(inventory_root, sta_element, _ns):
 
     return station
 
+
 def _read_site(sta_element, _ns):
 
     """
     Reads site information from the station element tags
-    and region from network element 
-    
+    and region from network element
+
     In sc3ml, site information are included as
     tags in the station_element
 
@@ -315,12 +322,13 @@ def _read_site(sta_element, _ns):
                                      town=place, county=None, region=region,
                                      country=country)
 
+
 def _read_datalogger(equip_element, _ns):
 
     """
     Reads equipment information from datalogger
     Some information is not present > to None
- 
+
     :param data_log_element: element to be parsed
     :param _ns: name space
     """
@@ -336,12 +344,13 @@ def _read_datalogger(equip_element, _ns):
         serial_number=None, installation_date=None,
         removal_date=None, calibration_dates=None)
 
+
 def _read_sensor(equip_element, _ns):
 
     """
     Reads equipment information from element
     Some information is not present > to None
- 
+
     :param equip_element: element to be parsed
     :param _ns: name space
     """
@@ -357,6 +366,7 @@ def _read_sensor(equip_element, _ns):
         manufacturer=manufacturer, vendor=None, model=model,
         serial_number=None, installation_date=None,
         removal_date=None, calibration_dates=None)
+
 
 def _read_channel(inventory_root, cha_element, _ns):
 
@@ -380,39 +390,43 @@ def _read_channel(inventory_root, cha_element, _ns):
                                datum=True)
     elevation = _read_floattype(sen_loc_element, _ns("elevation"), Distance,
                                 unit=True)
-    depth = _read_floattype(cha_element, _ns("depth"), Distance, 
+    depth = _read_floattype(cha_element, _ns("depth"), Distance,
                             unit=True)
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
 
-    """ 
-    obtain the sensorID and link to particular publicID <sensor> element in the 
+    """
+    obtain the sensorID and link to particular publicID <sensor> element in the
     inventory base node
     """
     sensor_id = cha_element.get("sensor")
-    sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id + "']"))
+    sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
+                                             "']"))
 
-    """ 
-    obtain the poles and zeros responseID and link to particular <responsePAZ> 
-    publicID element in the inventory base node 
+    """
+    obtain the poles and zeros responseID and link to particular <responsePAZ>
+    publicID element in the inventory base node
     """
     if sensor_element is not None:
         response_id = sensor_element.get("response")
         resp_type = response_id.split("#")[0]
         if resp_type == 'ResponsePAZ':
-            response_element = inventory_root.find(_ns("responsePAZ[@publicID='" + response_id + "']")) 
+            search = "responsePAZ[@publicID='" + response_id + "']"
+            response_element = inventory_root.find(_ns(search))
         elif resp_type == 'ResponsePolynomial':
-            response_element = inventory_root.find(_ns("responsePolynomial[@publicID='" + response_id + "']")) 
+            search = "responsePolynomial[@publicID='" + response_id + "']"
+            response_element = inventory_root.find(_ns(search))
     else:
         response_element = None
 
-    """ 
-    obtain the dataloggerID and link to particular <responsePAZ> publicID element 
-    in the inventory base node 
+    """
+    obtain the dataloggerID and link to particular <responsePAZ> publicID
+    element in the inventory base node
     """
     datalogger_id = cha_element.get("datalogger")
-    data_log_element = inventory_root.find(_ns("datalogger[@publicID='" + datalogger_id + "']"))
+    search = "datalogger[@publicID='" + datalogger_id + "']"
+    data_log_element = inventory_root.find(_ns(search))
 
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
@@ -430,22 +444,25 @@ def _read_channel(inventory_root, cha_element, _ns):
     numerator = _tag2obj(cha_element, _ns("sampleRateNumerator"), int)
     denominator = _tag2obj(cha_element, _ns("sampleRateDenominator"), int)
 
+    rate = numerator/denominator
+
     channel.sample_rate_ratio_number_samples = numerator
     channel.sample_rate_ratio_number_seconds = denominator
-    channel.sample_rate = _read_floattype_variable(numerator/denominator, SampleRate)
+    channel.sample_rate = _read_float_var(rate, SampleRate)
 
     if sensor_element is not None:
         channel.sensor = _read_sensor(sensor_element, _ns)
     if data_log_element is not None:
         channel.data_logger = _read_datalogger(data_log_element, _ns)
-        temp = _read_floattype(data_log_element, _ns("maxClockDrift"), ClockDrift)
+        temp = _read_floattype(data_log_element, _ns("maxClockDrift"),
+                               ClockDrift)
         if channel.sample_rate != 0.0:
             channel.clock_drift_in_seconds_per_sample = \
-                _read_floattype_variable(temp/channel.sample_rate, ClockDrift)
+                _read_float_var(temp/channel.sample_rate, ClockDrift)
         else:
-           msg = "Clock drift division by sample rate of 0: using sec/sample instead"
-           warnings.warn(msg)
-           channel.sample_rate = temp
+            msg = "Clock drift division by sample rate of 0: using sec/sample"
+            warnings.warn(msg)
+            channel.sample_rate = temp
 
     channel.azimuth = _read_floattype(cha_element, _ns("azimuth"), Azimuth)
     channel.dip = _read_floattype(cha_element, _ns("dip"), Dip)
@@ -462,21 +479,28 @@ def _read_channel(inventory_root, cha_element, _ns):
     response_fir_id = []
     response_paz_id = []
     if data_log_element is not None:
-        """ Find the decimation element with a particular numerator/denominator """
-        decim_element = data_log_element.find(_ns("decimation[@sampleRateDenominator='" + str(int(denominator)) + "'][@sampleRateNumerator='" + str(int(numerator)) + "']"))
-        analogue_filter_chain = _tag2obj(decim_element, _ns("analogueFilterChain"), str)
+        """ Find the decimation element with a particular num/denom """
+        decim_element = data_log_element.find(_ns(
+                        "decimation[@sampleRateDenominator='" +
+                        str(int(denominator)) + "'][@sampleRateNumerator='" +
+                        str(int(numerator)) + "']"))
+        analogue_filter_chain = _tag2obj(decim_element,
+                                         _ns("analogueFilterChain"), str)
         if analogue_filter_chain is not None:
             response_paz_id = analogue_filter_chain.split(" ")
-        digital_filter_chain = _tag2obj(decim_element, _ns("digitalFilterChain"), str)
+        digital_filter_chain = _tag2obj(decim_element,
+                                        _ns("digitalFilterChain"), str)
         if digital_filter_chain is not None:
             response_fir_id = digital_filter_chain.split(" ")
 
-    channel.response = _read_response(inventory_root, sensor_element, 
+    channel.response = _read_response(inventory_root, sensor_element,
                                       response_element, cha_element,
-                                      data_log_element, _ns, channel.sample_rate, 
+                                      data_log_element, _ns,
+                                      channel.sample_rate,
                                       response_fir_id, response_paz_id)
 
     return channel
+
 
 def _read_instrument_sensitivity(sen_element, cha_element, _ns):
 
@@ -487,7 +511,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
     gain = _tag2obj(cha_element, _ns("gain"), float)
     frequency = _tag2obj(cha_element, _ns("gainFrequency"), float)
 
-    input_units_name = _tag2obj(sen_element, _ns("unit"), str) 
+    input_units_name = _tag2obj(sen_element, _ns("unit"), str)
     output_units_name = str(None)
 
     sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
@@ -503,17 +527,21 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
 
     return sensitivity
 
-def _read_response(root, sen_element, resp_element, cha_element, data_log_element, _ns, samp_rate, FIR, analogue):
+
+def _read_response(root, sen_element, resp_element, cha_element,
+                   data_log_element, _ns, samp_rate, FIR, analogue):
 
     """
     reads response from sc3ml format
 
-    :param 
+    :param
     :param _ns: namespace
     """
 
     response = obspy.core.inventory.response.Response()
-    response.instrument_sensitivity = _read_instrument_sensitivity(sen_element, cha_element, _ns)
+    response.instrument_sensitivity = _read_instrument_sensitivity(sen_element,
+                                                                   cha_element,
+                                                                   _ns)
 
     if resp_element is None:
         return response
@@ -544,7 +572,8 @@ def _read_response(root, sen_element, resp_element, cha_element, data_log_elemen
             get the particular FIR stage decimation factor
             multiply the decimated sample rate by this factor
             """
-            fir_element = root.find(_ns("responseFIR[@publicID='" + FIR_id + "']"))
+            search = "responseFIR[@publicID='" + FIR_id + "']"
+            fir_element = root.find(_ns(search))
             if fir_element is None:
                 continue
             dec_fac = _tag2obj(fir_element, _ns("decimationFactor"), int)
@@ -556,12 +585,12 @@ def _read_response(root, sen_element, resp_element, cha_element, data_log_elemen
     FIR = FIR[::-1]
     FIR_stage_rates = FIR_stage_rates[::-1]
 
-    """ 
+    """
     Attempt to read stages in the proper order
     sc3ml does not group stages by an ID
     We are required to do stage counting ourselves
     """
-    
+
     stage = 1
     """ Get the sensor units, default to M/S """
     sensor_units = _tag2obj(sen_element, _ns("unit"), str)
@@ -570,30 +599,35 @@ def _read_response(root, sen_element, resp_element, cha_element, data_log_elemen
         warnings.warn(msg)
         sensor_units = "M/S"
 
-    """ 
+    """
     Get the first PAZ stage
     Input unit: M/S or M/S**2
     Output unit: V
     """
     if resp_element is not None:
-        paz_response = _read_response_stage(resp_element, _ns, samp_rate, stage, sensor_units, 'V')
+        paz_response = _read_response_stage(resp_element, _ns, samp_rate,
+                                            stage, sensor_units, 'V')
         if paz_response is not None:
             response.response_stages.append(paz_response)
             stage += 1
 
-    """ 
+    """
     Apply analogue filter stages (if any)
     Input unit: V
     Output unit: V
     """
     if len(analogue):
         for analogue_id in analogue:
-            analogue_element = root.find(_ns("responsePAZ[@publicID='" + analogue_id + "']"))
+            search = "responsePAZ[@publicID='" + analogue_id + "']"
+            analogue_element = root.find(_ns(search))
             if analogue_element is None:
-                msg = ("Analogue responsePAZ not found in inventory: %s, stopping before stage %i") % (analogue_id, stage )
+                msg = ('Analogue responsePAZ not in inventory:'
+                       '%s, stopping before stage %i') % (analogue_id, stage)
                 warnings.warn(msg)
                 return response
-            analogue_response = _read_response_stage(analogue_element, _ns, samp_rate, stage, 'V', 'V')
+            analogue_response = _read_response_stage(analogue_element, _ns,
+                                                     samp_rate, stage, 'V',
+                                                     'V')
             if analogue_response is not None:
                 response.response_stages.append(analogue_response)
                 stage += 1
@@ -604,7 +638,9 @@ def _read_response(root, sen_element, resp_element, cha_element, data_log_elemen
     Output unit: COUNTS
     """
     if data_log_element is not None:
-        coeff_response = _read_response_stage(data_log_element, _ns, samp_rate, stage, 'V', 'COUNTS')
+        coeff_response = _read_response_stage(data_log_element, _ns,
+                                              samp_rate, stage, 'V',
+                                              'COUNTS')
         if coeff_response is not None:
             response.response_stages.append(coeff_response)
             stage += 1
@@ -615,29 +651,35 @@ def _read_response(root, sen_element, resp_element, cha_element, data_log_elemen
     Output unit: COUNTS
     """
     for FIR_id, rate in zip(FIR, FIR_stage_rates):
-        stage_element = root.find(_ns("responseFIR[@publicID='" + FIR_id + "']"))
+        search = "responseFIR[@publicID='" + FIR_id + "']"
+        stage_element = root.find(_ns(search))
         if stage_element is None:
-            msg = ("FIR response not found in inventory: %s, stopping correction before stage %i") % (FIR_id, stage )
+            msg = ("FIR response not in inventory: %s, stopping correction"
+                   "before stage %i") % (FIR_id, stage)
             warnings.warn(msg)
             return response
-        fir_response = _read_response_stage(stage_element, _ns, rate, stage, 'COUNTS', 'COUNTS')
+        fir_response = _read_response_stage(stage_element, _ns, rate, stage,
+                                            'COUNTS', 'COUNTS')
         if fir_response is not None:
             response.response_stages.append(fir_response)
             stage += 1
     return response
 
-def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_units):
+
+def _read_response_stage(stage, _ns, rate, stage_number, input_units,
+                         output_units):
 
     elem_type = stage.tag.split("}")[1]
 
     stage_sequence_number = stage_number
 
-    """ 
+    """
     Obtain the stage gain and frequency
     Default to a gain of 0 and frequency of 0 if missing
     """
     stage_gain = _tag2obj(stage, _ns("gain"), float) or 0
-    stage_gain_frequency = _tag2obj(stage, _ns("gainFrequency"), float) or float(0.00)
+    stage_gain_frequency = _tag2obj(stage, _ns("gainFrequency"),
+                                    float) or float(0.00)
 
     name = stage.get("name")
     if name is not None:
@@ -655,26 +697,38 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
         decimation_factor = _tag2obj(stage, _ns("decimationFactor"), int)
         if rate != 0.0:
             temp = _tag2obj(stage, _ns("delay"), float) / rate
-            decimation_delay = _read_floattype_variable(temp, FloatWithUncertaintiesAndUnit, unit=True)
+            decimation_delay = _read_float_var(temp,
+                                               FloatWithUncertaintiesAndUnit,
+                                               unit=True)
             temp = _tag2obj(stage, _ns("correction"), float) / rate
-            decimation_correction = _read_floattype_variable(temp, FloatWithUncertaintiesAndUnit, unit=True)
+            decimation_corr = _read_float_var(temp,
+                                              FloatWithUncertaintiesAndUnit,
+                                              unit=True)
         else:
-            decimation_delay = _read_floattype_variable("inf", FloatWithUncertaintiesAndUnit, unit=True)
-            decimation_correction = _read_floattype_variable("inf", FloatWithUncertaintiesAndUnit, unit=True)
+            decimation_delay = _read_float_var("inf",
+                                               FloatWithUncertaintiesAndUnit,
+                                               unit=True)
+            decimation_corr = _read_float_var("inf",
+                                              FloatWithUncertaintiesAndUnit,
+                                              unit=True)
         decimation_input_sample_rate = \
-            _read_floattype_variable(rate, Frequency)
+            _read_float_var(rate, Frequency)
         decimation_offset = int(0)
     elif(elem_type == "datalogger"):
         decimation_factor = int(1)
-        decimation_delay = _read_floattype_variable(0.00, FloatWithUncertaintiesAndUnit, unit=True)
-        decimation_correction = _read_floattype_variable(0.00, FloatWithUncertaintiesAndUnit, unit=True)
+        decimation_delay = _read_float_var(0.00,
+                                           FloatWithUncertaintiesAndUnit,
+                                           unit=True)
+        decimation_corr = _read_float_var(0.00,
+                                          FloatWithUncertaintiesAndUnit,
+                                          unit=True)
         decimation_input_sample_rate = \
-            _read_floattype_variable(rate, Frequency)
+            _read_float_var(rate, Frequency)
         decimation_offset = int(0)
     elif(elem_type == "responsePAZ" or elem_type == "responsePolynomial"):
         decimation_factor = None
         decimation_delay = None
-        decimation_correction = None
+        decimation_corr = None
         decimation_input_sample_rate = None
         decimation_offset = None
     else:
@@ -697,10 +751,10 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
         "decimation_factor": decimation_factor,
         "decimation_offset": decimation_offset,
         "decimation_delay": decimation_delay,
-         "decimation_correction": decimation_correction
+        "decimation_correction": decimation_corr
     }
 
-    """ 
+    """
     Different processing for different types of responses
     currently supported:
     PAZ
@@ -711,8 +765,11 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
     if(elem_type == 'responsePAZ'):
 
         """ read normalization params """
-        normalization_frequency =  _read_floattype(stage, _ns("normalizationFrequency"), Frequency)
-        normalization_factor = _tag2obj(stage, _ns("normalizationFactor"), float)
+        normalization_freq = _read_floattype(stage,
+                                             _ns("normalizationFrequency"),
+                                             Frequency)
+        normalization_factor = _tag2obj(stage, _ns("normalizationFactor"),
+                                        float)
 
         """
         Parse the type of the transfer function
@@ -728,8 +785,8 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
         elif pz_transfer_function_type == 'D':
             pz_transfer_function_type = 'DIGITAL (Z-TRANSFORM)'
         else:
-            msg = ("Unknown transfer function code %s. Defaulting to Laplace (rad)") \
-                   % pz_transfer_function_type
+            msg = ("Unknown transfer function code %s. Defaulting to Laplace"
+                   "(rad)") % pz_transfer_function_type
             warnings.warn(msg)
             pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
 
@@ -763,12 +820,12 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
         """ Return da paz response clazz, mon """
         return obspy.core.inventory.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
-            normalization_frequency=normalization_frequency,
+            normalization_frequency=normalization_freq,
             normalization_factor=normalization_factor, zeros=zeros,
             poles=poles, **kwargs)
 
     elif(elem_type == 'datalogger'):
-        cf_transfer_function_type = "DIGITAL" 
+        cf_transfer_function_type = "DIGITAL"
         numerator = []
         denominator = []
         return obspy.core.inventory.CoefficientsTypeResponseStage(
@@ -792,12 +849,13 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
             coeffs_float = []
             i = 0
             """
-            pass additional mapping of coefficient counter 
+            pass additional mapping of coefficient counter
             so that a proper stationXML can be formatted
             """
             for c in coeffs:
-                coeffs_float.append(_read_floattype_variable(c, FilterCoefficient,
-                                                         additional_mapping={str("number"): i}))
+                temp = _read_float_var(c, FilterCoefficient,
+                                       additional_mapping={str("number"): i})
+                coeffs_float.append(temp)
                 i += 1
 
         return obspy.core.inventory.PolynomialResponseStage(
@@ -808,7 +866,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
 
     elif(elem_type == 'responseFIR'):
         """
-        For the responseFIR obtain the symmetry and 
+        For the responseFIR obtain the symmetry and
         list of coefficients
         """
 
@@ -818,18 +876,19 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
             coeffs = coeffs_str.split(" ")
             i = 0
             """
-            pass additional mapping of coefficient counter 
+            pass additional mapping of coefficient counter
             so that a proper stationXML can be formatted
             """
             for c in coeffs:
-                coeffs_float.append(_read_floattype_variable(c, FilterCoefficient, 
-                                                         additional_mapping={str("number"): i}))
+                temp = _read_float_var(c, FilterCoefficient,
+                                       additional_mapping={str("number"): i})
+                coeffs_float.append(temp)
                 i += 1
 
         """
         Write the FIR symmetry to what ObsPy expects
         A: NONE,
-        B: ODD, 
+        B: ODD,
         C: EVEN
         """
         symmetry = _tag2obj(stage, _ns("symmetry"), str)
@@ -842,8 +901,9 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units, output_uni
         else:
             raise ValueError('Unknown symmetry metric; expected A, B, or C')
 
-        return obspy.core.inventory.FIRResponseStage(coefficients=coeffs_float, 
-                                                     symmetry=symmetry, **kwargs)
+        return obspy.core.inventory.FIRResponseStage(
+            coefficients=coeffs_float, symmetry=symmetry, **kwargs)
+
 
 def _tag2pole_or_zero(paz_element, count):
 
@@ -859,7 +919,7 @@ def _tag2pole_or_zero(paz_element, count):
 
     paz_element = paz_element[1:-1]
     paz_element = paz_element.split(",")
- 
+
     real = float(paz_element[0])
     imag = float(paz_element[1])
 
@@ -873,7 +933,8 @@ def _tag2pole_or_zero(paz_element, count):
 
     return x
 
-def _read_floattype_variable(elem, cls, unit=False, datum=False, additional_mapping={}):
+
+def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
     """
     function to read floattype to cls object (based on _read_floattype)
     normally ObsPy would read this directly from a tag, but with different
