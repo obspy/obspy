@@ -313,7 +313,7 @@ class TauPyModel(object):
         >>> print(i91.get_travel_times(10, 20)[0].name)
         P
         >>> i91.get_travel_times(10, 20)[0].time  # doctest: +ELLIPSIS
-        272.667...
+        272.675...
         >>> len(i91.get_travel_times(100, 50, phase_list = ["P", "S"]))
         2
         """

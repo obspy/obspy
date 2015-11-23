@@ -104,9 +104,9 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self.assertEqual(p_arrival.name, "P")
         self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
         self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
@@ -157,9 +157,9 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self.assertEqual(p_arrival.name, "P")
         self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
         self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
@@ -185,9 +185,9 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self.assertEqual(p_arrival.name, "P")
         self.assertAlmostEqual(p_arrival.time, 412.43, 2)
-        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.612, 3)
+        self.assertAlmostEqual(p_arrival.ray_param_sec_degree, 8.613, 3)
         self.assertAlmostEqual(p_arrival.takeoff_angle, 26.74, 2)
-        self.assertAlmostEqual(p_arrival.incident_angle, 26.69, 2)
+        self.assertAlmostEqual(p_arrival.incident_angle, 26.70, 2)
         self.assertAlmostEqual(p_arrival.purist_distance, 35.00, 2)
         self.assertEqual(p_arrival.purist_name, "P")
 
@@ -346,6 +346,21 @@ class TauPyModelTestCase(unittest.TestCase):
 
         Essentially tests all kinds of depths and epicentral distances in the
         model iasp91.
+
+        Test data generated with:
+
+          $ phases="P,p,PcP,PcS,Pdiff,PKIKKIKP,PKIKKIKS,PKIKP,PKiKP,PKIKPPKIKP"
+          $ phases="${phases},PKIKS,PKKP,PKKS,PKP,PKPPKP,PP,pP,pPdiff,pPKIKP"
+          $ phases="${phases},pPKiKP,pPKP,PS,pS,pSKIKS,pSKS,S,s,ScP,ScS,Sdiff"
+          $ phases="${phases},SKIKKIKP,SKIKKIKS,SKIKP,SKiKP,SKIKS,SKIKSSKIKS"
+          $ phases="${phases},SKKP,SKKS,SKS,SKSSKS,SP,sP,sPdiff,sPKIKP,sPKiKP"
+          $ phases="${phases},sPKP,SS,sS,sSdiff,sSKIKS,sSKS"
+
+          $ for dist in 0 45 90 180 160; do
+              for depth in 0 100 1000 2889; do
+                ./taup_time -mod iasp91 -ph ${phases} -h ${depth} -deg ${dist}
+              done
+            done
         """
         m = TauPyModel(model="iasp91")
         filename = os.path.join(DATA, "java_tauptime_testoutput")

@@ -51,34 +51,34 @@ and model. Per default it returns arrivals for a number of phases.
 ...                                   distance_in_degree=67)
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 28 arrivals
-    P phase arrival at 647.036 seconds
-    pP phase arrival at 662.230 seconds
-    sP phase arrival at 668.702 seconds
-    PcP phase arrival at 674.868 seconds
-    PP phase arrival at 794.975 seconds
-    PKiKP phase arrival at 1034.106 seconds
-    pPKiKP phase arrival at 1050.535 seconds
-    sPKiKP phase arrival at 1056.727 seconds
-    S phase arrival at 1176.947 seconds
-    pS phase arrival at 1195.500 seconds
-    SP phase arrival at 1196.827 seconds
-    sS phase arrival at 1203.128 seconds
-    PS phase arrival at 1205.418 seconds
-    SKS phase arrival at 1239.088 seconds
-    SKKS phase arrival at 1239.107 seconds
-    ScS phase arrival at 1239.515 seconds
-    SKiKP phase arrival at 1242.400 seconds
-    pSKS phase arrival at 1260.313 seconds
-    sSKS phase arrival at 1266.919 seconds
-    SS phase arrival at 1437.417 seconds
-    PKIKKIKP phase arrival at 1855.260 seconds
-    SKIKKIKP phase arrival at 2063.556 seconds
-    PKIKKIKS phase arrival at 2069.749 seconds
-    SKIKKIKS phase arrival at 2277.833 seconds
-    PKIKPPKIKP phase arrival at 2353.930 seconds
-    PKPPKP phase arrival at 2356.420 seconds
-    PKPPKP phase arrival at 2358.925 seconds
-    SKIKSSKIKS phase arrival at 3208.154 seconds
+    P phase arrival at 647.041 seconds
+    pP phase arrival at 662.233 seconds
+    sP phase arrival at 668.704 seconds
+    PcP phase arrival at 674.865 seconds
+    PP phase arrival at 794.992 seconds
+    PKiKP phase arrival at 1034.098 seconds
+    pPKiKP phase arrival at 1050.529 seconds
+    sPKiKP phase arrival at 1056.721 seconds
+    S phase arrival at 1176.948 seconds
+    pS phase arrival at 1195.508 seconds
+    SP phase arrival at 1196.830 seconds
+    sS phase arrival at 1203.129 seconds
+    PS phase arrival at 1205.421 seconds
+    SKS phase arrival at 1239.090 seconds
+    SKKS phase arrival at 1239.109 seconds
+    ScS phase arrival at 1239.512 seconds
+    SKiKP phase arrival at 1242.388 seconds
+    pSKS phase arrival at 1260.314 seconds
+    sSKS phase arrival at 1266.921 seconds
+    SS phase arrival at 1437.427 seconds
+    PKIKKIKP phase arrival at 1855.271 seconds
+    SKIKKIKP phase arrival at 2063.564 seconds
+    PKIKKIKS phase arrival at 2069.756 seconds
+    SKIKKIKS phase arrival at 2277.857 seconds
+    PKIKPPKIKP phase arrival at 2353.934 seconds
+    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2358.899 seconds
+    SKIKSSKIKS phase arrival at 3208.155 seconds
 
 If you know which phases you are interested in, you can also specify them
 directly which speeds up the calculation as unnecessary phases are not
@@ -90,16 +90,16 @@ adhere to the naming scheme which is detailed later.
 ...                                   phase_list=["P", "PSPSPS"])
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 3 arrivals
-    P phase arrival at 485.204 seconds
-    PSPSPS phase arrival at 4983.023 seconds
-    PSPSPS phase arrival at 5799.225 seconds
+    P phase arrival at 485.210 seconds
+    PSPSPS phase arrival at 4983.041 seconds
+    PSPSPS phase arrival at 5799.249 seconds
 
 Each arrival is represented by an :class:`~obspy.taup.helper_classes.Arrival`
 object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7188..., 485.2041..., 24.3968...)
+(453.7535..., 485.2100..., 24.3988...)
 
 Ray Paths
 ^^^^^^^^^
