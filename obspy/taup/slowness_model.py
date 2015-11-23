@@ -1545,7 +1545,9 @@ class SlownessModel(object):
                 if highSZoneDepth.topDepth >= highSZoneDepth.botDepth:
                     raise SlownessModelError(
                         "High Slowness zone has zero or negative thickness!")
-                if highSZoneDepth.topDepth <= prevDepth:
+                if (highSZoneDepth.topDepth < prevDepth or (
+                        highSZoneDepth.topDepth == prevDepth and not
+                        self.vMod.isdiscontinuity(highSZoneDepth.topDepth))):
                     raise SlownessModelError(
                         "High Slowness zone overlaps previous zone.")
                 prevDepth = highSZoneDepth.botDepth
