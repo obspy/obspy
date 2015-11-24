@@ -17,7 +17,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-import io
 import re
 import math
 import os
@@ -27,16 +26,14 @@ import obspy
 from lxml import etree
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
-from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,
+from obspy.core.inventory import (Azimuth, ClockDrift, Dip,
                                   Distance, Frequency, Latitude,
                                   Longitude, SampleRate)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
-                                  CoefficientWithUncertainties,
                                   FilterCoefficient, FIRResponseStage,
                                   PolesZerosResponseStage,
-                                  PolynomialResponseStage,
-                                  ResponseListResponseStage, ResponseStage)
-from obspy.io.stationxml.core import _read_floattype, _read_floattype_list
+                                  PolynomialResponseStage)
+from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
@@ -818,7 +815,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             cnt += 1
 
         """ Return da paz response clazz, mon """
-        return obspy.core.inventory.PolesZerosResponseStage(
+        return PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_freq,
             normalization_factor=normalization_factor, zeros=zeros,
@@ -828,7 +825,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         cf_transfer_function_type = "DIGITAL"
         numerator = []
         denominator = []
-        return obspy.core.inventory.CoefficientsTypeResponseStage(
+        return CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
@@ -858,7 +855,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
                 coeffs_float.append(temp)
                 i += 1
 
-        return obspy.core.inventory.PolynomialResponseStage(
+        return PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
             approximation_upper_bound=appr_high, maximum_error=max_err,
@@ -901,7 +898,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         else:
             raise ValueError('Unknown symmetry metric; expected A, B, or C')
 
-        return obspy.core.inventory.FIRResponseStage(
+        return FIRResponseStage(
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
 
 

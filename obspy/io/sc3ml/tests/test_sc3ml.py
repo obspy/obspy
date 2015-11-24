@@ -18,17 +18,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import fnmatch
 import inspect
 import io
 import os
-import re
 import unittest
 
-import obspy
-from obspy.core.inventory import read_inventory, Inventory, Network
-from obspy.core.inventory.response import (PolesZerosResponseStage,
-                                           CoefficientsTypeResponseStage,
+from obspy.core.inventory import read_inventory
+from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
 
 
@@ -126,9 +122,10 @@ class sc3mlTestCase(unittest.TestCase):
                 self.assertEqual(sc3ml_sta.termination_date,
                                  stationxml_sta.termination_date)
 
-                for sc3ml_site,\
-                stationxml_site in zip(stationxml_sta.site.__dict__.items(),
-                                       sc3ml_sta.site.__dict__.items()):
+                staxml_items = stationxml_sta.site.__dict__.items()
+                sc3ml_items = sc3ml_sta.site.__dict__.items()
+                for sc3ml_site, stationxml_site in zip(staxml_items,
+                                                       sc3ml_items):
                     self.assertEqual(sc3ml_site, stationxml_site)
 
                 for sc3ml_cha, stationxml_cha in zip(sc3ml_sta,
@@ -148,23 +145,20 @@ class sc3mlTestCase(unittest.TestCase):
                     self.assertEqual(sc3ml_cha.storage_format,
                                      stationxml_cha.storage_format)
 
-                    self.assertEqual(sc3ml_cha.
-                                     clock_drift_in_seconds_per_sample,
-                                     stationxml_cha.
-                                     clock_drift_in_seconds_per_sample)
+                    cdisps = "clock_drift_in_seconds_per_sample"
+                    self.assertEqual(getattr(sc3ml_cha, cdisps),
+                                     getattr(stationxml_cha, cdisps))
 
-                    for sc3ml_logger,\
-                    stationxml_logger in zip(stationxml_cha.data_logger.
-                                             __dict__.items(),
-                                             sc3ml_cha.data_logger.
-                                             __dict__.items()):
-                        self.assertEqual(sc3ml_logger, stationxml_logger)
-                    for sc3ml_sensor,\
-                    stationxml_sensor in zip(stationxml_cha.sensor.
-                                             __dict__.items(),
-                                             sc3ml_cha.sensor.
-                                             __dict__.items()):
-                        self.assertEqual(sc3ml_sensor, stationxml_sensor)
+                    for sc3ml, stationxml in zip(stationxml_cha.data_logger.
+                                                 __dict__.items(),
+                                                 sc3ml_cha.data_logger.
+                                                 __dict__.items()):
+                        self.assertEqual(sc3ml, stationxml)
+                    for sc3ml, stationxml in zip(stationxml_cha.sensor.
+                                                 __dict__.items(),
+                                                 sc3ml_cha.sensor.
+                                                 __dict__.items()):
+                        self.assertEqual(sc3ml, stationxml)
 
                     self.assertEqual(sc3ml_cha.sample_rate,
                                      stationxml_cha.sample_rate)
@@ -181,15 +175,15 @@ class sc3mlTestCase(unittest.TestCase):
                     self.assertEqual(len(sc3ml_cha.response.response_stages),
                                      len(stationxml_cha.
                                          response.response_stages))
-                    for sc3ml_stage,\
-                    stationxml_stage in zip(sc3ml_cha.response.
-                                            response_stages,
-                                            stationxml_cha.response.
-                                            response_stages):
-                        self.assertEqual(sc3ml_stage.stage_gain,
-                                         stationxml_stage.stage_gain)
-                        self.assertEqual(sc3ml_stage.stage_sequence_number,
-                                         stationxml_stage.
+
+                    for sc3ml, stationxml in zip(sc3ml_cha.response.
+                                                 response_stages,
+                                                 stationxml_cha.response.
+                                                 response_stages):
+                        self.assertEqual(sc3ml.stage_gain,
+                                         stationxml.stage_gain)
+                        self.assertEqual(sc3ml.stage_sequence_number,
+                                         stationxml.
                                          stage_sequence_number)
 
                         """
@@ -199,16 +193,15 @@ class sc3mlTestCase(unittest.TestCase):
                         channels while this should be the sample rate after
                         stage 1 (never 0)
                         """
-                        if isinstance(sc3ml_stage,
-                                      CoefficientsTypeResponseStage):
+                        if isinstance(sc3ml, CoefficientsTypeResponseStage):
                             continue
 
-                        if isinstance(sc3ml_stage, FIRResponseStage):
-                            for sc3ml_FIR,\
-                            stationxml_FIR in zip(sc3ml_stage.
-                                                  __dict__.items(),
-                                                  stationxml_stage.
-                                                  __dict__.items()):
+                        if isinstance(sc3ml, FIRResponseStage):
+                            for sc3ml_FIR, stationxml_FIR in zip(sc3ml.__dict__
+                                                                 .items(),
+                                                                 stationxml.
+                                                                 __dict__
+                                                                 .items()):
                                 self.assertEqual(sc3ml_FIR, stationxml_FIR)
 
                     """ Check poles / zeros """
@@ -221,14 +214,12 @@ class sc3mlTestCase(unittest.TestCase):
                                      stationxml_paz.normalization_factor)
                     self.assertEqual(sc3ml_paz.pz_transfer_function_type,
                                      stationxml_paz.pz_transfer_function_type)
-                    for sc3ml_poles,\
-                    stationxml_poles in zip(sc3ml_paz.poles,
-                                            stationxml_paz.poles):
-                        self.assertEqual(sc3ml_poles, stationxml_poles)
-                    for sc3ml_zeros,\
-                    stationxml_zeros, in zip(sc3ml_paz.zeros,
-                                             stationxml_paz.zeros):
-                        self.assertEqual(sc3ml_zeros, stationxml_zeros)
+                    for sc3ml, stationxml in zip(sc3ml_paz.poles,
+                                                 stationxml_paz.poles):
+                        self.assertEqual(sc3ml, stationxml)
+                    for sc3ml, stationxml in zip(sc3ml_paz.zeros,
+                                                 stationxml_paz.zeros):
+                        self.assertEqual(sc3ml, stationxml)
 
 
 def suite():
