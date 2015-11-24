@@ -471,6 +471,57 @@ class PsdTestCase(unittest.TestCase):
             ppsd._plot_histogram(fig=fig, draw=True)
             fig.savefig(ic.name)
 
+    def test_PPSD_add_npz(self):
+        """
+        Test PPSD.add_npz().
+        """
+        # set up a bogus PPSD, with fixed random psds but with real start times
+        # of psd pieces, to facilitate testing the stack selection.
+        ppsd = PPSD(stats=Stats(dict(sampling_rate=150)), metadata=None,
+                    db_bins=(-200, -50, 20.), period_step_octaves=1.4)
+        _times_processed = np.load(
+            os.path.join(self.path, "ppsd_times_processed.npy")).tolist()
+        np.random.seed(1234)
+        _binned_psds = [
+            arr for arr in np.random.uniform(
+                -200, -50,
+                (len(_times_processed), len(ppsd.period_bin_centers)))]
+
+        with NamedTemporaryFile(suffix=".npz") as tf1, \
+                NamedTemporaryFile(suffix=".npz") as tf2, \
+                NamedTemporaryFile(suffix=".npz") as tf3:
+            # save data split up over three separate temporary files
+            ppsd._times_processed = _times_processed[:200]
+            ppsd._binned_psds = _binned_psds[:200]
+            ppsd.save_npz(tf1.name)
+            ppsd._times_processed = _times_processed[200:400]
+            ppsd._binned_psds = _binned_psds[200:400]
+            ppsd.save_npz(tf2.name)
+            ppsd._times_processed = _times_processed[400:]
+            ppsd._binned_psds = _binned_psds[400:]
+            ppsd.matplotlib_version = "X.X.X"
+            ppsd.save_npz(tf3.name)
+            # now load these saved npz files and check if all data is present
+            ppsd = PPSD.load_npz(tf1.name, metadata=None)
+            ppsd.add_npz(tf2.name)
+            # we changed a version number so this should emit a warning
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd.add_npz(tf3.name)
+                self.assertEqual(len(w), 1)
+            np.testing.assert_array_equal(_binned_psds, ppsd._binned_psds)
+            np.testing.assert_array_equal(_times_processed,
+                                          ppsd._times_processed)
+            # adding data already present should also emit a warning and the
+            # PPSD should not be changed
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd.add_npz(tf2.name)
+                self.assertEqual(len(w), 1)
+            np.testing.assert_array_equal(_binned_psds, ppsd._binned_psds)
+            np.testing.assert_array_equal(_times_processed,
+                                          ppsd._times_processed)
+
 
 def suite():
     return unittest.makeSuite(PsdTestCase, 'test')

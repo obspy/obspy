@@ -59,7 +59,7 @@ master:
      (see #1028)
    * New Lanczos interpolation/resampling (see #1101)
    * Higher order detrending methods (see #1173)
-   * PPSD (see #931, #1108, #1130):
+   * PPSD (see #931, #1108, #1130, #1187):
      - Algorithm for PSD computation was improved, especially affecting results
        at long periods (for detailed discussion see #931 and #1108).
      - Keywords `paz` and `parser` were removed in favor of new keyword
@@ -87,7 +87,8 @@ master:
        (see #1130).
      - New save/load mechanism using numpy .npz binary format that circumvents
        some problems with the old pickle mechanism:
-       `PPSD.save_npz()` and `PPSD.load_npz()`
+       `PPSD.save_npz()` and `PPSD.load_npz()` (and `PPSD.add_npz()` to add
+       data from additional npz files)
      - Change default colormap to new obspy default sequential colormap
        (matplotlibs new viridis colormap). The old PQLX colormap is provided by
        `obspy.imaging.cm.pqlx` and can be used with
