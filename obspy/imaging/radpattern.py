@@ -23,20 +23,29 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-D2R = np.pi / 180
-R2D = 180 / np.pi
-EPSILON = 0.00001
-
-def farfieldP(mt):
+def farfield_p_unitsphere(mt,nlats=30):
     """
-    This function is based on Aki & Richards Eq 4.29
+    Returns the P farfield radiation pattern on a unit sphere grid
+
+    :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
+        six independent components of the moment tensor, where the coordinate
+        system is 1,2,3 = Up,South,East which equals r,theta,phi -
+        Harvard/Global CMT convention). The relation to Aki and Richards
+        x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
+        Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+
+    :return: 3D grid point array with shape [3,npts] that contains
+             the sperical grid points
+
+             3D vector array with shape [3,npts] that contains the
+             displacement vector for each grid point
+
+    based on Aki & Richards Eq 4.29
     """
     ndim = 3
     Mpq = fullmt(mt)
 
     #---- make spherical grid ----
-    nlats  = 30
     colats = np.linspace(0.,np.pi,nlats)
     norms = np.sin(colats)
     nlons = (nlats*norms+1).astype(int)
@@ -77,15 +86,29 @@ def farfieldP(mt):
 
     return points,disp
 
-def farfieldS(mt):
+def farfield_s_unitsphere(mt,nlats=30):
     """
-    This function is based on Aki & Richards Eq 4.29
+    Returns the S farfield radiation pattern on a unit sphere grid
+
+    :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
+        six independent components of the moment tensor, where the coordinate
+        system is 1,2,3 = Up,South,East which equals r,theta,phi -
+        Harvard/Global CMT convention). The relation to Aki and Richards
+        x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
+        Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
+
+    :return: 3D grid point array with shape [3,npts] that contains
+             the sperical grid points
+
+             3D vector array with shape [3,npts] that contains the
+             displacement vector for each grid point
+
+    based on Aki & Richards Eq 4.29
     """
     ndim = 3
     Mpq = fullmt(mt)
 
     #---- make spherical grid ----
-    nlats  = 30
     colats = np.linspace(0.,np.pi,nlats)
     norms = np.sin(colats)
     nlons = (nlats*norms+1).astype(int)
@@ -134,4 +157,3 @@ def fullmt(mt):
                           [mt[3],mt[1],mt[5]],
                           [mt[4],mt[5],mt[2]]]) )
     return mt_full
-
