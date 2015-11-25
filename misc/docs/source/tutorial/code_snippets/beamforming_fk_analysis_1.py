@@ -9,8 +9,7 @@ st = read('http://examples.obspy.org/agfa_corrected.mseed')
 inv = read_inventory('http://examples.obspy.org/agfainventory.xml')
 
 # Create an array:
-the_array = SeismicArray("AGFA")
-the_array.add_inventory(inv)
+the_array = SeismicArray("AGFA", inv)
 
 # Execute the beamforming:
 kwargs2 = dict(

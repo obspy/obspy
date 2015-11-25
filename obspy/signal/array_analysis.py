@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 """
-Function for Array Analysis
-
-
-Coordinate conventions:
-
-* Right handed
-* X positive to east
-* Y positive to north
-* Z positive up
+Module for handling array analysis.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -56,34 +48,67 @@ import matplotlib.pyplot as plt
 class SeismicArray(object):
     """
     Class representing a seismic array.
+
+    The SeimicArray class is a named container for an
+    :class:`~obspy.core.inventory.Inventory` containing the stations and/or
+    channels making up the array along with methods for array processing. The
+    locations of the stations/channels must be set in the respective objects
+    (for an overview of the inventory system, see :mod:`~obspy.station`).
+    The array object does not contain any seismic data.
+
+    :param name: Array name.
+    :type name: str
+    :param inventory: Inventory of stations making up the array.
+    :type inventory: :class:`~obspy.core.inventory.Inventory`
+
+    .. rubric:: Basic Usage
+
+    >>> from obspy.core.inventory import read_inventory
+    >>> inv = read_inventory('http://examples.obspy.org/agfainventory.xml')
+    >>> array = SeismicArray('AGFA', inv)
+    >>> print(array)
+    Seismic Array 'AGFA' with 5 Stations, aperture: 0.06 km.
+
+
+    .. rubric:: Coordinate conventions:
+    * Right handed
+    * X positive to east
+    * Y positive to north
+    * Z positive up
+
     """
 
-    def __init__(self, name="", ):
+    def __init__(self, name, inventory):
         self.name = name
-        self.inventory = None
-
-    def add_inventory(self, inv):
-        """
-        Attach an inventory to the array. Array may only have one inventory
-        attached.
-        :param inv: The inventory to be attached
-        :type inv: :class:`~obspy.core.inventory.Inventory`
-        """
-        if self.inventory is not None:
-            raise NotImplementedError("Already has an inventory attached.")
-        if not isinstance(inv, Inventory):
-            raise TypeError("Can only attach obspy inventories.")
+        self.inventory = inventory
+        if not isinstance(inventory, Inventory):
+            raise TypeError("Inventory must be an ObsPy Inventory.")
         # Must use deepcopy, otherwise even temporary changes to the array
         # inventory will affect the 'original' inventory.
-        self.inventory = copy.deepcopy(inv)
+        self.inventory = copy.deepcopy(inventory)
+
+    def __str__(self):
+        """
+        Pretty representation of the array.
+        """
+        if self.inventory is None:
+            return "Empty seismic array '{}'".format(self.name)
+        ret_str = "Seismic Array '{name}' with ".format(name=self.name)
+        ret_str += "{count} Stations, ".format(count=len(self.geometry))
+        ret_str += "aperture: {aperture:.2f} km.".format(
+            aperture=self.aperture)
+        return ret_str
 
     def inventory_cull(self, st):
         """
-        From the array inventory permanently remove all entries for stations
-        that do not have traces in given stream st. Useful e.g. for beamforming
-        applications where self.geometry would return geometry for more
-        stations than are actually present in the data.
+        Shrink array inventory to stations represented in given data.
+
+        Permanently remove from the array inventory all entries for stations
+        that do not have traces in given stream st. Otherwise, self.geometry
+        would return a geometry for more stations than are actually present in
+        the data, making beamforming impossible.
         """
+        # todo: add usage example?
         inv = self.inventory
         # check what station/channel IDs are in the data
         stations_present = list(set(tr.getId() for tr in st))
@@ -111,6 +136,10 @@ class SeismicArray(object):
         self.inventory = inv
 
     def plot(self):
+        """
+        Plot the array's station/channel locations as well as it's geometric
+        and centre of gravity.
+        """
         if self.inventory:
             self.inventory.plot(projection="local", show=False)
             bmap = plt.gca().basemap
@@ -171,6 +200,12 @@ class SeismicArray(object):
 
     @property
     def geometrical_center(self):
+        """
+        Return the geometrical centre as dictionary.
+
+        The geometrical centre is the mid-point of the maximum array extent in
+        each direction.
+        """
         extent = self.extent
         return {
             "latitude": (extent["max_latitude"] +
@@ -184,6 +219,12 @@ class SeismicArray(object):
 
     @property
     def center_of_gravity(self):
+        """
+        Return the centre of gravity as a dictionary.
+
+        The centre of gravity is calculated as the mean of the array stations'
+        locations in each direction.
+        """
         lats, lngs, hgts = self.__coordinate_values()
         return {
             "latitude": np.mean(lats),
@@ -201,7 +242,10 @@ class SeismicArray(object):
     @property
     def aperture(self):
         """
-        The aperture of the array in kilometers.
+        Return the array aperture in kilometers.
+
+        The array aperture is the maximum distance between any two stations in
+        the array.
         """
         distances = []
         geo = self.geometry
@@ -218,6 +262,10 @@ class SeismicArray(object):
 
     @property
     def extent(self):
+        """
+        Dictionary of the array's minimum and maximum lat/long and elevation
+        values.
+        """
         lats, lngs, hgt = self.__coordinate_values()
 
         return {
@@ -229,6 +277,9 @@ class SeismicArray(object):
             "max_absolute_height_in_km": max(hgt)}
 
     def __coordinate_values(self):
+        """
+        Return the array geometry as simple lists of lat, long and elevation.
+        """
         geo = self.geometry
         lats, lngs, hgt = [], [], []
         for coordinates in list(geo.values()):
@@ -237,33 +288,24 @@ class SeismicArray(object):
             hgt.append(coordinates["absolute_height_in_km"])
         return lats, lngs, hgt
 
-    def __str__(self):
-        """
-        Pretty representation of the array.
-        """
-        if self.inventory is None:
-            return 'Empty Array'
-        ret_str = "Seismic Array '{name}'\n".format(name=self.name)
-        ret_str += "\t{count} Stations\n".format(count=len(self.geometry))
-        ret_str += "\tAperture: {aperture:.2f} km".format(
-            aperture=self.aperture)
-        return ret_str
-
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
         """
-        Method to calculate the array geometry and each station's offset
-        in km relative to a given reference (centre) point.
-        Example: To obtain it in relation to the center of gravity, use
-        self.get_geometry_xyz(**self.center_of_gravity).
+        Express the array geometry as each station's offset
+        relative to a given reference point, in km.
 
-        :param latitude: Latitude of reference origin
-        :param longitude: Longitude of reference origin
-        :param absolute_height_in_km: Elevation of reference origin
-        :param correct_3dplane: Corrects the returned geometry by a
+        Example: To obtain it in relation to the center of gravity, use
+
+        >>> array = SeismicArray('', inv) # doctest: +SKIP
+        >>> array.get_geometry_xyz(**array.center_of_gravity) # doctest: +SKIP
+
+        :param latitude: Latitude of reference origin.
+        :param longitude: Longitude of reference origin.
+        :param absolute_height_in_km: Elevation of reference origin.
+        :param correct_3dplane: Correct the returned geometry by a
                best-fitting 3D plane.
                This might be important if the array is located on an inclined
-               slope (e.g., at a volcano).
+               slope.
         :return: Returns the geometry of the stations as dictionary.
         """
         geometry = {}
@@ -281,6 +323,13 @@ class SeismicArray(object):
 
     def find_closest_station(self, latitude, longitude,
                              absolute_height_in_km=0.0):
+        """
+        Return the array station closest to a given reference point.
+
+        :param latitude: Latitude of reference origin.
+        :param longitude: Longitude of reference origin.
+        :param absolute_height_in_km: Elevation of reference origin.
+        """
         min_distance = None
         min_distance_station = None
 
@@ -909,14 +958,14 @@ class SeismicArray(object):
         :type sx: (float, float)
         :param sy: Min/Max slowness for analysis in y direction.
         :type sy: (float, float)
-        :param sls: step width of slowness grid
+        :param sls: step width of slowness grid.
         :type sls: float
-        :param freqmin: Low corner of frequency range for array analysis
+        :param freqmin: Low corner of frequency range for array analysis.
         :type freqmin: float
-        :param freqmax: High corner of frequency range for array analysis
+        :param freqmax: High corner of frequency range for array analysis.
         :type freqmax: float
         :param numfreqs: number of frequency values used for computing array
-         transfer function
+         transfer function.
         :type numfreqs: int
         """
         sllx, slmx = sx
