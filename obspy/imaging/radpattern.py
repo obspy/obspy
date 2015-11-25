@@ -22,6 +22,9 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
 import matplotlib.pyplot as plt
+from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
+from obspy.imaging.beachball import beach
+import mpl_toolkits.mplot3d.art3d as art3d
 
 def plot_3drpattern(mt, kind='both_sphere'):
     """
@@ -45,6 +48,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
     based on Aki & Richards Eq 4.29
     """
 
+
     #---- compute and plot radiation pattern ----
     vlength = 0.1 #length of vectors
     nlat = 30 #points for quiver sphere
@@ -62,33 +66,68 @@ def plot_3drpattern(mt, kind='both_sphere'):
         ax.quiver(points[0],points[1],points[2],disp[0],disp[1],disp[2],length=vlength)
 
     elif kind=='p_sphere':
-        #---- lat/lon sphere ----
-        u = np.linspace(0, 2 * np.pi, 200)
-        v = np.linspace(0, np.pi, 200)
+        # ---- generate spherical mesh that is aligned with the moment tensor
+        #null axis ----
+        mtensor = mopad_MomentTensor(mt, system='NED')
+        null    = np.ravel(mtensor._null_axis)
+
+        #make rotation matrix (after numpy mailing list)
+        zaxis  = np.array([0.,0.,1.])
+        raxis  = np.cross(null,zaxis)  #rotate z axis to null, around orthogonal rot axis
+        raxis /= np.linalg.norm(raxis)
+        rangle = np.arccos(np.dot(zaxis,null)) #this is the angle between z and null
+
+        eye = np.eye(3, dtype=np.float64)
+        raxis2 = np.outer(raxis, raxis)
+        skew = np.array([[    0,  raxis[2],  -raxis[1]],
+                         [-raxis[2],     0,  raxis[0]],
+                         [raxis[1], -raxis[0],    0]])
+        
+        rotmtx = raxis2 + np.cos(rangle) * (eye - raxis2) + np.sin(rangle) * skew
+
+        #make uv sphere that is aligned with z-axis
+        ntheta,nphi  = 200,200
+        sshape = (ntheta,nphi)
+        u = np.linspace(0, 2 * np.pi, nphi)
+        v = np.linspace(0, np.pi, ntheta)
 
         x = np.outer(np.cos(u), np.sin(v))
         y = np.outer(np.sin(u), np.sin(v))
         z = np.outer(np.ones(np.size(u)), np.cos(v))
 
+        #ravel point array and rotate them to the null axis
         points = np.vstack( (x.flatten(),y.flatten(),z.flatten()) )
+        points = np.dot(rotmtx,points)
 
         #---- get radiation pattern ----
         disp = farfield_p(mt,points)
         magn = np.sum(disp*points,axis=0)
         magn /= np.max(np.abs(magn))
 
-        #---- compute colours and displace points for normalized vectors ----
+        #---- compute colours and displace points along normal ----
         norm  = plt.Normalize(-1.,1.)
         cmap = plt.get_cmap('bwr')
-        x *= (1.+np.abs(magn.reshape(x.shape))/2.)
-        y *= (1.+np.abs(magn.reshape(x.shape))/2.)
-        z *= (1.+np.abs(magn.reshape(x.shape))/2.)
-        colors = np.array([cmap(norm(val)) for val in magn]).reshape(x.shape[0],x.shape[1],4)
+        points *= (1.+np.abs(magn)/2.)
+        colors = np.array([cmap(norm(val)) for val in magn]).reshape(ntheta,nphi,4)
+
+        x = points[0].reshape(sshape)
+        y = points[1].reshape(sshape)
+        z = points[2].reshape(sshape)
 
         #---- plot ----
         fig = plt.figure()
         ax  = fig.add_subplot(111, projection='3d')
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+        ax.plot([0,null[0]],[0,null[1]],[0,null[2]])
+
+        #plotting a beachball projection on the sides should work but bugs for now...
+        #bball   = beach(mt,width=0.1)
+        #ax.add_collection(bball)
+        #art3d.patch_collection_2d_to_3d(bball,zs=0,zdir='z')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
 
     elif kind=='s_quiver':
         #---- precompute even spherical grid and directional cosine array ----
