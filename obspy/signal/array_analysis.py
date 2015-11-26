@@ -50,11 +50,11 @@ class SeismicArray(object):
     Class representing a seismic array.
 
     The SeimicArray class is a named container for an
-    :class:`~obspy.core.inventory.Inventory` containing the stations and/or
-    channels making up the array along with methods for array processing. The
-    locations of the stations/channels must be set in the respective objects
-    (for an overview of the inventory system, see :mod:`~obspy.station`).
-    The array object does not contain any seismic data.
+    :class:`~obspy.core.inventory.Inventory` containing the components making
+    up the array along with methods for array processing. The locations of the
+    array components (stations or channels) must be set in the respective
+    objects (for an overview of the inventory system, see
+    :mod:`~obspy.station`). The array object does not contain any seismic data.
 
     :param name: Array name.
     :type name: str
@@ -158,9 +158,17 @@ class SeismicArray(object):
 
     def _get_geometry(self):
         """
-        Return a dictionary of lat, lon, height values for each item (station
-        or channel level, if available) in the array inventory.
-        Item codes are SEED ID strings.
+        Return a dictionary of latitude, longitude and absolute height
+        [km] for each component in the array inventory.
+
+        For every component in the array inventory (channels if available,
+        stations otherwise), a SEED ID string with the format
+        'network.station.location.channel', leaving any unknown parts blank, is
+        assembled. This is one key for the returned dictionary, while the value
+        is a dictionary of the component's coordinates.
+
+        :return A dictionary with keys: SEED IDs and values: dictionaries of
+            'latitude', 'longitude' and 'absolute_height_in_km'.
         """
         if not self.inventory:
             return {}
@@ -235,7 +243,16 @@ class SeismicArray(object):
     def geometry(self):
         """
         A dictionary of latitude, longitude and absolute height [km] values
-        for each station in the array inventory.
+        for each item in the array inventory.
+
+        For every component in the array inventory (channels if available,
+        stations otherwise), a SEED ID string with the format
+        'network.station.location.channel', leaving any unknown parts blank, is
+        assembled. This is one key for the returned dictionary, while the value
+        is a dictionary of the component's coordinates.
+
+        :return A dictionary with keys: SEED IDs and values: dictionaries of
+            'latitude', 'longitude' and 'absolute_height_in_km'.
         """
         return self._get_geometry()
 
@@ -291,10 +308,16 @@ class SeismicArray(object):
     def get_geometry_xyz(self, latitude, longitude, absolute_height_in_km,
                          correct_3dplane=False):
         """
-        Express the array geometry as each station's offset
+        Return the array geometry as each components's offset
         relative to a given reference point, in km.
 
-        Example: To obtain it in relation to the center of gravity, use
+        The returned geometry is a nested dictionary with each component's SEED
+        ID as key and a dictionary of its coordinates as value, similar to that
+        given by :attr:`~obspy.signal.array_analysis.SeismicArray.geometry`,
+        but with different coordinate values and keys.
+
+        To obtain the x-y-z geometry in relation to, for example, the center of
+        gravity, use:
 
         >>> array = SeismicArray('', inv) # doctest: +SKIP
         >>> array.get_geometry_xyz(**array.center_of_gravity) # doctest: +SKIP
@@ -303,10 +326,11 @@ class SeismicArray(object):
         :param longitude: Longitude of reference origin.
         :param absolute_height_in_km: Elevation of reference origin.
         :param correct_3dplane: Correct the returned geometry by a
-               best-fitting 3D plane.
-               This might be important if the array is located on an inclined
-               slope.
-        :return: Returns the geometry of the stations as dictionary.
+            best-fitting 3D plane.
+            This might be important if the array is located on an inclined
+            slope.
+        :return: The geometry of the components as dictionary, with coordinate
+            keys of 'x', 'y' and 'z'.
         """
         geometry = {}
         for key, value in list(self.geometry.items()):
@@ -2764,11 +2788,14 @@ class SeismicArray(object):
     def correct_with_3dplane(self, geometry):
         """
         Correct a given array geometry with a best-fitting plane.
-        :param geometry: nested dictionary of stations, as returned for example by
-        self.geometry or self.get_geometry_xyz.
-        :return: Returns corrected geometry, again as dict.
-        """
 
+        :type geometry: dict
+        :param geometry: Nested dictionary of stations, as returned for example
+            by :attr:`~obspy.signal.array_analyysis.SeismicArray.geometry`or
+            :meth:`~obspy.signal.array_analysis.SeismicArray.get_geometry_xyz`.
+        :return: The corrected geometry as dictionary, with the same keys as
+            passed in.
+        """
         # sort keys in the nested dict to be alphabetical:
         coord_sys_keys = sorted(list(geometry.items())[0][1].keys())
         if coord_sys_keys[0] == 'x':
@@ -2801,13 +2828,13 @@ class SeismicArray(object):
             geometry[:, 2]) / (
                             n[0] * n[0] + n[1] * n[1] + n[2] * n[2]))
         geometry = result[:]
-        #print("Best fitting plane-coordinates :\n", geometry)
+        # print("Best fitting plane-coordinates :\n", geometry)
 
         # convert geometry array back to a dictionary.
         geodict = {}
-        # The sorted list is necessary to match the station IDs (the keys in the
-        # geometry dict) to the correct array row (or column?), same as is done in
-        # _geometry_dict_to_array, but backwards.
+        # The sorted list is necessary to match the station IDs (the keys in
+        # the geometry dict) to the correct array row (or column?), same as is
+        # done in _geometry_dict_to_array, but backwards.
         for _i, (key, value) in enumerate(sorted(
                 list(orig_geometry.items()))):
             geodict[key] = {coord_sys_keys[0]: geometry[_i, 0],
