@@ -12,6 +12,7 @@ import gzip
 import os
 import unittest
 import warnings
+from copy import deepcopy
 
 import numpy as np
 
@@ -28,7 +29,7 @@ from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
 PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def _get_sample_data():
+def __get_sample_data():
     """
     Returns some real data (trace and poles and zeroes) for PPSD testing.
 
@@ -66,7 +67,15 @@ def _get_sample_data():
     return tr, paz
 
 
-def _get_ppsd():
+_sample_data = __get_sample_data()
+
+
+def _get_sample_data():
+    tr, paz = _sample_data
+    return tr.copy(), deepcopy(paz)
+
+
+def __get_ppsd():
     """
     Returns ready computed ppsd for testing purposes.
     """
@@ -76,6 +85,13 @@ def _get_ppsd():
     ppsd.add(st)
     ppsd.calculate_histogram()
     return ppsd
+
+
+_ppsd = __get_ppsd()
+
+
+def _get_ppsd():
+    return deepcopy(_ppsd)
 
 
 class PsdTestCase(unittest.TestCase):
