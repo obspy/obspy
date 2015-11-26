@@ -682,7 +682,7 @@ def main(argv=None, interactive=True):
             import cProfile as Profile
         except ImportError:
             import Profile
-        Profile.run('from obspy.core.scripts.runtests import run; run()',
+        Profile.run('from obspy.scripts.runtests import run; run()',
                     'obspy.pstats')
         import pstats
         stats = pstats.Stats('obspy.pstats')
