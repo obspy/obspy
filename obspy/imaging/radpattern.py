@@ -23,8 +23,9 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
-from obspy.imaging.beachball import beach
+from obspy.imaging.mopad_wrapper import beach
 import mpl_toolkits.mplot3d.art3d as art3d
+from matplotlib.patches import PathPatch
 
 def plot_3drpattern(mt, kind='both_sphere'):
     """
@@ -121,9 +122,14 @@ def plot_3drpattern(mt, kind='both_sphere'):
         ax.plot([0,null[0]],[0,null[1]],[0,null[2]])
 
         #plotting a beachball projection on the sides should work but bugs for now...
-        #bball   = beach(mt,width=0.1)
-        #ax.add_collection(bball)
-        #art3d.patch_collection_2d_to_3d(bball,zs=0,zdir='z')
+        bball   = beach(mt,width=2.0,mopad_basis='NED')
+        paths = bball.get_paths()
+        fcs = ['None','None','None']
+        
+        for path,fc in zip(paths,fcs):
+            patch = ax.add_patch(PathPatch(path,facecolor=fc))
+            art3d.pathpatch_2d_to_3d(patch,z=-3.)
+
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
