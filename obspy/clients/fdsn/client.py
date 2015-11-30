@@ -199,7 +199,7 @@ class Client(object):
                 msg = "The FDSN service shortcut `{}` is unknown."\
                       .format(base_url)
                 raise ValueError(msg)
-            elif not re.match('^https?://', base_url):
+            elif not re.match('^https?://\w(\.\w)', base_url.lower()):
                 msg = "The FDSN service base URL `{}` is not a valid URL."\
                       .format(base_url)
                 raise ValueError(msg)
