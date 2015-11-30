@@ -15,6 +15,7 @@ from future.utils import native_str
 
 import socket
 import struct
+import sys
 
 import numpy as np
 
@@ -91,7 +92,8 @@ class tracebuf2:
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
             struct.unpack(endian + packStr, head)
         if not tp.startswith(dtype):
-            print('Error parsing header: %s!=%s' % (dtype, tp))
+            msg = 'Error parsing header: %s!=%s'
+            print(msg % (dtype, tp), file=sys.stderr)
         self.start = UTCDateTime(ts)
         self.end = UTCDateTime(te)
         return
@@ -103,8 +105,8 @@ class tracebuf2:
         self.data = np.fromstring(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
-            print('data count in header (%d) != data count (%d)' % (self.nsamp,
-                                                                    ndat))
+            msg = 'data count in header (%d) != data count (%d)'
+            print(msg % (self.nsamp, ndat), file=sys.stderr)
             self.ndata = ndat
         return
 
@@ -156,7 +158,7 @@ def getSockCharLine(sock, timeout=10.):
             indat = sock.recv(1)
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in getSockCharLine()')
+        print('socket timeout in getSockCharLine()', file=sys.stderr)
         return None
     if chunks:
         response = b''.join(chunks)
@@ -179,7 +181,7 @@ def getSockBytes(sock, nbytes, timeout=None):
             btoread -= len(indat)
             chunks.append(indat)
     except socket.timeout:
-        print('socket timeout in getSockBytes()')
+        print('socket timeout in getSockBytes()', file=sys.stderr)
         return None
     if chunks:
         response = b''.join(chunks)
@@ -213,14 +215,15 @@ def getMenu(server, port, scnl=None, timeout=None):
             tokens = tokens[1:]
         flag = tokens[-1]
         if flag in ['FN', 'FC', 'FU']:
-            print('request returned %s - %s' % (flag, RETURNFLAG_KEY[flag]))
+            msg = 'request returned %s - %s'
+            print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
             return []
         if tokens[7].encode() in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
         elif tokens[6].encode() in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
-            print('no type token found in getMenu')
+            print('no type token found in getMenu', file=sys.stderr)
             return []
         outlist = []
         for p in range(0, len(tokens), elen):
@@ -253,7 +256,7 @@ def readWaveServerV(server, port, scnl, start, end, timeout=None):
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
-        print(msg % (flag, RETURNFLAG_KEY[flag]))
+        print(msg % (flag, RETURNFLAG_KEY[flag]), file=sys.stderr)
         return []
     nbytes = int(tokens[-1])
     dat = getSockBytes(sock, nbytes, timeout=timeout)
