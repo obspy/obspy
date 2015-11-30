@@ -20,6 +20,7 @@ import copy
 import gzip
 import io
 import os
+import re
 from socket import timeout as socket_timeout
 import textwrap
 import threading
@@ -193,6 +194,15 @@ class Client(object):
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
+        else:
+            if base_url.isalpha() and base_url.isupper():
+                msg = "The FDSN service shortcut `{}` is unknown."\
+                      .format(base_url)
+                raise ValueError(msg)
+            elif not re.match('^https?://', base_url):
+                msg = "The FDSN service base URL `{}` is not a valid URL."\
+                      .format(base_url)
+                raise ValueError(msg)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.strip("/")
