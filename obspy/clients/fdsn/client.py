@@ -195,7 +195,7 @@ class Client(object):
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
         else:
-            if base_url.isalpha() and base_url.isupper():
+            if base_url.isalpha():
                 msg = "The FDSN service shortcut `{}` is unknown."\
                       .format(base_url)
                 raise ValueError(msg)
