@@ -46,6 +46,7 @@ from .wadl_parser import WADLParser
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
+URL_REGEX = 'https?://(localhost|\w+(\.\w+){2,})(:\d+)?(/\w+)*/?$'
 
 class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
@@ -199,7 +200,7 @@ class Client(object):
                 msg = "The FDSN service shortcut `{}` is unknown."\
                       .format(base_url)
                 raise ValueError(msg)
-            elif not re.match('^https?://\w(\.\w)', base_url.lower()):
+            elif not re.match(URL_REGEX, base_url.lower()):
                 msg = "The FDSN service base URL `{}` is not a valid URL."\
                       .format(base_url)
                 raise ValueError(msg)
