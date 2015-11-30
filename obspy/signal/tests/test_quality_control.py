@@ -32,7 +32,7 @@ class QualityControlTestCase(unittest.TestCase):
         end_time = '2012-07-30T23:59:59'
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time, end_time)
-        print(mseed_metadata.msmeta)
+        # print(mseed_metadata.msmeta)
         self.assertEqual(mseed_metadata.msmeta, defaultdict())
 
     def test_populate_metadata(self):
@@ -73,7 +73,7 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(mseed_metadata2.msmeta['telemetry_sync_error'], 0)
         self.assertEqual(mseed_metadata2.msmeta['suspect_time_tag'], 6)
         # self.assertEqual(mseed_metadata2.msmeta['digitizer_clipping'], 1)
-        print(mseed_metadata2.msmeta)
+        # print(mseed_metadata2.msmeta)
 
     def test_get_json_meta_no_tq(self):
         mseed_filenames = ['fdsnws-dataselect_2015-10-21T11_32_21.mseed']
