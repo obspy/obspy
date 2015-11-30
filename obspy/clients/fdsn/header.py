@@ -48,7 +48,6 @@ URL_MAPPINGS = {
     "LMU": "http://erde.geophysik.uni-muenchen.de",
     "NCEDC": "http://service.ncedc.org",
     "NIEP": "http://eida-sc3.infp.ro",
-    "NERIES": "http://www.seismicportal.eu",
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",
