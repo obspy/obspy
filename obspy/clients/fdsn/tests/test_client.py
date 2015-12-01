@@ -691,7 +691,7 @@ class ClientTestCase(unittest.TestCase):
         Five request should be sent upon initializing a client. Test these.
         """
         download_url_mock.return_value = (404, None)
-        base_url = "http://example.com"
+        base_url = "http://ws.example.com"
 
         # An exception will be raised if not actual WADLs are returned.
         try:
@@ -717,7 +717,7 @@ class ClientTestCase(unittest.TestCase):
         Test the setting of custom major versions.
         """
         download_url_mock.return_value = (404, None)
-        base_url = "http://example.com"
+        base_url = "http://ws.example.com"
 
         # Passing an empty dictionary results in the default urls.
         major_versions = {}
@@ -782,14 +782,14 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the setting of per service endpoints
         """
-        base_url = "http://example.com"
+        base_url = "http://ws.example.com"
 
         # Replace all.
         download_url_mock.return_value = (404, None)
         # Some custom urls
-        base_url_event = "http://other_url.com/beta/event_service/11"
-        base_url_station = "http://some_url.com/beta2/stat_serv/7"
-        base_url_ds = "http://new.com/beta3/waveforms/8"
+        base_url_event = "http://ev.other_url.com/beta/event_service/11"
+        base_url_station = "http://st.some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://ds.new.com/beta3/waveforms/8"
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, service_mappings={
@@ -814,8 +814,8 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.reset_mock()
         download_url_mock.return_value = (404, None)
         # Some custom urls
-        base_url_station = "http://some_url.com/beta2/stat_serv/7"
-        base_url_ds = "http://new.com/beta3/waveforms/8"
+        base_url_station = "http://xx.some_url.com/beta2/stat_serv/7"
+        base_url_ds = "http://yy.new.com/beta3/waveforms/8"
         # An exception will be raised if not actual WADLs are returned.
         try:
             Client(base_url=base_url, service_mappings={
@@ -849,7 +849,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the downloading of data with custom mappings.
         """
-        base_url = "http://example.com"
+        base_url = "http://ws.example.com"
 
         # More extensive mock setup simulation service discovery.
         def custom_side_effects(*args, **kwargs):
@@ -875,9 +875,9 @@ class ClientTestCase(unittest.TestCase):
         download_url_mock.side_effect = custom_side_effects
 
         # Some custom urls
-        base_url_event = "http://example.com/beta/event_service/11"
-        base_url_station = "http://example.org/beta2/station/7"
-        base_url_ds = "http://example.edu/beta3/dataselect/8"
+        base_url_event = "http://ws.example.com/beta/event_service/11"
+        base_url_station = "http://ws.example.org/beta2/station/7"
+        base_url_ds = "http://ws.example.edu/beta3/dataselect/8"
 
         # An exception will be raised if not actual WADLs are returned.
         # Catch warnings to avoid them being raised for the tests.
