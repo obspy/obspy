@@ -30,6 +30,8 @@ master:
      individual steps of instrument response removal in frequency domain
      (see #1116).
  - obspy.clients.fdsn:
+   * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the 
+     `NERIES` shortcut, will be removed in a future release (see #1146). 
    * Now requests gzipped data for the XML files. Much smaller files!
    * The station service can now also be used to download files in the text
      format. This has limited information but is much faster.
