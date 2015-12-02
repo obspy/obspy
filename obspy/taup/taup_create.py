@@ -137,36 +137,28 @@ class TauP_Create(object):
                 print("Method run is done, but not necessarily successful.")
 
 
-def get_builtin_models():
+def get_builtin_model_files():
     """
-    Get a list of builtin models that can be loaded by model name only.
-
-    These models reside in the ``<package-root>/obspy/taup/data`` directory.
-    The ``.npz`` extension is not required for loading these models.
-    """
-    return glob.glob(os.path.join(__DATA_DIR, "*.npz"))
-
-
-def get_builtin_tvel_files():
-    """
-    Get a list of paths to builtin '.tvel' files that can be used for models.
+    Get a list of paths to builtin files that can be used for models.
 
     These files reside in the ``<package-root>/obspy/taup/data`` directory.
     """
-    return glob.glob(os.path.join(__DATA_DIR, "*.tvel"))
+    files = glob.glob(os.path.join(__DATA_DIR, "*.tvel"))
+    files.extend(glob.glob(os.path.join(__DATA_DIR, "*.nd")))
+    return files
 
 
-def build_taup_model(tvel_filename, output_folder=None):
+def build_taup_model(filename, output_folder=None):
     """
-    Build an ObsPy model file from a "tvel" file.
+    Build an ObsPy model file from a "tvel" or "nd" file.
 
-    The "tvel" file is loaded into a :class:`~obspy.taup.tau_model.TauModel`
+    The file is loaded into a :class:`~obspy.taup.tau_model.TauModel`
     instance and is then saved in ObsPy's own format, which can be loaded using
     :meth:`~obspy.taup.tau_model.TauModel.from_file`. The output file will have
     the same name as the input with ``'.npz'`` as file extension.
 
-    :type tvel_filename: str
-    :param tvel_filename: Absolute path of input tvel file.
+    :type filename: str
+    :param filename: Absolute path of input file.
     :type output_folder: str
     :param output_folder: Directory in which the built
         :class:`~obspy.taup.tau_model.TauModel` will be stored. Defaults to
@@ -175,11 +167,11 @@ def build_taup_model(tvel_filename, output_folder=None):
     if output_folder is None:
         output_folder = __DATA_DIR
 
-    model_name = os.path.splitext(os.path.basename(tvel_filename))[0]
+    model_name = os.path.splitext(os.path.basename(filename))[0]
     output_filename = os.path.join(output_folder, model_name + ".npz")
 
-    print("Building obspy.taup model for '%s' ..." % tvel_filename)
-    mod_create = TauP_Create(input_filename=tvel_filename,
+    print("Building obspy.taup model for '%s' ..." % filename)
+    mod_create = TauP_Create(input_filename=filename,
                              output_filename=output_filename)
     mod_create.loadVMod()
     mod_create.run()
@@ -191,8 +183,8 @@ def build_all_taup_models():
 
     The data directory is defined to be ``<package-root>/obspy/taup/data``.
     """
-    for model in get_builtin_tvel_files():
-        build_taup_model(tvel_filename=model)
+    for model in get_builtin_model_files():
+        build_taup_model(filename=model)
 
 
 if __name__ == '__main__':

@@ -340,19 +340,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import os
-
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
 from .taup import getTravelTimes, travelTimePlot  # NOQA
-
-# Internal imports.
-from .taup_create import get_builtin_models as _get_builtin_models
-
-
-BUILTIN_TAUP_MODELS = [
-    os.path.splitext(os.path.basename(path))[0]
-    for path in _get_builtin_models()]
 
 
 if __name__ == '__main__':
