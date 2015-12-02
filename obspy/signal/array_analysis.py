@@ -51,10 +51,14 @@ class SeismicArray(object):
 
     The SeimicArray class is a named container for an
     :class:`~obspy.core.inventory.Inventory` containing the components making
-    up the array along with methods for array processing. The locations of the
-    array components (stations or channels) must be set in the respective
-    objects (for an overview of the inventory system, see
-    :mod:`~obspy.station`). The array object does not contain any seismic data.
+    up the array along with methods for array processing. It does not contain
+    any seismic data. The locations of the array components (stations or
+    channels) must be set in the respective objects (for an overview of the
+    inventory system, see :mod:`~obspy.station`). While the inventory must
+    be composed of :class:`~obspy.station.station.Station` and/or :class:
+    `~obspy.station.channel.Channel` objects, they do not need to represent
+    actual seismic stations; their only required attribute is the location
+    information.
 
     :param name: Array name.
     :type name: str
@@ -104,11 +108,18 @@ class SeismicArray(object):
         Shrink array inventory to stations represented in given data.
 
         Permanently remove from the array inventory all entries for stations
-        that do not have traces in given stream st. Otherwise, self.geometry
-        would return a geometry for more stations than are actually present in
-        the data, making beamforming impossible.
+        that do not have traces in given :class:`~obspy.core.stream.Stream` st.
+        This may be useful e.g. if data is not consistently available from
+        every channel in an array.
+
+        If you wish to keep the original inventory, make a copy first:
+
+        >>> from copy import deepcopy #doctest: +SKIP
+        >>> original_inventory = deepcopy(array.inventory) #doctest: +SKIP
+
+        :param st: :class:`~obspy.core.stream.Stream` wo which the array
+            inventory should correspond.
         """
-        # todo: add usage example?
         inv = self.inventory
         # check what station/channel IDs are in the data
         stations_present = list(set(tr.getId() for tr in st))
@@ -167,7 +178,7 @@ class SeismicArray(object):
         assembled. This is one key for the returned dictionary, while the value
         is a dictionary of the component's coordinates.
 
-        :return A dictionary with keys: SEED IDs and values: dictionaries of
+        :return: A dictionary with keys: SEED IDs and values: dictionaries of
             'latitude', 'longitude' and 'absolute_height_in_km'.
         """
         if not self.inventory:
@@ -233,7 +244,7 @@ class SeismicArray(object):
         The centre of gravity is calculated as the mean of the array stations'
         locations in each direction.
         """
-        lats, lngs, hgts = self.__coordinate_values()
+        lats, lngs, hgts = self._coordinate_values()
         return {
             "latitude": np.mean(lats),
             "longitude": np.mean(lngs),
@@ -283,7 +294,7 @@ class SeismicArray(object):
         Dictionary of the array's minimum and maximum lat/long and elevation
         values.
         """
-        lats, lngs, hgt = self.__coordinate_values()
+        lats, lngs, hgt = self._coordinate_values()
 
         return {
             "min_latitude": min(lats),
@@ -293,7 +304,7 @@ class SeismicArray(object):
             "min_absolute_height_in_km": min(hgt),
             "max_absolute_height_in_km": max(hgt)}
 
-    def __coordinate_values(self):
+    def _coordinate_values(self):
         """
         Return the array geometry as simple lists of lat, long and elevation.
         """
@@ -518,6 +529,7 @@ class SeismicArray(object):
 
     def derive_rotation_from_array(self, stream, vp, vs, sigmau, latitude,
                                    longitude, absolute_height_in_km=0.0):
+        # todo: what does this do??
         geo = self.geometry
 
         components = collections.defaultdict(list)
@@ -1215,6 +1227,7 @@ class SeismicArray(object):
             slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
             if slow < 1e-8:
                 slow = 1e-8
+            # Transform from a slowness grid to polar coordinates.
             azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
             baz = azimut % -360 + 180
             if relpow > semb_thres and 1. / slow > vel_thres:
@@ -2791,8 +2804,7 @@ class SeismicArray(object):
 
         :type geometry: dict
         :param geometry: Nested dictionary of stations, as returned for example
-            by :attr:`~obspy.signal.array_analyysis.SeismicArray.geometry`or
-            :meth:`~obspy.signal.array_analysis.SeismicArray.get_geometry_xyz`.
+            by :attr:`geometry` or :meth:`get_geometry_xyz`.
         :return: The corrected geometry as dictionary, with the same keys as
             passed in.
         """
@@ -2972,6 +2984,68 @@ class SeismicArray(object):
 class BeamformerResult(object):
     """
     Contains results from beamforming and attached plotting methods.
+
+    This class is an attempt to standardise the output of the various
+    beamforming algorithms in :class:`SeismicArray`, and provide a range of
+    plotting options. To that end, the raw output from the beamformers is
+    combined with metadata to identify what method produced it with which
+    parameters, including: the frequency and slowness ranges, time frame and
+    the inventory defining the array (this will only include the stations for
+    which data were actually available during the considered time frame).
+
+    .. rubric:: Data transformation
+
+    The different beamforming algorithms produce output in different
+    formats, so it needs to be standardised. The
+    :meth:`slowness_whitened_power`, :meth:`phase_weighted_stack`,
+    :meth:`delay_and_sum`, and :meth:`fk_analysis` routines internally
+    perform grid searches of slownesses in x and y directions, producing
+    numpy arrays of power for every slowness, time window and discrete
+    frequency. Only the maximum relative and absolute powers of each time
+    window are returned, as well as the slowness values at which they were
+    found. The x-y slowness values are also converted to radial slowness and
+    backazimuth. Returning the complete data arrays for these methods is not
+    currently implemented.
+
+    Working somewhat differently, :meth:`three_component_beamforming` returns
+    a four-dimensional numpy array of relative powers for every backazimuth,
+    slowness, time window and discrete frequency, but no absolute powers. This
+    data allows the creation of the same plots as the previous methods, as the
+    maximum powers is easily calulated from the full power array.
+
+    .. rubric:: Concatenating results
+
+    To allow for the creation of beamformer output plots over long
+    timescales where the beamforming might performed not all at once,
+    the results may be concatenated (added). This is done by simple adding
+    syntax:
+
+    >>> long_results = beamresult_1 + beamresult_2 # doctest:+SKIP
+
+    Of course, this only makes sense if the two added result objects are
+    consistent. The :meth:`__add__` method checks that they were created by
+    the same beamforming method, with the same slowness and frequency
+    ranges. Only then are the data combined.
+
+    :param inventory: The inventory that was actually used in the beamforming.
+    :param times: Start times of the beamforming windows.
+    :type times: numpy array of :class:`obspy.core.utcdatetime.UTCDateTime`
+    :param slowness_range: The slowness range used for the beamforming.
+    :param max_rel_power: Maximum relative power at every timestep.
+    :param max_abs_power: Maximum absolute power at every timestep.
+    :param max_pow_baz: Backazimuth of the maximum power value at every
+     timestep.
+    :param max_pow_slow: Slowness of the maximum power value at every timestep.
+    :param full_beamres: 4D numpy array holding relative power results for
+     every backazimuth, slowness, window and discrete frequency (in that
+     order).
+    :param freqs: The discrete frequencies used for which the full_beamres
+     was computed.
+    :param incidence: Rayleigh wave incidence angles (only from three
+     component beamforming).
+    :param method: Method used for the beamforming.
+
+
     """
     # FK and other 1cbf return max relative (and absolute) powers, as well as
     # the slowness and azimuth where it happens.
@@ -2981,27 +3055,7 @@ class BeamformerResult(object):
                  max_abs_power=None, max_pow_baz=None, max_pow_slow=None,
                  full_beamres=None, freqs=None, incidence=None, method=None,
                  timestep=None):
-        """
-        :param inventory: The inventory that was actually used in the
-         beamforming.
-        :param times: Start times of the beamforming windows.
-        :type times: np.array of :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param slowness_range: The slowness range used for the beamforming.
-        :param max_rel_power: Maximum relative power at every timestep.
-        :param max_abs_power: Maximum absolute power at every timestep.
-        :param max_pow_baz: Backazimuth of the maximum power value at every
-         timestep.
-        :param max_pow_slow: Slowness of the maximum power value at every
-         timestep.
-        :param full_beamres: 4D numpy array holding relative power results
-         for every backazimuth, slowness, window and discrete frequency (in
-         that order).
-        :param freqs: The discrete frequencies used for which the full_beamres
-         was computed.
-        :param incidence: Rayleigh wave incidence angles (only from three
-         component beamforming).
-        :param method: Method used for the beamforming.
-        """
+
         self.inventory = copy.deepcopy(inventory)
         self.times = times
         self.starttime = times[0]
@@ -3043,14 +3097,15 @@ class BeamformerResult(object):
         if not isinstance(other, BeamformerResult):
             raise TypeError('unsupported operand types')
         if self.method != other.method:
-            raise ValueError
+            raise ValueError('Methods must be equal.')
         if self.freqs is None or other.freqs is None:
             attrs = ['slowness_range']
         else:
             attrs = ['freqs', 'slowness_range']
         if any((self.__dict__[attr] != other.__dict__[attr]).any()
                for attr in attrs):
-            raise ValueError
+            raise ValueError('Frequency and slowness range paramters must be '
+                             'equal.')
         times = np.append(self.times, other.times)
         if self.full_beamres is not None and other.full_beamres is not None:
             full_beamres = np.append(self.full_beamres,
@@ -3081,8 +3136,8 @@ class BeamformerResult(object):
 
     def _calc_max_values(self):
         """
-        If the max power etc values are unset, but the full results are
-        available (atm the case with the three component beamforming),
+        If the maximum power etc. values are unset, but the full results are
+        available (currently only from :meth:`three_component_beamforming`),
         calculate the former from the latter.
         """
         # Average over all frequencies.
@@ -3121,9 +3176,11 @@ class BeamformerResult(object):
     def plot_baz_hist(self, show=True):
         """
         Plot a backazimuth - slowness radial histogram.
+
         The backazimuth and slowness values of the maximum relative powers
         of each beamforming window are counted into bins defined
         by slowness and backazimuth, weighted by the power.
+
         :param show: Whether to call plt.show() immediately.
         """
         from matplotlib.colorbar import ColorbarBase
@@ -3188,6 +3245,7 @@ class BeamformerResult(object):
         """
         Plot beamforming results over time, with the relative power as
         colorscale.
+
         :param show: Whether to call plt.show() immediately.
         """
         labels = ['rel. power', 'abs. power', 'baz', 'slow']
@@ -3234,10 +3292,15 @@ class BeamformerResult(object):
     def plot_power(self, show=True):
         """
         Plot relative power as a function of backazimuth and time, like a
-        Vespagram. Requires full 4D results, at the moment only provided by
-        the three component beamforming.
+        Vespagram.
+
+        Requires full 4D results, at the moment only provided by
+        :meth:`three_component_beamforming`.
+
         :param show: Whether to call plt.show() immediately.
         """
+        if self.full_beamres is None:
+            raise ValueError('Insufficient data. Try other plotting options.')
         # Prepare data.
         freqavg = self.full_beamres.mean(axis=3)
         num_win = self.full_beamres.shape[2]
@@ -3284,19 +3347,23 @@ class BeamformerResult(object):
         if show is True:
             plt.show()
 
-    def plot_bf_plots(self, plot_frequencies=None, average_windows=True,
-                      average_freqs=True, show=True):
+    def plot_bf_plots(self, average_windows=True, average_freqs=True,
+                      plot_frequencies=None, show=True):
         """
         Plot beamforming results as individual polar plots of relative power as
-        function of backazimuth and slowness. Can plot results averaged over
-        windows/freqeuncies, results for each window and every frequency
-        individually, or for selected frequencies only.
-        :param plot_frequencies: List of discrete frequencies for which windows
-         should be plotted.
+        function of backazimuth and slowness.
+
+        Can plot results averaged over windows/frequencies, results for each
+        window and every frequency individually, or for selected frequencies
+        only.
+
         :param average_windows: Whether to plot an average of results over all
          windows.
         :param average_freqs: Whether to plot an average of results over all
-         frequencies (will override :param plot_frequencies:).
+         frequencies.
+        :param plot_frequencies: List of discrete frequencies for which windows
+         should be plotted, if not plotting an average of frequencies (ignored
+         if average_freqs is True).
         :param show: Whether to call plt.show() immediately.
         """
         if average_freqs is True and plot_frequencies is not None:
