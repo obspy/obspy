@@ -312,7 +312,7 @@ class Float(Field):
 
 class FixedString(Field):
     """
-    An string field with a fixed width.
+    A string field with a fixed width.
     """
     def __init__(self, id, name, length, flags='', **kwargs):
         self.default = ' ' * length
