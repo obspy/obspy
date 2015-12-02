@@ -771,6 +771,33 @@ class TauPyModelTestCase(unittest.TestCase):
 
         self._compare_arrivals_with_file(arrivals, "underside_reflections.txt")
 
+    def test_different_models(self):
+        """
+        Open all included models and make sure that they can produce
+        reasonable travel times.
+        """
+        models = ["1066a", "1066b", "ak135", "herrin", "iasp91", "prem", "sp6"]
+        for model in models:
+            m = TauPyModel(model=model)
+
+            # Get a p phase.
+            arrivals = m.get_travel_times(
+                source_depth_in_km=10.0, distance_in_degree=50.0,
+                phase_list=["P"])
+            # AK135 travel time.
+            expected = 534.4
+            self.assertTrue(abs(arrivals[0].time - expected) < 5)
+
+            # Get an s phase.
+            arrivals = m.get_travel_times(
+                source_depth_in_km=10.0, distance_in_degree=50.0,
+                phase_list=["S"])
+            # AK135 travel time.
+            expected = 965.1
+            # Some models do produce s-waves but they are very far from the
+            # AK135 value.
+            self.assertTrue(abs(arrivals[0].time - expected) < 50)
+
 
 def suite():
     return unittest.makeSuite(TauPyModelTestCase, 'test')
