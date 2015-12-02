@@ -30,8 +30,8 @@ master:
      individual steps of instrument response removal in frequency domain
      (see #1116).
  - obspy.clients.fdsn:
-   * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the 
-     `NERIES` shortcut, will be removed in a future release (see #1146). 
+   * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the
+     `NERIES` shortcut, will be removed in a future release (see #1146).
    * Now requests gzipped data for the XML files. Much smaller files!
    * The station service can now also be used to download files in the text
      format. This has limited information but is much faster.
@@ -119,6 +119,8 @@ master:
      `get_pierce_points_geo()` decorate the returned pierce points and ray
      paths with the latitude and longitude of each point. Some functionality
      needs the `geographiclib` module to be installed. (See #1164.)
+   * ObsPy now ships with a bunch of new velocity models in addition to the
+     existing ones: `prem`, `sp6`, `1066a,b`, `herrin` (See #1196).
 
 0.10.x:
   - obspy.core:
