@@ -776,8 +776,7 @@ class TauPyModelTestCase(unittest.TestCase):
         Open all included models and make sure that they can produce
         reasonable travel times.
         """
-        models = ["1066a", "1066b", "ak135", "alfs", "herrin", "iasp91",
-                  "prem", "sp6"]
+        models = ["1066a", "1066b", "ak135", "herrin", "iasp91", "prem", "sp6"]
         for model in models:
             m = TauPyModel(model=model)
 

@@ -21,8 +21,6 @@ Basic Usage
 
 Let's start by initializing a :class:`~obspy.taup.tau.TauPyModel` instance.
 Models can be initialized by specifying the name of a model provided by ObsPy.
-Names of available builtin models (in ``obspy/taup/data`` folder) are provided
-by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
@@ -30,7 +28,17 @@ by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 Model initialization is a fairly expensive operation so make sure to do it only
 if necessary. Custom built models can be initialized by specifying an absolute
 path to a model in ObsPy's ``.npz`` model format instead of just a model name.
-See below for how to build a ``.npz`` model file.
+See below for information on how to build a ``.npz`` model file.
+
+ObsPy currently ships with the following 1D velocity models:
+
+* ``ak135``, see [KennetEngdahlBuland1995]_
+* ``iasp91``, see [KennetEngdahl1991]_
+* ``prem``, see [Dziewonski1981]_
+* ``sp6``, see [MorelliDziewonski1993]_
+* ``1066a``, see [GilbertDziewonski1975]_
+* ``1066b``, see [GilbertDziewonski1975]_
+* ``herrin``, see [Herrin1968]_
 
 Travel Times
 ^^^^^^^^^^^^
@@ -333,7 +341,7 @@ depth to an interface involved in an interaction.
 Building custom models
 ----------------------
 
-Custom models can be built from ``.tvel`` files using the
+Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
 """
 from __future__ import (absolute_import, division, print_function,
