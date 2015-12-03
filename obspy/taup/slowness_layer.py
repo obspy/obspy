@@ -16,7 +16,7 @@ from .helper_classes import SlownessLayer, SlownessModelError
 from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
 
 
-def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
+def bullenRadialSlowness(layer, p, planet_radius, check=True):
     """
     Calculate time and distance increments of a spherical ray.
 
@@ -33,8 +33,8 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     :type layer: :class:`~numpy.ndarray`, dtype = :const:`SlownessLayer`
     :param p: The spherical ray paramater to use for calculation, in s/km.
     :type p: :class:`~numpy.ndarray`, dtype = :class:`float`
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
+    :param planet_radius: The radius of the Earth to use, in km.
+    :type planet_radius: float
     :param check: Check that the calculated results are not invalid. This
         check may be disabled if the layers requested are expected not to
         include the specified ray.
@@ -63,7 +63,7 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
         p = np.array([p] * length, dtype=np.float_)
 
     clibtau.bullen_radial_slowness_inner_loop(
-        layer, p, time, dist, radiusOfEarth, length)
+        layer, p, time, dist, planet_radius, length)
 
     if check and (np.any(time < 0) or np.any(np.isnan(time)) or
                   np.any(dist < 0) or np.any(np.isnan(dist))):
@@ -72,12 +72,12 @@ def bullenRadialSlowness(layer, p, radiusOfEarth, check=True):
     return time, dist
 
 
-def bullenDepthFor(layer, ray_param, radiusOfEarth):
+def bullenDepthFor(layer, ray_param, planet_radius):
     """
     Finds the depth for a ray parameter within this layer.
 
     Uses a Bullen interpolant, Ar^B. Special case for ``botP == 0`` or
-    ``botDepth == radiusOfEarth`` as these cause division by 0; use linear
+    ``botDepth == planet_radius`` as these cause division by 0; use linear
     interpolation in this case.
 
     :param layer: The layer to check.
@@ -85,8 +85,8 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
         :const:`SlownessLayer`)
     :param ray_param: The ray paramater to use for calculation, in s/km.
     :type ray_param: float
-    :param radiusOfEarth: The radius (in km) of the Earth to use.
-    :type radiusOfEarth: float
+    :param planet_radius: The radius (in km) of the Earth to use.
+    :type planet_radius: float
 
     :returns: The depth (in km) for the specified ray parameter.
     :rtype: float
@@ -100,21 +100,21 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
             return layer['topDepth']
         if layer['botP'] == ray_param:
             return layer['botDepth']
-        if layer['botP'] != 0 and layer['botDepth'] != radiusOfEarth:
+        if layer['botP'] != 0 and layer['botDepth'] != planet_radius:
             B = np.divide(math.log(layer['topP'] / layer['botP']),
-                          math.log((radiusOfEarth - layer['topDepth']) /
-                          (radiusOfEarth - layer['botDepth'])))
+                          math.log((planet_radius - layer['topDepth']) /
+                          (planet_radius - layer['botDepth'])))
             # This is a cludge but it's needed to mimic the Java behaviour.
             try:
-                denom = math.pow((radiusOfEarth - layer['topDepth']), B)
+                denom = math.pow((planet_radius - layer['topDepth']), B)
             except OverflowError:
                 denom = np.inf
             A = np.divide(layer['topP'], denom)
             with np.errstate(divide='ignore', invalid='ignore'):
-                tempDepth = radiusOfEarth - math.exp(
+                tempDepth = planet_radius - math.exp(
                     1.0 / B * math.log(np.divide(ray_param, A)))
             # or equivalent (maybe better stability?):
-            # tempDepth = radiusOfEarth - math.pow(ray_param/A, 1/B)
+            # tempDepth = planet_radius - math.pow(ray_param/A, 1/B)
             # Check if slightly outside layer due to rounding or
             # numerical instability:
             if layer['topDepth'] > tempDepth > layer['topDepth'] - 0.000001:
@@ -161,7 +161,7 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth):
             "Ray parameter is not contained within this slowness layer.")
 
 
-def evaluateAtBullen(layer, depth, radiusOfEarth):
+def evaluateAtBullen(layer, depth, planet_radius):
     """
     Find the slowness at the given depth.
 
@@ -177,15 +177,15 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
     :param depth: The depth (in km) to use for the calculation. It must be
         contained within the provided ``layer`` or else results are undefined.
     :type depth: float
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
+    :param planet_radius: The radius of the Earth to use, in km.
+    :type planet_radius: float
     """
     topP = layer['topP']
     botP = layer['botP']
     topDepth = layer['topDepth']
     botDepth = layer['botDepth']
     # Could do some safeguard asserts...
-    assert not botDepth > radiusOfEarth
+    assert not botDepth > planet_radius
     assert not (topDepth - depth) * (depth - botDepth) < 0
     if depth == topDepth:
         return topP
@@ -193,11 +193,11 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
         return botP
     else:
         B = np.divide(math.log(np.divide(topP, botP)),
-                      math.log(np.divide((radiusOfEarth - topDepth),
-                                         (radiusOfEarth - botDepth))))
-        ADenominator = pow((radiusOfEarth - topDepth), B)
+                      math.log(np.divide((planet_radius - topDepth),
+                                         (planet_radius - botDepth))))
+        ADenominator = pow((planet_radius - topDepth), B)
         A = topP / ADenominator
-        answer = A * pow((radiusOfEarth - depth), B)
+        answer = A * pow((planet_radius - depth), B)
         if answer < 0 or math.isnan(answer) or math.isinf(answer):
             # numerical instability in power law calculation???
             # try a linear interpolation if the layer is small ( <2 km)
@@ -219,8 +219,7 @@ def evaluateAtBullen(layer, depth, radiusOfEarth):
     return answer
 
 
-def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
-                       isSpherical=True):
+def create_from_vlayer(vLayer, isPWave, planet_radius, isSpherical=True):
     """
     Compute the slowness layer from a velocity layer.
 
@@ -229,8 +228,8 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     :param isPWave: Whether this velocity layer is for compressional/P
          (``True``) or shear/S (``False``) waves.
     :type isPWave: bool
-    :param radiusOfEarth: The radius of the Earth to use, in km.
-    :type radiusOfEarth: float
+    :param planet_radius: The radius of the Earth to use, in km.
+    :type planet_radius: float
     :param isSpherical: Whether the model is spherical. Non-spherical models
         are not currently supported.
     :type isSpherical: bool
@@ -240,9 +239,9 @@ def create_from_vlayer(vLayer, isPWave, radiusOfEarth=6371,
     ret['botDepth'] = vLayer['botDepth']
     waveType = ('p' if isPWave else 's')
     if isSpherical:
-        ret['topP'] = (radiusOfEarth - ret['topDepth']) / \
+        ret['topP'] = (planet_radius - ret['topDepth']) / \
             evaluateVelocityAtTop(vLayer, waveType)
-        ret['botP'] = (radiusOfEarth - ret['botDepth']) / \
+        ret['botP'] = (planet_radius - ret['botDepth']) / \
             evaluateVelocityAtBottom(vLayer, waveType)
     else:
         raise NotImplementedError("no flat models yet")

@@ -57,7 +57,7 @@ class TauP_Create(object):
         if self.debug:
             print("Done reading velocity model.")
             print("Radius of model " + self.vMod.modelName + " is " +
-                  str(self.vMod.radiusOfEarth))
+                  str(self.vMod.planet_radius))
         # if self.debug:
         #    print("velocity mode: " + self.vMod)
         return self.vMod

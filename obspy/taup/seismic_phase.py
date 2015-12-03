@@ -582,11 +582,11 @@ class SeismicPhase(object):
             self.time = np.zeros(2)
             self.ray_param = np.empty(2)
 
-            self.ray_param[0] = tMod.radiusOfEarth / float(self.name[:-4])
+            self.ray_param[0] = tMod.planet_radius / float(self.name[:-4])
 
             self.dist[1] = 2 * math.pi
             self.time[1] = \
-                2 * math.pi * tMod.radiusOfEarth / float(self.name[:-4])
+                2 * math.pi * tMod.planet_radius / float(self.name[:-4])
             self.ray_param[1] = self.ray_param[0]
 
             self.minDistance = 0
@@ -1051,11 +1051,11 @@ class SeismicPhase(object):
                                                           name[0])
             takeoffAngle = np.degrees(math.asin(np.clip(
                 takeoffVelocity * arrivalRayParam /
-                (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
+                (self.tMod.planet_radius - self.source_depth), -1.0, 1.0)))
             lastLeg = self.legs[-2][0]  # very last item is "END"
             incidentAngle = np.degrees(math.asin(
                 vMod.evaluateBelow(0, lastLeg) * arrivalRayParam /
-                self.tMod.radiusOfEarth))
+                self.tMod.planet_radius))
         return Arrival(self, degrees, arrivalTime, searchDist, arrivalRayParam,
                        rayNum, name, puristName, source_depth, takeoffAngle,
                        incidentAngle)

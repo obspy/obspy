@@ -20,10 +20,10 @@ class TauPySlownessModelTestCase(unittest.TestCase):
                             DEFAULT_QP, DEFAULT_QP,
                             DEFAULT_QS, DEFAULT_QS)],
                           dtype=VelocityLayer)
-        a = create_from_vlayer(vLayer, True)
+        a = create_from_vlayer(vLayer, True, 6371.0)
         self.assertEqual(a['botP'], 1268.0)
         self.assertEqual(a['botDepth'], 31.0)
-        b = create_from_vlayer(vLayer, False)
+        b = create_from_vlayer(vLayer, False, 6371.0)
         self.assertEqual(b['topP'], 3180.5)
 
 
