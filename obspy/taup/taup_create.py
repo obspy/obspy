@@ -122,8 +122,9 @@ class TauP_Create(object):
             if self.debug:
                 print("Done calculating Tau branches.")
 
-            if not os.path.exists(os.path.dirname(self.output_filename)):
-                os.makedirs(os.path.dirname(self.output_filename))
+            dirname = os.path.dirname(self.output_filename)
+            if dirname and not os.path.exists(dirname):
+                os.makedirs(dirname)
             self.tMod.serialize(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
