@@ -1008,8 +1008,10 @@ class SlownessModel(object):
                     smask = velocity == 0
                     if not self.allowInnerCoreS:
                         smask |= new_depth >= self.vMod.iocbDepth
-                    velocity[smask] = self.vMod.evaluateAbove(new_depth[smask],
-                                                              'P')
+                    if np.any(smask):
+                        velocity[smask] = self.vMod.evaluateAbove(
+                            new_depth[smask],
+                            'P')
 
                     slowness = self.toSlowness(velocity, new_depth)
                 else:
