@@ -39,6 +39,8 @@ ObsPy currently ships with the following 1D velocity models:
 * ``1066a``, see [GilbertDziewonski1975]_
 * ``1066b``, see [GilbertDziewonski1975]_
 * ``herrin``, see [Herrin1968]_
+* ``jb``, see [JeffreysBullen1940]_
+* ``pwdk``, see [WeberDavis1990]_
 
 Travel Times
 ^^^^^^^^^^^^
