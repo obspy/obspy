@@ -17,13 +17,13 @@ from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
 
 class VelocityModel(object):
     # Some default values as class attributes [km]
-    radiusOfEarth = 6371.0
+    planet_radius = 6371.0
     default_moho = 35
     default_cmb = 2889.0
     default_iocb = 5153.9
 
     def __init__(self, modelName="unknown",
-                 radiusOfEarth=radiusOfEarth, mohoDepth=default_moho,
+                 planet_radius=planet_radius, mohoDepth=default_moho,
                  cmbDepth=default_cmb, iocbDepth=default_iocb,
                  minRadius=0.0, maxRadius=6371.0, isSpherical=True,
                  layers=None):
@@ -32,8 +32,8 @@ class VelocityModel(object):
 
         :type modelName: str
         :param modelName: name of the velocity model.
-        :type radiusOfEarth: float
-        :param radiusOfEarth: reference radius (km), usually radius of the
+        :type planet_radius: float
+        :param planet_radius: reference radius (km), usually radius of the
             Earth.
         :type mohoDepth: float
         :param mohoDepth: Depth (km) of the Moho. It can be input from
@@ -65,7 +65,7 @@ class VelocityModel(object):
         :param isSpherical: Is this a spherical model? Defaults to true.
         """
         self.modelName = modelName
-        self.radiusOfEarth = radiusOfEarth
+        self.planet_radius = planet_radius
         self.mohoDepth = mohoDepth
         self.cmbDepth = cmbDepth
         self.iocbDepth = iocbDepth
@@ -252,10 +252,10 @@ class VelocityModel(object):
         :returns: True if the model is consistent.
         :raises ValueError: If the model is inconsistent.
         """
-        # Is radiusOfEarth positive?
-        if self.radiusOfEarth <= 0.0:
+        # Is planet_radius positive?
+        if self.planet_radius <= 0.0:
             raise ValueError("Radius of earth is not positive: %f" % (
-                self.radiusOfEarth, ))
+                self.planet_radius, ))
 
         # Is mohoDepth non-negative?
         if self.mohoDepth < 0.0:
@@ -371,8 +371,8 @@ class VelocityModel(object):
 
     def __str__(self):
         desc = "modelName=" + str(self.modelName) + "\n" + \
-               "\n radiusOfEarth=" + str(
-            self.radiusOfEarth) + "\n mohoDepth=" + str(self.mohoDepth) + \
+               "\n planet_radius=" + str(
+            self.planet_radius) + "\n mohoDepth=" + str(self.mohoDepth) + \
             "\n cmbDepth=" + str(self.cmbDepth) + "\n iocbDepth=" + \
             str(self.iocbDepth) + "\n minRadius=" + str(
             self.minRadius) + "\n maxRadius=" + str(self.maxRadius) + \
@@ -423,7 +423,7 @@ class VelocityModel(object):
         following assumptions:
 
         * ``modelname`` - from the filename, with ".tvel" dropped if present
-        * ``radiusOfEarth`` - the largest depth in the model
+        * ``planet_radius`` - the largest depth in the model
         * ``meanDensity`` - 5517.0
         * ``G`` - 6.67e-11
 
@@ -474,12 +474,12 @@ class VelocityModel(object):
         mask = layers['topDepth'] == layers['botDepth']
         layers = layers[~mask]
 
-        radiusOfEarth = data[-1, 0]
+        planet_radius = data[-1, 0]
         maxRadius = data[-1, 0]
         modelName = os.path.splitext(os.path.basename(filename))[0]
         # I assume that this is a whole earth model
         # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
+        return VelocityModel(modelName, planet_radius, cls.default_moho,
                              cls.default_cmb, cls.default_iocb, 0,
                              maxRadius, True, layers)
 
@@ -512,7 +512,7 @@ class VelocityModel(object):
 
         modelname - from the filename, with ".nd" dropped, if present
 
-        radiusOfEarth - the largest depth in the model
+        planet_radius - the largest depth in the model
 
         Comments are allowed. # signifies that the rest of the
         line is a comment.  If # is the first character in a line, the line is
@@ -602,12 +602,12 @@ class VelocityModel(object):
         mask = layers['topDepth'] == layers['botDepth']
         layers = layers[~mask]
 
-        radiusOfEarth = data[-1, 0]
+        planet_radius = data[-1, 0]
         maxRadius = data[-1, 0]
         modelName = os.path.splitext(os.path.basename(filename))[0]
         # I assume that this is a whole earth model
         # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, moho_depth,
+        return VelocityModel(modelName, planet_radius, moho_depth,
                              cmb_depth, iocb_depth, 0,
                              maxRadius, True, layers)
 
@@ -624,13 +624,13 @@ class VelocityModel(object):
         layers, e.g., oceans.
         """
         MOHO_MIN = 65.0
-        CMB_MIN = self.radiusOfEarth
-        IOCB_MIN = self.radiusOfEarth - 100.0
+        CMB_MIN = self.planet_radius
+        IOCB_MIN = self.planet_radius - 100.0
 
         changeMade = False
         tempMohoDepth = 0.0
-        tempCmbDepth = self.radiusOfEarth
-        tempIocbDepth = self.radiusOfEarth
+        tempCmbDepth = self.planet_radius
+        tempIocbDepth = self.planet_radius
 
         above = self.layers[:-1]
         below = self.layers[1:]
@@ -670,5 +670,5 @@ class VelocityModel(object):
         self.cmbDepth = tempCmbDepth
         self.iocbDepth = (tempIocbDepth
                           if tempCmbDepth != tempIocbDepth
-                          else self.radiusOfEarth)
+                          else self.planet_radius)
         return changeMade

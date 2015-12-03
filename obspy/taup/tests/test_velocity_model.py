@@ -28,7 +28,7 @@ class TauPyVelocityModelTestCase(unittest.TestCase):
             self.assertEqual(len(test2.layers), 129)
             self.assertEqual(len(test2), 129)
 
-            self.assertEqual(test2.radiusOfEarth, 6371.0)
+            self.assertEqual(test2.planet_radius, 6371.0)
             self.assertEqual(test2.mohoDepth, 35)
             self.assertEqual(test2.cmbDepth, 2889.0)
             self.assertEqual(test2.iocbDepth, 5153.9)

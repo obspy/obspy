@@ -356,14 +356,14 @@ class TauBranch(object):
                 sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
                 if sLayer['topDepth'] != sLayer['botDepth']:
                     turnDepth = bullenDepthFor(sLayer, ray_param,
-                                               sMod.radiusOfEarth)
+                                               sMod.planet_radius)
                     turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
                                             ray_param, turnDepth)],
                                           dtype=SlownessLayer)
                     time, dist = bullenRadialSlowness(
                         turnSLayer,
                         ray_param,
-                        sMod.radiusOfEarth)
+                        sMod.planet_radius)
                     thePath[pathIndex]['p'] = ray_param
                     thePath[pathIndex]['time'] = time
                     thePath[pathIndex]['dist'] = dist
@@ -385,14 +385,14 @@ class TauBranch(object):
             sLayer2 = sLayer[first_unmasked]
             if sLayer2['botP'] < ray_param:
                 turnDepth = bullenDepthFor(sLayer2, ray_param,
-                                           sMod.radiusOfEarth)
+                                           sMod.planet_radius)
                 turnSLayer = np.array([(sLayer2['topP'], sLayer2['topDepth'],
                                         ray_param, turnDepth)],
                                       dtype=SlownessLayer)
                 time, dist = bullenRadialSlowness(
                     turnSLayer,
                     ray_param,
-                    sMod.radiusOfEarth)
+                    sMod.planet_radius)
                 thePath[pathIndex]['p'] = ray_param
                 thePath[pathIndex]['time'] = time
                 thePath[pathIndex]['dist'] = dist

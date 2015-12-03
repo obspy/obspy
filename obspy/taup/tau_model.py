@@ -29,7 +29,7 @@ class TauModel(object):
 
     # Depth for which tau model as constructed.
     source_depth = 0.0
-    radiusOfEarth = 6371.0
+    planet_radius = 6371.0
     # Branch with the source at its top.
     sourceBranch = 0
     # Depths that should not have reflections or phase conversions. For
@@ -42,7 +42,7 @@ class TauModel(object):
 
     def __init__(self, sMod, spherical=True, debug=False, skip_calc=False):
         self.debug = debug
-        self.radiusOfEarth = 6371.0
+        self.planet_radius = 6371.0
         # True if this is a spherical slowness model. False if flat.
         self.spherical = spherical
         # Ray parameters used to construct the tau branches. This may only be
@@ -202,7 +202,7 @@ class TauModel(object):
         if self.source_depth != 0:
             raise TauModelError("Can't depth correct a TauModel that is not "
                                 "originally for a surface source.")
-        if depth > self.radiusOfEarth:
+        if depth > self.planet_radius:
             raise TauModelError("Can't depth correct to a source deeper than "
                                 "the radius of the Earth.")
         depthCorrected = self.loadFromDepthCache(depth)
@@ -388,7 +388,7 @@ class TauModel(object):
             mohoBranch <type 'int'>
             mohoDepth <type 'float'>
             noDisconDepths <type 'list'> (of float!?)
-            radiusOfEarth <type 'float'>
+            planet_radius <type 'float'>
             ray_params <type 'numpy.ndarray'> (1D, float)
             sMod <class 'obspy.taup.slowness_model.SlownessModel'>
             sourceBranch <type 'int'>
@@ -427,7 +427,7 @@ class TauModel(object):
             maxInterpError <type 'float'>
             maxRangeInterval <type 'float'>
             minDeltaP <type 'float'>
-            radiusOfEarth <type 'float'>
+            planet_radius <type 'float'>
             slowness_tolerance <type 'float'>
             vMod <class 'obspy.taup.velocity_model.VelocityModel'>
 
@@ -444,11 +444,11 @@ class TauModel(object):
             minRadius <type 'int'>
             modelName <type 'unicode'>
             mohoDepth <type 'float'>
-            radiusOfEarth <type 'float'>
+            planet_radius <type 'float'>
         """
         # a) handle simple contents
         keys = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch', 'iocbDepth',
-                'mohoBranch', 'mohoDepth', 'noDisconDepths', 'radiusOfEarth',
+                'mohoBranch', 'mohoDepth', 'noDisconDepths', 'planet_radius',
                 'ray_params', 'sourceBranch', 'source_depth', 'spherical']
         arrays = {k: getattr(self, k) for k in keys}
         # b) handle .tauBranches
@@ -470,7 +470,7 @@ class TauModel(object):
                   (native_str('maxInterpError'), np.float_),
                   (native_str('maxRangeInterval'), np.float_),
                   (native_str('minDeltaP'), np.float_),
-                  (native_str('radiusOfEarth'), np.float_),
+                  (native_str('planet_radius'), np.float_),
                   (native_str('slowness_tolerance'), np.float_)]
         slowness_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
@@ -501,7 +501,7 @@ class TauModel(object):
                   (native_str('modelName'), np.str_,
                    len(self.sMod.vMod.modelName)),
                   (native_str('mohoDepth'), np.float_),
-                  (native_str('radiusOfEarth'), np.float_)]
+                  (native_str('planet_radius'), np.float_)]
         velocity_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]

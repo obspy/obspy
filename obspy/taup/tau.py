@@ -154,7 +154,7 @@ class Arrivals(list):
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
-            radius = self.model.radiusOfEarth
+            radius = self.model.planet_radius
             for _i, ray in enumerate(arrivals):
                 # Requires interpolation otherwise diffracted phases look
                 # funny.
@@ -429,7 +429,7 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
+                                    self.model.planet_radius,
                                     self.earth_flattening)
         arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
                                          phase_list)
@@ -474,7 +474,7 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
+                                    self.model.planet_radius,
                                     self.earth_flattening)
 
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
@@ -485,7 +485,7 @@ class TauPyModel(object):
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,
                                            receiver_longitude_in_deg,
-                                           self.model.radiusOfEarth,
+                                           self.model.planet_radius,
                                            self.earth_flattening)
         else:
             msg = "Not able to evaluate positions of pierce points. " + \
@@ -533,7 +533,7 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
+                                    self.model.planet_radius,
                                     self.earth_flattening)
 
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
@@ -544,7 +544,7 @@ class TauPyModel(object):
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,
                                            receiver_longitude_in_deg,
-                                           self.model.radiusOfEarth,
+                                           self.model.planet_radius,
                                            self.earth_flattening)
         else:
             msg = "Not able to evaluate positions of points on path. " + \
