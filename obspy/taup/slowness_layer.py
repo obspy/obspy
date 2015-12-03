@@ -103,6 +103,10 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth, check=True):
         layer = layer * np.ones(ray_param.shape, dtype=SlownessLayer)
         depth = np.zeros(shape=ray_param.shape, dtype=np.float_)
     elif ldim == pdim and (ldim == 0 or layer.shape == ray_param.shape):
+        if ldim == 0:
+            # Make array-like to work with NumPy < 1.9.
+            layer = np.array([layer], dtype=SlownessLayer)
+            ray_param = np.array([ray_param])
         depth = np.zeros(shape=layer.shape, dtype=np.float_)
     else:
         raise TypeError('Either layer or ray_param must be 0D, or they must '
@@ -220,7 +224,11 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth, check=True):
         # Make sure invalid cases are left out
         depth[~valid] = np.nan
 
-        return depth
+        # NumPy < 1.9 compatibility.
+        if ldim == 0 and pdim == 0:
+            return depth[0]
+        else:
+            return depth
     else:
         raise SlownessModelError(
             "Ray parameter is not contained within this slowness layer.")
