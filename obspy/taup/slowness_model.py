@@ -1314,40 +1314,25 @@ class SlownessModel(object):
         if np.any(turning_layers):
             if ldim == 1 and pdim == 0:
                 # Turn in a layer, create temp layers with p at bottom.
-                for i in np.where(turning_layers)[0]:
-                    try:
-                        turn_depth = bullenDepthFor(sphericalLayer[i],
-                                                    sphericalRayParam,
-                                                    self.radiusOfEarth)
-                    except SlownessModelError:
-                        if check:
-                            raise
-                        else:
-                            turn_depth = np.nan
-                    sphericalLayer['botP'][i] = sphericalRayParam
-                    sphericalLayer['botDepth'][i] = turn_depth
+                tmp_layers = sphericalLayer[turning_layers]
+                turn_depth = bullenDepthFor(tmp_layers,
+                                            sphericalRayParam,
+                                            self.radiusOfEarth, check=False)
+                sphericalLayer['botP'][turning_layers] = sphericalRayParam
+                sphericalLayer['botDepth'][turning_layers] = turn_depth
 
             elif ldim == 0 and pdim == 1:
                 # Turn in layer, create temp layers with each p at bottom.
                 # Expand layer array so that each one turns at correct depth.
                 ldim = 1
-                new_layers = np.empty(shape=sphericalRayParam.shape,
-                                      dtype=SlownessLayer)
-                for i in np.where(turning_layers)[0]:
-                    try:
-                        turn_depth = bullenDepthFor(sphericalLayer,
-                                                    sphericalRayParam[i],
-                                                    self.radiusOfEarth)
-                    except SlownessModelError:
-                        if check:
-                            raise
-                        else:
-                            turn_depth = np.nan
-                    new_layers[i] = (
-                        sphericalLayer['topP'],
-                        sphericalLayer['topDepth'],
-                        sphericalRayParam[i],
-                        turn_depth)
+                new_layers = np.repeat(sphericalLayer, len(sphericalRayParam))
+                turn_depth = bullenDepthFor(new_layers,
+                                            sphericalRayParam,
+                                            self.radiusOfEarth, check=False)
+                new_layers['botP'][turning_layers] = \
+                    sphericalRayParam[turning_layers]
+                new_layers['botDepth'][turning_layers] = \
+                    turn_depth[turning_layers]
                 sphericalLayer = new_layers
 
             elif ldim == pdim == 0:
@@ -1366,19 +1351,14 @@ class SlownessModel(object):
 
             else:
                 # Turn in layer, create temp layers with each p at bottom.
-                for i in np.transpose(np.where(turning_layers)):
-                    index = tuple(i)
-                    try:
-                        turn_depth = bullenDepthFor(sphericalLayer[index],
-                                                    sphericalRayParam[index],
-                                                    self.radiusOfEarth)
-                    except SlownessModelError:
-                        if check:
-                            raise
-                        else:
-                            turn_depth = np.nan
-                    sphericalLayer['botP'][index] = sphericalRayParam[index]
-                    sphericalLayer['botDepth'][index] = turn_depth
+                turn_depth = bullenDepthFor(sphericalLayer,
+                                            sphericalRayParam,
+                                            self.radiusOfEarth, check=False)
+                turning_layers = np.where(turning_layers)
+                sphericalLayer['botP'][turning_layers] = \
+                    sphericalRayParam[turning_layers]
+                sphericalLayer['botDepth'][turning_layers] = \
+                    turn_depth[turning_layers]
 
         if check and np.any(
                 sphericalRayParam > np.maximum(sphericalLayer['topP'],
