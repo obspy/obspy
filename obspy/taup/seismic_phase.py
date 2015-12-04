@@ -6,6 +6,7 @@ Objects and functions dealing with seismic phases.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import raise_from
 
 from itertools import count
 import math
@@ -200,7 +201,8 @@ class SeismicPhase(object):
                 layer = tMod.sMod.getSlownessLayer(sLayerNum, isPWavePrev)
                 self.maxRayParam = layer['topP']
             except SlownessModelError as e:
-                raise RuntimeError('Should not happen' + str(e))
+                raise_from(RuntimeError('Please contact the developers. This '
+                                        'error should not occur.'), e)
             self.maxRayParam = tMod.getTauBranch(tMod.sourceBranch,
                                                  isPWave).maxRayParam
         elif currLeg in ("p", "s") or (self.expert and currLeg[0] == "k"):
@@ -213,7 +215,8 @@ class SeismicPhase(object):
                 layer = tMod.sMod.getSlownessLayer(sLayerNum, isPWavePrev)
                 self.maxRayParam = layer['botP']
             except SlownessModelError as e:
-                raise RuntimeError('Should not happen' + str(e))
+                raise_from(RuntimeError('Please contact the developers. This '
+                                        'error should not occur.'), e)
             if tMod.sourceBranch != 0:
                 self.currBranch = tMod.sourceBranch - 1
             else:
@@ -1255,7 +1258,8 @@ class SeismicPhase(object):
                                                 search_dist, tolerance,
                                                 recursion_limit - 1)
         except (IndexError, LookupError, SlownessModelError) as e:
-            raise RuntimeError('Should not happen: ' + str(e))
+            raise_from(RuntimeError('Please contact the developers. This '
+                                    'error should not occur.'), e)
 
     def shoot_ray(self, degrees, ray_param):
         if (any(phase in self.name
@@ -1344,7 +1348,8 @@ class SeismicPhase(object):
                 takeoff_velocity = vMod.evaluateAbove(self.source_depth,
                                                       self.name[0])
         except (IndexError, LookupError) as e:
-            raise RuntimeError('Should not happen: ' + str(e))
+            raise_from(RuntimeError('Please contact the developers. This '
+                                    'error should not occur.'), e)
 
         return ((self.tMod.radiusOfEarth - self.source_depth) *
                 math.sin(np.radians(takeoff_degree)) / takeoff_velocity)
@@ -1362,7 +1367,8 @@ class SeismicPhase(object):
                 takeoff_velocity = vMod.evaluateAbove(self.source_depth,
                                                       self.name[0])
         except (IndexError, LookupError) as e:
-            raise RuntimeError('Should not happen: ' + str(e))
+            raise_from(RuntimeError('Please contact the developers. This '
+                                    'error should not occur.'), e)
 
         takeoff_angle = np.degrees(math.asin(np.clip(
             takeoff_velocity * ray_param /
@@ -1388,7 +1394,8 @@ class SeismicPhase(object):
                 incident_velocity = vMod.evaluateBelow(self.receiver_depth,
                                                        lastLeg)
         except (IndexError, LookupError) as e:
-            raise RuntimeError('Should not happen: ' + str(e))
+            raise_from(RuntimeError('Please contact the developers. This '
+                                    'error should not occur.'), e)
 
         incident_angle = np.degrees(math.asin(np.clip(
                 incident_velocity * ray_param /
