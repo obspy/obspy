@@ -1107,17 +1107,17 @@ class SeismicPhase(object):
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
-        tempTimeDist = np.array([(currArrival.ray_param, 0, 0,
-                                  self.tMod.source_depth)], dtype=TimeDist)
+        tempTimeDist = (currArrival.ray_param, 0, 0, self.tMod.source_depth)
         # pathList is a list of lists.
         pathList = [tempTimeDist]
         for i, branchNum, isPWave, isDownGoing in zip(count(), self.branchSeq,
                                                       self.waveType,
                                                       self.downGoing):
-            tempTimeDist = self.tMod.getTauBranch(branchNum, isPWave)\
-                .path(currArrival.ray_param, isDownGoing, self.tMod.sMod)
+            br = self.tMod.getTauBranch(branchNum, isPWave)
+            tempTimeDist = br.path(currArrival.ray_param, isDownGoing,
+                                   self.tMod.sMod)
             if len(tempTimeDist):
-                pathList.append(tempTimeDist)
+                pathList.extend(tempTimeDist)
                 if np.any(tempTimeDist['dist'] < 0):
                     raise RuntimeError("Path is backtracking, "
                                        "this is impossible.")
@@ -1128,11 +1128,11 @@ class SeismicPhase(object):
                self.branchSeq[i + 1] == self.tMod.cmbBranch - 1 and
                ("Pdiff" in self.name or "Sdiff" in self.name)):
                 dist_diff = currArrival.purist_dist - self.dist[0]
-                diffTD = np.array([(
+                diffTD = (
                     currArrival.ray_param,
                     dist_diff * currArrival.ray_param,
                     dist_diff,
-                    self.tMod.cmbDepth)], dtype=TimeDist)
+                    self.tMod.cmbDepth)
                 pathList.append(diffTD)
 
             elif(branchNum == self.tMod.mohoBranch - 1 and
@@ -1142,24 +1142,24 @@ class SeismicPhase(object):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 numFound = max(self.name.count("Pn"), self.name.count("Sn"))
                 dist_head = (currArrival.purist_dist - self.dist[0]) / numFound
-                headTD = np.array([(
+                headTD = (
                     currArrival.ray_param,
                     dist_head * currArrival.ray_param,
                     dist_head,
-                    self.tMod.mohoDepth)], dtype=TimeDist)
+                    self.tMod.mohoDepth)
                 pathList.append(headTD)
 
         if "kmps" in self.name:
             # kmps phases have no branches, so need to end them at the arrival
             # distance.
-            headTD = np.array([(
+            headTD = (
                 currArrival.ray_param,
                 currArrival.purist_dist * currArrival.ray_param,
                 currArrival.purist_dist,
-                0)], dtype=TimeDist)
+                0)
             pathList.append(headTD)
 
-        currArrival.path = np.concatenate(pathList)
+        currArrival.path = np.array(pathList, dtype=TimeDist)
         np.cumsum(currArrival.path['time'], out=currArrival.path['time'])
         np.cumsum(currArrival.path['dist'], out=currArrival.path['dist'])
 

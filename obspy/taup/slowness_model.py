@@ -1099,12 +1099,8 @@ class SlownessModel(object):
                             splitLayer,
                             splitRayParam,
                             self.radiusOfEarth)
-                        splitTD = np.array([(
-                            splitRayParam,
-                            allButLayer['time'] + 2 * justLayerTime,
-                            allButLayer['dist'] + 2 * justLayerDist,
-                            0)],
-                            dtype=TimeDist)
+                        split_time = allButLayer['time'] + 2 * justLayerTime
+                        split_dist = allButLayer['dist'] + 2 * justLayerDist
                         # Python standard division is not IEEE compliant,
                         # as “The IEEE 754 standard specifies that every
                         # floating point arithmetic operation, including
@@ -1112,11 +1108,10 @@ class SlownessModel(object):
                         # Use numpy's division instead by using np.array:
                         with np.errstate(divide='ignore', invalid='ignore'):
                             diff = (currTD['time'] -
-                                    ((splitTD['time'] - prevTD['time']) *
-                                     ((currTD['dist'] -
-                                       prevTD['dist']) /
-                                        (splitTD['dist'] -
-                                         prevTD['dist'])) + prevTD['time']))
+                                    ((split_time - prevTD['time']) *
+                                     ((currTD['dist'] - prevTD['dist']) /
+                                      (split_dist - prevTD['dist'])) +
+                                     prevTD['time']))
                         if abs(diff) > self.maxInterpError:
                             p1 = (prevSLayer['topP'] + prevSLayer['botP']) / 2
                             p2 = (sLayer['topP'] + sLayer['botP']) / 2
@@ -1682,15 +1677,11 @@ class SlownessModel(object):
             # Check for very thin layers, just move the layer to hit the
             # boundary.
             outLayers = self.PLayers if isPWave else self.SLayers
-            outLayers[layerNum] = np.array([(sLayer['topP'], depth,
-                                             sLayer['botP'],
-                                             sLayer['botDepth'])],
-                                           dtype=SlownessLayer)
+            outLayers[layerNum] = (sLayer['topP'], depth,
+                                   sLayer['botP'], sLayer['botDepth'])
             sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
-            outLayers[layerNum - 1] = np.array([(sLayer['topP'],
-                                                 sLayer['topDepth'],
-                                                 sLayer['botP'], depth)],
-                                               dtype=SlownessLayer)
+            outLayers[layerNum - 1] = (sLayer['topP'], sLayer['topDepth'],
+                                       sLayer['botP'], depth)
             out = self
             out.PLayers = outLayers if isPWave else self.PLayers
             out.SLayers = outLayers if isPWave else self.SLayers
@@ -1698,15 +1689,11 @@ class SlownessModel(object):
         elif abs(depth - sLayer['botDepth']) < 0.000001:
             # As above.
             outLayers = self.PLayers if isPWave else self.SLayers
-            outLayers[layerNum] = np.array([(sLayer['topP'],
-                                             sLayer['topDepth'],
-                                             sLayer['botP'], depth)],
-                                           dtype=SlownessLayer)
+            outLayers[layerNum] = (sLayer['topP'], sLayer['topDepth'],
+                                   sLayer['botP'], depth)
             sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
-            outLayers[layerNum + 1] = np.array([(sLayer['topP'], depth,
-                                                 sLayer['botP'],
-                                                 sLayer['botDepth'])],
-                                               dtype=SlownessLayer)
+            outLayers[layerNum + 1] = (sLayer['topP'], depth,
+                                       sLayer['botP'], sLayer['botDepth'])
             out = self
             out.PLayers = outLayers if isPWave else self.PLayers
             out.SLayers = outLayers if isPWave else self.SLayers
@@ -1717,9 +1704,7 @@ class SlownessModel(object):
             topLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
                                   p, depth)],
                                 dtype=SlownessLayer)
-            botLayer = np.array([(p, depth,
-                                  sLayer['botP'], sLayer['botDepth'])],
-                                dtype=SlownessLayer)
+            botLayer = (p, depth, sLayer['botP'], sLayer['botDepth'])
             outLayers = self.PLayers if isPWave else self.SLayers
             outLayers[layerNum] = botLayer
             outLayers = np.insert(outLayers, layerNum, topLayer)
@@ -1764,12 +1749,11 @@ class SlownessModel(object):
                 # Found a slowness layer with the other wave type that
                 # contains the new slowness sample.
                 topLayer = np.array([(sLayer['topP'], sLayer['topDepth'], p,
-                                     bullenDepthFor(sLayer, p,
-                                                    self.radiusOfEarth))],
+                                      bullenDepthFor(sLayer, p,
+                                                     self.radiusOfEarth))],
                                     dtype=SlownessLayer)
-                botLayer = np.array([(p, topLayer['botDepth'], sLayer['botP'],
-                                      sLayer['botDepth'])],
-                                    dtype=SlownessLayer)
+                botLayer = (p, topLayer['botDepth'],
+                            sLayer['botP'], sLayer['botDepth'])
                 out[otherLayerNum] = botLayer
                 out = np.insert(out, otherLayerNum, topLayer)
                 # Fix critical layers since we have added a slowness layer.
