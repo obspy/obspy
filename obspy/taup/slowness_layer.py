@@ -142,7 +142,8 @@ def bullenDepthFor(layer, ray_param, radiusOfEarth, check=True):
             B = np.divide(np.log(topP_mask / botP_mask),
                           np.log((radiusOfEarth - topDepth_mask) /
                                  (radiusOfEarth - botDepth_mask)))
-            denom = np.power(radiusOfEarth - topDepth_mask, B)
+            with np.errstate(over='ignore'):
+                denom = np.power(radiusOfEarth - topDepth_mask, B)
             A = np.divide(topP_mask, denom)
 
             tempDepth = np.empty_like(A)
