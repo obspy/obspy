@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from copy import deepcopy
 import math
 
 import numpy as np
@@ -1676,36 +1677,33 @@ class SlownessModel(object):
         elif abs(sLayer['topDepth'] - depth) < 0.000001:
             # Check for very thin layers, just move the layer to hit the
             # boundary.
-            outLayers = self.PLayers if isPWave else self.SLayers
+            out = deepcopy(self)
+            outLayers = out.PLayers if isPWave else out.SLayers
             outLayers[layerNum] = (sLayer['topP'], depth,
                                    sLayer['botP'], sLayer['botDepth'])
             sLayer = self.getSlownessLayer(layerNum - 1, isPWave)
             outLayers[layerNum - 1] = (sLayer['topP'], sLayer['topDepth'],
                                        sLayer['botP'], depth)
-            out = self
-            out.PLayers = outLayers if isPWave else self.PLayers
-            out.SLayers = outLayers if isPWave else self.SLayers
             return SplitLayerInfo(out, False, True, sLayer['botP'])
         elif abs(depth - sLayer['botDepth']) < 0.000001:
             # As above.
-            outLayers = self.PLayers if isPWave else self.SLayers
+            out = deepcopy(self)
+            outLayers = out.PLayers if isPWave else out.SLayers
             outLayers[layerNum] = (sLayer['topP'], sLayer['topDepth'],
                                    sLayer['botP'], depth)
             sLayer = self.getSlownessLayer(layerNum + 1, isPWave)
             outLayers[layerNum + 1] = (sLayer['topP'], depth,
                                        sLayer['botP'], sLayer['botDepth'])
-            out = self
-            out.PLayers = outLayers if isPWave else self.PLayers
-            out.SLayers = outLayers if isPWave else self.SLayers
             return SplitLayerInfo(out, False, True, sLayer['botP'])
         else:
             # Must split properly.
+            out = deepcopy(self)
             p = evaluateAtBullen(sLayer, depth, self.radiusOfEarth)
             topLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
                                   p, depth)],
                                 dtype=SlownessLayer)
             botLayer = (p, depth, sLayer['botP'], sLayer['botDepth'])
-            outLayers = self.PLayers if isPWave else self.SLayers
+            outLayers = out.PLayers if isPWave else out.SLayers
             outLayers[layerNum] = botLayer
             outLayers = np.insert(outLayers, layerNum, topLayer)
             # Fix critical layers since we added a slowness layer.
@@ -1713,15 +1711,14 @@ class SlownessModel(object):
             _fixCriticalDepths(outCriticalDepths, layerNum, isPWave)
             if isPWave:
                 outPLayers = outLayers
-                outSLayers = self._fixOtherLayers(self.SLayers, p, sLayer,
+                outSLayers = self._fixOtherLayers(out.SLayers, p, sLayer,
                                                   topLayer, botLayer,
                                                   outCriticalDepths, False)
             else:
-                outPLayers = self._fixOtherLayers(self.PLayers, p, sLayer,
+                outPLayers = self._fixOtherLayers(out.PLayers, p, sLayer,
                                                   topLayer, botLayer,
                                                   outCriticalDepths, True)
                 outSLayers = outLayers
-            out = self
             out.criticalDepths = outCriticalDepths
             out.PLayers = outPLayers
             out.SLayers = outSLayers

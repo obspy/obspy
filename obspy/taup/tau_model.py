@@ -235,7 +235,7 @@ class TauModel(object):
         PWaveRayParam = -1
         indexS = -1
         SWaveRayParam = -1
-        outSMod = deepcopy(self.sMod)
+        outSMod = self.sMod
         outRayParams = self.ray_params
         # Do S wave first since the S ray param is > P ray param.
         for isPWave in [False, True]:
