@@ -41,9 +41,12 @@ from future.builtins import *  # NOQA
 
 import glob
 import os
+import warnings
 from datetime import timedelta
 
-from obspy import Stream, read
+import numpy as np
+
+from obspy import Stream, read, UTCDateTime
 from obspy.core.util.misc import BAND_CODE
 
 
@@ -110,7 +113,7 @@ class Client(object):
         self.fileborder_samples = fileborder_samples
 
     def get_waveforms(self, network, station, location, channel, starttime,
-                      endtime, merge=-1, sds_type=None):
+                      endtime, merge=-1, sds_type=None, **kwargs):
         """
         Read data from a local SeisComP Data Structure (SDS) directory tree.
 
@@ -152,6 +155,56 @@ class Client(object):
             msg = ("'endtime' must be after 'starttime'.")
             raise ValueError(msg)
         sds_type = sds_type or self.sds_type
+
+        st = Stream()
+        full_paths = self._get_filenames(
+            network=network, station=station, location=location,
+            channel=channel, starttime=starttime, endtime=endtime,
+            sds_type=sds_type)
+        for full_path in full_paths:
+            st += read(full_path, format=self.format, starttime=starttime,
+                       endtime=endtime, **kwargs)
+
+        # make sure we only have the desired data, just in case the file
+        # contents do not match the expected SEED id
+        st = st.select(network=network, station=station, location=location,
+                       channel=channel)
+
+        # avoid trim/merge operations when we do a headonly read for
+        # `_get_availability_percentage()`
+        if kwargs.get("_no_trim_or_merge", False):
+            return st
+
+        st.trim(starttime, endtime)
+        if merge is None or merge is False:
+            pass
+        else:
+            st.merge(merge)
+        return st
+
+    def _get_filenames(self, network, station, location, channel, starttime,
+                       endtime, sds_type=None):
+        """
+        Get list of filenames for certain waveform and time span.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of time span.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of time span.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: list of str
+        """
+        sds_type = sds_type or self.sds_type
         # SDS has data sometimes in adjacent days, so also try to read the
         # requested data from those files. Usually this is only a few seconds
         # of data after midnight, but for now we play safe here to catch all
@@ -171,7 +224,6 @@ class Client(object):
             t += timedelta(days=1)
         year_doy.add((t_max.year, t_max.julday))
 
-        st = Stream()
         full_paths = set()
         for year, doy in year_doy:
             filename = self.FMTSTR.format(
@@ -179,16 +231,267 @@ class Client(object):
                 channel=channel, year=year, doy=doy, type=sds_type)
             full_path = os.path.join(self.sds_root, filename)
             full_paths = full_paths.union(glob.glob(full_path))
-        for full_path in full_paths:
-            st += read(full_path, format=self.format, starttime=starttime,
-                       endtime=endtime)
 
-        st.trim(starttime, endtime)
-        if merge is None or merge is False:
-            pass
+        return full_paths
+
+    def _get_filename(self, network, station, location, channel, time,
+                      sds_type=None):
+        """
+        Get filename for certain waveform.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Time of interest.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: str
+        """
+        sds_type = sds_type or self.sds_type
+        filename = self.FMTSTR.format(
+            network=network, station=station, location=location,
+            channel=channel, year=time.year, doy=time.julday, type=sds_type)
+        return os.path.join(self.sds_root, filename)
+
+    def get_availability_percentage(self, network, station, location, channel,
+                                    starttime, endtime, sds_type=None):
+        """
+        Get percentage of available data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of requested time window.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of requested time window.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: 2-tuple (float, int)
+        :returns: 2-tuple of percentage of available data (``0.0`` to ``1.0``)
+            and number of gaps/overlaps.
+        """
+        if starttime >= endtime:
+            msg = ("'endtime' must be after 'starttime'.")
+            raise ValueError(msg)
+        sds_type = sds_type or self.sds_type
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Keyword headonly cannot be combined with "
+                "starttime, endtime or dtype.", UserWarning)
+            st = self.get_waveforms(network, station, location, channel,
+                                    starttime, endtime, sds_type=sds_type,
+                                    headonly=True, _no_trim_or_merge=True)
+        st.sort(keys=['starttime', 'endtime'])
+        st.traces = [tr for tr in st
+                     if not (tr.stats.endtime < starttime or
+                             tr.stats.starttime > endtime)]
+
+        if not st:
+            return (0, 1)
+
+        total_duration = endtime - starttime
+        # sum up gaps in the middle
+        gaps = [gap[6] for gap in st.getGaps()]
+        gap_sum = np.sum(gaps)
+        gap_count = len(gaps)
+        # check if we have a gap at start or end
+        earliest = min([tr.stats.starttime for tr in st])
+        latest = max([tr.stats.endtime for tr in st])
+        if earliest > starttime:
+            gap_sum += earliest - starttime
+            gap_count += 1
+        if latest < endtime:
+            gap_sum += endtime - latest
+            gap_count += 1
+
+        return (1 - (gap_sum / total_duration), gap_count)
+
+    def _get_current_endtime(self, network, station, location, channel,
+                             sds_type=None, stop_time=None):
+        """
+        Get time of last sample for given stream.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param stop_time: Time at which the search for data is stopped and
+            `None` is returned. If not specified, stops at ``1950-01-01T00``.
+        :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime` or `None`
+        """
+        sds_type = sds_type or self.sds_type
+
+        if not self.has_data(
+                network=network, station=station, location=location,
+                channel=channel, sds_type=sds_type):
+            return None
+
+        stop_time = stop_time or UTCDateTime(1950, 1, 1)
+        st = None
+        time = UTCDateTime()
+
+        while not st:
+            if time < stop_time:
+                return None
+            filename = self._get_filename(
+                network=network, station=station, location=location,
+                channel=channel, time=time, sds_type=sds_type)
+            if os.path.isfile(filename):
+                st = read(filename, format=self.format, headonly=True)
+                if st:
+                    break
+            time -= 24 * 3600
+
+        return max([tr.stats.endtime for tr in st])
+
+    def get_latency(self, network, station, location, channel,
+                    sds_type=None, stop_time=None):
+        """
+        Get time of last sample for given stream.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param stop_time: Time at which the search for data is stopped and
+            `None` is returned. If not specified, stops at ``1950-01-01T00``.
+        :rtype: float or ``None``
+        :returns: Latency in seconds or ``None`` if no data was encountered
+            from current time backwards until ``stop_time``.
+        """
+        endtime = self._get_current_endtime(
+            network=network, station=station, location=location,
+            channel=channel, sds_type=sds_type, stop_time=stop_time)
+
+        if endtime is None:
+            return endtime
+
+        return UTCDateTime() - endtime
+
+    def has_data(self, network, station, location, channel, sds_type=None):
+        """
+        Check if specified stream has any data.
+
+        Actually just checks whether a file is encountered in a folder that is
+        expected to contain data.
+
+        :type network: str
+        :param network: Network code of requested data (e.g. "IU").
+        :type station: str
+        :param station: Station code of requested data (e.g. "ANMO").
+        :type location: str
+        :param location: Location code of requested data (e.g. "").
+        :type channel: str
+        :param channel: Channel code of requested data (e.g. "HHZ").
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: bool
+        """
+        sds_type = sds_type or self.sds_type
+        pattern = self.FMTSTR.format(
+            year="*", network=network, station=station, location=location,
+            channel=channel, doy=0, type=sds_type)
+        # can not insert wildcard for day-of-year above, so replace it now
+        pattern = pattern.rsplit(".", 1)[0] + "*"
+        pattern = os.path.join(self.sds_root, pattern)
+        if glob.glob(pattern):
+            return True
         else:
-            st.merge(merge)
-        return st
+            return False
+
+    def get_all_nslc(self, sds_type=None):
+        """
+        Return information on what streams are included in archive.
+
+        Note that this can be very slow on network file systems because every
+        single file has to be touched (because available location codes can not
+        be discovered from folder structure alone).
+
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: list
+        :returns: List of (network, station, location, channel) 4-tuples of all
+            available streams in archive.
+        """
+        sds_type = sds_type or self.sds_type
+        pattern = self.FMTSTR.format(
+            year="*", network="*", station="*", location="*",
+            channel="*", doy=0, type=sds_type)
+        # can not insert wildcard for day-of-year above, so replace it now
+        pattern = pattern.rsplit(".", 1)[0] + "*"
+        pattern = os.path.join(self.sds_root, pattern)
+        all_files = glob.glob(pattern)
+        result = set()
+        for file_ in all_files:
+            network, station, channel, filename = file_.split("/")[-4:]
+            channel = channel.split(".")[0]
+            location = filename.split(".")[2]
+            result.add((network, station, location, channel))
+        return result
+
+    def get_all_stations(self, sds_type=None, strict=True):
+        """
+        Return information on what stations are included in archive.
+
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :type strict: bool
+        :param strict: Whether to only regard folders with valid
+            network/station code lengths with respect to SEED (i.e. at most 2
+            characters in network code, at most 5 characters in station code).
+        :rtype: list
+        :returns: List of (network, station) 2-tuples of all available stations
+            in archive.
+        """
+        sds_type = sds_type or self.sds_type
+        pattern = self.FMTSTR.format(
+            year="*", network="*", station="*", location="*",
+            channel="*", doy=0, type=sds_type)
+        # can not insert wildcard for day-of-year above, so replace it now
+        pattern = os.path.join(self.sds_root, pattern)
+        pattern = os.path.dirname(os.path.dirname(pattern))
+        all_folders = glob.glob(pattern)
+        result = set()
+        for file_ in all_folders:
+            network, station = file_.split("/")[-2:]
+            if strict:
+                if len(network) > 2 or len(network) > 5:
+                    continue
+            result.add((network, station))
+        return sorted(result)
 
 
 if __name__ == '__main__':
