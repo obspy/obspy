@@ -59,6 +59,8 @@ class Client(object):
     For details see the :meth:`~obspy.clients.filesystem.sds.Client.__init__()`
     method.
     """
+    FMTSTR = SDS_FMTSTR
+
     def __init__(self, sds_root, sds_type="D", format="MSEED",
                  fileborder_seconds=30, fileborder_samples=5000):
         """
@@ -172,7 +174,7 @@ class Client(object):
         st = Stream()
         full_paths = set()
         for year, doy in year_doy:
-            filename = SDS_FMTSTR.format(
+            filename = self.FMTSTR.format(
                 network=network, station=station, location=location,
                 channel=channel, year=year, doy=doy, type=sds_type)
             full_path = os.path.join(self.sds_root, filename)
