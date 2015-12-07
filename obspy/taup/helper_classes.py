@@ -137,7 +137,13 @@ class Arrival(object):
     """
     def __init__(self, phase, distance, time, purist_dist, ray_param,
                  ray_param_index, name, purist_name, source_depth,
-                 takeoff_angle, incident_angle):
+                 receiver_depth, takeoff_angle=None, incident_angle=None):
+        if np.isnan(time):
+            raise ValueError('Time cannot be NaN')
+        if ray_param_index < 0:
+            raise ValueError(
+                'ray_param_index cannot be negative: %d' % (ray_param_index, ))
+
         self.phase = phase
         self.distance = distance
         self.time = time
@@ -147,8 +153,15 @@ class Arrival(object):
         self.name = name
         self.purist_name = purist_name
         self.source_depth = source_depth
-        self.incident_angle = incident_angle
-        self.takeoff_angle = takeoff_angle
+        self.receiver_depth = receiver_depth
+        if takeoff_angle is None:
+            self.takeoff_angle = phase.calc_takeoff_angle(ray_param)
+        else:
+            self.takeoff_angle = takeoff_angle
+        if incident_angle is None:
+            self.incident_angle = phase.calc_incident_angle(ray_param)
+        else:
+            self.incident_angle = incident_angle
         self.pierce = None
         self.path = None
 

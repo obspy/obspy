@@ -237,7 +237,6 @@ class TauModel(object):
         SWaveRayParam = -1
         outSMod = self.sMod
         outRayParams = self.ray_params
-        oldRayParams = self.ray_params
         # Do S wave first since the S ray param is > P ray param.
         for isPWave in [False, True]:
             splitInfo = outSMod.splitLayer(depth, isPWave)
@@ -247,16 +246,12 @@ class TauModel(object):
                 # each.
                 newRayParam = splitInfo.ray_param
                 # Insert the new ray parameters into the ray_param array.
-                above = oldRayParams[:-1]
-                below = oldRayParams[1:]
-                index = (above < newRayParam) & (newRayParam < below)
+                above = outRayParams[:-1]
+                below = outRayParams[1:]
+                index = (above > newRayParam) & (newRayParam > below)
                 if np.any(index):
-                    index = np.where(index)[0][0]
-                    # FIXME: The original code uses oldRayParams, but that
-                    # seems like it would not work if you need to insert both
-                    # P and S waves. This part of the code doesn't seem to be
-                    # triggered, though.
-                    outRayParams = np.insert(oldRayParams, index, newRayParam)
+                    index = np.where(index)[0][0] + 1
+                    outRayParams = np.insert(outRayParams, index, newRayParam)
 
                     if isPWave:
                         indexP = index
@@ -271,8 +266,8 @@ class TauModel(object):
         newTauBranches = np.empty((2, self.tauBranches.shape[1] + 1),
                                   dtype=TauBranch)
         for i in range(branchToSplit):
-            newTauBranches[0, i] = self.tauBranches[0, i]
-            newTauBranches[1, i] = self.tauBranches[1, i]
+            newTauBranches[0, i] = deepcopy(self.tauBranches[0, i])
+            newTauBranches[1, i] = deepcopy(self.tauBranches[1, i])
             # Add the new ray parameter(s) from splitting the S and/or P
             # wave slowness layer to both the P and S wave tau branches (if
             # splitting occurred).
@@ -297,7 +292,8 @@ class TauModel(object):
                     outRayParams)
         for i in range(branchToSplit + 1, len(self.tauBranches[0])):
             for pOrS in range(2):
-                newTauBranches[pOrS, i + 1] = self.tauBranches[pOrS, i]
+                newTauBranches[pOrS, i + 1] =  \
+                    deepcopy(self.tauBranches[pOrS, i])
             if indexS != -1:
                 # Add the new ray parameter from splitting the S wave
                 # slownes layer to both the P and S wave tau branches.
@@ -309,7 +305,7 @@ class TauModel(object):
                 # slownes layer to both the P and S wave tau branches.
                 for pOrS in range(2):
                     newTauBranches[pOrS, i + 1].insert(PWaveRayParam, outSMod,
-                                                       indexS)
+                                                       indexP)
         # We have split a branch so possibly sourceBranch, mohoBranch,
         # cmbBranch and iocbBranch are off by 1.
         outSourceBranch = self.sourceBranch

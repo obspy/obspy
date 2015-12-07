@@ -15,16 +15,16 @@ class TauP_Pierce(TauP_Time):
     The methods here allow using TauP_Time to calculate the pierce points
     relating to the different arrivals.
     """
-    def __init__(self, model, phase_list, depth, degrees):
+    def __init__(self, model, phase_list, depth, degrees, receiver_depth=0.0):
         super().__init__(model=model, phase_list=phase_list, depth=depth,
-                         degrees=degrees)
+                         degrees=degrees, receiver_depth=receiver_depth)
         self.onlyTurnPoints = False
         self.onlyRevPoints = False
         self.onlyUnderPoints = False
         self.onlyAddPoints = False
         self.addDepth = []
 
-    def depth_correct(self, depth):
+    def depth_correct(self, depth, receiver_depth=None):
         """
         Override TauP_Time.depth_correct so that the pierce points may be
         added.
@@ -53,20 +53,20 @@ class TauP_Pierce(TauP_Time):
         if not mustRecalc:
             # Won't actually do anything much since depth_corrected_model !=
             #  None.
-            TauP_Time.depth_correct(self, depth)
+            TauP_Time.depth_correct(self, depth, receiver_depth)
         else:
             self.depth_corrected_model = None
             if self.addDepth is not None:
                 for addDepth in self.addDepth:
                     self.model = self.model.splitBranch(addDepth)
-            TauP_Time.depth_correct(self, depth)
+            TauP_Time.depth_correct(self, depth, receiver_depth)
             self.model = tModOrig
 
     def calculate(self, degrees):
         """
         Call all the necessary calculations to obtain the pierce points.
         """
-        self.depth_correct(self.source_depth)
+        self.depth_correct(self.source_depth, self.receiver_depth)
         self.recalc_phases()
         self.arrivals = []
         self.calcPierce(degrees)

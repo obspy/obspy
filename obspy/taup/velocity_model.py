@@ -78,6 +78,9 @@ class VelocityModel(object):
     def __len__(self):
         return len(self.layers)
 
+    def isdiscontinuity(self, depth):
+        return np.any(self.getDisconDepths() == depth)
+
     # @property  ?
     def getDisconDepths(self):
         """
