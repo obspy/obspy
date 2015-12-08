@@ -739,6 +739,20 @@ class CoreTestCase(unittest.TestCase):
         with io.BytesIO() as fh:
             self.assertRaises(ValueError, st.write, fh, format="sacxy")
 
+    def test_valid_sac_from_minimal_existing_sac_header(self):
+        """
+        An existing SAC header with null required headers should still produce
+        a valid SAC file.  Issue 1204.
+        """
+        tr = Trace(np.arange(100))
+        tr.stats.sac = {}
+        tr.stats.sac['stla'] = 1.
+        tr.stats.sac['stlo'] = 2.
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
