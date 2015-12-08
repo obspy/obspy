@@ -3,7 +3,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import imghdr
+import inspect
 import os
+import re
 import shutil
 import tempfile
 import unittest
@@ -11,7 +14,9 @@ import unittest
 import numpy as np
 
 from obspy import UTCDateTime, Trace, Stream
+from obspy.core.util.misc import TemporaryWorkingDirectory
 from obspy.clients.filesystem.sds import SDS_FMTSTR, Client
+from obspy.scripts.sds_html_report import main as sds_report
 
 
 class TemporarySDSDirectory(object):
@@ -19,29 +24,35 @@ class TemporarySDSDirectory(object):
     Handles creation and deletion of a temporary SDS directory structure.
     To be used with "with" statement.
     """
-    def __init__(self, year, doy):
+    sampling_rate = 0.1
+    networks = ("AB", "CD")
+    stations = ("XYZ", "ZZZ3")
+    locations = ("", "00")
+    channels = ("HHZ", "HHN", "HHE", "BHZ", "BHN", "BHE")
+
+    def __init__(self, year, doy, time=None):
         """
         Set which day's midnight (00:00 hours) is used as a day break in the
         testing (to split the test data into two files).
+
+        If `time` is specified it overrides `year` and `doy`.
         """
-        self.time = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
-        sampling_rate = 0.1
-        delta = 1 / sampling_rate
-        networks = ("AB", "CD")
-        stations = ("XYZ", "ZZZ3")
-        locations = ("", "00")
-        channels = ("HHZ", "HHN", "HHE", "BHZ", "BHN", "BHE")
+        if time:
+            self.time = time
+        else:
+            self.time = UTCDateTime("%d-%03dT00:00:00" % (year, doy))
+        delta = 1.0 / self.sampling_rate
 
         self.stream = Stream()
-        for net in networks:
-            for sta in stations:
-                for loc in locations:
-                    for cha in channels:
+        for net in self.networks:
+            for sta in self.stations:
+                for loc in self.locations:
+                    for cha in self.channels:
                         tr = Trace(
                             data=np.arange(100, dtype=np.int32),
                             header=dict(
                                 network=net, station=sta, location=loc,
-                                channel=cha, sampling_rate=sampling_rate,
+                                channel=cha, sampling_rate=self.sampling_rate,
                                 starttime=self.time - 30 * delta))
 
                         # cut into two seamless traces
@@ -56,7 +67,7 @@ class TemporarySDSDirectory(object):
         for tr_ in self.stream:
             t_ = tr_.stats.starttime
             full_path = SDS_FMTSTR.format(year=t_.year, doy=t_.julday,
-                                          type="D", **tr_.stats)
+                                          sds_type="D", **tr_.stats)
             full_path = os.path.join(self.tempdir, full_path)
             dirname, filename = os.path.split(full_path)
             if not os.path.isdir(dirname):
@@ -73,6 +84,10 @@ class SDSTestCase(unittest.TestCase):
     """
     Test reading data from SDS file structure.
     """
+    def setUp(self):
+        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+             inspect.getfile(inspect.currentframe()))), "data")
+
     def test_read_from_SDS(self):
         """
         Test reading data across year and day breaks from SDS directory
@@ -144,6 +159,94 @@ class SDSTestCase(unittest.TestCase):
                 net, sta, loc, cha = wildcarded_seed_id.split(".")
                 st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
                 self.assertEqual(len(st), num_matching_ids)
+
+    def test_SDS_report(self):
+        """
+        Test command line script for generating SDS report html.
+
+        Inherently that script uses many other routines like `_get_filenames`,
+        `get_availability_percentage`, `_get_current_endtime`,
+        `get_latency`, `has_data` and `get_all_stations`, so these should be
+        sufficiently covered as well.
+        """
+        # generate some dummy SDS with data roughly 2-3 hours behind current
+        # time
+        t = UTCDateTime() - 2.5 * 3600
+        with TemporarySDSDirectory(year=None, doy=None, time=t) as temp_sds, \
+                TemporaryWorkingDirectory():
+            # create the report
+            output_basename = "sds_report"
+            argv = [
+                "-r={}".format(temp_sds.tempdir),
+                "-o={}".format(os.path.join(os.curdir, output_basename)),
+                "-l=", "-l=00", "-l=10", "-c=HHZ", "-c=BHZ", "-i=AB.XYZ..BHE",
+                "--check-quality-days=1"]
+            sds_report(argv)
+            # do the testing
+            output_basename_abspath = os.path.abspath(
+                os.path.join(os.curdir, output_basename))
+            file_html = output_basename_abspath + ".html"
+            file_txt = output_basename_abspath + ".txt"
+            file_png = output_basename_abspath + ".png"
+            # check that output files exist
+            for file_ in [file_html, file_txt, file_png]:
+                self.assertTrue(os.path.isfile(file_))
+            # check content of image file (just check it is a png file)
+            self.assertEqual(imghdr.what(file_png), "png")
+            # check content of stream info / data quality file
+            expected_lines = [b"AB,XYZ,,BHE,0.007292,2",
+                              b"AB,XYZ,,HHZ,0.007292,2",
+                              b"AB,XYZ,00,HHZ,0.007292,2",
+                              b"AB,ZZZ3,,HHZ,0.007292,2",
+                              b"AB,ZZZ3,00,HHZ,0.007292,2",
+                              b"CD,XYZ,,HHZ,0.007292,2",
+                              b"CD,XYZ,00,HHZ,0.007292,2",
+                              b"CD,ZZZ3,,HHZ,0.007292,2",
+                              b"CD,ZZZ3,00,HHZ,0.007292,2"]
+            with open(file_txt, "rb") as fh:
+                got_lines = fh.readlines()
+            for expected_line, got_line in zip(expected_lines, got_lines):
+                self.assertEqual(expected_line, got_line.rstrip())
+            # check content of html report
+            with open(file_html, "rb") as fh:
+                got_lines = fh.readlines()
+            html_regex_file = os.path.join(self.data_dir, "sds_report.regex")
+            with open(html_regex_file, "rb") as fh:
+                regex_patterns = fh.readlines()
+            failed = False  # XXX remove again
+            for got, pattern in zip(got_lines, regex_patterns):
+                match = re.match(pattern.strip(), got.strip())
+                try:  # XXX remove again
+                    self.assertIsNotNone(match)
+                except:
+                    failed = True
+                    print(pattern.strip())
+                    print(got.strip())
+            if failed:
+                raise
+
+    def test_get_all_stations_and_nslc(self):
+        """
+        Test `get_all_stations` and `get_all_nslc` methods
+        """
+        # generate dummy SDS
+        t = UTCDateTime()
+        with TemporarySDSDirectory(year=None, doy=None, time=t) as temp_sds:
+            client = Client(temp_sds.tempdir)
+            expected_netsta = sorted([
+                (net, sta)
+                for net in temp_sds.networks
+                for sta in temp_sds.stations])
+            got_netsta = client.get_all_stations()
+            self.assertEqual(expected_netsta, got_netsta)
+            expected_nslc = sorted([
+                (net, sta, loc, cha)
+                for net in temp_sds.networks
+                for sta in temp_sds.stations
+                for loc in temp_sds.locations
+                for cha in temp_sds.channels])
+            got_nslc = client.get_all_nslc()
+            self.assertEqual(expected_nslc, got_nslc)
 
 
 def suite():

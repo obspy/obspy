@@ -123,6 +123,7 @@ ENTRY_POINTS = {
         'obspy-runtests = obspy.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.scripts.reftekrescue:main',
         'obspy-print = obspy.scripts.print:main',
+        'obspy-sds-report = obspy.scripts.sds_html_report:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',

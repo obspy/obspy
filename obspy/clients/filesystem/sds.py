@@ -41,6 +41,7 @@ from future.builtins import *  # NOQA
 
 import glob
 import os
+import re
 import warnings
 from datetime import timedelta
 
@@ -51,8 +52,9 @@ from obspy.core.util.misc import BAND_CODE
 
 
 SDS_FMTSTR = os.path.join(
-    "{year}", "{network}", "{station}", "{channel}.{type}",
-    "{network}.{station}.{location}.{channel}.{type}.{year}.{doy:03d}")
+    "{year}", "{network}", "{station}", "{channel}.{sds_type}",
+    "{network}.{station}.{location}.{channel}.{sds_type}.{year}.{doy:03d}")
+FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w*?)?([!:].*?)?}"
 
 
 class Client(object):
@@ -149,6 +151,9 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :param kwargs: Additional kwargs that get passed on to
+            :func:`~obspy.core.stream.read` internally, mostly for internal
+            low-level purposes used by other methods.
         :rtype: :class:`~obspy.core.stream.Stream`
         """
         if starttime >= endtime:
@@ -228,7 +233,7 @@ class Client(object):
         for year, doy in year_doy:
             filename = self.FMTSTR.format(
                 network=network, station=station, location=location,
-                channel=channel, year=year, doy=doy, type=sds_type)
+                channel=channel, year=year, doy=doy, sds_type=sds_type)
             full_path = os.path.join(self.sds_root, filename)
             full_paths = full_paths.union(glob.glob(full_path))
 
@@ -257,7 +262,8 @@ class Client(object):
         sds_type = sds_type or self.sds_type
         filename = self.FMTSTR.format(
             network=network, station=station, location=location,
-            channel=channel, year=time.year, doy=time.julday, type=sds_type)
+            channel=channel, year=time.year, doy=time.julday,
+            sds_type=sds_type)
         return os.path.join(self.sds_root, filename)
 
     def get_availability_percentage(self, network, station, location, channel,
@@ -325,6 +331,9 @@ class Client(object):
         """
         Get time of last sample for given stream.
 
+        ``None`` is returned if no data at all is encountered when going
+        backwards until `stop_time` (defaults to Jan 1st 1950).
+
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
         :type station: str
@@ -338,8 +347,8 @@ class Client(object):
             during client initialization.
         :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param stop_time: Time at which the search for data is stopped and
-            `None` is returned. If not specified, stops at ``1950-01-01T00``.
-        :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime` or `None`
+            ``None`` is returned. If not specified, stops at ``1950-01-01T00``.
+        :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime` or ``None``
         """
         sds_type = sds_type or self.sds_type
 
@@ -369,7 +378,10 @@ class Client(object):
     def get_latency(self, network, station, location, channel,
                     sds_type=None, stop_time=None):
         """
-        Get time of last sample for given stream.
+        Get latency for given stream, i.e. difference of current time and
+        latest available data for stream in SDS archive. ``None`` is returned
+        if no data at all is encountered when going backwards until
+        `stop_time` (defaults to Jan 1st 1950).
 
         :type network: str
         :param network: Network code of requested data (e.g. "IU").
@@ -384,7 +396,7 @@ class Client(object):
             during client initialization.
         :type stop_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param stop_time: Time at which the search for data is stopped and
-            `None` is returned. If not specified, stops at ``1950-01-01T00``.
+            ``None`` is returned. If not specified, stops at ``1950-01-01T00``.
         :rtype: float or ``None``
         :returns: Latency in seconds or ``None`` if no data was encountered
             from current time backwards until ``stop_time``.
@@ -419,11 +431,15 @@ class Client(object):
         :rtype: bool
         """
         sds_type = sds_type or self.sds_type
-        pattern = self.FMTSTR.format(
-            year="*", network=network, station=station, location=location,
-            channel=channel, doy=0, type=sds_type)
-        # can not insert wildcard for day-of-year above, so replace it now
-        pattern = pattern.rsplit(".", 1)[0] + "*"
+
+        pattern = re.sub(
+            FORMAT_STR_PLACEHOLDER_REGEX,
+            _wildcarded_except(["network", "station", "location", "channel",
+                                "sds_type"]),
+            self.FMTSTR)
+        pattern = pattern.format(
+            network=network, station=station, location=location,
+            channel=channel, sds_type=sds_type)
         pattern = os.path.join(self.sds_root, pattern)
         if glob.glob(pattern):
             return True
@@ -446,52 +462,118 @@ class Client(object):
             available streams in archive.
         """
         sds_type = sds_type or self.sds_type
-        pattern = self.FMTSTR.format(
-            year="*", network="*", station="*", location="*",
-            channel="*", doy=0, type=sds_type)
-        # can not insert wildcard for day-of-year above, so replace it now
-        pattern = pattern.rsplit(".", 1)[0] + "*"
+        result = set()
+        # wildcarded pattern to match all files of interest
+        pattern = re.sub(
+            FORMAT_STR_PLACEHOLDER_REGEX,
+            _wildcarded_except(["sds_type"]),
+            self.FMTSTR).format(sds_type=sds_type)
         pattern = os.path.join(self.sds_root, pattern)
         all_files = glob.glob(pattern)
-        result = set()
+        # set up inverse regex to extract kwargs/values from full paths
+        pattern_ = os.path.join(self.sds_root, self.FMTSTR)
+        group_map = {i: groups[0] for i, groups in
+                     enumerate(re.findall(FORMAT_STR_PLACEHOLDER_REGEX,
+                                          pattern_))}
         for file_ in all_files:
-            network, station, channel, filename = file_.split("/")[-4:]
-            channel = channel.split(".")[0]
-            location = filename.split(".")[2]
+            dict_ = _parse_path_to_dict(file_, pattern_, group_map)
+            try:
+                network = dict_["network"]
+                station = dict_["station"]
+                location = dict_["location"]
+                channel = dict_["channel"]
+            except KeyError as e:
+                msg = (
+                    "Failed to extract key from pattern '{}' in path "
+                    "'{}': {}").format(pattern, file_, e)
+                warnings.warn(msg)
+                continue
             result.add((network, station, location, channel))
-        return result
+        return sorted(result)
 
-    def get_all_stations(self, sds_type=None, strict=True):
+    def get_all_stations(self, sds_type=None):
         """
         Return information on what stations are included in archive.
+
+        This method assumes that network/station combinations can be discovered
+        from the folder structure alone (as opposed to the filenames).
 
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
-        :type strict: bool
-        :param strict: Whether to only regard folders with valid
-            network/station code lengths with respect to SEED (i.e. at most 2
-            characters in network code, at most 5 characters in station code).
         :rtype: list
         :returns: List of (network, station) 2-tuples of all available stations
             in archive.
         """
         sds_type = sds_type or self.sds_type
-        pattern = self.FMTSTR.format(
-            year="*", network="*", station="*", location="*",
-            channel="*", doy=0, type=sds_type)
-        # can not insert wildcard for day-of-year above, so replace it now
-        pattern = os.path.join(self.sds_root, pattern)
-        pattern = os.path.dirname(os.path.dirname(pattern))
-        all_folders = glob.glob(pattern)
         result = set()
-        for file_ in all_folders:
-            network, station = file_.split("/")[-2:]
-            if strict:
-                if len(network) > 2 or len(network) > 5:
-                    continue
+        # wildcarded pattern to match all files of interest
+        fmtstr = os.path.dirname(self.FMTSTR)
+        pattern = re.sub(
+            FORMAT_STR_PLACEHOLDER_REGEX,
+            _wildcarded_except(["sds_type"]),
+            fmtstr).format(sds_type=sds_type)
+        pattern = os.path.join(self.sds_root, pattern)
+        all_files = glob.glob(pattern)
+        # set up inverse regex to extract kwargs/values from full paths
+        pattern_ = os.path.join(self.sds_root, fmtstr)
+        group_map = {i: groups[0] for i, groups in
+                     enumerate(re.findall(FORMAT_STR_PLACEHOLDER_REGEX,
+                                          pattern_))}
+        for file_ in all_files:
+            dict_ = _parse_path_to_dict(file_, pattern_, group_map)
+            try:
+                network = dict_["network"]
+                station = dict_["station"]
+            except KeyError as e:
+                msg = (
+                    "Failed to extract key from pattern '{}' in path "
+                    "'{}': {}").format(pattern_, file_, e)
+                warnings.warn(msg)
+                continue
             result.add((network, station))
         return sorted(result)
+
+
+def _wildcarded_except(exclude=[]):
+    """
+    Function factory for :mod:`re` ``repl`` functions used in :func:`re.sub``,
+    replacing all format string place holders with ``*`` wildcards, except
+    named fields as specified in ``exclude``.
+    """
+    def __wildcarded(match):
+        if match.group(1) in exclude:
+            return match.group(0)
+        return "*"
+    return __wildcarded
+
+
+def _parse_path_to_dict(path, pattern, group_map):
+    # escape special regex characters "." and "\"
+    # in principle we should escape all special characters in Python regex:
+    #    . ^ $ * + ? { } [ ] \ | ( )
+    # and also only replace them if outside of format string placeholders..
+    regex = re.sub(r'([\.\\])', r'\\\1', pattern)
+    # replace each format string placeholder with a regex group, matching
+    # alphanumerics. append end-of-line otherwise the last non-greedy match
+    # doesn't catch anything if it's at the end of the regex
+    regex = re.sub(FORMAT_STR_PLACEHOLDER_REGEX, r'(\w*?)', regex) + "$"
+    match = re.match(regex, path)
+    if match is None:
+        return None
+    result = {}
+    for i, value in enumerate(match.groups()):
+        key = group_map[i]
+        if key in result:
+            if result[key] != value:
+                msg = (
+                    "Failed to parse path '{}': Mismatching information "
+                    "for key '{}' from pattern '{}'.").format(
+                        path, key, pattern)
+                warnings.warn(msg)
+                return None
+        result[key] = value
+    return result
 
 
 if __name__ == '__main__':
