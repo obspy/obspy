@@ -48,6 +48,7 @@ from datetime import timedelta
 import numpy as np
 
 from obspy import Stream, read, UTCDateTime
+from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
 
 
@@ -296,11 +297,21 @@ class Client(object):
         sds_type = sds_type or self.sds_type
         with warnings.catch_warnings():
             warnings.filterwarnings(
-                "ignore", "Keyword headonly cannot be combined with "
-                "starttime, endtime or dtype.", UserWarning)
+                "ignore", _headonly_warning_msg, UserWarning,
+                "obspy.core.stream")
             st = self.get_waveforms(network, station, location, channel,
                                     starttime, endtime, sds_type=sds_type,
                                     headonly=True, _no_trim_or_merge=True)
+        # even if the warning was silently caught and not shown it gets
+        # registered in the __warningregistry__ and will not be shown
+        # subsequently in a place were it's not caught
+        # see https://bugs.python.org/issue4180
+        # see e.g. http://blog.ionelmc.ro/2013/06/26/testing-python-warnings/
+        from obspy.core.stream import __warningregistry__ as \
+            stream_warningregistry
+        for key in list(stream_warningregistry.keys()):
+            if key[0] == _headonly_warning_msg:
+                stream_warningregistry.pop(key)
         st.sort(keys=['starttime', 'endtime'])
         st.traces = [tr for tr in st
                      if not (tr.stats.endtime < starttime or
