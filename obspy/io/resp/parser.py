@@ -13,6 +13,8 @@ import re
 import io
 from pprint import pprint
 
+from obspy.io.xseed import (parser, blockette, fields)
+
 DEBUG = True
 
 def read_RESP(filename):
@@ -23,7 +25,7 @@ def read_RESP(filename):
     blockettefieldlist = list()
     last_blockette_id = None
     for line in respfile:
-        print(line, end='')
+        #print(line, end='')
         m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
         if m:
             g = m.groups()
@@ -31,7 +33,7 @@ def read_RESP(filename):
             if blockette_number != last_blockette_id:
                 # A new blockette starting
                 if len(blockettefieldlist) > 0:
-                    print("new blockette")
+                    #print("new blockette")
                     blockettelist.append(blockettefieldlist)
                     blockettefieldlist = list()
                 last_blockette_id = blockette_number
@@ -53,15 +55,24 @@ def read_RESP(filename):
         elif re.match(r"^#.*\+", line):
             # Comment line with a + in it means blockette is finished start a new one
             if len(blockettefieldlist) > 0:
-                print("new blockette")
+                #print("new blockette")
                 blockettelist.append(blockettefieldlist)
                 blockettefieldlist = list()
                 
             #print()
+    # add last blockette
+    if len(blockettefieldlist) > 0:
+        blockettelist.append(blockettefieldlist)
+        
     return blockettelist
+
+def record_type_from_blocketteid(bid):
+    for voltype in parser.HEADER_INFO:
+        if bid in parser.HEADER_INFO[voltype]['blockettes']:
+            return voltype
+        
                 
 def make_xseed(RESPblockettelist):
-    from obspy.io.xseed import (parser, blockette, fields)
     seedparser = parser.Parser()
     seedparser.temp = {'volume': [], 'abbreviations': [], 'stations': []}
     # Make an empty blockette10
@@ -83,17 +94,17 @@ def make_xseed(RESPblockettelist):
                                          record_type='A')
         b34_obj.parse_SEED(data, expected_length=len(b34))
         seedparser.temp['abbreviations'].append(b34_obj)
-    record_type = 'S'
     seedparser.temp['stations'].append([])
     root_attribute = seedparser.temp['stations'][-1]
  
     old_RESPblockette_id = None
     
     for RESPblockettefieldlist in RESPblockettelist:
-        # Creat a new blockette using the first field
+        # Create a new blockette using the first field
         RESPblockette_id, RESPfield, RESPvalue = RESPblockettefieldlist[0]
         class_name = 'Blockette%03d' % int(RESPblockette_id)
         blockette_class = getattr(blockette, class_name)
+        record_type =  record_type_from_blocketteid(blockette_class.id)
         blockette_obj = blockette_class(debug=DEBUG,
                                         strict=False,
                                         compact=False,
@@ -120,11 +131,10 @@ def make_xseed(RESPblockettelist):
                     print(RESPvalue)
                     #lookup if abbv
                     RESPvalue = abbv_lookup.get(RESPvalue, RESPvalue)
-                    print(RESPvalue)
                     dataRESPvalue = io.BytesIO(RESPvalue.encode('utf-8'))
-                    if blockette_obj.id == 57 and bfield.id == 4:
-                        # Oddity with B057F03
-                        bfield.length = 12
+                    if hasattr(bfield, 'length') and bfield.length < len(RESPvalue):
+                        # Oddity with many sci notation floats
+                        bfield.length = len(RESPvalue)
                     bfield.parse_SEED(blockette_obj, dataRESPvalue)
                     if bfield in unused_fields:
                         # Looping fields can't be removed twice.
@@ -134,19 +144,21 @@ def make_xseed(RESPblockettelist):
             # Set unused fields to default
             bfield.parse_SEED(blockette_obj, None)
         
-        root_attribute.append(blockette_obj)
+        # This is not correct for more than rdseed -R, although it will parse
+        # Also will not separate stations blockettes by station
+        if record_type == 'S':
+            root_attribute.append(blockette_obj)
+        elif record_type == 'V':
+            seedparser.temp['volume'].append(blockette_obj)
+        elif record_type == 'A':
+            seedparser.temp['abbreviations'].append(blockette_obj)
+            
         seedparser.blockettes.setdefault(blockette_obj.id,
                                          []).append(blockette_obj)
         
     seedparser._update_internal_SEED_structure()
-    seedparser.get_SEED()
-    pprint(seedparser.__dict__)        
+    return seedparser
     
 if __name__ == '__main__':
-    blockettefieldlist = read_RESP(filename='/Users/lloyd/work/workMOONBASE/PDCC/2015/NRL-download-directfromIRIS/IRIS/dataloggers/quanterra/RESP.XX.NQ004..BHZ.Q330.SR.1.40.all')
-    #blockettefieldlist = read_RESP(filename='/Users/lloyd/work/workMOONBASE/PDCC/2015/NRL-download-directfromIRIS/IRIS/sensors/streckeisen/RESP.XX.NS085..BHZ.STS2_gen3.120.1500')    
-    #blockettefieldlist = read_RESP(filename='/Users/lloyd/work/workMOONBASE/test_data/RESP.GR.FUR..BHE_with_blkt60')    
-    #blockettefieldlist = read_RESP(filename='/Volumes/liquid/work/TESTDATA/XE.2015/rdseed.out.XE')    
-    pprint(blockettefieldlist)
-    make_xseed(blockettefieldlist)
+    pass
     
