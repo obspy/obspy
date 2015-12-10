@@ -380,6 +380,8 @@ class Client(object):
                 channel=channel, time=time, sds_type=sds_type)
             if os.path.isfile(filename):
                 st = read(filename, format=self.format, headonly=True)
+                st = st.select(network=network, station=station,
+                               location=location, channel=channel)
                 if st:
                     break
             time -= 24 * 3600
