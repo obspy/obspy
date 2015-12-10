@@ -39,6 +39,9 @@ master:
      of FDSN web services.
  - obspy.clients.filesystem.sds:
    * New client to read data from local SDS directory structure (see #1135).
+   * Command line script `obspy-sds-report` to generate html page with
+     information on latency, data availability percentage and number of gaps
+     for a local SDS archive (see #1202)
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.

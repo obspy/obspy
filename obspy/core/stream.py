@@ -40,6 +40,10 @@ from obspy.core.util.decorator import (deprecated_keywords,
 from obspy.core.util.misc import get_window_times
 
 
+_headonly_warning_msg = (
+    "Keyword headonly cannot be combined with starttime, endtime or dtype.")
+
+
 @map_example_filename("pathname_or_url")
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
@@ -245,9 +249,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
                 raise Exception("Cannot open file/files: %s" % pathname)
     # Trim if times are given.
     if headonly and (starttime or endtime or dtype):
-        msg = "Keyword headonly cannot be combined with starttime, endtime" + \
-            " or dtype."
-        warnings.warn(msg, UserWarning)
+        warnings.warn(_headonly_warning_msg, UserWarning)
         return st
     if starttime:
         st._ltrim(starttime, nearest_sample=nearest_sample)
