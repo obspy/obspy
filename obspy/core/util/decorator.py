@@ -50,7 +50,7 @@ def deprecated(warning_msg=None):
             msg = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
-        warnings.warn(msg, category=ObsPyDeprecationWarning)
+        warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         return func(*args, **kwargs)
     return _deprecated
 
@@ -94,10 +94,12 @@ def deprecated_keywords(keywords):
                     nkw = keywords[kw]
                     if nkw is None:
                         warnings.warn(msg2 % (kw, fname),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                         kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
