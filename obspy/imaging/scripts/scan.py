@@ -334,7 +334,11 @@ def main(argv=None):
             _samp_int = _samp_int[indices]
         if len(startend) == 0:
             continue
-        timerange = startend[:, 1].max() - startend[:, 0].min()
+        data_start = startend[:, 0].min()
+        data_end = startend[:, 1].max()
+        timerange_start = args.start_time or data_start
+        timerange_end = args.end_time or data_end
+        timerange = timerange_end - timerange_start
         if timerange == 0.0:
             warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
@@ -349,17 +353,41 @@ def main(argv=None):
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
+        # if start- and/or endtime is specified, add missing data at start/end
+        # to gap sum
+        has_gap = False
+        gap_at_start = (
+            args.start_time and
+            data_start > args.start_time and
+            data_start - args.start_time)
+        gap_at_end = (
+            args.end_time and
+            args.end_time > data_end and
+            args.end_time - data_end)
+        if args.start_time and gap_at_start:
+            gapsum += gap_at_start
+            has_gap = True
+        if args.end_time and gap_at_end:
+            gapsum += gap_at_end
+            has_gap = True
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
         gap_indices = diffs > 1.8 * _samp_int[:-1]
-        gap_indices = np.concatenate((gap_indices, [False]))
-        if any(gap_indices):
+        gap_indices = np.append(gap_indices, False)
+        has_gap |= any(gap_indices)
+        if has_gap:
             # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
-            if not args.no_gaps and any(gap_indices):
-                rects = [Rectangle((start_, offset[0] - 0.4),
-                                   end_ - start_, 0.8)
+            if args.start_time and gap_at_start:
+                gaps_start = np.append(gaps_start, args.start_time)
+                gaps_end = np.append(gaps_end, data_start)
+            if args.end_time and gap_at_end:
+                gaps_start = np.append(gaps_start, data_end)
+                gaps_end = np.append(gaps_end, args.end_time)
+            if not args.no_gaps:
+                rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_,
+                                   0.8)
                          for start_, end_ in zip(gaps_start, gaps_end)]
                 ax.add_collection(PatchCollection(rects, color="r"))
             if args.print_gaps:
