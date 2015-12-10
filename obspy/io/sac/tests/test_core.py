@@ -742,9 +742,8 @@ class CoreTestCase(unittest.TestCase):
 
     def test_valid_sac_from_minimal_existing_sac_header(self):
         """
-        An existing incomplete manually-produced SAC header should still
-        produce a valid SAC file, including values from the ObsPy header.
-        Issue 1204.
+        An incomplete manually-produced SAC header should still produce a
+        valid SAC file, including values from the ObsPy header.  Issue 1204.
         """
         tr = Trace(np.arange(100))
         t = UTCDateTime()
@@ -753,25 +752,28 @@ class CoreTestCase(unittest.TestCase):
         tr.stats.network = 'XX'
         tr.stats.channel = 'BHZ'
         tr.stats.location = '00'
+
         tr.stats.sac = AttribDict()
-        tr.stats.sac['iztype'] = 9
-        tr.stats.sac['nvhdr'] = 6
-        tr.stats.sac['leven'] = 1
-        tr.stats.sac['lovrok'] = 1
-        tr.stats.sac['iftype'] = 1
+        tr.stats.sac.iztype = 9
+        tr.stats.sac.nvhdr = 6
+        tr.stats.sac.leven = 1
+        tr.stats.sac.lovrok = 1
+        tr.stats.sac.iftype = 1
         tr.stats.sac.stla = 1.
         tr.stats.sac.stlo = 2.
+
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             tr.write(tempfile, format='SAC')
             tr1 = read(tempfile)[0]
 
-        self.assertEqual(tr1.stats.starttime, t)
+        # starttime made its way to SAC file
         self.assertEqual(tr1.stats.sac.nzyear, t.year)
         self.assertEqual(tr1.stats.sac.nzjday, t.julday)
         self.assertEqual(tr1.stats.sac.nzhour, t.hour)
         self.assertEqual(tr1.stats.sac.nzmin, t.minute)
         self.assertEqual(tr1.stats.sac.nzsec, t.second)
+        # don't want to bother with nzmsec b/c of truncation
         self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
         self.assertEqual(tr1.stats.sac.knetwk, 'XX')
         self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
