@@ -261,6 +261,22 @@ def split_microseconds(microseconds):
     return milliseconds, microseconds
 
 
+def utcdatetime_to_sac_nztimes(utcdt):
+    # Returns a dict of integer nz-times and remainder microseconds
+    nztimes = {}
+    nztimes['nzyear'] = utcdt.year
+    nztimes['nzjday'] = utcdt.julday
+    nztimes['nzhour'] = utcdt.hour
+    nztimes['nzmin'] = utcdt.minute
+    nztimes['nzsec'] = utcdt.second
+    # nz times don't have enough precision, so push microseconds into b,
+    # using integer arithmetic
+    millisecond, microsecond = split_microseconds(utcdt.microsecond)
+    nztimes['nzmsec'] = millisecond
+
+    return nztimes, microsecond
+
+
 # TODO: do this in SACTrace? has some reftime handling overlap w/ set_reftime.
 def obspy_to_sac_header(stats, keep_sac_header=True):
     """
@@ -293,36 +309,46 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header['npts'] = stats['npts']
         header['delta'] = stats['delta']
 
-        # XXX: if you don't know "b", you don't know the difference btwn
-        #   the old and new 1st sample times, and b/bshift will be wrong.
-        #   ObsPy compatible behavior is to procede as though iztype is 'ib',
-        #   the starttime is the reftime, and b is 0.0?
-
+        # get "b"
+        # NOTE: if you don't know the old absolute first sample time, you don't
+        # know the difference btwn the old SAC 1st sample time and the current
+        # stats.starttime (in the case of Trace merging or trimming). If the
+        # old iztype was 9, knowing this shift is required in order to keep SAC
+        # relative time headers valid.
+        # XXX: what about synthetic data, sac funcgen files?
         try:
-            # if the first sample time in stats is different than the one in
-            # the old header (e.g. from trimming), we need to know that shift.
-            # The treatment will depend on whether the old header had a valid
-            # reftime.
             reftime = get_sac_reftime(header)
-            # reftme + b is the old first sample time
+            # reftime + b is the old first sample time
             b = stats['starttime'] - reftime
             # NOTE: if b or e is null, it will become set here.
-            # TODO: I want to uncomment this eventually.
             header['b'] = b
             header['e'] = b + (stats['endtime'] - stats['starttime'])
         except SacHeaderTimeError:
-            # can't determine absolute time shift.
-            # assume that the old and new 1st sample times are the same
+            # can't determine reftime or absolute time shift.
+            # assume that the old and new 1st sample times are the same.
+            # don't set b, e (for some reason)
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
+
+            # use the stats starttime as the reftime
+            # XXX: If a single nz-time in the original header is bad,
+            #   they are all set to the stats.starttime, and b = 0, which
+            #   implies iztype = 9, which I'm not changing b/c that would
+            #   invalidate every other relative time header.
+            reftime = stats['starttime']
+            nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
+            header.update(nztimes)
+            header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+            header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
-            # Assume an iztype 9/'ib' type file: move the reftime to the
+            # XXX: Assume an iztype 9/'ib' type file: move the reftime to the
             # starttime and assume that the old and new 1st sample times are
             # the same
-            pass
+            b = 0
+            e = (header['npts'] - 1) * header['delta']
     else:
-        # SAC header from scratch
+        # SAC header from scratch.  Just use stats.
         header['npts'] = stats['npts']
         header['delta'] = stats['delta']
 
@@ -330,16 +356,12 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         # SAC header
         header['iztype'] = 9
         starttime = stats['starttime']
-        header['nzyear'] = starttime.year
-        header['nzjday'] = starttime.julday
-        header['nzhour'] = starttime.hour
-        header['nzmin'] = starttime.minute
-        header['nzsec'] = starttime.second
         # nz times don't have enough precision, so push microseconds into b,
         # using integer arithmetic
-        millisecond, microsecond = split_microseconds(starttime.microsecond)
-        header['nzmsec'] = millisecond
+        nztimes, microsecond = utcdatetime_to_sac_nztimes(starttime)
+        header.update(nztimes)
 
+        # XXX: 1e-6 doesn't look quite right...
         header['b'] = (microsecond * 1e-6) if microsecond else 0.0
 
         # we now have correct b, npts, delta, and nz times
