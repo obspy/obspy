@@ -80,13 +80,13 @@ def make_xseed(RESPblockettelist):
     # Make an empty blockette10
     seedparser.temp['volume'].append(blockette.Blockette010(
         debug=DEBUG, strict=False, compact=False, record_type='V'))
-
     # Make unit lookup blockette34
     b34s = ('034  44  4M/S~velocity in meters per second~',
             '034  25  5V~emf in volts~',
             '034  32  7COUNTS~digital counts~'
             )
     abbv_lookup = {'M/S': '4', 'V': '5', 'COUNTS': '7'}
+
     for b34 in b34s:
         data = io.BytesIO(b34.encode('utf-8'))
         b34_obj = blockette.Blockette034(debug=DEBUG,
@@ -95,8 +95,6 @@ def make_xseed(RESPblockettelist):
         seedparser.temp['abbreviations'].append(b34_obj)
     seedparser.temp['stations'].append([])
     root_attribute = seedparser.temp['stations'][-1]
-
-    old_RESPblockette_id = None
 
     for RESPblockettefieldlist in RESPblockettelist:
         # Create a new blockette using the first field
