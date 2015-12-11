@@ -335,18 +335,19 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             #   they are all set to the stats.starttime, and b = 0, which
             #   implies iztype = 9, which I'm not changing b/c that would
             #   invalidate every other relative time header.
-            reftime = stats['starttime']
-            nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
-            header.update(nztimes)
-            header['b'] = (microsecond * 1e-6) if microsecond else 0.0
-            header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
+            # reftime = stats['starttime']
+            # nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
+            # header.update(nztimes)
+            # header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+            # header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
             # XXX: Assume an iztype 9/'ib' type file: move the reftime to the
             # starttime and assume that the old and new 1st sample times are
             # the same
-            b = 0
-            e = (header['npts'] - 1) * header['delta']
+            # b = 0
+            # e = (header['npts'] - 1) * header['delta']
+            pass
     else:
         # SAC header from scratch.  Just use stats.
         header['npts'] = stats['npts']
@@ -380,14 +381,15 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         # header['internal0'] = 2.0
         # header['cmpaz'] = 0
         # header['cmpinc'] = 0
-        header['nvhdr'] = 6
-        header['leven'] = 1
         # header['lpspol'] = 1
         # header['lcalda'] = 0
-        header['lovrok'] = 1
         # header['evla'] = 0
         # header['evlo'] = 0
-        header['iftype'] = 1
+
+    header['nvhdr'] = 6
+    header['leven'] = 1
+    header['lovrok'] = 1
+    header['iftype'] = 1
 
     return header
 
