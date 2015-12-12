@@ -299,14 +299,12 @@ def main(argv=None):
     if args.write:
         write_npz(args.write, data, samp_int)
 
-    # Loop through this dictionary
-    ids = list(data.keys())
     # Handle deprecated argument
     if args.ids and not args.id:
         args.id = args.ids.split(',')
-    # restrict plotting of results to given ids
-    if args.id:
-        ids = [x for x in ids if x in args.id]
+    # either use ids specified by user or use ids based on what data we have
+    # parsed
+    ids = args.id or list(data.keys())
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
     if args.verbose or not args.quiet:
@@ -314,12 +312,26 @@ def main(argv=None):
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         # sort data list and sampling rate list
-        startend = np.array(data[_id])
-        _samp_int = np.array(samp_int[_id])
-        indices = np.lexsort((startend[:, 1], startend[:, 0]))
-        startend = startend[indices]
-        _samp_int = _samp_int[indices]
+        if _id in data:
+            startend = np.array(data[_id])
+            _samp_int = np.array(samp_int[_id])
+            indices = np.lexsort((startend[:, 1], startend[:, 0]))
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
+        else:
+            startend = np.array([])
+            _samp_int = np.array([])
         if len(startend) == 0:
+            if not (args.start_time and args.end_time):
+                continue
+            if not args.no_gaps:
+                rects = [Rectangle((args.start_time, _i - 0.4),
+                                   args.end_time - args.start_time, 0.8)]
+                ax.add_collection(PatchCollection(rects, color="r"))
+            if args.print_gaps and (args.verbose or not args.quiet):
+                print("%s %s %s %.3f" % (
+                    _id, args.start_time, args.end_time,
+                    args.end_time - args.start_time))
             continue
         # restrict plotting of results to given start/end time
         if args.start_time:
@@ -400,8 +412,8 @@ def main(argv=None):
                                                  end_ - start_))
 
     # Pretty format the plot
-    ax.set_ylim(0 - 0.5, _i + 0.5)
-    ax.set_yticks(np.arange(_i + 1))
+    ax.set_ylim(0 - 0.5, len(ids) - 0.5)
+    ax.set_yticks(np.arange(len(ids)))
     ax.set_yticklabels(labels, family="monospace", ha="right")
     fig.autofmt_xdate()  # rotate date
     ax.xaxis_date()
