@@ -326,7 +326,7 @@ def main(argv=None):
     now = UTCDateTime()
     stop_time = now - args.check_back_days * 24 * 3600
     client = Client(args.sds_root)
-    dtype_streamfile = np.dtype("U10, U30, U10, U10, f8, i8")
+    dtype_streamfile = np.dtype("U10, U30, U10, U10, f8, f8, i8")
     availability_check_endtime = now - 3600
     availability_check_starttime = (
         availability_check_endtime - (args.check_quality_days * 24 * 3600))
@@ -379,21 +379,27 @@ def main(argv=None):
                 latency.append(latency_ or np.inf)
             # only include the channel with lowest latency in our stream list
             cha = args.channels[np.argmin(latency)]
-            nslc.append((net, sta, loc, cha))
+            latency = np.min(latency)
+            nslc.append((net, sta, loc, cha, latency))
+        for id in args.ids:
+            net, sta, loc, cha = id.split(".")
+            latency = client.get_latency(net, sta, loc, cha,
+                                         stop_time=stop_time)
+            nslc.append((net, sta, loc, cha, latency))
         nslc_ = []
         # request and assemble availability information.
         # this takes pretty long (on network/slow file systems),
         # so we only do it during a full run here, not during update
-        for net, sta, loc, cha in nslc + [id.split(".") for id in args.ids]:
+        for net, sta, loc, cha, latency in nslc:
             percentage, gap_count = client.get_availability_percentage(
                 net, sta, loc, cha, availability_check_starttime,
                 availability_check_endtime)
-            nslc_.append((net, sta, loc, cha, percentage, gap_count))
+            nslc_.append((net, sta, loc, cha, latency, percentage, gap_count))
         nslc = nslc_
         # write stream list and availability information to file
         nslc = np.array(sorted(nslc), dtype=dtype_streamfile)
         np.savetxt(streams_file, nslc, delimiter=",",
-                   fmt=["%s", "%s", "%s", "%s", "%f", "%d"])
+                   fmt=["%s", "%s", "%s", "%s", "%f", "%f", "%d"])
         # generate obspy-scan image
         scan_args = ["--start-time={}".format(availability_check_starttime),
                      "--end-time={}".format(availability_check_endtime),
@@ -401,7 +407,9 @@ def main(argv=None):
                      "-f={}".format(args.format)]
         files = []
         for nslc_ in nslc:
-            net, sta, loc, cha, _, _ = nslc_
+            net, sta, loc, cha, latency, _, _ = nslc_
+            if np.isinf(latency) or latency > args.check_back_days * 24 * 3600:
+                continue
             scan_args.append("--id={}.{}.{}.{}".format(net, sta, loc, cha))
             files += client._get_filenames(
                 net, sta, loc, cha, availability_check_starttime,
@@ -411,10 +419,11 @@ def main(argv=None):
 
     # request and assemble current latency information
     data = []
-    for net, sta, loc, cha, percentage, gap_count in nslc:
-        latency = client.get_latency(net, sta, loc, cha,
-                                     stop_time=stop_time)
-        latency = latency or np.inf
+    for net, sta, loc, cha, latency, percentage, gap_count in nslc:
+        if args.update:
+            latency = client.get_latency(net, sta, loc, cha,
+                                         stop_time=stop_time)
+            latency = latency or np.inf
         data.append((net, sta, loc, cha, latency, percentage, gap_count))
 
     # separate out the long dead streams
