@@ -339,7 +339,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
             # header.update(nztimes)
             # header['b'] = (microsecond * 1e-6) if microsecond else 0.0
-            # header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
+            # header['e'] = header['b'] +(header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
             # XXX: Assume an iztype 9/'ib' type file: move the reftime to the
@@ -352,13 +352,17 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issue 1204
         if header.get('kstnm') in (None, HD.SNULL):
-            header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
+            header['kstnm'] = stats['station'] if stats['station']\
+                    else HD.SNULL
         if header.get('knetwk') in (None, HD.SNULL):
-            header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
+            header['knetwk'] = stats['network'] if stats['network']\
+                    else HD.SNULL
         if header.get('kcmpnm') in (None, HD.SNULL):
-            header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
+            header['kcmpnm'] = stats['channel'] if stats['channel']\
+                    else HD.SNULL
         if header.get('khole') in (None, HD.SNULL):
-            header['khole'] = stats['location'] if stats['location'] else HD.SNULL
+            header['khole'] = stats['location'] if stats['location']\
+                    else HD.SNULL
 
     else:
         # SAC header from scratch.  Just use stats.
