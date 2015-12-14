@@ -348,6 +348,18 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # b = 0
             # e = (header['npts'] - 1) * header['delta']
             pass
+
+        # merge some values from stats if they're missing in the SAC header
+        # ObsPy issue 1204
+        if header.get('kstnm') in (None, HD.SNULL):
+            header['kstnm'] = stats['station'] if stats['station'] else HD.SNULL
+        if header.get('knetwk') in (None, HD.SNULL):
+            header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
+        if header.get('kcmpnm') in (None, HD.SNULL):
+            header['kcmpnm'] = stats['channel'] if stats['channel'] else HD.SNULL
+        if header.get('khole') in (None, HD.SNULL):
+            header['khole'] = stats['location'] if stats['location'] else HD.SNULL
+
     else:
         # SAC header from scratch.  Just use stats.
         header['npts'] = stats['npts']
@@ -386,6 +398,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         # header['evla'] = 0
         # header['evlo'] = 0
 
+    # ObsPy issue 1204
     header['nvhdr'] = 6
     header['leven'] = 1
     header['lovrok'] = 1
