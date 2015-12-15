@@ -333,14 +333,13 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # TODO: consolidate relative time header list in header.py
             relhdrs = ['t'+str(i) for i in range(10)] + ['a', 'f']
             if header.get('iztype') == 9 and all([header.get(hdr) in
-                (None, HD.SNULL) for hdr in relhdrs]):
-
+                    (None, HD.SNULL) for hdr in relhdrs]):
                 reftime = stats['starttime']
                 nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
                 header.update(nztimes)
                 header['b'] = (microsecond * 1e-6) if microsecond else 0.0
                 header['e'] = header['b'] +\
-                                (header['npts'] - 1) * header['delta']
+                    (header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
             pass
