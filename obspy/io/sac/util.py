@@ -295,15 +295,14 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     :type keep_sac_header: bool
 
     """
-    # XXX: forces the user to keep either all or nothing of the old SAC header
-    # (almost).  e.g. updates to stats.channel are ignored for stats.sac.kcmpnm
-    # if you want to keep the old iztype & nz times with keep_sac_header=True.
     header = {}
     oldsac = stats.get('sac', {})
 
     if keep_sac_header and oldsac:
         # start with the old header, and only update a minimal set of headers
         # values from stats: npts, b, e, delta
+        # some Stats headers are put into the SAC header, if the corresponding
+        # SAC header values are missing.
         header.update(oldsac)
 
         header['npts'] = stats['npts']
@@ -325,28 +324,25 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             header['e'] = b + (stats['endtime'] - stats['starttime'])
         except SacHeaderTimeError:
             # can't determine reftime or absolute time shift.
-            # assume that the old and new 1st sample times are the same.
-            # don't set b, e (for some reason)
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
 
-            # use the stats starttime as the reftime
-            # XXX: If a single nz-time in the original header is bad,
-            #   they are all set to the stats.starttime, and b = 0, which
-            #   implies iztype = 9, which I'm not changing b/c that would
-            #   invalidate every other relative time header.
-            # reftime = stats['starttime']
-            # nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
-            # header.update(nztimes)
-            # header['b'] = (microsecond * 1e-6) if microsecond else 0.0
-            # header['e'] = header['b'] +(header['npts'] - 1) * header['delta']
+            # If no relative headers are set and the iztype was 9, we're OK to
+            # use stats.starttime as the reftime, and set b, e
+            # ObsPy issue 1204
+            # TODO: consolidate relative time header list in header.py
+            relhdrs = ['t'+str(i) for i in range(10)] + ['a', 'f']
+            if header.get('iztype') == 9 and all([header.get(hdr) in
+                (None, HD.SNULL) for hdr in relhdrs]):
+
+                reftime = stats['starttime']
+                nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
+                header.update(nztimes)
+                header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+                header['e'] = header['b'] +\
+                                (header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
-            # XXX: Assume an iztype 9/'ib' type file: move the reftime to the
-            # starttime and assume that the old and new 1st sample times are
-            # the same
-            # b = 0
-            # e = (header['npts'] - 1) * header['delta']
             pass
 
         # merge some values from stats if they're missing in the SAC header
