@@ -342,7 +342,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 reftime = stats['starttime']
                 nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
                 header.update(nztimes)
-                header['b'] = (microsecond * 1e-6) if microsecond else 0.0
+                header['b'] = microsecond * 1e-6
                 header['e'] = header['b'] +\
                     (header['npts'] - 1) * header['delta']
         except (KeyError, TypeError):
@@ -374,7 +374,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header.update(nztimes)
 
         # XXX: 1e-6 doesn't look quite right...
-        header['b'] = (microsecond * 1e-6)
+        header['b'] = microsecond * 1e-6
 
         # we now have correct b, npts, delta, and nz times
         header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
