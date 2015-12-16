@@ -19,6 +19,7 @@ from obspy.core import AttribDict
 from obspy.io.sac import SacError, SACTrace, SacIOError
 from obspy.io.sac.core import (_is_sac, _is_sacXY, _read_sac, _read_sacXY,
                                _write_sac, _write_sacXY)
+from obspy.io.sac.util import utcdatetime_to_sac_nztimes
 
 
 class CoreTestCase(unittest.TestCase):
@@ -768,13 +769,13 @@ class CoreTestCase(unittest.TestCase):
             tr1 = read(tempfile)[0]
 
         # starttime made its way to SAC file
-        # XXX: can't do this. conflicts with XY tests
-        self.assertEqual(tr1.stats.sac.nzyear, t.year)
-        self.assertEqual(tr1.stats.sac.nzjday, t.julday)
-        self.assertEqual(tr1.stats.sac.nzhour, t.hour)
-        self.assertEqual(tr1.stats.sac.nzmin, t.minute)
-        self.assertEqual(tr1.stats.sac.nzsec, t.second)
-        # don't want to bother with nzmsec b/c of truncation
+        nztimes, microsecond = utcdatetime_to_sac_nztimes(t)
+        self.assertEqual(tr1.stats.sac.nzyear, nztimes['nzyear'])
+        self.assertEqual(tr1.stats.sac.nzjday, nztimes['nzjday'])
+        self.assertEqual(tr1.stats.sac.nzhour, nztimes['nzhour'])
+        self.assertEqual(tr1.stats.sac.nzmin, nztimes['nzmin'])
+        self.assertEqual(tr1.stats.sac.nzsec, nztimes['nzsec'])
+        self.assertEqual(tr1.stats.sac.nzmsec, nztimes['nzmsec'])
         self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
         self.assertEqual(tr1.stats.sac.knetwk, 'XX')
         self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
