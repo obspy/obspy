@@ -373,7 +373,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         nztimes, microsecond = utcdatetime_to_sac_nztimes(starttime)
         header.update(nztimes)
 
-        # XXX: 1e-6 doesn't look quite right...
         header['b'] = microsecond * 1e-6
 
         # we now have correct b, npts, delta, and nz times
