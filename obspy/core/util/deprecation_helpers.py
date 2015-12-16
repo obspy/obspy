@@ -93,87 +93,86 @@ FUNCTION_MAPS = {
         'sendSockReq': 'send_sock_req',
         'tracebuf2': 'TraceBuf2',
         'tracebufs2obspyStream': 'trace_bufs2obspy_stream'},
-    # 'obspy.io.gse2.core': {
-    #     'isGSE1': 'isGSE1',
-    #     'isGSE2': 'isGSE2',
-    #     'readGSE1': 'readGSE1',
-    #     'readGSE2': 'readGSE2',
-    #     'writeGSE2': 'writeGSE2'},
-    # 'obspy.io.gse2.libgse1': {
-    #     'readHeader': 'readHeader',
-    #     'readIntegerData': 'readIntegerData',
-    #     'verifyChecksum': 'verifyChecksum'},
-    # 'obspy.io.gse2.libgse2': {
-    #     'isGse2': 'isGse2',
-    #     'readHeader': 'readHeader',
-    #     'verifyChecksum': 'verifyChecksum',
-    #     'writeHeader': 'writeHeader'},
-    # 'obspy.io.gse2.paz': {
-    #     'readPaz': 'readPaz'},
-    # 'obspy.imaging.beachball': {
-    #     'MT2Axes': 'MT2Axes',
-    #     'MT2Plane': 'MT2Plane',
-    #     'Pol2Cart': 'Pol2Cart',
-    #     'StrikeDip': 'StrikeDip',
-    #     'TDL': 'TDL',
-    #     'plotDC': 'plotDC',
-    #     'plotMT': 'plotMT'},
-    # 'obspy.io.mseed.core': {
-    #     'isMSEED': 'isMSEED',
-    #     'readMSEED': 'readMSEED',
-    #     'writeMSEED': 'writeMSEED'},
-    # 'obspy.io.ndk.core': {
-    #     'is_ndk': 'is_ndk',
-    #     'read_ndk': 'read_ndk'},
-    # 'obspy.clients.neic.util': {
-    #     'getProperty': 'getProperty'},
-    # 'obspy.io.pdas': {
-    #     'isPDAS': 'isPDAS',
-    #     'readPDAS': 'readPDAS'},
-    # 'obspy.io.pdas.core': {
-    #     'isPDAS': 'isPDAS',
-    #     'readPDAS': 'readPDAS'},
-    # 'obspy.io.pde.mchedr': {
-    #     'isMchedr': 'isMchedr',
-    #     'readMchedr': 'readMchedr'},
+    'obspy.io.gse2.core': {
+        'isGSE1': '_is_gse1',
+        'isGSE2': '_is_gse2',
+        'readGSE1': '_read_gse1',
+        'readGSE2': '_read_gse2',
+        'writeGSE2': '_write_gse2'},
+    'obspy.io.gse2.libgse1': {
+        'readHeader': 'read_header',
+        'readIntegerData': 'read_integer_data'},
+    'obspy.io.gse2.libgse2': {
+        'isGse2': 'is_gse2',
+        'readHeader': 'read_header',
+        'verifyChecksum': 'verify_checksum',
+        'writeHeader': 'write_header'},
+    'obspy.io.gse2.paz': {
+        'readPaz': 'read_paz'},
+    'obspy.imaging.beachball': {
+        'MT2Axes': 'mt2axes',
+        'MT2Plane': 'mt2plane',
+        'Pol2Cart': 'pol2cart',
+        'StrikeDip': 'strike_dip',
+        'TDL': 'tdl',
+        'plotDC': 'plot_dc',
+        'plotMT': 'plot_mt'},
+    'obspy.io.mseed.core': {
+        'isMSEED': '_is_mseed',
+        'readMSEED': '_read_mseed',
+        'writeMSEED': '_write_mseed'},
+    'obspy.io.ndk.core': {
+        'is_ndk': '_is_ndk',
+        'read_ndk': '_read_ndk'},
+    'obspy.clients.neic.util': {
+        'getProperty': 'get_property'},
+    'obspy.io.pdas': {
+        'isPDAS': '_is_pdas',
+        'readPDAS': '_read_pdas'},
+    'obspy.io.pdas.core': {
+        'isPDAS': '_is_pdas',
+        'readPDAS': '_read_pdas'},
+    'obspy.io.pde.mchedr': {
+        'isMchedr': '_is_mchedr',
+        'readMchedr': '_read_mchedr'},
     # 'obspy.io.sac': {
     #     'SacIO': 'SacIO'},
-    # 'obspy.io.sac.core': {
-    #     'SacIO': 'SacIO',
-    #     'isSAC': 'isSAC',
-    #     'isSACXY': 'isSACXY',
-    #     'readSAC': 'readSAC',
-    #     'readSACXY': 'readSACXY',
-    #     'writeSAC': 'writeSAC',
-    #     'writeSACXY': 'writeSACXY'},
-    # 'obspy.io.sac.sacpz': {
-    #     'write_SACPZ': 'write_SACPZ'},
-    # 'obspy.io.seg2.seg2': {
-    #     'isSEG2': 'isSEG2',
-    #     'readSEG2': 'readSEG2'},
-    # 'obspy.io.segy.core': {
-    #     'isSEGY': 'isSEGY',
-    #     'isSU': 'isSU',
-    #     'readSEGY': 'readSEGY',
-    #     'readSEGYrev1': 'readSEGYrev1',
-    #     'readSU': 'readSU',
-    #     'readSUFile': 'readSUFile',
-    #     'writeSEGY': 'writeSEGY',
-    #     'writeSU': 'writeSU'},
-    # 'obspy.io.segy.segy': {
-    #     'readSEGY': 'readSEGY',
-    #     'readSU': 'readSU'},
-    # 'obspy.io.seisan.core': {
-    #     'isSEISAN': 'isSEISAN',
-    #     'readSEISAN': 'readSEISAN'},
-    # 'obspy.io.sh.core': {
-    #     'fromUTCDateTime': 'fromUTCDateTime',
-    #     'isASC': 'isASC',
-    #     'isQ': 'isQ',
-    #     'readASC': 'readASC',
-    #     'readQ': 'readQ',
-    #     'writeASC': 'writeASC',
-    #     'writeQ': 'writeQ'},
+    'obspy.io.sac.core': {
+        # 'SacIO': 'SacIO',
+        'isSAC': '_is_sac',
+        'isSACXY': '_is_sacXY',
+        'readSAC': '_read_sac',
+        'readSACXY': '_read_sacXY',
+        'writeSAC': '_write_sac',
+        'writeSACXY': '_write_sacXY'},
+    'obspy.io.sac.sacpz': {
+        'write_SACPZ': '_write_sacpz'},
+    'obspy.io.seg2.seg2': {
+        'isSEG2': '_is_seg2',
+        'readSEG2': '_read_seg2'},
+    'obspy.io.segy.core': {
+        'isSEGY': '_is_segy',
+        'isSU': '_is_su',
+        'readSEGY': '_read_segy',
+        # 'readSEGYrev1': 'readSEGYrev1',
+        'readSU': '_read_su',
+        # 'readSUFile': 'readSUFile',
+        'writeSEGY': '_write_segy',
+        'writeSU': '_write_su'},
+    'obspy.io.segy.segy': {
+        'readSEGY': '_read_segy',
+        'readSU': '_read_su'},
+    'obspy.io.seisan.core': {
+        'isSEISAN': '_is_seisan',
+        'readSEISAN': '_read_seisan'},
+    'obspy.io.sh.core': {
+        'fromUTCDateTime': 'from_UTCDateTime',
+        'isASC': '_is_asc',
+        'isQ': '_is_q',
+        'readASC': '_read_asc',
+        'readQ': '_read_q',
+        'writeASC': '_write_asc',
+        'writeQ': '_write_q'},
     # 'obspy.signal': {
     #     'arPick': 'arPick',
     #     'bandpass': 'bandpass',
@@ -221,71 +220,70 @@ FUNCTION_MAPS = {
     #     'xcorrPickCorrection': 'xcorrPickCorrection',
     #     'xcorr_3C': 'xcorr_3C',
     #     'zDetect': 'zDetect'},
-    # 'obspy.signal.calibration': {
-    #     'relcalstack': 'relcalstack'},
-    # 'obspy.signal.cpxtrace': {
-    #     'instBwith': 'instBwith',
-    #     'instFreq': 'instFreq',
-    #     'normEnvelope': 'normEnvelope'},
-    # 'obspy.signal.cross_correlation': {
-    #     'xcorrPickCorrection': 'xcorrPickCorrection'},
-    # 'obspy.signal.freqattributes': {
-    #     'bwith': 'bwith',
-    #     'cfrequency': 'cfrequency',
-    #     'cfrequency_unwindowed': 'cfrequency_unwindowed',
-    #     'domperiod': 'domperiod',
-    #     'logbankm': 'logbankm',
-    #     'logcep': 'logcep',
-    #     'mper': 'mper',
-    #     'pgm': 'pgm',
-    #     'seisSim': 'seisSim'},
+    'obspy.signal.calibration': {
+        'relcalstack': 'rel_calib_stack'},
+    'obspy.signal.cpxtrace': {
+        'instBwith': 'instantaneous_bandwidth',
+        'instFreq': 'instantaneous_frequency',
+        'normEnvelope': 'normalized_envelope'},
+    'obspy.signal.cross_correlation': {
+        'xcorrPickCorrection': 'xcorr_pick_correction'},
+    'obspy.signal.freqattributes': {
+        'bwith': 'bandwidth',
+        'cfrequency': 'central_frequency',
+        'cfrequency_unwindowed': 'central_frequency_unwindowed',
+        'domperiod': 'dominant_period',
+        'logbankm': 'log_spaced_filterbank_matrix',
+        'logcep': 'log_cepstrum',
+        'mper': 'spectrum',
+        'pgm': 'peak_ground_motion'},
     'obspy.signal.konnoohmachismoothing': {
         'calculateSmoothingMatrix': 'calculate_smoothing_matrix',
         'konnoOhmachiSmoothing': 'konno_ohmachi_smoothing',
         'konnoOhmachiSmoothingWindow': 'konno_ohmachi_smoothing_window'},
-    # 'obspy.signal.trigger': {
-    #     'arPick': 'arPick',
-    #     'carlSTATrig': 'carlSTATrig',
-    #     'classicSTALTA': 'classicSTALTA',
-    #     'classicSTALTAPy': 'classicSTALTAPy',
-    #     'coincidenceTrigger': 'coincidenceTrigger',
-    #     'delayedSTALTA': 'delayedSTALTA',
-    #     'pkBaer': 'pkBaer',
-    #     'plotTrigger': 'plotTrigger',
-    #     'recSTALTA': 'recSTALTA',
-    #     'recSTALTAPy': 'recSTALTAPy',
-    #     'triggerOnset': 'triggerOnset',
-    #     'zDetect': 'zDetect'},
-    # 'obspy.signal.util': {
-    #     'nearestPow2': 'nearestPow2',
-    #     'prevpow2': 'prevpow2'},
-    # 'obspy.io.stationxml.core': {
-    #     'is_StationXML': 'is_StationXML',
-    #     'read_StationXML': 'read_StationXML',
-    #     'validate_StationXML': 'validate_StationXML',
-    #     'write_StationXML': 'write_StationXML'},
-    # 'obspy.io.wav.core': {
-    #     'isWAV': 'isWAV',
-    #     'readWAV': 'readWAV',
-    #     'writeWAV': 'writeWAV'},
-    # 'obspy.io.xseed.utils': {
-    #     'Blockette34Lookup': 'Blockette34Lookup',
-    #     'DateTime2String': 'DateTime2String',
-    #     'LookupCode': 'LookupCode',
-    #     'compareSEED': 'compareSEED',
-    #     'formatRESP': 'formatRESP',
-    #     'getXPath': 'getXPath',
-    #     'setXPath': 'setXPath',
-    #     'toString': 'toString',
-    #     'toTag': 'toTag',
-    #     'uniqueList': 'uniqueList'},
-    # 'obspy.io.y.core': {
-    #     'isY': 'isY',
-    #     'readY': 'readY'},
-    # 'obspy.io.zmap.core': {
-    #     'isZmap': 'isZmap',
-    #     'readZmap': 'readZmap',
-    #     'writeZmap': 'writeZmap'}
+    'obspy.signal.trigger': {
+        'arPick': 'ar_pick',
+        'carlSTATrig': 'carl_STA_trig',
+        'classicSTALTA': 'classic_STALTA',
+        'classicSTALTAPy': 'classic_STALTA_py',
+        'coincidenceTrigger': 'coincidence_trigger',
+        'delayedSTALTA': 'delayed_STALTA',
+        'pkBaer': 'pk_baer',
+        'plotTrigger': 'plot_trigger',
+        'recSTALTA': 'recursive_STALTA',
+        'recSTALTAPy': 'recursive_STALTA_py',
+        'triggerOnset': 'trigger_onset',
+        'zDetect': 'z_detect'},
+    'obspy.signal.util': {
+        'nearestPow2': 'nearest_pow_2',
+        'prevpow2': 'prev_pow_2'},
+    'obspy.io.stationxml.core': {
+        'is_StationXML': '_is_stationxml',
+        'read_StationXML': '_read_stationxml',
+        # 'validate_StationXML': 'validate_stationxml',
+        'write_StationXML': '_write_stationxml'},
+    'obspy.io.wav.core': {
+        'isWAV': '_is_wav',
+        'readWAV': '_read_wav',
+        'writeWAV': '_write_wav'},
+    'obspy.io.xseed.utils': {
+        'Blockette34Lookup': 'blockette_34_lookup',
+        'DateTime2String': 'datetime_2_string',
+        'LookupCode': 'lookup_code',
+        'compareSEED': 'compare_SEED',
+        'formatRESP': 'format_RESP',
+        'getXPath': 'get_xpath',
+        'setXPath': 'set_xpath',
+        'toString': 'to_string',
+        'toTag': 'to_tag',
+        'uniqueList': 'unique_list'},
+    'obspy.io.y.core': {
+        'isY': '_is_y',
+        'readY': '_read_y'},
+    'obspy.io.zmap.core': {
+        'isZmap': '_is_zmap',
+        'readZmap': '_read_zmap',
+        'writeZmap': '_write_zmap'}
     }
 FUNCTION_RENAME_MSG = (
     "Function '{old}' in module '{mod}' is deprecated and was renamed to "
