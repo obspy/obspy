@@ -32,7 +32,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
-import imp
 import importlib
 import warnings
 import sys
@@ -41,7 +40,8 @@ import sys
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _get_version_string
 from obspy.core.util.deprecation_helpers import (
-    ObsPyDeprecationWarning, DynamicAttributeImportRerouteModule)
+    ObsPyDeprecationWarning, DynamicAttributeImportRerouteModule,
+    _add_deprecated_functions)
 __version__ = _get_version_string(abbrev=10)
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
@@ -192,6 +192,10 @@ else:
     Catalog.write.__doc__ = \
         Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                          numspaces=8)
+
+
+# remove after 0.11 release
+_add_deprecated_functions()
 
 
 if __name__ == '__main__':
