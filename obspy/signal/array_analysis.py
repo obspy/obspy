@@ -28,7 +28,6 @@ from obspy.core import UTCDateTime
 from obspy.geodetics import gps2DistAzimuth, degrees2kilometers, \
     kilometer2degrees
 from obspy.signal.util import utlGeoKm, nextpow2
-from obspy.signal.headers import clibsignal
 from obspy.core import Trace
 from obspy.core.inventory import Inventory
 from scipy.integrate import cumtrapz
@@ -1388,7 +1387,6 @@ class SeismicArray(object):
         alldataZ = np.zeros((n_stats, num_win, nsamp))
         alldataN, alldataE = alldataZ.copy(), alldataZ.copy()
         nst = np.zeros(num_win)
-        window_start_times = []
 
         # Iterate over the beamfoming windows:
         for i in range(num_win):
@@ -1401,17 +1399,22 @@ class SeismicArray(object):
                                                    nsamp]).any():
                     # All data, tapered.
                     alldataZ[n, i, :] = _alldataZ[n, i * nstep:
-                                                  i * nstep + nsamp] * cosTaper(nsamp)
-
+                                                  i * nstep + nsamp] * \
+                                        cosTaper(nsamp)
                     alldataN[n, i, :] = _alldataN[n, i * nstep:
-                                                  i * nstep + nsamp] * cosTaper(nsamp)
+                                                  i * nstep + nsamp] * \
+                                        cosTaper(nsamp)
                     alldataE[n, i, :] = _alldataE[n, i * nstep:
-                                                  i * nstep + nsamp] * cosTaper(nsamp)
+                                                  i * nstep + nsamp] * \
+                                        cosTaper(nsamp)
                     nst[i] += 1
-            if i % win_average == 0:
-                window_start_times.append(stream_N.traces[0].stats.starttime +
-                                          i * nstep/fs)
-        window_start_times = np.array(window_start_times)
+
+        # Need an array of the starting times of the beamforming windows for
+        # later reference (e.g. plotting).
+        avg_starttime = UTCDateTime(np.mean([tr.stats.starttime.timestamp for
+                                             tr in stream_N.traces]))
+        window_start_times = np.array([avg_starttime + i * nstep/fs for i in
+                                       range(num_win) if i % win_average == 0])
 
         print(nst, ' stations/window; average over ', win_average)
 
@@ -1422,8 +1425,8 @@ class SeismicArray(object):
         # angle.
         lowcorner = sub_freq_range[0]
         highcorner = sub_freq_range[1]
-        index = np.where((freq_range > lowcorner)
-                         & (freq_range < highcorner))[0]
+        index = np.where((freq_range >= lowcorner)
+                         & (freq_range <= highcorner))[0]
         fr = freq_range[index]
         fcoeffZ = np.fft.fft(alldataZ, n=nsamp, axis=-1) / nsamp
         fcoeffN = np.fft.fft(alldataN, n=nsamp, axis=-1) / nsamp
@@ -1597,7 +1600,7 @@ class SeismicArray(object):
                                     whiten=False, coherency=True,
                                     plot_transff=False):
         """
-        Do three component beamforming following Esmersoy 1985.
+        Do three-component beamforming following Esmersoy 1985.
         Three streams representing N, E, Z oriented components must be given,
         where the traces contained are from the different stations. The
         traces must all have same length and start/end times (to within
@@ -1617,15 +1620,15 @@ class SeismicArray(object):
         :param stream_Z: stream of Up components. Will be ignored for Love
          waves.
         :param wlen: window length in seconds
-        :param smin: minimum slowness of the slowness grid [km/s]
-        :param smax: maximum slowness [km/s]
-        :param sstep: slowness step [km/s]
+        :param smin: minimum slowness of the slowness grid [s/km]
+        :param smax: maximum slowness [s/km]
+        :param sstep: slowness step [s/km]
         :param wavetype: 'love', 'rayleigh_prograde', 'rayleigh_retrograde',
          'P', or 'SV'
         :param freq_range: Frequency band (min, max) that is used for
          beamforming and returned. Ideally, use the frequency band of the
          pre-filter.
-        :param plot_frequencies: frequencies to plot [s]
+        :param plot_frequencies: frequencies to plot
         :param n_min_stns: required minimum number of stations
         :param win_average: number of windows to average covariance matrix over
         :param win_frac: fraction of sliding window to use for step
@@ -3370,7 +3373,8 @@ class BeamformerResult(object):
             warnings.warn("Ignoring plot_frequencies, only plotting an average"
                           " of all frequencies.")
         if(type(plot_frequencies) is not list and
-           type(plot_frequencies) is not tuple):
+           type(plot_frequencies) is not tuple and
+           plot_frequencies is not None):
             plot_frequencies = [plot_frequencies]
 
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
@@ -3393,10 +3397,10 @@ class BeamformerResult(object):
                               labels=['90', '45', '0', '315', '270', '225',
                                       '180', '135'])
             ax.set_rmax(self.slowness_range[-1])
-            # Setting this to -0 means that when the slowness range doesn't
-            # start at 0, the plot is shown with a 'hole' in the middle rather
-            # stitching it up. This behaviour shows the resulting shapes much
-            # better.
+            # Setting this to -0 means that if the slowness range doesn't
+            # start at 0, the plot is shown with a 'hole' in the middle
+            # rather than stitching it up. This behaviour shows the
+            # resulting shapes much better.
             ax.set_rmin(-0)
             fig.colorbar(CONTF)
             ax.grid(True)
@@ -3411,34 +3415,47 @@ class BeamformerResult(object):
             beamresnz = beamresnz.mean(axis=beamresnz.ndim - 1)
 
         if average_windows and average_freqs:
-            _actual_plotting(beamresnz, 'Averaged BF result.')
+            _actual_plotting(beamresnz,
+                             '{} beamforming result, averaged over all time '
+                             'windows ({} to {}) and frequencies).'
+                             .format(self.method, self.starttime.isoformat(),
+                                     self.endtime.isoformat()))
 
         if average_windows and not average_freqs:
-            for plot_freq in plot_frequencies:
-                # works because freqs is a range
-                ifreq = np.searchsorted(self.freqs, plot_freq)
-                _actual_plotting(beamresnz[:, :, ifreq],
-                                 'Averaged windows, frequency {}'
-                                 .format(self.freqs[ifreq]))
+            if plot_frequencies is None:
+                warnings.warn('No frequency specified for plotting.')
+            else:
+                for plot_freq in plot_frequencies:
+                    # works because freqs is a range
+                    ifreq = np.searchsorted(self.freqs, plot_freq)
+                    _actual_plotting(beamresnz[:, :, ifreq],
+                                     '{} beamforming result, averaged over all'
+                                     ' time windows\n for frequency {} Hz'
+                                     .format(self.method, self.freqs[ifreq]))
 
         if average_freqs and not average_windows:
             for iwin in range(len(beamresnz[0, 0, :])):
                 _actual_plotting(beamresnz[:, :, iwin],
-                                 'Averaged all frequencies, window {}\n'
+                                 '{} beamforming result, averaged over all '
+                                 'frequencies,\n for window {}'
                                  '(starting {})'
-                                 .format(iwin, self.times[iwin].isoformat()))
+                                 .format(self.method, iwin,
+                                         self.times[iwin].isoformat()))
 
         # Plotting all windows, selected frequencies.
         if average_freqs is False and average_windows is False:
-            for plot_freq in plot_frequencies:
-                ifreq = np.searchsorted(self.freqs, plot_freq)
-                for iwin in range(len(beamresnz[0, 0, :, 0])):
-                    _actual_plotting(beamresnz[:, :, iwin, ifreq],
-                                     '{} BF result freq {}, window {}\n'
-                                     '(starting {})'
-                                     .format(self.method, self.freqs[ifreq],
-                                             iwin,
-                                             self.times[iwin].isoformat()))
+            if plot_frequencies is None:
+                warnings.warn('No frequency specified for plotting.')
+            else:
+                for plot_freq in plot_frequencies:
+                    ifreq = np.searchsorted(self.freqs, plot_freq)
+                    for iwin in range(len(beamresnz[0, 0, :, 0])):
+                        _actual_plotting(beamresnz[:, :, iwin, ifreq],
+                                         '{} beamforming result, for frequency'
+                                         ' {} Hz\n, window {}\n (starting {})'
+                                         .format(self.method,
+                                                 self.freqs[ifreq], iwin,
+                                                 self.times[iwin].isoformat()))
 
         if show is True:
             plt.show()
