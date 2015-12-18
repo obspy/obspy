@@ -46,10 +46,13 @@ class SeedlinkClient(WaveformClient, EventClient):
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
-from future.utils import native_str
 
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
+
+
+class ClientException(Exception):
+    pass
+
 
 class BaseClient(object):
     __metaclass__ = ABCMeta
