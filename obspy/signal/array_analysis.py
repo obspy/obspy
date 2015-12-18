@@ -40,10 +40,6 @@ import matplotlib.dates as mdates
 from matplotlib.ticker import MultipleLocator
 
 
-import cartopy
-import matplotlib.pyplot as plt
-
-
 class SeismicArray(object):
     """
     Class representing a seismic array.
@@ -1604,7 +1600,8 @@ class SeismicArray(object):
                                     whiten=False, coherency=True,
                                     plot_transff=False):
         """
-        Do three-component beamforming following Esmersoy 1985.
+        Do three-component beamforming following [Esmersoy1985]_.
+
         Three streams representing N, E, Z oriented components must be given,
         where the traces contained are from the different stations. The
         traces must all have same length and start/end times (to within
