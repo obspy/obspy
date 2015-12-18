@@ -1410,11 +1410,15 @@ class SeismicArray(object):
                     nst[i] += 1
 
         # Need an array of the starting times of the beamforming windows for
-        # later reference (e.g. plotting).
+        # later reference (e.g. plotting). The precision of these should not
+        # exceed what is reasonable given the sampling rate: the different
+        # traces have the same start times only to within a sample.
         avg_starttime = UTCDateTime(np.mean([tr.stats.starttime.timestamp for
                                              tr in stream_N.traces]))
-        window_start_times = np.array([avg_starttime + i * nstep/fs for i in
-                                       range(num_win) if i % win_average == 0])
+        window_start_times = \
+            np.array([UTCDateTime(avg_starttime + i * nstep/fs,
+                                  precision=len(str(fs).split('.')[0]))
+                      for i in range(num_win) if i % win_average == 0])
 
         print(nst, ' stations/window; average over ', win_average)
 
@@ -1425,8 +1429,8 @@ class SeismicArray(object):
         # angle.
         lowcorner = sub_freq_range[0]
         highcorner = sub_freq_range[1]
-        index = np.where((freq_range >= lowcorner)
-                         & (freq_range <= highcorner))[0]
+        index = np.where((freq_range >= lowcorner) &
+                         (freq_range <= highcorner))[0]
         fr = freq_range[index]
         fcoeffZ = np.fft.fft(alldataZ, n=nsamp, axis=-1) / nsamp
         fcoeffN = np.fft.fft(alldataN, n=nsamp, axis=-1) / nsamp
@@ -3050,9 +3054,7 @@ class BeamformerResult(object):
 
 
     """
-    # FK and other 1cbf return max relative (and absolute) powers, as well as
-    # the slowness and azimuth where it happens.
-    # 3cbf as of now returns the whole results...
+
 
     def __init__(self, inventory, times, slowness_range, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slow=None,
@@ -3069,7 +3071,9 @@ class BeamformerResult(object):
             warnings.warn(msg)
         else:
             self.timestep = times[1] - times[0]
-        self.endtime = times[-1] + self.timestep
+        # Don't use unjustified higher precision.
+        self.endtime = UTCDateTime(times[-1] + self.timestep,
+                                   precision=times[-1].precision)
         self.max_rel_power = max_rel_power
         if max_rel_power is not None:
             self.max_rel_power = self.max_rel_power.astype(float)
@@ -3092,8 +3096,11 @@ class BeamformerResult(object):
         if full_beamres is not None and full_beamres.ndim != 4:
             raise ValueError("Full beamresults should be 4D array.")
         self.full_beamres = full_beamres
-        if(max_rel_power is None and max_pow_baz is None
-           and max_pow_slow is None and full_beamres is not None):
+        # FK and other 1cbf return max relative (and absolute) powers,
+        # as well as the slowness and azimuth where appropriate. 3cbf as of
+        # now returns the whole results.
+        if(max_rel_power is None and max_pow_baz is None and
+                max_pow_slow is None and full_beamres is not None):
             self._calc_max_values()
 
     def __add__(self, other):
@@ -3107,7 +3114,7 @@ class BeamformerResult(object):
             attrs = ['freqs', 'slowness_range']
         if any((self.__dict__[attr] != other.__dict__[attr]).any()
                for attr in attrs):
-            raise ValueError('Frequency and slowness range paramters must be '
+            raise ValueError('Frequency and slowness range parameters must be '
                              'equal.')
         times = np.append(self.times, other.times)
         if self.full_beamres is not None and other.full_beamres is not None:
@@ -3189,22 +3196,19 @@ class BeamformerResult(object):
         from matplotlib.colorbar import ColorbarBase
         from matplotlib.colors import Normalize
         cmap = cm.hot_r
-        # todo: this needs to be quite a bit more elegant really.
-        # Do the methods return negative slownesses if that's where the max
-        # values were in the grid search??
         # Can't plot negative slownesses:
         sll = abs(self.slowness_range).min()
         slm = self.slowness_range.max()
 
         # choose number of azimuth bins in plot
-        # (desirably 360 degree/N is an integer!)
-        N = 36
+        # (desirably 360 degree/azimuth_bins is an integer!)
+        azimuth_bins = 36
         # number of slowness bins
-        N2 = len(self.slowness_range)
+        slowness_bins = len(self.slowness_range)
         # Plot is not too readable beyond a certain number of bins.
-        N2 = 30 if N2 > 30 else N2
-        abins = np.arange(N + 1) * 360. / N
-        sbins = np.linspace(sll, slm, N2 + 1)
+        slowness_bins = 30 if slowness_bins > 30 else slowness_bins
+        abins = np.arange(azimuth_bins + 1) * 360. / azimuth_bins
+        sbins = np.linspace(sll, slm, slowness_bins + 1)
 
         # sum rel power in bins given by abins and sbins
         hist, baz_edges, sl_edges = \
@@ -3226,9 +3230,9 @@ class BeamformerResult(object):
 
         # circle through backazimuth
         for i, row in enumerate(hist):
-            bars = ax.bar(left=(i * dw) * np.ones(N2),
-                          height=dh * np.ones(N2),
-                          width=dw, bottom=dh * np.arange(N2),
+            bars = ax.bar(left=(i * dw) * np.ones(slowness_bins),
+                          height=dh * np.ones(slowness_bins),
+                          width=dw, bottom=dh * np.arange(slowness_bins),
                           color=cmap(row / hist.max()))
 
         ax.set_xticks(np.linspace(0, 2 * np.pi, 4, endpoint=False))
@@ -3239,8 +3243,8 @@ class BeamformerResult(object):
         ColorbarBase(cax, cmap=cmap,
                      norm=Normalize(vmin=hist.min(), vmax=hist.max()))
         plt.suptitle('{} beamforming: results from \n{} to {}'
-                     .format(self.method, self.starttime.isoformat(),
-                             self.endtime.isoformat()))
+                     .format(self.method, self.starttime,
+                             self.endtime))
         if show is True:
             plt.show()
 
@@ -3251,7 +3255,7 @@ class BeamformerResult(object):
 
         :param show: Whether to call plt.show() immediately.
         """
-        labels = ['rel. power', 'abs. power', 'baz', 'slow']
+        labels = ['Rel. Power', 'Abs. Power', 'Backazimuth', 'Slowness']
         datas = [self.max_rel_power, self.max_abs_power,
                  self.max_pow_baz, self.max_pow_slow]
         # To account for e.g. the _beamforming method not returning absolute
@@ -3262,7 +3266,7 @@ class BeamformerResult(object):
                 labels.remove(lab)
 
         xlocator = mdates.AutoDateLocator(interval_multiples=True)
-        ymajorLocator = MultipleLocator(90)
+        ymajorlocator = MultipleLocator(90)
 
         fig = plt.figure()
         for i, (data, lab) in enumerate(zip(datas, labels)):
@@ -3270,13 +3274,13 @@ class BeamformerResult(object):
             ax.scatter(self._get_plotting_timestamps(), data,
                        c=self.max_rel_power, alpha=0.6, edgecolors='none')
             ax.set_ylabel(lab)
-            timemargin = 0.05 * (self._get_plotting_timestamps()[-1]
-                                 - self._get_plotting_timestamps()[0])
+            timemargin = 0.05 * (self._get_plotting_timestamps()[-1] -
+                                 self._get_plotting_timestamps()[0])
             ax.set_xlim(self._get_plotting_timestamps()[0] - timemargin,
                         self._get_plotting_timestamps()[-1] + timemargin)
-            if lab == 'baz':
+            if lab == 'Backazimuth':
                 ax.set_ylim(0, 360)
-                ax.yaxis.set_major_locator(ymajorLocator)
+                ax.yaxis.set_major_locator(ymajorlocator)
             else:
                 datamargin = 0.05 * (data.max() - data.min())
                 ax.set_ylim(data.min() - datamargin, data.max() + datamargin)
@@ -3284,8 +3288,8 @@ class BeamformerResult(object):
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
         fig.suptitle('{} beamforming: results from \n{} to {}'
-                     .format(self.method, self.starttime.isoformat(),
-                             self.endtime.isoformat()))
+                     .format(self.method, self.starttime,
+                             self.endtime))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
                             hspace=0.1)
@@ -3342,8 +3346,8 @@ class BeamformerResult(object):
             ax.xaxis.set_major_formatter(mdates.AutoDateFormatter(xlocator))
 
         fig.suptitle('{} beamforming: results from \n{} to {}'
-                     .format(self.method, self.starttime.isoformat(),
-                             self.endtime.isoformat()))
+                     .format(self.method, self.starttime,
+                             self.endtime))
         fig.autofmt_xdate()
         fig.subplots_adjust(left=0.15, top=0.9, right=0.95, bottom=0.2,
                             hspace=0.1)
@@ -3384,7 +3388,7 @@ class BeamformerResult(object):
             Pass in a 2D bfres array of beamforming results with
             averaged or selected windows and frequencies.
             """
-            fig = plt.figure(figsize=(6, 6))
+            fig = plt.figure()#figsize=(9, 9))
             ax = fig.add_subplot(1, 1, 1, projection='polar')
             jetmap = cm.get_cmap('jet')
             CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.),
@@ -3417,9 +3421,9 @@ class BeamformerResult(object):
         if average_windows and average_freqs:
             _actual_plotting(beamresnz,
                              '{} beamforming result, averaged over all time '
-                             'windows ({} to {}) and frequencies).'
-                             .format(self.method, self.starttime.isoformat(),
-                                     self.endtime.isoformat()))
+                             'windows\n ({} to {}) and frequencies).'
+                             .format(self.method, self.starttime,
+                                     self.endtime))
 
         if average_windows and not average_freqs:
             if plot_frequencies is None:
@@ -3437,10 +3441,10 @@ class BeamformerResult(object):
             for iwin in range(len(beamresnz[0, 0, :])):
                 _actual_plotting(beamresnz[:, :, iwin],
                                  '{} beamforming result, averaged over all '
-                                 'frequencies,\n for window {}'
+                                 'frequencies,\n for window {} '
                                  '(starting {})'
                                  .format(self.method, iwin,
-                                         self.times[iwin].isoformat()))
+                                         self.times[iwin]))
 
         # Plotting all windows, selected frequencies.
         if average_freqs is False and average_windows is False:
@@ -3452,10 +3456,10 @@ class BeamformerResult(object):
                     for iwin in range(len(beamresnz[0, 0, :, 0])):
                         _actual_plotting(beamresnz[:, :, iwin, ifreq],
                                          '{} beamforming result, for frequency'
-                                         ' {} Hz\n, window {}\n (starting {})'
+                                         ' {} Hz,\n, window {} (starting {})'
                                          .format(self.method,
                                                  self.freqs[ifreq], iwin,
-                                                 self.times[iwin].isoformat()))
+                                                 self.times[iwin]))
 
         if show is True:
             plt.show()
