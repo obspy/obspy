@@ -27,7 +27,7 @@ and/or get_stations methods, like in the example below.
 
 .. rubric:: Example
 
-class SeedlinkClient(WaveformClient, EventClient):
+class MyNewClient(WaveformClient, StationClient):
     def __init__(self, url=None):
         self._version = '1.0'
         if url:
@@ -36,11 +36,15 @@ class SeedlinkClient(WaveformClient, EventClient):
     def get_server_version(self):
         self.conn.get_version()
 
-    def get_waveforms(self, station, channel):
-        return self.conn.fetch_mseed(station, channel)
+    def get_waveforms(self, network, station, location, channel, starttime
+                      endtime):
+        return self.conn.fetch_mseed(network, station, location, channel,
+                                     starttime, endtime)
 
-    def get_events(self, starttime, endtime):
-        return self.conn.fetch_catalog()
+    def get_stations(self, network, station, location, channel, starttime,
+                     endtime):
+        return self.conn.fetch_inventory(network, station, location, channel
+                                         starttime, endtime)
 
 """
 from __future__ import (absolute_import, division, print_function,
