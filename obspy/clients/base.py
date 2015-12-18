@@ -67,7 +67,8 @@ class WaveformClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_waveforms():
+    def get_waveforms(self, network, station, location, channel, starttime,
+                      endtime, **kwargs):
         """Returns a Stream."""
         pass
 
@@ -76,7 +77,10 @@ class EventClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_events():
+    def get_events(self, starttime, endtime, minlatitude, maxlatitude,
+                   minlongitude, maxlongitude, mindepth, maxdepth,
+                   minmagnitude, maxmagnitude, magnitudetype, author,
+                   **kwargs):
         """Returns a Catalog."""
         pass
 
@@ -85,6 +89,7 @@ class StationClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_stations():
+    def get_stations(self, network, station, location, channel, starttime,
+                     endtime, **kwargs):
         """Returns an Inventory."""
         pass
