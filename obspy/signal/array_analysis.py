@@ -731,7 +731,6 @@ def get_spoint(stream, stime, etime):
                         tr.stats.sampling_rate + .5)
     return spoint, epoint
 
-
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     Returns array transfer function as a function of wavenumber difference
@@ -763,18 +762,15 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
     nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
 
-    transff = np.empty((nkx, nky))
+    kxgrid,kygrid = np.meshgrid(np.linspace(kxmin, kxmax, nkx),
+                                np.linspace(kymin, kymax, nky))
 
-    for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
-        for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
-            _sum = 0j
-            for k in range(len(coords)):
-                _sum += np.exp(complex(0.,
-                               coords[k, 0] * kx + coords[k, 1] * ky))
-            transff[i, j] = abs(_sum) ** 2
+    ks  = np.transpose(np.vstack( (kxgrid.flatten(),kygrid.flatten()) ))
 
-    transff /= transff.max()
-    return transff
+    k_dot_r = np.einsum('ni,mi->nm',ks,coords[:,:2]) #z coordinate is not used
+    transff = np.abs(np.sum(np.exp(1j*k_dot_r), axis=1))**2/len(coords)**2
+
+    return transff.reshape(nkx,nky)
 
 
 def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
@@ -833,7 +829,6 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
 
     transff /= transff.max()
     return transff
-
 
 def dump(pow_map, apow_map, i):
     """
