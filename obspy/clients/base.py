@@ -13,7 +13,7 @@ Enforce common interfaces for ObsPy client classes using Abstract Base Classes.
 Common interfaces provide the ability to write applications that employ any
 Client, regardless of its origin, and to expect to get a Stream from a
 get_waveforms method, a Catalog from a get_events method, and an Inventory from
-a get_stations method. It may encourage Client writers to connect their data
+a get_stations method. This encourages Client writers to connect their data
 sources to Stream, Inventory, and Catalog types, and encourage users to rely on
 them in their applications.  Three base classes are provided: one for clients
 that return waveforms, one for those that return events, and one for those that
@@ -25,6 +25,8 @@ EventClient, and StationClient, and re-program the get_waveforms, get_events,
 and/or get_stations methods, like in the example below.
 
 
+.. rubric:: Example
+
 class SeedlinkClient(WaveformClient, EventClient):
     def __init__(self, url=None):
         self._version = '1.0'
@@ -34,7 +36,7 @@ class SeedlinkClient(WaveformClient, EventClient):
     def get_server_version(self):
         self.conn.get_version()
 
-    def get_wavforms(self, station, channel):
+    def get_waveforms(self, station, channel):
         return self.conn.fetch_mseed(station, channel)
 
     def get_events(self, starttime, endtime):
@@ -53,7 +55,8 @@ class BaseClient(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_server_version(self):
+    def get_service_version(self):
+        """Returns a semantic versioning string."""
         pass
 
 
@@ -82,5 +85,3 @@ class StationClient(BaseClient):
     def get_stations():
         """Returns an Inventory."""
         pass
-
-
