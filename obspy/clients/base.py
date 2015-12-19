@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-An ObsPy base client for uniform interfaces.
+Base classes for uniform Client interfaces.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -59,15 +59,23 @@ class ClientException(Exception):
 
 
 class BaseClient(object):
+    """
+    Base class for common methods.
+
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
     def get_service_version(self):
-        """Returns a semantic versioning string."""
+        """Return a semantic version number as a string."""
         pass
 
 
 class WaveformClient(BaseClient):
+    """
+    Base class for Clients supporting Stream objects.
+
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -78,6 +86,10 @@ class WaveformClient(BaseClient):
 
 
 class EventClient(BaseClient):
+    """
+    Base class for Clients supporting Catalog objects.
+
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -90,6 +102,10 @@ class EventClient(BaseClient):
 
 
 class StationClient(BaseClient):
+    """
+    Base class for Clients supporting Inventory objects.
+
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
