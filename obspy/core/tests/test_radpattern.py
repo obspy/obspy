@@ -9,7 +9,7 @@ from future.builtins import *  # NOQA
 import unittest
 
 import matplotlib.pyplot as plt
-from obspy.imaging.radpattern import plot_3drpattern
+from obspy.core.event import plot_3drpattern
 from mpl_toolkits.mplot3d import Axes3D
 
 

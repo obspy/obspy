@@ -89,7 +89,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
 
         #make uv sphere that is aligned with z-axis
-        ntheta, nphi = 200, 200
+        ntheta, nphi = 100, 100
         sshape = (ntheta, nphi)
         u = np.linspace(0, 2 * np.pi, nphi)
         v = np.linspace(0, np.pi, ntheta)
@@ -123,16 +123,6 @@ def plot_3drpattern(mt, kind='both_sphere'):
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
         ax.plot([0, null[0]], [0, null[1]], [0, null[2]])
-
-        #plotting a beachball projection on the sides should work but
-        #bugs for now...
-        bball = beach(mt, width=2.0, mopad_basis='NED')
-        paths = bball.get_paths()
-        fcs = ['None', 'None', 'None']
-
-        for path, fc in zip(paths, fcs):
-            patch = ax.add_patch(PathPatch(path, facecolor=fc))
-            art3d.pathpatch_2d_to_3d(patch, z=-3.)
 
         ax.set_xlabel('x')
         ax.set_ylabel('y')
