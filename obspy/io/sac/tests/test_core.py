@@ -779,7 +779,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
         self.assertEqual(tr1.stats.sac.knetwk, 'XX')
         self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
-        # self.assertEqual(tr1.stats.khole, '00')
+        self.assertEqual(tr1.stats.sac.khole, '00')
         self.assertEqual(tr1.stats.sac.iztype, 9)
         self.assertEqual(tr1.stats.sac.nvhdr, 6)
         self.assertEqual(tr1.stats.sac.leven, 1)
