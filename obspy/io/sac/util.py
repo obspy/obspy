@@ -336,7 +336,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # use stats.starttime as the reftime, and set b, e
             # ObsPy issue 1204
             # TODO: consolidate relative-time header list in header.py
-            relhdrs = ['t'+str(i) for i in range(10)] + ['a', 'f']
+            relhdrs = ['t' + str(i) for i in range(10)] + ['a', 'f']
             NR = all([header.get(hdr) in (None, HD.SNULL) for hdr in relhdrs])
             if header.get('iztype') == 9 and NR:
                 reftime = stats['starttime']
