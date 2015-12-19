@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
-# Filename: beachball.py
+# Filename: radpattern.py
 #  Purpose: Computes and plots radiation patterns
 # ---------------------------------------------------------------------
 
@@ -23,13 +23,12 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
 import matplotlib.pyplot as plt
-from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
-from obspy.imaging.mopad_wrapper import beach
+from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 import mpl_toolkits.mplot3d.art3d as art3d
 from matplotlib.patches import PathPatch
 
 
-def plot_3drpattern(mt, kind='both_sphere'):
+def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
     """
     Returns the P farfield radiation pattern on a unit sphere grid
 
@@ -190,6 +189,41 @@ def plot_3drpattern(mt, kind='both_sphere'):
         qs = ax.quiver(points[0], points[1], points[2],
                        disps[0], disps[1], disps[2], length=vlength)
         qs.set_array(normp)
+
+    elif kind == 'vtk' and vtk_fname is None:
+        #use mayavi if possible. Otherwise fall back to output a vtkfile
+        from mayavi import mlab
+        mopad_mt = MomentTensor(mt,system='NED')
+        bb = BeachBall(mopad_mt, npoints=200)
+        bb._setup_BB(unit_circle=False)
+
+        # extract the coordinates of the nodal lines
+        neg_nodalline = bb._nodalline_negative
+        pos_nodalline = bb._nodalline_positive
+
+        #plot radiation pattern and nodal lines
+        points = spherical_grid(nlat=nlat)
+        dispp = farfieldP(mt, points)
+        disps = farfieldS(mt, points)
+
+        fig1 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+        pts1 = mlab.quiver3d(points[0], points[1], points[2],
+                             dispp[0], dispp[1], dispp[2],
+                             scalars=normp, vmin=-rangep, vmax=rangep)
+        pts1.glyph.color_mode = 'color_by_scalar'
+        mlab.plot3d(*neg_nodalline, color=(0,0.5,0), tube_radius=0.01)
+        mlab.plot3d(*pos_nodalline, color=(0,0.5,0), tube_radius=0.01)
+        plot_sphere(0.7)
+
+        fig2 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+        mlab.quiver3d(points[0], points[1], points[2],
+                      disps[0], disps[1], disps[2],
+                      vmin=-ranges, vmax=ranges)
+        mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+        mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+        plot_sphere(0.7)
+
+        mlab.show()
 
     else:
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
