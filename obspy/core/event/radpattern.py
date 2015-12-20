@@ -24,13 +24,12 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
-import mpl_toolkits.mplot3d.art3d as art3d
-from matplotlib.patches import PathPatch
 
 
 def plot_3drpattern(mt, kind='both_sphere'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
+    calculations are based on Aki & Richards Eq 4.29
 
     :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
@@ -40,18 +39,19 @@ def plot_3drpattern(mt, kind='both_sphere'):
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
 
     :param kind: can be one of the following options:
-                 'p_quiver': matplotlib quiver plot of p wave radiation farfield
-                 's_quiver': matplotlib quiver plot of s wave radiation farfield
-                 'both_quiver': matplotlib quiver plot of s and p wave farfield pattern
-                 'p_sphere': matplotlib surface plot of p wave radiation farfield
-                 's_sphere': matplotlib surface plot of s wave radiation farfield
-                 'mayavi': uses the mayavi library (not yet available under python 3
-                           and problematic with anaconda)
-                 'vtk': This vtk option writes three vtk files to the current working directory.
-                        rpattern.vtk contains the p and s wave farfield vector field
-                        beachlines.vtk contains the nodal lines of the radiation pattern
-                        rpattern.pvsm is a state file that sets paraview parameters
-                        to plot rpattern.vtk and beachlines.vtk
+                 'p_quiver': matplotlib quiver plot of p wave farfield
+                 's_quiver': matplotlib quiver plot of s wave farfield
+                 'both_quiver': matplotlib quiver plot of s and p wave farfield
+                 'p_sphere': matplotlib surface plot of p wave farfield
+                 's_sphere': matplotlib surface plot of s wave farfield
+                 'mayavi': uses the mayavi library (not yet available under
+                           python 3 and problematic with anaconda)
+                 'vtk': This vtk option writes three vtk files to the current
+                        working directory. rpattern.vtk contains the p and s
+                        wave farfield vector field beachlines.vtk contains the
+                        nodal lines of the radiation pattern rpattern.pvsm
+                        is a state file that sets paraview parameters to plot
+                        rpattern.vtk and beachlines.vtk
 
     :return: 3D grid point array with shape [3,npts] that contains
              the sperical grid points
@@ -59,7 +59,6 @@ def plot_3drpattern(mt, kind='both_sphere'):
              3D vector array with shape [3,npts] that contains the
              displacement vector for each grid point
 
-    based on Aki & Richards Eq 4.29
     """
 
     vlength = 0.1  # length of vectors
@@ -228,8 +227,8 @@ def plot_3drpattern(mt, kind='both_sphere'):
                              dispp[0], dispp[1], dispp[2],
                              scalars=normp, vmin=-rangep, vmax=rangep)
         pts1.glyph.color_mode = 'color_by_scalar'
-        mlab.plot3d(*neg_nodalline, color=(0,0.5,0), tube_radius=0.01)
-        mlab.plot3d(*pos_nodalline, color=(0,0.5,0), tube_radius=0.01)
+        mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+        mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
         plot_sphere(0.7)
 
         fig2 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
@@ -245,7 +244,8 @@ def plot_3drpattern(mt, kind='both_sphere'):
     elif kind == 'vtk':
         fname_vtkrpattern = 'rpattern.vtk'
         fname_vtkbeachlines = 'beachlines.vtk'
-        #output a vtkfile that can be read e.g. by paraview
+
+        #output a vtkfile that can for exampled be displayed by paraview
         mopad_mt = MomentTensor(mt, system='NED')
         bb = BeachBall(mopad_mt, npoints=200)
         bb._setup_BB(unit_circle=False)
@@ -255,47 +255,47 @@ def plot_3drpattern(mt, kind='both_sphere'):
         pos_nodalline = bb._nodalline_positive
 
         #plot radiation pattern and nodal lines
-        points  = spherical_grid(nlat=nlat)
-        ndim,npoints = points.shape
+        points = spherical_grid()
+        ndim, npoints = points.shape
         dispp = farfield_p(mt, points)
         disps = farfield_s(mt, points)
 
         #output to file
-        with open(fname_vtkrpattern,'w') as vtk_file:
-            vtk_header = '# vtk DataFile Version 2.0\n'+\
-                         'radiation pattern vector field\n'+\
-                         'ASCII\n'+\
-                         'DATASET UNSTRUCTURED_GRID\n'+\
+        with open(fname_vtkrpattern, 'w') as vtk_file:
+            vtk_header = '# vtk DataFile Version 2.0\n' + \
+                         'radiation pattern vector field\n' + \
+                         'ASCII\n' + \
+                         'DATASET UNSTRUCTURED_GRID\n' + \
                          'POINTS {:d} float\n'.format(npoints)
 
             vtk_file.write(vtk_header)
             #write point locations
-            for x,y,z in np.transpose(points):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            for x, y, z in np.transpose(points):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
             #write vector field
             vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
             vtk_file.write('VECTORS s_radiation float\n')
-            for x,y,z in np.transpose(disps):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            for x, y, z in np.transpose(disps):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
             vtk_file.write('VECTORS p_radiation float\n'.format(npoints))
-            for x,y,z in np.transpose(dispp):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            for x, y, z in np.transpose(dispp):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
-        with open(fname_vtkbeachlines,'w') as vtk_file:
+        with open(fname_vtkbeachlines, 'w') as vtk_file:
             npoints_neg = neg_nodalline.shape[1]
             npoints_pos = neg_nodalline.shape[1]
-            vtk_header = '# vtk DataFile Version 2.0\n'+\
-                         'beachball nodal lines\n'+\
-                         'ASCII\n'+\
-                         'DATASET UNSTRUCTURED_GRID\n'+\
+            vtk_header = '# vtk DataFile Version 2.0\n' + \
+                         'beachball nodal lines\n' + \
+                         'ASCII\n' + \
+                         'DATASET UNSTRUCTURED_GRID\n' + \
                          'POINTS {:d} float\n'.format(npoints_neg+npoints_pos)
 
             vtk_file.write(vtk_header)
             #write point locations
-            for x,y,z in np.transpose(neg_nodalline):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
-            for x,y,z in np.transpose(pos_nodalline):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            for x, y, z in np.transpose(neg_nodalline):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+            for x, y, z in np.transpose(pos_nodalline):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
             #LINE CONNECTIVITY (SHOULD BECOME A TUBE LATER)
 
@@ -303,23 +303,25 @@ def plot_3drpattern(mt, kind='both_sphere'):
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
 
 
-
 def spherical_grid(nlat=30):
     """
-    generates a simple equal area spherical grid
+    generates a simple grid with adapted longitude spacing
+
+    :param nlat: number of nodes in lat direction. The number of
+                 nodes in lon direction is 2*nlat+1 at the equator
     """
 
     ndim = 3
     colats = np.linspace(0., np.pi, nlat)
     norms = np.sin(colats)
-    nlons = (nlat * norms + 1).astype(int)  # scale number of point with lat
+    nlons = (2*nlat * norms + 1).astype(int)  # scale number of point with lat
 
     #---- make colat/lon grid ----
     colatgrid, longrid = [], []
     for ilat in range(nlat):
         nlon = nlons[ilat]
         dlon = 2.*np.pi / nlon
-        lons = np.arange(0., 2.*np.pi, dlon)
+        lons = np.linspace(0.+dlon/2., 2.*np.pi-dlon/2., nlon)
         for ilon in range(nlon):
             colatgrid.append(colats[ilat])
             longrid.append(lons[ilon])
@@ -337,9 +339,10 @@ def spherical_grid(nlat=30):
 def farfield_p(mt, points):
     """
     Returns the P farfield radiation pattern
+    based on Aki & Richards Eq 4.29
 
     :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
-        six independent components of the moment tensor)
+               six independent components of the moment tensor)
 
     :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
                    (theta,phi) The normalized displacement of the moment
@@ -347,8 +350,6 @@ def farfield_p(mt, points):
 
     :return: 3D vector array with shape [3,npts] that contains the
              displacement vector for each grid point
-
-    based on Aki & Richards Eq 4.29
     """
     ndim, npoints = points.shape
     if ndim == 2:
@@ -387,9 +388,10 @@ def farfield_p(mt, points):
 def farfield_s(mt, points):
     """
     Returns the S farfield radiation pattern
+    based on Aki & Richards Eq 4.29
 
     :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
-        six independent components of the moment tensor)
+               six independent components of the moment tensor)
 
     :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
                    (theta,phi) The normalized displacement of the moment
@@ -397,8 +399,6 @@ def farfield_s(mt, points):
 
     :return: 3D vector array with shape [3,npts] that contains the
              displacement vector for each grid point
-
-    based on Aki & Richards Eq 4.29
     """
     ndim, npoints = points.shape
     if ndim == 2:
