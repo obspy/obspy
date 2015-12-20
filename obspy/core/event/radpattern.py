@@ -28,7 +28,7 @@ import mpl_toolkits.mplot3d.art3d as art3d
 from matplotlib.patches import PathPatch
 
 
-def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
+def plot_3drpattern(mt, kind='both_sphere', vtk_fname='radpattern.vtk'):
     """
     Returns the P farfield radiation pattern on a unit sphere grid
 
@@ -65,6 +65,7 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
         ax = fig.add_subplot(111, projection='3d')
         ax.quiver(points[0], points[1], points[2],
                   disp[0], disp[1], disp[2], length=vlength)
+        plt.show()
 
     elif kind == 'p_sphere':
         #generate spherical mesh that is aligned with the moment tensor null
@@ -126,6 +127,7 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
+        plt.show()
 
     elif kind == 's_quiver':
         #precompute even spherical grid and directional cosine array
@@ -139,6 +141,7 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
         ax = fig.add_subplot(111, projection='3d')
         ax.quiver(points[0], points[1], points[2],
                   disp[0], disp[1], disp[2], length=vlength)
+        plt.show()
 
     elif kind == 's_sphere':
         #lat/lon sphere
@@ -169,6 +172,7 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+        plt.show()
 
     elif kind == 'both_quiver':
         #precompute even spherical grid and directional cosine array
@@ -189,11 +193,12 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
         qs = ax.quiver(points[0], points[1], points[2],
                        disps[0], disps[1], disps[2], length=vlength)
         qs.set_array(normp)
+        plt.show()
 
-    elif kind == 'vtk' and vtk_fname is None:
+    elif kind == 'mayavi':
         #use mayavi if possible. Otherwise fall back to output a vtkfile
         from mayavi import mlab
-        mopad_mt = MomentTensor(mt,system='NED')
+        mopad_mt = MomentTensor(mt, system='NED')
         bb = BeachBall(mopad_mt, npoints=200)
         bb._setup_BB(unit_circle=False)
 
@@ -203,8 +208,8 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
 
         #plot radiation pattern and nodal lines
         points = spherical_grid(nlat=nlat)
-        dispp = farfieldP(mt, points)
-        disps = farfieldS(mt, points)
+        dispp = farfield_p(mt, points)
+        disps = farfield_s(mt, points)
 
         fig1 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
         pts1 = mlab.quiver3d(points[0], points[1], points[2],
@@ -225,10 +230,66 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname=None):
 
         mlab.show()
 
+    elif kind == 'vtk':
+        fname_vtkrpattern = 'rpattern.vtk'
+        fname_vtkbeachlines = 'beachlines.vtk'
+        #output a vtkfile that can be read e.g. by paraview
+        mopad_mt = MomentTensor(mt, system='NED')
+        bb = BeachBall(mopad_mt, npoints=200)
+        bb._setup_BB(unit_circle=False)
+
+        # extract the coordinates of the nodal lines
+        neg_nodalline = bb._nodalline_negative
+        pos_nodalline = bb._nodalline_positive
+
+        #plot radiation pattern and nodal lines
+        points  = spherical_grid(nlat=nlat)
+        ndim,npoints = points.shape
+        dispp = farfield_p(mt, points)
+        disps = farfield_s(mt, points)
+
+        #output to file
+        with open(fname_vtkrpattern,'w') as vtk_file:
+            vtk_header = '# vtk DataFile Version 2.0\n'+\
+                         'radiation pattern vector field\n'+\
+                         'ASCII\n'+\
+                         'DATASET UNSTRUCTURED_GRID\n'+\
+                         'POINTS {:d} float\n'.format(npoints)
+
+            vtk_file.write(vtk_header)
+            #write point locations
+            for x,y,z in np.transpose(points):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            #write vector field
+            vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
+            vtk_file.write('VECTORS s_radiation float\n')
+            for x,y,z in np.transpose(disps):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            vtk_file.write('VECTORS p_radiation float\n'.format(npoints))
+            for x,y,z in np.transpose(dispp):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+
+        with open(fname_vtkbeachlines,'w') as vtk_file:
+            npoints_neg = neg_nodalline.shape[1]
+            npoints_pos = neg_nodalline.shape[1]
+            vtk_header = '# vtk DataFile Version 2.0\n'+\
+                         'beachball nodal lines\n'+\
+                         'ASCII\n'+\
+                         'DATASET UNSTRUCTURED_GRID\n'+\
+                         'POINTS {:d} float\n'.format(npoints_neg+npoints_pos)
+
+            vtk_file.write(vtk_header)
+            #write point locations
+            for x,y,z in np.transpose(neg_nodalline):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+            for x,y,z in np.transpose(pos_nodalline):
+                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x,y,z))
+
+            #LINE CONNECTIVITY (SHOULD BECOME A TUBE LATER)
+
     else:
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
 
-    plt.show()
 
 
 def spherical_grid(nlat=30):

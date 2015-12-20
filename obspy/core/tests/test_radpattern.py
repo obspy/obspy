@@ -24,7 +24,7 @@ class RadPatternTestCase(unittest.TestCase):
         """
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
         #mt = [0.0, 1, -1, 0, -1, 0.]
-        plot_3drpattern(mt,kind='vtk')
+        plot_3drpattern(mt, kind='vtk')
 
 def suite():
     return unittest.makeSuite(RadPatternTestCase, 'test')
