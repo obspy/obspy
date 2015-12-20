@@ -28,9 +28,9 @@ import mpl_toolkits.mplot3d.art3d as art3d
 from matplotlib.patches import PathPatch
 
 
-def plot_3drpattern(mt, kind='both_sphere', vtk_fname='radpattern.vtk'):
+def plot_3drpattern(mt, kind='both_sphere'):
     """
-    Returns the P farfield radiation pattern on a unit sphere grid
+    Plots the P farfield radiation pattern on a unit sphere grid
 
     :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
@@ -39,7 +39,19 @@ def plot_3drpattern(mt, kind='both_sphere', vtk_fname='radpattern.vtk'):
         x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
 
-    :param kind: can be 'p_quiver, s_quiver, both_quiver, p_sphere, s_sphere'
+    :param kind: can be one of the following options:
+                 'p_quiver': matplotlib quiver plot of p wave radiation farfield
+                 's_quiver': matplotlib quiver plot of s wave radiation farfield
+                 'both_quiver': matplotlib quiver plot of s and p wave farfield pattern
+                 'p_sphere': matplotlib surface plot of p wave radiation farfield
+                 's_sphere': matplotlib surface plot of s wave radiation farfield
+                 'mayavi': uses the mayavi library (not yet available under python 3
+                           and problematic with anaconda)
+                 'vtk': This vtk option writes three vtk files to the current working directory.
+                        rpattern.vtk contains the p and s wave farfield vector field
+                        beachlines.vtk contains the nodal lines of the radiation pattern
+                        rpattern.pvsm is a state file that sets paraview parameters
+                        to plot rpattern.vtk and beachlines.vtk
 
     :return: 3D grid point array with shape [3,npts] that contains
              the sperical grid points
