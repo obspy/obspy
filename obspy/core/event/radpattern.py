@@ -210,7 +210,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         #use mayavi if possible.
         try:
             from mayavi import mlab
-        except ImportError,err:
+        except ImportError, err:
             print(err)
             print("mayavi import error. Use kind='vtk' for vtk file "
                   "output of the radiation pattern that can be used "
@@ -307,22 +307,22 @@ def plot_3drpattern(mt, kind='both_sphere'):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
             #write line segments
-            vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot+4))
+            vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
 
-            ipoints = list(range(0, npts_neg))+[0]
+            ipoints = list(range(0, npts_neg)) + [0]
             vtk_file.write('{:d} '.format(npts_neg+1))
             for ipoint in ipoints:
-                if ipoint%30==29:
+                if ipoint % 30 == 29:
                     vtk_file.write('\n')
                 vtk_file.write('{:d} '.format(ipoint))
             vtk_file.write('\n')
 
-            ipoints = list(range(0, npts_pos))+[0]
-            vtk_file.write('{:d} '.format(npts_pos+1))
+            ipoints = list(range(0, npts_pos)) + [0]
+            vtk_file.write('{:d} '.format(npts_pos + 1))
             for ipoint in ipoints:
-                if ipoint%30==29:
+                if ipoint % 30 == 29:
                     vtk_file.write('\n')
-                vtk_file.write('{:d} '.format(ipoint+npts_neg))
+                vtk_file.write('{:d} '.format(ipoint + npts_neg))
             vtk_file.write('\n')
 
             #cell types. 4 means cell type is a poly_line
