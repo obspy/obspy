@@ -22,7 +22,7 @@ format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-from .event import *
+from .base import *
 from .radpattern import *
 
 if __name__ == '__main__':

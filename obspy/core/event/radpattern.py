@@ -207,8 +207,16 @@ def plot_3drpattern(mt, kind='both_sphere'):
         plt.show()
 
     elif kind == 'mayavi':
-        #use mayavi if possible. Otherwise fall back to output a vtkfile
-        from mayavi import mlab
+        #use mayavi if possible.
+        try:
+            from mayavi import mlab
+        except ImportError as err:
+            raise ImportError(str(e) + (
+                    "mayavi import error. Use kind='vtk' for vtk file 
+                    output of the radiation pattern that can be used
+                    by external software like paraview")
+
+        #get mopad moment tensor
         mopad_mt = MomentTensor(mt, system='NED')
         bb = BeachBall(mopad_mt, npoints=200)
         bb._setup_BB(unit_circle=False)
