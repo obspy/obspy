@@ -12,6 +12,7 @@ import inspect
 import os
 from math import pi
 
+from obspy.taup import _DEFAULT_VALUES
 from obspy.taup.slowness_model import SlownessModel
 from obspy.taup.tau_model import TauModel
 from obspy.taup.velocity_model import VelocityModel
@@ -82,7 +83,7 @@ class TauP_Create(object):
             vMod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
             self.max_range_interval * pi / 180.0, self.max_interp_error,
             self.allow_inner_core_s,
-            SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
+            _DEFAULT_VALUES["slowness_tolerance"])
         if self.debug:
             print("Parameters are:")
             print("taup.create.min_delta_p = " + str(self.sMod.minDeltaP) +

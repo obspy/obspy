@@ -12,13 +12,13 @@ import math
 
 import numpy as np
 
+from . import _DEFAULT_VALUES
 from .helper_classes import (CriticalDepth, DepthRange, SlownessLayer,
                              SlownessModelError, SplitLayerInfo, TimeDist)
 from .slowness_layer import (bullenDepthFor,
                              bullenRadialSlowness, create_from_vlayer,
                              evaluateAtBullen)
-from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
-                             VelocityLayer, evaluateVelocityAtBottom,
+from .velocity_layer import (VelocityLayer, evaluateVelocityAtBottom,
                              evaluateVelocityAtTop)
 
 
@@ -33,35 +33,32 @@ class SlownessModel(object):
     """
     Storage and methods for generating slowness-depth pairs.
     """
-    DEBUG = False
-    DEFAULT_SLOWNESS_TOLERANCE = 1e-16
-
-    # NB if the following are actually cleared (lists are mutable) every
-    # time createSample is called, maybe it would be better to just put these
-    # initialisations into the relevant methods? They do have to be
-    # persistent across method calls in createSample though, so don't.
-
-    # Stores the layer number for layers in the velocity model with a critical
-    # point at their top. These form the "branches" of slowness sampling.
-    criticalDepths = None  # will be list of CriticalDepth objects
-    # Store depth ranges that contains a high slowness zone for P/S. Stored as
-    # DepthRange objects, containing the top depth and bottom depth.
-    highSlownessLayerDepthsP = []  # will be list of DepthRanges
-    highSlownessLayerDepthsS = []
-    # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
-    # DepthRange objects, containing the top depth and bottom depth.
-    fluidLayerDepths = []
-    PLayers = None
-    SLayers = None
-    # For methods that have an isPWave parameter
-    SWAVE = False
-    PWAVE = True
-
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115,
                  maxRangeInterval=2.5 * math.pi / 180, maxInterpError=0.05,
                  allowInnerCoreS=True,
-                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE,
+                 slowness_tolerance=_DEFAULT_VALUES["slowness_tolerance"],
                  skip_model_creation=False):
+        self.DEBUG = False
+        # NB if the following are actually cleared (lists are mutable) every
+        # time createSample is called, maybe it would be better to just put these
+        # initialisations into the relevant methods? They do have to be
+        # persistent across method calls in createSample though, so don't.
+
+        # Stores the layer number for layers in the velocity model with a critical
+        # point at their top. These form the "branches" of slowness sampling.
+        self.criticalDepths = None  # will be list of CriticalDepth objects
+        # Store depth ranges that contains a high slowness zone for P/S. Stored as
+        # DepthRange objects, containing the top depth and bottom depth.
+        self.highSlownessLayerDepthsP = []  # will be list of DepthRanges
+        self.highSlownessLayerDepthsS = []
+        # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
+        # DepthRange objects, containing the top depth and bottom depth.
+        self.fluidLayerDepths = []
+        self.PLayers = None
+        self.SLayers = None
+        # For methods that have an isPWave parameter
+        self.SWAVE = False
+        self.PWAVE = True
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -721,12 +718,12 @@ class SlownessModel(object):
         currVLayer['botPVelocity'] = below['topPVelocity']
         currVLayer['topSVelocity'] = topSVel
         currVLayer['botSVelocity'] = botSVel
-        currVLayer['topDensity'].fill(DEFAULT_DENSITY)
-        currVLayer['botDensity'].fill(DEFAULT_DENSITY)
-        currVLayer['topQp'].fill(DEFAULT_QP)
-        currVLayer['botQp'].fill(DEFAULT_QP)
-        currVLayer['topQs'].fill(DEFAULT_QS)
-        currVLayer['botQs'].fill(DEFAULT_QS)
+        currVLayer['topDensity'].fill(_DEFAULT_VALUES["density"])
+        currVLayer['botDensity'].fill(_DEFAULT_VALUES["density"])
+        currVLayer['topQp'].fill(_DEFAULT_VALUES["qp"])
+        currVLayer['botQp'].fill(_DEFAULT_VALUES["qp"])
+        currVLayer['topQs'].fill(_DEFAULT_VALUES["qs"])
+        currVLayer['botQs'].fill(_DEFAULT_VALUES["qs"])
 
         currPLayer = create_from_vlayer(
                 vLayer=currVLayer,

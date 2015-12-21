@@ -25,23 +25,10 @@ class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
-    # The following really need to be class attributes. For some reason.
-
-    # Depth for which tau model as constructed.
-    source_depth = 0.0
-    radius_of_planet = 6371.0
-    # Branch with the source at its top.
-    sourceBranch = 0
-    # Depths that should not have reflections or phase conversions. For
-    # instance, if the source is not at a branch boundary then
-    # noDisconDepths contains source depth and reflections and phase
-    # conversions are not allowed at this branch boundary. If the source
-    # happens to fall on a real discontinuity then then it is not
-    # included.
-    noDisconDepths = []
-
     def __init__(self, sMod, spherical=True, debug=False, skip_calc=False):
         self.debug = debug
+        # Depth for which tau model as constructed.
+        self.source_depth = 0.0
         self.radius_of_planet = 6371.0
         # True if this is a spherical slowness model. False if flat.
         self.spherical = spherical
@@ -59,6 +46,16 @@ class TauModel(object):
         self.tauBranches = None
 
         self.sMod = sMod
+
+        # Branch with the source at its top.
+        self.sourceBranch = 0
+        # Depths that should not have reflections or phase conversions. For
+        # instance, if the source is not at a branch boundary then
+        # noDisconDepths contains source depth and reflections and phase
+        # conversions are not allowed at this branch boundary. If the source
+        # happens to fall on a real discontinuity then then it is not
+        # included.
+        self.noDisconDepths = []
 
         if not skip_calc:
             self.calcTauIncFrom()
@@ -408,7 +405,6 @@ class TauModel(object):
             SlownessModel
             =============
             DEBUG <type 'bool'>
-            DEFAULT_SLOWNESS_TOLERANCE <type 'float'>
             PLayers <type 'numpy.ndarray'>
             PWAVE <type 'bool'>
             SLayers <type 'numpy.ndarray'>
@@ -454,7 +450,6 @@ class TauModel(object):
                 arrays[key] = self.tauBranches[i_][j_]._to_array()
         # c) handle simple contents of .sMod
         dtypes = [(native_str('DEBUG'), np.bool_),
-                  (native_str('DEFAULT_SLOWNESS_TOLERANCE'), np.float_),
                   (native_str('PWAVE'), np.bool_),
                   (native_str('SWAVE'), np.bool_),
                   (native_str('allowInnerCoreS'), np.bool_),

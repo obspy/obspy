@@ -357,6 +357,23 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+# Module wide default settings.
+_DEFAULT_VALUES = {
+    # Default depths for a couple of discontinuities in earth. These are
+    # only used for the tvel files which have no named discontinuities.
+    # Values are in km.
+    "default_moho": 35,
+    "default_cmb": 2889.0,
+    "default_iocb": 5153.9,
+    # Default material parameters if a model does not set them.
+    "density": 2.6,
+    "qp": 1000.0,
+    "qs": 2000.0,
+    # Slowness tolerance
+    "slowness_tolerance": 1e-16
+}
+
+
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
 from .taup import getTravelTimes, travelTimePlot  # NOQA

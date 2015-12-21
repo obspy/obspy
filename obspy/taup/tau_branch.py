@@ -22,12 +22,12 @@ class TauBranch(object):
     branch. A branch is a group of layers bounded by discontinuities or
     reversals in slowness gradient.
     """
-    DEBUG = False
-
     def __init__(self, topDepth=0, botDepth=0, isPWave=False):
         self.topDepth = topDepth
         self.botDepth = botDepth
         self.isPWave = isPWave
+        self.DEBUG = False
+
 
     def __str__(self):
         desc = "Tau Branch\n"

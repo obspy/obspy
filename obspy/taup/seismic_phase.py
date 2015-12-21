@@ -31,37 +31,36 @@ class SeismicPhase(object):
     contributions for scattered phases. Nomenclature: "K" - downgoing wave
     from source in core; "k" - upgoing wave from source in core.
     """
-    DEBUG = False
-    # Enables phases originating in core.
-    expert = False
-    # Used by addToBranch when the path turns within a segment. We assume
-    # that no ray will turn downward so turning implies turning from
-    # downward to upward, ie U.
-    TURN = 0
-    # Used by addToBranch when the path reflects off the top of the end of a
-    # segment, ie ^.
-    REFLECT_UNDERSIDE = 1
-    # Used by addToBranch when the path reflects off the bottom of the end
-    # of a segment, ie v.
-    REFLECT_TOPSIDE = 2
-    # Used by addToBranch when the path transmits up through the end of a
-    # segment.
-    TRANSUP = 3
-    # Used by addToBranch when the path transmits down through the end of a
-    # segment.
-    TRANSDOWN = 4
-    # The maximum degrees that a Pn or Sn can refract along the moho. Note
-    # this is not the total distance, only the segment along the moho. The
-    # default is 20 degrees.
-    maxRefraction = 20
-    # The maximum degrees that a Pdiff or Sdiff can diffract along the CMB.
-    # Note this is not the total distance, only the segment along the CMB.
-    # The default is 60 degrees.
-    maxDiffraction = 60
-    # The maximum number of refinements to make to an Arrival.
-    maxRecursion = 5
-
     def __init__(self, name, tMod, receiver_depth=0.0):
+        # Used by addToBranch when the path turns within a segment. We assume
+        # that no ray will turn downward so turning implies turning from
+        # downward to upward, ie U.
+        self.TURN = 0
+        # Used by addToBranch when the path reflects off the top of the end of
+        # a segment, ie ^.
+        self.REFLECT_UNDERSIDE = 1
+        # Used by addToBranch when the path reflects off the bottom of the end
+        # of a segment, ie v.
+        self.REFLECT_TOPSIDE = 2
+        # Used by addToBranch when the path transmits up through the end of a
+        # segment.
+        self.TRANSUP = 3
+        # Used by addToBranch when the path transmits down through the end of a
+        # segment.
+        self.TRANSDOWN = 4
+        # The maximum degrees that a Pn or Sn can refract along the moho. Note
+        # this is not the total distance, only the segment along the moho. The
+        # default is 20 degrees.
+        self.maxRefraction = 20
+        # The maximum degrees that a Pdiff or Sdiff can diffract along the CMB.
+        # Note this is not the total distance, only the segment along the CMB.
+        # The default is 60 degrees.
+        self.maxDiffraction = 60
+        # The maximum number of refinements to make to an Arrival.
+        self.maxRecursion = 5
+
+        # Enables phases originating in core.
+        self.expert = False
         # Minimum/maximum ray parameters that exist for this phase.
         self.minRayParam = None
         self.maxRayParam = None

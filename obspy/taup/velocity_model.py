@@ -11,17 +11,8 @@ import os
 
 import numpy as np
 
-from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
-                             evaluateVelocityAt)
-
-
-# Some defaults value for Earth in km.
-_DEFAULT_VALUES = {
-    "radiusOfEarth": 6371.0,
-    "default_moho": 35,
-    "default_cmb": 2889.0,
-    "default_iocb": 5153.9
-}
+from .velocity_layer import VelocityLayer, evaluateVelocityAt
+from . import _DEFAULT_VALUES
 
 
 class VelocityModel(object):
@@ -451,10 +442,10 @@ class VelocityModel(object):
         layers['botDensity'] = data[1:, 3]
 
         # We do not at present support varying attenuation
-        layers['topQp'].fill(DEFAULT_QP)
-        layers['botQp'].fill(DEFAULT_QP)
-        layers['topQs'].fill(DEFAULT_QS)
-        layers['botQs'].fill(DEFAULT_QS)
+        layers['topQp'].fill(_DEFAULT_VALUES["qp"])
+        layers['botQp'].fill(_DEFAULT_VALUES["qp"])
+        layers['topQs'].fill(_DEFAULT_VALUES["qs"])
+        layers['botQs'].fill(_DEFAULT_VALUES["qs"])
 
         # Don't use zero thickness layers; first order discontinuities are
         # taken care of by storing top and bottom depths.
@@ -594,10 +585,10 @@ class VelocityModel(object):
         layers['botDensity'] = data[1:, 3]
 
         # We do not at present support varying attenuation
-        layers['topQp'].fill(DEFAULT_QP)
-        layers['botQp'].fill(DEFAULT_QP)
-        layers['topQs'].fill(DEFAULT_QS)
-        layers['botQs'].fill(DEFAULT_QS)
+        layers['topQp'].fill(_DEFAULT_VALUES["qp"])
+        layers['botQp'].fill(_DEFAULT_VALUES["qp"])
+        layers['topQs'].fill(_DEFAULT_VALUES["qs"])
+        layers['botQs'].fill(_DEFAULT_VALUES["qs"])
 
         # Don't use zero thickness layers; first order discontinuities are
         # taken care of by storing top and bottom depths.

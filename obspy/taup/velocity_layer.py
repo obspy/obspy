@@ -11,10 +11,6 @@ from future.utils import native_str
 import numpy as np
 
 
-DEFAULT_DENSITY = 2.6
-DEFAULT_QP = 1000.0
-DEFAULT_QS = 2000.0
-
 #: The VelocityLayer dtype stores a single layer. An entire velocity model is
 #: implemented as an array of layers. The elements are:
 #:
