@@ -14,6 +14,8 @@ import re
 
 import numpy as np
 
+from obspy.core.util.obspy_types import Enum
+
 from .helper_classes import (Arrival, SlownessModelError, TauModelError,
                              TimeDist)
 
@@ -21,6 +23,26 @@ from .c_wrappers import clibtau
 
 
 REFINE_DIST_RADIAN_TOL = 0.0049 * math.pi / 180
+
+
+_ACTIONS = Enum([
+    # Used by add_to_branch when the path turns within a segment. We assume
+    # that no ray will turn downward so turning implies turning from downward
+    # to upward, ie U.
+    "turn",
+    # Used by add_to_branch when the path reflects off the top of the end of
+    # a segment, ie ^.
+    "reflect_underside",
+    # Used by add_to_branch when the path reflects off the bottom of the end
+    # of a segment, ie v.
+    "reflect_topside",
+    # Used by add_to_branch when the path transmits up through the end of a
+    # segment.
+    "transup",
+    # Used by add_to_branch when the path transmits down through the end of a
+    # segment.
+    "transdown"
+])
 
 
 class SeismicPhase(object):
@@ -32,32 +54,34 @@ class SeismicPhase(object):
     from source in core; "k" - upgoing wave from source in core.
     """
     def __init__(self, name, tMod, receiver_depth=0.0):
-        # Used by addToBranch when the path turns within a segment. We assume
-        # that no ray will turn downward so turning implies turning from
-        # downward to upward, ie U.
-        self.TURN = 0
-        # Used by addToBranch when the path reflects off the top of the end of
-        # a segment, ie ^.
-        self.REFLECT_UNDERSIDE = 1
-        # Used by addToBranch when the path reflects off the bottom of the end
-        # of a segment, ie v.
-        self.REFLECT_TOPSIDE = 2
-        # Used by addToBranch when the path transmits up through the end of a
-        # segment.
-        self.TRANSUP = 3
-        # Used by addToBranch when the path transmits down through the end of a
-        # segment.
-        self.TRANSDOWN = 4
+        # The phase name, e.g. PKiKP.
+        self.name = name
+        # The receiver depth within the TauModel that was used to generate this
+        # phase. Normally this is 0.0 for a surface station, but can be
+        # different for borehole or scattering calculations.
+        self.receiver_depth = receiver_depth
+        # TauModel to generate phase for.
+        self.tMod = tMod
+
+        # The source depth within the TauModel that was used to generate
+        # this phase.
+        self.source_depth = self.tMod.source_depth
+
+        # Name with depths corrected to be actual discontinuities in the model.
+        self.puristName = self.create_purist_name(tMod)
+        self.parse_name(tMod)
+        self.sum_branches(tMod)
+
         # The maximum degrees that a Pn or Sn can refract along the moho. Note
         # this is not the total distance, only the segment along the moho. The
         # default is 20 degrees.
-        self.maxRefraction = 20
+        self.max_refraction = 20
         # The maximum degrees that a Pdiff or Sdiff can diffract along the CMB.
         # Note this is not the total distance, only the segment along the CMB.
         # The default is 60 degrees.
-        self.maxDiffraction = 60
+        self.max_diffraction = 60
         # The maximum number of refinements to make to an Arrival.
-        self.maxRecursion = 5
+        self.max_recursion = 5
 
         # Enables phases originating in core.
         self.expert = False
@@ -75,17 +99,6 @@ class SeismicPhase(object):
         # Temporary branch numbers determining where to start adding to the
         # branch sequence.
         self.currBranch = None
-        # The phase name, e.g. PKiKP.
-        self.name = name
-        # The source depth within the TauModel that was used to generate
-        # this phase.
-        self.source_depth = tMod.source_depth
-        # The receiver depth within the TauModel that was used to generate this
-        # phase. Normally this is 0.0 for a surface station, but can be
-        # different for borehole or scattering calculations.
-        self.receiver_depth = receiver_depth
-        # TauModel to generate phase for.
-        self.tMod = tMod
         # Array of distances corresponding to the ray parameters stored in
         # ray_param.
         self.dist = None
@@ -110,10 +123,6 @@ class SeismicPhase(object):
         self.waveType = []
         # List containing strings for each leg.
         self.legs = leg_puller(name)
-        # Name with depths corrected to be actual discontinuities in the model.
-        self.puristName = self.create_purist_name(tMod)
-        self.parse_name(tMod)
-        self.sum_branches(tMod)
 
     def create_purist_name(self, tMod):
         currLeg = self.legs[0]
@@ -153,7 +162,7 @@ class SeismicPhase(object):
         nextLeg = currLeg
         isPWave = True
         isPWavePrev = isPWave
-        endAction = self.TRANSDOWN
+        endAction = _ACTIONS["transdown"]
 
         # Deal with surface wave velocities first, since they are a special
         # case.
@@ -193,7 +202,7 @@ class SeismicPhase(object):
             # Downgoing from source.
             self.currBranch = tMod.sourceBranch
             # Treat initial downgoing as if it were an underside reflection.
-            endAction = self.REFLECT_UNDERSIDE
+            endAction = _ACTIONS["reflect_underside"]
             try:
                 sLayerNum = tMod.sMod.layer_number_below(tMod.source_depth,
                                                          isPWavePrev)
@@ -207,7 +216,7 @@ class SeismicPhase(object):
         elif currLeg in ("p", "s") or (self.expert and currLeg[0] == "k"):
             # Upgoing from source: treat initial downgoing as if it were a
             # topside reflection.
-            endAction = self.REFLECT_TOPSIDE
+            endAction = _ACTIONS["reflect_topside"]
             try:
                 sLayerNum = tMod.sMod.layer_number_above(tMod.source_depth,
                                                          isPWavePrev)
@@ -311,7 +320,7 @@ class SeismicPhase(object):
                 elif nextLeg.startswith("^"):
                     disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if self.currBranch >= disconBranch:
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
                     else:
@@ -320,7 +329,7 @@ class SeismicPhase(object):
                             "currBranch > disconBranch".format(currLeg,
                                                                nextLeg))
                 elif nextLeg == "m" and self.currBranch >= tMod.mohoBranch:
-                    endAction = self.TRANSUP
+                    endAction = _ACTIONS["transup"]
                     self.add_to_branch(tMod, self.currBranch, tMod.mohoBranch,
                                        isPWave, endAction)
                 elif nextLeg[0] in ("P", "S") or nextLeg in ("K", "END"):
@@ -331,14 +340,14 @@ class SeismicPhase(object):
                     else:
                         disconBranch = 0
                     if currLeg == 'k' and nextLeg != 'K':
-                        endAction = self.TRANSUP
+                        endAction = _ACTIONS["transup"]
                     else:
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                     self.add_to_branch(tMod, self.currBranch, disconBranch,
                                        isPWave, endAction)
                 elif isNextLegDepth:
                     disconBranch = closest_branch_to_depth(tMod, nextLeg)
-                    endAction = self.TRANSUP
+                    endAction = _ACTIONS["transup"]
                     self.add_to_branch(tMod, self.currBranch, disconBranch,
                                        isPWave, endAction)
                 else:
@@ -349,26 +358,26 @@ class SeismicPhase(object):
             # Now deal with P and S case.
             elif currLeg in ("P", "S"):
                 if nextLeg in ("P", "S", "Pn", "Sn", "END"):
-                    if endAction == self.TRANSDOWN or \
-                            endAction == self.REFLECT_UNDERSIDE:
+                    if endAction == _ACTIONS["transdown"] or \
+                            endAction == _ACTIONS["reflect_underside"]:
                         # Was downgoing, so must first turn in mantle.
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.cmbBranch - 1, isPWave,
                                            endAction)
                     if nextLeg == 'END':
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch,
                                            upgoingRecBranch, isPWave,
                                            endAction)
                     else:
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch, 0, isPWave,
                                            endAction)
                 elif nextLeg[0] == "v":
                     disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if self.currBranch <= disconBranch - 1:
-                        endAction = self.REFLECT_TOPSIDE
+                        endAction = _ACTIONS["reflect_topside"]
                         self.add_to_branch(tMod, self.currBranch,
                                            disconBranch - 1, isPWave,
                                            endAction)
@@ -380,16 +389,16 @@ class SeismicPhase(object):
                 elif nextLeg[0] == "^":
                     disconBranch = closest_branch_to_depth(tMod, nextLeg[1:])
                     if prevLeg == "K":
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
                     elif prevLeg[0] == "^" or prevLeg in ("P", "S", "p", "s",
                                                           "START"):
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.cmbBranch - 1, isPWave,
                                            endAction)
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
                     elif ((prevLeg[0] == "v" and
@@ -399,7 +408,7 @@ class SeismicPhase(object):
                                disconBranch < tMod.mohoBranch) or
                            (prevLeg == "c" and
                                disconBranch < tMod.cmbBranch))):
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
                     else:
@@ -408,11 +417,11 @@ class SeismicPhase(object):
                             "currBranch > disconBranch".format(currLeg,
                                                                nextLeg))
                 elif nextLeg == "c":
-                    endAction = self.REFLECT_TOPSIDE
+                    endAction = _ACTIONS["reflect_topside"]
                     self.add_to_branch(tMod, self.currBranch,
                                        tMod.cmbBranch - 1, isPWave, endAction)
                 elif nextLeg == "K":
-                    endAction = self.TRANSDOWN
+                    endAction = _ACTIONS["transdown"]
                     self.add_to_branch(tMod, self.currBranch,
                                        tMod.cmbBranch - 1, isPWave, endAction)
                 elif nextLeg == "m" or (isNextLegDepth and
@@ -420,9 +429,9 @@ class SeismicPhase(object):
                     # Treat the Moho in the same way as 410 type
                     # discontinuities.
                     disconBranch = closest_branch_to_depth(tMod, nextLeg)
-                    if endAction == self.TURN \
-                            or endAction == self.REFLECT_TOPSIDE \
-                            or endAction == self.TRANSUP:
+                    if endAction == _ACTIONS["turn"] \
+                            or endAction == _ACTIONS["reflect_topside"] \
+                            or endAction == _ACTIONS["transup"]:
                         # Upgoing section
                         if disconBranch > self.currBranch:
                             # Check the discontinuity below the current
@@ -431,7 +440,7 @@ class SeismicPhase(object):
                                 "Phase not recognised: {} followed by {} when "
                                 "currBranch > disconBranch".format(currLeg,
                                                                    nextLeg))
-                        endAction = self.TRANSUP
+                        endAction = _ACTIONS["transup"]
                         self.add_to_branch(tMod, self.currBranch, disconBranch,
                                            isPWave, endAction)
                     else:
@@ -441,18 +450,18 @@ class SeismicPhase(object):
                         nextnextLeg = self.legs[legNum + 2]
                         if nextnextLeg == "p" or nextnextLeg == "s":
                             # Convert on upgoing section
-                            endAction = self.TURN
+                            endAction = _ACTIONS["turn"]
                             self.add_to_branch(tMod, self.currBranch,
                                                tMod.cmbBranch - 1, isPWave,
                                                endAction)
-                            endAction = self.TRANSUP
+                            endAction = _ACTIONS["transup"]
                             self.add_to_branch(tMod, self.currBranch,
                                                disconBranch, isPWave,
                                                endAction)
                         elif nextnextLeg == "P" or nextnextLeg == "S":
                             if disconBranch > self.currBranch:
                                 # discon is below current loc
-                                endAction = self.TRANSDOWN
+                                endAction = _ACTIONS["transdown"]
                                 self.add_to_branch(tMod, self.currBranch,
                                                    disconBranch - 1, isPWave,
                                                    endAction)
@@ -480,18 +489,18 @@ class SeismicPhase(object):
                     if (self.maxRayParam >= tMod.getTauBranch(
                             tMod.cmbBranch - 1, isPWave).minTurnRayParam >=
                             self.minRayParam):
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.cmbBranch - 1, isPWave,
                                            endAction)
                         self.maxRayParam = self.minRayParam
                         if nextLeg == "END":
-                            endAction = self.REFLECT_UNDERSIDE
+                            endAction = _ACTIONS["reflect_underside"]
                             self.add_to_branch(tMod, self.currBranch,
                                                upgoingRecBranch, isPWave,
                                                endAction)
                         elif nextLeg[0] in "PS":
-                            endAction = self.REFLECT_UNDERSIDE
+                            endAction = _ACTIONS["reflect_underside"]
                             self.add_to_branch(tMod, self.currBranch, 0,
                                                isPWave, endAction)
                     else:
@@ -508,11 +517,11 @@ class SeismicPhase(object):
                         self.maxRayParam = -1
                         return
                     if currLeg in ("Pg", "Sg"):
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.mohoBranch - 1, isPWave,
                                            endAction)
-                        endAction = self.REFLECT_UNDERSIDE
+                        endAction = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tMod, self.currBranch,
                                            upgoingRecBranch, isPWave,
                                            endAction)
@@ -524,22 +533,22 @@ class SeismicPhase(object):
                         if (self.maxRayParam >= tMod.getTauBranch(
                                 tMod.mohoBranch, isPWave).maxRayParam >=
                                 self.minRayParam):
-                            endAction = self.TURN
+                            endAction = _ACTIONS["turn"]
                             self.add_to_branch(tMod, self.currBranch,
                                                tMod.mohoBranch, isPWave,
                                                endAction)
-                            endAction = self.TRANSUP
+                            endAction = _ACTIONS["transup"]
                             self.add_to_branch(tMod, self.currBranch,
                                                tMod.mohoBranch, isPWave,
                                                endAction)
                             self.minRayParam = self.maxRayParam
                             if nextLeg == "END":
-                                endAction = self.REFLECT_UNDERSIDE
+                                endAction = _ACTIONS["reflect_underside"]
                                 self.add_to_branch(tMod, self.currBranch,
                                                    upgoingRecBranch, isPWave,
                                                    endAction)
                             elif nextLeg[0] in "PS":
-                                endAction = self.REFLECT_UNDERSIDE
+                                endAction = _ACTIONS["reflect_underside"]
                                 self.add_to_branch(tMod, self.currBranch, 0,
                                                    isPWave, endAction)
                         else:
@@ -555,28 +564,28 @@ class SeismicPhase(object):
             elif currLeg == "K":
                 if nextLeg in ("P", "S"):
                     if prevLeg in ("P", "S", "K", "k", "START"):
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.iocbBranch - 1, isPWave,
                                            endAction)
-                    endAction = self.TRANSUP
+                    endAction = _ACTIONS["transup"]
                     self.add_to_branch(tMod, self.currBranch, tMod.cmbBranch,
                                        isPWave, endAction)
                 elif nextLeg == "K":
                     if prevLeg in ("P", "S", "K"):
-                        endAction = self.TURN
+                        endAction = _ACTIONS["turn"]
                         self.add_to_branch(tMod, self.currBranch,
                                            tMod.iocbBranch - 1, isPWave,
                                            endAction)
-                    endAction = self.REFLECT_UNDERSIDE
+                    endAction = _ACTIONS["reflect_underside"]
                     self.add_to_branch(tMod, self.currBranch, tMod.cmbBranch,
                                        isPWave, endAction)
                 elif nextLeg in ("I", "J"):
-                    endAction = self.TRANSDOWN
+                    endAction = _ACTIONS["transdown"]
                     self.add_to_branch(tMod, self.currBranch,
                                        tMod.iocbBranch - 1, isPWave, endAction)
                 elif nextLeg == "i":
-                    endAction = self.REFLECT_TOPSIDE
+                    endAction = _ACTIONS["reflect_topside"]
                     self.add_to_branch(tMod, self.currBranch,
                                        tMod.iocbBranch - 1, isPWave, endAction)
                 else:
@@ -585,16 +594,16 @@ class SeismicPhase(object):
                             currLeg, nextLeg))
 
             elif currLeg in ("I", "J"):
-                endAction = self.TURN
+                endAction = _ACTIONS["turn"]
                 self.add_to_branch(tMod, self.currBranch,
                                    tMod.tauBranches.shape[1] - 1, isPWave,
                                    endAction)
                 if nextLeg in ("I", "J"):
-                    endAction = self.REFLECT_UNDERSIDE
+                    endAction = _ACTIONS["reflect_underside"]
                     self.add_to_branch(tMod, self.currBranch, tMod.iocbBranch,
                                        isPWave, endAction)
                 elif nextLeg == "K":
-                    endAction = self.TRANSUP
+                    endAction = _ACTIONS["transup"]
                     self.add_to_branch(tMod, self.currBranch, tMod.iocbBranch,
                                        isPWave, endAction)
 
@@ -626,13 +635,13 @@ class SeismicPhase(object):
                                                                      nextLeg))
 
         if self.maxRayParam != -1:
-            if (endAction == self.REFLECT_UNDERSIDE and
+            if (endAction == _ACTIONS["reflect_underside"] and
                     downgoingRecBranch == self.branchSeq[-1]):
                 # Last action was upgoing, so last branch should be
                 # upgoingRecBranch
                 self.minRayParam = -1
                 self.maxRayParam = -1
-            elif (endAction == self.REFLECT_TOPSIDE and
+            elif (endAction == _ACTIONS["reflect_topside"] and
                     upgoingRecBranch == self.branchSeq[-1]):
                 # Last action was downgoing, so last branch should be
                 # downgoingRecBranch
@@ -647,26 +656,26 @@ class SeismicPhase(object):
         ray parameters that cannot propagate from the CMB into the mantle as a
         P wave.
         """
-        if endAction == self.TURN:
+        if endAction == _ACTIONS["turn"]:
             # Can't phase convert for just a turn point
             raise TauModelError("Bad endAction: phase conversion is not "
                                 "allowed at turn points.")
-        elif endAction == self.REFLECT_UNDERSIDE:
+        elif endAction == _ACTIONS["reflect_underside"]:
             self.maxRayParam = \
                 min(self.maxRayParam,
                     tMod.getTauBranch(fromBranch, isPtoS).maxRayParam,
                     tMod.getTauBranch(fromBranch, not isPtoS).maxRayParam)
-        elif endAction == self.REFLECT_TOPSIDE:
+        elif endAction == _ACTIONS["reflect_topside"]:
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(fromBranch, isPtoS).minTurnRayParam,
                 tMod.getTauBranch(fromBranch, not isPtoS).minTurnRayParam)
-        elif endAction == self.TRANSUP:
+        elif endAction == _ACTIONS["transup"]:
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(fromBranch, isPtoS).maxRayParam,
                 tMod.getTauBranch(fromBranch - 1, not isPtoS).minTurnRayParam)
-        elif endAction == self.TRANSDOWN:
+        elif endAction == _ACTIONS["transdown"]:
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(fromBranch, isPtoS).minRayParam,
@@ -680,37 +689,37 @@ class SeismicPhase(object):
 
         Branches from startBranch to endBranch, inclusive, are added in order.
         Also, currBranch is set correctly based on the value of endAction.
-        endAction can be one of TRANSUP, TRANSDOWN, REFLECT_UNDERSIDE,
-        REFLECT_TOPSIDE, or TURN.
+        endAction can be one of transup, transdown, reflect_underside,
+        reflect_topside, or turn.
         """
         if endBranch < 0 or endBranch > tMod.tauBranches.shape[1]:
             raise ValueError('End branch outside range: %d' % (endBranch, ))
 
-        if endAction == self.TURN:
+        if endAction == _ACTIONS["turn"]:
             endOffset = 0
             isDownGoing = True
             self.minRayParam = max(
                 self.minRayParam,
                 tMod.getTauBranch(endBranch, isPWave).minTurnRayParam)
-        elif endAction == self.REFLECT_UNDERSIDE:
+        elif endAction == _ACTIONS["reflect_underside"]:
             endOffset = 0
             isDownGoing = False
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(endBranch, isPWave).maxRayParam)
-        elif endAction == self.REFLECT_TOPSIDE:
+        elif endAction == _ACTIONS["reflect_topside"]:
             endOffset = 0
             isDownGoing = True
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(endBranch, isPWave).minTurnRayParam)
-        elif endAction == self.TRANSUP:
+        elif endAction == _ACTIONS["transup"]:
             endOffset = -1
             isDownGoing = False
             self.maxRayParam = min(
                 self.maxRayParam,
                 tMod.getTauBranch(endBranch, isPWave).maxRayParam)
-        elif endAction == self.TRANSDOWN:
+        elif endAction == _ACTIONS["transdown"]:
             endOffset = 1
             isDownGoing = True
             self.maxRayParam = min(
@@ -835,14 +844,14 @@ class SeismicPhase(object):
                 self.ray_param = np.empty(0)
                 return
             else:
-                self.dist[1] = self.dist[0] + np.radians(self.maxDiffraction)
+                self.dist[1] = self.dist[0] + np.radians(self.max_diffraction)
                 self.time[1] = self.time[0] + \
-                    np.radians(self.maxDiffraction) * self.minRayParam
+                               np.radians(self.max_diffraction) * self.minRayParam
 
         elif "Pn" in self.name or "Sn" in self.name:
-            self.dist[1] = self.dist[0] + np.radians(self.maxRefraction)
+            self.dist[1] = self.dist[0] + np.radians(self.max_refraction)
             self.time[1] = (self.time[0] +
-                            np.radians(self.maxRefraction) * self.minRayParam)
+                            np.radians(self.max_refraction) * self.minRayParam)
 
         elif self.maxRayParamIndex == self.minRayParamIndex:
             self.dist[1] = self.dist[0]
@@ -967,7 +976,7 @@ class SeismicPhase(object):
         for _i in range(phase_count):
             arrivals.append(self.refine_arrival(
                 degrees, r_ray_num[_i], r_dist[_i], REFINE_DIST_RADIAN_TOL,
-                self.maxRecursion))
+                self.max_recursion))
         return arrivals
 
     def calc_pierce(self, degrees):
