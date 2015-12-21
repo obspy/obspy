@@ -15,74 +15,67 @@ from .velocity_layer import (DEFAULT_QP, DEFAULT_QS, VelocityLayer,
                              evaluateVelocityAt)
 
 
-class VelocityModel(object):
-    # Some default values as class attributes [km]
-    radiusOfEarth = 6371.0
-    default_moho = 35
-    default_cmb = 2889.0
-    default_iocb = 5153.9
+# Some defaults value for Earth in km.
+_DEFAULT_VALUES = {
+    "radiusOfEarth": 6371.0,
+    "default_moho": 35,
+    "default_cmb": 2889.0,
+    "default_iocb": 5153.9
+}
 
-    def __init__(self, modelName="unknown",
-                 radiusOfEarth=radiusOfEarth, mohoDepth=default_moho,
-                 cmbDepth=default_cmb, iocbDepth=default_iocb,
-                 minRadius=0.0, maxRadius=6371.0, isSpherical=True,
+
+class VelocityModel(object):
+    def __init__(self, model_name, radius_of_planet, min_radius, max_radius,
+                 moho_depth, cmb_depth, iocb_depth, is_spherical,
                  layers=None):
         """
-        Create an object to store a seismic Earth model.
+        Object for storing a seismic planet model.
 
-        :type modelName: str
-        :param modelName: name of the velocity model.
-        :type radiusOfEarth: float
-        :param radiusOfEarth: reference radius (km), usually radius of the
-            Earth.
-        :type mohoDepth: float
-        :param mohoDepth: Depth (km) of the Moho. It can be input from
-            velocity model (``*.nd``) or should be explicitly set. By default
-            it is 35 kilometers (from IASP91).  For phase naming, the tau model
-            will choose the closest first order discontinuity. Thus for most
-            simple Earth models these values are satisfactory. Take proper care
-            if your model has a thicker crust and a discontinuity near 35 km
-            depth.
-        :type cmbDepth: float
-        :param cmbDepth: Depth (km) of the CMB (core mantle boundary). It can
+        :type model_name: str
+        :param model_name: name of the velocity model.
+        :type radius_of_planet: float
+        :param radius_of_planet: reference radius (km), usually radius of the
+            planet.
+        :type min_radius: float
+        :param min_radius: Minimum radius of the model (km).
+        :type max_radius: float
+        :param max_radius: Maximum radius of the model (km).
+        :type moho_depth: float
+        :param moho_depth: Depth (km) of the Moho. It can be input from
+            velocity model (``*.nd``) or should be explicitly set. For phase
+            naming, the tau model will choose the closest first order
+            discontinuity.
+        :type cmb_depth: float
+        :param cmb_depth: Depth (km) of the CMB (core mantle boundary). It can
             be input from velocity model (``*.nd``) or should be explicitly
-            set. By default it is 2889 kilometers (from IASP91). For phase
-            naming, the tau model will choose the closest 1st order
-            discontinuity. Thus for most simple Earth models these values are
-            satisfactory.
-        :type iocbDepth: float
-        :param iocbDepth: Depth (km) of the IOCB (inner core-outer core
+            set.
+        :type iocb_depth: float
+        :param iocb_depth: Depth (km) of the IOCB (inner core-outer core
             boundary). It can be input from velocity model (``*.nd``) or should
-            be explicitly set. By default it is 5153.9 kilometers (from
-            IASP91). For phase naming, the tau model will choose the closest
-            first order discontinuity. Thus for most simple Earth models these
-            values are satisfactory.
-        :type minRadius: float
-        :param minRadius: Minimum radius of the model (km).
-        :type maxRadius: float
-        :param maxRadius: Maximum radius of the model (km).
-        :type isSpherical: bool
-        :param isSpherical: Is this a spherical model? Defaults to true.
+            be explicitly set.
+        :type is_spherical: bool
+        :param is_spherical: Is this a spherical model? Defaults to true.
+        :type layers: list
+        :param layers: The layers of the model.
         """
-        self.modelName = modelName
-        self.radiusOfEarth = radiusOfEarth
-        self.mohoDepth = mohoDepth
-        self.cmbDepth = cmbDepth
-        self.iocbDepth = iocbDepth
-        self.minRadius = minRadius
-        self.maxRadius = maxRadius
-        self.isSpherical = isSpherical
+        self.model_name = model_name
+        self.radius_of_planet = radius_of_planet
+        self.moho_depth = moho_depth
+        self.cmb_depth = cmb_depth
+        self.iocb_depth = iocb_depth
+        self.min_radius = min_radius
+        self.max_radius = max_radius
+        self.is_spherical = is_spherical
         self.layers = np.array(layers if layers is not None else [],
                                dtype=VelocityLayer)
 
     def __len__(self):
         return len(self.layers)
 
-    def isdiscontinuity(self, depth):
-        return np.any(self.getDisconDepths() == depth)
+    def is_discontinuity(self, depth):
+        return np.any(self.get_discontinuity_depth() == depth)
 
-    # @property  ?
-    def getDisconDepths(self):
+    def get_discontinuity_depth(self):
         """
         Return the depths of discontinuities within the velocity model.
 
@@ -100,22 +93,14 @@ class VelocityModel(object):
 
         return discontinuities
 
-    def getNumLayers(self):
-        """
-        Return the number of layers in this velocity model.
-
-        :rtype: int
-        """
-        return len(self.layers)
-
-    def layerNumberAbove(self, depth):
+    def layer_number_above(self, depth):
         """
         Find the layer containing the given depth(s).
 
         Note this returns the upper layer if the depth happens to be at a layer
         boundary.
 
-        .. seealso:: :meth:`layerNumberBelow`
+        .. seealso:: :meth:`layer_number_below`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -134,14 +119,14 @@ class VelocityModel(object):
         else:
             raise LookupError("No such layer.")
 
-    def layerNumberBelow(self, depth):
+    def layer_number_below(self, depth):
         """
         Find the layer containing the given depth(s).
 
         Note this returns the lower layer if the depth happens to be at a layer
         boundary.
 
-        .. seealso:: :meth:`layerNumberAbove`
+        .. seealso:: :meth:`layer_number_above`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -160,14 +145,14 @@ class VelocityModel(object):
         else:
             raise LookupError("No such layer.")
 
-    def evaluateAbove(self, depth, prop):
+    def evaluate_above(self, depth, prop):
         """
         Return the value of the given material property at the given depth(s).
 
         Note this returns the value at the bottom of the upper layer if the
         depth happens to be at a layer boundary.
 
-        .. seealso:: :meth:`evaluateBelow`
+        .. seealso:: :meth:`evaluate_below`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -185,17 +170,17 @@ class VelocityModel(object):
         :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
             :class:`float`, shape equivalent to ``depth``)
         """
-        layer = self.layers[self.layerNumberAbove(depth)]
+        layer = self.layers[self.layer_number_above(depth)]
         return evaluateVelocityAt(layer, depth, prop)
 
-    def evaluateBelow(self, depth, prop):
+    def evaluate_below(self, depth, prop):
         """
         Return the value of the given material property at the given depth(s).
 
         Note this returns the value at the top of the lower layer if the depth
         happens to be at a layer boundary.
 
-        .. seealso:: :meth:`evaluateBelow`
+        .. seealso:: :meth:`evaluate_below`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -213,14 +198,14 @@ class VelocityModel(object):
         :rtype: :class:`float` or :class:`~numpy.ndarray` (dtype =
             :class:`float`, shape equivalent to ``depth``)
         """
-        layer = self.layers[self.layerNumberBelow(depth)]
+        layer = self.layers[self.layer_number_below(depth)]
         return evaluateVelocityAt(layer, depth, prop)
 
-    def depthAtTop(self, layer):
+    def depth_at_top(self, layer):
         """
         Return the depth at the top of the given layer.
 
-        .. seealso:: :meth:`depthAtBottom`
+        .. seealso:: :meth:`depth_at_bottom`
 
         :param layer: The layer number
         :type layer: :class:`int` or :class:`~numpy.ndarray`
@@ -232,11 +217,11 @@ class VelocityModel(object):
         layer = self.layers[layer]
         return layer['topDepth']
 
-    def depthAtBottom(self, layer):
+    def depth_at_bottom(self, layer):
         """
         Return the depth at the bottom of the given layer.
 
-        .. seealso:: :meth:`depthAtTop`
+        .. seealso:: :meth:`depth_at_top`
 
         :param layer: The layer number
         :type layer: :class:`int` or :class:`~numpy.ndarray`
@@ -255,53 +240,53 @@ class VelocityModel(object):
         :returns: True if the model is consistent.
         :raises ValueError: If the model is inconsistent.
         """
-        # Is radiusOfEarth positive?
-        if self.radiusOfEarth <= 0.0:
-            raise ValueError("Radius of earth is not positive: %f" % (
-                self.radiusOfEarth, ))
+        # Is radius_of_planet positive?
+        if self.radius_of_planet <= 0.0:
+            raise ValueError("Radius of the planet is not positive: %f" % (
+                self.radius_of_planet, ))
 
-        # Is mohoDepth non-negative?
-        if self.mohoDepth < 0.0:
-            raise ValueError("mohoDepth is not non-negative: %f" % (
-                self.mohoDepth, ))
+        # Is moho_depth non-negative?
+        if self.moho_depth < 0.0:
+            raise ValueError("moho_depth is not non-negative: %f" % (
+                self.moho_depth, ))
 
-        # Is cmbDepth >= mohoDepth?
-        if self.cmbDepth < self.mohoDepth:
-            raise ValueError("cmbDepth (%f) < mohoDepth (%f)" % (
-                self.cmbDepth,
-                self.mohoDepth))
+        # Is cmb_depth >= moho_depth?
+        if self.cmb_depth < self.moho_depth:
+            raise ValueError("cmb_depth (%f) < moho_depth (%f)" % (
+                self.cmb_depth,
+                self.moho_depth))
 
-        # Is cmbDepth positive?
-        if self.cmbDepth <= 0.0:
-            raise ValueError("cmbDepth is not positive: %f" % (
-                self.cmbDepth, ))
+        # Is cmb_depth positive?
+        if self.cmb_depth <= 0.0:
+            raise ValueError("cmb_depth is not positive: %f" % (
+                self.cmb_depth, ))
 
-        # Is iocbDepth >= cmbDepth?
-        if self.iocbDepth < self.cmbDepth:
-            raise ValueError("iocbDepth (%f) < cmbDepth (%f)" % (
-                self.iocbDepth,
-                self.cmbDepth))
+        # Is iocb_depth >= cmb_depth?
+        if self.iocb_depth < self.cmb_depth:
+            raise ValueError("iocb_depth (%f) < cmb_depth (%f)" % (
+                self.iocb_depth,
+                self.cmb_depth))
 
-        # Is iocbDepth positive?
-        if self.iocbDepth <= 0.0:
-            raise ValueError("iocbDepth is not positive: %f" % (
-                self.iocbDepth, ))
+        # Is iocb_depth positive?
+        if self.iocb_depth <= 0.0:
+            raise ValueError("iocb_depth is not positive: %f" % (
+                self.iocb_depth, ))
 
-        # Is minRadius non-negative?
-        if self.minRadius < 0.0:
-            raise ValueError("minRadius is not non-negative: %f " % (
-                self.minRadius, ))
+        # Is min_radius non-negative?
+        if self.min_radius < 0.0:
+            raise ValueError("min_radius is not non-negative: %f " % (
+                self.min_radius, ))
 
-        # Is maxRadius non-negative?
-        if self.maxRadius <= 0.0:
-            raise ValueError("maxRadius is not positive: %f" % (
-                self.maxRadius, ))
+        # Is max_radius non-negative?
+        if self.max_radius <= 0.0:
+            raise ValueError("max_radius is not positive: %f" % (
+                self.max_radius, ))
 
-        # Is maxRadius > minRadius?
-        if self.maxRadius <= self.minRadius:
-            raise ValueError("maxRadius (%f) <= minRadius (%f)" % (
-                self.maxRadius,
-                self.minRadius))
+        # Is max_radius > min_radius?
+        if self.max_radius <= self.min_radius:
+            raise ValueError("max_radius (%f) <= min_radius (%f)" % (
+                self.max_radius,
+                self.min_radius))
 
         # Check for gaps
         gaps = self.layers[:-1]['botDepth'] != self.layers[1:]['topDepth']
@@ -373,18 +358,17 @@ class VelocityModel(object):
         return True
 
     def __str__(self):
-        desc = "modelName=" + str(self.modelName) + "\n" + \
-               "\n radiusOfEarth=" + str(
-            self.radiusOfEarth) + "\n mohoDepth=" + str(self.mohoDepth) + \
-            "\n cmbDepth=" + str(self.cmbDepth) + "\n iocbDepth=" + \
-            str(self.iocbDepth) + "\n minRadius=" + str(
-            self.minRadius) + "\n maxRadius=" + str(self.maxRadius) + \
-            "\n spherical=" + str(self.isSpherical)
-        # desc += "\ngetNumLayers()=" + str(self.getNumLayers()) + "\n"
+        desc = "model_name=" + str(self.model_name) + "\n" + \
+               "\n radius_of_planet=" + str(
+            self.radius_of_planet) + "\n moho_depth=" + str(self.moho_depth) + \
+            "\n cmb_depth=" + str(self.cmb_depth) + "\n iocb_depth=" + \
+               str(self.iocb_depth) + "\n min_radius=" + str(
+            self.min_radius) + "\n max_radius=" + str(self.max_radius) + \
+            "\n spherical=" + str(self.is_spherical)
         return desc
 
     @classmethod
-    def readVelocityFile(cls, filename):
+    def read_velocity_file(cls, filename):
         """
         Read in a velocity file.
 
@@ -400,16 +384,16 @@ class VelocityModel(object):
         if filename.endswith(".nd"):
             vMod = cls.read_nd_file(filename)
         elif filename.endswith(".tvel"):
-            vMod = cls.readTVelFile(filename)
+            vMod = cls.read_tvel_file(filename)
         else:
             raise ValueError("File type could not be determined, please "
                              "rename your file to end with .tvel or .nd")
 
-        vMod.fixDisconDepths()
+        vMod.fix_discontinuity_depths()
         return vMod
 
     @classmethod
-    def readTVelFile(cls, filename):
+    def read_tvel_file(cls, filename):
         """
         Read in a velocity model from a "tvel" ASCII text file.
 
@@ -426,7 +410,7 @@ class VelocityModel(object):
         following assumptions:
 
         * ``modelname`` - from the filename, with ".tvel" dropped if present
-        * ``radiusOfEarth`` - the largest depth in the model
+        * ``radius_of_planet`` - the largest depth in the model
         * ``meanDensity`` - 5517.0
         * ``G`` - 6.67e-11
 
@@ -477,14 +461,24 @@ class VelocityModel(object):
         mask = layers['topDepth'] == layers['botDepth']
         layers = layers[~mask]
 
-        radiusOfEarth = data[-1, 0]
-        maxRadius = data[-1, 0]
-        modelName = os.path.splitext(os.path.basename(filename))[0]
-        # I assume that this is a whole earth model
-        # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, cls.default_moho,
-                             cls.default_cmb, cls.default_iocb, 0,
-                             maxRadius, True, layers)
+        # tvel files cannot have named discontinuities so it is really only
+        # useful for Earth models. The exact radius is derived from the tvel
+        # file, the depth of discontinuities are fixed.
+        min_radius = 0
+        max_radius = data[-1, 0]
+        radius_of_planet = data[-1, 0]
+        model_name = os.path.splitext(os.path.basename(filename))[0]
+
+        return VelocityModel(
+            model_name=model_name,
+            radius_of_planet=radius_of_planet,
+            min_radius=min_radius,
+            max_radius=max_radius,
+            moho_depth=_DEFAULT_VALUES["default_moho"],
+            cmb_depth=_DEFAULT_VALUES["default_cmb"],
+            iocb_depth=_DEFAULT_VALUES["default_iocb"],
+            is_spherical=True,
+            layers=layers)
 
     @classmethod
     def read_nd_file(cls, filename):
@@ -515,7 +509,7 @@ class VelocityModel(object):
 
         modelname - from the filename, with ".nd" dropped, if present
 
-        radiusOfEarth - the largest depth in the model
+        radius_of_planet - the largest depth in the model
 
         Comments are allowed. # signifies that the rest of the
         line is a comment.  If # is the first character in a line, the line is
@@ -526,9 +520,9 @@ class VelocityModel(object):
 
         :raises ValueError: If model file is in error.
         """
-        moho_depth = cls.default_moho
-        cmb_depth = cls.default_cmb
-        iocb_depth = cls.default_iocb
+        moho_depth = None
+        cmb_depth = None
+        iocb_depth = None
 
         # Read all lines from file to enable identifying top and bottom values
         # for each layer and find named discontinuities if present
@@ -550,14 +544,12 @@ class VelocityModel(object):
                 ii = ii + 1
             else:
                 if len(line) == 1:  # Named discontinuity
-                    if ((line[0].lower() == 'mantle') or (line[0].lower() ==
-                                                          'moho')):
+                    dc_name = line[0].lower()
+                    if dc_name in ("mantle", "moho"):
                         moho_depth = data[ii - 1, 0]
-                    elif ((line[0].lower() == 'outer-core') or
-                          (line[0].lower() == 'cmb')):
+                    elif dc_name in ("outer-core", "cmb"):
                         cmb_depth = data[ii - 1, 0]
-                    elif ((line[0].lower() == 'inner-core') or
-                          (line[0].lower() == 'iocb')):
+                    elif dc_name in ("inner-core", "iocb"):
                         iocb_depth = data[ii - 1, 0]
                     else:
                         raise ValueError("Unrecognized discontinuity name: " +
@@ -568,6 +560,13 @@ class VelocityModel(object):
                         row.append(float(item))
                     data = np.vstack((data, np.array(row)))
                     ii = ii + 1
+
+        if moho_depth is None:
+            raise ValueError("Moho depth is not specified in model file!")
+        if cmb_depth is None:
+            raise ValueError("CMB depth is not specified in model file!")
+        if iocb_depth is None:
+            raise ValueError("IOCB depth is not specified in model file!")
 
         # Check if density is present.
         if data.shape[1] < 4:
@@ -605,16 +604,19 @@ class VelocityModel(object):
         mask = layers['topDepth'] == layers['botDepth']
         layers = layers[~mask]
 
-        radiusOfEarth = data[-1, 0]
-        maxRadius = data[-1, 0]
-        modelName = os.path.splitext(os.path.basename(filename))[0]
-        # I assume that this is a whole earth model
-        # so the maximum depth ==  maximum radius == earth radius.
-        return VelocityModel(modelName, radiusOfEarth, moho_depth,
-                             cmb_depth, iocb_depth, 0,
-                             maxRadius, True, layers)
+        radius_of_planet = data[-1, 0]
+        max_radius = data[-1, 0]
+        model_name = os.path.splitext(os.path.basename(filename))[0]
+        # I assume that this is a whole planet model
+        # so the maximum depth ==  maximum radius == planet radius.
+        return VelocityModel(
+            model_name=model_name,
+            radius_of_planet=radius_of_planet,
+            min_radius=0, max_radius=max_radius,
+            moho_depth=moho_depth, cmb_depth=cmb_depth, iocb_depth=iocb_depth,
+            is_spherical=True, layers=layers)
 
-    def fixDisconDepths(self):
+    def fix_discontinuity_depths(self):
         """
         Reset depths of major discontinuities.
 
@@ -622,18 +624,18 @@ class VelocityModel(object):
         The initial values are set such that if there is no discontinuity
         within the top 100 km then the Moho is set to 0.0. Similarly, if there
         are no discontinuities at all then the CMB is set to the radius of the
-        Earth. Similarly for the IOCB, except it must be a fluid to solid
+        planet. Similarly for the IOCB, except it must be a fluid to solid
         boundary and deeper than 100 km to avoid problems with shallower fluid
         layers, e.g., oceans.
         """
         MOHO_MIN = 65.0
-        CMB_MIN = self.radiusOfEarth
-        IOCB_MIN = self.radiusOfEarth - 100.0
+        CMB_MIN = self.radius_of_planet
+        IOCB_MIN = self.radius_of_planet - 100.0
 
         changeMade = False
         tempMohoDepth = 0.0
-        tempCmbDepth = self.radiusOfEarth
-        tempIocbDepth = self.radiusOfEarth
+        tempCmbDepth = self.radius_of_planet
+        tempIocbDepth = self.radius_of_planet
 
         above = self.layers[:-1]
         below = self.layers[1:]
@@ -642,21 +644,21 @@ class VelocityModel(object):
                              above['botSVelocity'] != below['topSVelocity'])
 
         # Find discontinuity closest to current Moho
-        moho_diff = np.abs(self.mohoDepth - above['botDepth'])
+        moho_diff = np.abs(self.moho_depth - above['botDepth'])
         moho_diff[~mask] = MOHO_MIN
         moho = np.argmin(moho_diff)
         if moho_diff[moho] < MOHO_MIN:
             tempMohoDepth = above[moho]['botDepth']
 
         # Find discontinuity closest to current CMB
-        cmb_diff = np.abs(self.cmbDepth - above['botDepth'])
+        cmb_diff = np.abs(self.cmb_depth - above['botDepth'])
         cmb_diff[~mask] = CMB_MIN
         cmb = np.argmin(cmb_diff)
         if cmb_diff[cmb] < CMB_MIN:
             tempCmbDepth = above[cmb]['botDepth']
 
         # Find discontinuity closest to current IOCB
-        iocb_diff = self.iocbDepth - above['botDepth']
+        iocb_diff = self.iocb_depth - above['botDepth']
         iocb_diff[~mask] = IOCB_MIN
         # IOCB must transition from S==0 to S!=0
         iocb_diff[above['botSVelocity'] != 0.0] = IOCB_MIN
@@ -665,13 +667,13 @@ class VelocityModel(object):
         if iocb_diff[iocb] < IOCB_MIN:
             tempIocbDepth = above[iocb]['botDepth']
 
-        if self.mohoDepth != tempMohoDepth \
-                or self.cmbDepth != tempCmbDepth \
-                or self.iocbDepth != tempIocbDepth:
+        if self.moho_depth != tempMohoDepth \
+                or self.cmb_depth != tempCmbDepth \
+                or self.iocb_depth != tempIocbDepth:
             changeMade = True
-        self.mohoDepth = tempMohoDepth
-        self.cmbDepth = tempCmbDepth
-        self.iocbDepth = (tempIocbDepth
+        self.moho_depth = tempMohoDepth
+        self.cmb_depth = tempCmbDepth
+        self.iocb_depth = (tempIocbDepth
                           if tempCmbDepth != tempIocbDepth
-                          else self.radiusOfEarth)
+                          else self.radius_of_planet)
         return changeMade

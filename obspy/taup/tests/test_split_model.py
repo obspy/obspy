@@ -31,9 +31,9 @@ class SplitTauModelTestCase(unittest.TestCase):
         split_branch_index = tMod.findBranch(depth)
 
         new_P_ray_param = splitTMod.sMod.getSlownessLayer(
-            splitTMod.sMod.layerNumberAbove(depth, True), True)['botP']
+            splitTMod.sMod.layer_number_above(depth, True), True)['botP']
         new_S_ray_param = splitTMod.sMod.getSlownessLayer(
-            splitTMod.sMod.layerNumberAbove(depth, False), False)['botP']
+            splitTMod.sMod.layer_number_above(depth, False), False)['botP']
 
         pIndex = sIndex = len(splitTMod.ray_params)
         ray_params = splitTMod.ray_params

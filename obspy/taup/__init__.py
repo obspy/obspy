@@ -190,7 +190,7 @@ Phase naming in obspy.taup
     all credit goes to the authors of that.
 
 A major feature of ``obspy.taup`` is the implementation of a phase name parser
-that allows the user to define essentially arbitrary phases through the Earth.
+that allows the user to define essentially arbitrary phases through a planet.
 Thus, ``obspy.taup`` is extremely flexible in this respect since it is not
 limited to a pre-defined set of phases. Phase names are not hard-coded into the
 software, rather the names are interpreted and the appropriate propagation path

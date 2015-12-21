@@ -46,8 +46,8 @@ class TauBranch(object):
         Calculates tau for this branch, between slowness layers topLayerNum and
         botLayerNum, inclusive.
         """
-        topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
-        botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
+        topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
+        botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
         topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
         botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
         if topSLayer['topDepth'] != self.topDepth \
@@ -115,8 +115,8 @@ class TauBranch(object):
         given to the branch. This is used for making the depth correction to a
         tau model for a non-surface source.
         """
-        topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
-        botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
+        topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
+        botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
         topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
         botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
         if topSLayer['topDepth'] != self.topDepth \
@@ -184,8 +184,8 @@ class TauBranch(object):
             raise TauModelError(
                 "Can't subtract branches is isPWave doesn't agree.")
         # Find the top and bottom slowness layers of the bottom half.
-        topLayerNum = sMod.layerNumberBelow(topBranch.botDepth, self.isPWave)
-        botLayerNum = sMod.layerNumberBelow(self.botDepth, self.isPWave)
+        topLayerNum = sMod.layer_number_below(topBranch.botDepth, self.isPWave)
+        botLayerNum = sMod.layer_number_below(self.botDepth, self.isPWave)
         topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
         botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
         if botSLayer['topDepth'] == self.botDepth \
@@ -199,11 +199,11 @@ class TauBranch(object):
                 "TauBranch not compatible with slowness sampling.")
         # Make sure indexP and indexS really correspond to new ray
         # parameters at the top of this branch.
-        sLayer = sMod.getSlownessLayer(sMod.layerNumberBelow(
+        sLayer = sMod.getSlownessLayer(sMod.layer_number_below(
             topBranch.botDepth, True), True)
         if indexP >= 0 and sLayer['topP'] != ray_params[indexP]:
             raise TauModelError("P wave index doesn't match top layer.")
-        sLayer = sMod.getSlownessLayer(sMod.layerNumberBelow(
+        sLayer = sMod.getSlownessLayer(sMod.layer_number_below(
             topBranch.botDepth, False), False)
         if indexS >= 0 and sLayer['topP'] != ray_params[indexS]:
             raise TauModelError("S wave index doesn't match top layer.")
@@ -313,8 +313,8 @@ class TauBranch(object):
         assert ray_param >= 0
 
         try:
-            topLayerNum = sMod.layerNumberBelow(self.topDepth, self.isPWave)
-            botLayerNum = sMod.layerNumberAbove(self.botDepth, self.isPWave)
+            topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
+            botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
         # except NoSuchLayerError as e:
         except SlownessModelError:
             raise SlownessModelError("SlownessModel and TauModel are likely"
@@ -364,14 +364,14 @@ class TauBranch(object):
                 sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
                 if sLayer['topDepth'] != sLayer['botDepth']:
                     turnDepth = bullenDepthFor(sLayer, ray_param,
-                                               sMod.radiusOfEarth)
+                                               sMod.radius_of_planet)
                     turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
                                             ray_param, turnDepth)],
                                           dtype=SlownessLayer)
                     time, dist = bullenRadialSlowness(
                         turnSLayer,
                         ray_param,
-                        sMod.radiusOfEarth)
+                        sMod.radius_of_planet)
                     thePath[pathIndex]['p'] = ray_param
                     thePath[pathIndex]['time'] = time
                     thePath[pathIndex]['dist'] = dist
@@ -393,14 +393,14 @@ class TauBranch(object):
             sLayer2 = sLayer[first_unmasked]
             if sLayer2['botP'] < ray_param:
                 turnDepth = bullenDepthFor(sLayer2, ray_param,
-                                           sMod.radiusOfEarth)
+                                           sMod.radius_of_planet)
                 turnSLayer = np.array([(sLayer2['topP'], sLayer2['topDepth'],
                                         ray_param, turnDepth)],
                                       dtype=SlownessLayer)
                 time, dist = bullenRadialSlowness(
                     turnSLayer,
                     ray_param,
-                    sMod.radiusOfEarth)
+                    sMod.radius_of_planet)
                 thePath[pathIndex]['p'] = ray_param
                 thePath[pathIndex]['time'] = time
                 thePath[pathIndex]['dist'] = dist

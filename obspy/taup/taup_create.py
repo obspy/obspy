@@ -50,19 +50,19 @@ class TauP_Create(object):
         filename = self.input_filename
         if self.debug:
             print("filename =", filename)
-        self.vMod = VelocityModel.readVelocityFile(filename)
+        self.vMod = VelocityModel.read_velocity_file(filename)
         if self.vMod is None:
             raise IOError("Velocity model file not found: " + filename)
         # If model was read:
         if self.debug:
             print("Done reading velocity model.")
-            print("Radius of model " + self.vMod.modelName + " is " +
-                  str(self.vMod.radiusOfEarth))
+            print("Radius of model " + self.vMod.model_name + " is " +
+                  str(self.vMod.radius_of_planet))
         # if self.debug:
         #    print("velocity mode: " + self.vMod)
         return self.vMod
 
-    def createTauModel(self, vMod):
+    def create_tau_model(self, vMod):
         """
         Create :class:`~.TauModel` from velocity model.
 
@@ -71,7 +71,7 @@ class TauP_Create(object):
         """
         if vMod is None:
             raise ValueError("vMod is None.")
-        if vMod.isSpherical is False:
+        if vMod.is_spherical is False:
             raise Exception("Flat slowness model not yet implemented.")
         SlownessModel.DEBUG = self.debug
         if self.debug:
@@ -97,8 +97,8 @@ class TauP_Create(object):
                   str(self.sMod.maxInterpError) + " seconds")
             print("taup.create.allowInnerCoreS = " +
                   str(self.sMod.allowInnerCoreS))
-            print("Slow model " + " " + str(self.sMod.getNumLayers(True)) +
-                  " P layers," + str(self.sMod.getNumLayers(False)) +
+            print("Slow model " + " " + str(self.sMod.get_num_layers(True)) +
+                  " P layers," + str(self.sMod.get_num_layers(False)) +
                   " S layers")
         # if self.debug:
         #    print(self.sMod)
@@ -113,10 +113,10 @@ class TauP_Create(object):
         Create a tau model from a velocity model.
 
         Called by :func:`build_taup_model` after :meth:`loadVMod`; calls
-        :meth:`createTauModel` and writes the result to a ``.npy`` file.
+        :meth:`create_tau_model` and writes the result to a ``.npy`` file.
         """
         try:
-            self.tMod = self.createTauModel(self.vMod)
+            self.tMod = self.create_tau_model(self.vMod)
             # this reassigns model! Used to be TauModel() class,
             # now it's an instance of it.
             if self.debug:

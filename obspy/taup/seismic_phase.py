@@ -100,7 +100,7 @@ class SeismicPhase(object):
         # The maximum distance that this phase can be theoretically observed.
         self.maxDistance = 1e300
         # List (could make array!) of branch numbers for the given phase.
-        # Note that this depends upon both the earth model and the source
+        # Note that this depends upon both the planet model and the source
         # depth.
         self.branchSeq = []
         # True if the current leg of the phase is down going. This allows a
@@ -184,7 +184,7 @@ class SeismicPhase(object):
         if currLeg[0] in "sS":
             # Exclude S sources in fluids.
             sdep = tMod.source_depth
-            if tMod.cmbDepth < sdep < tMod.iocbDepth:
+            if tMod.cmb_depth < sdep < tMod.iocb_depth:
                 self.maxRayParam, self.minRayParam = -1, -1
                 return
 
@@ -196,8 +196,8 @@ class SeismicPhase(object):
             # Treat initial downgoing as if it were an underside reflection.
             endAction = self.REFLECT_UNDERSIDE
             try:
-                sLayerNum = tMod.sMod.layerNumberBelow(tMod.source_depth,
-                                                       isPWavePrev)
+                sLayerNum = tMod.sMod.layer_number_below(tMod.source_depth,
+                                                         isPWavePrev)
                 layer = tMod.sMod.getSlownessLayer(sLayerNum, isPWavePrev)
                 self.maxRayParam = layer['topP']
             except SlownessModelError as e:
@@ -210,8 +210,8 @@ class SeismicPhase(object):
             # topside reflection.
             endAction = self.REFLECT_TOPSIDE
             try:
-                sLayerNum = tMod.sMod.layerNumberAbove(tMod.source_depth,
-                                                       isPWavePrev)
+                sLayerNum = tMod.sMod.layer_number_above(tMod.source_depth,
+                                                         isPWavePrev)
                 layer = tMod.sMod.getSlownessLayer(sLayerNum, isPWavePrev)
                 self.maxRayParam = layer['botP']
             except SlownessModelError as e:
@@ -417,7 +417,7 @@ class SeismicPhase(object):
                     self.add_to_branch(tMod, self.currBranch,
                                        tMod.cmbBranch - 1, isPWave, endAction)
                 elif nextLeg == "m" or (isNextLegDepth and
-                                        nextLegDepth < tMod.cmbDepth):
+                                        nextLegDepth < tMod.cmb_depth):
                     # Treat the Moho in the same way as 410 type
                     # discontinuities.
                     disconBranch = closest_branch_to_depth(tMod, nextLeg)
@@ -752,11 +752,11 @@ class SeismicPhase(object):
             self.time = np.zeros(2)
             self.ray_param = np.empty(2)
 
-            self.ray_param[0] = tMod.radiusOfEarth / float(self.name[:-4])
+            self.ray_param[0] = tMod.radius_of_planet / float(self.name[:-4])
 
             self.dist[1] = 2 * math.pi
             self.time[1] = \
-                2 * math.pi * tMod.radiusOfEarth / float(self.name[:-4])
+                2 * math.pi * tMod.radius_of_planet / float(self.name[:-4])
             self.ray_param[1] = self.ray_param[0]
 
             self.minDistance = 0
@@ -824,7 +824,7 @@ class SeismicPhase(object):
                 self.time[:size] += tbs * taubs.time[index]
 
         if "Sdiff" in self.name or "Pdiff" in self.name:
-            if tMod.sMod.depthInHighSlowness(tMod.cmbDepth - 1e-10,
+            if tMod.sMod.depthInHighSlowness(tMod.cmb_depth - 1e-10,
                                              self.minRayParam,
                                              self.name[0] == "P"):
                 # No diffraction if there is a high slowness zone at the CMB.
@@ -1092,7 +1092,7 @@ class SeismicPhase(object):
 
     def calc_path(self, degrees):
         """
-        Calculate the paths this phase takes through the Earth model.
+        Calculate the paths this phase takes through the planet model.
 
         Only calls :meth:`calc_path_from_arrival`.
         """
@@ -1103,7 +1103,7 @@ class SeismicPhase(object):
 
     def calc_path_from_arrival(self, currArrival):
         """
-        Calculate the paths this phase takes through the Earth model.
+        Calculate the paths this phase takes through the planet model.
         """
         # Find the ray parameter index that corresponds to the arrival ray
         # parameter in the TauModel, i.e. it is between rayNum and rayNum + 1.
@@ -1132,7 +1132,7 @@ class SeismicPhase(object):
                     currArrival.ray_param,
                     dist_diff * currArrival.ray_param,
                     dist_diff,
-                    self.tMod.cmbDepth)
+                    self.tMod.cmb_depth)
                 pathList.append(diffTD)
 
             elif(branchNum == self.tMod.mohoBranch - 1 and
@@ -1146,7 +1146,7 @@ class SeismicPhase(object):
                     currArrival.ray_param,
                     dist_head * currArrival.ray_param,
                     dist_head,
-                    self.tMod.mohoDepth)
+                    self.tMod.moho_depth)
                 pathList.append(headTD)
 
         if "kmps" in self.name:
@@ -1181,9 +1181,9 @@ class SeismicPhase(object):
             raise TauModelError("No head/diff segment in" + str(self.name))
 
         if phaseSeg in ["Pn", "Sn"]:
-            headDepth = self.tMod.mohoDepth
+            headDepth = self.tMod.moho_depth
         else:
-            headDepth = self.tMod.cmbDepth
+            headDepth = self.tMod.cmb_depth
 
         numFound = self.name.count(phaseSeg)
         refractDist = currArrival.purist_dist - self.dist[0]
@@ -1290,8 +1290,8 @@ class SeismicPhase(object):
         for j in range(tMod.tauBranches.shape[1]):
             if timesBranches[0, j] != 0:
                 br = tMod.getTauBranch(j, sMod.PWAVE)
-                top_layer = sMod.layerNumberBelow(br.topDepth, sMod.PWAVE)
-                bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.PWAVE)
+                top_layer = sMod.layer_number_below(br.topDepth, sMod.PWAVE)
+                bot_layer = sMod.layer_number_above(br.botDepth, sMod.PWAVE)
                 td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
                                      allow_turn_in_layer=True)
 
@@ -1300,8 +1300,8 @@ class SeismicPhase(object):
 
             if timesBranches[1, j] != 0:
                 br = tMod.getTauBranch(j, sMod.SWAVE)
-                top_layer = sMod.layerNumberBelow(br.topDepth, sMod.SWAVE)
-                bot_layer = sMod.layerNumberAbove(br.botDepth, sMod.SWAVE)
+                top_layer = sMod.layer_number_below(br.topDepth, sMod.SWAVE)
+                bot_layer = sMod.layer_number_above(br.botDepth, sMod.SWAVE)
                 td = br.calcTimeDist(sMod, top_layer, bot_layer, ray_param,
                                      allow_turn_in_layer=True)
 
@@ -1342,16 +1342,16 @@ class SeismicPhase(object):
         vMod = self.tMod.sMod.vMod
         try:
             if self.downGoing[0]:
-                takeoff_velocity = vMod.evaluateBelow(self.source_depth,
-                                                      self.name[0])
+                takeoff_velocity = vMod.evaluate_below(self.source_depth,
+                                                       self.name[0])
             else:
-                takeoff_velocity = vMod.evaluateAbove(self.source_depth,
-                                                      self.name[0])
+                takeoff_velocity = vMod.evaluate_above(self.source_depth,
+                                                       self.name[0])
         except (IndexError, LookupError) as e:
             raise_from(RuntimeError('Please contact the developers. This '
                                     'error should not occur.'), e)
 
-        return ((self.tMod.radiusOfEarth - self.source_depth) *
+        return ((self.tMod.radius_of_planet - self.source_depth) *
                 math.sin(np.radians(takeoff_degree)) / takeoff_velocity)
 
     def calc_takeoff_angle(self, ray_param):
@@ -1361,18 +1361,18 @@ class SeismicPhase(object):
         vMod = self.tMod.sMod.vMod
         try:
             if self.downGoing[0]:
-                takeoff_velocity = vMod.evaluateBelow(self.source_depth,
-                                                      self.name[0])
+                takeoff_velocity = vMod.evaluate_below(self.source_depth,
+                                                       self.name[0])
             else:
-                takeoff_velocity = vMod.evaluateAbove(self.source_depth,
-                                                      self.name[0])
+                takeoff_velocity = vMod.evaluate_above(self.source_depth,
+                                                       self.name[0])
         except (IndexError, LookupError) as e:
             raise_from(RuntimeError('Please contact the developers. This '
                                     'error should not occur.'), e)
 
         takeoff_angle = np.degrees(math.asin(np.clip(
             takeoff_velocity * ray_param /
-            (self.tMod.radiusOfEarth - self.source_depth), -1.0, 1.0)))
+            (self.tMod.radius_of_planet - self.source_depth), -1.0, 1.0)))
         if not self.downGoing[0]:
             # upgoing, so angle is in 90-180 range
             takeoff_angle = 180 - takeoff_angle
@@ -1388,18 +1388,19 @@ class SeismicPhase(object):
         lastLeg = self.legs[-2][0]
         try:
             if self.downGoing[-1]:
-                incident_velocity = vMod.evaluateAbove(self.receiver_depth,
-                                                       lastLeg)
+                incident_velocity = vMod.evaluate_above(self.receiver_depth,
+                                                        lastLeg)
             else:
-                incident_velocity = vMod.evaluateBelow(self.receiver_depth,
-                                                       lastLeg)
+                incident_velocity = vMod.evaluate_below(self.receiver_depth,
+                                                        lastLeg)
         except (IndexError, LookupError) as e:
             raise_from(RuntimeError('Please contact the developers. This '
                                     'error should not occur.'), e)
 
         incident_angle = np.degrees(math.asin(np.clip(
             incident_velocity * ray_param /
-            (self.tMod.radiusOfEarth - self.receiver_depth), -1.0, 1.0)))
+            (self.tMod.radius_of_planet - self.receiver_depth),
+            -1.0, 1.0)))
         if self.downGoing[-1]:
             incident_angle = 180 - incident_angle
 

@@ -5,8 +5,8 @@ Functions to handle geographical points
 
 These functions are used to allow taup models to process input data with
 source and receiver locations given as latitudes and longitudes. The functions
-are set up to handle an elliptical Earth model, but we do not have ellipticity
-corrections for travel times. Although changing the shape of the Earth from
+are set up to handle an elliptical planet model, but we do not have ellipticity
+corrections for travel times. Although changing the shape of the planet from
 something other than spherical would change the epicentral distance, the change
 in the distance for the ray to pass through each layer has a larger effect.
 We do not make the larger correction.
@@ -30,7 +30,7 @@ if geodetics.HAS_GEOGRAPHICLIB:
 
 def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
               receiver_latitude_in_deg, receiver_longitude_in_deg,
-              radius_of_earth_in_km, flattening_of_earth):
+              radius_of_planet_in_km, flattening_of_planet):
     """
     Given the source and receiver location, calculate the azimuth and distance.
 
@@ -42,17 +42,17 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
     :type receiver_latitude_in_deg: float
     :param receiver_longitude_in_deg: Receiver location longitude in degrees
     :type receiver_longitude_in_deg: float
-    :param radius_of_earth_in_km: Radius of the Earth in km
-    :type radius_of_earth_in_km: float
-    :param flattening_of_earth: Flattening of Earth (0 for a sphere)
+    :param radius_of_planet_in_km: Radius of the planet in km
+    :type radius_of_planet_in_km: float
+    :param flattening_of_planet: Flattening of planet (0 for a sphere)
     :type receiver_longitude_in_deg: float
 
     :return: distance_in_deg
     :rtype: float
     """
     if geodetics.HAS_GEOGRAPHICLIB:
-        ellipsoid = Geodesic(a=radius_of_earth_in_km*1000.0,
-                             f=flattening_of_earth)
+        ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
+                             f=flattening_of_planet)
         g = ellipsoid.Inverse(source_latitude_in_deg,
                               source_longitude_in_deg,
                               receiver_latitude_in_deg,
@@ -65,24 +65,24 @@ def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
                                   source_longitude_in_deg,
                                   receiver_latitude_in_deg,
                                   receiver_longitude_in_deg,
-                                  a=radius_of_earth_in_km*1000.0,
-                                  f=flattening_of_earth)
+                                  a=radius_of_planet_in_km * 1000.0,
+                                  f=flattening_of_planet)
         distance_in_km = values[0]/1000.0
-        # NB - km2deg assumes spherical Earth... generate a warning
-        if flattening_of_earth != 0.0:
-            msg = "Assuming spherical Earth when calculating epicentral " + \
+        # NB - km2deg assumes spherical planet... generate a warning
+        if flattening_of_planet != 0.0:
+            msg = "Assuming spherical planet when calculating epicentral " + \
                   "distance. Install the Python module 'geographiclib' " + \
                   "to solve this."
             warnings.warn(msg)
         distance_in_deg = kilometer2degrees(distance_in_km,
-                                            radius=radius_of_earth_in_km)
+                                            radius=radius_of_planet_in_km)
     return distance_in_deg
 
 
 def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                         source_longitude_in_deg, receiver_latitude_in_deg,
-                        receiver_longitude_in_deg, radius_of_earth_in_km,
-                        flattening_of_earth):
+                        receiver_longitude_in_deg, radius_of_planet_in_km,
+                        flattening_of_planet):
     """
     Add geographical information to arrivals.
 
@@ -96,9 +96,9 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     :type receiver_latitude_in_deg: float
     :param receiver_longitude_in_deg: Receiver location longitude in degrees
     :type receiver_longitude_in_deg: float
-    :param radius_of_earth_in_km: Radius of the Earth in km
-    :type radius_of_earth_in_km: float
-    :param flattening_of_earth: Flattening of Earth (0 for a sphere)
+    :param radius_of_planet_in_km: Radius of the planet in km
+    :type radius_of_planet_in_km: float
+    :param flattening_of_planet: Flattening of planet (0 for a sphere)
     :type receiver_longitude_in_deg: float
 
     :return: List of ``Arrival`` objects, each of which has the time,
@@ -107,8 +107,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     :rtype: :class:`Arrivals`
     """
     if geodetics.HAS_GEOGRAPHICLIB:
-        ellipsoid = Geodesic(a=radius_of_earth_in_km * 1000.0,
-                             f=flattening_of_earth)
+        ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
+                             f=flattening_of_planet)
         g = ellipsoid.Inverse(source_latitude_in_deg, source_longitude_in_deg,
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg)

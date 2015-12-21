@@ -144,7 +144,7 @@ class Arrivals(list):
         if not arrivals:
             raise ValueError("Can only plot arrivals with calculated ray "
                              "paths.")
-        discons = self.model.sMod.vMod.getDisconDepths()
+        discons = self.model.sMod.vMod.get_discontinuity_depth()
         if plot_type == "spherical":
             if not ax:
                 plt.figure(figsize=(10, 10))
@@ -154,7 +154,7 @@ class Arrivals(list):
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
-            radius = self.model.radiusOfEarth
+            radius = self.model.radius_of_planet
             for _i, ray in enumerate(arrivals):
                 # Requires interpolation otherwise diffracted phases look
                 # funny.
@@ -291,20 +291,20 @@ class TauPyModel(object):
     Representation of a seismic model and methods for ray paths through it.
     """
 
-    def __init__(self, model="iasp91", verbose=False, earth_flattening=0.0):
+    def __init__(self, model="iasp91", verbose=False, planet_flattening=0.0):
         """
         Loads an already created TauPy model.
 
         :param model: The model name. Either an internal TauPy model or a
             filename in the case of custom models.
-        :param earth_flattening: Flattening parameter for Earth's ellipsoid
-            (i.e. a-b/a, where a is the semimajor equatorial radius and b is
-            the semiminor polar radius). A value of 0 (the default) gives a
-            spherical Earth. Note that this is only used to convert from
-            geographical positions (source and receiver latitudes and
+        :param planet_flattening: Flattening parameter for the planet's
+            ellipsoid (i.e. a-b/a, where a is the semimajor equatorial radius
+            and b is the semiminor polar radius). A value of 0 (the default)
+            gives a spherical planet. Note that this is only used to convert
+            from geographical positions (source and receiver latitudes and
             longitudes) to epicentral distances - the actual traveltime and
-            raypath calculations are performed on a spherical Earth.
-        :type earth_flattening: float
+            raypath calculations are performed on a spherical planet.
+        :type planet_flattening: float
 
         Usage:
 
@@ -319,7 +319,7 @@ class TauPyModel(object):
         """
         self.verbose = verbose
         self.model = TauModel.from_file(model)
-        self.earth_flattening = earth_flattening
+        self.planet_flattening = planet_flattening
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
                          phase_list=("ttall",), receiver_depth_in_km=0.0):
@@ -413,8 +413,8 @@ class TauPyModel(object):
             Note that the conversion from source and receiver latitudes and
             longitudes to epicentral distances respects the model's flattening
             parameter, so this calculation can be performed for a ellipsoidal
-            or spherical Earth. However, the actual traveltime and raypath
-            calculations are performed on a spherical Earth. Ellipticity
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
             corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
@@ -440,8 +440,8 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
-                                    self.earth_flattening)
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
         arrivals = self.get_travel_times(source_depth_in_km, distance_in_deg,
                                          phase_list)
         return arrivals
@@ -459,8 +459,8 @@ class TauPyModel(object):
             Note that the conversion from source and receiver latitudes and
             longitudes to epicentral distances respects the model's flattening
             parameter, so this calculation can be performed for a ellipsoidal
-            or spherical Earth. However, the actual traveltime and raypath
-            calculations are performed on a spherical Earth. Ellipticity
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
             corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
@@ -485,8 +485,8 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
-                                    self.earth_flattening)
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
 
         arrivals = self.get_pierce_points(source_depth_in_km, distance_in_deg,
                                           phase_list)
@@ -496,8 +496,8 @@ class TauPyModel(object):
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,
                                            receiver_longitude_in_deg,
-                                           self.model.radiusOfEarth,
-                                           self.earth_flattening)
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening)
         else:
             msg = "Not able to evaluate positions of pierce points. " + \
                   "Arrivals object will not be modified. " + \
@@ -518,8 +518,8 @@ class TauPyModel(object):
             Note that the conversion from source and receiver latitudes and
             longitudes to epicentral distances respects the model's flattening
             parameter, so this calculation can be performed for a ellipsoidal
-            or spherical Earth. However, the actual traveltime and raypath
-            calculations are performed on a spherical Earth. Ellipticity
+            or spherical planet. However, the actual traveltime and raypath
+            calculations are performed on a spherical planet. Ellipticity
             corrections of e.g. [Dziewonski1976]_ are not made.
 
         :param source_depth_in_km: Source depth in km
@@ -544,8 +544,8 @@ class TauPyModel(object):
                                     source_longitude_in_deg,
                                     receiver_latitude_in_deg,
                                     receiver_longitude_in_deg,
-                                    self.model.radiusOfEarth,
-                                    self.earth_flattening)
+                                    self.model.radius_of_planet,
+                                    self.planet_flattening)
 
         arrivals = self.get_ray_paths(source_depth_in_km, distance_in_deg,
                                       phase_list)
@@ -555,8 +555,8 @@ class TauPyModel(object):
                                            source_longitude_in_deg,
                                            receiver_latitude_in_deg,
                                            receiver_longitude_in_deg,
-                                           self.model.radiusOfEarth,
-                                           self.earth_flattening)
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening)
         else:
             msg = "Not able to evaluate positions of points on path. " + \
                   "Arrivals object will not be modified. " + \
