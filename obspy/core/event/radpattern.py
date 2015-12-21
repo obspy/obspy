@@ -210,11 +210,11 @@ def plot_3drpattern(mt, kind='both_sphere'):
         #use mayavi if possible.
         try:
             from mayavi import mlab
-        except ImportError as err:
-            raise ImportError(str(e) + (
-                    "mayavi import error. Use kind='vtk' for vtk file 
-                    output of the radiation pattern that can be used
-                    by external software like paraview")
+        except ImportError,err:
+            print(err)
+            print("mayavi import error. Use kind='vtk' for vtk file "
+                  "output of the radiation pattern that can be used "
+                  "by external software like paraview")
 
         #get mopad moment tensor
         mopad_mt = MomentTensor(mt, system='NED')
@@ -290,13 +290,14 @@ def plot_3drpattern(mt, kind='both_sphere'):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
         with open(fname_vtkbeachlines, 'w') as vtk_file:
-            npoints_neg = neg_nodalline.shape[1]
-            npoints_pos = neg_nodalline.shape[1]
+            npts_neg = neg_nodalline.shape[1]
+            npts_pos = pos_nodalline.shape[1]
+            npts_tot = npts_neg+npts_pos
             vtk_header = '# vtk DataFile Version 2.0\n' + \
                          'beachball nodal lines\n' + \
                          'ASCII\n' + \
                          'DATASET UNSTRUCTURED_GRID\n' + \
-                         'POINTS {:d} float\n'.format(npoints_neg+npoints_pos)
+                         'POINTS {:d} float\n'.format(npts_tot)
 
             vtk_file.write(vtk_header)
             #write point locations
@@ -305,7 +306,28 @@ def plot_3drpattern(mt, kind='both_sphere'):
             for x, y, z in np.transpose(pos_nodalline):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
-            #LINE CONNECTIVITY (SHOULD BECOME A TUBE LATER)
+            #write line segments
+            vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot+4))
+
+            ipoints = list(range(0, npts_neg))+[0]
+            vtk_file.write('{:d} '.format(npts_neg+1))
+            for ipoint in ipoints:
+                if ipoint%30==29:
+                    vtk_file.write('\n')
+                vtk_file.write('{:d} '.format(ipoint))
+            vtk_file.write('\n')
+
+            ipoints = list(range(0, npts_pos))+[0]
+            vtk_file.write('{:d} '.format(npts_pos+1))
+            for ipoint in ipoints:
+                if ipoint%30==29:
+                    vtk_file.write('\n')
+                vtk_file.write('{:d} '.format(ipoint+npts_neg))
+            vtk_file.write('\n')
+
+            #cell types. 4 means cell type is a poly_line
+            vtk_file.write('\nCELL_TYPES 2\n')
+            vtk_file.write('4\n4')
 
     else:
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
