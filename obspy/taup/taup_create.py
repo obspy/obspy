@@ -117,7 +117,7 @@ class TauP_Create(object):
         :meth:`create_tau_model` and writes the result to a ``.npy`` file.
         """
         try:
-            self.tMod = self.create_tau_model(self.vMod)
+            self.tau_model = self.create_tau_model(self.vMod)
             # this reassigns model! Used to be TauModel() class,
             # now it's an instance of it.
             if self.debug:
@@ -126,7 +126,7 @@ class TauP_Create(object):
             dirname = os.path.dirname(self.output_filename)
             if dirname and not os.path.exists(dirname):
                 os.makedirs(dirname)
-            self.tMod.serialize(self.output_filename)
+            self.tau_model.serialize(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
         except IOError as e:

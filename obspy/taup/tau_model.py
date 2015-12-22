@@ -319,21 +319,21 @@ class TauModel(object):
             outiocbBranch += 1
         # No overloaded constructors - so do it this way to bypass the
         # calcTauIncFrom in the __init__.
-        tMod = TauModel(outSMod, spherical=self.spherical, debug=self.debug,
+        tau_model = TauModel(outSMod, spherical=self.spherical, debug=self.debug,
                         skip_calc=True)
-        tMod.source_depth = self.source_depth
-        tMod.sourceBranch = outSourceBranch
-        tMod.mohoBranch = outmohoBranch
-        tMod.moho_depth = self.moho_depth
-        tMod.cmbBranch = outcmbBranch
-        tMod.cmb_depth = self.cmb_depth
-        tMod.iocbBranch = outiocbBranch
-        tMod.iocb_depth = self.iocb_depth
-        tMod.ray_params = outRayParams
-        tMod.tauBranches = newTauBranches
-        tMod.noDisconDepths = self.noDisconDepths + [depth]
-        tMod.validate()
-        return tMod
+        tau_model.source_depth = self.source_depth
+        tau_model.sourceBranch = outSourceBranch
+        tau_model.mohoBranch = outmohoBranch
+        tau_model.moho_depth = self.moho_depth
+        tau_model.cmbBranch = outcmbBranch
+        tau_model.cmb_depth = self.cmb_depth
+        tau_model.iocbBranch = outiocbBranch
+        tau_model.iocb_depth = self.iocb_depth
+        tau_model.ray_params = outRayParams
+        tau_model.tauBranches = newTauBranches
+        tau_model.noDisconDepths = self.noDisconDepths + [depth]
+        tau_model.validate()
+        return tau_model
 
     def findBranch(self, depth):
         """Finds the branch that either has the depth as its top boundary, or

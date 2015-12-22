@@ -69,7 +69,7 @@ class TauP_Time(object):
                 # if seismic_phase.name == temp_phase_name:
                 #     self.phases.pop(phase_num)
                 #     if (seismic_phase.source_depth == self.source_depth and
-                #            seismic_phase.tMod == self.depth_corrected_model):
+                #            seismic_phase.tau_model == self.depth_corrected_model):
                 #         # OK so copy to new_phases:
                 #         new_phases.append(seismic_phase)
                 #         break
