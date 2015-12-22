@@ -133,7 +133,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
             rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
 
         #make uv sphere that is aligned with z-axis
-        ntheta, nphi = 200, 200
+        ntheta, nphi = 100, 100
         sshape = (ntheta, nphi)
         u = np.linspace(0, 2 * np.pi, nphi)
         v = np.linspace(0, np.pi, ntheta)
@@ -173,7 +173,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
                  xticklabels=['South', 'North'],
                  yticklabels=['West', 'East'],
                  zticklabels=['Up', 'Down'],
-                 title='3d radiation pattern')
+                 title='p-wave farfield radiation')
         ax3d.view_init(elev=-110., azim=0.)
 
         bball = Beach(mt, xy=(0, 0), width=50,
