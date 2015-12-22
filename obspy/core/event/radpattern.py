@@ -105,25 +105,35 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
         #axis. MOPAD should use NED coordinate system to avoid internal
         #coordinate transformations
         mtensor = MomentTensor(ned_mt, system='NED')
-        null = np.ravel(mtensor._null_axis)
+
+        #use the most isolated eigenvector as axis of symmetry
+        evecs = mtensor.get_eigvecs()
+        evals = np.abs(mtensor.get_eigvals())**2
+        evals_dev = np.abs(evals-np.mean(evals))
+        evec_max = evecs[np.argmax(evals_dev)]
+
+        symmax = np.ravel(evec_max)
 
         #make rotation matrix (after numpy mailing list)
-        #(bugs probably for zero rotation?)
         zaxis = np.array([0., 0., 1.])
-        raxis = np.cross(null, zaxis)  # rotate z axis to null
-        raxis /= np.linalg.norm(raxis)
-        angle = np.arccos(np.dot(zaxis, null))  # angle between z and null
+        raxis = np.cross(symmax, zaxis)  # rotate z axis to null
+        raxis_norm = np.linalg.norm(raxis)
+        if raxis_norm < 1e-10:  # check for zero rotation
+            rotmtx = np.eye(3, dtype=np.float64)
+        else:
+            raxis /= raxis_norm
+            angle = np.arccos(np.dot(zaxis, symmax))  # angle between z and null
 
-        eye = np.eye(3, dtype=np.float64)
-        raxis2 = np.outer(raxis, raxis)
-        skew = np.array([[0, raxis[2], -raxis[1]],
-                         [-raxis[2], 0, raxis[0]],
-                         [raxis[1], -raxis[0], 0]])
+            eye = np.eye(3, dtype=np.float64)
+            raxis2 = np.outer(raxis, raxis)
+            skew = np.array([[0, raxis[2], -raxis[1]],
+                             [-raxis[2], 0, raxis[0]],
+                             [raxis[1], -raxis[0], 0]])
 
-        rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
+            rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
 
         #make uv sphere that is aligned with z-axis
-        ntheta, nphi = 100, 100
+        ntheta, nphi = 200, 200
         sshape = (ntheta, nphi)
         u = np.linspace(0, 2 * np.pi, nphi)
         v = np.linspace(0, np.pi, ntheta)
