@@ -90,7 +90,7 @@ class SplitTauModelTestCase(unittest.TestCase):
         orig = tMod.getTauBranch(split_branch_index, True)
         above = splitTMod.getTauBranch(split_branch_index, True)
         below = splitTMod.getTauBranch(split_branch_index + 1, True)
-        self.assertAlmostEqual(above.minRayParam, below.maxRayParam, 8)
+        self.assertAlmostEqual(above.min_ray_param, below.max_ray_param, 8)
         for i in range(len(above.dist)):
             if i < sIndex:
                 self.assertAlmostEqual(orig.dist[i], above.dist[i],

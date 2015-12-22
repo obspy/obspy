@@ -279,13 +279,13 @@ class TauModel(object):
                 self.tauBranches[pOrS, branchToSplit].topDepth, depth,
                 pOrS == 0)
             newTauBranches[pOrS, branchToSplit].createBranch(
-                outSMod, self.tauBranches[pOrS, branchToSplit].maxRayParam,
+                outSMod, self.tauBranches[pOrS, branchToSplit].max_ray_param,
                 outRayParams)
             newTauBranches[pOrS, branchToSplit + 1] = \
                 self.tauBranches[pOrS, branchToSplit].difference(
                     newTauBranches[pOrS, branchToSplit],
                     indexP, indexS, outSMod,
-                    newTauBranches[pOrS, branchToSplit].minRayParam,
+                    newTauBranches[pOrS, branchToSplit].min_ray_param,
                     outRayParams)
         for i in range(branchToSplit + 1, len(self.tauBranches[0])):
             for pOrS in range(2):
@@ -395,8 +395,8 @@ class TauModel(object):
             botDepth <type 'float'>
             dist <type 'numpy.ndarray'>
             isPWave <type 'bool'>
-            maxRayParam <type 'float'>
-            minRayParam <type 'float'>
+            max_ray_param <type 'float'>
+            min_ray_param <type 'float'>
             minTurnRayParam <type 'float'>
             tau <type 'numpy.ndarray'>
             time <type 'numpy.ndarray'>

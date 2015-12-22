@@ -33,9 +33,9 @@ class TauBranch(object):
         desc = "Tau Branch\n"
         desc += " topDepth = " + str(self.topDepth) + "\n"
         desc += " botDepth = " + str(self.botDepth) + "\n"
-        desc += " maxRayParam=" + str(self.maxRayParam) + " minTurnRayParam=" \
+        desc += " max_ray_param=" + str(self.max_ray_param) + " minTurnRayParam=" \
             + str(self.minTurnRayParam)
-        desc += " minRayParam=" + str(self.minRayParam) + "\n"
+        desc += " min_ray_param=" + str(self.min_ray_param) + "\n"
         return desc
 
     def __eq__(self, other):
@@ -70,13 +70,13 @@ class TauBranch(object):
                                     str(self.topDepth))
         # Here we set minTurnRayParam to be the ray parameter that turns within
         # the layer, not including total reflections off of the bottom.
-        # maxRayParam is the largest ray parameter that can penetrate this
-        # branch. minRayParam is the minimum ray parameter that turns or is
+        # max_ray_param is the largest ray parameter that can penetrate this
+        # branch. min_ray_param is the minimum ray parameter that turns or is
         # totally reflected in this branch.
-        self.maxRayParam = minPSoFar
+        self.max_ray_param = minPSoFar
         self.minTurnRayParam = sMod.getMinTurnRayParam(self.botDepth,
                                                        self.isPWave)
-        self.minRayParam = sMod.getMinRayParam(self.botDepth, self.isPWave)
+        self.min_ray_param = sMod.getMinRayParam(self.botDepth, self.isPWave)
 
         timeDist = self.calcTimeDist(sMod, topLayerNum, botLayerNum,
                                      ray_params)
@@ -105,7 +105,7 @@ class TauBranch(object):
 
         clibtau.tau_branch_calc_time_dist_inner_loop(
             ray_params, time, dist, layer, timeDist, ray_params.shape[0],
-            ray_params.shape[1], self.maxRayParam, allow_turn_in_layer)
+            ray_params.shape[1], self.max_ray_param, allow_turn_in_layer)
 
         return timeDist
 
@@ -211,9 +211,9 @@ class TauBranch(object):
         # Construct the new TauBranch, going from the bottom of the top half
         # to the bottom of the whole branch.
         botBranch = TauBranch(topBranch.botDepth, self.botDepth, self.isPWave)
-        botBranch.maxRayParam = topBranch.minRayParam
+        botBranch.max_ray_param = topBranch.min_ray_param
         botBranch.minTurnRayParam = self.minTurnRayParam
-        botBranch.minRayParam = self.minRayParam
+        botBranch.min_ray_param = self.min_ray_param
         PRayParam = -1
         SRayParam = -1
         arrayLength = len(self.dist)
@@ -308,7 +308,7 @@ class TauBranch(object):
         :param sMod:
         :return:
         """
-        if ray_param > self.maxRayParam:
+        if ray_param > self.max_ray_param:
             return np.empty(0, dtype=TimeDist)
         assert ray_param >= 0
 
@@ -437,8 +437,8 @@ class TauBranch(object):
                   (native_str('botDepth'), np.float_),
                   (native_str('dist'), np.float_, self.dist.shape),
                   (native_str('isPWave'), np.bool_),
-                  (native_str('maxRayParam'), np.float_),
-                  (native_str('minRayParam'), np.float_),
+                  (native_str('max_ray_param'), np.float_),
+                  (native_str('min_ray_param'), np.float_),
                   (native_str('minTurnRayParam'),  np.float_),
                   (native_str('tau'), np.float_, self.tau.shape),
                   (native_str('time'), np.float_, self.time.shape),
