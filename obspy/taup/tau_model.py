@@ -25,13 +25,14 @@ class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
-    def __init__(self, sMod, spherical=True, debug=False, skip_calc=False):
+    def __init__(self, sMod, radius_of_planet, is_spherical=True, debug=False,
+                 skip_calc=False):
         self.debug = debug
         # Depth for which tau model as constructed.
         self.source_depth = 0.0
-        self.radius_of_planet = 6371.0
-        # True if this is a spherical slowness model. False if flat.
-        self.spherical = spherical
+        self.radius_of_planet = radius_of_planet
+        # True if this is a is_spherical slowness model. False if flat.
+        self.is_spherical = is_spherical
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
@@ -319,8 +320,11 @@ class TauModel(object):
             outiocbBranch += 1
         # No overloaded constructors - so do it this way to bypass the
         # calcTauIncFrom in the __init__.
-        tau_model = TauModel(outSMod, spherical=self.spherical, debug=self.debug,
-                        skip_calc=True)
+        tau_model = TauModel(
+            outSMod,
+            radius_of_planet=outSMod.vMod.radius_of_planet,
+            is_spherical=self.is_spherical,
+            debug=self.debug, skip_calc=True)
         tau_model.source_depth = self.source_depth
         tau_model.sourceBranch = outSourceBranch
         tau_model.mohoBranch = outmohoBranch
@@ -440,6 +444,7 @@ class TauModel(object):
                 'mohoBranch', 'moho_depth', 'noDisconDepths', 'radius_of_planet',
                 'ray_params', 'sourceBranch', 'source_depth', 'spherical']
         arrays = {k: getattr(self, k) for k in keys}
+
         # b) handle .tauBranches
         i, j = self.tauBranches.shape
         for j_ in range(j):
@@ -448,6 +453,7 @@ class TauModel(object):
                 # later reconstruction of array in deserialization.
                 key = 'tauBranches_%i/%i_%i/%i' % (j_, j, i_, i)
                 arrays[key] = self.tauBranches[i_][j_]._to_array()
+
         # c) handle simple contents of .sMod
         dtypes = [(native_str('DEBUG'), np.bool_),
                   (native_str('PWAVE'), np.bool_),
@@ -465,6 +471,7 @@ class TauModel(object):
             key = dtype[0]
             slowness_model[key] = getattr(self.sMod, key)
         arrays['sMod'] = slowness_model
+
         # d) handle complex contents of .sMod
         arrays['sMod.PLayers'] = self.sMod.PLayers
         arrays['sMod.SLayers'] = self.sMod.SLayers
@@ -477,6 +484,7 @@ class TauModel(object):
             else:
                 arr_ = np.vstack([data_._to_array() for data_ in data])
             arrays['sMod.' + key] = arr_
+
         # e) handle .sMod.vMod
         dtypes = [(native_str('cmb_depth'), np.float_),
                   (native_str('iocb_depth'), np.float_),
@@ -493,7 +501,8 @@ class TauModel(object):
             velocity_model[key] = getattr(self.sMod.vMod, key)
         arrays['vMod'] = velocity_model
         arrays['vMod.layers'] = self.sMod.vMod.layers
-        # finally save the collection of (structured) arrays to binary file
+
+        # finally save the collection of (structured) arrays to a binary file
         np.savez_compressed(filename, **arrays)
 
     @staticmethod
@@ -504,12 +513,15 @@ class TauModel(object):
         # XXX: Make this a with statement when old NumPy support is dropped.
         npz = np.load(filename)
         try:
-            model = TauModel(sMod=None, skip_calc=True)
+            model = TauModel(sMod=None,
+                             radius_of_planet=float(npz["radius_of_planet"]),
+                             skip_calc=True)
             complex_contents = [
                 'tauBranches', 'sMod', 'vMod',
                 'sMod.PLayers', 'sMod.SLayers', 'sMod.criticalDepths',
                 'sMod.fluidLayerDepths', 'sMod.highSlownessLayerDepthsP',
                 'sMod.highSlownessLayerDepthsS', 'vMod.layers']
+
             # a) handle simple contents
             for key in npz.keys():
                 # we have multiple, dynamic key names for individual tau
@@ -520,6 +532,7 @@ class TauModel(object):
                 if arr.ndim == 0:
                     arr = arr[()]
                 setattr(model, key, arr)
+
             # b) handle .tauBranches
             tau_branch_keys = [key for key in npz.keys()
                                if key.startswith('tauBranches_')]
@@ -536,6 +549,7 @@ class TauModel(object):
             # make a copy just in case..
             branches = np.copy(branches)
             setattr(model, "tauBranches", branches)
+
             # c) handle simple contents of .sMod
             slowness_model = SlownessModel(vMod=None, skip_model_creation=True)
             setattr(model, "sMod", slowness_model)
@@ -545,6 +559,7 @@ class TauModel(object):
                 if arr.ndim == 0:
                     arr = arr.flatten()[0]
                 setattr(slowness_model, key, arr)
+
             # d) handle complex contents of .sMod
             for key in ['PLayers', 'SLayers', 'criticalDepths']:
                 setattr(slowness_model, key, npz['sMod.' + key])
@@ -556,6 +571,7 @@ class TauModel(object):
                 else:
                     data = [DepthRange._from_array(x) for x in arr_]
                 setattr(slowness_model, key, data)
+
             # e) handle .sMod.vMod
             velocity_model = VelocityModel(
                 model_name=native_str(npz["vMod"]["model_name"]),
