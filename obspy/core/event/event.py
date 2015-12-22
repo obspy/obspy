@@ -255,7 +255,7 @@ class Event(__Event):
             plot_3drpattern(mt, kind='p_sphere')
         except AttributeError,err:
             print(err)
-            print('couldn\'nt access moment tensor of the event'
+            print('couldn\'nt access moment tensor of the event')
 
     def write(self, filename, format, **kwargs):
         """

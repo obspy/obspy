@@ -180,7 +180,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                  xticklabels=['South', 'North'],
                  yticklabels=['West', 'East'],
                  zticklabels=['Up', 'Down'],
-                 title='p-wave farfield radiation')
+                 title='p-wave farfield')
         ax3d.view_init(elev=-110., azim=0.)
 
         bball = Beach(mt, xy=(0, 0), width=50,
