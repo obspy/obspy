@@ -24,9 +24,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import numpy as np
 import matplotlib.pyplot as plt
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
+from obspy.imaging.mopad_wrapper import Beach
 
 
-def plot_3drpattern(mt, kind='both_sphere'):
+def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
     calculations are based on Aki & Richards Eq 4.29
@@ -61,6 +62,27 @@ def plot_3drpattern(mt, kind='both_sphere'):
 
     """
 
+    #reoorder all moment tensors to NED convention
+    #name : COMPONENT              : NED sign and index
+    #NED  : NN, EE, DD, NE, ND, ED : [0, 1, 2, 3, 4, 5]
+    #USE  : UU, SS, EE, US, UE, SE : [1, 2, 0, -5, 3, -4]
+    #RTP  : RR, TT, PP, RT, RP, TP : [1, 2, 0, -5, 3, -4]
+    #DSE  : DD, SS, EE, DS, DE, SE : [1, 2, 0, -5, -3, 4]
+    if coordinate_system == 'RTP' or coordinate_system == 'USE':
+        signs = [1, 1, 1, -1, 1, -1]
+        indices = [1, 2, 0, 5, 3, 4]
+        ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+    elif coordinate_system == 'DSE':
+        signs = [1, 1, 1, -1, -1, 1]
+        indices = [1, 2, 0, 5, 3, 4]
+        ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+    elif coordinate_system == 'NED':
+        ned_mt = mt
+    else:
+        msg = 'coordinate system {:s} not known'.format(coordinate_system)
+        raise NotImplementedError(msg)
+
+    #matplotlib options:
     vlength = 0.1  # length of vectors
     nlat = 30      # points for quiver sphere
 
@@ -69,7 +91,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         points = spherical_grid(nlat=nlat)
 
         #get radiation pattern
-        disp = farfield_p(mt, points)
+        disp = farfield_p(ned_mt, points)
 
         #plot
         fig = plt.figure()
@@ -80,12 +102,13 @@ def plot_3drpattern(mt, kind='both_sphere'):
 
     elif kind == 'p_sphere':
         #generate spherical mesh that is aligned with the moment tensor null
-        #axis
-        mtensor = mopad_MomentTensor(mt, system='NED')
+        #axis. MOPAD should use NED coordinate system to avoid internal
+        #coordinate transformations
+        mtensor = MomentTensor(ned_mt, system='NED')
         null = np.ravel(mtensor._null_axis)
 
         #make rotation matrix (after numpy mailing list)
-        #(bugs for zero rotation?)
+        #(bugs probably for zero rotation?)
         zaxis = np.array([0., 0., 1.])
         raxis = np.cross(null, zaxis)  # rotate z axis to null
         raxis /= np.linalg.norm(raxis)
@@ -114,7 +137,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         points = np.dot(rotmtx, points)
 
         #get radiation pattern
-        disp = farfield_p(mt, points)
+        disp = farfield_p(ned_mt, points)
         magn = np.sum(disp * points, axis=0)
         magn /= np.max(np.abs(magn))
 
@@ -129,15 +152,41 @@ def plot_3drpattern(mt, kind='both_sphere'):
         y = points[1].reshape(sshape)
         z = points[2].reshape(sshape)
 
-        #plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
-        ax.plot([0, null[0]], [0, null[1]], [0, null[2]])
+        #plot 3d radiation pattern and beachball
+        fig = plt.figure(figsize=plt.figaspect(0.5), facecolor='white')
+        ax3d = fig.add_axes((0.01, 0.01, 0.48, 0.98), projection='3d')
+        ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+        #uncomment next line to plot the null axis
+        #ax3d.plot([0, null[0]], [0, null[1]], [0, null[2]])
+        ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
+                 xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
+                 xticklabels=['South', 'North'],
+                 yticklabels=['West', 'East'],
+                 zticklabels=['Up', 'Down'],
+                 title='3d radiation pattern')
+        ax3d.view_init(elev=-110., azim=0.)
 
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
+        bball = Beach(mt, xy=(0, 0), width=50)
+        size = 0.8  # shrink ax to make it more similar to the 3d plot
+        width, height = size * 0.5, size * 1.
+        left = 0.5 + (0.5-width)/2.
+        bottom = (1.-height)/2.
+        axbball = fig.add_axes((left, bottom, width, height))
+
+        axbball.spines['left'].set_position('center')
+        axbball.spines['right'].set_color('none')
+        axbball.spines['bottom'].set_position('center')
+        axbball.spines['top'].set_color('none')
+        #axbball.spines['left'].set_smart_bounds(True)
+        #axbball.spines['bottom'].set_smart_bounds(True)
+
+        axbball.add_collection(bball)
+        axbball.set(xlim=(-50, 50), ylim=(-50, 50),
+                    xticks=(-40, 40), yticks=(-40, 40),
+                    xticklabels=('West', 'East'),
+                    yticklabels=('South', 'North'),
+                    title='lower hemisphere stereographical projection')
+
         plt.show()
 
     elif kind == 's_quiver':
@@ -145,7 +194,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         points = spherical_grid(nlat=nlat)
 
         #get radiation pattern
-        disp = farfield_s(mt, points)
+        disp = farfield_s(ned_mt, points)
 
         #plot
         fig = plt.figure()
@@ -166,7 +215,7 @@ def plot_3drpattern(mt, kind='both_sphere'):
         points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
 
         #get radiation pattern
-        disp = farfield_s(mt, points)
+        disp = farfield_s(ned_mt, points)
         magn = np.sum(disp * disp, axis=0)
         magn /= np.max(np.abs(magn))
 
@@ -190,8 +239,8 @@ def plot_3drpattern(mt, kind='both_sphere'):
         points = spherical_grid(nlat=nlat)
 
         #get radiation pattern
-        dispp = farfield_p(mt, points)
-        disps = farfield_s(mt, points)
+        dispp = farfield_p(ned_mt, points)
+        disps = farfield_s(ned_mt, points)
 
         #plot
         fig = plt.figure()
@@ -254,8 +303,8 @@ def plot_3drpattern(mt, kind='both_sphere'):
         fname_vtkbeachlines = 'beachlines.vtk'
 
         #output a vtkfile that can for exampled be displayed by paraview
-        mopad_mt = MomentTensor(mt, system='NED')
-        bb = BeachBall(mopad_mt, npoints=200)
+        mtensor = MomentTensor(ned_mt, system='NED')
+        bb = BeachBall(mtensor, npoints=200)
         bb._setup_BB(unit_circle=False)
 
         # extract the coordinates of the nodal lines
@@ -265,8 +314,8 @@ def plot_3drpattern(mt, kind='both_sphere'):
         #plot radiation pattern and nodal lines
         points = spherical_grid()
         ndim, npoints = points.shape
-        dispp = farfield_p(mt, points)
-        disps = farfield_s(mt, points)
+        dispp = farfield_p(ned_mt, points)
+        disps = farfield_s(ned_mt, points)
 
         #output to file
         with open(fname_vtkrpattern, 'w') as vtk_file:
