@@ -166,7 +166,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
                  title='3d radiation pattern')
         ax3d.view_init(elev=-110., azim=0.)
 
-        bball = Beach(mt, xy=(0, 0), width=50)
+        bball = Beach(mt, xy=(0, 0), width=50,
+                facecolor=cmap(norm(0.7)), bgcolor=cmap(norm(-0.7)))
         size = 0.8  # shrink ax to make it more similar to the 3d plot
         width, height = size * 0.5, size * 1.
         left = 0.5 + (0.5-width)/2.
@@ -177,8 +178,6 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
         axbball.spines['right'].set_color('none')
         axbball.spines['bottom'].set_position('center')
         axbball.spines['top'].set_color('none')
-        #axbball.spines['left'].set_smart_bounds(True)
-        #axbball.spines['bottom'].set_smart_bounds(True)
 
         axbball.add_collection(bball)
         axbball.set(xlim=(-50, 50), ylim=(-50, 50),
@@ -266,7 +265,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
                   "by external software like paraview")
 
         #get mopad moment tensor
-        mopad_mt = MomentTensor(mt, system='NED')
+        mopad_mt = MomentTensor(ned_mt, system='NED')
         bb = BeachBall(mopad_mt, npoints=200)
         bb._setup_BB(unit_circle=False)
 
@@ -276,8 +275,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
 
         #plot radiation pattern and nodal lines
         points = spherical_grid(nlat=nlat)
-        dispp = farfield_p(mt, points)
-        disps = farfield_s(mt, points)
+        dispp = farfield_p(ned_mt, points)
+        disps = farfield_s(ned_mt, points)
 
         fig1 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
         pts1 = mlab.quiver3d(points[0], points[1], points[2],
