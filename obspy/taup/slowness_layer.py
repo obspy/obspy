@@ -315,8 +315,14 @@ def create_from_vlayer(vLayer, isPWave, radius_of_planet, isSpherical=True):
     if isSpherical:
         ret['topP'] = (radius_of_planet - ret['topDepth']) / \
                        evaluateVelocityAtTop(vLayer, waveType)
-        ret['botP'] = (radius_of_planet - ret['botDepth']) / \
-                       evaluateVelocityAtBottom(vLayer, waveType)
+
+        bot_depth = ret["botDepth"]
+        bot_vel = evaluateVelocityAtBottom(vLayer, waveType)
+
+        if bot_depth == radius_of_planet and bot_vel == 0.0:
+            ret['botP'] = np.inf
+        else:
+            ret['botP'] = (radius_of_planet - bot_depth) / bot_vel
     else:
         raise NotImplementedError("no flat models yet")
     return ret

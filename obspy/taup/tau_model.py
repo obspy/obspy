@@ -390,7 +390,7 @@ class TauModel(object):
             sMod <class 'obspy.taup.slowness_model.SlownessModel'>
             sourceBranch <type 'int'>
             source_depth <type 'float'>
-            spherical <type 'bool'>
+            is_spherical <type 'bool'>
             tauBranches <type 'numpy.ndarray'> (2D, type TauBranch)
 
             TauBranch
@@ -442,7 +442,7 @@ class TauModel(object):
         # a) handle simple contents
         keys = ['cmbBranch', 'cmb_depth', 'debug', 'iocbBranch', 'iocb_depth',
                 'mohoBranch', 'moho_depth', 'noDisconDepths', 'radius_of_planet',
-                'ray_params', 'sourceBranch', 'source_depth', 'spherical']
+                'ray_params', 'sourceBranch', 'source_depth', 'is_spherical']
         arrays = {k: getattr(self, k) for k in keys}
 
         # b) handle .tauBranches

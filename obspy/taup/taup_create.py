@@ -107,7 +107,7 @@ class TauP_Create(object):
         TauModel.DEBUG = self.debug
         SlownessModel.DEBUG = self.debug
         # Creates tau model from slownesses.
-        return TauModel(self.sMod)
+        return TauModel(self.sMod, radius_of_planet=vMod.radius_of_planet)
 
     def run(self):
         """

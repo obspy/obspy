@@ -425,7 +425,7 @@ class SlownessModel(object):
         # in the outer core or if allowInnerCoreS == false and we want to use
         # the P velocity structure in the inner core.
         if inFluidZone:
-            fluidZone['botDepth'] = currVLayer['botDepth']
+            fluidZone.botDepth = currVLayer['botDepth']
             self.fluidLayerDepths.append(fluidZone)
 
         self.criticalDepths = self.criticalDepths[:cd_count]
@@ -1017,8 +1017,8 @@ class SlownessModel(object):
         The maximum is determined by ``self.maxDepthInterval``.
         """
         for wave in [self.SWAVE, self.PWAVE]:
-            # These might change with calls to addSlowness, so be sure we have
-            # the correct copy.
+            # These might change with calls to add_slowness, so be sure we
+            # have the correct copy.
             if wave == self.PWAVE:
                 layers = self.PLayers
             else:
@@ -1043,9 +1043,7 @@ class SlownessModel(object):
                         smask |= new_depth >= self.vMod.iocb_depth
                     if np.any(smask):
                         velocity[smask] = self.vMod.evaluate_above(
-                            new_depth[smask],
-                            'P')
-
+                            new_depth[smask], 'P')
                     slowness = self.toSlowness(velocity, new_depth)
                 else:
                     slowness = self.toSlowness(
