@@ -27,7 +27,8 @@ from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
 
 
-def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
+def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP', 
+                    p_sphere_tension='inwards'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
     calculations are based on Aki & Richards Eq 4.29
@@ -110,7 +111,10 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
         evecs = mtensor.get_eigvecs()
         evals = np.abs(mtensor.get_eigvals())**2
         evals_dev = np.abs(evals-np.mean(evals))
-        evec_max = evecs[np.argmax(evals_dev)]
+        if p_sphere_tension == 'outwards':
+            evec_max = evecs[np.argmax(evals_dev)]
+        elif p_sphere_tension == 'inwards':
+            evec_max = evecs[np.argmax(evals)]
 
         symmax = np.ravel(evec_max)
 
@@ -154,7 +158,10 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP'):
         #compute colours and displace points along normal
         norm = plt.Normalize(-1., 1.)
         cmap = plt.get_cmap('bwr')
-        points *= (1. + np.abs(magn) / 2.)
+        if p_sphere_tension == 'outwards':
+            points *= (1. + np.abs(magn) / 2.)
+        elif p_sphere_tension == 'inwards':
+            points *= (1. + magn/2.)
         colors = np.array([cmap(norm(val)) for val in magn])
         colors = colors.reshape(ntheta, nphi, 4)
 
