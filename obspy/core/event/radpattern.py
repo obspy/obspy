@@ -27,11 +27,12 @@ from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
 
 
-def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP', 
+def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                     p_sphere_tension='inwards'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
     calculations are based on Aki & Richards Eq 4.29
+
 
     :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
@@ -63,12 +64,12 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
     """
 
-    #reoorder all moment tensors to NED convention
-    #name : COMPONENT              : NED sign and index
-    #NED  : NN, EE, DD, NE, ND, ED : [0, 1, 2, 3, 4, 5]
-    #USE  : UU, SS, EE, US, UE, SE : [1, 2, 0, -5, 3, -4]
-    #RTP  : RR, TT, PP, RT, RP, TP : [1, 2, 0, -5, 3, -4]
-    #DSE  : DD, SS, EE, DS, DE, SE : [1, 2, 0, -5, -3, 4]
+    # reoorder all moment tensors to NED convention
+    # name : COMPONENT              : NED sign and index
+    # NED  : NN, EE, DD, NE, ND, ED : [0, 1, 2, 3, 4, 5]
+    # USE  : UU, SS, EE, US, UE, SE : [1, 2, 0, -5, 3, -4]
+    # RTP  : RR, TT, PP, RT, RP, TP : [1, 2, 0, -5, 3, -4]
+    # DSE  : DD, SS, EE, DS, DE, SE : [1, 2, 0, -5, -3, 4]
     if coordinate_system == 'RTP' or coordinate_system == 'USE':
         signs = [1, 1, 1, -1, 1, -1]
         indices = [1, 2, 0, 5, 3, 4]
@@ -83,18 +84,18 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         msg = 'coordinate system {:s} not known'.format(coordinate_system)
         raise NotImplementedError(msg)
 
-    #matplotlib options:
+    # matplotlib options:
     vlength = 0.1  # length of vectors
     nlat = 30      # points for quiver sphere
 
     if kind == 'p_quiver':
-        #precompute even spherical grid and directional cosine array
+        # precompute even spherical grid and directional cosine array
         points = spherical_grid(nlat=nlat)
 
-        #get radiation pattern
+        # get radiation pattern
         disp = farfield_p(ned_mt, points)
 
-        #plot
+        # plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.quiver(points[0], points[1], points[2],
@@ -102,12 +103,12 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         plt.show()
 
     elif kind == 'p_sphere':
-        #generate spherical mesh that is aligned with the moment tensor null
-        #axis. MOPAD should use NED coordinate system to avoid internal
-        #coordinate transformations
+        # generate spherical mesh that is aligned with the moment tensor null
+        # axis. MOPAD should use NED coordinate system to avoid internal
+        # coordinate transformations
         mtensor = MomentTensor(ned_mt, system='NED')
 
-        #use the most isolated eigenvector as axis of symmetry
+        # use the most isolated eigenvector as axis of symmetry
         evecs = mtensor.get_eigvecs()
         evals = np.abs(mtensor.get_eigvals())**2
         evals_dev = np.abs(evals-np.mean(evals))
@@ -118,7 +119,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
         symmax = np.ravel(evec_max)
 
-        #make rotation matrix (after numpy mailing list)
+        # make rotation matrix (after numpy mailing list)
         zaxis = np.array([0., 0., 1.])
         raxis = np.cross(symmax, zaxis)  # rotate z axis to null
         raxis_norm = np.linalg.norm(raxis)
@@ -136,7 +137,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
             rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
 
-        #make uv sphere that is aligned with z-axis
+        # make uv sphere that is aligned with z-axis
         ntheta, nphi = 100, 100
         sshape = (ntheta, nphi)
         u = np.linspace(0, 2 * np.pi, nphi)
@@ -146,16 +147,16 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         y = np.outer(np.sin(u), np.sin(v))
         z = np.outer(np.ones(np.size(u)), np.cos(v))
 
-        #ravel point array and rotate them to the null axis
+        # ravel point array and rotate them to the null axis
         points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
         points = np.dot(rotmtx, points)
 
-        #get radiation pattern
+        # get radiation pattern
         disp = farfield_p(ned_mt, points)
         magn = np.sum(disp * points, axis=0)
         magn /= np.max(np.abs(magn))
 
-        #compute colours and displace points along normal
+        # compute colours and displace points along normal
         norm = plt.Normalize(-1., 1.)
         cmap = plt.get_cmap('bwr')
         if p_sphere_tension == 'outwards':
@@ -169,12 +170,12 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         y = points[1].reshape(sshape)
         z = points[2].reshape(sshape)
 
-        #plot 3d radiation pattern and beachball
+        # plot 3d radiation pattern and beachball
         fig = plt.figure(figsize=plt.figaspect(0.5), facecolor='white')
         ax3d = fig.add_axes((0.01, 0.01, 0.48, 0.98), projection='3d')
         ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
-        #uncomment next line to plot the null axis
-        #ax3d.plot([0, null[0]], [0, null[1]], [0, null[2]])
+        # uncomment next line to plot the null axis
+        # ax3d.plot([0, null[0]], [0, null[1]], [0, null[2]])
         ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
                  xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
                  xticklabels=['South', 'North'],
@@ -206,13 +207,13 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         plt.show()
 
     elif kind == 's_quiver':
-        #precompute even spherical grid and directional cosine array
+        # precompute even spherical grid and directional cosine array
         points = spherical_grid(nlat=nlat)
 
-        #get radiation pattern
+        # get radiation pattern
         disp = farfield_s(ned_mt, points)
 
-        #plot
+        # plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.quiver(points[0], points[1], points[2],
@@ -220,7 +221,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         plt.show()
 
     elif kind == 's_sphere':
-        #lat/lon sphere
+        # lat/lon sphere
         u = np.linspace(0, 2 * np.pi, 200)
         v = np.linspace(0, np.pi, 200)
 
@@ -230,12 +231,12 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
         points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
 
-        #get radiation pattern
+        # get radiation pattern
         disp = farfield_s(ned_mt, points)
         magn = np.sum(disp * disp, axis=0)
         magn /= np.max(np.abs(magn))
 
-        #compute colours and displace points for normalized vectors
+        # compute colours and displace points for normalized vectors
         norm = plt.Normalize(-1., 1.)
         cmap = plt.get_cmap('bwr')
         x *= (1. + np.abs(magn.reshape(x.shape)) / 2.)
@@ -244,21 +245,21 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         colors = np.array([cmap(norm(val)) for val in magn])
         colors = colors.reshape(x.shape[0], x.shape[1], 4)
 
-        #plot
+        # plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
         plt.show()
 
     elif kind == 'both_quiver':
-        #precompute even spherical grid and directional cosine array
+        # precompute even spherical grid and directional cosine array
         points = spherical_grid(nlat=nlat)
 
-        #get radiation pattern
+        # get radiation pattern
         dispp = farfield_p(ned_mt, points)
         disps = farfield_s(ned_mt, points)
 
-        #plot
+        # plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         qp = ax.quiver(points[0], points[1], points[2],
@@ -272,7 +273,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         plt.show()
 
     elif kind == 'mayavi':
-        #use mayavi if possible.
+        # use mayavi if possible.
         try:
             from mayavi import mlab
         except ImportError, err:
@@ -281,7 +282,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                   "output of the radiation pattern that can be used "
                   "by external software like paraview")
 
-        #get mopad moment tensor
+        # get mopad moment tensor
         mopad_mt = MomentTensor(ned_mt, system='NED')
         bb = BeachBall(mopad_mt, npoints=200)
         bb._setup_BB(unit_circle=False)
@@ -290,7 +291,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         neg_nodalline = bb._nodalline_negative
         pos_nodalline = bb._nodalline_positive
 
-        #plot radiation pattern and nodal lines
+        # plot radiation pattern and nodal lines
         points = spherical_grid(nlat=nlat)
         dispp = farfield_p(ned_mt, points)
         disps = farfield_s(ned_mt, points)
@@ -318,7 +319,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         fname_vtkrpattern = 'rpattern.vtk'
         fname_vtkbeachlines = 'beachlines.vtk'
 
-        #output a vtkfile that can for exampled be displayed by paraview
+        # output a vtkfile that can for exampled be displayed by paraview
         mtensor = MomentTensor(ned_mt, system='NED')
         bb = BeachBall(mtensor, npoints=200)
         bb._setup_BB(unit_circle=False)
@@ -327,13 +328,13 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         neg_nodalline = bb._nodalline_negative
         pos_nodalline = bb._nodalline_positive
 
-        #plot radiation pattern and nodal lines
+        # plot radiation pattern and nodal lines
         points = spherical_grid()
         ndim, npoints = points.shape
         dispp = farfield_p(ned_mt, points)
         disps = farfield_s(ned_mt, points)
 
-        #output to file
+        # output to file
         with open(fname_vtkrpattern, 'w') as vtk_file:
             vtk_header = '# vtk DataFile Version 2.0\n' + \
                          'radiation pattern vector field\n' + \
@@ -342,10 +343,10 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                          'POINTS {:d} float\n'.format(npoints)
 
             vtk_file.write(vtk_header)
-            #write point locations
+            # write point locations
             for x, y, z in np.transpose(points):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-            #write vector field
+            # write vector field
             vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
             vtk_file.write('VECTORS s_radiation float\n')
             for x, y, z in np.transpose(disps):
@@ -365,13 +366,13 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                          'POINTS {:d} float\n'.format(npts_tot)
 
             vtk_file.write(vtk_header)
-            #write point locations
+            # write point locations
             for x, y, z in np.transpose(neg_nodalline):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
             for x, y, z in np.transpose(pos_nodalline):
                 vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
 
-            #write line segments
+            # write line segments
             vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
 
             ipoints = list(range(0, npts_neg)) + [0]
@@ -390,7 +391,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                 vtk_file.write('{:d} '.format(ipoint + npts_neg))
             vtk_file.write('\n')
 
-            #cell types. 4 means cell type is a poly_line
+            # cell types. 4 means cell type is a poly_line
             vtk_file.write('\nCELL_TYPES 2\n')
             vtk_file.write('4\n4')
 
@@ -411,7 +412,7 @@ def spherical_grid(nlat=30):
     norms = np.sin(colats)
     nlons = (2*nlat * norms + 1).astype(int)  # scale number of point with lat
 
-    #---- make colat/lon grid ----
+    # make colat/lon grid
     colatgrid, longrid = [], []
     for ilat in range(nlat):
         nlon = nlons[ilat]
@@ -422,7 +423,7 @@ def spherical_grid(nlat=30):
             longrid.append(lons[ilon])
     npoints = len(longrid)
 
-    #---- get cartesian coordinates of spherical grid ----
+    # get cartesian coordinates of spherical grid
     points = np.empty((ndim, npoints))
     points[0] = np.sin(colatgrid) * np.cos(longrid)
     points[1] = np.sin(colatgrid) * np.sin(longrid)
@@ -448,29 +449,29 @@ def farfield_p(mt, points):
     """
     ndim, npoints = points.shape
     if ndim == 2:
-        #points are given as theta,phi
+        # points are given as theta,phi
         points = np.empty((3, npoints))
         points[0] = np.sin(points[0]) * np.cos(points[1])
         points[1] = np.sin(points[0]) * np.sin(points[1])
         points[2] = np.cos(points[0])
     elif ndim == 3:
-        #points are given as x,y,z, (same system as the moment tensor)
+        # points are given as x,y,z, (same system as the moment tensor)
         pass
     else:
         raise ValueError('points should have shape 2 x npoints or 3 x npoints')
     Mpq = fullmt(mt)
 
-    #---- precompute directional cosine array ----
+    # precompute directional cosine array
     dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
                     points[2] * points[2])
     gammas = points / dists
 
-    #---- initialize displacement array ----
+    # initialize displacement array
     disp = np.empty((ndim, npoints))
 
-    #---- loop through points ----
+    # loop through points
     for ipoint in range(npoints):
-        #loop through displacement component [n index]
+        # loop through displacement component [n index]
         gamma = gammas[:, ipoint]
         gammapq = np.outer(gamma, gamma)
         gammatimesmt = gammapq * Mpq
@@ -497,29 +498,29 @@ def farfield_s(mt, points):
     """
     ndim, npoints = points.shape
     if ndim == 2:
-        #points are given as theta,phi
+        # points are given as theta,phi
         points = np.empty((3, npoints))
         points[0] = np.sin(points[0]) * np.cos(points[1])
         points[1] = np.sin(points[0]) * np.sin(points[1])
         points[2] = np.cos(points[0])
     elif ndim == 3:
-        #points are given as x,y,z, (same system as the moment tensor)
+        # points are given as x,y,z, (same system as the moment tensor)
         pass
     else:
         raise ValueError('points should have shape 2 x npoints or 3 x npoints')
     Mpq = fullmt(mt)
 
-    #---- precompute directional cosine array ----
+    # precompute directional cosine array
     dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
                     points[2] * points[2])
     gammas = points / dists
 
-    #---- initialize displacement array ----
+    # initialize displacement array
     disp = np.empty((ndim, npoints))
 
-    #---- loop through points ----
+    # loop through points
     for ipoint in range(npoints):
-        #---- loop through displacement component [n index] ----
+        # loop through displacement component [n index]
         gamma = gammas[:, ipoint]
         Mp = np.dot(Mpq, gamma)
         for n in range(ndim):
@@ -532,7 +533,7 @@ def farfield_s(mt, points):
     return disp
 
 
-#---- get full moment tensor ----
+# get full moment tensor
 def fullmt(mt):
     mt_full = np.array(([[mt[0], mt[3], mt[4]],
                          [mt[3], mt[1], mt[5]],
