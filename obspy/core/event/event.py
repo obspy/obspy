@@ -245,3 +245,7 @@ class Event(__Event):
         >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
         """
         Catalog(events=[self]).write(filename, format, **kwargs)
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

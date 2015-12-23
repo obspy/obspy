@@ -578,6 +578,7 @@ class Catalog(object):
 
         Mollweide projection for global overview:
 
+        >>> from obspy import read_events
         >>> cat = read_events()
         >>> cat.plot()  # doctest:+SKIP
 
@@ -720,3 +721,7 @@ class Catalog(object):
                 plt.show()
 
         return fig
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

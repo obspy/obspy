@@ -537,9 +537,13 @@ def farfield_s(mt, points):
     return disp
 
 
-# get full moment tensor
 def fullmt(mt):
+    """takes 6 comp moment tensor and returns full 3x3 moment tensor"""
     mt_full = np.array(([[mt[0], mt[3], mt[4]],
                          [mt[3], mt[1], mt[5]],
                          [mt[4], mt[5], mt[2]]]))
     return mt_full
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
