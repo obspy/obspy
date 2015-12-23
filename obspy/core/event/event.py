@@ -216,7 +216,6 @@ class Event(__Event):
         """
         plots the preferred focal mechanism and radiation pattern
         """
-        from mpl_toolkits.mplot3d import Axes3D
         fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
         try:
             mtensor = fm.moment_tensor.tensor
