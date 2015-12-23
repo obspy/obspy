@@ -1,17 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event - Classes for handling event metadata
+obspy.core.event - The Catalog class definition
 ======================================================
-This module provides a class hierarchy to consistently handle event metadata.
-This class hierarchy is closely modelled after the de-facto standard
-format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
-
-.. figure:: /_images/Event.png
-
-.. note::
-
-    For handling additional information not covered by the QuakeML standard and
-    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
+Catalog class
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -34,12 +25,14 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.imaging.cm import obspy_sequential
 
-from .base import *
+from .base import CreationInfo, ResourceIdentifier
+
 from .event import Event
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
 EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 ATTRIBUTE_HAS_ERRORS = True
+
 
 class Catalog(object):
     """

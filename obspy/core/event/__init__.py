@@ -24,9 +24,19 @@ from __future__ import (absolute_import, division, print_function,
 
 from future.builtins import *  # NOQA
 
-from .base import *
-from .event import Event
+from .base import (_event_type_class_factory, Amplitude,
+                   Arrival, Axis, Comment, CompositeTime,
+                   ConfidenceEllipsoid, CreationInfo,
+                   DataUsed, EventDescription, FocalMechanism,
+                   Magnitude, MomentTensor, NodalPlane,
+                   NodalPlanes, Origin, OriginQuality,
+                   OriginUncertainty, Pick, PrincipalAxes,
+                   QuantityError, ResourceIdentifier,
+                   SourceTimeFunction, StationMagnitude,
+                   StationMagnitudeContribution, Tensor,
+                   TimeWindow, WaveformStreamID, read_events)
 from .catalog import Catalog
+from .event import Event
 from .radpattern import plot_3drpattern, farfield_p, farfield_s
 
 if __name__ == '__main__':

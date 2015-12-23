@@ -22,8 +22,9 @@ from obspy.core.event_header import EventType, EventTypeCertainty
 
 from obspy.core.util.base import ENTRY_POINTS
 
-from .base import *
-from .base import _event_type_class_factory
+from .base import (_event_type_class_factory,
+                   CreationInfo, ResourceIdentifier)
+
 from .radpattern import plot_3drpattern
 
 
