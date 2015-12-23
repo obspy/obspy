@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
-from mpl_toolkits.mplot3d import Axes3D # NOQA
+from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
 
 def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',

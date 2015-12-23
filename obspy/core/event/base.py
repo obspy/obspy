@@ -519,6 +519,7 @@ class ResourceIdentifier(object):
     object get deleted or runs out of scope, e.g. gets garbage collected, the
     reference will cease to exist.
 
+    >>> from obspy.core.event import Event
     >>> event = Event()
     >>> import sys
     >>> ref_count = sys.getrefcount(event)
@@ -544,6 +545,7 @@ class ResourceIdentifier(object):
     This enables, e.g. the resource references between the different QuakeML
     elements to work in a rather natural way.
 
+    >>> from obspy.core.event import Event
     >>> event_object = Event()
     >>> obj_id = id(event_object)
     >>> res_id = "obspy.org/event/test"
