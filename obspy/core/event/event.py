@@ -17,41 +17,10 @@ obspy.core.event.event - Event Class
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
-from future.utils import native_str
 
-import collections
-import copy
-import glob
-import inspect
-import io
-import os
-import re
-import warnings
-import weakref
-from copy import deepcopy
-from uuid import uuid4
+from obspy.core.event_header import EventType, EventTypeCertainty
 
-with standard_library.hooks():
-    import urllib.request
-
-import numpy as np
-from pkg_resources import load_entry_point
-
-from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
-                                     DataUsedWaveType, EvaluationMode,
-                                     EvaluationStatus, EventDescriptionType,
-                                     EventType, EventTypeCertainty,
-                                     MomentTensorCategory, MTInversionType,
-                                     OriginDepthType, OriginType,
-                                     OriginUncertaintyDescription, PickOnset,
-                                     PickPolarity, SourceTimeFunctionType)
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import (deprecated, map_example_filename,
-                                       uncompress_file)
-from obspy.imaging.cm import obspy_sequential
 
 from .base import *
 from .base import _event_type_class_factory

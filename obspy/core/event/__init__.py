@@ -23,8 +23,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from future.builtins import *  # NOQA
-from future import standard_library
-from future.utils import native_str
 
 from .base import *
 from .event import Event

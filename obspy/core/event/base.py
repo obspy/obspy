@@ -41,13 +41,9 @@ from uuid import uuid4
 with standard_library.hooks():
     import urllib.request
 
-import numpy as np
-from pkg_resources import load_entry_point
-
 from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      DataUsedWaveType, EvaluationMode,
                                      EvaluationStatus, EventDescriptionType,
-                                     EventType, EventTypeCertainty,
                                      MomentTensorCategory, MTInversionType,
                                      OriginDepthType, OriginType,
                                      OriginUncertaintyDescription, PickOnset,
@@ -57,9 +53,6 @@ from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import (deprecated, map_example_filename,
                                        uncompress_file)
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
-from obspy.imaging.cm import obspy_sequential
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']

@@ -20,13 +20,12 @@ patterns:
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
-from future.utils import native_str
 
 import numpy as np
 import matplotlib.pyplot as plt
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
@@ -125,11 +124,13 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         zaxis = np.array([0., 0., 1.])
         raxis = np.cross(symmax, zaxis)  # rotate z axis to null
         raxis_norm = np.linalg.norm(raxis)
-        if raxis_norm < 1e-10:  # check for zero rotation
+        if raxis_norm < 1e-10:  # check for zero or 180 degree rotation
             rotmtx = np.eye(3, dtype=np.float64)
         else:
             raxis /= raxis_norm
-            angle = np.arccos(np.dot(zaxis, symmax))  # angle between z and null
+
+            # angle between z and null
+            angle = np.arccos(np.dot(zaxis, symmax))
 
             eye = np.eye(3, dtype=np.float64)
             raxis2 = np.outer(raxis, raxis)
@@ -137,7 +138,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                              [-raxis[2], 0, raxis[0]],
                              [raxis[1], -raxis[0], 0]])
 
-            rotmtx = raxis2 + np.cos(angle) * (eye - raxis2) + np.sin(angle) * skew
+            rotmtx = (raxis2 + np.cos(angle) * (eye - raxis2) +
+                      np.sin(angle) * skew)
 
         # make uv sphere that is aligned with z-axis
         ntheta, nphi = 100, 100
@@ -186,8 +188,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                  title='p-wave farfield')
         ax3d.view_init(elev=-110., azim=0.)
 
-        bball = Beach(mt, xy=(0, 0), width=50,
-                facecolor=cmap(norm(0.7)), bgcolor=cmap(norm(-0.7)))
+        bball = Beach(mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
+                      bgcolor=cmap(norm(-0.7)))
         size = 0.8  # shrink ax to make it more similar to the 3d plot
         width, height = size * 0.5, size * 1.
         left = 0.5 + (0.5-width)/2.
@@ -264,8 +266,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         # plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        qp = ax.quiver(points[0], points[1], points[2],
-                       dispp[0], dispp[1], dispp[2], length=vlength)
+        ax.quiver(points[0], points[1], points[2],
+                  dispp[0], dispp[1], dispp[2], length=vlength)
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -298,7 +300,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         dispp = farfield_p(ned_mt, points)
         disps = farfield_s(ned_mt, points)
 
-        fig1 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+        mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
         pts1 = mlab.quiver3d(points[0], points[1], points[2],
                              dispp[0], dispp[1], dispp[2],
                              scalars=normp, vmin=-rangep, vmax=rangep)
@@ -307,7 +309,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
         plot_sphere(0.7)
 
-        fig2 = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+        mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
         mlab.quiver3d(points[0], points[1], points[2],
                       disps[0], disps[1], disps[2],
                       vmin=-ranges, vmax=ranges)
