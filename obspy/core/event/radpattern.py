@@ -280,7 +280,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         # use mayavi if possible.
         try:
             from mayavi import mlab
-        except ImportError, err:
+        except ImportError as err:
             print(err)
             print("mayavi import error. Use kind='vtk' for vtk file "
                   "output of the radiation pattern that can be used "

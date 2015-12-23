@@ -222,7 +222,7 @@ class Event(__Event):
             mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
                   mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
             plot_3drpattern(mt, kind='p_sphere')
-        except AttributeError, err:
+        except AttributeError as err:
             print(err)
             print('Couldn\'t access event\'s moment tensor')
 
