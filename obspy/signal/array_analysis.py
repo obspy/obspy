@@ -763,8 +763,9 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
     nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
 
-    kxgrid, kygrid = np.meshgrid(np.linspace(kxmin, kxmax, nkx),
-                                 np.linspace(kymin, kymax, nky), indexing='ij')
+    # careful with meshgrid indexing
+    kygrid, kxgrid = np.meshgrid(np.linspace(kymin, kymax, nky),
+                                 np.linspace(kxmin, kxmax, nkx))
 
     ks = np.transpose(np.vstack((kxgrid.flatten(), kygrid.flatten())))
 
