@@ -922,11 +922,12 @@ class Stream(object):
             This results in a potentially worse performance but the interactive
             matplotlib view can be used properly.
             Defaults to 'fast'.
-        :param type: Type may be set to either ``'dayplot'`` in order to create
-            a one-day plot for a single Trace or ``'relative'`` to convert all
-            date/time information to a relative scale, effectively starting
-            the seismogram at 0 seconds. ``'normal'`` will produce a standard
-            plot.
+        :param type: Type may be set to either: ``'dayplot'`` to create
+            a one-day plot for a single Trace; ``'relative'`` to convert all
+            date/time information to a relative scale starting
+            the seismogram at 0 seconds; ``'normal'`` will produce the standard
+            plot; ``'section'`` to plot a set of seismograms in one coordinate
+            system shifted according to their position.
             Defaults to ``'normal'``.
         :param equal_scale: If enabled all plots are equally scaled.
             Defaults to ``True``.
