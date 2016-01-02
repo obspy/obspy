@@ -926,8 +926,8 @@ class Stream(object):
             a one-day plot for a single Trace; ``'relative'`` to convert all
             date/time information to a relative scale starting
             the seismogram at 0 seconds; ``'normal'`` will produce the standard
-            plot; ``'section'`` to plot a set of seismograms in one coordinate
-            system shifted according to their position.
+            plot; ``'section'`` to plot all seismograms in a single
+            coordinate system shifted according to their position.
             Defaults to ``'normal'``.
         :param equal_scale: If enabled all plots are equally scaled.
             Defaults to ``True``.
