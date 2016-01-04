@@ -55,6 +55,7 @@ from abc import ABCMeta, abstractmethod
 
 
 class ClientException(Exception):
+    """Base exception for Client classes."""
     pass
 
 
@@ -70,6 +71,11 @@ class BaseClient(object):
         """Return a semantic version number as a string."""
         pass
 
+    @abstractmethod
+    def get_client_version(self):
+        """Returns a client version number as a string."""
+        pass
+
 
 class WaveformClient(BaseClient):
     """
@@ -81,7 +87,12 @@ class WaveformClient(BaseClient):
     @abstractmethod
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, **kwargs):
-        """Returns a Stream."""
+        """
+        Returns a Stream.
+
+        Keyword arguments are passed to the underlying concrete class.
+
+        """
         pass
 
 
@@ -94,10 +105,15 @@ class EventClient(BaseClient):
 
     @abstractmethod
     def get_events(self, starttime, endtime, minlatitude, maxlatitude,
-                   minlongitude, maxlongitude, mindepth, maxdepth,
-                   minmagnitude, maxmagnitude, magnitudetype, author,
-                   **kwargs):
-        """Returns a Catalog."""
+                   minlongitude, maxlongitude, latitute, longitude, minaradius,
+                   maxradius, mindepth, maxdepth, minmagnitude, maxmagnitude,
+                   magnitudetype, author, **kwargs):
+        """
+        Returns a Catalog.
+
+        Keyword arguments are passed to the underlying concrete class.
+
+        """
         pass
 
 
