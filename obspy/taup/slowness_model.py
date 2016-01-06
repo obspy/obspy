@@ -598,7 +598,7 @@ class SlownessModel(object):
         :returns: The slowness, in s/km.
         :rtype: float
         """
-        if velocity == 0:
+        if np.any(velocity == 0):
             raise SlownessModelError(
                 "toSlowness: velocity can't be zero, at depth" +
                 str(depth),
