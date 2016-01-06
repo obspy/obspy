@@ -3054,11 +3054,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         nthreads = kwargs.get('nthreads')
         nprocs = kwargs.get('nprocs')
-        if nthreads is None and nprocs is None:
-            # serial instrument response removal
-            for tr in self:
-                tr.remove_response(*args, **kwargs)
-        elif nprocs is None:
+        if nthreads:
             # parallel instrument response removal [threading module]
             try:
                 nthreads = int(kwargs.get('nthreads'))
@@ -3089,8 +3085,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             if not threads_alive:
                 raise Exception('A thread crashed!')
-        else:
-            # parallel instrument response removal [threading module]
+        elif nprocs:
+            # parallel instrument response removal [multiprocessing module]
             try:
                 nprocs = int(kwargs.get('nprocs'))
                 # the nthreads arguments has to be removed because it is
@@ -3103,6 +3099,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             pool = Pool(processes=nprocs)
             self.traces = pool.map(_remove_response_parallel,
                 zip(self.traces, [kwargs for i in range(len(self))]))
+        else:
+            # serial instrument response removal
+            for tr in self:
+                tr.remove_response(*args, **kwargs)
 
         return self
 
