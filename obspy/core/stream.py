@@ -19,7 +19,9 @@ from glob import glob, has_magic
 import math
 import os
 import pickle
-from Queue import Queue
+import warnings
+from glob import glob, has_magic
+from multiprocessing import Pool
 from threading import Thread, Event
 import warnings
 
@@ -3050,11 +3052,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        if kwargs.get('nthreads') is None:
+        nthreads = kwargs.get('nthreads')
+        nprocs = kwargs.get('nprocs')
+        if nthreads is None and nprocs is None:
             # serial instrument response removal
             for tr in self:
                 tr.remove_response(*args, **kwargs)
-        else:
+        elif nprocs is None:
             # parallel instrument response removal [threading module]
             try:
                 nthreads = int(kwargs.get('nthreads'))
@@ -3085,6 +3089,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             if not threads_alive:
                 raise Exception('A thread crashed!')
+        else:
+            # parallel instrument response removal [threading module]
+            try:
+                nprocs = int(kwargs.get('nprocs'))
+                # the nthreads arguments has to be removed because it is
+                # unknown to get_evalresp_response
+                del kwargs['nprocs']
+            except Exception as err:
+                msg = 'int procs ({:d}) should be > 1'.format(nthreads)
+                raise ValueError(msg)
+
+            pool = Pool(processes=nprocs)
+            self.traces = pool.map(_remove_response_parallel,
+                zip(self.traces, [kwargs for i in range(len(self))]))
 
         return self
 
@@ -3127,6 +3145,11 @@ def readPickle(*args, **kwargs):  # noqa
 @deprecated("Renamed to '_write_pickle'. Use that instead.")
 def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
+
+
+def _remove_response_parallel( tr_params ):
+    tr_params[0].remove_response(**tr_params[1])
+    return tr_params[0]
 
 
 class InstrumentRemover(Thread):
