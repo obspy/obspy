@@ -3048,8 +3048,34 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        for tr in self:
-            tr.remove_response(*args, **kwargs)
+        if kwargs.get('nthreads') is None:
+            # serial instrument deconvolution
+            for tr in self:
+                tr.remove_response(*args, **kwargs)
+        else:
+            # parallel instrument deconvolution [threading module]
+            try:
+                nthreads = int(kwargs.get('nthreads'))
+            except Exception as err:
+                msg = 'int nthreads ({:d}) should be > 0'.format(nthreads)
+                raise ValueError(msg)
+
+            thread_names = ['Thread-{:d}'.format(i) for i in range(nthreads)]
+            threads = []
+            queue = Queue(2 * nthreads)
+            for name in thread_names:
+                thread = InstrumentRemover(name, queue, params)
+                thread.setDaemon(True)
+                thread.start()
+                threads.append(thread)
+
+            # fill queue
+            for tr in waveforms:
+                queue.put(tr)
+
+            # wait until queue is empty
+            queue.join()
+
         return self
 
     def remove_sensitivity(self, *args, **kwargs):
@@ -3091,6 +3117,38 @@ def readPickle(*args, **kwargs):  # noqa
 @deprecated("Renamed to '_write_pickle'. Use that instead.")
 def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
+
+
+class InstrumentRemover(Thread):
+    """
+    After this thread is launched, it can be fed with trace objects to remove
+    their attached instrument response.
+    """
+    def __init__(self, name, q, params):
+        """
+        :param name: the thread's name
+        :param q: a Queue object that is filled with traces
+        :param params: a dictionary that is passed to remove_response
+        """
+        Thread.__init__(self, name=name)
+        self.name = name
+        self.q = q
+        self.params = params
+        self.exitflag = Event()
+
+    def run(self):
+        while True:
+            try:
+                tr = self.q.get()
+                tr.remove_response(**self.params)
+                self.q.task_done()
+            except Exception as err:
+                print err
+                # self.exit() this doesn't work yet unfortunately
+
+    def exit(self):
+        self.exitflag.set()
+        self.join()
 
 
 def _is_pickle(filename):  # @UnusedVariable
