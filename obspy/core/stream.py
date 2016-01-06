@@ -3061,7 +3061,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 # the nthreads arguments has to be removed because it is
                 # unknown to get_evalresp_response
                 del kwargs['nthreads']
-            except Exception as err:
+            except Exception:
                 msg = 'int nthreads ({:d}) should be > 0'.format(nthreads)
                 raise ValueError(msg)
 
@@ -3079,9 +3079,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 queue.put(tr)
 
             # wait until queue is empty or a thread crashed
-            threads_alive = all([thread.isAlive() for thread in threads])
+            threads_alive = all([thr.isAlive() for thr in threads])
             while not queue.empty() and threads_alive:
-                alive = all([thread.isAlive() for thread in threads])
+                threads_alive = all([thr.isAlive() for thr in threads])
 
             if not threads_alive:
                 raise Exception('A thread crashed!')
@@ -3092,13 +3092,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 # the nthreads arguments has to be removed because it is
                 # unknown to get_evalresp_response
                 del kwargs['nprocs']
-            except Exception as err:
-                msg = 'int procs ({:d}) should be > 1'.format(nthreads)
+            except Exception:
+                msg = 'int nprocs ({:d}) should be > 1'.format(nthreads)
                 raise ValueError(msg)
 
             pool = Pool(processes=nprocs)
-            self.traces = pool.map(_remove_response_parallel,
-                zip(self.traces, [kwargs for i in range(len(self))]))
+            args = zip(self.traces, [kwargs for i in range(len(self))])
+            self.traces = pool.map(_remove_response_parallel, args)
         else:
             # serial instrument response removal
             for tr in self:
@@ -3147,7 +3147,7 @@ def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
 
 
-def _remove_response_parallel( tr_params ):
+def _remove_response_parallel(tr_params):
     tr_params[0].remove_response(**tr_params[1])
     return tr_params[0]
 
