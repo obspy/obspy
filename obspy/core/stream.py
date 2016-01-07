@@ -21,8 +21,7 @@ import os
 import pickle
 import warnings
 from glob import glob, has_magic
-from multiprocessing import Pool
-from threading import Thread, Event
+from multiprocessing.dummy import Pool
 import warnings
 
 from pkg_resources import load_entry_point
@@ -3022,9 +3021,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise
         return skipped_traces
 
-    def remove_response(self, *args, **kwargs):
+    def remove_response(self, nthreads=-1, *args, **kwargs):
         """
         Deconvolve instrument response for all Traces in Stream.
+
+        :param nthreads: specifies the number of threads used. This can speed
+            up instrument removal due to parallel execution on a multicore
+            machine
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.remove_response` method of
@@ -3052,50 +3055,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        nthreads = kwargs.get('nthreads')
-        nprocs = kwargs.get('nprocs')
-        if nthreads:
-            # parallel instrument response removal [threading module]
-            try:
-                nthreads = int(kwargs.get('nthreads'))
-                # the nthreads arguments has to be removed because it is
-                # unknown to get_evalresp_response
-                del kwargs['nthreads']
-            except Exception:
-                msg = 'int nthreads ({:d}) should be > 0'.format(nthreads)
-                raise ValueError(msg)
-
-            thread_names = ['Thread-{:d}'.format(i) for i in range(nthreads)]
-            threads = []
-            queue = Queue(maxsize=len(self))
-            for name in thread_names:
-                thread = InstrumentRemover(name, queue, kwargs)
-                thread.setDaemon(True)
-                thread.start()
-                threads.append(thread)
-
-            # fill queue
-            for tr in self:
-                queue.put(tr)
-
-            # wait until queue is empty or a thread crashed
-            threads_alive = all([thr.isAlive() for thr in threads])
-            while not queue.empty() and threads_alive:
-                threads_alive = all([thr.isAlive() for thr in threads])
-
-            if not threads_alive:
-                raise Exception('A thread crashed!')
-        elif nprocs:
-            # parallel instrument response removal [multiprocessing module]
-            try:
-                nprocs = int(kwargs.get('nprocs'))
-                # the nthreads arguments has to be removed because it is
-                # unknown to get_evalresp_response
-                del kwargs['nprocs']
-            except Exception:
-                msg = 'int nprocs ({:d}) should be > 1'.format(nthreads)
-                raise ValueError(msg)
-
+        if nthreads > 0:
+            # multi-threaded instrument response removal. multiprocessing.dummy
+            # uses threads with the Pool API of multiprocessing
             pool = Pool(processes=nprocs)
             args = zip(self.traces, [kwargs for i in range(len(self))])
             self.traces = pool.map(_remove_response_parallel, args)
@@ -3150,40 +3112,6 @@ def writePickle(*args, **kwargs):  # noqa
 def _remove_response_parallel(tr_params):
     tr_params[0].remove_response(**tr_params[1])
     return tr_params[0]
-
-
-class InstrumentRemover(Thread):
-    """
-    After this thread is launched, it can be fed with trace objects to remove
-    their attached instrument response.
-    """
-    def __init__(self, name, q, params):
-        """
-        :param name: the thread's name
-        :param q: a Queue object that is filled with traces
-        :param params: a dictionary that is passed to remove_response
-        """
-        Thread.__init__(self, name=name)
-        self.name = name
-        self.q = q
-        self.params = params
-        self._exit = Event()
-
-    def run(self):
-        while not self._exit.is_set():
-            try:
-                tr = self.q.get()
-                tr.remove_response(**self.params)
-                self.q.task_done()
-            except Exception as err:
-                print(err)
-                self.exit()
-            except KeyboardInterrupt:
-                print('interrupted by user')
-                self.exit()
-
-    def exit(self):
-        self._exit.set()
 
 
 def _is_pickle(filename):  # @UnusedVariable
