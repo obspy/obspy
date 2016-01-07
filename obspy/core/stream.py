@@ -3058,9 +3058,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if nthreads > 0:
             # multi-threaded instrument response removal. multiprocessing.dummy
             # uses threads with the Pool API of multiprocessing
-            pool = Pool(processes=nprocs)
+            pool = Pool(processes=nthreads)
             args = zip(self.traces, [kwargs for i in range(len(self))])
-            self.traces = pool.map(_remove_response_parallel, args)
+            pool.map(_remove_response_parallel, args)
         else:
             # serial instrument response removal
             for tr in self:
@@ -3110,8 +3110,8 @@ def writePickle(*args, **kwargs):  # noqa
 
 
 def _remove_response_parallel(tr_params):
+    """inplace instrument removal"""
     tr_params[0].remove_response(**tr_params[1])
-    return tr_params[0]
 
 
 def _is_pickle(filename):  # @UnusedVariable
