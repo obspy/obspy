@@ -107,13 +107,11 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class EventClient(BaseClient):
+class EventClient(with_metaclass(ABCMeta,BaseClient)):
     """
     Base class for Clients supporting Catalog objects.
 
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def get_events(self, *args, **kwargs):
         """
