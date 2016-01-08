@@ -107,7 +107,7 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         pass
 
 
-class EventClient(with_metaclass(ABCMeta,BaseClient)):
+class EventClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Catalog objects.
 
