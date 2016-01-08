@@ -36,14 +36,14 @@ class MyNewClient(WaveformClient, StationClient):
     def get_server_version(self):
         self.conn.get_version()
 
-    def get_waveforms(self, network, station, location, channel, starttime
+    def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
         return self.conn.fetch_mseed(network, station, location, channel,
                                      starttime, endtime)
 
     def get_stations(self, network, station, location, channel, starttime,
                      endtime):
-        return self.conn.fetch_inventory(network, station, location, channel
+        return self.conn.fetch_inventory(network, station, location, channel,
                                          starttime, endtime)
 
 """
@@ -69,11 +69,6 @@ class BaseClient(object):
     @abstractmethod
     def get_service_version(self):
         """Return a semantic version number as a string."""
-        pass
-
-    @abstractmethod
-    def get_client_version(self):
-        """Returns a client version number as a string."""
         pass
 
 
