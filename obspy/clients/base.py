@@ -80,12 +80,31 @@ class WaveformClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_waveforms(self, network, station, location, channel, starttime,
-                      endtime, **kwargs):
+    def get_waveforms(self, *args, **kwargs):
         """
         Returns a Stream.
 
         Keyword arguments are passed to the underlying concrete class.
+
+        :type network: str
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated. Wildcards are allowed.
+        :type station: str
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated. Wildcards are allowed.
+        :type location: str
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated. Wildcards are allowed.
+        :type channel: str
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit results to time series samples on or after the
+            specified start time
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit results to time series samples on or before the
+            specified end time
 
         """
         pass
@@ -99,14 +118,56 @@ class EventClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_events(self, starttime, endtime, minlatitude, maxlatitude,
-                   minlongitude, maxlongitude, latitute, longitude, minaradius,
-                   maxradius, mindepth, maxdepth, minmagnitude, maxmagnitude,
-                   magnitudetype, author, **kwargs):
+    def get_events(self, *args, **kwargs):
         """
         Returns a Catalog.
 
         Keyword arguments are passed to the underlying concrete class.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit to events on or after the specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit to events on or before the specified end time.
+        :type minlatitude: float, optional
+        :param minlatitude: Limit to events with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float, optional
+        :param maxlatitude: Limit to events with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float, optional
+        :param minlongitude: Limit to events with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float, optional
+        :param maxlongitude: Limit to events with a longitude smaller than the
+            specified maximum.
+        :type latitude: float, optional
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float, optional
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius: float, optional
+        :param minradius: Limit to events within the specified minimum number
+            of degrees from the geographic point defined by the latitude and
+            longitude parameters.
+        :type maxradius: float, optional
+        :param maxradius: Limit to events within the specified maximum number
+            of degrees from the geographic point defined by the latitude and
+            longitude parameters.
+        :type mindepth: float, optional
+        :param mindepth: Limit to events with depth more than the specified
+            minimum.
+        :type maxdepth: float, optional
+        :param maxdepth: Limit to events with depth less than the specified
+            maximum.
+        :type minmagnitude: float, optional
+        :param minmagnitude: Limit to events with a magnitude larger than the
+            specified minimum.
+        :type maxmagnitude: float, optional
+        :param maxmagnitude: Limit to events with a magnitude smaller than the
+            specified maximum.
+        :type magnitudetype: str, optional
+        :param magnitudetype: Specify a magnitude type to use for testing the
+            minimum and maximum limits.
 
         """
         pass
@@ -120,7 +181,69 @@ class StationClient(BaseClient):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get_stations(self, network, station, location, channel, starttime,
-                     endtime, **kwargs):
-        """Returns an Inventory."""
+    def get_stations(self, *args, **kwargs):
+        """
+        Returns an Inventory.
+
+        Keyword arguments are passed to the underlying concrete class.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit to metadata epochs starting on or after the
+            specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit to metadata epochs ending on or before the
+            specified end time.
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startbefore: Limit to metadata epochs starting before specified
+            time.
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param startafter: Limit to metadata epochs starting after specified
+            time.
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endbefore: Limit to metadata epochs ending before specified
+            time.
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endafter: Limit to metadata epochs ending after specified time.
+        :type network: str
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated.
+        :type station: str
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated.
+        :type location: str
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated. As a special case ``“--“`` (two
+            dashes) will be translated to a string of two space characters to
+            match blank location IDs.
+        :type channel: str
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated.
+        :type minlatitude: float
+        :param minlatitude: Limit to stations with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float
+        :param maxlatitude: Limit to stations with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float
+        :param minlongitude: Limit to stations with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float
+        :param maxlongitude: Limit to stations with a longitude smaller than
+            the specified maximum.
+        :type latitude: float
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius: float
+        :param minradius: Limit results to stations within the specified
+            minimum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type maxradius: float
+        :param maxradius: Limit results to stations within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+
+        """
         pass
