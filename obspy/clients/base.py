@@ -50,6 +50,7 @@ class MyNewClient(WaveformClient, StationClient):
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
+from future.utils import with_metaclass
 
 from abc import ABCMeta, abstractmethod
 
@@ -59,26 +60,22 @@ class ClientException(Exception):
     pass
 
 
-class BaseClient(object):
+class BaseClient(with_metaclass(ABCMeta, object)):
     """
     Base class for common methods.
 
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def get_service_version(self):
         """Return a semantic version number as a string."""
         pass
 
 
-class WaveformClient(BaseClient):
+class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Stream objects.
 
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def get_waveforms(self, *args, **kwargs):
         """
@@ -173,13 +170,11 @@ class EventClient(BaseClient):
         pass
 
 
-class StationClient(BaseClient):
+class StationClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Inventory objects.
 
     """
-    __metaclass__ = ABCMeta
-
     @abstractmethod
     def get_stations(self, *args, **kwargs):
         """
