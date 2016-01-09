@@ -2584,7 +2584,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             bbox = dict(boxstyle="round", fc="w", alpha=1, ec="w")
             bbox1 = dict(boxstyle="round", fc="blue", alpha=0.15)
             bbox2 = dict(boxstyle="round", fc="red", alpha=0.15)
-            if fig is not None:
+            if fig is None:
                 fig = plt.figure(figsize=(14, 10))
             fig.suptitle(str(self))
             ax1 = fig.add_subplot(321)
@@ -2598,9 +2598,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             ax6 = fig.add_subplot(326, sharex=ax4)
             for ax_ in (ax1, ax2, ax3, ax4, ax5, ax6):
                 ax_.grid(zorder=-10)
-            ax1.text(0.05, 0.1, 'pre_filt: %s' % str(pre_filt),
-                     ha="left", va="bottom", transform=ax1.transAxes,
-                     fontsize="large", bbox=bbox, zorder=5)
+            text = 'pre_filt: (%.2f %.2f %.2f %.2f)' % pre_filt
+            ax1.text(0.05, 0.1, text, ha="left", va="bottom",
+                     transform=ax1.transAxes, fontsize="large", bbox=bbox,
+                     zorder=5)
             ax1.set_ylabel("Data spectrum, raw", bbox=bbox1)
             ax1b.set_ylabel("'pre_filt' taper fraction", bbox=bbox2)
             evalresp_info = "\n".join(
@@ -2687,8 +2688,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if plot:
             ax6.plot(times, data, color="k")
             plt.subplots_adjust(wspace=0.4)
-            if plot is True:
+            if plot is True and fig is None:
                 plt.show()
+            elif plot is True and fig is not None:
+                pass
             else:
                 plt.savefig(plot)
                 plt.close(fig)

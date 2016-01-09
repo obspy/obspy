@@ -32,7 +32,7 @@ def utlGeoKm(*args, **kwargs):
 
 def util_geo_km(orig_lon, orig_lat, lon, lat):
     """
-    Transform lon, lat to km in reference to orig_lon and orig_lat on the
+    Transform lon, lat to km with reference to orig_lon and orig_lat on the
     elliptic Earth.
 
     >>> util_geo_km(12.0, 48.0, 12.0, 48.0)
