@@ -2401,7 +2401,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
-                        plot=False, **kwargs):
+                        plot=False, fig=None, **kwargs):
         """
         Deconvolve instrument response.
 
@@ -2584,7 +2584,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             bbox = dict(boxstyle="round", fc="w", alpha=1, ec="w")
             bbox1 = dict(boxstyle="round", fc="blue", alpha=0.15)
             bbox2 = dict(boxstyle="round", fc="red", alpha=0.15)
-            fig = plt.figure(figsize=(14, 10))
+            if fig is not None:
+                fig = plt.figure(figsize=(14, 10))
             fig.suptitle(str(self))
             ax1 = fig.add_subplot(321)
             ax1b = ax1.twinx()
