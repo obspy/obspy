@@ -922,7 +922,7 @@ class Stream(object):
             This results in a potentially worse performance but the interactive
             matplotlib view can be used properly.
             Defaults to 'fast'.
-        :param type: Type may be set to either: ``'normal'`` to produce the 
+        :param type: Type may be set to either: ``'normal'`` to produce the
             standard plot; ``'dayplot'`` to create a one-day plot for a single
             Trace; ``'relative'`` to convert all date/time information to a
             relative scale starting the seismogram at 0 seconds; ``'section'``
