@@ -3055,16 +3055,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        if nthreads > 0:
-            # multi-threaded instrument response removal. multiprocessing.dummy
-            # uses threads with the Pool API of multiprocessing
-            pool = Pool(processes=nthreads)
-            args = zip(self.traces, [kwargs for i in range(len(self))])
-            pool.map(_remove_response_parallel, args)
-        else:
-            # serial instrument response removal
-            for tr in self:
-                tr.remove_response(*args, **kwargs)
+        # Guard against empty Stream objects:
+        if not len(self):
+            return self
+
+        # multi-threaded instrument response removal. multiprocessing.dummy
+        # uses threads with the Pool API of multiprocessing
+        nthreads_clip = max(1, min(int(nthreads), len(self.traces)))
+        pool = Pool(processes=nthreads_clip)
+        args = zip(self.traces, [kwargs for i in range(len(self))])
+        # the following is a hack because pool.map doesn't recognize
+        # KeyboardInterrupts and hangs. For more info see:
+        # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
+        # with-pythons-multiprocessing-pool'
+        pool.map_async(_remove_response_parallel, args).get(9999999)
+        pool.close()
+        pool.join()
 
         return self
 
