@@ -9,16 +9,16 @@ Base classes for uniform Client interfaces.
     (http://www.gnu.org/copyleft/lesser.html)
 
 
-Enforce common interfaces for ObsPy client classes using Abstract Base Classes.
-Common interfaces provide the ability to write applications that employ any
-Client, regardless of its origin, and to expect to get a Stream from a
-get_waveforms method, a Catalog from a get_events method, and an Inventory from
-a get_stations method. This encourages Client writers to connect their data
-sources to Stream, Inventory, and Catalog types, and encourage users to rely on
-them in their applications.  Three base classes are provided: one for clients
-that return waveforms, one for those that return events, and one for those that
-return stations.  Each inherits from a common base class, which contains
-methods common to all.
+This module defines common interfaces for ObsPy client classes, using Abstract
+Base Classes.  These common interfaces are a place to explicitly declare the
+intent for any Client, regardless of its origin, and to return a Stream from
+a get_waveforms method, a Catalog from a get_events method, and an Inventory
+from a get_stations method. This encourages Client writers to connect their
+data sources to Stream, Inventory, and Catalog types, and encourage users to
+rely on them in their applications.  Four base classes are provided: one for
+clients that return waveforms, one for those that return events, and one for
+those that return stations.  Each inherits from a common base class, which
+contains methods common to all.
 
 Individual client classes inherit from one or more of WaveformClient,
 EventClient, and StationClient, and re-program the get_waveforms, get_events,
