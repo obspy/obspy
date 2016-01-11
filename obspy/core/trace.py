@@ -2598,7 +2598,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             ax6 = fig.add_subplot(326, sharex=ax4)
             for ax_ in (ax1, ax2, ax3, ax4, ax5, ax6):
                 ax_.grid(zorder=-10)
-            text = 'pre_filt: ({:.2f} {:.2f} {:.2f} {:.2f})'.format(*pre_filt)
+            text = 'pre_filt: ({:.3g} {:.3g} {:.3g} {:.3g})'.format(*pre_filt)
             ax1.text(0.05, 0.1, text, ha="left", va="bottom",
                      transform=ax1.transAxes, fontsize="large", bbox=bbox,
                      zorder=5)
