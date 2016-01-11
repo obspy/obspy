@@ -33,7 +33,7 @@ class MyNewClient(WaveformClient, StationClient):
         if url:
             self.conn = open(url)
 
-    def get_server_version(self):
+    def get_service_version(self):
         self.conn.get_version()
 
     def get_waveforms(self, network, station, location, channel, starttime,
