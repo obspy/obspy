@@ -50,9 +50,27 @@ class MyNewClient(WaveformClient, StationClient):
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import with_metaclass
+from future.utils import PY2, with_metaclass
 
 from abc import ABCMeta, abstractmethod
+import platform
+import sys
+
+import obspy
+
+
+# Default user agents all HTTP clients should utilize.
+if PY2:
+    platform_ = platform.platform().decode("ascii", "ignore")
+else:
+    encoding = sys.getdefaultencoding() or "UTF-8"
+    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+# The default User Agent that will be sent with every request.
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (
+    obspy.__version__, platform_, platform.python_version())
+# The user agent tests should use by default.
+DEFAULT_TESTING_USER_AGENT = "ObsPy %s (test suite) (%s, Python %s)" % (
+    obspy.__version__, platform_, platform.python_version())
 
 
 class ClientException(Exception):
