@@ -208,7 +208,7 @@ HEADER_DOCSTRING = """
 Field Name   Type Description
 ============ ==== ===============================================
 """ + HDR_DESC + \
-        "\n============ ==== ==============================================="
+    "\n============ ==== ==============================================="
 
 # Module documentation string
 __doc__ = MODULE_DOCSTRING + HEADER_DOCSTRING

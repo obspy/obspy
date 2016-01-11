@@ -1434,7 +1434,7 @@ class PPSD(object):
             if getattr(self, key) != data[key].item():
                 msg = ("Mismatch in version numbers (%s) between current data "
                        "(%s) and loaded data (%s).") % (
-                            key, getattr(self, key), data[key].item())
+                           key, getattr(self, key), data[key].item())
                 warnings.warn(msg)
         _times_data = data["_times_data"].tolist()
         _times_gaps = data["_times_gaps"].tolist()

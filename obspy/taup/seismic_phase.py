@@ -1398,8 +1398,8 @@ class SeismicPhase(object):
                                     'error should not occur.'), e)
 
         incident_angle = np.degrees(math.asin(np.clip(
-                incident_velocity * ray_param /
-                (self.tMod.radiusOfEarth - self.receiver_depth), -1.0, 1.0)))
+            incident_velocity * ray_param /
+            (self.tMod.radiusOfEarth - self.receiver_depth), -1.0, 1.0)))
         if self.downGoing[-1]:
             incident_angle = 180 - incident_angle
 

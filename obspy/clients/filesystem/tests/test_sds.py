@@ -86,7 +86,7 @@ class SDSTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
-             inspect.getfile(inspect.currentframe()))), "data")
+            inspect.getfile(inspect.currentframe()))), "data")
 
     def test_read_from_SDS(self):
         """

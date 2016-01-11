@@ -1007,7 +1007,7 @@ class SACTrace(object):
                 assert self._hf.dtype.byteorder == self._hi.dtype.byteorder
             else:
                 assert self._hf.dtype.byteorder == self._hi.dtype.byteorder ==\
-                        self.data.dtype.byteorder
+                    self.data.dtype.byteorder
         except AssertionError:
             msg = 'Inconsistent header/data byteorders.'
             raise SacError(msg)
