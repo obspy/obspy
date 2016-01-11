@@ -10,12 +10,22 @@ Example
 For a full scan, computing list of streams to check and data
 availability percentage and gaps (note how to specify an empty location code):
 
-$ obspy-sds-report -r /bay200/mseed_online/archive -o /tmp/sds_report \
- -l "" -l 00 -c EHZ -c HHZ -c ELZ -i BW.PFORL..HJZ -i BW.RLAS..HJZ
+.. code-block:: bash
+
+    $ obspy-sds-report -r /bay200/mseed_online/archive -o /tmp/sds_report \
+-l "" -l 00 -c EHZ -c HHZ -c ELZ -i BW.PFORL..HJZ -i BW.RLAS..HJZ
 
 For a subsequent update of latency only:
 
-$ obspy-sds-report -r /bay200/mseed_online/archive -o /tmp/sds_report --update
+.. code-block:: bash
+
+    $ obspy-sds-report -r /bay200/mseed_online/archive -o /tmp/sds_report \
+--update
+
+Screenshot of resulting html page (cut off at the bottom):
+
+.. image:: /_static/sds_report.png
+
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
