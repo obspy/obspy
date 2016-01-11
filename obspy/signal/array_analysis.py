@@ -1250,28 +1250,37 @@ class SeismicArray(object):
 
     @staticmethod
     def _three_c_dowhiten(fcoeffZ, fcoeffN, fcoeffE, deltaf):
-        # amplitude spectra whitening with moving average and window width ww
-        # and weighting factor: 1/((Z+E+N)/3)
+        """
+        Amplitude spectra whitening with moving average and window width ww
+        and weighting factor: 1/((Z+E+N)/3)
+        """
         for nst in range(fcoeffZ.shape[0]):
             for nwin in range(fcoeffZ.shape[1]):
                 ampZ = np.abs(fcoeffZ[nst, nwin, :])
                 ampN = np.abs(fcoeffN[nst, nwin, :])
                 ampE = np.abs(fcoeffE[nst, nwin, :])
+                # todo: why choose this constant?
                 ww = int(round(0.01 / deltaf))
+                # Window width must be at least 2:
+                if ww == 0:
+                    ww = 2
                 if ww % 2:
                     ww += 1
-                nn = len(ampZ)
-                csamp = np.zeros((nn, 3), dtype=ampZ.dtype)
+                n_freqs = len(ampZ)
+                csamp = np.zeros((n_freqs, 3), dtype=ampZ.dtype)
                 csamp[:, 0] = np.cumsum(ampZ)
                 csamp[:, 1] = np.cumsum(ampE)
                 csamp[:, 2] = np.cumsum(ampN)
-                ampw = np.zeros(nn, dtype=csamp.dtype)
+                ampw = np.zeros(n_freqs, dtype=csamp.dtype)
                 for k in range(3):
-                    ampw[ww / 2:nn - ww / 2] += (csamp[ww:, k] -
-                                                 csamp[:-ww, k]) / ww
-                ampw[nn - ww / 2:] = ampw[nn - ww / 2 - 1]
+                    ampw[ww / 2:n_freqs - ww / 2] += (csamp[ww:, k] -
+                                                      csamp[:-ww, k]) / ww
+                # Fill zero elements at start and end of array with closest
+                # non-zero value.
+                ampw[n_freqs - ww / 2:] = ampw[n_freqs - ww / 2 - 1]
                 ampw[:ww / 2] = ampw[ww / 2]
                 ampw *= 1 / 3.
+                # Weights are 1/ampw unless ampw is very small, then 0.
                 weight = np.where(ampw > np.finfo(np.float).eps * 10.,
                                   1. / (ampw + np.finfo(np.float).eps), 0.)
                 fcoeffZ[nst, nwin, :] *= weight
@@ -1597,7 +1606,7 @@ class SeismicArray(object):
                                     smin, smax, sstep, wavetype,
                                     freq_range, plot_frequencies=None,
                                     n_min_stns=7, win_average=1, win_frac=1,
-                                    whiten=False, coherency=True,
+                                    whiten=False, coherency=False,
                                     plot_transff=False):
         """
         Do three-component beamforming following [Esmersoy1985]_.
