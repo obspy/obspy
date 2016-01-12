@@ -45,15 +45,15 @@ class SeismicArray(object):
     Class representing a seismic array.
 
     The SeimicArray class is a named container for an
-    :class:`~obspy.core.inventory.Inventory` containing the components making
-    up the array along with methods for array processing. It does not contain
-    any seismic data. The locations of the array components (stations or
-    channels) must be set in the respective objects (for an overview of the
-    inventory system, see :mod:`~obspy.station`). While the inventory must
-    be composed of :class:`~obspy.station.station.Station` and/or :class:
-    `~obspy.station.channel.Channel` objects, they do not need to represent
-    actual seismic stations; their only required attribute is the location
-    information.
+    :class:`~obspy.core.inventory.Inventory` containing the components
+    making up the array along with methods for array processing. It does not
+    contain any seismic data. The locations of the array components
+    (stations or channels) must be set in the respective objects (for an
+    overview of the inventory system, see :mod:`~obspy.station`). While the
+    inventory must be composed of :class:`~obspy.station.station.Station`
+    and/or :class:`~obspy.station.channel.Channel` objects, they do not need
+    to represent actual seismic stations; their only required attribute is
+    the location information.
 
     :param name: Array name.
     :type name: str
@@ -1288,7 +1288,7 @@ class SeismicArray(object):
                 fcoeffN[nst, nwin, :] *= weight
         return fcoeffZ, fcoeffN, fcoeffE
 
-    def _three_c_plot_transfer_function(self, u, periods):
+    def _three_c_plot_transfer_function(self, u, freqs):
         """
         Plot transfer function of input array geometry 2D.
         """
@@ -1306,8 +1306,8 @@ class SeismicArray(object):
         steering = u_y * y_ + u_x * x_
         theo_backazi = theo_backazi[:, 0]
         beamres = np.zeros((len(theo_backazi), u.size))
-        for p in periods:
-            omega = 2. * math.pi / p
+        for f in freqs:
+            omega = 2. * math.pi * f
             R = np.ones((steering.shape[1], steering.shape[1]))
             for vel in range(len(u)):
                 e_steer = np.exp(-1j * steering * omega * u[vel])
@@ -1336,7 +1336,7 @@ class SeismicArray(object):
             ax.set_rmin(-0)
             fig.colorbar(CONTF)
             ax.grid(True)
-            ax.set_title('Transfer function s ' + str(p))
+            ax.set_title('Transfer function for frequency ' + str(f))
         plt.show()
 
     def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, win_frac,
@@ -1602,9 +1602,8 @@ class SeismicArray(object):
 
         return beamres, fr, incidence, window_start_times
 
-    def three_component_beamforming(self, stream_N, stream_E, stream_Z, wlen,
-                                    smin, smax, sstep, wavetype,
-                                    freq_range, plot_frequencies=None,
+    def three_component_beamforming(self, stream_n, stream_e, stream_z, wlen,
+                                    smin, smax, sstep, wavetype, freq_range,
                                     n_min_stns=7, win_average=1, win_frac=1,
                                     whiten=False, coherency=False,
                                     plot_transff=False):
@@ -1625,9 +1624,9 @@ class SeismicArray(object):
         NB all channels of a station must be located in the same location for
         this method.
 
-        :param stream_N: Stream of all traces for the North component.
-        :param stream_E: stream of East components
-        :param stream_Z: stream of Up components. Will be ignored for Love
+        :param stream_n: Stream of all traces for the North component.
+        :param stream_e: Stream of East components.
+        :param stream_z: Stream of Up components. Will be ignored for Love
          waves.
         :param wlen: window length in seconds
         :param smin: minimum slowness of the slowness grid [s/km]
@@ -1638,14 +1637,17 @@ class SeismicArray(object):
         :param freq_range: Frequency band (min, max) that is used for
          beamforming and returned. Ideally, use the frequency band of the
          pre-filter.
-        :param plot_frequencies: frequencies to plot
-        :param n_min_stns: required minimum number of stations
+        :param n_min_stns: Minimum number of stations for which data must be
+         present in a time window, otherwise that window is skipped.
         :param win_average: number of windows to average covariance matrix over
         :param win_frac: fraction of sliding window to use for step
         :param whiten: whether to whiten the frequency spectrum
         :param coherency: whether to normalise the powers
-        :param plot_transff: whether to also plot the transfer function of the
-         array (only considering stations/channels for which data is present)
+        :param plot_transff: Whether to also plot the transfer function of the
+         array. This the transfer function resulting from only those
+         stations/channels for which data is present, not necessarily the
+         entire array. The transfer function is plotted for the minimum and
+         maximum frequencies of the given frequency range.
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
         object containing the beamforming results, with dimensions of
         backazimuth range, slowness range, number of windows and number of
@@ -1657,25 +1659,25 @@ class SeismicArray(object):
         if wavetype.lower() not in pol_dict:
             raise ValueError('Invalid option for wavetype: {}'
                              .format(wavetype))
-        if len(set(len(vel.traces) for vel in (stream_N, stream_E,
-                                               stream_Z))) > 1:
+        if len(set(len(vel.traces) for vel in (stream_n, stream_e,
+                                               stream_z))) > 1:
             raise ValueError("All three streams must have same number of "
                              "traces.")
-        if len(stream_N.traces) == 0:
+        if len(stream_n.traces) == 0:
             raise ValueError("Streams do not seem to contain any traces.")
 
         # from _array_analysis_helper:
         starttime = max(max([tr.stats.starttime for tr in st]) for st in
-                        (stream_N, stream_E, stream_E))
+                        (stream_n, stream_e, stream_e))
         min_starttime = min(min([tr.stats.starttime for tr in st]) for st in
-                            (stream_N, stream_E, stream_E))
+                            (stream_n, stream_e, stream_e))
         endtime = min(min([tr.stats.endtime for tr in st]) for st in
-                      (stream_N, stream_E, stream_E))
+                      (stream_n, stream_e, stream_e))
         max_endtime = max(max([tr.stats.endtime for tr in st]) for st in
-                          (stream_N, stream_E, stream_E))
+                          (stream_n, stream_e, stream_e))
 
-        delta_common = stream_N.traces[0].stats.delta
-        npts_common = stream_N.traces[0].stats.npts
+        delta_common = stream_n.traces[0].stats.delta
+        npts_common = stream_n.traces[0].stats.npts
         if max(abs(min_starttime - starttime),
                abs(max_endtime - endtime)) > delta_common:
             raise ValueError("Traces do not have identical start/end times. "
@@ -1684,7 +1686,7 @@ class SeismicArray(object):
                              "of samples!")
 
         # Check for equal deltas and number of samples:
-        for st in (stream_N, stream_E, stream_Z):
+        for st in (stream_n, stream_e, stream_z):
             for tr in st:
                 if tr.stats.npts != npts_common:
                     raise ValueError('Traces do not have identical number of '
@@ -1695,10 +1697,10 @@ class SeismicArray(object):
         datalen_sec = endtime - starttime
 
         # Sort all traces just to make sure they're in the same order.
-        for st in (stream_N, stream_E, stream_Z):
+        for st in (stream_n, stream_e, stream_z):
             st.sort()
 
-        for trN, trE, trZ in zip(stream_N, stream_E, stream_Z):
+        for trN, trE, trZ in zip(stream_n, stream_e, stream_z):
             if len(set('{}.{}'.format(tr.stats.network, tr.stats.station)
                        for tr in (trN, trE, trZ))) > 1:
                 raise ValueError("Traces are not from same stations.")
@@ -1708,7 +1710,7 @@ class SeismicArray(object):
         # Otherwise self.geometry and the xyz geometry arrays will have more
         # entries than the stream.
         invbkp = copy.deepcopy(self.inventory)
-        allstreams = stream_N + stream_E + stream_Z
+        allstreams = stream_n + stream_e + stream_z
         self.inventory_cull(allstreams)
 
         if wlen < smax * self.aperture:
@@ -1720,11 +1722,11 @@ class SeismicArray(object):
             # Slowness range evaluated for (incidence) angle measurement
             # (Rayleigh, P, SV):
             # These values are a bit arbitrary for now:
-            uindex = np.where((u > 0.5 * smax + smin)
-                              & (u < 0.8 * smax + smin))[0]
+            uindex = np.where((u > 0.5 * smax + smin) &
+                              (u < 0.8 * smax + smin))[0]
 
             bf_results, freqs, incidence, window_start_times = \
-                self._three_c_do_bf(stream_N, stream_E, stream_Z,
+                self._three_c_do_bf(stream_n, stream_e, stream_z,
                                     win_len=wlen, win_frac=win_frac, u=u,
                                     sub_freq_range=freq_range,
                                     n_min_stns=n_min_stns,
@@ -1735,11 +1737,11 @@ class SeismicArray(object):
                                     datalen_sec=datalen_sec,
                                     uindex=uindex)
 
-            # More interesting perhaps to plot the tranfer function only
-            # with the actually used stations, i.e. the culled inventory
+            # Plot the transfer function from here so it's calculated only for
+            # the actually used stations, i.e. the culled inventory.
             if plot_transff:
-                plot_periods = [1/f for f in plot_frequencies]
-                self._three_c_plot_transfer_function(u, plot_periods)
+                self._three_c_plot_transfer_function(u, [freq_range[0],
+                                                         freq_range[-1]])
 
             out = BeamformerResult(inventory=self.inventory,
                                    times=window_start_times, slowness_range=u,
