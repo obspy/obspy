@@ -1316,17 +1316,16 @@ class SeismicArray(object):
                 beamres[:, vel] = 1. / (
                     steering.shape[1] * steering.shape[1]) * abs(
                     (np.conjugate(w) * np.dot(R, wT).T).sum(1))
-            fig = plt.figure(figsize=(6, 6))
+            fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1, projection='polar')
-            jetmap = cm.get_cmap('jet')
-            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
-                                beamres.T, 100, cmap=jetmap, antialiased=True,
+            cmap = cm.hot_r
+            contf = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
+                                beamres.T, 100, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
             ax.contour((theo_backazi[::-1] + math.pi / 2.), u, beamres.T, 100,
-                       cmap=jetmap)
-            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
-                              labels=['90', '45', '0', '315', '270', '225',
-                                      '180', '135'])
+                       cmap=cmap)
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction(-1)
             ax.set_rgrids([0.1, 0.2, 0.3, 0.4, 0.5],
                           labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
                           color='r')
@@ -1334,9 +1333,9 @@ class SeismicArray(object):
             # This means that if u does not start at 0, the plot will show a
             # hole in the middle rather than stitching it up.
             ax.set_rmin(-0)
-            fig.colorbar(CONTF)
+            fig.colorbar(contf)
             ax.grid(True)
-            ax.set_title('Transfer function for frequency ' + str(f))
+            ax.set_title('Transfer function for frequency ' + str(f) + '.')
         plt.show()
 
     def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, win_frac,
@@ -1605,7 +1604,7 @@ class SeismicArray(object):
     def three_component_beamforming(self, stream_n, stream_e, stream_z, wlen,
                                     smin, smax, sstep, wavetype, freq_range,
                                     n_min_stns=7, win_average=1, win_frac=1,
-                                    whiten=False, coherency=False,
+                                    whiten=True, coherency=False,
                                     plot_transff=False):
         """
         Do three-component beamforming following [Esmersoy1985]_.
@@ -3331,7 +3330,7 @@ class BeamformerResult(object):
         datas = [maskedazipows]  # , maskedslow]
 
         xlocator = mdates.AutoDateLocator(interval_multiples=True)
-        ymajorLocator = MultipleLocator(90)
+        ymajorlocator = MultipleLocator(90)
         fig = plt.figure()
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
@@ -3346,7 +3345,7 @@ class BeamformerResult(object):
                         self._get_plotting_timestamps(extended=True)[-1]
                         + timemargin)
             ax.set_ylim(0, 360)
-            ax.yaxis.set_major_locator(ymajorLocator)
+            ax.yaxis.set_major_locator(ymajorlocator)
             cbar = fig.colorbar(pc)
             cbar.solids.set_rasterized(True)
             ax.set_ylabel('Backazimuth')
@@ -3396,25 +3395,23 @@ class BeamformerResult(object):
             Pass in a 2D bfres array of beamforming results with
             averaged or selected windows and frequencies.
             """
-            fig = plt.figure()#figsize=(9, 9))
+            fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1, projection='polar')
-            jetmap = cm.get_cmap('jet')
-            CONTF = ax.contourf((theo_backazi[::-1] + math.pi / 2.),
-                                self.slowness_range,
-                                bfres.T, 100, cmap=jetmap, antialiased=True,
+            cmap = cm.hot_r
+            contf = ax.contourf(theo_backazi, self.slowness_range, bfres.T,
+                                100, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
-            ax.contour((theo_backazi[::-1] + math.pi / 2.),
-                       self.slowness_range, bfres.T, 100, cmap=jetmap)
-            ax.set_thetagrids([0, 45., 90., 135., 180., 225., 270., 315.],
-                              labels=['90', '45', '0', '315', '270', '225',
-                                      '180', '135'])
+            ax.contour(theo_backazi, self.slowness_range, bfres.T, 100,
+                       cmap=cmap)
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction(-1)
             ax.set_rmax(self.slowness_range[-1])
             # Setting this to -0 means that if the slowness range doesn't
             # start at 0, the plot is shown with a 'hole' in the middle
             # rather than stitching it up. This behaviour shows the
             # resulting shapes much better.
             ax.set_rmin(-0)
-            fig.colorbar(CONTF)
+            fig.colorbar(contf)
             ax.grid(True)
             ax.set_title(title)
 
@@ -3429,7 +3426,7 @@ class BeamformerResult(object):
         if average_windows and average_freqs:
             _actual_plotting(beamresnz,
                              '{} beamforming result, averaged over all time '
-                             'windows\n ({} to {}) and frequencies).'
+                             'windows\n ({} to {}) and frequencies.'
                              .format(self.method, self.starttime,
                                      self.endtime))
 
@@ -3442,7 +3439,7 @@ class BeamformerResult(object):
                     ifreq = np.searchsorted(self.freqs, plot_freq)
                     _actual_plotting(beamresnz[:, :, ifreq],
                                      '{} beamforming result, averaged over all'
-                                     ' time windows\n for frequency {} Hz'
+                                     ' time windows\n for frequency {} Hz.'
                                      .format(self.method, self.freqs[ifreq]))
 
         if average_freqs and not average_windows:
@@ -3464,7 +3461,7 @@ class BeamformerResult(object):
                     for iwin in range(len(beamresnz[0, 0, :, 0])):
                         _actual_plotting(beamresnz[:, :, iwin, ifreq],
                                          '{} beamforming result, for frequency'
-                                         ' {} Hz,\n, window {} (starting {})'
+                                         ' {} Hz,\n, window {} (starting {}).'
                                          .format(self.method,
                                                  self.freqs[ifreq], iwin,
                                                  self.times[iwin]))
