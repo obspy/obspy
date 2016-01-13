@@ -1,0 +1,9 @@
+
+Model: iasp91  Receiver Depth: 50.0 km
+Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident  Purist    Purist
+  (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   Distance   Name
+-----------------------------------------------------------------------------------
+   90.00    10.0   P        772.34     4.639     14.03    19.76    90.00   = P
+   90.00    10.0   PP       985.67     7.951     24.54    35.42    90.00   = PP
+   90.00    10.0   S       1420.27     9.175     16.12    21.85    90.00   = S
+

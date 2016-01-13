@@ -21,8 +21,6 @@ Basic Usage
 
 Let's start by initializing a :class:`~obspy.taup.tau.TauPyModel` instance.
 Models can be initialized by specifying the name of a model provided by ObsPy.
-Names of available builtin models (in ``obspy/taup/data`` folder) are provided
-by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 
 >>> from obspy.taup import TauPyModel
 >>> model = TauPyModel(model="iasp91")
@@ -30,7 +28,17 @@ by :const:`~obspy.taup.BUILTIN_TAUP_MODELS`.
 Model initialization is a fairly expensive operation so make sure to do it only
 if necessary. Custom built models can be initialized by specifying an absolute
 path to a model in ObsPy's ``.npz`` model format instead of just a model name.
-See below for how to build a ``.npz`` model file.
+See below for information on how to build a ``.npz`` model file.
+
+ObsPy currently ships with the following 1D velocity models:
+
+* ``ak135``, see [KennetEngdahlBuland1995]_
+* ``iasp91``, see [KennetEngdahl1991]_
+* ``prem``, see [Dziewonski1981]_
+* ``sp6``, see [MorelliDziewonski1993]_
+* ``1066a``, see [GilbertDziewonski1975]_
+* ``1066b``, see [GilbertDziewonski1975]_
+* ``herrin``, see [Herrin1968]_
 
 Travel Times
 ^^^^^^^^^^^^
@@ -43,34 +51,34 @@ and model. Per default it returns arrivals for a number of phases.
 ...                                   distance_in_degree=67)
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 28 arrivals
-    P phase arrival at 647.036 seconds
-    pP phase arrival at 662.230 seconds
-    sP phase arrival at 668.702 seconds
-    PcP phase arrival at 674.868 seconds
-    PP phase arrival at 794.975 seconds
-    PKiKP phase arrival at 1034.106 seconds
-    pPKiKP phase arrival at 1050.535 seconds
-    sPKiKP phase arrival at 1056.727 seconds
-    S phase arrival at 1176.947 seconds
-    pS phase arrival at 1195.500 seconds
-    SP phase arrival at 1196.827 seconds
-    sS phase arrival at 1203.128 seconds
-    PS phase arrival at 1205.418 seconds
-    SKS phase arrival at 1239.088 seconds
-    SKKS phase arrival at 1239.107 seconds
-    ScS phase arrival at 1239.515 seconds
-    SKiKP phase arrival at 1242.400 seconds
-    pSKS phase arrival at 1260.313 seconds
-    sSKS phase arrival at 1266.919 seconds
-    SS phase arrival at 1437.417 seconds
-    PKIKKIKP phase arrival at 1855.260 seconds
-    SKIKKIKP phase arrival at 2063.556 seconds
-    PKIKKIKS phase arrival at 2069.749 seconds
-    SKIKKIKS phase arrival at 2277.833 seconds
-    PKIKPPKIKP phase arrival at 2353.930 seconds
-    PKPPKP phase arrival at 2356.420 seconds
-    PKPPKP phase arrival at 2358.925 seconds
-    SKIKSSKIKS phase arrival at 3208.154 seconds
+    P phase arrival at 647.041 seconds
+    pP phase arrival at 662.233 seconds
+    sP phase arrival at 668.704 seconds
+    PcP phase arrival at 674.865 seconds
+    PP phase arrival at 794.992 seconds
+    PKiKP phase arrival at 1034.098 seconds
+    pPKiKP phase arrival at 1050.529 seconds
+    sPKiKP phase arrival at 1056.721 seconds
+    S phase arrival at 1176.948 seconds
+    pS phase arrival at 1195.508 seconds
+    SP phase arrival at 1196.830 seconds
+    sS phase arrival at 1203.129 seconds
+    PS phase arrival at 1205.421 seconds
+    SKS phase arrival at 1239.090 seconds
+    SKKS phase arrival at 1239.109 seconds
+    ScS phase arrival at 1239.512 seconds
+    SKiKP phase arrival at 1242.388 seconds
+    pSKS phase arrival at 1260.314 seconds
+    sSKS phase arrival at 1266.921 seconds
+    SS phase arrival at 1437.427 seconds
+    PKIKKIKP phase arrival at 1855.271 seconds
+    SKIKKIKP phase arrival at 2063.564 seconds
+    PKIKKIKS phase arrival at 2069.756 seconds
+    SKIKKIKS phase arrival at 2277.857 seconds
+    PKIKPPKIKP phase arrival at 2353.934 seconds
+    PKPPKP phase arrival at 2356.425 seconds
+    PKPPKP phase arrival at 2358.899 seconds
+    SKIKSSKIKS phase arrival at 3208.155 seconds
 
 If you know which phases you are interested in, you can also specify them
 directly which speeds up the calculation as unnecessary phases are not
@@ -82,16 +90,16 @@ adhere to the naming scheme which is detailed later.
 ...                                   phase_list=["P", "PSPSPS"])
 >>> print(arrivals)  # doctest: +NORMALIZE_WHITESPACE
 3 arrivals
-    P phase arrival at 485.204 seconds
-    PSPSPS phase arrival at 4983.023 seconds
-    PSPSPS phase arrival at 5799.225 seconds
+    P phase arrival at 485.210 seconds
+    PSPSPS phase arrival at 4983.041 seconds
+    PSPSPS phase arrival at 5799.249 seconds
 
 Each arrival is represented by an :class:`~obspy.taup.helper_classes.Arrival`
 object which can be queried for various attributes.
 
 >>> arr = arrivals[0]
 >>> arr.ray_param, arr.time, arr.incident_angle  # doctest: +ELLIPSIS
-(453.7188..., 485.2041..., 24.3968...)
+(453.7535..., 485.2100..., 24.3988...)
 
 Ray Paths
 ^^^^^^^^^
@@ -230,6 +238,8 @@ depth to an interface involved in an interaction.
       mantle boundary
     * ``kmps`` appended to a velocity - horizontal phase velocity (see 10
       below)
+    * ``ed`` appended to ``P`` or ``S`` - an exclusively downgoing path, for a
+      receiver below the source (see 3 below)
 3. The characters ``p`` and ``s`` **always** represent up-going legs. An
    example is the source to surface leg of the phase ``pP`` from a source at
    depth. ``P`` and ``S`` can be turning waves, but always indicate downgoing
@@ -240,6 +250,13 @@ depth to an interface involved in an interaction.
    cases. For instance, ``PcP`` is allowed since the direction of the phase is
    unambiguously determined by the symbol ``c``, but would be named ``Pcp`` by
    a purist using our nomenclature.
+
+   With the ability to have sources at depth, there is a need to specify the
+   difference between a wave that is exclusively downgoing to the receiver from
+   one that turns and is upgoing at the receiver. The suffix ``ed`` can be
+   appended to indicate exclusively downgoing. So for a source at 10 km depth
+   and a receiver at 20 km depth at 0 degree distance ``P`` does not have an
+   arrival but ``Ped`` does.
 4. Numbers, except velocities for ``kmps`` phases (see 10 below), represent
    depths at which interactions take place. For example, ``P410s`` represents a
    *P*-to-*S* conversion at a discontinuity at 410km depth. Since the *S*-leg
@@ -333,26 +350,16 @@ depth to an interface involved in an interaction.
 Building custom models
 ----------------------
 
-Custom models can be built from ``.tvel`` files using the
+Custom models can be built from ``.tvel`` and ``.nd`` files using the
 :func:`~obspy.taup.taup_create.build_taup_model` function.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import os
-
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
 from .taup import getTravelTimes, travelTimePlot  # NOQA
-
-# Internal imports.
-from .taup_create import get_builtin_models as _get_builtin_models
-
-
-BUILTIN_TAUP_MODELS = [
-    os.path.splitext(os.path.basename(path))[0]
-    for path in _get_builtin_models()]
 
 
 if __name__ == '__main__':

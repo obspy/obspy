@@ -223,6 +223,11 @@ Gallery
 
     polynomial(tr.data, order=3, plot=True)
 
+.. image:: /_static/sds_report.png
+    :target: packages/autogen/obspy.scripts.sds_html_report.html
+    :alt: SDS html report
+    :scale: 50%
+
 .. raw:: html
 
     </div>

@@ -182,6 +182,15 @@ class Client(object):
                    "Please change to 'Client('NIEP')'. This re-routing will "
                    "be removed in a future release.")
             warnings.warn(msg)
+        # Deprecate FDSN URL-shortcut 'NERIES' in favour of 'EMSC', see #1146.
+        # TODO: remove in 0.12.x or 1.x release
+        elif base_url.upper() == "NERIES":
+            base_url = "EMSC"
+            msg = ("FDSN short-URL 'NERIES' has been replaced by 'EMSC'. "
+                   "Please change to 'Client('EMSC')'. This re-routing will "
+                   "be removed in a future release.")
+            warnings.warn(msg)
+
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
 

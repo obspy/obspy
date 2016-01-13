@@ -37,6 +37,7 @@ class FDSNRedirectException(FDSNException):
 URL_MAPPINGS = {
     "BGR": "http://eida.bgr.de",
     "ETH": "http://eida.ethz.ch",
+    "EMSC": "http://www.seismicportal.eu",
     "GEONET": "http://service.geonet.org.nz",
     "GFZ": "http://geofon.gfz-potsdam.de",
     "INGV": "http://webservices.rm.ingv.it",
@@ -47,7 +48,6 @@ URL_MAPPINGS = {
     "LMU": "http://erde.geophysik.uni-muenchen.de",
     "NCEDC": "http://service.ncedc.org",
     "NIEP": "http://eida-sc3.infp.ro",
-    "NERIES": "http://www.seismicportal.eu",
     "ODC": "http://www.orfeus-eu.org",
     "ORFEUS": "http://www.orfeus-eu.org",
     "RESIF": "http://ws.resif.fr",

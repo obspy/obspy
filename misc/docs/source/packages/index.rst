@@ -27,6 +27,7 @@ The functionality is provided through the following packages:
 
    obspy.scripts.runtests
    obspy.scripts.reftekrescue
+   obspy.scripts.sds_html_report
 
 .. rubric:: Waveform Import/Export Plug-ins
 

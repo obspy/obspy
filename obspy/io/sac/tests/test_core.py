@@ -15,9 +15,11 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import AttribDict
 from obspy.io.sac import SacError, SACTrace, SacIOError
 from obspy.io.sac.core import (_is_sac, _is_sacXY, _read_sac, _read_sacXY,
                                _write_sac, _write_sacXY)
+from obspy.io.sac.util import utcdatetime_to_sac_nztimes
 
 
 class CoreTestCase(unittest.TestCase):
@@ -738,6 +740,53 @@ class CoreTestCase(unittest.TestCase):
 
         with io.BytesIO() as fh:
             self.assertRaises(ValueError, st.write, fh, format="sacxy")
+
+    def test_valid_sac_from_minimal_existing_sac_header(self):
+        """
+        An incomplete manually-produced SAC header should still produce a
+        valid SAC file, including values from the ObsPy header.  Issue 1204.
+        """
+        tr = Trace(np.arange(100))
+        t = UTCDateTime()
+        tr.stats.starttime = t
+        tr.stats.station = 'AAA'
+        tr.stats.network = 'XX'
+        tr.stats.channel = 'BHZ'
+        tr.stats.location = '00'
+
+        tr.stats.sac = AttribDict()
+        tr.stats.sac.iztype = 9
+        tr.stats.sac.nvhdr = 6
+        tr.stats.sac.leven = 1
+        tr.stats.sac.lovrok = 1
+        tr.stats.sac.iftype = 1
+        tr.stats.sac.stla = 1.
+        tr.stats.sac.stlo = 2.
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+
+        # starttime made its way to SAC file
+        nztimes, microsecond = utcdatetime_to_sac_nztimes(t)
+        self.assertEqual(tr1.stats.sac.nzyear, nztimes['nzyear'])
+        self.assertEqual(tr1.stats.sac.nzjday, nztimes['nzjday'])
+        self.assertEqual(tr1.stats.sac.nzhour, nztimes['nzhour'])
+        self.assertEqual(tr1.stats.sac.nzmin, nztimes['nzmin'])
+        self.assertEqual(tr1.stats.sac.nzsec, nztimes['nzsec'])
+        self.assertEqual(tr1.stats.sac.nzmsec, nztimes['nzmsec'])
+        self.assertEqual(tr1.stats.sac.kstnm, 'AAA')
+        self.assertEqual(tr1.stats.sac.knetwk, 'XX')
+        self.assertEqual(tr1.stats.sac.kcmpnm, 'BHZ')
+        self.assertEqual(tr1.stats.sac.khole, '00')
+        self.assertEqual(tr1.stats.sac.iztype, 9)
+        self.assertEqual(tr1.stats.sac.nvhdr, 6)
+        self.assertEqual(tr1.stats.sac.leven, 1)
+        self.assertEqual(tr1.stats.sac.lovrok, 1)
+        self.assertEqual(tr1.stats.sac.iftype, 1)
+        self.assertEqual(tr1.stats.sac.stla, 1.0)
+        self.assertEqual(tr1.stats.sac.stlo, 2.0)
 
 
 def suite():
