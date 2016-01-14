@@ -988,6 +988,21 @@ class UTCDateTimeTestCase(unittest.TestCase):
             t = UTCDateTime(2011, 1, 25, 15, 32, 12 + microns / 1e6)
             self.assertEqual(microns, t.microsecond)
 
+    def test_issue1215(self):
+        """
+        Tests some non-ISO8601 strings which should be also properly parsed.
+
+        See issue #1215.
+        """
+        self.assertEqual(UTCDateTime('2015-07-03-06'),
+                         UTCDateTime(2015, 7, 3, 6, 0, 0))
+        self.assertEqual(UTCDateTime('2015-07-03-06-42'),
+                         UTCDateTime(2015, 7, 3, 6, 42, 0))
+        self.assertEqual(UTCDateTime('2015-07-03-06-42-1'),
+                         UTCDateTime(2015, 7, 3, 6, 42, 1))
+        self.assertEqual(UTCDateTime('2015-07-03-06-42-1.5123'),
+                         UTCDateTime(2015, 7, 3, 6, 42, 1, 512300))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
