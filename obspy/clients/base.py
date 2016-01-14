@@ -56,6 +56,8 @@ from abc import ABCMeta, abstractmethod
 import platform
 import sys
 
+import requests
+
 import obspy
 
 
@@ -74,8 +76,80 @@ DEFAULT_TESTING_USER_AGENT = "ObsPy %s (test suite) (%s, Python %s)" % (
 
 
 class ClientException(Exception):
-    """Base exception for Client classes."""
+    """
+    Base exception for Client classes.
+    """
     pass
+
+
+class ClientHTTPException(ClientException):
+    """
+    Exception that should be raised for all HTTP exceptions.
+    """
+    pass
+
+
+class HTTPClient(with_metaclass(ABCMeta, object)):
+    """
+    Mix-in class to add HTTP capabilities.
+
+    .. rubric:: Example
+
+    from obspy.clients.base import (WaveformClient, HTTPClient,
+                                    DEFAULT_USER_AGENT)
+
+    class NewClient(WaveformClient, HTTPClient):
+        def __init__(self, user_agent=DEFAULT_USER_AGENT):
+            HTTPClient.__init__(self, user_agent=user_agent)
+
+        def _handle_requests_http_error(self, r):
+            r.raise_for_status()
+
+        def get_service_version(self):
+            ...
+
+        def get_waveforms(...):
+            ...
+    """
+    def __init__(self, user_agent=DEFAULT_USER_AGENT):
+        self._user_agent = user_agent
+
+    @abstractmethod
+    def _handle_requests_http_error(self, r):
+        """
+        Error handling for the HTTP errors.
+
+        Method called when the _download() method downloads something with a
+        status code different than 200.
+
+        The error codes mean different things for different web services
+        thus this needs to be implemented by every HTTPClient.
+
+        :param r: The response object resulting in the error.
+        :type r: :class:`requests.Response`
+        """
+        pass
+
+    def _download(self, url, params=None):
+        """
+        Download the URL with GET and the chosen parameters.
+
+        Will only return if it manages to download with HTTP code 200,
+        otherwise the _handle_requests_http_error() method is called.
+
+        :param url: The URL to download from.
+        :type url: str
+        :param params: Additional URL parameters.
+        :type params: dict
+        :return: The response object resulting in the error.
+        :rtype: :class:`requests.Response`
+        """
+        r = requests.get(url, headers={"User-Agent": self._user_agent},
+                         params=params)
+        # Only accept code 200.
+        if r.status_code == 200:
+            return r
+        self._handle_requests_http_error(r)
 
 
 class BaseClient(with_metaclass(ABCMeta, object)):
@@ -85,14 +159,15 @@ class BaseClient(with_metaclass(ABCMeta, object)):
     """
     @abstractmethod
     def get_service_version(self):
-        """Return a semantic version number as a string."""
+        """
+        Return a semantic version number as a string.
+        """
         pass
 
 
 class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Stream objects.
-
     """
     @abstractmethod
     def get_waveforms(self, *args, **kwargs):
@@ -120,7 +195,6 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Limit results to time series samples on or before the
             specified end time
-
         """
         pass
 
@@ -128,7 +202,6 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
 class EventClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Catalog objects.
-
     """
     @abstractmethod
     def get_events(self, *args, **kwargs):
@@ -181,7 +254,6 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
         :type magnitudetype: str, optional
         :param magnitudetype: Specify a magnitude type to use for testing the
             minimum and maximum limits.
-
         """
         pass
 
@@ -189,7 +261,6 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
 class StationClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Inventory objects.
-
     """
     @abstractmethod
     def get_stations(self, *args, **kwargs):
@@ -255,6 +326,5 @@ class StationClient(with_metaclass(ABCMeta, BaseClient)):
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
-
         """
         pass
