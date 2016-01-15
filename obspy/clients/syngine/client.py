@@ -217,7 +217,9 @@ class Client(WaveformClient, HTTPClient):
             archive of SAC files, either ``miniseed`` or ``saczip``.
         :type format: str
         """
-        model = str(model).strip().lower()
+        model = model.strip().lower()
+        if not model:
+            raise ValueError("Model must be given.")
 
         # Error handling is mostly delegated to the actual syngine service.
         # Here we just check that the types are compatible.
@@ -238,7 +240,16 @@ class Client(WaveformClient, HTTPClient):
                 value = locals()[key]
                 if value is None:
                     continue
+                value = t(value)
+                # String arguments are stripped and empty strings are not
+                # allowed.
+                if t is str:
+                    value = value.strip()
+                    if not value:
+                        raise ValueError("String argument '%s' must not be "
+                                         "an empty string." % key)
                 locals()[key] = t(value)
+
 
         # These can be absolute times, relative times or phase relative times.
         # jo

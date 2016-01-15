@@ -184,6 +184,17 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["headers"],
                          {"User-Agent": DEFAULT_TESTING_USER_AGENT})
 
+    def test_error_handling_arguments(self):
+        # Floating points value
+        self.assertRaises(ValueError, self.c.get_waveforms, model="test",
+                          receiverlatitude="a")
+        # Int.
+        self.assertRaises(ValueError, self.c.get_waveforms, model="test",
+                          kernelwidth="a")
+        # Time.
+        self.assertRaises(TypeError, self.c.get_waveforms, model="test",
+                          origintime="a")
+
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
