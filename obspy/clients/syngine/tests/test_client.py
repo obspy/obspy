@@ -6,8 +6,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import io
 import unittest
 
+import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.misc import CatchOutput
 from obspy.clients.syngine import Client
@@ -95,6 +97,92 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["headers"],
                          {'User-Agent': DEFAULT_TESTING_USER_AGENT})
 
+    def test_get_waveforms_mock(self):
+        """
+        Test the queries from the IRIS syngine website and see if they
+        produce the correct URLS.
+        """
+        r = RequestsMockResponse()
+        with io.BytesIO() as buf:
+            obspy.read()[0].write(buf, format="mseed")
+            buf.seek(0, 0)
+            r.content = buf.read()
+
+        # http://service.iris.edu/irisws/syngine/1/query?network=IU&
+        # station=ANMO&components=ZRT&eventid=GCMT:M110302J
+        with mock.patch("requests.get") as p:
+            p.return_value = r
+            st = self.c.get_waveforms(model="ak135f_5s",
+                                      network="IU", station="ANMO",
+                                      components="ZRT",
+                                      eventid="GCMT:M110302J")
+
+        self.assertTrue(isinstance(st, obspy.Stream))
+
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(p.call_args[0][0],
+                         "http://service.iris.edu/irisws/syngine/1/query")
+        self.assertEqual(p.call_args[1]["params"], {
+            "components": "ZRT",
+            "eventid": "GCMT:M110302J",
+            "format": "miniseed",
+            "model": "ak135f_5s",
+            "network": "IU",
+            "station": "ANMO"})
+        self.assertEqual(p.call_args[1]["headers"],
+                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
+
+        # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
+        # components=Z&eventid=GCMT:M110302J&endtime=1800
+        with mock.patch("requests.get") as p:
+            p.return_value = r
+            st = self.c.get_waveforms(model="ak135f_5s",
+                                      network="_GSN",
+                                      components="Z",
+                                      endtime=1800.0,
+                                      eventid="GCMT:M110302J")
+
+        self.assertTrue(isinstance(st, obspy.Stream))
+
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(p.call_args[0][0],
+                         "http://service.iris.edu/irisws/syngine/1/query")
+        self.assertEqual(p.call_args[1]["params"], {
+            "components": "Z",
+            "endtime": 1800.0,
+            "eventid": "GCMT:M110302J",
+            "format": "miniseed",
+            "model": "ak135f_5s",
+            "network": "_GSN"})
+        self.assertEqual(p.call_args[1]["headers"],
+                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
+
+        # http://service.iris.edu/irisws/syngine/1/query?network=_GSN&
+        # components=Z&eventid=GCMT:M110302J&starttime=P-10&endtime=ScS%2B60
+        with mock.patch("requests.get") as p:
+            p.return_value = r
+            st = self.c.get_waveforms(model="ak135f_5s",
+                                      network="_GSN",
+                                      components="Z",
+                                      starttime="P-10",
+                                      endtime="ScS+60",
+                                      eventid="GCMT:M110302J")
+
+        self.assertTrue(isinstance(st, obspy.Stream))
+
+        self.assertEqual(p.call_count, 1)
+        self.assertEqual(p.call_args[0][0],
+                         "http://service.iris.edu/irisws/syngine/1/query")
+        self.assertEqual(p.call_args[1]["params"], {
+            "components": "Z",
+            "starttime": "P-10",
+            "endtime": "ScS+60",
+            "eventid": "GCMT:M110302J",
+            "format": "miniseed",
+            "model": "ak135f_5s",
+            "network": "_GSN"})
+        self.assertEqual(p.call_args[1]["headers"],
+                         {"User-Agent": DEFAULT_TESTING_USER_AGENT})
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
