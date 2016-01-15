@@ -44,7 +44,7 @@ class SeismicArray(object):
     """
     Class representing a seismic array.
 
-    The SeimicArray class is a named container for an
+    The SeismicArray class is a named container for an
     :class:`~obspy.core.inventory.Inventory` containing the components
     making up the array along with methods for array processing. It does not
     contain any seismic data. The locations of the array components
@@ -978,59 +978,6 @@ class SeismicArray(object):
             self.inventory = invbkp
             shutil.rmtree(tmpdir)
 
-    def plot_transfer_function(self, sx=(-10, 10),
-                               sy=(-10, 10), sls=0.5, freqmin=0.1, freqmax=4.0,
-                               numfreqs=10):
-        """
-        Plot transfer function (uses array transfer function as a function of
-        slowness difference and frequency).
-
-        :param sx: Min/Max slowness for analysis in x direction.
-        :type sx: (float, float)
-        :param sy: Min/Max slowness for analysis in y direction.
-        :type sy: (float, float)
-        :param sls: step width of slowness grid.
-        :type sls: float
-        :param freqmin: Low corner of frequency range for array analysis.
-        :type freqmin: float
-        :param freqmax: High corner of frequency range for array analysis.
-        :type freqmax: float
-        :param numfreqs: number of frequency values used for computing array
-         transfer function.
-        :type numfreqs: int
-        """
-        sllx, slmx = sx
-        slly, slmy = sy
-        sllx = kilometer2degrees(sllx)
-        slmx = kilometer2degrees(slmx)
-        slly = kilometer2degrees(slly)
-        slmy = kilometer2degrees(slmy)
-        sls = kilometer2degrees(sls)
-
-        stepsfreq = (freqmax - freqmin) / float(numfreqs)
-        transff = self._array_transff_freqslowness((sllx, slmx, slly, slmy),
-                                                   sls, freqmin, freqmax,
-                                                   stepsfreq)
-
-        sllx = degrees2kilometers(sllx)
-        slmx = degrees2kilometers(slmx)
-        slly = degrees2kilometers(slly)
-        slmy = degrees2kilometers(slmy)
-        sls = degrees2kilometers(sls)
-
-        slx = np.arange(sllx, slmx + sls, sls)
-        sly = np.arange(slly, slmy + sls, sls)
-        fig = plt.figure(figsize=(12, 12))
-        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-
-        # ax.pcolormesh(slx, sly, transff.T)
-        ax.contour(sly, slx, transff.T, 10)
-        ax.set_xlabel('slowness [s/deg]')
-        ax.set_ylabel('slowness [s/deg]')
-        ax.set_ylim(slx[0], slx[-1])
-        ax.set_xlim(sly[0], sly[-1])
-        plt.show()
-
     def _attach_coords_to_stream(self, stream):
         """
         Attaches dictionary with latitude, longitude and elevation to each
@@ -1287,56 +1234,6 @@ class SeismicArray(object):
                 fcoeffE[nst, nwin, :] *= weight
                 fcoeffN[nst, nwin, :] *= weight
         return fcoeffZ, fcoeffN, fcoeffE
-
-    def _three_c_plot_transfer_function(self, u, freqs):
-        """
-        Plot transfer function of input array geometry 2D.
-        """
-        # todo: merge with the other transff functions here
-        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
-        theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
-        u_y = -np.cos(theo_backazi)
-        u_x = -np.sin(theo_backazi)
-        geo_array = self._geometry_dict_to_array(
-            self.get_geometry_xyz(**self.center_of_gravity))
-        x_ = geo_array[:, 0]
-        y_ = geo_array[:, 1]
-        x_ = np.array(x_)
-        y_ = np.array(y_)
-        steering = u_y * y_ + u_x * x_
-        theo_backazi = theo_backazi[:, 0]
-        beamres = np.zeros((len(theo_backazi), u.size))
-        for f in freqs:
-            omega = 2. * math.pi * f
-            R = np.ones((steering.shape[1], steering.shape[1]))
-            for vel in range(len(u)):
-                e_steer = np.exp(-1j * steering * omega * u[vel])
-                w = e_steer
-                wT = w.T.copy()
-                beamres[:, vel] = 1. / (
-                    steering.shape[1] * steering.shape[1]) * abs(
-                    (np.conjugate(w) * np.dot(R, wT).T).sum(1))
-            fig = plt.figure()
-            ax = fig.add_subplot(1, 1, 1, projection='polar')
-            cmap = cm.hot_r
-            contf = ax.contourf((theo_backazi[::-1] + math.pi / 2.), u,
-                                beamres.T, 100, cmap=cmap, antialiased=True,
-                                linstyles='dotted')
-            ax.contour((theo_backazi[::-1] + math.pi / 2.), u, beamres.T, 100,
-                       cmap=cmap)
-            ax.set_theta_zero_location('N')
-            ax.set_theta_direction(-1)
-            ax.set_rgrids([0.1, 0.2, 0.3, 0.4, 0.5],
-                          labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
-                          color='r')
-            ax.set_rmax(u[-1])
-            # This means that if u does not start at 0, the plot will show a
-            # hole in the middle rather than stitching it up.
-            ax.set_rmin(-0)
-            fig.colorbar(contf)
-            ax.grid(True)
-            ax.set_title('Transfer function for frequency ' + str(f) + '.')
-        plt.show()
 
     def _three_c_do_bf(self, stream_N, stream_E, stream_Z, win_len, win_frac,
                        u, sub_freq_range, n_min_stns, polarisation,
@@ -1604,8 +1501,7 @@ class SeismicArray(object):
     def three_component_beamforming(self, stream_n, stream_e, stream_z, wlen,
                                     smin, smax, sstep, wavetype, freq_range,
                                     n_min_stns=7, win_average=1, win_frac=1,
-                                    whiten=True, coherency=False,
-                                    plot_transff=False):
+                                    whiten=True, coherency=False):
         """
         Do three-component beamforming following [Esmersoy1985]_.
 
@@ -1642,11 +1538,6 @@ class SeismicArray(object):
         :param win_frac: fraction of sliding window to use for step
         :param whiten: whether to whiten the frequency spectrum
         :param coherency: whether to normalise the powers
-        :param plot_transff: Whether to also plot the transfer function of the
-         array. This the transfer function resulting from only those
-         stations/channels for which data is present, not necessarily the
-         entire array. The transfer function is plotted for the minimum and
-         maximum frequencies of the given frequency range.
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
         object containing the beamforming results, with dimensions of
         backazimuth range, slowness range, number of windows and number of
@@ -1735,12 +1626,6 @@ class SeismicArray(object):
                                     win_average=win_average,
                                     datalen_sec=datalen_sec,
                                     uindex=uindex)
-
-            # Plot the transfer function from here so it's calculated only for
-            # the actually used stations, i.e. the culled inventory.
-            if plot_transff:
-                self._three_c_plot_transfer_function(u, [freq_range[0],
-                                                         freq_range[-1]])
 
             out = BeamformerResult(inventory=self.inventory,
                                    times=window_start_times, slowness_range=u,
@@ -2358,96 +2243,213 @@ class SeismicArray(object):
                 (tr.stats.endtime - etime) * tr.stats.sampling_rate + .5)
         return spoint, epoint
 
+    def plot_radial_transfer_function(self, smin, smax, sstep, freqs):
+        """
+        Plot array transfer function radially, as function of slowness.
+        """
+        u = np.arange(smin, smax, sstep)
+        theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
+        theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
+        u_y = -np.cos(theo_backazi)
+        u_x = -np.sin(theo_backazi)
+        geo_array = self._geometry_dict_to_array(
+            self.get_geometry_xyz(**self.center_of_gravity))
+        x_ = geo_array[:, 0]
+        y_ = geo_array[:, 1]
+        x_ = np.array(x_)
+        y_ = np.array(y_)
+        steering = u_y * y_ + u_x * x_
+        theo_backazi = theo_backazi[:, 0]
+        beamres = np.zeros((len(theo_backazi), u.size))
+        for f in freqs:
+            omega = 2. * math.pi * f
+            R = np.ones((steering.shape[1], steering.shape[1]))
+            for vel in range(len(u)):
+                e_steer = np.exp(-1j * steering * omega * u[vel])
+                w = e_steer
+                wT = w.T.copy()
+                beamres[:, vel] = 1. / (
+                    steering.shape[1] * steering.shape[1]) * abs(
+                    (np.conjugate(w) * np.dot(R, wT).T).sum(1))
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1, projection='polar')
+            cmap = cm.hot_r
+            contf = ax.contourf(theo_backazi, u,
+                                beamres.T, 100, cmap=cmap, antialiased=True,
+                                linstyles='dotted')
+            ax.contour(theo_backazi, u, beamres.T, 100,
+                       cmap=cmap)
+            ax.set_theta_zero_location('N')
+            ax.set_theta_direction(-1)
+            ax.set_rgrids([0.1, 0.2, 0.3, 0.4, 0.5],
+                          labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
+                          color='r')
+            ax.set_rmax(u[-1])
+            # This means that if u does not start at 0, the plot will show a
+            # hole in the middle rather than stitching it up.
+            ax.set_rmin(-0)
+            fig.colorbar(contf)
+            ax.grid(True)
+            ax.set_title('Transfer function for frequency ' + str(f) + '.')
+        plt.show()
+
+    def plot_transfer_function_wavenumber(self, klim, kstep):
+        """
+        Plot array transfer function as function of wavenumber.
+
+        :param klim: Maximum wavenumber (symmetric about zero in
+         x and y directions).
+        :param kstep: Step in wavenumber.
+        """
+        transff = self.array_transff_wavenumber(klim, kstep)
+        self._plot_transff_helper(transff, klim, kstep)
+        plt.xlabel('Wavenumber West-East')
+        plt.ylabel('Wavenumber North-South')
+        plt.show()
+
+    def plot_transfer_function_freqslowness(self, slim, sstep, freq_min,
+                                            freq_max, freq_step):
+        """
+        Plot array transfer function as function of slowness and frequency.
+
+        :param slim: Maximum slowness (symmetric about zero in x and y
+         directions).
+        :param sstep: Step in slowness.
+        :param freq_min: Minimum frequency in signal.
+        :param freq_max: Maximum frequency in signal.
+        :param freq_step: Frequency sample distance
+        """
+        transff = self.array_transff_freqslowness(slim, sstep, freq_min,
+                                                  freq_max, freq_step)
+        self._plot_transff_helper(transff, slim, sstep)
+        plt.xlabel('Slowness West-East')
+        plt.ylabel('Slowness North-South')
+        plt.show()
+
+    @staticmethod
+    def _plot_transff_helper(transff, lim, step):
+        """
+        Plot array transfer function.
+
+        :param transff: Transfer function to plot.
+        :param lim: Maximum value of slowness/wavenumber.
+        :param step: Step in slowness/wavenumber.
+        """
+        ranges = np.arange(-lim, lim + step, step)
+        plt.pcolor(ranges, ranges, transff.T, cmap=cm.hot_r)
+        plt.colorbar()
+        plt.clim(vmin=0., vmax=1.)
+        plt.xlim(-lim, lim)
+        plt.ylim(-lim, lim)
+
     def array_transff_wavenumber(self, klim, kstep):
         """
-        Returns array transfer function as a function of wavenumber difference
+        Return array transfer function as a function of wavenumber difference.
 
-        :param klim: either a float to use symmetric limits for wavenumber
-            differences or the tuple (kxmin, kxmax, kymin, kymax)
+        :param klim: Either a float to use symmetric limits for wavenumber
+            differences or the tuple (kxmin, kxmax, kymin, kymax).
+        :param kstep: Step in wavenumber.
         """
-        coords = self._geometry_dict_to_array(self.get_geometry_xyz(
-            **self.center_of_gravity))
-
-        if isinstance(klim, float):
-            kxmin = -klim
-            kxmax = klim
-            kymin = -klim
-            kymax = klim
-        elif isinstance(klim, tuple):
-            if len(klim) == 4:
+        try:
+            if isinstance(klim, float) or isinstance(klim, int):
+                kxmin = -klim
+                kxmax = klim
+                kymin = -klim
+                kymax = klim
+            elif len(klim) == 4:
                 kxmin = klim[0]
                 kxmax = klim[1]
                 kymin = klim[2]
                 kymax = klim[3]
-        else:
-            raise TypeError('klim must either be a float or a tuple of length 4')
+            else:
+                raise TypeError
+        except TypeError:
+            raise TypeError('Parameter klim must either be a float '
+                            'or a tuple of length 4.')
 
-        nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
-        nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
+        return self._array_transff_helper(kxmin, kxmax, kymin, kymax, kstep,
+                                          'wavenumber')
 
-        transff = np.empty((nkx, nky))
-
-        for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
-            for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
-                _sum = 0j
-                for k in range(len(coords)):
-                    _sum += np.exp(complex(0.,
-                                           coords[k, 0] * kx + coords[k, 1] * ky))
-                transff[i, j] = abs(_sum) ** 2
-
-        transff /= transff.max()
-        return transff
-
-    def _array_transff_freqslowness(self, slim, sstep, fmin, fmax,
-                                    fstep):
+    def array_transff_freqslowness(self, slim, sstep, fmin, fmax,
+                                   fstep):
         """
-        Returns array transfer function as a function of slowness difference
+        Return array transfer function as a function of slowness difference
         and frequency.
 
-        :param slim: either a float to use symmetric limits for slowness
-            differences or the tupel (sxmin, sxmax, symin, symax)
-        :type fmin: float
-        :param fmin: minimum frequency in signal
-        :type fmax: float
-        :param fmin: maximum frequency in signal
-        :type fstep: float
-        :param fmin: frequency sample distance
+        :param slim: Either a float to use symmetric limits for slowness
+            differences or the tuple (sxmin, sxmax, symin, symax).
+        :param sstep: Step in frequency.
+        :param fmin: Minimum frequency in signal.
+        :param fmax: Maximum frequency in signal.
+        :param fstep: Frequency sample distance.
         """
-        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
-            **self.center_of_gravity))
-
-        if isinstance(slim, float):
-            sxmin = -slim
-            sxmax = slim
-            symin = -slim
-            symax = slim
-        elif isinstance(slim, tuple):
-            if len(slim) == 4:
+        try:
+            if isinstance(slim, float) or isinstance(slim, int):
+                sxmin = -slim
+                sxmax = slim
+                symin = -slim
+                symax = slim
+            elif len(slim) == 4:
                 sxmin = slim[0]
                 sxmax = slim[1]
                 symin = slim[2]
                 symax = slim[3]
-        else:
-            raise TypeError('slim must either be a float '
-                            'or a tuple of length 4')
+            else:
+                raise TypeError
+        except TypeError:
+            raise TypeError('Parameter slim must either be a float '
+                            'or a tuple of length 4.')
 
-        nsx = int(np.ceil((sxmax + sstep / 10. - sxmin) / sstep))
-        nsy = int(np.ceil((symax + sstep / 10. - symin) / sstep))
-        nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
+        return self._array_transff_helper(sxmin, sxmax, symin, symax, sstep,
+                                          'slowness', fmin, fmax, fstep)
 
-        transff = np.empty((nsx, nsy))
-        buff = np.zeros(nf)
+    def _array_transff_helper(self, pxmin, pxmax, pymin, pymax, pstep, param,
+                              fmin=None, fmax=None, fstep=None):
+        """
+        Return array transfer function as function of wavenumber or slowness
+        and frequency.
 
-        for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
-            for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
-                for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
+        :param pxmin: Minimum wavenumber/slowness in x-direction.
+        :param pxmax: Maximum wavenumber/slowness in x-direction.
+        :param pymin: Minimum wavenumber/slowness in y-direction.
+        :param pymax: Maximum wavenumber/slowness in y-direction.
+        :param pstep: Step in wavenumber/slowness.
+        :param param: 'wavenumber' or 'slowness'
+        :param fmin: Minimum frequency (only for slowness calculation).
+        :param fmax: Maximum frequency (only for slowness calculation).
+        :param fstep: Frequency sample distance (only with slowness).
+        """
+        geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
+            **self.center_of_gravity))
+        npx = int(np.ceil((pxmax + pstep / 10. - pxmin) / pstep))
+        npy = int(np.ceil((pymax + pstep / 10. - pymin) / pstep))
+        transff = np.empty((npx, npy))
+
+        if param is 'wavenumber':
+            for i, kx in enumerate(np.arange(pxmin, pxmax + pstep / 10., pstep)):
+                for j, ky in enumerate(np.arange(pymin, pymax + pstep / 10.,
+                                                 pstep)):
                     _sum = 0j
-                    for l in np.arange(len(geometry)):
-                        _sum += np.exp(complex(
-                            0., (geometry[l, 0] * sx + geometry[l, 1] * sy) *
-                            2 * np.pi * f))
-                    buff[k] = abs(_sum) ** 2
-                transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
+                    for k in range(len(geometry)):
+                        _sum += np.exp(complex(0., geometry[k, 0] * kx +
+                                               geometry[k, 1] * ky))
+                    transff[i, j] = abs(_sum) ** 2
+
+        elif param is 'slowness':
+            nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
+            buff = np.zeros(nf)
+            for i, sx in enumerate(np.arange(pxmin, pxmax + pstep / 10., pstep)):
+                for j, sy in enumerate(np.arange(pymin, pymax + pstep / 10.,
+                                                 pstep)):
+                    for k, f in enumerate(np.arange(fmin, fmax + fstep / 10.,
+                                                    fstep)):
+                        _sum = 0j
+                        for l in np.arange(len(geometry)):
+                            _sum += np.exp(complex(0., (geometry[l, 0] * sx +
+                                                        geometry[l, 1] * sy) *
+                                                   2 * np.pi * f))
+                        buff[k] = abs(_sum) ** 2
+                    transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
 
         transff /= transff.max()
         return transff
@@ -3058,10 +3060,7 @@ class BeamformerResult(object):
     :param incidence: Rayleigh wave incidence angles (only from three
      component beamforming).
     :param method: Method used for the beamforming.
-
-
     """
-
 
     def __init__(self, inventory, times, slowness_range, max_rel_power=None,
                  max_abs_power=None, max_pow_baz=None, max_pow_slow=None,
@@ -3111,6 +3110,10 @@ class BeamformerResult(object):
             self._calc_max_values()
 
     def __add__(self, other):
+        """
+        Add two sequential BeamformerResult instances. Must have been created
+        with identical frequency and slowness ranges.
+        """
         if not isinstance(other, BeamformerResult):
             raise TypeError('unsupported operand types')
         if self.method != other.method:
@@ -3468,6 +3471,49 @@ class BeamformerResult(object):
 
         if show is True:
             plt.show()
+
+    def plot_radial_transfer_function(self, plot_freqs=None):
+        """
+        Plot the radial transfer function of the array and slowness range used
+        to produce this result.
+
+        :param plot_freqs: List of discrete frequencies for which the transfer
+         function should be plotted. Defaults to the minimum and maximum of the
+         frequency range used in the generation of this results object.
+        """
+        if plot_freqs is None:
+            plot_freqs = [self.freqs[0], self.freqs[-1]]
+        if type(plot_freqs) is float or type(plot_freqs) is float:
+            plot_freqs = [plot_freqs]
+
+        # Need absolute values:
+        absolute_slownesses = [abs(_) for _ in self.slowness_range]
+
+        # Need to create an array object:
+        plot_array = SeismicArray('plot_array', self.inventory)
+        plot_array.plot_radial_transfer_function(min(absolute_slownesses),
+                                                 max(absolute_slownesses),
+                                                 self.slowness_range[1] -
+                                                 self.slowness_range[0],
+                                                 plot_freqs)
+
+    def plot_transfer_function_freqslowness(self):
+        """
+        Plot an x-y transfer function of the array used to produce this
+        result, as a function of the set slowness and frequency ranges.
+        """
+        # Need absolute values:
+        absolute_slownesses = [abs(_) for _ in self.slowness_range]
+        # Need to create an array object:
+        arr = SeismicArray('plot_array', self.inventory)
+        arr.plot_transfer_function_freqslowness(max(absolute_slownesses),
+                                                self.slowness_range[1] -
+                                                self.slowness_range[0],
+                                                min(self.freqs),
+                                                max(self.freqs),
+                                                abs(self.freqs[1] -
+                                                    self.freqs[0]))
+
 
 if __name__ == '__main__':
     import doctest
