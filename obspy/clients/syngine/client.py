@@ -27,19 +27,24 @@ from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
 
 class Client(WaveformClient, HTTPClient):
     """
-    FDSN Web service request client.
-
-    For details see the :meth:`~obspy.clients.fdsn.clients.Client.__init__()`
-    method.
+    Client for the IRIS syngine service.
     """
-    # Caching the database information, thus repeatedly initializing the
-    # client is cheap.
+    # Caching some information.
     __cache = {}
 
     def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
         """
         Initializes a Syngine Client.
+
+        :param base_url: The base URL of the service.
+        :type base_url: str
+        :param user_agent: The user agent sent along the HTTP request.
+        :type user_agent: str
+        :param debug: Debug on/off.
+        :type debug: bool
+        :param timeout: The socket timeout.
+        :type timeout: float
         """
         HTTPClient.__init__(self, debug=debug, timeout=timeout,
                             user_agent=user_agent)
@@ -61,6 +66,9 @@ class Client(WaveformClient, HTTPClient):
         Get some information about a particular model.
 
         :param model_name: The name of the model. Case insensitive.
+        :type model_name: str
+        :returns: A dictionary with more information about any model.
+        :rtype: :class:`obspy.core.attribdict.AttribDict`
         """
         model_name = model_name.strip().lower()
         key = "model_" + model_name
@@ -76,6 +84,9 @@ class Client(WaveformClient, HTTPClient):
         return self.__cache[self._base_url][key]
 
     def get_service_version(self):
+        """
+        Get the service version of the remote syngine server.
+        """
         self.__cache.setdefault(self._base_url, {})
         if "version" not in self.__cache[self._base_url]:
             r = self._download(self._get_url("version"))
