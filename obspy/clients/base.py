@@ -82,16 +82,54 @@ class ClientException(Exception):
     pass
 
 
-class ClientHTTPException(ClientException):
+class ClientHTTPException(ClientException,
+                          requests.exceptions.RequestException):
     """
     Exception that should be raised for all HTTP exceptions.
+
+    Inherits from :class:`requests.exceptions.Request.Exception` so catching
+    the main requests exception catches this one as well.
     """
     pass
 
 
-class HTTPClient(with_metaclass(ABCMeta, object)):
+class BaseClient(object):
+    """
+    Base class for common methods.
+    """
+    def __init__(self, debug=False):
+        self._debug = debug
+
+
+class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
+    def __init__(self, debug=False, timeout=120):
+        """
+        Base class for all remote mixin classes.
+
+        :param debug: Passed on to the :class:`BaseClient` constructor.
+        :type debug: bool
+        :param timeout: The network timeout in seconds.
+        :type timeout: float
+        """
+        self._timeout = timeout
+        BaseClient.__init__(debug=debug)
+
+    @abstractmethod
+    def get_service_version(self):
+        """
+        Return a semantic version number of the remote service as a string.
+        """
+        pass
+
+
+class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
     """
     Mix-in class to add HTTP capabilities.
+
+    :param debug: Passed on to the :class:`BaseClient` constructor.
+    :type debug: bool
+    :param timeout: Passed on to the :class:`RemoteBaseClient` constructor.
+    :type timeout: float
 
     .. rubric:: Example
 
@@ -111,8 +149,10 @@ class HTTPClient(with_metaclass(ABCMeta, object)):
         def get_waveforms(...):
             ...
     """
-    def __init__(self, user_agent=DEFAULT_USER_AGENT):
+    def __init__(self, debug=False, timeout=120,
+                 user_agent=DEFAULT_USER_AGENT):
         self._user_agent = user_agent
+        RemoteBaseClient.__init__(self, debug=debug, timeout=timeout)
 
     @abstractmethod
     def _handle_requests_http_error(self, r):
@@ -150,19 +190,6 @@ class HTTPClient(with_metaclass(ABCMeta, object)):
         if r.status_code == 200:
             return r
         self._handle_requests_http_error(r)
-
-
-class BaseClient(with_metaclass(ABCMeta, object)):
-    """
-    Base class for common methods.
-
-    """
-    @abstractmethod
-    def get_service_version(self):
-        """
-        Return a semantic version number as a string.
-        """
-        pass
 
 
 class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
