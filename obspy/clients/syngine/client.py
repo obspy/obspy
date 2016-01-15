@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import io
+import pprint
 
 import numpy as np
 
@@ -76,6 +77,18 @@ class Client(WaveformClient, HTTPClient):
         info.sliprate = np.array(info.sliprate, dtype=np.float64)
         return info
 
+    def get_available_models(self):
+        """
+        Get information about all available velocity models.
+        """
+        return self._download(self._get_url("models")).json()
+
+    def print_model_information(self):
+        """
+        Print information about the available models.
+        """
+        pprint.pprint(self.get_available_models())
+
     def get_service_version(self):
         """
         Get the service version of the remote syngine server.
@@ -91,8 +104,8 @@ class Client(WaveformClient, HTTPClient):
             eventid=None, sourcelatitude=None, sourcelongitude=None,
             sourcedepthinmeters=None, sourcemomenttensor=None,
             sourcedoublecouple=None, sourceforce=None, origintime=None,
-            starttime=None, endtime=None, label=None, components="ZRT",
-            units="velocity", scale=1.0, dt=None, kernelwidth=8,
+            starttime=None, endtime=None, label=None, components=None,
+            units=None, scale=None, dt=None, kernelwidth=None,
             format="miniseed"):
         """
         """
