@@ -29,9 +29,6 @@ class Client(WaveformClient, HTTPClient):
     """
     Client for the IRIS syngine service.
     """
-    # Caching some information.
-    __cache = {}
-
     def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
         """
@@ -71,28 +68,21 @@ class Client(WaveformClient, HTTPClient):
         :rtype: :class:`obspy.core.attribdict.AttribDict`
         """
         model_name = model_name.strip().lower()
-        key = "model_" + model_name
-        self.__cache.setdefault(self._base_url, {})
-        if key not in self.__cache[self._base_url]:
-            r = self._download(self._get_url("info"),
-                               params={"model": model_name})
-            info = AttribDict(r.json())
-            # Convert slip and sliprate into a numpy array for easier handling.
-            info.slip = np.array(info.slip, dtype=np.float64)
-            info.sliprate = np.array(info.sliprate, dtype=np.float64)
-            self.__cache[self._base_url][key] = info
-        return self.__cache[self._base_url][key]
+        r = self._download(self._get_url("info"),
+                           params={"model": model_name})
+        info = AttribDict(r.json())
+        # Convert slip and sliprate into numpy arrays for easier handling.
+        info.slip = np.array(info.slip, dtype=np.float64)
+        info.sliprate = np.array(info.sliprate, dtype=np.float64)
+        return info
 
     def get_service_version(self):
         """
         Get the service version of the remote syngine server.
         """
-        self.__cache.setdefault(self._base_url, {})
-        if "version" not in self.__cache[self._base_url]:
-            r = self._download(self._get_url("version"))
-            # Decoding and what not is handled by the requests library.
-            self.__cache[self._base_url]["version"] = r.text
-        return self.__cache[self._base_url]["version"]
+        r = self._download(self._get_url("version"))
+        # Decoding and what not is handled by the requests library.
+        return r.text
 
     def get_waveforms(
             self, model, network=None, station=None,
