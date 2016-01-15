@@ -112,7 +112,7 @@ class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
         :type timeout: float
         """
         self._timeout = timeout
-        BaseClient.__init__(debug=debug)
+        BaseClient.__init__(self, debug=debug)
 
     @abstractmethod
     def get_service_version(self):

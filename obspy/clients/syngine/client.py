@@ -14,9 +14,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import io
+
 import numpy as np
 
-from obspy import UTCDateTime
+import obspy
 from obspy.core import AttribDict
 
 from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
@@ -39,9 +41,8 @@ class Client(WaveformClient, HTTPClient):
         """
         Initializes a Syngine Client.
         """
-        HTTPClient.__init__(self, user_agent=user_agent)
-        self._debug = debug
-        self._timeout = timeout
+        HTTPClient.__init__(self, debug=debug, timeout=timeout,
+                            user_agent=user_agent)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.rstrip("/")
@@ -110,7 +111,7 @@ class Client(WaveformClient, HTTPClient):
         for keys, t in ((str_arguments, str),
                        (float_arguments, float),
                        (int_arguments, int),
-                       (time_arguments, UTCDateTime)):
+                       (time_arguments, obspy.UTCDateTime)):
             for key in keys:
                 value = locals()[key]
                 if value is None:
@@ -132,13 +133,13 @@ class Client(WaveformClient, HTTPClient):
             # syngine service deal with the erorr handling.
             elif isinstance(value, (str, native_str)):
                 try:
-                    value = UTCDateTime(value)
+                    value = obspy.UTCDateTime(value)
                 except:
                     value = str(value)
             # Last but not least just try to pass it to the datetime
             # constructor without catching the error.
             else:
-                value = UTCDateTime(value)
+                value = obspy.UTCDateTime(value)
             locals()[0] = value
 
         # These all have to be lists of floats. Otherwise it fails.
@@ -169,4 +170,6 @@ class Client(WaveformClient, HTTPClient):
             params[arg] = value
 
         r = self._download(url=self._get_url("query"), params=params)
-        from IPython.core.debugger import Tracer; Tracer(colors="Linux")()
+        with io.BytesIO(r.content) as buf:
+            st = obspy.read(buf)
+        return st
