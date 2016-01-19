@@ -25,8 +25,7 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from obspy.core import UTCDateTime
-from obspy.geodetics import gps2DistAzimuth, degrees2kilometers, \
-    kilometer2degrees
+from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.core import Trace
 from obspy.core.inventory import Inventory
@@ -276,7 +275,7 @@ class SeismicArray(object):
             for other_location, other_coordinates in list(geo.items()):
                 if location == other_location:
                     continue
-                distances.append(gps2DistAzimuth(
+                distances.append(gps2dist_azimuth(
                     coordinates["latitude"], coordinates["longitude"],
                     other_coordinates["latitude"],
                     other_coordinates["longitude"])[0] / 1000.0)
