@@ -24,6 +24,7 @@ class RequestsMockResponse(object):
         self.content = b""
         self.status_code = 200
         self._json = {}
+
     def json(self):
         return self._json
 
@@ -204,8 +205,8 @@ class ClientTestCase(unittest.TestCase):
 
         with mock.patch("requests.get") as p:
             p.return_value = r
-            st = self.c.get_waveforms(model="ak135f_5s",
-                                      sourcemomenttensor=[1, 2, 3, 4, 5, 6])
+            self.c.get_waveforms(model="ak135f_5s",
+                                 sourcemomenttensor=[1, 2, 3, 4, 5, 6])
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[0][0],
                          "http://service.iris.edu/irisws/syngine/1/query")
@@ -216,8 +217,8 @@ class ClientTestCase(unittest.TestCase):
 
         with mock.patch("requests.get") as p:
             p.return_value = r
-            st = self.c.get_waveforms(model="ak135f_5s",
-                                      sourcedoublecouple=[1, 2, 3, 4])
+            self.c.get_waveforms(model="ak135f_5s",
+                                 sourcedoublecouple=[1, 2, 3, 4])
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[0][0],
                          "http://service.iris.edu/irisws/syngine/1/query")
@@ -228,8 +229,8 @@ class ClientTestCase(unittest.TestCase):
 
         with mock.patch("requests.get") as p:
             p.return_value = r
-            st = self.c.get_waveforms(model="ak135f_5s",
-                                      sourceforce=[3.32, 4.23, 5.11])
+            self.c.get_waveforms(model="ak135f_5s",
+                                 sourceforce=[3.32, 4.23, 5.11])
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[0][0],
                          "http://service.iris.edu/irisws/syngine/1/query")
@@ -237,6 +238,7 @@ class ClientTestCase(unittest.TestCase):
             "model": "ak135f_5s",
             "format": "miniseed",
             "sourceforce": "3.32,4.23,5.11"})
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

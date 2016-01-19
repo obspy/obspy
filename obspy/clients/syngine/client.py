@@ -235,9 +235,9 @@ class Client(WaveformClient, HTTPClient):
         time_arguments = ["origintime"]
 
         for keys, t in ((str_arguments, str),
-                       (float_arguments, float),
-                       (int_arguments, int),
-                       (time_arguments, obspy.UTCDateTime)):
+                        (float_arguments, float),
+                        (int_arguments, int),
+                        (time_arguments, obspy.UTCDateTime)):
             for key in keys:
                 value = locals()[key]
                 if value is None:
@@ -251,7 +251,6 @@ class Client(WaveformClient, HTTPClient):
                         raise ValueError("String argument '%s' must not be "
                                          "an empty string." % key)
                 params[key] = t(value)
-
 
         # These can be absolute times, relative times or phase relative times.
         # jo
