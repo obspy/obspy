@@ -221,6 +221,8 @@ class Client(WaveformClient, HTTPClient):
         if not model:
             raise ValueError("Model must be given.")
 
+        params = {"model": model}
+
         # Error handling is mostly delegated to the actual syngine service.
         # Here we just check that the types are compatible.
         str_arguments = ["network", "station", "networkcode", "stationcode",
@@ -248,7 +250,7 @@ class Client(WaveformClient, HTTPClient):
                     if not value:
                         raise ValueError("String argument '%s' must not be "
                                          "an empty string." % key)
-                locals()[key] = t(value)
+                params[key] = t(value)
 
 
         # These can be absolute times, relative times or phase relative times.
@@ -273,7 +275,7 @@ class Client(WaveformClient, HTTPClient):
             # constructor without catching the error.
             else:
                 value = obspy.UTCDateTime(value)
-            locals()[0] = value
+            params[key] = value
 
         # These all have to be lists of floats. Otherwise it fails.
         source_mecs = ["sourcemomenttensor",
@@ -283,24 +285,8 @@ class Client(WaveformClient, HTTPClient):
             value = locals()[key]
             if value is None:
                 continue
-            value = [float(_i) for _i in value]
-            locals()[key] = value
-
-        # Now simply use all arguments to construct the query.
-        all_arguments = ["model"]
-        all_arguments.extend(str_arguments)
-        all_arguments.extend(float_arguments)
-        all_arguments.extend(int_arguments )
-        all_arguments.extend(time_arguments)
-        all_arguments.extend(temporal_bounds)
-        all_arguments.extend(source_mecs)
-
-        params = {}
-        for arg in all_arguments:
-            value = locals()[arg]
-            if value is None:
-                continue
-            params[arg] = value
+            value = ",".join(["%g" % float(_i) for _i in value])
+            params[key] = value
 
         r = self._download(url=self._get_url("query"), params=params)
         with io.BytesIO(r.content) as buf:
