@@ -122,12 +122,11 @@ def make_xseed(RESPblockettelist):
 
         for RESPblockette_id, RESPfield, RESPvalue in RESPblockettefieldlist:
             for bfield in blockette_fields:
-                # bfield maybe a loop and have no id
                 if bfield.id == int(RESPfield):
                     if isinstance(bfield, fields.VariableString):
                         # Variable string needs terminator '~'
                         RESPvalue += '~'
-                    print(RESPvalue)
+                    # print(RESPvalue)
                     # Lookup if abbv
                     RESPvalue = abbv_lookup.get(RESPvalue, RESPvalue)
                     dataRESPvalue = io.BytesIO(RESPvalue.encode('utf-8'))
@@ -138,7 +137,6 @@ def make_xseed(RESPblockettelist):
                         bfield.length = len(RESPvalue)
                     bfield.parse_SEED(blockette_obj, dataRESPvalue)
                     if bfield in unused_fields:
-                        # Looping fields can't be removed twice.
                         unused_fields.remove(bfield)
                     break
         for bfield in unused_fields:
