@@ -26,13 +26,13 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from obspy.core import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
-from obspy.signal.util import utlGeoKm, nextpow2
+from obspy.signal.util import util_geo_km, nextpow2
 from obspy.core import Trace
 from obspy.core.inventory import Inventory
 from scipy.integrate import cumtrapz
 from obspy.core import Stream
 from obspy.signal.headers import clibsignal
-from obspy.signal.invsim import cosTaper
+from obspy.signal.invsim import cosine_taper
 from obspy.core.util import AttribDict
 import warnings
 import matplotlib.dates as mdates
@@ -339,8 +339,8 @@ class SeismicArray(object):
         """
         geometry = {}
         for key, value in list(self.geometry.items()):
-            x, y = utlGeoKm(longitude, latitude, value["longitude"],
-                            value["latitude"])
+            x, y = util_geo_km(longitude, latitude, value["longitude"],
+                               value["latitude"])
             geometry[key] = {
                 "x": x,
                 "y": y,
@@ -364,8 +364,8 @@ class SeismicArray(object):
 
         for key, value in list(self.geometry.items()):
             # output in [km]
-            x, y = utlGeoKm(longitude, latitude, value["longitude"],
-                            value["latitude"])
+            x, y = util_geo_km(longitude, latitude, value["longitude"],
+                               value["latitude"])
             x *= 1000.0
             y *= 1000.0
 
@@ -485,10 +485,8 @@ class SeismicArray(object):
                             "Warning correction velocity smaller than apparent"
                             " velocity")
                         inc = np.pi / 2.
-                    time_shift_tbl[:, k, l] = sx * geometry[:, 0] + \
-                                              sy * geometry[:, 1] + \
-                                              geometry[:, 2] * np.cos(inc) \
-                                              / vel_cor
+                    time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * \
+                        geometry[:, 1] + geometry[:, 2] * np.cos(inc) / vel_cor
             return time_shift_tbl
         # optimized version
         else:
@@ -504,8 +502,8 @@ class SeismicArray(object):
                   absolute_height_in_km=None, method="DLS", nthroot=1,
                   static_3D=False, vel_cor=4.0):
         baz = float(event_or_baz)
-        if(latitude is None or longitude is None
-           or absolute_height_in_km is None):
+        if(latitude is None or longitude is None or
+           absolute_height_in_km is None):
             time_shift_table = self.get_timeshift_baz(sll, slm, sls, baz,
                                                       static_3D=static_3D,
                                                       vel_cor=vel_cor)
@@ -566,9 +564,9 @@ class SeismicArray(object):
             station = "%s.%s" % (tr.stats.network, tr.stats.station)
             # todo: This is the same as self.geometry_xyz, isn't it?
 
-            x, y = utlGeoKm(longitude, latitude,
-                            geo[station]["longitude"],
-                            geo[station]["latitude"])
+            x, y = util_geo_km(longitude, latitude,
+                               geo[station]["longitude"],
+                               geo[station]["latitude"])
             z = absolute_height_in_km
             array_coords[_i][0] = x * 1000.0
             array_coords[_i][1] = y * 1000.0
@@ -626,8 +624,8 @@ class SeismicArray(object):
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
-        :param vel_corr: Correction velocity for static topography correction in
-         km/s.
+        :param vel_corr: Correction velocity for static topography correction
+         in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -672,8 +670,8 @@ class SeismicArray(object):
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
-        :param vel_corr: Correction velocity for static topography correction in
-         km/s.
+        :param vel_corr: Correction velocity for static topography correction
+         in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -816,8 +814,8 @@ class SeismicArray(object):
         :param static3D: static correction of topography using `vel_corr` as
          velocity (slow!)
         :type static3D: bool
-        :param vel_corr: Correction velocity for static topography correction in
-         km/s.
+        :param vel_corr: Correction velocity for static topography correction
+         in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -1115,7 +1113,7 @@ class SeismicArray(object):
         ft = np.empty((nstat, nf), dtype=np.complex128)
         newstart = stime
         # 0.22 matches 0.2 of historical C bbfk.c
-        tap = cosTaper(nsamp, p=0.22)
+        tap = cosine_taper(nsamp, p=0.22)
         offset = 0
         count = 0  # iteration of loop
         relpow_map = np.empty((grdpts_x, grdpts_y), dtype=np.float64)
@@ -1300,13 +1298,13 @@ class SeismicArray(object):
                     # All data, tapered.
                     alldataZ[n, i, :] = _alldataZ[n, i * nstep:
                                                   i * nstep + nsamp] * \
-                                        cosTaper(nsamp)
+                        cosine_taper(nsamp)
                     alldataN[n, i, :] = _alldataN[n, i * nstep:
                                                   i * nstep + nsamp] * \
-                                        cosTaper(nsamp)
+                        cosine_taper(nsamp)
                     alldataE[n, i, :] = _alldataE[n, i * nstep:
                                                   i * nstep + nsamp] * \
-                                        cosTaper(nsamp)
+                        cosine_taper(nsamp)
                     nst[i] += 1
 
         # Need an array of the starting times of the beamforming windows for
@@ -1447,18 +1445,18 @@ class SeismicArray(object):
                                 (np.conjugate(w) * np.dot(R, wT).T).sum(1))
                         else:
                             beamres[:, vel, win / win_average, f] = 1. / (
-                                nst[win]) * abs((np.conjugate(w)
-                                                 * np.dot(R, wT).T).sum(1)) \
+                                nst[win]) * abs((np.conjugate(w) *
+                                                 np.dot(R, wT).T).sum(1)) \
                                 / abs(np.sum(np.diag(R[n_stats:, n_stats:])))
 
                     elif polarisation in [1, 2, 3]:
                         for inc_angle in range(len(incs)):
-                            w = np.concatenate((e_steer * Cz[polarisation]
-                                                * np.cos(incs[inc_angle]),
-                                                e_steerN
-                                                * np.sin(incs[inc_angle]),
-                                                e_steerE
-                                                * np.sin(incs[inc_angle])),
+                            w = np.concatenate((e_steer * Cz[polarisation] *
+                                                np.cos(incs[inc_angle]),
+                                                e_steerN *
+                                                np.sin(incs[inc_angle]),
+                                                e_steerE *
+                                                np.sin(incs[inc_angle])),
                                                axis=1)
                             wT = w.T.copy()
                             if not coherency:
@@ -1472,12 +1470,12 @@ class SeismicArray(object):
 
                     elif polarisation == 4:
                         for inc_angle in range(len(incs)):
-                            w = np.concatenate((e_steer * Cz[polarisation]
-                                                * np.sin(incs[inc_angle]),
-                                                e_steerN
-                                                * np.cos(incs[inc_angle]),
-                                                e_steerE
-                                                * np.cos(incs[inc_angle])),
+                            w = np.concatenate((e_steer * Cz[polarisation] *
+                                                np.sin(incs[inc_angle]),
+                                                e_steerN *
+                                                np.cos(incs[inc_angle]),
+                                                e_steerE *
+                                                np.cos(incs[inc_angle])),
                                                axis=1)
                             wT = w.T.copy()
                             if not coherency:
@@ -1638,6 +1636,7 @@ class SeismicArray(object):
 
         return out
 
+    # todo: make this use array geometry!
     @staticmethod
     def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
                               array_coords, sigmau):
@@ -1645,8 +1644,9 @@ class SeismicArray(object):
         This routine calculates the best-fitting rigid body rotation and
         uniform strain as functions of time, and their formal errors, given
         three-component ground motion time series recorded on a seismic array.
-        The theory implemented herein is presented in the papers [Spudich1995]_,
-        (abbreviated S95 herein) [Spudich2008]_ (SF08) and [Spudich2009]_ (SF09).
+        The theory implemented herein is presented in the papers
+        [Spudich1995]_, (abbreviated S95 herein) [Spudich2008]_ (SF08) and
+        [Spudich2009]_ (SF09).
 
         This is a translation of the Matlab Code presented in (SF09) with
         small changes in details only. Output has been checked to be the same
@@ -1655,146 +1655,146 @@ class SeismicArray(object):
         .. note::
             ts\_ below means "time series"
 
-        :type vp: float
-        :param vp: P wave speed in the soil under the array (km/s)
-        :type vs: float
-        :param vs: S wave speed in the soil under the array Note - vp and vs may be
-            any unit (e.g. miles/week), and this unit need not be related to the
-            units of the station coordinates or ground motions, but the units of vp
-            and vs must be the SAME because only their ratio is used.
+        :param vp: P wave speed in the soil under the array (km/s).
+        :param vs: S wave speed in the soil under the array Note - vp and vs
+         may be any unit (e.g. miles/week), and this unit need not be related
+         to the units of the station coordinates or ground motions, but the
+         units of vp and vs must be the SAME because only their ratio is used.
         :type array_coords: numpy.ndarray
-        :param array_coords: array of dimension Na x 3, where Na is the number of
-            stations in the array.  array_coords[i,j], i in arange(Na), j in
-            arange(3) is j coordinate of station i.  units of array_coords may be
-            anything, but see the "Discussion of input and output units" above.
-            The origin of coordinates is arbitrary and does not affect the
-            calculated strains and rotations.  Stations may be entered in any
-            order.
+        :param array_coords: Array of dimension Na x 3, where Na is the number
+         of stations in the array.  array_coords[i,j], i in arange(Na), j in
+         arange(3) is j coordinate of station i.  units of array_coords may be
+         anything, but see the "Discussion of input and output units" above.
+         The origin of coordinates is arbitrary and does not affect the
+         calculated strains and rotations.  Stations may be entered in any
+         order.
         :type ts1: numpy.ndarray
-        :param ts1: array of x1-component seismograms, dimension nt x Na.
-            ts1[j,k], j in arange(nt), k in arange(Na) contains the k'th time
-            sample of the x1 component ground motion at station k. NOTE that the
-            seismogram in column k must correspond to the station whose coordinates
-            are in row k of in.array_coords. nt is the number of time samples in
-            the seismograms.  Seismograms may be displacement, velocity,
-            acceleration, jerk, etc.  See the "Discussion of input and output
-            units" below.
+        :param ts1: Array of x1-component seismograms, dimension nt x Na.
+         ts1[j,k], j in arange(nt), k in arange(Na) contains the k'th time
+         sample of the x1 component ground motion at station k. NOTE that the
+         seismogram in column k must correspond to the station whose
+         coordinates are in row k of in.array_coords. nt is the number of time
+         samples in the seismograms.  Seismograms may be displacement,
+         velocity, acceleration, jerk, etc.  See the "Discussion of input and
+         output units" below.
         :type ts2: numpy.ndarray
-        :param ts2: same as ts1, but for the x2 component of motion.
+        :param ts2: Aame as ts1, but for the x2 component of motion.
         :type ts3: numpy.ndarray
-        :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion.
+        :param ts3: Aame as ts1, but for the x3 (UP or DOWN) component of
+         motion.
         :type sigmau: float or :class:`numpy.ndarray`
-        :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
-            corresponds to sigma-sub-u in S95 lines above eqn (A5).
-            NOTE: This may be entered as a scalar, vector, or matrix!
+        :param sigmau: Standard deviation (NOT VARIANCE) of ground noise,
+         corresponds to sigma-sub-u in S95 lines above eqn (A5).
+         NOTE: This may be entered as a scalar, vector, or matrix!
 
-            * If sigmau is a scalar, it will be used for all components of all
-              stations.
-            * If sigmau is a 1D array of length Na, sigmau[i] will be the noise
-              assigned to all components of the station corresponding to
-              array_coords[i,:]
-            * If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
-              used as the noise of station i, component j.
+         * If sigmau is a scalar, it will be used for all components of all
+           stations.
+         * If sigmau is a 1D array of length Na, sigmau[i] will be the noise
+           assigned to all components of the station corresponding to
+           array_coords[i,:]
+         * If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
+           used as the noise of station i, component j.
 
-            In all cases, this routine assumes that the noise covariance between
-            different stations and/or components is zero.
+         In all cases, this routine assumes that the noise covariance between
+         different stations and/or components is zero.
         :type subarray: numpy.ndarray
-        :param subarray: NumPy array of subarray stations to use. I.e. if subarray
-            = array([1, 4, 10]), then only rows 1, 4, and 10 of array_coords will
-            be used, and only ground motion time series in the first, fourth, and
-            tenth columns of ts1 will be used. n_plus_1 is the number of elements
-            in the subarray vector, and N is set to n_plus_1 - 1. To use all
-            stations in the array, set in.subarray = arange(Na), where Na is the
-            total number of stations in the array (equal to the number of rows of
-            in.array_coords. Sequence of stations in the subarray vector is
-            unimportant; i.e.  subarray = array([1, 4, 10]) will yield essentially
-            the same rotations and strains as subarray = array([10, 4, 1]).
-            "Essentially" because permuting subarray sequence changes the d vector,
-            yielding a slightly different numerical result.
+        :param subarray: NumPy array of subarray stations to use. I.e. if
+         subarray = array([1, 4, 10]), then only rows 1, 4, and 10 of
+         array_coords will be used, and only ground motion time series in the
+         first, fourth, and tenth columns of ts1 will be used. n_plus_1 is the
+         number of elements in the subarray vector, and N is set to
+         n_plus_1 - 1. To use all stations in the array, set
+         in.subarray = arange(Na), where Na is the total number of stations in
+         the array (equal to the number of rows of in.array_coords. Sequence of
+         stations in the subarray vector is  unimportant; i.e. subarray =
+         array([1, 4, 10]) will yield essentially the same rotations and
+         strains as subarray = array([10, 4, 1]). "Essentially" because
+         permuting subarray sequence changes the d vector, yielding a slightly
+         different numerical result.
         :return: Dictionary with fields:
 
-            **A:** (array, dimension 3N x 6)
-                data mapping matrix 'A' of S95(A4)
-            **g:** (array, dimension 6 x 3N)
-                generalized inverse matrix relating ptilde and data vector, in
-                S95(A5)
-            **Ce:** (4 x 4)
-                covariance matrix of the 4 independent strain tensor elements e11,
-                e21, e22, e33
-            **ts_d:** (array, length nt)
-                dilatation (trace of the 3x3 strain tensor) as a function of time
-            **sigmad:** (scalar)
-                standard deviation of dilatation
-            **ts_dh:** (array, length nt)
-                horizontal dilatation (also known as areal strain) (eEE+eNN) as a
-                function of time
-            **sigmadh:** (scalar)
-                standard deviation of horizontal dilatation (areal strain)
-            **ts_e:** (array, dimension nt x 3 x 3)
-                strain tensor
-            **ts_s:** (array, length nt)
-                maximum strain ( .5*(max eigval of e - min eigval of e) as a
-                function of time, where e is the 3x3 strain tensor
-            **Cgamma:** (4 x 4)
-                covariance matrix of the 4 independent shear strain tensor elements
-                g11, g12, g22, g33 (includes full covariance effects). gamma is
-                traceless part of e.
-            **ts_sh:** (array, length nt)
-                maximum horizontal strain ( .5*(max eigval of eh - min eigval of
-                eh) as a function of time, where eh is e(1:2,1:2)
-            **Cgammah:** (3 x 3)
-                covariance matrix of the 3 independent horizontal shear strain
-                tensor elements gamma11, gamma12, gamma22 gamma is traceless part
-                of e.
-            **ts_wmag:** (array, length nt)
-                total rotation angle (radians) as a function of time.  I.e. if the
-                rotation vector at the j'th time step is
-                w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
-                positive for right-handed rotation
-            **Cw:** (3 x 3)
-                covariance matrix of the 3 independent rotation tensor elements
-                w21, w31, w32
-            **ts_w1:** (array, length nt)
-                rotation (rad) about the x1 axis, positive for right-handed
-                rotation
-            **sigmaw1:** (scalar)
-                standard deviation of the ts_w1 (sigma-omega-1 in SF08)
-            **ts_w2:** (array, length nt)
-                rotation (rad) about the x2 axis, positive for right-handed
-                rotation
-            **sigmaw2:** (scalar)
-                standard deviation of ts_w2 (sigma-omega-2 in SF08)
-            **ts_w3:** (array, length nt)
-                "torsion", rotation (rad) about a vertical up or down axis, i.e.
-                x3, positive for right-handed rotation
-            **sigmaw3:** (scalar)
-                standard deviation of the torsion (sigma-omega-3 in SF08)
-            **ts_tilt:** (array, length nt)
-                tilt (rad) (rotation about a horizontal axis, positive for right
-                handed rotation) as a function of time
-                tilt = sqrt( w1^2 + w2^2)
-            **sigmat:** (scalar)
-                standard deviation of the tilt (not defined in SF08, From
-                Papoulis (1965, p. 195, example 7.8))
-            **ts_data:** (array, shape (nt x 3N))
-                time series of the observed displacement differences, which are
-                the di in S95 eqn A1
-            **ts_pred:** (array, shape (nt x 3N))
-                time series of the fitted model's predicted displacement difference
-                Note that the fitted model displacement differences correspond
-                to linalg.dot(A, ptilde), where A is the big matrix in S95 eqn A4
-                and ptilde is S95 eqn A5
-            **ts_misfit:** (array, shape (nt x 3N))
-                time series of the residuals (fitted model displacement differences
-                minus observed displacement differences). Note that the fitted
-                model displacement differences correspond to linalg.dot(A, ptilde),
-                where A is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5
-            **ts_M:** (array, length nt)
-                Time series of M, misfit ratio of S95, p. 688
-            **ts_ptilde:** (array, shape (nt x 6))
-                solution vector p-tilde (from S95 eqn A5) as a function of time
-            **Cp:** (6 x 6)
-                solution covariance matrix defined in SF08
+        **A:** (array, dimension 3N x 6)
+            data mapping matrix 'A' of S95(A4)
+        **g:** (array, dimension 6 x 3N)
+            generalized inverse matrix relating ptilde and data vector, in
+            S95(A5)
+        **Ce:** (4 x 4)
+            covariance matrix of the 4 independent strain tensor elements e11,
+            e21, e22, e33
+        **ts_d:** (array, length nt)
+            dilatation (trace of the 3x3 strain tensor) as a function of time
+        **sigmad:** (scalar)
+            standard deviation of dilatation
+        **ts_dh:** (array, length nt)
+            horizontal dilatation (also known as areal strain) (eEE+eNN) as a
+            function of time
+        **sigmadh:** (scalar)
+            standard deviation of horizontal dilatation (areal strain)
+        **ts_e:** (array, dimension nt x 3 x 3)
+            strain tensor
+        **ts_s:** (array, length nt)
+            maximum strain ( .5*(max eigval of e - min eigval of e) as a
+            function of time, where e is the 3x3 strain tensor
+        **Cgamma:** (4 x 4)
+            covariance matrix of the 4 independent shear strain tensor elements
+            g11, g12, g22, g33 (includes full covariance effects). gamma is
+            traceless part of e.
+        **ts_sh:** (array, length nt)
+            maximum horizontal strain ( .5*(max eigval of eh - min eigval of
+            eh) as a function of time, where eh is e(1:2,1:2)
+        **Cgammah:** (3 x 3)
+            covariance matrix of the 3 independent horizontal shear strain
+            tensor elements gamma11, gamma12, gamma22 gamma is traceless part
+            of e.
+        **ts_wmag:** (array, length nt)
+            total rotation angle (radians) as a function of time.  I.e. if the
+            rotation vector at the j'th time step is
+            w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
+            positive for right-handed rotation
+        **Cw:** (3 x 3)
+            covariance matrix of the 3 independent rotation tensor elements
+            w21, w31, w32
+        **ts_w1:** (array, length nt)
+            rotation (rad) about the x1 axis, positive for right-handed
+            rotation
+        **sigmaw1:** (scalar)
+            standard deviation of the ts_w1 (sigma-omega-1 in SF08)
+        **ts_w2:** (array, length nt)
+            rotation (rad) about the x2 axis, positive for right-handed
+            rotation
+        **sigmaw2:** (scalar)
+            standard deviation of ts_w2 (sigma-omega-2 in SF08)
+        **ts_w3:** (array, length nt)
+            "torsion", rotation (rad) about a vertical up or down axis, i.e.
+            x3, positive for right-handed rotation
+        **sigmaw3:** (scalar)
+            standard deviation of the torsion (sigma-omega-3 in SF08)
+        **ts_tilt:** (array, length nt)
+            tilt (rad) (rotation about a horizontal axis, positive for right
+            handed rotation) as a function of time
+            tilt = sqrt( w1^2 + w2^2)
+        **sigmat:** (scalar)
+            standard deviation of the tilt (not defined in SF08, From
+            Papoulis (1965, p. 195, example 7.8))
+        **ts_data:** (array, shape (nt x 3N))
+            time series of the observed displacement differences, which are
+            the di in S95 eqn A1
+        **ts_pred:** (array, shape (nt x 3N))
+            time series of the fitted model's predicted displacement difference
+            Note that the fitted model displacement differences correspond
+            to linalg.dot(A, ptilde), where A is the big matrix in S95 eqn A4
+            and ptilde is S95 eqn A5
+        **ts_misfit:** (array, shape (nt x 3N))
+            time series of the residuals (fitted model displacement differences
+            minus observed displacement differences). Note that the fitted
+            model displacement differences correspond to linalg.dot(A, ptilde),
+            where A is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5
+        **ts_M:** (array, length nt)
+            Time series of M, misfit ratio of S95, p. 688
+        **ts_ptilde:** (array, shape (nt x 6))
+            solution vector p-tilde (from S95 eqn A5) as a function of time
+        **Cp:** (6 x 6)
+            solution covariance matrix defined in SF08
 
         .. rubric:: Warnings
 
@@ -1812,8 +1812,8 @@ class SeismicArray(object):
 
             This routine allows the user to input the coordinates and ground
             motion time series of all stations in a seismic array having Na
-            stations and the user may select for analysis a subarray of n_plus_1
-            <= Na stations.
+            stations and the user may select for analysis a subarray of
+            n_plus_1 <= Na stations.
 
         (2) Discussion Of Physical Units Of Input And Output
 
@@ -1843,8 +1843,8 @@ class SeismicArray(object):
         if ts1.shape != ts3.shape:
             raise ValueError('ts1 and ts3 have different sizes')
 
-        # check to verify that the number of stations in ts1 agrees with the number
-        # of stations in array_coords
+        # check to verify that the number of stations in ts1 agrees with the
+        # number of stations in array_coords
         nrac, _ = array_coords.shape
         if nrac != na:
             msg = 'ts1 has %s columns(stations) but array_coords has ' % na + \
@@ -1989,7 +1989,7 @@ class SeismicArray(object):
         Bw[2, 5] = 2.
         Bw *= .5
         #
-        # this is the 4x6 matrix mapping solution to total shear strain gamma
+        # This is the 4x6 matrix mapping solution to total shear strain gamma
         # where gamma = strain - tr(strain)/3 * eye(3)
         # the four elements of shear are 11, 12, 22, and 33.  It is symmetric.
         aa = (2 + eta) / 3
@@ -2004,10 +2004,10 @@ class SeismicArray(object):
         Bgamma[2, 4] = aa
         Bgamma[3, 0] = -c
         Bgamma[3, 4] = -c
-        #
-        # this is the 3x6 matrix mapping solution to horizontal shear strain
-        # gamma
-        # the four elements of horiz shear are 11, 12, and 22.  It is symmetric.
+
+        # This is the 3x6 matrix mapping solution to horizontal shear strain
+        #  gamma the four elements of horiz shear are 11, 12, and 22.  It is
+        #  symmetric.
         Bgammah = np.zeros((3, 6))
         Bgammah[0, 0] = .5
         Bgammah[0, 4] = -.5
@@ -2016,7 +2016,7 @@ class SeismicArray(object):
         Bgammah[2, 0] = -.5
         Bgammah[2, 4] = .5
 
-        # solution covariance matrix.  dim(Cp) = 6 * 6
+        # Solution covariance matrix.  dim(Cp) = 6 * 6
         # corresponding to solution elements [u1,1 u1,2 u1,3 u2,1 u2,2 u2,3 ]
         Cp = np.dot(np.dot(g, Cd), g.T)
 
@@ -2064,9 +2064,12 @@ class SeismicArray(object):
             # sum the lengths of the displ difference vectors
             sumlen = 0
             for i in range(N):
-                udif[0, i] = ts1[itime, subarray[i + 1]] - ts1[itime, subarray[0]]
-                udif[1, i] = ts2[itime, subarray[i + 1]] - ts2[itime, subarray[0]]
-                udif[2, i] = ts3[itime, subarray[i + 1]] - ts3[itime, subarray[0]]
+                udif[0, i] = ts1[itime, subarray[i + 1]] - \
+                    ts1[itime, subarray[0]]
+                udif[1, i] = ts2[itime, subarray[i + 1]] - \
+                    ts2[itime, subarray[0]]
+                udif[2, i] = ts3[itime, subarray[i + 1]] - \
+                    ts3[itime, subarray[0]]
                 sumlen = sumlen + np.sqrt(np.sum(udif[:, i].T ** 2))
 
             data = udif.T.reshape(udif.size)
@@ -2425,7 +2428,8 @@ class SeismicArray(object):
         transff = np.empty((npx, npy))
 
         if param is 'wavenumber':
-            for i, kx in enumerate(np.arange(pxmin, pxmax + pstep / 10., pstep)):
+            for i, kx in enumerate(np.arange(pxmin, pxmax + pstep / 10.,
+                                             pstep)):
                 for j, ky in enumerate(np.arange(pymin, pymax + pstep / 10.,
                                                  pstep)):
                     _sum = 0j
@@ -2437,7 +2441,8 @@ class SeismicArray(object):
         elif param is 'slowness':
             nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
             buff = np.zeros(nf)
-            for i, sx in enumerate(np.arange(pxmin, pxmax + pstep / 10., pstep)):
+            for i, sx in enumerate(np.arange(pxmin, pxmax + pstep / 10.,
+                                             pstep)):
                 for j, sy in enumerate(np.arange(pymin, pymax + pstep / 10.,
                                                  pstep)):
                     for k, f in enumerate(np.arange(fmin, fmax + fstep / 10.,
@@ -2456,8 +2461,8 @@ class SeismicArray(object):
     def _beamforming(self, stream, sll_x, slm_x, sll_y, slm_y, sl_s, frqlow,
                      frqhigh, stime, etime, win_len=-1, win_frac=0.5,
                      verbose=False, timestamp='mlabday',
-                     method="DLS", nthroot=1, store=None, correct_3dplane=False,
-                     static_3D=False, vel_cor=4.):
+                     method="DLS", nthroot=1, store=None,
+                     correct_3dplane=False, static_3D=False, vel_cor=4.):
         """
         Method for Delay and Sum/Phase Weighted Stack/Whitened Slowness Power
 
@@ -2472,36 +2477,35 @@ class SeismicArray(object):
         :type etime: UTCDateTime
         :param etime: Endtime of interest
         :param win_len: length for sliding window analysis, default is -1
-            which means the whole trace;
+         which means the whole trace;
         :param win_frac of win_len which is used to 'hop' forward in time
         :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec'
-            returns the timestamp in secons since 1970-01-01T00:00:00,
-            'mlabday' returns the timestamp in days (decimals represent hours,
-            minutes and seconds) since '0001-01-01T00:00:00' as needed for
-            matplotlib date plotting (see e.g. matplotlibs num2date).
+         returns the timestamp in secons since 1970-01-01T00:00:00,
+         'mlabday' returns the timestamp in days (decimals represent hours,
+         minutes and seconds) since '0001-01-01T00:00:00' as needed for
+         matplotlib date plotting (see e.g. matplotlibs num2date).
         :param method: the method to use "DLS" delay and sum; "PWS" phase
-            weighted stack; "SWP" slowness weightend power spectrum
+         weighted stack; "SWP" slowness weightend power spectrum
         :param nthroot: nth-root processing; nth gives the root (1,2,3,4),
-            default 1 (no nth-root)
+         default 1 (no nth-root)
         :type store: function
         :param store: A custom function which gets called on each iteration. It
-            is
-            called with the relative power map and the time offset as first and
-            second arguments and the iteration number as third argument. Useful
-            for
-            storing or plotting the map for each iteration.
+         is called with the relative power map and the time offset as first and
+         second arguments and the iteration number as third argument. Useful
+         for storing or plotting the map for each iteration.
         :param correct_3dplane: if Yes than a best (LSQ) plane will be fitted
-            into the array geometry.
-            Mainly used with small apature arrays at steep flanks
+         into the array geometry. Mainly used with small apature arrays at
+         steep flanks.
         :param static_3D: if yes the station height of am array station is
-            taken into account accoring the formula:
-                tj = -xj*sxj - yj*syj + zj*cos(inc)/vel_cor
-            the inc angle is slowness dependend and thus must
-            be estimated for each grid-point:
-                inc = asin(v_cor*slow)
-        :param vel_cor: Velocity for the upper layer (static correction) in km/s
+         taken into account according to the formula:
+            tj = -xj*sxj - yj*syj + zj*cos(inc)/vel_cor
+         the inc angle is slowness dependend and thus must
+         be estimated for each grid-point:
+            inc = asin(v_cor*slow)
+        :param vel_cor: Velocity for the upper layer (static correction)
+         in km/s.
         :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
-            backazimut, slowness, maximum beam (for DLS)
+         backazimut, slowness, maximum beam (for DLS)
         """
         res = []
         eotr = True
@@ -2645,7 +2649,7 @@ class SeismicArray(object):
                         dat = stream[i].data[spoint[i] + offset:
                                              spoint[i] + offset + nsamp]
 
-                        tap = cosTaper(nsamp, p=0.22)
+                        tap = cosine_taper(nsamp, p=0.22)
                         dat = (dat - dat.mean()) * tap
                         spec[i, :] = np.fft.rfft(dat, nfft)[nlow: nlow + nf]
                 except IndexError:
@@ -2746,12 +2750,12 @@ class SeismicArray(object):
                                          fs + 0.5)
                     shifted = tr.data[s: s + ndat]
                     singlet += 1. / len(stream) * np.sum(shifted * shifted)
-                    beams[_i] += 1. / len(stream) * np.power(
-                        np.abs(shifted), 1. / nthroot) * shifted / \
-                                 np.abs(shifted)
+                    beams[_i] += 1. / len(stream) * np.power(np.abs(shifted),
+                                                             1. / nthroot) * \
+                        shifted / np.abs(shifted)
 
                 beams[_i] = np.power(np.abs(beams[_i]), nthroot) * \
-                            beams[_i] / np.abs(beams[_i])
+                    beams[_i] / np.abs(beams[_i])
 
                 bs = np.sum(beams[_i] * beams[_i])
                 bs /= singlet
@@ -2955,7 +2959,6 @@ class SeismicArray(object):
             # of the sx,sy slowness map is needed
             if baz_plot:
                 slowgrid = []
-                transgrid = []
                 pow = np.asarray(powmap[i])
                 for ix, sx in enumerate(slx):
                     for iy, sy in enumerate(sly):
@@ -3341,11 +3344,11 @@ class BeamformerResult(object):
                                azis, data.T, cmap=cm.get_cmap('hot_r'),
                                rasterized=True)
             timemargin = 0.05 * (self._get_plotting_timestamps(extended=True
-                                                               )[-1]
-                                 - self._get_plotting_timestamps()[0])
+                                                               )[-1] -
+                                 self._get_plotting_timestamps()[0])
             ax.set_xlim(self._get_plotting_timestamps()[0] - timemargin,
-                        self._get_plotting_timestamps(extended=True)[-1]
-                        + timemargin)
+                        self._get_plotting_timestamps(extended=True)[-1] +
+                        timemargin)
             ax.set_ylim(0, 360)
             ax.yaxis.set_major_locator(ymajorlocator)
             cbar = fig.colorbar(pc)
