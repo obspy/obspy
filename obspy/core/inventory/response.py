@@ -27,6 +27,8 @@ from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
                                          ZeroSamplingRate)
+from obspy.io.resp import parser
+from obspy.io.xseed.utils import lookup_code
 
 from .util import Angle, Frequency
 
@@ -35,7 +37,7 @@ class ResponseStage(ComparingObject):
     """
     From the StationXML Definition:
         This complex type represents channel response and covers SEED
-        blockettes 53 to 56.
+        blockettes 53 to 57.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
@@ -192,9 +194,9 @@ class PolesZerosResponseStage(ResponseStage):
     :type normalization_frequency: float
     :param normalization_frequency: The frequency at which the normalization
         factor is normalized.
-    :type zeros: list of complex
+    :type zeros: list of CustomComplex
     :param zeros: All zeros of the stage.
-    :type poles: list of complex
+    :type poles: list of CustomComplex
     :param poles: All poles of the stage.
     :type normalization_factor: float, optional
     :param normalization_factor:
@@ -1109,6 +1111,373 @@ class Response(ComparingObject):
 
         return output, freqs
 
+    def get_evalresp_norm_resp(self, output, start_stage=None, end_stage=None):
+        """
+        XXX This function was adapted (copied and pasted, and
+        return type changed) from get_evalresp_response;
+        unused args and code should be removed and cleaned up.
+
+        :type output: str
+        :param output: Output units. One of:
+
+            ``"DISP"``
+                displacement, output unit is meters
+            ``"VEL"``
+                velocity, output unit is meters/second
+            ``"ACC"``
+                acceleration, output unit is meters/second**2
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two floats
+        :returns: Overall frequency and sensitivity
+        """
+        if not self.response_stages:
+            msg = ("Can not use evalresp on response with no response "
+                   "stages.")
+            raise ObsPyException(msg)
+
+        import obspy.signal.evrespwrapper as ew
+        from obspy.signal.headers import clibevresp
+
+        out_units = output.upper()
+        if out_units not in ("DISP", "VEL", "ACC"):
+            msg = ("requested output is '%s' but must be one of 'DISP', 'VEL' "
+                   "or 'ACC'") % output
+            raise ValueError(msg)
+
+        # Whacky. Evalresp uses a global variable and uses that to scale the
+        # response if it encounters any unit that is not SI.
+        scale_factor = [1.0]
+
+        def get_unit_mapping(key):
+            try:
+                key = key.upper()
+            except:
+                pass
+            units_mapping = {
+                "M": ew.ENUM_UNITS["DIS"],
+                "NM": ew.ENUM_UNITS["DIS"],
+                "CM": ew.ENUM_UNITS["DIS"],
+                "MM": ew.ENUM_UNITS["DIS"],
+                "M/S": ew.ENUM_UNITS["VEL"],
+                "M/SEC": ew.ENUM_UNITS["VEL"],
+                "NM/S": ew.ENUM_UNITS["VEL"],
+                "NM/SEC": ew.ENUM_UNITS["VEL"],
+                "CM/S": ew.ENUM_UNITS["VEL"],
+                "CM/SEC": ew.ENUM_UNITS["VEL"],
+                "MM/S": ew.ENUM_UNITS["VEL"],
+                "MM/SEC": ew.ENUM_UNITS["VEL"],
+                "M/S**2": ew.ENUM_UNITS["ACC"],
+                "M/(S**2)": ew.ENUM_UNITS["ACC"],
+                "M/SEC**2": ew.ENUM_UNITS["ACC"],
+                "M/(SEC**2)": ew.ENUM_UNITS["ACC"],
+                "NM/S**2": ew.ENUM_UNITS["ACC"],
+                "NM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "NM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "NM/(SEC**2)": ew.ENUM_UNITS["ACC"],
+                "CM/S**2": ew.ENUM_UNITS["ACC"],
+                "CM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "CM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "CM/(SEC**2)": ew.ENUM_UNITS["ACC"],
+                "MM/S**2": ew.ENUM_UNITS["ACC"],
+                "MM/(S**2)": ew.ENUM_UNITS["ACC"],
+                "MM/SEC**2": ew.ENUM_UNITS["ACC"],
+                "MM/(SEC**2)": ew.ENUM_UNITS["ACC"],
+                "V": ew.ENUM_UNITS["VOLTS"],
+                "VOLT": ew.ENUM_UNITS["VOLTS"],
+                "VOLTS": ew.ENUM_UNITS["VOLTS"],
+                # This is weird, but evalresp appears to do the same.
+                "V/M": ew.ENUM_UNITS["VOLTS"],
+                "COUNT": ew.ENUM_UNITS["COUNTS"],
+                "COUNTS": ew.ENUM_UNITS["COUNTS"],
+                "T": ew.ENUM_UNITS["TESLA"],
+                "PA": ew.ENUM_UNITS["PRESSURE"],
+                "MBAR": ew.ENUM_UNITS["PRESSURE"]}
+            if key not in units_mapping:
+                if key is not None:
+                    msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
+                           "would refuse to calculate a response for this "
+                           "channel. Proceed with caution.") % key
+                    warnings.warn(msg)
+                value = ew.ENUM_UNITS["UNDEF_UNITS"]
+            else:
+                value = units_mapping[key]
+
+            # Scale factor with the same logic as evalresp.
+            if key in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
+                scale_factor[0] = 1.0E2
+            elif key in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
+                scale_factor[0] = 1.0E3
+            elif key in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
+                scale_factor[0] = 1.0E9
+
+            return value
+
+        all_stages = defaultdict(list)
+
+        for stage in self.response_stages:
+            # optionally select only stages as requested by user
+            if start_stage is not None:
+                if stage.stage_sequence_number < start_stage:
+                    continue
+            if end_stage is not None:
+                if stage.stage_sequence_number > end_stage:
+                    continue
+            all_stages[stage.stage_sequence_number].append(stage)
+
+        stage_lengths = set(map(len, all_stages.values()))
+        if len(stage_lengths) != 1 or stage_lengths.pop() != 1:
+            msg = "Each stage can only appear once."
+            raise ValueError(msg)
+
+        stage_list = sorted(all_stages.keys())
+
+        stage_objects = []
+
+        for stage_number in stage_list:
+            st = ew.stage()
+            st.sequence_no = stage_number
+
+            stage_blkts = []
+
+            blockette = all_stages[stage_number][0]
+
+            # Write the input and output units.
+            st.input_units = get_unit_mapping(blockette.input_units)
+            st.output_units = get_unit_mapping(blockette.output_units)
+
+            if isinstance(blockette, PolesZerosResponseStage):
+                blkt = ew.blkt()
+                # Map the transfer function type.
+                transfer_fct_mapping = {
+                    "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
+                    "LAPLACE (HERTZ)": "ANALOG_PZ",
+                    "DIGITAL (Z-TRANSFORM)": "IIR_PZ"}
+                blkt.type = ew.ENUM_FILT_TYPES[transfer_fct_mapping[
+                    blockette.pz_transfer_function_type]]
+
+                # The blockette is a pole zero blockette.
+                pz = blkt.blkt_info.pole_zero
+
+                pz.nzeros = len(blockette.zeros)
+                pz.npoles = len(blockette.poles)
+                pz.a0 = blockette.normalization_factor
+                pz.a0_freq = blockette.normalization_frequency
+
+                # XXX: Find a better way to do this.
+                poles = (ew.complex_number * len(blockette.poles))()
+                for i, value in enumerate(blockette.poles):
+                    poles[i].real = value.real
+                    poles[i].imag = value.imag
+
+                zeros = (ew.complex_number * len(blockette.zeros))()
+                for i, value in enumerate(blockette.zeros):
+                    zeros[i].real = value.real
+                    zeros[i].imag = value.imag
+
+                pz.poles = C.cast(C.pointer(poles),
+                                  C.POINTER(ew.complex_number))
+                pz.zeros = C.cast(C.pointer(zeros),
+                                  C.POINTER(ew.complex_number))
+            elif isinstance(blockette, CoefficientsTypeResponseStage):
+                blkt = ew.blkt()
+                # This type can have either an FIR or an IIR response. If
+                # the number of denominators is 0, it is a FIR. Otherwise
+                # an IIR.
+
+                # FIR
+                if len(blockette.denominator) == 0:
+                    if blockette.cf_transfer_function_type.lower() \
+                            != "digital":
+                        msg = ("When no denominators are given it must "
+                               "be a digital FIR filter.")
+                        raise ValueError(msg)
+                    # Set the type to an asymmetric FIR blockette.
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                    fir = blkt.blkt_info.fir
+                    fir.h0 = 1.0
+                    fir.ncoeffs = len(blockette.numerator)
+                    # XXX: Find a better way to do this.
+                    coeffs = (C.c_double * len(blockette.numerator))()
+                    for i, value in enumerate(blockette.numerator):
+                        coeffs[i] = float(value)
+                    fir.coeffs = C.cast(C.pointer(coeffs),
+                                        C.POINTER(C.c_double))
+                # IIR
+                else:
+                    blkt.type = ew.ENUM_FILT_TYPES["IIR_COEFFS"]
+                    coeff = blkt.blkt_info.coeff
+
+                    coeff.h0 = 1.0
+                    coeff.nnumer = len(blockette.numerator)
+                    coeff.ndenom = len(blockette.denominator)
+
+                    # XXX: Find a better way to do this.
+                    coeffs = (C.c_double * len(blockette.numerator))()
+                    for i, value in enumerate(blockette.numerator):
+                        coeffs[i] = float(value)
+                    coeff.numer = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
+                    coeffs = (C.c_double * len(blockette.denominator))()
+                    for i, value in enumerate(blockette.denominator):
+                        coeffs[i] = float(value)
+                    coeff.denom = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
+            elif isinstance(blockette, ResponseListResponseStage):
+                msg = ("ResponseListResponseStage not yet implemented due to "
+                       "missing example data. Please contact the developers "
+                       "with a test data set (waveforms and StationXML "
+                       "metadata).")
+                raise NotImplementedError(msg)
+            elif isinstance(blockette, FIRResponseStage):
+                blkt = ew.blkt()
+
+                if blockette.symmetry == "NONE":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                if blockette.symmetry == "ODD":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_1"]
+                if blockette.symmetry == "EVEN":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_2"]
+
+                # The blockette is a fir blockette
+                fir = blkt.blkt_info.fir
+                fir.h0 = 1.0
+                fir.ncoeffs = len(blockette.coefficients)
+
+                # XXX: Find a better way to do this.
+                coeffs = (C.c_double * len(blockette.coefficients))()
+                for i, value in enumerate(blockette.coefficients):
+                    coeffs[i] = float(value)
+                fir.coeffs = C.cast(C.pointer(coeffs),
+                                    C.POINTER(C.c_double))
+            elif isinstance(blockette, PolynomialResponseStage):
+                msg = ("PolynomialResponseStage not yet implemented. "
+                       "Please contact the developers.")
+                raise NotImplementedError(msg)
+            else:
+                # Otherwise it could be a gain only stage.
+                if blockette.stage_gain is not None and \
+                        blockette.stage_gain_frequency is not None:
+                    blkt = None
+                else:
+                    msg = "Type: %s." % str(type(blockette))
+                    raise NotImplementedError(msg)
+
+            if blkt is not None:
+                stage_blkts.append(blkt)
+
+            # Parse the decimation if is given.
+            decimation_values = set([
+                blockette.decimation_correction,
+                blockette.decimation_delay, blockette.decimation_factor,
+                blockette.decimation_input_sample_rate,
+                blockette.decimation_offset])
+            if None in decimation_values:
+                if len(decimation_values) != 1:
+                    msg = ("If a decimation is given, all values must "
+                           "be specified.")
+                    raise ValueError(msg)
+            else:
+                blkt = ew.blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
+                decimation_blkt = blkt.blkt_info.decimation
+
+                # Evalresp does the same!
+                if blockette.decimation_input_sample_rate == 0:
+                    decimation_blkt.sample_int = 0.0
+                else:
+                    decimation_blkt.sample_int = \
+                        1.0 / blockette.decimation_input_sample_rate
+
+                decimation_blkt.deci_fact = blockette.decimation_factor
+                decimation_blkt.deci_offset = blockette.decimation_offset
+                decimation_blkt.estim_delay = blockette.decimation_delay
+                decimation_blkt.applied_corr = \
+                    blockette.decimation_correction
+                stage_blkts.append(blkt)
+
+            # Add the gain if it is available.
+            if blockette.stage_gain is not None and \
+                    blockette.stage_gain_frequency is not None:
+                blkt = ew.blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+                gain_blkt = blkt.blkt_info.gain
+                gain_blkt.gain = blockette.stage_gain
+                gain_blkt.gain_freq = blockette.stage_gain_frequency
+                stage_blkts.append(blkt)
+
+            if not stage_blkts:
+                msg = "At least one blockette is needed for the stage."
+                raise ValueError(msg)
+
+            # Attach the blockette chain to the stage.
+            st.first_blkt = C.pointer(stage_blkts[0])
+            for _i in range(1, len(stage_blkts)):
+                stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
+
+            stage_objects.append(st)
+
+        # Attach the instrument sensitivity as stage 0 at the end.
+        st = ew.stage()
+        st.sequence_no = 0
+        st.input_units = 0
+        st.output_units = 0
+        blkt = ew.blkt()
+        blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+        gain_blkt = blkt.blkt_info.gain
+        gain_blkt.gain = self.instrument_sensitivity.value
+        gain_blkt.gain_freq = self.instrument_sensitivity.frequency
+        st.first_blkt = C.pointer(blkt)
+        stage_objects.append(st)
+
+        chan = ew.channel()
+        if not stage_objects:
+            msg = "At least one stage is needed."
+            raise ValueError(msg)
+
+        # Attach the stage chain to the channel.
+        chan.first_stage = C.pointer(stage_objects[0])
+        for _i in range(1, len(stage_objects)):
+            stage_objects[_i - 1].next_stage = C.pointer(stage_objects[_i])
+
+        chan.nstages = len(stage_objects)
+
+        # Evalresp will take care of setting it to the overall sensitivity.
+        chan.sensit = 0.0
+        chan.sensfreq = 0.0
+
+        # output = np.empty(len(freqs), dtype=np.complex128)
+        out_units = C.c_char_p(out_units.encode('ascii', 'strict'))
+
+        # Set global variables
+        if self.resource_id:
+            clibevresp.curr_file.value = self.resource_id.encode('utf-8')
+        else:
+            clibevresp.curr_file.value = None
+
+        try:
+            rc = clibevresp._obspy_check_channel(C.byref(chan))
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('check_channel: ' + m)
+
+            rc = clibevresp._obspy_norm_resp(C.byref(chan), -1, 0)
+            if rc:
+                e, m = ew.ENUM_ERROR_CODES[rc]
+                raise e('norm_resp: ' + m)
+
+            # XXX: Check if this is really not needed.
+            # output *= scale_factor[0]
+
+        finally:
+            clibevresp.curr_file.value = None
+
+        return chan.sensfreq, chan.calc_sensit
+
     def __str__(self):
         i_s = self.instrument_sensitivity
         if i_s:
@@ -1337,6 +1706,155 @@ class Response(ComparingObject):
         # extract paz
         paz = self.get_paz()
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
+
+
+def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
+    """
+    Returns a Response object built using a sensor,
+    and datalogger NRL type RESP format file.
+    Many caveats and assumptions; Only tested with subset of NRL RESP files
+    for VEL instruments. Does not handle blockettes 61,62
+    :type sensor_resp_file: str
+    :param sensor_resp_file: Filename of NRL RESP for sensor
+    :type datalogger_resp_file: str
+    :param datalogger_resp_file: Filename of NRL RESP for datalogger
+    :type frequency: float, optional
+    :param frequency: Frequency of gain to calculate stage0 gain.
+    """
+    """
+    Assumptions
+    Stage1  :   sensor : b53, b58       -> PolesZerosResponseStage
+    Stage2-N:   DL     : b58            -> ResponseStage
+                       or
+                       : b54, b57, b58  -> CoefficientsTypeResponseStage
+
+    """
+    TRANSFORM_MAP = {'A': 'LAPLACE (RADIANS/SECOND)',
+                     'B': 'LAPLACE (HERTZ)',
+                     'D': 'DIGITAL (Z-TRANSFORM)'
+                     }
+    TRANSFER_MAP = {'A': 'ANALOG (RADIANS/SECOND',
+                    'B': 'ANALOG (HERTZ)',
+                    'D': 'DIGITAL'
+                    }
+
+    def lookup_unit(abbr, lookup):
+        return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
+
+    sensor_blockettelist = parser.read_RESP(sensor_resp_file)
+    sensor_xseedparser = parser.make_xseed(sensor_blockettelist)
+    dl_blockettelist = parser.read_RESP(datalogger_resp_file)
+    dl_xseedparser = parser.make_xseed(dl_blockettelist)
+
+    resp_stages = list()
+
+    # Stage 1 from sensor
+    b53 = sensor_xseedparser.blockettes[53][0]
+    b58 = next((b for b in sensor_xseedparser.blockettes[58]
+                if b.stage_sequence_number == 1), None)
+    sensor_xseedparser._get_abbreviation
+    stage1 = PolesZerosResponseStage(
+        stage_sequence_number=b53.stage_sequence_number,
+        stage_gain=b58.sensitivity_gain,
+        stage_gain_frequency=b58.frequency,
+        input_units=lookup_unit(sensor_xseedparser.abbreviations,
+                                b53.stage_signal_input_units),
+        output_units=lookup_unit(sensor_xseedparser.abbreviations,
+                                 b53.stage_signal_output_units),
+        pz_transfer_function_type=TRANSFORM_MAP[b53.transfer_function_types],
+        normalization_frequency=b53.normalization_frequency,
+        zeros=list(map(CustomComplex, b53.real_zero, b53.imaginary_zero)),
+        poles=list(map(CustomComplex, b53.real_pole, b53.imaginary_pole)),
+        normalization_factor=b53.A0_normalization_factor,
+        resource_id='GENERATOR:obspy_from_RESP',   # XXX what should id be?
+    )
+
+    resp_stages.append(stage1)
+
+    # Stage2-N
+    # Get all blockettes for given stage
+    resp_blockettes = dict()
+    for b in dl_xseedparser.stations[0]:
+        if b.id in (54, 57, 58) and b.stage_sequence_number >= 2:
+            resp_blockettes.setdefault(b.stage_sequence_number, {})[b.id] = b
+
+    for stage in resp_blockettes:
+        if 54 in resp_blockettes[stage]:
+            # Coefficient type response
+            # b54, b57, b58 should be present
+            b54 = resp_blockettes[stage][54]
+            b57 = resp_blockettes[stage][57]
+            b58 = resp_blockettes[stage][58]
+            # Numerators are not a list if length 1
+            if b54.number_of_numerators == 1:
+                b54.numerator_coefficient = [b54.numerator_coefficient]
+                b54.numerator_error = [b54.numerator_error]
+            if b54.number_of_denominators == 0:
+                denominator = []
+            elif b54.number_of_denominators == 1:
+                denominator = list(map(FloatWithUncertaintiesAndUnit,
+                                       [b54.denominator_coefficient]))
+            else:
+                denominator = list(map(FloatWithUncertaintiesAndUnit,
+                                       b54.denominator_coefficient))
+
+            response_stage = CoefficientsTypeResponseStage(
+                stage_sequence_number=stage,
+                stage_gain=b58.sensitivity_gain,
+                stage_gain_frequency=b58.frequency,
+                input_units=lookup_unit(dl_xseedparser.abbreviations,
+                                        b54.signal_input_units),
+                output_units=lookup_unit(dl_xseedparser.abbreviations,
+                                         b54.signal_output_units),
+                cf_transfer_function_type=TRANSFER_MAP[b54.response_type],
+                numerator=list(map(FloatWithUncertaintiesAndUnit,
+                                   b54.numerator_coefficient)),
+                denominator=denominator,
+                decimation_input_sample_rate=b57.input_sample_rate,
+                decimation_factor=b57.decimation_factor,
+                decimation_offset=b57.decimation_offset,
+                decimation_delay=b57.estimated_delay,
+                decimation_correction=b57.correction_applied
+            )
+        else:
+            # Basic responsestage
+            # just a b58
+            b58 = resp_blockettes[stage][58]
+            response_stage = ResponseStage(
+                stage_sequence_number=stage,
+                stage_gain=b58.sensitivity_gain,
+                stage_gain_frequency=b58.frequency,
+                # XXX Assume this is stage2 V to V
+                input_units='V',
+                output_units='V'
+            )
+        resp_stages.append(response_stage)
+
+    # XXX Pick 'correct' frequency for Instrument sensitivity
+    # for now we will use the sensor stage1 if not provided as arg.
+    if frequency is None:
+        sensitivity_frequency = stage1.stage_gain_frequency
+    else:
+        sensitivity_frequency = frequency
+    # dummy stage0
+    stage0 = InstrumentSensitivity(value=1.0,
+                                   frequency=sensitivity_frequency,
+                                   input_units='M/S',
+                                   output_units='COUNTS')
+    # Create Inventory.Response object
+    inv_response = Response(resource_id='Resource_ID',
+                            instrument_sensitivity=stage0,
+                            instrument_polynomial=None,
+                            response_stages=resp_stages)
+    # calculate overal response; stage0
+    sensfreq, calc_sensit = inv_response.get_evalresp_norm_resp('VEL')
+    print('freq: %s, calc_sensit: %s' % (sensfreq,
+                                         calc_sensit)
+          )
+    # put calculated response in instrument sensitivity
+    inv_response.instrument_sensitivity.value = calc_sensit
+    inv_response.instrument_sensitivity.frequency = sensfreq
+    return inv_response
 
 
 def paz_to_sacpz_string(paz, instrument_sensitivity):
