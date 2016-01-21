@@ -53,6 +53,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import PY2, with_metaclass
 
 from abc import ABCMeta, abstractmethod
+import io
 import platform
 import sys
 
@@ -170,7 +171,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         """
         pass
 
-    def _download(self, url, params=None):
+    def _download(self, url, params=None, filename=None):
         """
         Download the URL with GET and the chosen parameters.
 
@@ -181,16 +182,43 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :type url: str
         :param params: Additional URL parameters.
         :type params: dict
+        :param filename: String or file like object. Will download directly
+            to the file. If given, this function will return nothing.
+        :type filename: str or file-like object
         :return: The response object resulting in the error.
         :rtype: :class:`requests.Response`
         """
-        r = requests.get(url, headers={"User-Agent": self._user_agent},
-                         params=params)
+        _request_args = {"url": url
+                         "headers": {"User-Agent": self._user_agent},
+                         "params": params}
+
+        # Stream to file - no need to keep it in memory for large files.
+        if filename:
+            _request_args["stream"] = True
+
+        r = requests.get(**_request_args)
+
         # Only accept code 200.
         if r.status_code == 200:
             return r
         self._handle_requests_http_error(r)
 
+        # Return if nothing else happens.
+        if not filename:
+            return r
+
+        _chunk_size = 1024
+        if hasattr(filename, "write"):
+            for chunk in r.iter_content(chunk_size=_chunk_size):
+                if not chunk:
+                    continue
+                filename.write(chunk)
+        else:
+            with io.open(filename, "wb") as fh:
+                for chunk in r.iter_content(chunk_size=_chunk_size):
+                    if not chunk:
+                        continue
+                    fh.write(chunk)
 
 class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
     """
