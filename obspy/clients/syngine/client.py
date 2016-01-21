@@ -106,7 +106,7 @@ class Client(WaveformClient, HTTPClient):
             sourcedoublecouple=None, sourceforce=None, origintime=None,
             starttime=None, endtime=None, label=None, components=None,
             units=None, scale=None, dt=None, kernelwidth=None,
-            format="miniseed"):
+            format="miniseed", filename=None):
         """
         Request waveforms using the Syngine service.
 
@@ -216,6 +216,9 @@ class Client(WaveformClient, HTTPClient):
         :param format: Specify output file to be either miniSEED or a ZIP
             archive of SAC files, either ``miniseed`` or ``saczip``.
         :type format: str
+        :param filename: Will download directly to the given file. If given,
+            this method will return nothing.
+        :type filename: str or file-like object
         """
         model = model.strip().lower()
         if not model:
@@ -287,7 +290,13 @@ class Client(WaveformClient, HTTPClient):
             value = ",".join(["%g" % float(_i) for _i in value])
             params[key] = value
 
-        r = self._download(url=self._get_url("query"), params=params)
+        r = self._download(url=self._get_url("query"), params=params,
+                           filename=filename)
+
+        # A given filename will write directly to a file.
+        if filename:
+            return
+
         with io.BytesIO(r.content) as buf:
             st = obspy.read(buf)
         return st
