@@ -279,12 +279,10 @@ class UTCDateTime(object):
                     for i in range(1, min(len(parts), 6)):
                         if len(parts[i]) == 1:
                             parts[i] = '0' + parts[i]
-                    # standard date string
                     value = ''.join(parts)
-                    if len(value) > 8:
-                        pattern = "%Y%m%d%H%M%S"
-                    else:
-                        pattern = "%Y%m%d"
+                    # fill missing elements with zeros
+                    value += '0' * (14 - len(value))
+                    pattern = "%Y%m%d%H%M%S"
                 ms = 0
                 if '.' in value:
                     parts = value.split('.')
