@@ -3,11 +3,10 @@
 obspy.clients.syngine - Client for the IRIS Syngine service
 ===========================================================
 
-Contains request abilities that naturally integrate with the rest of ObsPy
-for the IRIS syngine service (http://ds.iris.edu/ds/products/syngine/). The
-service is able to generate fully three dimensional synthetics through
-various 1D Earth models with arbitrary source-receiver geometries and source
-mechanisms.
+This module offers methods to download from the IRIS syngine service
+(http://ds.iris.edu/ds/products/syngine/). The service is able to generate
+fully three dimensional synthetics through various 1D Earth models with
+arbitrary source-receiver geometries and source mechanisms.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -61,7 +60,7 @@ can potentially download a lot of data with a single request.
 
     from obspy.clients.syngine import Client
     client = Client()
-    st = client.get_waveforms(model="ak135f_5s", network="IU", station="AN*",
+    st = client.get_waveforms(model="ak135f_5s", network="IU", station="A*",
                               eventid="GCMT:C201002270634A",
                               starttime="P-10", endtime="P+20")
     st.plot()
