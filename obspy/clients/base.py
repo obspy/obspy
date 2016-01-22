@@ -171,12 +171,15 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         """
         pass
 
-    def _download(self, url, params=None, filename=None):
+    def _download(self, url, params=None, filename=None, data=None):
         """
-        Download the URL with GET and the chosen parameters.
+        Download the URL with GET or POST and the chosen parameters.
 
         Will only return if it manages to download with HTTP code 200,
         otherwise the _handle_requests_http_error() method is called.
+
+        By default it will send a GET request - if data is given it will
+        send a POST request.
 
         :param url: The URL to download from.
         :type url: str
@@ -185,6 +188,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :param filename: String or file like object. Will download directly
             to the file. If given, this function will return nothing.
         :type filename: str or file-like object
+        :param data: If given, a POST request will be sent with the data in
+            the body of the request.
+        :type data: dictionary, bytes, or file-like object
         :return: The response object resulting in the error.
         :rtype: :class:`requests.Response`
         """
@@ -196,7 +202,11 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         if filename:
             _request_args["stream"] = True
 
-        r = requests.get(**_request_args)
+        if data is None:
+            r = requests.get(**_request_args)
+        else:
+            _request_args["data"] = data
+            r = requests.post(**_request_args)
 
         # Only accept code 200.
         if r.status_code == 200:

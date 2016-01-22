@@ -14,6 +14,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import collections
+import copy
 import io
 import pprint
 
@@ -449,6 +451,9 @@ class Client(WaveformClient, HTTPClient):
         this method will return nothing.
         :type filename: str or file-like object
         """
+        if not bulk:
+            raise ValueError("Some bulk download information must be given.")
+
         arguments = {
             "eventid": eventid,
             "sourcelatitude": sourcelatitude,
@@ -470,3 +475,57 @@ class Client(WaveformClient, HTTPClient):
             "filename": filename}
 
         params = self._convert_parameters(model=model, **arguments)
+
+        # Assemble the bulk file.
+        with io.BytesIO() as buf:
+            # Write the header.
+            buf.write("model={model}\n".format(**params).encode())
+            del params["model"]
+            for key in sorted(params.keys()):
+                value = params[key]
+                buf.write("{key}={value}\n".format(key=key,
+                                                   value=value).encode())
+
+            # Write the bulk content.
+            for item in bulk:
+                # Dictionary like items.
+                if isinstance(item, collections.Mapping):
+                    if "latitude" in item or "longitude" in item:
+                        if not ("latitude" in item and "longitude" in item):
+                            raise ValueError(
+                                "Item '%s' in bulk must contain both "
+                                "latitude and longitude if either is given." %
+                                str(item))
+                        bulk_item = "{latitude} {longitude}".format(**item)
+                        for _i in ("netcode", "stacode", "loccode"):
+                            if _i in item:
+                                bulk_item += " %s=%s" % (_i.upper(), item[_i])
+                    elif "stacode" in item and "netcode" in item:
+                        bulk_item = "{netcode} {stacode}".format(**item)
+                    else:
+                        raise ValueError("Item '%s' in bulk is malformed." %
+                                         str(item))
+                # Iterable items.
+                elif isinstance(item, collections.Container):
+                    if len(item) != 2:
+                        raise ValueError("Item '%s' in bulk must have two "
+                                         "entries." % str(item))
+                    bulk_item = "%s %s" % (item[0], item[1])
+                else:
+                    raise ValueError("Item '%s' in bulk cannot be parsed." %
+                                     str(item))
+
+                buf.write((bulk_item.strip() + "\n").encode())
+
+            buf.seek(0, 0)
+
+            r = self._download(url=self._get_url("query"),
+                               data=buf, filename=filename)
+
+            # A given filename will write directly to a file.
+            if filename:
+                return
+
+            with io.BytesIO(r.content) as buf:
+                st = obspy.read(buf)
+            return st
