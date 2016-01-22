@@ -14,7 +14,6 @@ import numpy as np
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
@@ -92,23 +91,6 @@ class ClientTestCase(unittest.TestCase):
         # Check random key.
         self.assertEqual(models["ak135f_5s"]["components"],
                          "vertical and horizontal")
-
-    def test_print_model_information(self):
-        with mock.patch("requests.get") as p:
-            p.return_value = RequestsMockResponse()
-            p.return_value._json = {"a": "b"}
-
-            with CatchOutput() as out:
-                self.c.print_model_information()
-
-        self.assertEqual(out.stdout, b"{'a': 'b'}\n")
-
-        self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[1]["url"],
-                         'http://service.iris.edu/irisws/syngine/1/models')
-        self.assertEqual(p.call_args[1]["params"], None)
-        self.assertEqual(p.call_args[1]["headers"],
-                         {'User-Agent': DEFAULT_TESTING_USER_AGENT})
 
     def test_get_service_version_mock(self):
         with mock.patch("requests.get") as p:

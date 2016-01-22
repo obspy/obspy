@@ -93,12 +93,6 @@ class Client(WaveformClient, HTTPClient):
         """
         return self._download(self._get_url("models")).json()
 
-    def print_model_information(self):
-        """
-        Print information about the available models.
-        """
-        pprint.pprint(self.get_available_models())
-
     def get_service_version(self):
         """
         Get the service version of the remote Syngine server.
