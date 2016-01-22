@@ -112,7 +112,7 @@ method for a list of all available methods including some meta-information.
 The :func:`~obspy.clients.syngine.client.Client.get_model_info()`
 method should be used to retrieve information about a specific model.
 
->>> from obspy.client.syngine import Client
+>>> from obspy.clients.syngine import Client
 >>> c = Client()
 >>> db_info = c.get_model_info(model_name="ak135f_5s")
 >>> print(db_info.period)

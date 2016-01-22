@@ -66,7 +66,7 @@ class Client(WaveformClient, HTTPClient):
 
         .. rubric:: Example
 
-        >>> from obspy.client.syngine import Client
+        >>> from obspy.clients.syngine import Client
         >>> c = Client()
         >>> db_info = c.get_model_info(model_name="ak135f_5s")
         >>> print(db_info.period)
