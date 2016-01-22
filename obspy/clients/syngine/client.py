@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ObsPy client for the IRIS syngine service.
+ObsPy client for the IRIS Syngine service.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -30,7 +30,7 @@ from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
 
 class Client(WaveformClient, HTTPClient):
     """
-    Client for the IRIS syngine service.
+    Client for the IRIS Syngine service.
     """
     def __init__(self, base_url="http://service.iris.edu/irisws/syngine/1",
                  user_agent=DEFAULT_USER_AGENT, debug=False, timeout=20):
@@ -93,7 +93,7 @@ class Client(WaveformClient, HTTPClient):
 
     def get_service_version(self):
         """
-        Get the service version of the remote syngine server.
+        Get the service version of the remote Syngine server.
         """
         r = self._download(self._get_url("version"))
         # Decoding and what not is handled by the requests library.
@@ -106,7 +106,7 @@ class Client(WaveformClient, HTTPClient):
 
         params = {"model": model}
 
-        # Error handling is mostly delegated to the actual syngine service.
+        # Error handling is mostly delegated to the actual Syngine service.
         # Here we just check that the types are compatible.
         str_arguments = ["network", "station", "networkcode", "stationcode",
                          "locationcode", "eventid", "label", "components",
@@ -153,7 +153,7 @@ class Client(WaveformClient, HTTPClient):
                 value = float(value)
             # If a string like object, attempt to parse it to a datetime
             # object, otherwise assume its a phase-relative time and let the
-            # syngine service deal with the erorr handling.
+            # Syngine service deal with the erorr handling.
             elif isinstance(value, (str, native_str)):
                 try:
                     value = obspy.UTCDateTime(value)
@@ -213,9 +213,22 @@ class Client(WaveformClient, HTTPClient):
 
         This method is strongly tied to the actual implementation on the
         server side. The default values and all the exception handling are
-        deferred to the service. Please see `the syngine documentation
+        deferred to the service. Please see `the Syngine documentation
         <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
         default values of all parameters.
+
+        .. rubric:: Example
+
+        >>> from obspy.clients.syngine import Client
+        >>> client = Client()
+        >>> st = client.get_waveforms(model="ak135f_5s", network="IU",
+        ...                           station="ANMO",
+        ...                           eventid="GCMT:C201002270634A")
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        IU.ANMO.SE.MXZ | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXN | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXE | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
 
         :param model: Specify the model.
         :type model: str
@@ -246,15 +259,14 @@ class Client(WaveformClient, HTTPClient):
         :type sourcelatitude: float
         :param sourcelongitude: Specify the source longitude.
         :type sourcelongitude: float
-        :param sourcedepthinmeters: Specify the source depth in meters from
-            0 to 700000.
+        :param sourcedepthinmeters: Specify the source depth in meters.
         :type sourcedepthinmeters: float
         :param sourcemomenttensor: Specify a source in moment tensor
             components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
             ``Mtp`` with values in Newton meters (*Nm*).
         :type sourcemomenttensor: list of floats
         :param sourcedoublecouple: Specify a source as a double couple. The
-            list of values are ``strike``, ``dip``, ``rake`` [,``M0``],
+            list of values are ``strike``, ``dip``, ``rake`` [, ``M0`` ],
             where strike, dip and rake are in degrees and M0 is the scalar
             seismic moment in Newton meters (Nm). If not specified, a value
             of *1e19* will be used as the scalar moment.
@@ -275,10 +287,10 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example **P-10** (meaning Pwave arrival time minus 10
+            for example ``P-10`` (meaning Pwave arrival time minus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``origintime``.
-        :type starttime::class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Specifies the desired end time for the synthetic
             trace(s). This may be specified as either:
 
@@ -289,10 +301,10 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example **P-10** (meaning Pwave arrival time minus 10
+            for example ``P-10`` (meaning Pwave arrival time minus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``starttime``.
-        :type endtime::class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param label: Specify a label to be included in file names and HTTP
             file name suggestions.
         :type label: str
@@ -368,103 +380,136 @@ class Client(WaveformClient, HTTPClient):
             units=None, scale=None, dt=None, kernelwidth=None,
             format="miniseed", filename=None, data=None):
         """
-        Request multiple waveforms using the Syngine service at once.
+        Request waveforms for multiple receivers simultaneously.
 
         This method is strongly tied to the actual implementation on the
         server side. The default values and all the exception handling are
-        deferred to the service. Please see `the syngine documentation
+        deferred to the service. Please see the `Syngine documentation
         <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
         default values of all parameters.
 
-        This method used the POST functionalities of the syngine service.
+        This method uses the POST functionalities of the Syngine service.
+
+
+        .. rubric:: Example
+
+        The `bulk` parameter is a list of either other lists/tuples or
+        dictionaries. Each item specifies one receiver. Items can be
+        specified in a number of different ways:
+
+        >>> from obspy.clients.syngine import Client
+        >>> c = Client()
+        >>> bulk = [
+        ...     {"netcode": "IU" ,"stacode": "ANMO"},  # net/sta codes
+        ...     {"latitude": 47.0,"longitude": 12.1},  # coordinates
+        ...     {"latitude": 47.0,"longitude": 12.1,
+        ...      "netcode": "AA", "stacode": "BB",
+        ...      "loccode": "CC"},                     # optional net/sta/loc
+        ...     ["IU", "ANTO"],                        # net/sta as list
+        ...     [33.2, -123.5]                         # lat/lon as list/tuple
+        ... ]
+
+        Just pass that on to the bulk waveform method and retrieve the data.
+
+        >>> st = c.get_waveforms_bulk(
+        ...     model="ak135f_5s", bulk=bulk, sourcelatitude=12.3,
+        ...     sourcelongitude=75.3, sourcedepthinmeters=54321,
+        ...     sourcemomenttensor=[1E19, 1E19, 1E19, 0, 0, 0],
+        ...     components="Z")
+        >>> print(st.sort())  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        AA.BB.CC.MXZ    | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
+        IU.ANMO.SE.MXZ  | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
+        IU.ANTO.SE.MXZ  | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
+        XX.S0001.SE.MXZ | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
+        XX.S0002.SE.MXZ | 1900-01-01T00:00:00... - ... | 4.0 Hz, 15520 samples
 
         :param model: Specify the model.
         :type model: str
         :param bulk: Specify the receivers to download in bulk.
         :type bulk: list of lists, tuples, or dictionaries
         :param eventid: Specify an event identifier in the form
-        [catalog]:[eventid]. The centroid time and location and moment
-        tensor of the solution will be used as the source.
+            [catalog]:[eventid]. The centroid time and location and moment
+            tensor of the solution will be used as the source.
         :type eventid: str
         :param sourcelatitude: Specify the source latitude.
         :type sourcelatitude: float
         :param sourcelongitude: Specify the source longitude.
         :type sourcelongitude: float
-        :param sourcedepthinmeters: Specify the source depth in meters from
-        0 to 700000.
+        :param sourcedepthinmeters: Specify the source depth in meters.
         :type sourcedepthinmeters: float
         :param sourcemomenttensor: Specify a source in moment tensor
-        components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
-        ``Mtp`` with values in Newton meters (*Nm*).
+            components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
+            ``Mtp`` with values in Newton meters (*Nm*).
         :type sourcemomenttensor: list of floats
         :param sourcedoublecouple: Specify a source as a double couple. The
-        list of values are ``strike``, ``dip``, ``rake`` [,``M0``],
-        where strike, dip and rake are in degrees and M0 is the scalar
-        seismic moment in Newton meters (Nm). If not specified, a value
-        of *1e19* will be used as the scalar moment.
+            list of values are ``strike``, ``dip``, ``rake`` [, ``M0`` ],
+            where strike, dip and rake are in degrees and M0 is the scalar
+            seismic moment in Newton meters (Nm). If not specified, a value
+            of *1e19* will be used as the scalar moment.
         :type sourcedoublecouple: list of floats
         :param sourceforce: Specify a force source as a list of ``Fr``, ``Ft``,
-        ``Fp`` in units of Newtons (N).
+            ``Fp`` in units of Newtons (N).
         :type sourceforce: list of floats
         :param origintime: Specify the source origin time. This must be
-        specified as an absolute date and time.
+            specified as an absolute date and time.
         :type origintime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Specifies the desired start time for the synthetic
             trace(s). This may be specified as either:
 
-        * an absolute date and time
-        * a phase-relative offset
-        * an offset from origin time in seconds
+            * an absolute date and time
+            * a phase-relative offset
+            * an offset from origin time in seconds
 
-        If the value is recognized as a date and time, it is interpreted
-        as an absolute time. If the value is in the form
-        ``phase[+-]offset`` it is interpreted as a phase-relative time,
-        for example **P-10** (meaning Pwave arrival time minus 10
-        seconds). If the value is a numerical value it is interpreted as an
-        offset, in seconds, from the ``origintime``.
-        :type starttime::class:`~obspy.core.utcdatetime.UTCDateTime`
+            If the value is recognized as a date and time, it is interpreted
+            as an absolute time. If the value is in the form
+            ``phase[+-]offset`` it is interpreted as a phase-relative time,
+            for example ``P-10`` (meaning Pwave arrival time minus 10
+            seconds). If the value is a numerical value it is interpreted as an
+            offset, in seconds, from the ``origintime``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Specifies the desired end time for the synthetic
-        trace(s). This may be specified as either:
+            trace(s). This may be specified as either:
 
-        * an absolute date and time
-        * a phase-relative offset
-        * an offset from origin time in seconds
+            * an absolute date and time
+            * a phase-relative offset
+            * an offset from origin time in seconds
 
-        If the value is recognized as a date and time, it is interpreted
-        as an absolute time. If the value is in the form
-        ``phase[+-]offset`` it is interpreted as a phase-relative time,
-        for example **P-10** (meaning Pwave arrival time minus 10
-        seconds). If the value is a numerical value it is interpreted as an
-        offset, in seconds, from the ``starttime``.
-        :type endtime::class:`~obspy.core.utcdatetime.UTCDateTime`
+            If the value is recognized as a date and time, it is interpreted
+            as an absolute time. If the value is in the form
+            ``phase[+-]offset`` it is interpreted as a phase-relative time,
+            for example ``P-10`` (meaning Pwave arrival time minus 10
+            seconds). If the value is a numerical value it is interpreted as an
+            offset, in seconds, from the ``starttime``.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param label: Specify a label to be included in file names and HTTP
-        file name suggestions.
+            file name suggestions.
         :type label: str
         :param components: Specify the orientation of the synthetic
-        seismograms as a list of any combination of ``Z`` (vertical),
-        ``N`` (north), ``E`` (east), ``R`` (radial), ``T`` (transverse)
+            seismograms as a list of any combination of ``Z`` (vertical),
+            ``N`` (north), ``E`` (east), ``R`` (radial), ``T`` (transverse)
         :type components: str or list of strings.
         :param units: Specify either ``displacement``, ``velocity`` or
-        ``acceleration`` for the synthetics. The length unit is meters.
+            ``acceleration`` for the synthetics. The length unit is meters.
         :type units: str
         :param scale: Specify an amplitude scaling factor. The default
-        amplitude length unit is meters.
+            amplitude length unit is meters.
         :type scale: float
         :param dt: Specify the sampling interval in seconds. Only upsampling
-        is allowed so this value must be larger than the intrinsic interval
-        of the model database.
+            is allowed so this value must be larger than the intrinsic interval
+            of the model database.
         :type dt: float
         :param kernelwidth: Specify the width of the sinc kernel used for
             resampling to requested sample interval (``dt``), relative to the
             original sampling rate.
         :type kernelwidth: int
         :param format: Specify output file to be either miniSEED or a ZIP
-        archive of SAC files, either ``miniseed`` or ``saczip``.
+            archive of SAC files, either ``miniseed`` or ``saczip``.
         :type format: str
         :param filename: Will download directly to the given file. If given,
-        this method will return nothing.
+            this method will return nothing.
         :type filename: str or file-like object
-        :param data: If given this will be sent directly sent to the syngine
+        :param data: If given this will be sent directly sent to the Syngine
             service as a POST payload. All other parameters except the
             ``filename`` parameter will be silently ignored. Likely not that
             useful for most people.

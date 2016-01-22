@@ -9,7 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       sds.Client
+       client.Client
 
     .. comment to end block
 
@@ -19,6 +19,6 @@
        :toctree: autogen
        :nosignatures:
 
-       sds
+       client
 
     .. comment to end block
