@@ -23,7 +23,7 @@ First initialize a client object.
 >>> from obspy.clients.syngine import Client
 >>> client = Client()
 
-Then requests some data.
+Then request some data.
 
 >>> st = client.get_waveforms(model="ak135f_5s", network="IU", station="ANMO",
 ...                           eventid="GCMT:C201002270634A")
