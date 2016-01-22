@@ -375,7 +375,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
-        # One last test to test a source mechanism
+        # One to test a source mechanism
         st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
                                   sourcemomenttensor=[1, 2, 3, 4, 5, 6],
                                   sourcelatitude=10, sourcelongitude=20,
@@ -384,6 +384,29 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         st_bulk = self.c.get_waveforms_bulk(
                 model="test", bulk=[("IU", "ANMO")],
+                sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+                sourcelatitude=10, sourcelongitude=20,
+                sourcedepthinmeters=100,
+                components="Z")
+        self.assertEqual(len(st_bulk), 1)
+        self.assertEqual(st, st_bulk)
+
+        # One more to test actual time values.
+        st = self.c.get_waveforms(
+            model="test", network="IU", station="ANMO",
+            origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
+            starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
+            endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
+            sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+            sourcelatitude=10, sourcelongitude=20,
+            sourcedepthinmeters=100,
+            components="Z")
+        self.assertEqual(len(st), 1)
+        st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
+                starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
+                endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
                 sourcemomenttensor=[1, 2, 3, 4, 5, 6],
                 sourcelatitude=10, sourcelongitude=20,
                 sourcedepthinmeters=100,
