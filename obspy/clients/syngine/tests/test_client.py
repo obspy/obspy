@@ -280,6 +280,82 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn("HTTP code 400 when", msg)
         self.assertIn("Unrecognized component", msg)
 
+    def test_bulk_waveform_download_mock(self):
+        """
+        Mock the bulk download requests to test the payload generation.
+        """
+        r = RequestsMockResponse()
+        with io.BytesIO() as buf:
+            obspy.read()[0].write(buf, format="mseed")
+            buf.seek(0, 0)
+            r.content = buf.read()
+
+        payload = []
+
+        def side_effect(*args, **kwargs):
+            kwargs["data"].seek(0, 0)
+            payload[:] = [kwargs["data"].read().decode()]
+            return r
+
+        # Test simple lists first.
+        with mock.patch("requests.post") as p:
+            p.side_effect = side_effect
+            self.c.get_waveforms_bulk(
+                model="ak135f_5s", bulk=[
+                    [1.0, 2.0],
+                    (2.0, 3.0),
+                    ("AA", "BB")])
+
+        self.assertEqual(payload[0], "\n".join([
+            "model=ak135f_5s",
+            "format=miniseed",
+            "1.0 2.0",
+            "2.0 3.0",
+            "AA BB\n"]))
+
+        # A couple more parameters
+        with mock.patch("requests.post") as p:
+            p.side_effect = side_effect
+            self.c.get_waveforms_bulk(
+                model="ak135f_5s", bulk=[
+                    [1.0, 2.0],
+                    (2.0, 3.0),
+                    ("AA", "BB")],
+                format="saczip", sourcemomenttensor=[1,2,3,4,5,6])
+
+        self.assertEqual(payload[0], "\n".join([
+            "model=ak135f_5s",
+            "format=saczip",
+            "sourcemomenttensor=1,2,3,4,5,6",
+            "1.0 2.0",
+            "2.0 3.0",
+            "AA BB\n"]))
+
+        # A couple of dictionaries.
+        with mock.patch("requests.post") as p:
+            p.side_effect = side_effect
+            self.c.get_waveforms_bulk(
+                    model="ak135f_5s", bulk=[
+                        {"netcode": "IU", "stacode": "ANMO"},
+                        {"latitude": 12, "longitude": 13.1},
+                        {"latitude": 12, "longitude": 13.1, "netcode": "IU"},
+                        {"latitude": 12, "longitude": 13.1, "stacode": "ANMO"},
+                        {"latitude": 12, "longitude": 13.1, "loccode": "00"},
+                        {"latitude": 12, "longitude": 13.1, "netcode": "IU",
+                         "stacode": "ANMO", "loccode": "00"}],
+                    format="saczip", eventid="GCMT:C201002270634A")
+
+        self.assertEqual(payload[0], "\n".join([
+            "model=ak135f_5s",
+            "eventid=GCMT:C201002270634A",
+            "format=saczip",
+            "IU ANMO",
+            "12 13.1",
+            "12 13.1 NETCODE=IU",
+            "12 13.1 STACODE=ANMO",
+            "12 13.1 LOCCODE=00",
+            "12 13.1 NETCODE=IU STACODE=ANMO LOCCODE=00\n"]))
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
