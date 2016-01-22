@@ -889,7 +889,10 @@ class ResourceIdentifier(object):
         Both the object and it's id can still be independently used as
         dictionary keys.
         """
-        return self.id.__hash__()
+        # "Salt" the hash with a string so the hash of the object and a
+        # string identical to the id can both be used as individual
+        # dictionary keys.
+        return hash("RESOURCE_ID") + self.id.__hash__()
 
     def regenerate_uuid(self):
         """
