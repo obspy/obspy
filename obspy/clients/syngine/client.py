@@ -65,10 +65,18 @@ class Client(WaveformClient, HTTPClient):
         """
         Get some information about a particular model.
 
+        .. rubric:: Example
+
+        >>> from obspy.client.syngine import Client
+        >>> c = Client()
+        >>> db_info = c.get_model_info(model_name="ak135f_5s")
+        >>> print(db_info.period)
+        5.125
+
         :param model_name: The name of the model. Case insensitive.
         :type model_name: str
         :returns: A dictionary with more information about any model.
-        :rtype: :class:`obspy.core.attribdict.AttribDict`
+        :rtype: :class:`obspy.core.util.attribdict.AttribDict`
         """
         model_name = model_name.strip().lower()
         r = self._download(self._get_url("info"),
