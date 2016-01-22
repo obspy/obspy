@@ -118,7 +118,7 @@ class Client(WaveformClient, HTTPClient):
         int_arguments = ["kernelwidth"]
         time_arguments = ["origintime"]
 
-        for keys, t in ((str_arguments, str),
+        for keys, t in ((str_arguments, native_str),
                         (float_arguments, float),
                         (int_arguments, int),
                         (time_arguments, obspy.UTCDateTime)):
@@ -159,12 +159,12 @@ class Client(WaveformClient, HTTPClient):
                 try:
                     value = obspy.UTCDateTime(value)
                 except:
-                    value = str(value)
+                    value = (value)
             # Last but not least just try to pass it to the datetime
             # constructor without catching the error.
             else:
                 value = obspy.UTCDateTime(value)
-            params[key] = value
+            params[key] = native_str(value)
 
         # These all have to be lists of floats. Otherwise it fails.
         source_mecs = ["sourcemomenttensor",
