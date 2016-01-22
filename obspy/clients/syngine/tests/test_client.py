@@ -322,11 +322,11 @@ class ClientTestCase(unittest.TestCase):
                     [1.0, 2.0],
                     (2.0, 3.0),
                     ("AA", "BB")],
-                format="saczip", sourcemomenttensor=[1,2,3,4,5,6])
+                format="miniseed", sourcemomenttensor=[1,2,3,4,5,6])
 
         self.assertEqual(payload[0], "\n".join([
             "model=ak135f_5s",
-            "format=saczip",
+            "format=miniseed",
             "sourcemomenttensor=1,2,3,4,5,6",
             "1.0 2.0",
             "2.0 3.0",
@@ -344,12 +344,12 @@ class ClientTestCase(unittest.TestCase):
                         {"latitude": 12, "longitude": 13.1, "loccode": "00"},
                         {"latitude": 12, "longitude": 13.1, "netcode": "IU",
                          "stacode": "ANMO", "loccode": "00"}],
-                    format="saczip", eventid="GCMT:C201002270634A")
+                    format="miniseed", eventid="GCMT:C201002270634A")
 
         self.assertEqual(payload[0], "\n".join([
             "model=ak135f_5s",
             "eventid=GCMT:C201002270634A",
-            "format=saczip",
+            "format=miniseed",
             "IU ANMO",
             "12 13.1",
             "12 13.1 NETCODE=IU",

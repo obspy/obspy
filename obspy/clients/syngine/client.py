@@ -180,6 +180,15 @@ class Client(WaveformClient, HTTPClient):
 
         return params
 
+    def __read_to_stream(self, r, format):
+        with io.BytesIO(r.content) as buf:
+            if format == "miniseed":
+                st = obspy.read(buf)
+            elif format == "saczip":
+                raise NotImplementedError("Unknown format '%s'." % format)
+            else:
+                raise NotImplementedError("Unknown format '%s'." % format)
+        return st
 
     def get_waveforms(
             self, model, network=None, station=None,
@@ -340,9 +349,7 @@ class Client(WaveformClient, HTTPClient):
         if filename:
             return
 
-        with io.BytesIO(r.content) as buf:
-            st = obspy.read(buf)
-        return st
+        return self.__read_to_stream(r=r, format=format)
 
     def get_waveforms_bulk(
             self, model, bulk,
@@ -525,6 +532,4 @@ class Client(WaveformClient, HTTPClient):
             if filename:
                 return
 
-            with io.BytesIO(r.content) as buf:
-                st = obspy.read(buf)
-            return st
+            return self.__read_to_stream(r=r, format=format)
