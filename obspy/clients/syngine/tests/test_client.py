@@ -15,7 +15,7 @@ import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.misc import CatchOutput
 from obspy.clients.syngine import Client
-from obspy.clients.base import DEFAULT_TESTING_USER_AGENT
+from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
 BASE_URL = "http://service.iris.edu/irisws/syngine/1"
 
@@ -264,6 +264,21 @@ class ClientTestCase(unittest.TestCase):
             "model": "ak135f_5s",
             "format": "miniseed",
             "sourceforce": "3.32,4.23,5.11"})
+
+    def test_error_handling(self):
+        """
+        Tests the error handling. The clients just passes on most things to
+        syngine and relies on the service for the error detection.
+        """
+        # Wrong components.
+        with self.assertRaises(ClientHTTPException) as cm:
+            self.c.get_waveforms(
+                model="ak135f_5s", eventid="GCMT:C201002270634A",
+                station="ANMO", network="IU", components="ABC")
+
+        msg = cm.exception.args[0]
+        self.assertIn("HTTP code 400 when", msg)
+        self.assertIn("Unrecognized component", msg)
 
 
 def suite():
