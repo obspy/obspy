@@ -78,6 +78,7 @@ The functionality is provided through the following packages:
    obspy.io.css
    obspy.io.kml
    obspy.io.sac.sacpz
+   obspy.io.sc3ml
    obspy.io.shapefile
    obspy.io.stationtxt
    obspy.io.stationxml
