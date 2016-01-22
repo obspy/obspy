@@ -216,9 +216,8 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
             r = requests.post(**_request_args)
 
         # Only accept code 200.
-        if r.status_code == 200:
-            return r
-        self._handle_requests_http_error(r)
+        if r.status_code != 200:
+            self._handle_requests_http_error(r)
 
         # Return if nothing else happens.
         if not filename:
