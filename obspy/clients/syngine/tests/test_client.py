@@ -82,6 +82,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(p.call_args[1]["headers"],
                          {'User-Agent': DEFAULT_TESTING_USER_AGENT})
 
+    def test_get_available_models(self):
+        models = self.c.get_available_models()
+        self.assertTrue(isinstance(models, dict))
+        keys = list(models.keys())
+        self.assertTrue(len(keys) > 3)
+        self.assertIn(keys, "ak135f_5s")
+        # Check random key.
+        self.assertEqual(models["ak135f_5s"]["components"],
+                         "vertical and horizontal")
+
     def test_print_model_information(self):
         with mock.patch("requests.get") as p:
             p.return_value = RequestsMockResponse()
