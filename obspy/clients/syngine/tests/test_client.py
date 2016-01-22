@@ -440,6 +440,13 @@ class ClientTestCase(unittest.TestCase):
                 eventid="GCMT:C201002270634A", starttime="P-10",
                 endtime="P+10", components="Z", format="saczip")
         self.assertEqual(len(st), 1)
+        # Same with bulk request.
+        st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                eventid="GCMT:C201002270634A", components="Z",
+                format="saczip")
+        self.assertEqual(len(st_bulk), 1)
+        self.assertEqual(st, st_bulk)
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
