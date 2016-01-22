@@ -434,6 +434,13 @@ class ClientTestCase(unittest.TestCase):
             st = obspy.read(buf)
             self.assertEqual(len(st), 1)
 
+    def test_reading_saczip_files(self):
+        st = self.c.get_waveforms(
+                model="test", network="IU", station="ANMO",
+                eventid="GCMT:C201002270634A", starttime="P-10",
+                endtime="P+10", components="Z", format="saczip")
+        self.assertEqual(len(st), 1)
+
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
