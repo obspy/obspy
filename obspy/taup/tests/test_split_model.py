@@ -25,7 +25,8 @@ class SplitTauModelTestCase(unittest.TestCase):
         splitTMod = tau_model.splitBranch(depth)
         self.assertEqual(tau_model.tauBranches.shape[1] + 1,
                          splitTMod.tauBranches.shape[1])
-        self.assertEqual(len(tau_model.ray_params) + 2, len(splitTMod.ray_params))
+        self.assertEqual(len(tau_model.ray_params) + 2,
+                         len(splitTMod.ray_params))
 
         branch_count = tau_model.tauBranches.shape[1]
         split_branch_index = tau_model.findBranch(depth)

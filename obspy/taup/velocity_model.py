@@ -351,9 +351,10 @@ class VelocityModel(object):
     def __str__(self):
         desc = "model_name=" + str(self.model_name) + "\n" + \
                "\n radius_of_planet=" + str(
-            self.radius_of_planet) + "\n moho_depth=" + str(self.moho_depth) + \
+            self.radius_of_planet) + "\n moho_depth=" + \
+            str(self.moho_depth) + \
             "\n cmb_depth=" + str(self.cmb_depth) + "\n iocb_depth=" + \
-               str(self.iocb_depth) + "\n min_radius=" + str(
+            str(self.iocb_depth) + "\n min_radius=" + str(
             self.min_radius) + "\n max_radius=" + str(self.max_radius) + \
             "\n spherical=" + str(self.is_spherical)
         return desc
@@ -665,6 +666,6 @@ class VelocityModel(object):
         self.moho_depth = tempMohoDepth
         self.cmb_depth = tempCmbDepth
         self.iocb_depth = (tempIocbDepth
-                          if tempCmbDepth != tempIocbDepth
-                          else self.radius_of_planet)
+                           if tempCmbDepth != tempIocbDepth
+                           else self.radius_of_planet)
         return changeMade

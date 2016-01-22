@@ -28,13 +28,12 @@ class TauBranch(object):
         self.isPWave = isPWave
         self.DEBUG = False
 
-
     def __str__(self):
         desc = "Tau Branch\n"
         desc += " topDepth = " + str(self.topDepth) + "\n"
         desc += " botDepth = " + str(self.botDepth) + "\n"
-        desc += " max_ray_param=" + str(self.max_ray_param) + " minTurnRayParam=" \
-            + str(self.minTurnRayParam)
+        desc += " max_ray_param=" + str(self.max_ray_param) + \
+            " minTurnRayParam=" + str(self.minTurnRayParam)
         desc += " min_ray_param=" + str(self.min_ray_param) + "\n"
         return desc
 

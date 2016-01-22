@@ -40,15 +40,16 @@ class SlownessModel(object):
                  skip_model_creation=False):
         self.DEBUG = False
         # NB if the following are actually cleared (lists are mutable) every
-        # time createSample is called, maybe it would be better to just put these
-        # initialisations into the relevant methods? They do have to be
+        # time createSample is called, maybe it would be better to just put
+        # these initialisations into the relevant methods? They do have to be
         # persistent across method calls in createSample though, so don't.
 
-        # Stores the layer number for layers in the velocity model with a critical
-        # point at their top. These form the "branches" of slowness sampling.
+        # Stores the layer number for layers in the velocity model with a
+        # critical point at their top. These form the "branches" of slowness
+        # sampling.
         self.criticalDepths = None  # will be list of CriticalDepth objects
-        # Store depth ranges that contains a high slowness zone for P/S. Stored as
-        # DepthRange objects, containing the top depth and bottom depth.
+        # Store depth ranges that contains a high slowness zone for P/S. Stored
+        # as DepthRange objects, containing the top depth and bottom depth.
         self.highSlownessLayerDepthsP = []  # will be list of DepthRanges
         self.highSlownessLayerDepthsS = []
         # Stores depth ranges that are fluid, ie S velocity is zero. Stored as

@@ -140,7 +140,8 @@ class TauModel(object):
                 minPSoFar = min(minPSoFar,
                                 min(topSLayer['topP'], botSLayer['botP']))
                 botSLayer = self.sMod.getSlownessLayer(
-                    self.sMod.layer_number_above(botCritDepth['depth'], isPWave),
+                    self.sMod.layer_number_above(botCritDepth['depth'],
+                                                 isPWave),
                     isPWave)
                 minPSoFar = min(minPSoFar, botSLayer['botP'])
         # Here we decide which branches are the closest to the Moho, CMB,
@@ -160,7 +161,8 @@ class TauModel(object):
             if abs(tBranch.topDepth - self.sMod.vMod.iocb_depth) < bestIocb:
                 self.iocbBranch = branchNum
                 bestIocb = abs(tBranch.topDepth - self.sMod.vMod.iocb_depth)
-        # Now set moho_depth etc. to the top of the branches we have decided on.
+        # Now set moho_depth etc. to the top of the branches we have decided
+        # on.
         self.moho_depth = self.tauBranches[0, self.mohoBranch].topDepth
         self.cmb_depth = self.tauBranches[0, self.cmbBranch].topDepth
         self.iocb_depth = self.tauBranches[0, self.iocbBranch].topDepth
@@ -440,8 +442,9 @@ class TauModel(object):
         """
         # a) handle simple contents
         keys = ['cmbBranch', 'cmb_depth', 'debug', 'iocbBranch', 'iocb_depth',
-                'mohoBranch', 'moho_depth', 'noDisconDepths', 'radius_of_planet',
-                'ray_params', 'sourceBranch', 'source_depth', 'is_spherical']
+                'mohoBranch', 'moho_depth', 'noDisconDepths',
+                'radius_of_planet', 'ray_params', 'sourceBranch',
+                'source_depth', 'is_spherical']
         arrays = {k: getattr(self, k) for k in keys}
 
         # b) handle .tauBranches
