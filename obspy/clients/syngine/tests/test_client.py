@@ -13,6 +13,7 @@ import numpy as np
 
 import obspy
 from obspy.core.compatibility import mock
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
@@ -406,6 +407,32 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
+    def test_saving_directly_to_file(self):
+        # Save to a filename.
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            st = self.c.get_waveforms(
+                model="test", network="IU", station="ANMO",
+                eventid="GCMT:C201002270634A", starttime="P-10",
+                endtime="P+10", components="Z", filename=tf)
+            # No return value.
+            self.assertTrue(st is None)
+
+            st = obspy.read(filename)
+            self.assertEqual(len(st), 1)
+
+        # Save to an open file-like object.
+        with io.BytesIO() as buf:
+            st = self.c.get_waveforms(
+                model="test", network="IU", station="ANMO",
+                eventid="GCMT:C201002270634A", starttime="P-10",
+                endtime="P+10", components="Z", filename=buf)
+            # No return value.
+            self.assertTrue(st is None)
+
+            buf.seek(0, 0)
+            st = obspy.read(buf)
+            self.assertEqual(len(st), 1)
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
