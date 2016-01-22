@@ -97,6 +97,89 @@ class Client(WaveformClient, HTTPClient):
         # Decoding and what not is handled by the requests library.
         return r.text
 
+    def _convert_parameters(self, model, **kwargs):
+        model = model.strip().lower()
+        if not model:
+            raise ValueError("Model must be given.")
+
+        params = {"model": model}
+
+        # Error handling is mostly delegated to the actual syngine service.
+        # Here we just check that the types are compatible.
+        str_arguments = ["network", "station", "networkcode", "stationcode",
+                         "locationcode", "eventid", "label", "components",
+                         "units", "format"]
+        float_arguments = ["receiverlatitude", "receiverlongitude",
+                           "sourcelatitude", "sourcelongitude",
+                           "sourcedepthinmeters", "scale", "dt"]
+        int_arguments = ["kernelwidth"]
+        time_arguments = ["origintime"]
+
+        for keys, t in ((str_arguments, str),
+                        (float_arguments, float),
+                        (int_arguments, int),
+                        (time_arguments, obspy.UTCDateTime)):
+            for key in keys:
+                try:
+                    value = kwargs[key]
+                except KeyError:
+                    continue
+                if value is None:
+                    continue
+                value = t(value)
+                # String arguments are stripped and empty strings are not
+                # allowed.
+                if t is str:
+                    value = value.strip()
+                    if not value:
+                        raise ValueError("String argument '%s' must not be "
+                                         "an empty string." % key)
+                params[key] = t(value)
+
+        # These can be absolute times, relative times or phase relative times.
+        # jo
+        temporal_bounds = ["starttime", "endtime"]
+        for key in temporal_bounds:
+            try:
+                value = kwargs[key]
+            except KeyError:
+                continue
+            if value is None:
+                continue
+            # If a number, convert to a float.
+            elif isinstance(value, (int, float)):
+                value = float(value)
+            # If a string like object, attempt to parse it to a datetime
+            # object, otherwise assume its a phase-relative time and let the
+            # syngine service deal with the erorr handling.
+            elif isinstance(value, (str, native_str)):
+                try:
+                    value = obspy.UTCDateTime(value)
+                except:
+                    value = str(value)
+            # Last but not least just try to pass it to the datetime
+            # constructor without catching the error.
+            else:
+                value = obspy.UTCDateTime(value)
+            params[key] = value
+
+        # These all have to be lists of floats. Otherwise it fails.
+        source_mecs = ["sourcemomenttensor",
+                       "sourcedoublecouple",
+                       "sourceforce"]
+        for key in source_mecs:
+            try:
+                value = kwargs[key]
+            except KeyError:
+                continue
+            if value is None:
+                continue
+            value = ",".join(["%g" % float(_i) for _i in value])
+            params[key] = value
+
+        return params
+
+
     def get_waveforms(
             self, model, network=None, station=None,
             receiverlatitude=None, receiverlongitude=None,
@@ -220,75 +303,34 @@ class Client(WaveformClient, HTTPClient):
             this method will return nothing.
         :type filename: str or file-like object
         """
-        model = model.strip().lower()
-        if not model:
-            raise ValueError("Model must be given.")
+        arguments = {
+            "network": network,
+            "station": station,
+            "receiverlatitude": receiverlatitude,
+            "receiverlongitude": receiverlongitude,
+            "networkcode": networkcode,
+            "stationcode": stationcode,
+            "locationcode": locationcode,
+            "eventid": eventid,
+            "sourcelatitude": sourcelatitude,
+            "sourcelongitude": sourcelongitude,
+            "sourcedepthinmeters": sourcedepthinmeters,
+            "sourcemomenttensor": sourcemomenttensor,
+            "sourcedoublecouple": sourcedoublecouple,
+            "sourceforce": sourceforce,
+            "origintime": origintime,
+            "starttime": starttime,
+            "endtime": endtime,
+            "label": label,
+            "components": components,
+            "units": units,
+            "scale": scale,
+            "dt": dt,
+            "kernelwidth": kernelwidth,
+            "format": format,
+            "filename": filename}
 
-        params = {"model": model}
-
-        # Error handling is mostly delegated to the actual syngine service.
-        # Here we just check that the types are compatible.
-        str_arguments = ["network", "station", "networkcode", "stationcode",
-                         "locationcode", "eventid", "label", "components",
-                         "units", "format"]
-        float_arguments = ["receiverlatitude", "receiverlongitude",
-                           "sourcelatitude", "sourcelongitude",
-                           "sourcedepthinmeters", "scale", "dt"]
-        int_arguments = ["kernelwidth"]
-        time_arguments = ["origintime"]
-
-        for keys, t in ((str_arguments, str),
-                        (float_arguments, float),
-                        (int_arguments, int),
-                        (time_arguments, obspy.UTCDateTime)):
-            for key in keys:
-                value = locals()[key]
-                if value is None:
-                    continue
-                value = t(value)
-                # String arguments are stripped and empty strings are not
-                # allowed.
-                if t is str:
-                    value = value.strip()
-                    if not value:
-                        raise ValueError("String argument '%s' must not be "
-                                         "an empty string." % key)
-                params[key] = t(value)
-
-        # These can be absolute times, relative times or phase relative times.
-        # jo
-        temporal_bounds = ["starttime", "endtime"]
-        for key in temporal_bounds:
-            value = locals()[key]
-            if value is None:
-                continue
-            # If a number, convert to a float.
-            elif isinstance(value, (int, float)):
-                value = float(value)
-            # If a string like object, attempt to parse it to a datetime
-            # object, otherwise assume its a phase-relative time and let the
-            # syngine service deal with the erorr handling.
-            elif isinstance(value, (str, native_str)):
-                try:
-                    value = obspy.UTCDateTime(value)
-                except:
-                    value = str(value)
-            # Last but not least just try to pass it to the datetime
-            # constructor without catching the error.
-            else:
-                value = obspy.UTCDateTime(value)
-            params[key] = value
-
-        # These all have to be lists of floats. Otherwise it fails.
-        source_mecs = ["sourcemomenttensor",
-                       "sourcedoublecouple",
-                       "sourceforce"]
-        for key in source_mecs:
-            value = locals()[key]
-            if value is None:
-                continue
-            value = ",".join(["%g" % float(_i) for _i in value])
-            params[key] = value
+        params = self._convert_parameters(model=model, **arguments)
 
         r = self._download(url=self._get_url("query"), params=params,
                            filename=filename)

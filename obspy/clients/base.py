@@ -188,7 +188,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :return: The response object resulting in the error.
         :rtype: :class:`requests.Response`
         """
-        _request_args = {"url": url
+        _request_args = {"url": url,
                          "headers": {"User-Agent": self._user_agent},
                          "params": params}
 

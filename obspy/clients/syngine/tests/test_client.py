@@ -47,7 +47,7 @@ class ClientTestCase(unittest.TestCase):
             self.c.get_model_info("test_model")
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          'http://service.iris.edu/irisws/syngine/1/info')
         self.assertEqual(p.call_args[1]["params"],
                          {'model': 'test_model'})
@@ -60,7 +60,7 @@ class ClientTestCase(unittest.TestCase):
             self.c.get_available_models()
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          'http://service.iris.edu/irisws/syngine/1/models')
         self.assertEqual(p.call_args[1]["params"], None)
         self.assertEqual(p.call_args[1]["headers"],
@@ -77,7 +77,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(out.stdout, b"{'a': 'b'}\n")
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          'http://service.iris.edu/irisws/syngine/1/models')
         self.assertEqual(p.call_args[1]["params"], None)
         self.assertEqual(p.call_args[1]["headers"],
@@ -92,7 +92,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(version, "1.2.3")
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          'http://service.iris.edu/irisws/syngine/1/version')
         self.assertEqual(p.call_args[1]["params"], None)
         self.assertEqual(p.call_args[1]["headers"],
@@ -121,7 +121,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st, obspy.Stream))
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "components": "ZRT",
@@ -146,7 +146,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st, obspy.Stream))
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "components": "Z",
@@ -172,7 +172,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st, obspy.Stream))
 
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "components": "Z",
@@ -208,7 +208,7 @@ class ClientTestCase(unittest.TestCase):
             self.c.get_waveforms(model="ak135f_5s",
                                  sourcemomenttensor=[1, 2, 3, 4, 5, 6])
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "model": "ak135f_5s",
@@ -220,7 +220,7 @@ class ClientTestCase(unittest.TestCase):
             self.c.get_waveforms(model="ak135f_5s",
                                  sourcedoublecouple=[1, 2, 3, 4])
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "model": "ak135f_5s",
@@ -232,7 +232,7 @@ class ClientTestCase(unittest.TestCase):
             self.c.get_waveforms(model="ak135f_5s",
                                  sourceforce=[3.32, 4.23, 5.11])
         self.assertEqual(p.call_count, 1)
-        self.assertEqual(p.call_args[0][0],
+        self.assertEqual(p.call_args[1]["url"],
                          "http://service.iris.edu/irisws/syngine/1/query")
         self.assertEqual(p.call_args[1]["params"], {
             "model": "ak135f_5s",
