@@ -87,7 +87,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(models, dict))
         keys = list(models.keys())
         self.assertTrue(len(keys) > 3)
-        self.assertIn(keys, "ak135f_5s")
+        self.assertIn("ak135f_5s", keys)
         # Check random key.
         self.assertEqual(models["ak135f_5s"]["components"],
                          "vertical and horizontal")
