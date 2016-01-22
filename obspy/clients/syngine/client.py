@@ -181,11 +181,13 @@ class Client(WaveformClient, HTTPClient):
 
         return params
 
-    def __read_to_stream(self, r, format):
+    def __read_to_stream(self, r):
         with io.BytesIO(r.content) as buf:
-            if format == "miniseed":
+            # First try to read the file in a normal way, otherwise assume
+            # its a saczip file.
+            try:
                 st = obspy.read(buf)
-            elif format == "saczip":
+            except:
                 st = obspy.Stream()
                 zip_obj = zipfile.ZipFile(io.BytesIO(r.content))
                 for name in zip_obj.namelist():
@@ -194,8 +196,6 @@ class Client(WaveformClient, HTTPClient):
                         continue
                     st += obspy.read(io.BytesIO(zip_obj.read(name)))
                 return st
-            else:
-                raise NotImplementedError("Unknown format '%s'." % format)
         return st
 
     def get_waveforms(
@@ -357,7 +357,7 @@ class Client(WaveformClient, HTTPClient):
         if filename:
             return
 
-        return self.__read_to_stream(r=r, format=format)
+        return self.__read_to_stream(r=r)
 
     def get_waveforms_bulk(
             self, model, bulk,
@@ -366,7 +366,7 @@ class Client(WaveformClient, HTTPClient):
             sourcedoublecouple=None, sourceforce=None, origintime=None,
             starttime=None, endtime=None, label=None, components=None,
             units=None, scale=None, dt=None, kernelwidth=None,
-            format="miniseed", filename=None):
+            format="miniseed", filename=None, data=None):
         """
         Request multiple waveforms using the Syngine service at once.
 
@@ -464,7 +464,20 @@ class Client(WaveformClient, HTTPClient):
         :param filename: Will download directly to the given file. If given,
         this method will return nothing.
         :type filename: str or file-like object
+        :param data: If given this will be sent directly sent to the syngine
+            service as a POST payload. All other parameters except the
+            ``filename`` parameter will be silently ignored. Likely not that
+            useful for most people.
+        :type data: dictionary, bytes, or file-like object
         """
+        # Send data straight via POST if given.
+        if data:
+            r = self._download(url=self._get_url("query"),
+                               data=data, filename=filename)
+            if filename:
+                return
+            return self.__read_to_stream(r=r)
+
         if not bulk:
             raise ValueError("Some bulk download information must be given.")
 
@@ -540,4 +553,4 @@ class Client(WaveformClient, HTTPClient):
             if filename:
                 return
 
-            return self.__read_to_stream(r=r, format=format)
+            return self.__read_to_stream(r=r)
