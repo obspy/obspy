@@ -449,6 +449,30 @@ class ClientTestCase(unittest.TestCase):
 
         self.assertEqual(st, st_bulk)
 
+    def test_bulk_waveform_send_custom_payload(self):
+        """
+        The get_waveforms_bulk() method can send a custom payload.
+        """
+        r = RequestsMockResponse()
+        with io.BytesIO() as buf:
+            obspy.read()[0].write(buf, format="mseed")
+            buf.seek(0, 0)
+            r.content = buf.read()
+
+        payload = []
+
+        def side_effect(*args, **kwargs):
+            payload[:] = [kwargs["data"]]
+            return r
+
+        # Test simple lists first.
+        with mock.patch("requests.post") as p:
+            p.side_effect = side_effect
+            self.c.get_waveforms_bulk(
+                model="ak135f_5s", bulk=[], data=b"1234\n5678")
+
+        self.assertEqual(payload[0], b"1234\n5678")
+
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
