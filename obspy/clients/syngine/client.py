@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import collections
-import copy
 import io
 import pprint
 
