@@ -408,8 +408,8 @@ class Client(WaveformClient, HTTPClient):
         for example **P-10** (meaning Pwave arrival time minus 10
         seconds). If the value is a numerical value it is interpreted as an
         offset, in seconds, from the ``origintime``.
-    :type starttime::class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: Specifies the desired end time for the synthetic
+        :type starttime::class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Specifies the desired end time for the synthetic
         trace(s). This may be specified as either:
 
         * an absolute date and time
