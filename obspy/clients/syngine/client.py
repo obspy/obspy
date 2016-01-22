@@ -16,7 +16,6 @@ from future.utils import native_str
 
 import collections
 import io
-import pprint
 import zipfile
 
 import numpy as np

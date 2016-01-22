@@ -304,7 +304,8 @@ class ClientTestCase(unittest.TestCase):
                     [1.0, 2.0],
                     (2.0, 3.0),
                     ("AA", "BB")],
-                format="miniseed", sourcemomenttensor=[1,2,3,4,5,6])
+                format="miniseed",
+                sourcemomenttensor=[1, 2, 3, 4, 5, 6])
 
         self.assertEqual(payload[0], "\n".join([
             "model=ak135f_5s",
@@ -454,6 +455,7 @@ class ClientTestCase(unittest.TestCase):
                 model="ak135f_5s", bulk=[], data=b"1234\n5678")
 
         self.assertEqual(payload[0], b"1234\n5678")
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
