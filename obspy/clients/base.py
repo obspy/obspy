@@ -202,6 +202,13 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         if filename:
             _request_args["stream"] = True
 
+        if self._debug:
+            # Construct the same URL requests would construct.
+            from requests import PreparedRequest  # noqa
+            p = PreparedRequest()
+            p.prepare(method="GET", **_request_args)
+            print("Downloading %s ..." % p.url)
+
         if data is None:
             r = requests.get(**_request_args)
         else:
