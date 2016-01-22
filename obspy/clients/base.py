@@ -138,8 +138,10 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
                                     DEFAULT_USER_AGENT)
 
     class NewClient(WaveformClient, HTTPClient):
-        def __init__(self, user_agent=DEFAULT_USER_AGENT):
-            HTTPClient.__init__(self, user_agent=user_agent)
+        def __init__(self, user_agent=DEFAULT_USER_AGENT, debug=False,
+                     timeout=20):
+            HTTPClient.__init__(self, user_agent=user_agent, debug=debug,
+                                timeout=timeout)
 
         def _handle_requests_http_error(self, r):
             r.raise_for_status()
@@ -235,6 +237,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
                     if not chunk:
                         continue
                     fh.write(chunk)
+
 
 class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
     """
