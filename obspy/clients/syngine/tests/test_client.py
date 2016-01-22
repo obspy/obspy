@@ -9,6 +9,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import io
 import unittest
 
+import numpy as np
+
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.misc import CatchOutput
@@ -53,6 +55,20 @@ class ClientTestCase(unittest.TestCase):
                          {'model': 'test_model'})
         self.assertEqual(p.call_args[1]["headers"],
                          {'User-Agent': DEFAULT_TESTING_USER_AGENT})
+
+    def test_get_model_info(self):
+        """
+        Actual test for the get_model_info() method.
+        """
+        info = self.c.get_model_info("test")
+
+        self.assertTrue(isinstance(info, obspy.core.AttribDict))
+        # Check two random keys.
+        self.assertEqual(info.dump_type, "displ_only")
+        self.assertEqual(info.time_scheme, "newmark2")
+        # Check that both arrays have been converted to numpy arrays.
+        self.assertTrue(isinstance(info.slip, np.ndarray))
+        self.assertTrue(isinstance(info.sliprate, np.ndarray))
 
     def test_get_available_models_mock(self):
         with mock.patch("requests.get") as p:
