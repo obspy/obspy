@@ -356,6 +356,33 @@ class ClientTestCase(unittest.TestCase):
             "12 13.1 LOCCODE=00",
             "12 13.1 NETCODE=IU STACODE=ANMO LOCCODE=00\n"]))
 
+    def test_get_waveforms(self):
+        """
+        Test get_waveforms() by actually downloading some things.
+
+        Use the 'test' model which does not produce useful seismograms but
+        is quick to test.
+        """
+        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+                                  eventid="GCMT:C201002270634A",
+                                  components="Z")
+        self.assertEqual(len(st), 1)
+
+        # Test phase relative times. This tests that everything is correctly
+        # encoded and what not.
+        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+                                  eventid="GCMT:C201002270634A",
+                                  starttime="P-10", endtime="P+20",
+                                  components="Z")
+        self.assertEqual(len(st), 1)
+
+        # One last test to test a source mechanism
+        st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
+                                  sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+                                  sourcelatitude=10, sourcelongitude=20,
+                                  sourcedepthinmeters=100,
+                                  components="Z")
+        self.assertEqual(len(st), 1)
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
