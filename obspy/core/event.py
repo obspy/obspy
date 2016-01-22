@@ -870,6 +870,8 @@ class ResourceIdentifier(object):
         return 'ResourceIdentifier(id="%s")' % self.id
 
     def __eq__(self, other):
+        if self.id == other:
+            return True
         if not isinstance(other, ResourceIdentifier):
             return False
         if self.id == other.id:
