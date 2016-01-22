@@ -193,7 +193,7 @@ class Client(WaveformClient, HTTPClient):
         """
         Request waveforms using the Syngine service.
 
-        This method is strongly tied to the actual implememtation on the
+        This method is strongly tied to the actual implementation on the
         server side. The default values and all the exception handling are
         deferred to the service. Please see `the syngine documentation
         <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
@@ -342,3 +342,131 @@ class Client(WaveformClient, HTTPClient):
         with io.BytesIO(r.content) as buf:
             st = obspy.read(buf)
         return st
+
+    def get_waveforms_bulk(
+            self, model, bulk,
+            eventid=None, sourcelatitude=None, sourcelongitude=None,
+            sourcedepthinmeters=None, sourcemomenttensor=None,
+            sourcedoublecouple=None, sourceforce=None, origintime=None,
+            starttime=None, endtime=None, label=None, components=None,
+            units=None, scale=None, dt=None, kernelwidth=None,
+            format="miniseed", filename=None):
+        """
+        Request multiple waveforms using the Syngine service at once.
+
+        This method is strongly tied to the actual implementation on the
+        server side. The default values and all the exception handling are
+        deferred to the service. Please see `the syngine documentation
+        <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
+        default values of all parameters.
+
+        This method used the POST functionalities of the syngine service.
+
+        :param model: Specify the model.
+        :type model: str
+        :param bulk: Specify the receivers to download in bulk.
+        :type bulk: list of lists, tuples, or dictionaries
+        :param eventid: Specify an event identifier in the form
+        [catalog]:[eventid]. The centroid time and location and moment
+        tensor of the solution will be used as the source.
+        :type eventid: str
+        :param sourcelatitude: Specify the source latitude.
+        :type sourcelatitude: float
+        :param sourcelongitude: Specify the source longitude.
+        :type sourcelongitude: float
+        :param sourcedepthinmeters: Specify the source depth in meters from
+        0 to 700000.
+        :type sourcedepthinmeters: float
+        :param sourcemomenttensor: Specify a source in moment tensor
+        components as a list: ``Mrr``, ``Mtt``, ``Mpp``, ``Mrt``, ``Mrp``,
+        ``Mtp`` with values in Newton meters (*Nm*).
+        :type sourcemomenttensor: list of floats
+        :param sourcedoublecouple: Specify a source as a double couple. The
+        list of values are ``strike``, ``dip``, ``rake`` [,``M0``],
+        where strike, dip and rake are in degrees and M0 is the scalar
+        seismic moment in Newton meters (Nm). If not specified, a value
+        of *1e19* will be used as the scalar moment.
+        :type sourcedoublecouple: list of floats
+        :param sourceforce: Specify a force source as a list of ``Fr``, ``Ft``,
+        ``Fp`` in units of Newtons (N).
+        :type sourceforce: list of floats
+        :param origintime: Specify the source origin time. This must be
+        specified as an absolute date and time.
+        :type origintime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Specifies the desired start time for the synthetic
+            trace(s). This may be specified as either:
+
+        * an absolute date and time
+        * a phase-relative offset
+        * an offset from origin time in seconds
+
+        If the value is recognized as a date and time, it is interpreted
+        as an absolute time. If the value is in the form
+        ``phase[+-]offset`` it is interpreted as a phase-relative time,
+        for example **P-10** (meaning Pwave arrival time minus 10
+        seconds). If the value is a numerical value it is interpreted as an
+        offset, in seconds, from the ``origintime``.
+    :type starttime::class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: Specifies the desired end time for the synthetic
+        trace(s). This may be specified as either:
+
+        * an absolute date and time
+        * a phase-relative offset
+        * an offset from origin time in seconds
+
+        If the value is recognized as a date and time, it is interpreted
+        as an absolute time. If the value is in the form
+        ``phase[+-]offset`` it is interpreted as a phase-relative time,
+        for example **P-10** (meaning Pwave arrival time minus 10
+        seconds). If the value is a numerical value it is interpreted as an
+        offset, in seconds, from the ``starttime``.
+        :type endtime::class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param label: Specify a label to be included in file names and HTTP
+        file name suggestions.
+        :type label: str
+        :param components: Specify the orientation of the synthetic
+        seismograms as a list of any combination of ``Z`` (vertical),
+        ``N`` (north), ``E`` (east), ``R`` (radial), ``T`` (transverse)
+        :type components: str or list of strings.
+        :param units: Specify either ``displacement``, ``velocity`` or
+        ``acceleration`` for the synthetics. The length unit is meters.
+        :type units: str
+        :param scale: Specify an amplitude scaling factor. The default
+        amplitude length unit is meters.
+        :type scale: float
+        :param dt: Specify the sampling interval in seconds. Only upsampling
+        is allowed so this value must be larger than the intrinsic interval
+        of the model database.
+        :type dt: float
+        :param kernelwidth: Specify the width of the sinc kernel used for
+            resampling to requested sample interval (``dt``), relative to the
+            original sampling rate.
+        :type kernelwidth: int
+        :param format: Specify output file to be either miniSEED or a ZIP
+        archive of SAC files, either ``miniseed`` or ``saczip``.
+        :type format: str
+        :param filename: Will download directly to the given file. If given,
+        this method will return nothing.
+        :type filename: str or file-like object
+        """
+        arguments = {
+            "eventid": eventid,
+            "sourcelatitude": sourcelatitude,
+            "sourcelongitude": sourcelongitude,
+            "sourcedepthinmeters": sourcedepthinmeters,
+            "sourcemomenttensor": sourcemomenttensor,
+            "sourcedoublecouple": sourcedoublecouple,
+            "sourceforce": sourceforce,
+            "origintime": origintime,
+            "starttime": starttime,
+            "endtime": endtime,
+            "label": label,
+            "components": components,
+            "units": units,
+            "scale": scale,
+            "dt": dt,
+            "kernelwidth": kernelwidth,
+            "format": format,
+            "filename": filename}
+
+        params = self._convert_parameters(model=model, **arguments)
