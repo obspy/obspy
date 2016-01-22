@@ -358,7 +358,8 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_waveforms(self):
         """
-        Test get_waveforms() by actually downloading some things.
+        Test get_waveforms() and get_waveforms_bulk() by actually downloading
+        some things.
 
         Use the 'test' model which does not produce useful seismograms but
         is quick to test.
@@ -367,6 +368,13 @@ class ClientTestCase(unittest.TestCase):
                                   eventid="GCMT:C201002270634A",
                                   components="Z")
         self.assertEqual(len(st), 1)
+        # Download exactly the same with a bulk request and check the result
+        # is the same!
+        st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                eventid="GCMT:C201002270634A", components="Z")
+        self.assertEqual(len(st_bulk), 1)
+        self.assertEqual(st, st_bulk)
 
         # Test phase relative times. This tests that everything is correctly
         # encoded and what not.
@@ -375,6 +383,12 @@ class ClientTestCase(unittest.TestCase):
                                   starttime="P-10", endtime="P+20",
                                   components="Z")
         self.assertEqual(len(st), 1)
+        st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                starttime="P-10", endtime="P+20",
+                eventid="GCMT:C201002270634A", components="Z")
+        self.assertEqual(len(st_bulk), 1)
+        self.assertEqual(st, st_bulk)
 
         # One last test to test a source mechanism
         st = self.c.get_waveforms(model="test", network="IU", station="ANMO",
@@ -383,6 +397,15 @@ class ClientTestCase(unittest.TestCase):
                                   sourcedepthinmeters=100,
                                   components="Z")
         self.assertEqual(len(st), 1)
+        st_bulk = self.c.get_waveforms_bulk(
+                model="test", bulk=[("IU", "ANMO")],
+                sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+                sourcelatitude=10, sourcelongitude=20,
+                sourcedepthinmeters=100,
+                components="Z")
+        self.assertEqual(len(st_bulk), 1)
+        self.assertEqual(st, st_bulk)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
