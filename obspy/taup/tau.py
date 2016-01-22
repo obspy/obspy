@@ -298,7 +298,7 @@ class TauPyModel(object):
         :param model: The model name. Either an internal TauPy model or a
             filename in the case of custom models.
         :param planet_flattening: Flattening parameter for the planet's
-            ellipsoid (i.e. a-b/a, where a is the semimajor equatorial radius
+            ellipsoid (i.e. (a-b)/a, where a is the semimajor equatorial radius
             and b is the semiminor polar radius). A value of 0 (the default)
             gives a spherical planet. Note that this is only used to convert
             from geographical positions (source and receiver latitudes and

@@ -31,7 +31,7 @@ class TauModel(object):
         # Depth for which tau model as constructed.
         self.source_depth = 0.0
         self.radius_of_planet = radius_of_planet
-        # True if this is a is_spherical slowness model. False if flat.
+        # True if this is a spherical slowness model. False if flat.
         self.is_spherical = is_spherical
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
@@ -54,8 +54,7 @@ class TauModel(object):
         # instance, if the source is not at a branch boundary then
         # noDisconDepths contains source depth and reflections and phase
         # conversions are not allowed at this branch boundary. If the source
-        # happens to fall on a real discontinuity then then it is not
-        # included.
+        # happens to fall on a real discontinuity then it is not included.
         self.noDisconDepths = []
 
         if not skip_calc:
@@ -70,8 +69,8 @@ class TauModel(object):
         if self.sMod.get_num_layers(True) == 0 \
                 or self.sMod.get_num_layers(False) == 0:
             raise SlownessModelError(
-                "Can't calculate tauInc when get_num_layers() = 0. I need more "
-                "slowness samples.")
+                "Can't calculate tauInc when get_num_layers() = 0. "
+                "I need more slowness samples.")
         self.sMod.validate()
         # Create an array holding the ray parameter that we will use for
         # constructing the tau splines. Only store ray parameters that are
@@ -84,8 +83,8 @@ class TauModel(object):
         # waves have been constructed to be a subset of the S samples.
         rayNum = 0
         minPSoFar = self.sMod.SLayers[0]['topP']
-        tempRayParams = np.empty(
-                2 * self.sMod.get_num_layers(False) + len(self.sMod.criticalDepths))
+        tempRayParams = np.empty(2 * self.sMod.get_num_layers(False) +
+                                 len(self.sMod.criticalDepths))
         # Make sure we get the top slowness of the very top layer
         tempRayParams[rayNum] = minPSoFar
         rayNum += 1
