@@ -17,6 +17,7 @@ from future.utils import native_str
 import collections
 import io
 import pprint
+import zipfile
 
 import numpy as np
 
@@ -185,7 +186,14 @@ class Client(WaveformClient, HTTPClient):
             if format == "miniseed":
                 st = obspy.read(buf)
             elif format == "saczip":
-                raise NotImplementedError("Unknown format '%s'." % format)
+                st = obspy.Stream()
+                zip_obj = zipfile.ZipFile(io.BytesIO(r.content))
+                for name in zip_obj.namelist():
+                    # Skip the log file.
+                    if name.lower() == "syngine.log":
+                        continue
+                    st += obspy.read(io.BytesIO(zip_obj.read(name)))
+                return st
             else:
                 raise NotImplementedError("Unknown format '%s'." % format)
         return st
