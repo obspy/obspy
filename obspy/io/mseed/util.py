@@ -273,7 +273,7 @@ def get_timing_and_data_quality(file_or_file_object):
                     quality_count[key] += 1
 
         if timing_quality and "timing_quality" in rec_info:
-           tq.append(float(rec_info["timing_quality"]))
+            tq.append(float(rec_info["timing_quality"]))
 
         offset += rec_info["record_length"]
 

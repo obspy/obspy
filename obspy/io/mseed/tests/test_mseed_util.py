@@ -42,7 +42,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.nperr = np.geterr()
         np.seterr(all='ignore')
 
-    def test_convert_date_time(self):
+    def test_convert_datetime(self):
         """
         Tests all time conversion methods.
         """
@@ -494,7 +494,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util._check_flag_value
         """
-
         # Valid value for a boolean flag
         corrected_flag = util._check_flag_value(True)
         self.assertTrue(isinstance(corrected_flag, bool))
@@ -742,7 +741,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util._convert_flags_to_raw_byte
         """
-
         recstart = UTCDateTime("2009-12-25T06:00:00.0")
         recend = UTCDateTime("2009-12-26T06:00:00.0")
         user_flags = {
@@ -808,9 +806,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         Test case for obspy.io.mseed.util.set_flags_in_fixed_headers
         """
-
         # Write mseed file with several traces
-
         npts = 1000
         np.random.seed(42)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
@@ -986,7 +982,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         :type reclen: int
         :param reclen: record length across the file
         """
-
         prev_pos = file_bfr.tell()
         file_bfr.seek(0, os.SEEK_END)
         filesize = file_bfr.tell()
