@@ -200,6 +200,104 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     return dist, alpha12, alpha21
 
 
+def calc_vincenty_direct(lat, lon, azimuth, distance, a=WGS84_A, f=WGS84_F):
+    """
+    Vincenty Direct Solution of Geodesics on the Ellipsoid.
+
+    Calculate the location of a point ('point B') on an ellipsoid given the
+    azimuth and distance from a starting point ('point A') using Vincenty's
+    direct approach [Vincenty1975]_.
+
+    :param lat: Latitude of point A in degrees (positive for northern,
+        negative for southern hemisphere).
+    :param lon: Longitude of point A in degrees (positive for eastern,
+        negative for western hemisphere).
+    :param azimuth: Azimuth from point A to point B in degrees (zero points to
+        North, positive is clockwise).
+    :param distance: Distance from point A to point B in m.
+    :param a: Radius of Earth in m. Uses the value for WGS84 by default.
+    :param f: Flattening of Earth. Uses the value for WGS84 by default.
+    :return: (Latitude of point B, Longitude of point B) both in degrees.
+    :raises: This method may have no solution between two nearly antipodal
+        points; an iteration limit traps this case and a ``StopIteration``
+        exception will be raised.
+    """
+    # Check inputs
+    if lat > 90 or lat < -90:
+        msg = "Latitude of Point 1 out of bounds! (-90 <= lat <=90)"
+        raise ValueError(msg)
+    while lon > 180:
+        lon -= 360
+    while lon < -180:
+        lon += 360
+    while azimuth > 180:
+        azimuth -= 360
+    while azimuth < -180:
+        azimuth += 360
+
+    # Work in radians
+    lat = math.radians(lat)
+    lon = math.radians(lon)
+    azi = math.radians(azimuth)
+
+    # Set up major and minor axes (sometimes a and b)
+    r_major = a
+    r_minor = a * (1 - f)
+
+    U1 = math.atan((1.0-f) * math.tan(lat))
+
+    sigma1 = math.atan2(math.tan(U1), math.cos(azi))
+    sin_apha = math.cos(U1)*math.sin(azi)
+    cos_2_alpha = 1 - sin_apha**2
+    u_2 = cos_2_alpha * ((r_major**2 - r_minor**2) / r_minor**2)
+    A = 1 + (u_2 / 16384)*(4096 + u_2 * (-768 + u_2 * (320 - 175 * u_2)))
+    B = (u_2/1024)*(256 + u_2*(-128+u_2*(74-47*u_2)))
+    sig_0 = distance/(r_minor*A)
+    sig = sig_0
+
+    epsilon = 1E-12
+    iterlimit = 100
+    sig_old = 0.0
+    try:
+        while (math.fabs(sig-sig_old) > epsilon):
+            sig_old = sig
+            sig_2_m = 2.0*sigma1 + sig
+            d_sig = B * math.sin(sig) * (
+                      math.cos(sig_2_m) + 0.25*B*(
+                        math.cos(sig)*(-1.0 + 2.0*math.cos(sig_2_m)**2.0) -
+                        (1.0/6.0)*B*math.cos(sig_2_m) *
+                        (-3.0+4.0*math.sin(sig)**2.0) *
+                        (-3.0+4.0*math.cos(sig_2_m)**2)))
+            sig = sig_0 + d_sig
+            iterlimit -= 1
+            if iterlimit < 0:
+                # iteration limit reached
+                raise StopIteration
+    except ValueError:
+        # usually "math domain error"
+        raise StopIteration
+
+    lat2 = math.atan2(math.sin(U1)*math.cos(sig) +
+                      math.cos(U1)*math.sin(sig)*math.cos(azi),
+                      (1.0-f)*math.sqrt(sin_apha**2.0 +
+                      (math.sin(U1)*math.sin(sig)-math.cos(U1) *
+                       math.cos(sig)*math.cos(azi))**2.0))
+
+    lam = math.atan2(math.sin(sig)*math.sin(azi),
+                     math.cos(U1)*math.cos(sig) -
+                     math.sin(U1)*math.sin(sig)*math.cos(azi))
+
+    C = (f/16.0) * cos_2_alpha * (4.0 + f*(4.0-3.0*cos_2_alpha))
+
+    L = lam - (1.0-C)*f*sin_apha*(sig+C*math.sin(sig)*(math.cos(sig_2_m) +
+                                  C*math.cos(sig)*(-1.0+2.0 *
+                                  math.cos(sig_2_m)**2.0)))
+
+    lon2 = L + lon
+
+    return math.degrees(lat2), math.degrees(lon2)
+
+
 @deprecated("'gps2DistAzimuth' has been renamed to "
             "'gps2dist_azimuth'. Use that instead.")
 def gps2DistAzimuth(lat1, lon1, lat2, lon2):
