@@ -142,31 +142,83 @@ class MSEEDUtilTestCase(unittest.TestCase):
     def test_get_flags(self):
         """
         This test reads a real Mini-SEED file which has been
-        modified ad hoc
+        modified ad hoc.
         """
         filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
-        result = util.get_flags(filename)
-        self.assertEqual(result['data_quality_flags'],
-                         [0, 672, 0, 663, 0, 663, 804, 8])
-        self.assertEqual(result['activity_flags'],
-                         [0, 0, 0, 2253, 0, 11, 0])
-        self.assertEqual(result['io_and_clock_flags'],
-                         [0, 1033, 0, 0, 0, 11258])
+        result = util.get_flags(filename, timing_quality=False)
+
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 672,
+            "spikes_detected": 0,
+            "glitches_detected": 663,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 663,
+            "digital_filter_charging": 804,
+            "time_tag_uncertain": 8})
+
+        self.assertEqual(result['activity_flags'], {
+            "calibration_signals_present": 0,
+            "time_correction_applied": 0,
+            "beginning_event": 0,
+            "end_event": 2253,
+            "positive_leap": 0,
+            "negative_leap": 11,
+            "clock_locked": 0})
+
+        self.assertEqual(result['io_and_clock_flags'], {
+            "station_volume_parity_error": 0,
+            "long_record_read": 1033,
+            "short_record_read": 0,
+            "start_time_series": 0,
+            "end_time_series": 0,
+            "clock_locked": 11258})
+
+        # Test time settings.
         filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
         starttime = '2015-10-16T00:00:00'
-        result = util.get_flags(filename, starttime=starttime)
-        self.assertEqual(result['data_quality_flags'],
-                         [0, 672, 0, 663, 0, 663, 804, 8])
+        result = util.get_flags(filename, starttime=starttime,
+                                io_flags=False, activity_flags=False,
+                                timing_quality=False)
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 672,
+            "spikes_detected": 0,
+            "glitches_detected": 663,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 663,
+            "digital_filter_charging": 804,
+            "time_tag_uncertain": 8})
+
         starttime = '2015-10-17T00:00:00'
-        result = util.get_flags(filename, starttime=starttime)
-        self.assertEqual(result['data_quality_flags'],
-                         [0, 0, 0, 0, 0, 0, 0, 0])
+        result = util.get_flags(filename, starttime=starttime,
+                                io_flags=False, activity_flags=False,
+                                timing_quality=False)
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 0,
+            "spikes_detected": 0,
+            "glitches_detected": 0,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 0,
+            "digital_filter_charging": 0,
+            "time_tag_uncertain": 0})
+
         filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.290')
         starttime = '2015-10-17T00:00:00'
         endtime = '2015-10-17T23:59:00'
-        result = util.get_flags(filename, starttime=starttime, endtime=endtime)
-        self.assertEqual(result['data_quality_flags'],
-                         [0, 0, 0, 0, 0, 0, 0, 6])
+        result = util.get_flags(filename, starttime=starttime,
+                                endtime=endtime, io_flags=False,
+                                activity_flags=False, timing_quality=False)
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 0,
+            "spikes_detected": 0,
+            "glitches_detected": 0,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 0,
+            "digital_filter_charging": 0,
+            "time_tag_uncertain": 6})
 
     def test_get_start_and_end_time(self):
         """

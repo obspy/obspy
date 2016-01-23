@@ -100,21 +100,21 @@ def get_timing_and_data_quality(file_or_file_object):
     Counts all data quality, I/O, and activity flags of the given MiniSEED
     file and returns statistics about the timing quality if applicable.
 
-    :param file_or_file_object: MiniSEED file name or open file-like object
-        containing MiniSEED records.
+    :param file_or_file_object: MiniSEED file.
     :type file_or_file_object: str or file-like object
-    :param starttime: ISO8601 string
+    :param starttime: Only use records whose end time is larger then this
+        given time.
     :type starttime: str or UTCDateTime
-    :param endtime: ISO8601 string
+    :param starttime: Only use records whose start time is smaller then this
+        given time.
     :type endtime: str or UTCDateTime
     :return: Dictionary with information about the timing quality and the data
-        quality, I/O and activity flags.
+        quality, I/O, and activity flags.
 
     .. rubric:: Data quality
 
-    This method will count all set flag bits in the fixed section
-    of the data header in a MiniSEED file and returns the total count for each
-    flag type.
+    This method will count all set bit flags in the fixed header of a MiniSEED
+    file and return the total count for each flag type.
 
     Data quality flags
     ========  =================================================
@@ -153,15 +153,15 @@ def get_timing_and_data_quality(file_or_file_object):
     [Bit 4]   End of time series
     [Bit 5]   Clock locked
 
-
     .. rubric:: Timing quality
 
     If the file has a Blockette 1001 statistics about the timing quality will
-    also be returned. See the doctests for more information.
+    be returned if ``timing_quality`` is True. See the doctests for more
+    information.
 
     This method will read the timing quality in Blockette 1001 for each
     record in the file if available and return the following statistics:
-    Minima, maxima, average, median and upper and lower quantile.
+    Minima, maxima, average, median and upper and lower quantiles.
     Quantiles are calculated using a integer round outwards policy: lower
     quantiles are rounded down (probability < 0.5), and upper quantiles
     (probability > 0.5) are rounded up.
@@ -249,91 +249,100 @@ def get_timing_and_data_quality(file_or_file_object):
     timing_quality_upper_quantile 75.0
     >>> file_object.close()
     """
+    # Keep track of the extracted information. Initialize with a list of
+    # tuples to preserve the crucial ordering.
+    quality_count = collections.OrderedDict([
+        ("amplifier_saturation_detected", 0),
+        ("digitizer_clipping_detected", 0),
+        ("spikes_detected", 0),
+        ("glitches_detected", 0),
+        ("missing_data_present", 0),
+        ("telemetry_sync_error", 0),
+        ("digital_filter_charging", 0),
+        ("time_tag_uncertain", 0)])
+    activity_count = collections.OrderedDict([
+        ("calibration_signals_present", 0),
+        ("time_correction_applied", 0),
+        ("beginning_event", 0),
+        ("end_event", 0),
+        ("positive_leap", 0),
+        ("negative_leap", 0),
+        ("clock_locked", 0)])
+    io_count = collections.OrderedDict([
+        ("station_volume_parity_error", 0),
+        ("long_record_read", 0),
+        ("short_record_read", 0),
+        ("start_time_series", 0),
+        ("end_time_series", 0),
+        ("clock_locked", 0)])
+    # Timing quality for now is a list containing the timing quality of each
+    # record.
+    tq = []
+
     # Read the first record to get a starting point and.
     info = get_record_information(file_or_file_object)
-    # Keep track of the extracted information.
-    quality_count = collections.OrderedDict(
-        amplifier_saturation_detected=0,
-        digitizer_clipping_detected=0,
-        spikes_detected=0,
-        glitches_detected=0,
-        missing_data_present=0,
-        telemetry_sync_error=0,
-        digital_filter_charging=0,
-        time_tag_uncertain=0)
-    activity_count = collections.OrderedDict(
-        calibration_signals_present=0,
-        time_correction_applied=0,
-        beginning_event=0,
-        end_event=0,
-        positive_leap=0,
-        negative_leap=0,
-        clock_locked=0)
-    io_count = collections.OrderedDict(
-        station_volume_parity_error=0,
-        long_record_read=0,
-        short_record_read=0,
-        start_time_series=0,
-        end_time_series=0,
-        clock_locked=0)
-    timing_quality = []
+
+    # Accepts string or anything else UTCDateTime can parse.
+    starttime = UTCDateTime(starttime) if starttime else None
+    endtime = UTCDateTime(endtime) if endtime else None
+
     offset = 0
-    if starttime is not None:
-        starttime = UTCDateTime(starttime)
-    if endtime is not None:
-        endtime = UTCDateTime(endtime)
+
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
-    while offset <= (info['filesize'] - 256):
-        this_info = get_record_information(file_or_file_object, offset)
-        if starttime is not None and this_info["endtime"] < starttime:
+    while offset <= (info["filesize"] - 256):
+        rec_info = get_record_information(file_or_file_object, offset)
+
+        # Filter records based on times if applicable.
+        if starttime is not None and rec_info["endtime"] < starttime:
             break
-        if endtime is not None and this_info["starttime"] > endtime:
+        if endtime is not None and rec_info["starttime"] > endtime:
             break
-        if(io_flags):
-            # Add the value of each bit to the io_count.
-            for _i, key in enumerate(io_count):
-                if (this_info['io_and_clock_flags'] & (1 << _i)) != 0:
+
+        if io_flags:
+            for _i, key in enumerate(io_count.keys()):
+                if (rec_info["io_and_clock_flags"] & (1 << _i)) != 0:
                     io_count[key] += 1
-        if(activity_flags):
-            # Add the value of each bit to the activity_count.
-            for _i, key in enumerate(activity_count):
-                if (this_info['activity_flags'] & (1 << _i)) != 0:
+
+        if activity_flags:
+            for _i, key in enumerate(activity_count.keys()):
+                if (rec_info["activity_flags"] & (1 << _i)) != 0:
                     activity_count[key] += 1
-        # Add the timing quality.
-        if 'timing_quality' in this_info:
-            timing_quality.append(float(this_info['timing_quality']))
-        # Add the value of each bit to the quality_count.
-        for _i, key in enumerate(quality_count):
-                if (this_info['data_quality_flags'] & (1 << _i)) != 0:
+
+        if data_quality_flags:
+            for _i, key in enumerate(quality_count.keys()):
+                if (rec_info["data_quality_flags"] & (1 << _i)) != 0:
                     quality_count[key] += 1
-        offset += this_info['record_length']
-    # Collect the results in a dictionary.
-    result = {'data_quality_flags': list(quality_count.values())}
-    if(activity_flags):
-        result.update({'activity_flags': list(activity_count.values())})
-    if(io_flags):
-        result.update({'io_and_clock_flags': list(io_count.values())})
-    # Parse of the timing quality list.
-    count = len(timing_quality)
-    timing_quality = sorted(timing_quality)
-    # If no timing_quality was collected just return an empty dictionary.
-    if count == 0:
-        return result
-    # if full time quality requested
-    if(t_quality):
-        result.update({'timing_quality': timing_quality})
-    # Otherwise calculate some statistical values from the timing quality.
-    result['timing_quality_min'] = min(timing_quality)
-    result['timing_quality_max'] = max(timing_quality)
-    result['timing_quality_average'] = sum(timing_quality) / count
-    result['timing_quality_median'] = \
-        score_at_percentile(timing_quality, 50, issorted=False)
-    result['timing_quality_lower_quantile'] = \
-        score_at_percentile(timing_quality, 25, issorted=False)
-    result['timing_quality_upper_quantile'] = \
-        score_at_percentile(timing_quality, 75, issorted=False)
-    return result
+
+        if timing_quality and "timing_quality" in rec_info:
+           tq.append(float(rec_info["timing_quality"]))
+
+        offset += rec_info["record_length"]
+
+    results = {}
+
+    if io_flags:
+        results["io_and_clock_flags"] = io_count
+    if activity_flags:
+        results["activity_flags"] = activity_count
+    if data_quality_flags:
+        results["data_quality_flags"] = quality_count
+    if timing_quality:
+        tq = np.array(tq, dtype=np.float64)
+        if len(tq):
+            results["timing_quality"] = {
+                "all_values": tq,
+                "min": tq.min(),
+                "max": tq.max(),
+                "mean": tq.mean(),
+                "median": np.median(tq),
+                "lower_quartile": np.percentile(tq, 25),
+                "upper_quartile": np.percentile(tq, 75)
+            }
+        else:
+            results["timing_quality"] = {"all_values": tq}
+
+    return results
 
 
 def get_record_information(file_or_file_object, offset=0, endian=None):
