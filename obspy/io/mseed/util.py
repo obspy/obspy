@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Mini-SEED specific utilities.
+MiniSEED specific utilities.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -28,16 +28,16 @@ from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
 
 def get_start_and_end_time(file_or_file_object):
     """
-    Returns the start and end time of a Mini-SEED file or file-like object.
+    Returns the start and end time of a MiniSEED file or file-like object.
 
     :type file_or_file_object: str or file
-    :param file_or_file_object: Mini-SEED file name or open file-like object
-        containing a Mini-SEED record.
+    :param file_or_file_object: MiniSEED file name or open file-like object
+        containing a MiniSEED record.
     :return: tuple (start time of first record, end time of last record)
 
     This method will return the start time of the first record and the end time
     of the last record. Keep in mind that it will not return the correct result
-    if the records in the Mini-SEED file do not have a chronological ordering.
+    if the records in the MiniSEED file do not have a chronological ordering.
 
     The returned end time is the time of the last data sample and not the
     time that the last sample covers.
@@ -59,7 +59,7 @@ def get_start_and_end_time(file_or_file_object):
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    And also with a Mini-SEED file stored in a BytesIO
+    And also with a MiniSEED file stored in a BytesIO
 
     >>> import io
     >>> file_object = io.BytesIO(f.read())
@@ -97,24 +97,23 @@ def get_start_and_end_time(file_or_file_object):
 
 def get_timing_and_data_quality(file_or_file_object):
     """
-    Counts all data quality, I/O and activity flags
-    of the given Mini-SEED file and returns
-    statistics about the timing quality if applicable.
+    Counts all data quality, I/O, and activity flags of the given MiniSEED
+    file and returns statistics about the timing quality if applicable.
 
-    :type file_or_file_object: str or file
-    :param file_or_file_object: Mini-SEED file name or open file-like object
-        containing a Mini-SEED record.
-    :type str or UTCDateTime
+    :param file_or_file_object: MiniSEED file name or open file-like object
+        containing MiniSEED records.
+    :type file_or_file_object: str or file-like object
     :param starttime: ISO8601 string
-    :type str or UTCDateTime
+    :type starttime: str or UTCDateTime
     :param endtime: ISO8601 string
+    :type endtime: str or UTCDateTime
     :return: Dictionary with information about the timing quality and the data
         quality, I/O and activity flags.
 
     .. rubric:: Data quality
 
     This method will count all set flag bits in the fixed section
-    of the data header in a Mini-SEED file and returns the total count for each
+    of the data header in a MiniSEED file and returns the total count for each
     flag type.
 
     Data quality flags
@@ -208,7 +207,7 @@ def get_timing_and_data_quality(file_or_file_object):
 
     Reading a file with Blockette 1001 will return timing quality statistics.
     The data quality flags will always exists because they are part of the
-    fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
+    fixed MiniSEED header and therefore need to be in every MiniSEED file.
 
     >>> filename = get_example_file("timingquality.mseed")
     >>> tq = get_timing_and_data_quality(filename)
@@ -381,10 +380,10 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
 
 def _get_record_information(file_object, offset=0, endian=None):
     """
-    Searches the first Mini-SEED record stored in file_object at the current
+    Searches the first MiniSEED record stored in file_object at the current
     position and returns some information about it.
 
-    If offset is given, the Mini-SEED record is assumed to start at current
+    If offset is given, the MiniSEED record is assumed to start at current
     position + offset in file_object.
 
     :param endian: If given, the byte order will be enforced. Can be either "<"
@@ -430,9 +429,9 @@ def _get_record_information(file_object, offset=0, endian=None):
             raise ValueError("Invalid MiniSEED file.")
     file_object.seek(record_start, 0)
 
-    # check if full SEED or Mini-SEED
+    # check if full SEED or MiniSEED
     if file_object.read(8)[6:7] == b'V':
-        # found a full SEED record - seek first Mini-SEED record
+        # found a full SEED record - seek first MiniSEED record
         # search blockette 005, 008 or 010 which contain the record length
         blockette_id = file_object.read(3)
         while blockette_id not in [b'010', b'008', b'005']:
@@ -626,9 +625,9 @@ def _convert_datetime_to_mstime(dt):
 
 def _convert_mstime_to_datetime(timestring):
     """
-    Takes a Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
+    Takes a MiniSEED timestamp and returns a obspy.util.UTCDateTime object.
 
-    :param timestamp: Mini-SEED timestring (Epoch time string in ms).
+    :param timestamp: MiniSEED timestring (Epoch time string in ms).
     """
     return UTCDateTime(timestring / HPTMODULUS)
 
