@@ -27,6 +27,65 @@ from obspy.io.mseed.headers import (FIXED_HEADER_ACTIVITY_FLAGS,
 from obspy.io.mseed.util import set_flags_in_fixed_headers
 
 
+def _create_mseed_file(filename, record_count, sampling_rate=1.0,
+                       starttime=UTCDateTime(0), flags=None, seed=None,
+                       skiprecords=0):
+    """
+    Helper function to create MiniSEED files with certain flags set for
+    testing purposes.
+    """
+    all_flags = {
+        "data_quality_flags": {"offset": 38, "flags": [
+            "amplifier_saturation_detected", "digitizer_clipping_detected",
+            "spikes_detected", "glitches_detected", "missing_data_present",
+            "telemetry_sync_error", "digital_filter_charging",
+            "time_tag_uncertain"]},
+        "activity_flags": {"offset": 36, "flags": [
+            "calibration_signals_present", "time_correction_applied",
+            "beginning_event", "end_event", "positive_leap", "negative_leap",
+            "clock_locked"]},
+        "io_and_clock_flags": {"offset": 37, "flags": [
+            "station_volume_parity_error", "long_record_read",
+            "short_record_read", "start_time_series", "end_time_series",
+            "clock_locked"]}
+    }
+
+    # With uncompressed float32 it is 50 samples per record.
+    data = np.empty(50 * record_count, dtype=np.float32)
+    tr = Trace(data=data,
+               header={"sampling_rate": sampling_rate, "starttime": starttime})
+    tr.write(filename, format="mseed", reclen=256, encoding="FLOAT32")
+
+    if not flags:
+        return
+
+    # Reproducibility!
+    if seed is not None:
+        np.random.seed(seed)
+
+    data = np.fromfile(filename, dtype=np.int8)
+
+    # Modify the flags to get the required statistics.
+    for key, value in all_flags.items():
+        if key not in flags:
+            continue
+        _f = value["flags"]
+        _flag_values = np.zeros(record_count - skiprecords, dtype=np.int8)
+        for _i, name in enumerate(_f):
+            if name not in flags[key]:
+                continue
+            # Create array with the correct number of flags set.
+            arr = np.zeros(record_count - skiprecords, dtype=np.int8)
+            arr[:flags[key][name]] = 1 << _i
+            np.random.shuffle(arr)
+            _flag_values |= arr
+        data[value["offset"]:: 256] = np.concatenate([
+            np.zeros(skiprecords, dtype=np.int8), _flag_values])
+
+    # Write again.
+    data.tofile(filename)
+
+
 class MSEEDUtilTestCase(unittest.TestCase):
     """
     Tests suite for util module of obspy.io.mseed.
@@ -167,152 +226,226 @@ class MSEEDUtilTestCase(unittest.TestCase):
         This test reads a real Mini-SEED file which has been
         modified ad hoc.
         """
-        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
-        result = util.get_flags(filename, timing_quality=False)
+        with NamedTemporaryFile() as tf:
+            _create_mseed_file(
+                tf.name, record_count=112, seed=3412,
+                starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                    'data_quality_flags': {
+                        "amplifier_saturation_detected": 55,
+                        "digitizer_clipping_detected": 72,
+                        "spikes_detected": 55,
+                        "glitches_detected": 63,
+                        "missing_data_present": 55,
+                        "telemetry_sync_error": 63,
+                        "digital_filter_charging": 4,
+                        "time_tag_uncertain": 8},
+                    'activity_flags': {
+                        "calibration_signals_present": 1,
+                        "time_correction_applied": 2,
+                        "beginning_event": 3,
+                        "end_event": 53,
+                        "positive_leap": 4,
+                        "negative_leap": 11,
+                        "clock_locked": 5},
+                    'io_and_clock_flags': {
+                        "station_volume_parity_error": 1,
+                        "long_record_read": 33,
+                        "short_record_read": 2,
+                        "start_time_series": 3,
+                        "end_time_series": 4,
+                        "clock_locked": 32}})
 
-        self.assertEqual(result["record_count"], 11266)
+            result = util.get_flags(tf.name, timing_quality=False)
 
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 672,
-            "spikes_detected": 0,
-            "glitches_detected": 663,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 663,
-            "digital_filter_charging": 804,
-            "time_tag_uncertain": 8})
+            self.assertEqual(result["record_count"], 112)
 
-        self.assertEqual(result['activity_flags'], {
-            "calibration_signals_present": 0,
-            "time_correction_applied": 0,
-            "beginning_event": 0,
-            "end_event": 2253,
-            "positive_leap": 0,
-            "negative_leap": 11,
-            "clock_locked": 0})
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 55,
+                "digitizer_clipping_detected": 72,
+                "spikes_detected": 55,
+                "glitches_detected": 63,
+                "missing_data_present": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "time_tag_uncertain": 8})
 
-        self.assertEqual(result['io_and_clock_flags'], {
-            "station_volume_parity_error": 0,
-            "long_record_read": 1033,
-            "short_record_read": 0,
-            "start_time_series": 0,
-            "end_time_series": 0,
-            "clock_locked": 11258})
+            self.assertEqual(result['activity_flags'], {
+                "calibration_signals_present": 1,
+                "time_correction_applied": 2,
+                "beginning_event": 3,
+                "end_event": 53,
+                "positive_leap": 4,
+                "negative_leap": 11,
+                "clock_locked": 5})
 
-        # Test time settings.
-        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
-        starttime = '2015-10-16T00:00:00'
-        result = util.get_flags(filename, starttime=starttime,
-                                io_flags=False, activity_flags=False,
-                                timing_quality=False)
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 672,
-            "spikes_detected": 0,
-            "glitches_detected": 663,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 663,
-            "digital_filter_charging": 804,
-            "time_tag_uncertain": 8})
+            self.assertEqual(result['io_and_clock_flags'], {
+                "station_volume_parity_error": 1,
+                "long_record_read": 33,
+                "short_record_read": 2,
+                "start_time_series": 3,
+                "end_time_series": 4,
+                "clock_locked": 32})
 
-        starttime = '2015-10-17T00:00:00'
-        result = util.get_flags(filename, starttime=starttime,
-                                io_flags=False, activity_flags=False,
-                                timing_quality=False)
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 0,
-            "spikes_detected": 0,
-            "glitches_detected": 0,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 0,
-            "digital_filter_charging": 0,
-            "time_tag_uncertain": 0})
+            # Test time settings. Everything is still present.
+            starttime = '2015-10-16T00:00:00'
+            result = util.get_flags(tf.name, starttime=starttime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 55,
+                "digitizer_clipping_detected": 72,
+                "spikes_detected": 55,
+                "glitches_detected": 63,
+                "missing_data_present": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "time_tag_uncertain": 8})
 
-        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.290')
-        starttime = '2015-10-17T00:00:00'
-        endtime = '2015-10-17T23:59:00'
-        result = util.get_flags(filename, starttime=starttime,
-                                endtime=endtime, io_flags=False,
-                                activity_flags=False, timing_quality=False)
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 0,
-            "spikes_detected": 0,
-            "glitches_detected": 0,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 0,
-            "digital_filter_charging": 0,
-            "time_tag_uncertain": 6})
+            # Nothing is present.
+            starttime = '2015-10-17T00:00:00'
+            result = util.get_flags(tf.name, starttime=starttime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 0,
+                "digitizer_clipping_detected": 0,
+                "spikes_detected": 0,
+                "glitches_detected": 0,
+                "missing_data_present": 0,
+                "telemetry_sync_error": 0,
+                "digital_filter_charging": 0,
+                "time_tag_uncertain": 0})
+
+            # There are exactly 10 records at the front which have nothing.
+            # Thus reading until that point should yield nothing.
+            endtime = UTCDateTime('2015-10-15T00:00:00') + 50 * 10
+            result = util.get_flags(tf.name, endtime=endtime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 0,
+                "digitizer_clipping_detected": 0,
+                "spikes_detected": 0,
+                "glitches_detected": 0,
+                "missing_data_present": 0,
+                "telemetry_sync_error": 0,
+                "digital_filter_charging": 0,
+                "time_tag_uncertain": 0})
+
+            # Reading after that point should yield everything.
+            result = util.get_flags(tf.name, starttime=endtime,
+                                    io_flags=False, activity_flags=False,
+                                    timing_quality=False)
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 55,
+                "digitizer_clipping_detected": 72,
+                "spikes_detected": 55,
+                "glitches_detected": 63,
+                "missing_data_present": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "time_tag_uncertain": 8})
 
     def test_get_flags_from_files_and_file_like_objects(self):
         """
         Similar to test_get_flags() but with file-like objects.
         """
-        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
+        with NamedTemporaryFile() as tf:
+            _create_mseed_file(
+                    tf.name, record_count=112, seed=3412,
+                    starttime="2015-10-16T00:00:00", skiprecords=5, flags={
+                        'data_quality_flags': {
+                            "amplifier_saturation_detected": 55,
+                            "digitizer_clipping_detected": 72,
+                            "spikes_detected": 55,
+                            "glitches_detected": 63,
+                            "missing_data_present": 55,
+                            "telemetry_sync_error": 63,
+                            "digital_filter_charging": 4,
+                            "time_tag_uncertain": 8},
+                        'activity_flags': {
+                            "calibration_signals_present": 1,
+                            "time_correction_applied": 2,
+                            "beginning_event": 3,
+                            "end_event": 53,
+                            "positive_leap": 4,
+                            "negative_leap": 11,
+                            "clock_locked": 5},
+                        'io_and_clock_flags': {
+                            "station_volume_parity_error": 1,
+                            "long_record_read": 33,
+                            "short_record_read": 2,
+                            "start_time_series": 3,
+                            "end_time_series": 4,
+                            "clock_locked": 32}})
 
-        # From open file.
-        with io.open(filename, "rb") as fh:
-            result = util.get_flags(fh, timing_quality=False)
+            tf.seek(0, 0)
 
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 672,
-            "spikes_detected": 0,
-            "glitches_detected": 663,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 663,
-            "digital_filter_charging": 804,
-            "time_tag_uncertain": 8})
+            # Directly from the file.
+            result = util.get_flags(tf, timing_quality=False)
 
-        self.assertEqual(result['activity_flags'], {
-            "calibration_signals_present": 0,
-            "time_correction_applied": 0,
-            "beginning_event": 0,
-            "end_event": 2253,
-            "positive_leap": 0,
-            "negative_leap": 11,
-            "clock_locked": 0})
+            self.assertEqual(result["record_count"], 112)
 
-        self.assertEqual(result['io_and_clock_flags'], {
-            "station_volume_parity_error": 0,
-            "long_record_read": 1033,
-            "short_record_read": 0,
-            "start_time_series": 0,
-            "end_time_series": 0,
-            "clock_locked": 11258})
+            self.assertEqual(result['data_quality_flags'], {
+                "amplifier_saturation_detected": 55,
+                "digitizer_clipping_detected": 72,
+                "spikes_detected": 55,
+                "glitches_detected": 63,
+                "missing_data_present": 55,
+                "telemetry_sync_error": 63,
+                "digital_filter_charging": 4,
+                "time_tag_uncertain": 8})
 
-        # From BytesIO.
-        with io.open(filename, "rb") as fh:
-            with io.BytesIO(fh.read()) as buf:
+            self.assertEqual(result['activity_flags'], {
+                "calibration_signals_present": 1,
+                "time_correction_applied": 2,
+                "beginning_event": 3,
+                "end_event": 53,
+                "positive_leap": 4,
+                "negative_leap": 11,
+                "clock_locked": 5})
+
+            self.assertEqual(result['io_and_clock_flags'], {
+                "station_volume_parity_error": 1,
+                "long_record_read": 33,
+                "short_record_read": 2,
+                "start_time_series": 3,
+                "end_time_series": 4,
+                "clock_locked": 32})
+
+            # From a BytesIO objects.
+            tf.seek(0, 0)
+            with io.BytesIO(tf.read()) as buf:
                 result = util.get_flags(buf, timing_quality=False)
 
-        self.assertEqual(result['data_quality_flags'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 672,
-            "spikes_detected": 0,
-            "glitches_detected": 663,
-            "missing_data_present": 0,
-            "telemetry_sync_error": 663,
-            "digital_filter_charging": 804,
-            "time_tag_uncertain": 8})
+                self.assertEqual(result["record_count"], 112)
 
-        self.assertEqual(result['activity_flags'], {
-            "calibration_signals_present": 0,
-            "time_correction_applied": 0,
-            "beginning_event": 0,
-            "end_event": 2253,
-            "positive_leap": 0,
-            "negative_leap": 11,
-            "clock_locked": 0})
+                self.assertEqual(result['data_quality_flags'], {
+                    "amplifier_saturation_detected": 55,
+                    "digitizer_clipping_detected": 72,
+                    "spikes_detected": 55,
+                    "glitches_detected": 63,
+                    "missing_data_present": 55,
+                    "telemetry_sync_error": 63,
+                    "digital_filter_charging": 4,
+                    "time_tag_uncertain": 8})
 
-        self.assertEqual(result['io_and_clock_flags'], {
-            "station_volume_parity_error": 0,
-            "long_record_read": 1033,
-            "short_record_read": 0,
-            "start_time_series": 0,
-            "end_time_series": 0,
-            "clock_locked": 11258})
+                self.assertEqual(result['activity_flags'], {
+                    "calibration_signals_present": 1,
+                    "time_correction_applied": 2,
+                    "beginning_event": 3,
+                    "end_event": 53,
+                    "positive_leap": 4,
+                    "negative_leap": 11,
+                    "clock_locked": 5})
+
+                self.assertEqual(result['io_and_clock_flags'], {
+                    "station_volume_parity_error": 1,
+                    "long_record_read": 33,
+                    "short_record_read": 2,
+                    "start_time_series": 3,
+                    "end_time_series": 4,
+                    "clock_locked": 32})
 
     def test_get_start_and_end_time(self):
         """
