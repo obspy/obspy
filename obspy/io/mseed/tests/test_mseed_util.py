@@ -220,6 +220,75 @@ class MSEEDUtilTestCase(unittest.TestCase):
             "digital_filter_charging": 0,
             "time_tag_uncertain": 6})
 
+    def test_get_flags_from_files_and_file_like_objects(self):
+        """
+        Similar to test_get_flags() but with file-like objects.
+        """
+        filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
+
+        # From open file.
+        with io.open(filename, "rb") as fh:
+            result = util.get_flags(fh, timing_quality=False)
+
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 672,
+            "spikes_detected": 0,
+            "glitches_detected": 663,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 663,
+            "digital_filter_charging": 804,
+            "time_tag_uncertain": 8})
+
+        self.assertEqual(result['activity_flags'], {
+            "calibration_signals_present": 0,
+            "time_correction_applied": 0,
+            "beginning_event": 0,
+            "end_event": 2253,
+            "positive_leap": 0,
+            "negative_leap": 11,
+            "clock_locked": 0})
+
+        self.assertEqual(result['io_and_clock_flags'], {
+            "station_volume_parity_error": 0,
+            "long_record_read": 1033,
+            "short_record_read": 0,
+            "start_time_series": 0,
+            "end_time_series": 0,
+            "clock_locked": 11258})
+
+        # From BytesIO.
+        with io.open(filename, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                result = util.get_flags(buf, timing_quality=False)
+
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 672,
+            "spikes_detected": 0,
+            "glitches_detected": 663,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 663,
+            "digital_filter_charging": 804,
+            "time_tag_uncertain": 8})
+
+        self.assertEqual(result['activity_flags'], {
+            "calibration_signals_present": 0,
+            "time_correction_applied": 0,
+            "beginning_event": 0,
+            "end_event": 2253,
+            "positive_leap": 0,
+            "negative_leap": 11,
+            "clock_locked": 0})
+
+        self.assertEqual(result['io_and_clock_flags'], {
+            "station_volume_parity_error": 0,
+            "long_record_read": 1033,
+            "short_record_read": 0,
+            "start_time_series": 0,
+            "end_time_series": 0,
+            "clock_locked": 11258})
+
     def test_get_start_and_end_time(self):
         """
         Tests getting the start- and endtime of a file.

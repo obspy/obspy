@@ -108,13 +108,22 @@ def get_timing_and_data_quality(file_or_file_object):
     :param starttime: Only use records whose start time is smaller then this
         given time.
     :type endtime: str or UTCDateTime
+    :param io_flags: Extract I/O flag counts.
+    :type io_flags: bool
+    :param activity_flags: Extract activity flag counts.
+    :type activity_flags: bool
+    :param data_quality_flags: Extract data quality flag counts.
+    :type data_quality_flags: bool
+    :param timing_quality: Extract timing quality and corresponding statistics.
+    :type timing_quality: bool
     :return: Dictionary with information about the timing quality and the data
         quality, I/O, and activity flags.
 
-    .. rubric:: Data quality
+    .. rubric:: Flags
 
     This method will count all set bit flags in the fixed header of a MiniSEED
-    file and return the total count for each flag type.
+    file and return the total count for each flag type. The following flags
+    are extracted:
 
     Data quality flags
     ========  =================================================
@@ -161,93 +170,38 @@ def get_timing_and_data_quality(file_or_file_object):
 
     This method will read the timing quality in Blockette 1001 for each
     record in the file if available and return the following statistics:
-    Minima, maxima, average, median and upper and lower quantiles.
-    Quantiles are calculated using a integer round outwards policy: lower
-    quantiles are rounded down (probability < 0.5), and upper quantiles
-    (probability > 0.5) are rounded up.
-    This gives no more than the requested probability in the tails, and at
-    least the requested probability in the central area.
-    The median is calculating by either taking the middle value or, with an
-    even numbers of values, the average between the two middle values.
+    Minima, maxima, average, median and upper and lower quartiles.
 
-    .. rubric:: Example
+    .. rubric:: Examples
 
     >>> from obspy.core.util import get_example_file
     >>> filename = get_example_file("qualityflags.mseed")
-    >>> tq = get_timing_and_data_quality(filename)
-    >>> for k, v in tq.items():
+    >>> flags = get_flags(filename)
+    >>> for k, v in flags["data_quality_flags"].items():
     ...     print(k, v)
-    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
+    amplifier_saturation_detected 9
+    digitizer_clipping_detected 8
+    spikes_detected 7
+    glitches_detected 6
+    missing_data_present 5
+    telemetry_sync_error 4
+    digital_filter_charging 3
+    time_tag_uncertain 2
 
-    Also works with file pointers and BytesIOs.
-
-    >>> f = open(filename, 'rb')
-    >>> tq = get_timing_and_data_quality(f)
-    >>> for k, v in tq.items():
-    ...     print(k, v)
-    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
-
-    >>> import io
-    >>> file_object = io.BytesIO(f.read())
-    >>> f.close()
-    >>> tq = get_timing_and_data_quality(file_object)
-    >>> for k, v in tq.items():
-    ...     print(k, v)
-    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
-
-    If the file pointer or BytesIO position does not correspond to the first
-    record the omitted records will be skipped.
-
-    >>> _ = file_object.seek(1024, 1)
-    >>> tq = get_timing_and_data_quality(file_object)
-    >>> for k, v in tq.items():
-    ...     print(k, v)
-    data_quality_flags [8, 8, 7, 6, 5, 4, 3, 2]
-    >>> file_object.close()
-
-    Reading a file with Blockette 1001 will return timing quality statistics.
-    The data quality flags will always exists because they are part of the
-    fixed MiniSEED header and therefore need to be in every MiniSEED file.
+    Reading a file with Blockette 1001 will return timing quality statistics if
+    requested.
 
     >>> filename = get_example_file("timingquality.mseed")
-    >>> tq = get_timing_and_data_quality(filename)
-    >>> for k, v in sorted(tq.items()):
-    ...     print(k, v)
-    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
-    timing_quality_average 50.0
-    timing_quality_lower_quantile 25.0
-    timing_quality_max 100.0
-    timing_quality_median 50.0
-    timing_quality_min 0.0
-    timing_quality_upper_quantile 75.0
-
-    Also works with file pointers and BytesIOs.
-
-    >>> f = open(filename, 'rb')
-    >>> tq = get_timing_and_data_quality(f)
-    >>> for k, v in sorted(tq.items()):
-    ...     print(k, v)
-    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
-    timing_quality_average 50.0
-    timing_quality_lower_quantile 25.0
-    timing_quality_max 100.0
-    timing_quality_median 50.0
-    timing_quality_min 0.0
-    timing_quality_upper_quantile 75.0
-
-    >>> file_object = io.BytesIO(f.read())
-    >>> f.close()
-    >>> tq = get_timing_and_data_quality(file_object)
-    >>> for k, v in sorted(tq.items()):
-    ...     print(k, v)
-    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
-    timing_quality_average 50.0
-    timing_quality_lower_quantile 25.0
-    timing_quality_max 100.0
-    timing_quality_median 50.0
-    timing_quality_min 0.0
-    timing_quality_upper_quantile 75.0
-    >>> file_object.close()
+    >>> flags = get_flags(filename)
+    >>> for k, v in sorted(flags["timing_quality"].items()):
+    ...     print(k, v)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    all_values [...]
+    lower_quartile 25.0
+    max 100.0
+    mean 50.0
+    median 50.0
+    min 0.0
+    upper_quartile 75.0
     """
     # Keep track of the extracted information. Initialize with a list of
     # tuples to preserve the crucial ordering.
