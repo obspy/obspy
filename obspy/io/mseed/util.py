@@ -117,7 +117,9 @@ def get_timing_and_data_quality(file_or_file_object):
     :param timing_quality: Extract timing quality and corresponding statistics.
     :type timing_quality: bool
     :return: Dictionary with information about the timing quality and the data
-        quality, I/O, and activity flags.
+        quality, I/O, and activity flags. It has the following keys:
+        ``"record_count"``, ``"data_quality_flags"``, ``"activity_flags"``,
+        ``"io_and_clock_flags"``, and ``"timing_quality"``.
 
     .. rubric:: Flags
 
@@ -241,11 +243,13 @@ def get_timing_and_data_quality(file_or_file_object):
     endtime = UTCDateTime(endtime) if endtime else None
 
     offset = 0
+    record_count = 0
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
     while offset <= (info["filesize"] - 256):
         rec_info = get_record_information(file_or_file_object, offset)
+        record_count += 1
 
         # Filter records based on times if applicable.
         if starttime is not None and rec_info["endtime"] < starttime:
@@ -273,7 +277,9 @@ def get_timing_and_data_quality(file_or_file_object):
 
         offset += rec_info["record_length"]
 
-    results = {}
+    results = {
+        "record_count": record_count
+    }
 
     if io_flags:
         results["io_and_clock_flags"] = io_count
@@ -294,7 +300,7 @@ def get_timing_and_data_quality(file_or_file_object):
                 "upper_quartile": np.percentile(tq, 75)
             }
         else:
-            results["timing_quality"] = {"all_values": tq}
+            results["timing_quality"] = {}
 
     return results
 

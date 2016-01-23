@@ -122,22 +122,45 @@ class MSEEDUtilTestCase(unittest.TestCase):
         This test reads a self-made Mini-SEED file with set Data Quality Bits.
         A real test file would be better as this test tests a file that was
         created by the inverse method that reads the bits.
+
+        The method used to be called getTimingAndDataQuality() but has in
+        the meanwhile been replaced by a more general get_flags() method.
+        This test uses the general method but is otherwise not altered.
         """
         filename = os.path.join(self.path, 'data', 'qualityflags.mseed')
         # Read quality flags.
-        result = util.get_timing_and_data_quality(filename)
+        result = util.get_flags(filename, timing_quality=False,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=True)
         # The test file contains 18 records. The first record has no set bit,
         # bit 0 of the second record is set, bit 1 of the third, ..., bit 7 of
         # the 9th record is set. The last nine records have 0 to 8 set bits,
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
-        self.assertEqual(result,
-                         {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]})
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 9,
+            "digitizer_clipping_detected": 8,
+            "spikes_detected": 7,
+            "glitches_detected": 6,
+            "missing_data_present": 5,
+            "telemetry_sync_error": 4,
+            "digital_filter_charging": 3,
+            "time_tag_uncertain": 2})
+
         # No set quality flags should result in a list of zeros.
         filename = os.path.join(self.path, 'data', 'test.mseed')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
+        result = util.get_flags(filename, timing_quality=False,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=True)
+        self.assertEqual(result['data_quality_flags'], {
+            "amplifier_saturation_detected": 0,
+            "digitizer_clipping_detected": 0,
+            "spikes_detected": 0,
+            "glitches_detected": 0,
+            "missing_data_present": 0,
+            "telemetry_sync_error": 0,
+            "digital_filter_charging": 0,
+            "time_tag_uncertain": 0})
 
     def test_get_flags(self):
         """
@@ -146,6 +169,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'NA.SEUT..BHZ.D.2015.289')
         result = util.get_flags(filename, timing_quality=False)
+
+        self.assertEqual(result["record_count"], 11266)
 
         self.assertEqual(result['data_quality_flags'], {
             "amplifier_saturation_detected": 0,
@@ -318,26 +343,37 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         V <- 0:100; min(V); max(V); mean(V); median(V); quantile(V, 0.75,
         type = 3); quantile(V, 0.25, type = 3)
+
+        The method used to be called getTimingAndDataQuality() but has in
+        the meanwhile been replaced by a more general get_flags() method.
+        This test uses the general method but is otherwise not altered.
         """
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'timing_quality_upper_quantile': 75.0,
-                          'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0],
-                          'timing_quality_min': 0.0,
-                          'timing_quality_lower_quantile': 25.0,
-                          'timing_quality_average': 50.0,
-                          'timing_quality_median': 50.0,
-                          'timing_quality_max': 100.0})
+        result = util.get_flags(filename, timing_quality=True,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=False)
+        # Test all values separately.
+        np.testing.assert_allclose(
+            sorted(result["timing_quality"]["all_values"]),
+            np.arange(0, 101))
+
+        del result["timing_quality"]["all_values"]
+
+        self.assertEqual(result["timing_quality"], {
+            'upper_quartile': 75.0,
+            'min': 0.0,
+            'lower_quartile': 25.0,
+            'mean': 50.0,
+            'median': 50.0,
+            'max': 100.0})
+
         # No timing quality set should result in an empty dictionary.
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
-        result = util.get_timing_and_data_quality(filename)
-        self.assertEqual(result,
-                         {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
+        result = util.get_flags(filename, timing_quality=True,
+                                io_flags=False, activity_flags=False,
+                                data_quality_flags=False)
+        self.assertEqual(result["timing_quality"], {})
 
     def test_unpack_steim_1(self):
         """
