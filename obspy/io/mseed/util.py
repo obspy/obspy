@@ -104,10 +104,10 @@ def get_timing_and_data_quality(file_or_file_object):
     :type file_or_file_object: str or file-like object
     :param starttime: Only use records whose end time is larger then this
         given time.
-    :type starttime: str or UTCDateTime
-    :param starttime: Only use records whose start time is smaller then this
+    :type starttime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: Only use records whose start time is smaller then this
         given time.
-    :type endtime: str or UTCDateTime
+    :type endtime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
     :param io_flags: Extract I/O flag counts.
     :type io_flags: bool
     :param activity_flags: Extract activity flag counts.
@@ -223,7 +223,7 @@ def get_timing_and_data_quality(file_or_file_object):
         ("end_event", 0),
         ("positive_leap", 0),
         ("negative_leap", 0),
-        ("clock_locked", 0)])
+        ("event_in_progress", 0)])
     io_count = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
