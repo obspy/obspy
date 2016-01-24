@@ -264,8 +264,10 @@ class MSEEDMetadata(object):
         """
         _streams = obspy.Stream()
         _files = []
-        self.starttime = obspy.UTCDateTime(starttime)
-        self.endtime = obspy.UTCDateTime(endtime)
+        self.starttime = obspy.UTCDateTime(starttime) \
+            if starttime is not None else None
+        self.endtime = obspy.UTCDateTime(endtime) \
+            if endtime is not None else None
 
         for file in files:
             # Will raise if not a MiniSEED files.
@@ -295,6 +297,11 @@ class MSEEDMetadata(object):
         # Sort so that gaps and what not work in an ok fashion.
         self.data.sort()
         self.files.extend(_files)
+
+        if self.starttime is None:
+            self.starttime = self.data[0].stats.starttime
+        if self.endtime is None:
+            self.endtime = self.data[-1].stats.endtime
 
         self._extract_mseed_stream_metadata()
         self._compute_sample_metrics()

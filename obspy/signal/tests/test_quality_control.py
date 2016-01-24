@@ -9,7 +9,10 @@ from future.builtins import *  # NOQA
 import os
 import unittest
 
+import numpy as np
+
 import obspy
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.quality_control import MSEEDMetadata
 
 
@@ -17,84 +20,76 @@ class QualityControlTestCase(unittest.TestCase):
     """
     Test cases for Quality Control.
     """
-    def setUp(self):
-        # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
-
-    def test_populate_metadata_null(self):
-        mseed_filenames = []
-        files = list()
-        for _i in mseed_filenames:
-            files.append(os.path.join(self.path, _i))
-        start_time = obspy.UTCDateTime('2012-07-30T00:00:00')
-        end_time = obspy.UTCDateTime('2012-07-30T23:59:59')
+    def test_no_files_given(self):
+        """
+        Tests the raised exception if no file is given.
+        """
         mseed_metadata = MSEEDMetadata()
 
         with self.assertRaises(ValueError) as e:
-            mseed_metadata.populate_metadata(files, start_time, end_time)
+            mseed_metadata.populate_metadata(files=[])
 
         self.assertEqual(
             e.exception.args[0],
             "Nothing added - no data within the given temporal constraints "
             "found.")
 
-    def test_populate_metadata(self):
-        mseed_filenames = ['VEN1.NL.HHZ.D.2012.07.30.212.0000']
-        files = list()
-        for _i in mseed_filenames:
-            files.append(os.path.join(self.path, _i))
-        start_time = obspy.UTCDateTime('2012-07-30T00:00:00')
-        end_time = obspy.UTCDateTime('2012-07-31T00:00:00')
-        mseed_metadata = MSEEDMetadata()
-        mseed_metadata.populate_metadata(files, start_time, end_time)
-        self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 3)
+    def test_gap_count(self):
+        """
+        Tests that gap counting works as expected.
+        """
+        # Create a file with 3 gaps.
+        tr_1 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(0)})
+        tr_2 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(100)})
+        tr_3 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(200)})
+        tr_4 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(300)})
+        st = obspy.Stream(traces=[tr_1, tr_2, tr_3, tr_4])
 
-    def test_populate_metadata_multiple_files(self):
-        mseed_filenames = ['LLW.BHZ.BN.1989.172', 'LLW.BHZ.BN.1989.173']
-        files = list()
-        for _i in mseed_filenames:
-            files.append(os.path.join(self.path, _i))
-        start_time = '1989-06-22T00:00:00'
-        end_time = '1989-06-22T23:59:59'
-        mseed_metadata = MSEEDMetadata()
-        mseed_metadata.populate_metadata(files, start_time,
-                                         end_time, c_seg=False)
-        self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 1)
-        self.assertNotIn("c_segments", mseed_metadata._ms_meta)
-        mseed_more_filenames = ['NA.SEUT..BHZ.D.2015.289',
-                                'NA.SEUT..BHZ.D.2015.290']
-        start_time = '2015-10-17T00:00:00'
-        end_time = '2015-10-17T23:59:00'
-        more_files = list()
-        mseed_metadata2 = MSEEDMetadata()
-        for _i in mseed_more_filenames:
-            more_files.append(os.path.join(self.path, _i))
-        mseed_metadata2.populate_metadata(more_files, start_time,
-                                          end_time, c_seg=False)
-        self.assertEqual(mseed_metadata2._ms_meta['telemetry_sync_error'], 0)
-        self.assertEqual(mseed_metadata2._ms_meta['suspect_time_tag'], 6)
+        with NamedTemporaryFile() as tf:
+            st.write(tf.name, format="mseed")
 
-    def test_get_json_meta_no_tq(self):
-        mseed_filenames = ['fdsnws-dataselect_2015-10-21T11_32_21.mseed']
-        files = list()
-        for _i in mseed_filenames:
-            files.append(os.path.join(self.path, _i))
-        start_time = '2015-01-01T00:00:00'
-        end_time = '2015-01-02T00:00:00'
-        mseed_metadata = MSEEDMetadata()
-        mseed_metadata.populate_metadata(files, start_time, end_time)
-        self.assertEqual(mseed_metadata._ms_meta['timing_quality_max'], None)
+            mseed_metadata = MSEEDMetadata()
+            mseed_metadata.populate_metadata(files=[tf.name])
+            self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 3)
 
-    def test_get_json_meta(self):
-        mseed_filenames = ['SFRA.HGE.CH.2011.101']
-        files = list()
-        for _i in mseed_filenames:
-            files.append(os.path.join(self.path, _i))
-        start_time = '2011-04-11T00:00:00'
-        end_time = '2011-04-11T23:59:59'
-        mseed_metadata = MSEEDMetadata()
-        mseed_metadata.populate_metadata(files, start_time, end_time)
-        self.assertGreater(mseed_metadata._ms_meta['num_gaps'], 10)
+    def test_gaps_between_multiple_files(self):
+        """
+        Test gap counting between multiple files.
+        """
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+            # Two files, same ids but a gap in-between.
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                tf1.name, format="mseed")
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(100)}).write(
+                    tf2.name, format="mseed")
+            # Don't calculate statistics on the single segments.
+            mseed_metadata = MSEEDMetadata()
+            mseed_metadata.populate_metadata([tf1.name, tf2.name], c_seg=False)
+            self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 1)
+            self.assertNotIn("c_segments", mseed_metadata._ms_meta)
+
+    def test_file_with_no_timing_quality(self):
+        """
+        Tests timing quality extraction in files with no timing quality.
+        """
+        with NamedTemporaryFile() as tf1:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                    tf1.name, format="mseed")
+            mseed_metadata = MSEEDMetadata()
+            mseed_metadata.populate_metadata([tf1.name])
+            self.assertEqual(mseed_metadata._ms_meta['timing_quality_max'],
+                             None)
+            self.assertEqual(mseed_metadata._ms_meta['timing_quality_min'],
+                             None)
+            self.assertEqual(mseed_metadata._ms_meta['timing_quality_mean'],
+                             None)
 
 
 def suite():
