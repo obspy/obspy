@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-:author: Luca Trani
-:contact: trani@knmi.nl
+Quality control module for ObsPy.
 
+Currently requires MiniSEED files as that is the dominant data format in
+data centers.
 
+:author:
+    Luca Trani (trani@knmi.nl)
+    Lion Krischer (krischer@geophysik.uni-muenchen.de)
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -13,11 +17,14 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from obspy.core import UTCDateTime, read, Stream
-from obspy.io.mseed.util import get_flags, get_start_and_end_time
-import numpy as np
+
+import collections
 import json
-from collections import defaultdict
+
+import numpy as np
+
+import obspy
+from obspy.io.mseed.util import get_flags, get_start_and_end_time
 
 
 class NumPyEncoder(json.JSONEncoder):
@@ -32,240 +39,276 @@ class NumPyEncoder(json.JSONEncoder):
             return super(NumPyEncoder, self).default(obj)
 
 
-class MSEEDMetadata():
+class MSEEDMetadata(object):
     """
-    A container for MSEED specific metadata including QC
+    A container for MSEED specific metadata including QC.
     """
-
     def __init__(self):
-        self.__msmeta__ = defaultdict()
-        self.__samples__ = []
-        self.__num_records__ = 0
-        self.__num_samples__ = 0
-        self.__st__ = Stream()
-        self.start_time = None
-        self.end_time = None
+        self._ms_meta = {}
+        self.data = obspy.Stream()
         self.files = []
+        self.starttime = None
+        self.endtime = None
 
-    def __read__(self, files, start_time, end_time):
-        """
-        Assumes that each file contains a
-        single stream (scnl)
-        Files should represent consecutive
-        ordered time windows:
-        e.g. daily files
-        """
-        if(len(files) > 1):
-            first_file = files.pop(0)
-            first_end_time = get_start_and_end_time(first_file)[1]
-            last_file = files.pop()
-            last_start_time = get_start_and_end_time(first_file)[0]
-            if first_end_time > start_time:
-                self.__st__ = read(first_file)
-                self.files.append(first_file)
-            for file in files:
-                self.__st__ += read(file)
-                self.files.append(file)
-            if last_start_time < end_time:
-                self.__st__ += read(last_file)
-                self.files.append(last_file)
-        else:
-            for file in files:
-                self.__st__ += read(file)
-                self.files.append(file)
-        self.start_time = start_time
-        self.end_time = end_time
-        if start_time is not None or end_time is not None:
-            # cut the Stream to the requested time window
-            self.__st__.trim(starttime=start_time, endtime=end_time)
-        for t in self.__st__:
-            self.__samples__.extend(t.data)
-            self.__num_records__ += t.stats.mseed.number_of_records
-            self.__num_samples__ += t.stats.npts
+    @property
+    def number_of_records(self):
+        return sum(tr.stats.mseed.number_of_records for tr in self.data)
 
-    def __extract_mseed_stream_metadata__(self):
+    @property
+    def number_of_samples(self):
+        return sum(tr.stats.npts for tr in self.data)
+
+    def _extract_mseed_stream_metadata(self):
         """
         Extracts metadata from the MSEED header
         and populates the msmeta dictionary
         """
-        if(self.__st__.__nonzero__()):
-            stats = self.__st__[0].stats
-            self.__msmeta__['net'] = stats.network
-            self.__msmeta__['sta'] = stats.station
-            self.__msmeta__['cha'] = stats.channel
-            self.__msmeta__['loc'] = stats.location
-            self.__msmeta__['files'] = self.files
-            # start time of the requested available stream
-            self.__msmeta__['start_time'] = self.__st__[0].\
-                stats['starttime'].isoformat()
-            # end time of the requested available stream
-            self.__msmeta__['end_time'] = self.__st__[-1].\
-                stats['endtime'].isoformat()
-            self.__msmeta__['sample_rate'] = stats.sampling_rate
-            self.__msmeta__['record_len'] = stats.mseed.record_length
-            self.__msmeta__['quality'] = stats.mseed.dataquality
-            self.__msmeta__['encoding'] = stats.mseed.encoding
-            self.__msmeta__['num_records'] = self.__num_records__
-            self.__msmeta__['num_samples'] = len(self.__samples__)
-            if len(self.files) > 1:
-                data_quality_flags = [0, 0, 0, 0, 0, 0, 0, 0]
-                activity_flags = [0, 0, 0, 0, 0, 0, 0]
-                io_and_clock_flags = [0, 0, 0, 0, 0, 0]
-                timing_quality = []
-                for f in self.files:
-                    flags = get_flags(f, starttime=self.start_time,
-                                      endtime=self.end_time,
-                                      t_quality=True)
-                    data_quality_flags = [sum(i)
-                                          for i in zip(
-                        data_quality_flags, flags['data_quality_flags'])]
-                    activity_flags = [sum(i)
-                                      for i in zip(
-                        activity_flags, flags['activity_flags'])]
-                    io_and_clock_flags = [sum(i)
-                                          for i in zip(
-                        io_and_clock_flags, flags['io_and_clock_flags'])]
-                    if 'timing_quality' in flags:
-                        timing_quality.extend(flags['timing_quality'])
-                count = len(timing_quality)
-                timing_quality_mean = sum(timing_quality) / count \
-                    if(count > 0) else None
-                timing_quality_min = min(timing_quality) \
-                    if(count > 0) else None
-                timing_quality_max = max(timing_quality) \
-                    if(count > 0) else None
-            else:
-                flags = get_flags(self.files[0],
-                                  starttime=self.start_time,
-                                  endtime=self.end_time)
-                data_quality_flags = flags['data_quality_flags']
-                activity_flags = flags['activity_flags']
-                io_and_clock_flags = flags['io_and_clock_flags']
-                timing_quality_mean = flags['timing_quality_average'] \
-                    if ('timing_quality_average' in flags) else None
-                timing_quality_min = flags['timing_quality_min'] \
-                    if ('timing_quality_min' in flags) else None
-                timing_quality_max = flags['timing_quality_max'] \
-                    if ('timing_quality_max' in flags) else None
-            self.__msmeta__['glitches'] = data_quality_flags[3]
-            self.__msmeta__['amplifier_saturation'] = data_quality_flags[0]
-            self.__msmeta__['digital_filter_charging'] = data_quality_flags[6]
-            self.__msmeta__['digitizer_clipping'] = data_quality_flags[1]
-            self.__msmeta__['missing_padded_data'] = data_quality_flags[4]
-            self.__msmeta__['spikes'] = data_quality_flags[2]
-            self.__msmeta__['suspect_time_tag'] = data_quality_flags[7]
-            self.__msmeta__['telemetry_sync_error'] = data_quality_flags[5]
-            self.__msmeta__['calibration_signal'] = activity_flags[0]
-            self.__msmeta__['event_begin'] = activity_flags[2]
-            self.__msmeta__['event_end'] = activity_flags[3]
-            self.__msmeta__['event_in_progress'] = activity_flags[6]
-            self.__msmeta__['timing_correction'] = activity_flags[1]
-            self.__msmeta__['clock_locked'] = io_and_clock_flags[5]
-            self.__msmeta__['timing_quality_mean'] = timing_quality_mean
-            self.__msmeta__['timing_quality_min'] = timing_quality_min
-            self.__msmeta__['timing_quality_max'] = timing_quality_max
+        if not self.data:
+            raise ValueError("Object contains no waveform data.")
 
-    def __compute_sample_metrics__(self):
+        self.data.sort()
+        m = self._ms_meta
+
+        stats = self.data[0].stats
+        m['net'] = stats.network
+        m['sta'] = stats.station
+        m['cha'] = stats.channel
+        m['loc'] = stats.location
+        m['files'] = self.files
+
+        # start time of the requested available stream
+        m['start_time'] = self.data[0].stats.starttime
+        # end time of the requested available stream
+        m['end_time'] = self.data[-1].stats.endtime
+
+        m['num_records'] = self.number_of_records
+        m['num_samples'] = self.number_of_samples
+
+        # The following are lists as it might contain multiple entries.
+        m['sample_rate'] = set([tr.stats.sampling_rate for tr in self.data])
+        m['record_len'] = set([tr.stats.mseed.record_length
+                               for tr in self.data])
+        m['quality'] = set([tr.stats.mseed.dataquality for tr in self.data])
+        m['encoding'] = set([tr.stats.mseed.encoding for tr in self.data])
+
+        # Setup counters for the MiniSEED header flags.
+        data_quality_flags = collections.Counter(
+                amplifier_saturation_detected=0,
+                digitizer_clipping_detected=0,
+                spikes_detected=0,
+                glitches_detected=0,
+                missing_data_present=0,
+                telemetry_sync_error=0,
+                digital_filter_charging=0,
+                time_tag_uncertain=0)
+        activity_flags = collections.Counter(
+                calibration_signals_present=0,
+                time_correction_applied=0,
+                beginning_event=0,
+                end_event=0,
+                positive_leap=0,
+                negative_leap=0,
+                clock_locked=0)
+        io_and_clock_flags = collections.Counter(
+                station_volume_parity_error=0,
+                long_record_read=0,
+                short_record_read=0,
+                start_time_series=0,
+                end_time_series=0,
+                clock_locked=0)
+        timing_quality = []
+
+        for file in self.files:
+            flags = get_flags(
+                file, starttime=self.starttime, endtime=self.endtime)
+
+            data_quality_flags.update(flags["data_quality_flags"])
+            activity_flags.update(flags["activity_flags"])
+            io_and_clock_flags.update(flags["io_and_clock_flags"])
+            if flags["timing_quality"]:
+                timing_quality.append(flags["timing_quality"]["all_values"])
+
+        # Only calculate the timing quality statistics if each files has the
+        # timing quality set. This should usually be the case. Otherwise we
+        # would created tinted statistics. There is still a chance that some
+        # records in a file have timing qualities set and others not but
+        # that should be small.
+        if len(timing_quality) == len(self.files):
+            timing_quality = np.concatenate(timing_quality)
+            timing_quality_mean = timing_quality.mean()
+            timing_quality_min = timing_quality.min()
+            timing_quality_max = timing_quality.max()
+        else:
+            timing_quality_mean = None
+            timing_quality_min = None
+            timing_quality_max = None
+
+        m['glitches'] = data_quality_flags["glitches_detected"]
+        m['amplifier_saturation'] = \
+            data_quality_flags["amplifier_saturation_detected"]
+        m['digital_filter_charging'] = \
+            data_quality_flags["digital_filter_charging"]
+        m['digitizer_clipping'] = \
+            data_quality_flags["digitizer_clipping_detected"]
+        m['missing_padded_data'] = data_quality_flags["missing_data_present"]
+        m['spikes'] = data_quality_flags["spikes_detected"]
+        m['suspect_time_tag'] = data_quality_flags["time_tag_uncertain"]
+        m['telemetry_sync_error'] = data_quality_flags["telemetry_sync_error"]
+        m['calibration_signal'] = activity_flags["calibration_signals_present"]
+        m['event_begin'] = activity_flags["beginning_event"]
+        m['event_end'] = activity_flags["end_event"]
+        m['event_in_progress'] = activity_flags["event_in_progress"]
+        m['timing_correction'] = activity_flags["time_correction_applied"]
+        m['clock_locked'] = io_and_clock_flags["clock_locked"]
+        m['timing_quality_mean'] = timing_quality_mean
+        m['timing_quality_min'] = timing_quality_min
+        m['timing_quality_max'] = timing_quality_max
+
+    def _compute_sample_metrics(self):
         """
         Computes metrics on samples contained in the specified time window
         """
-        if(self.__st__.__nonzero__()):
-            gaps = self.__st__.getGaps()
-            self.__msmeta__['sample_rms'] = np.sqrt(
-                sum([np.square(n) for n in self.__samples__]) /
-                len(self.__samples__)
-                )
-            self.__msmeta__['sample_mean'] = np.mean(self.__samples__)
-            self.__msmeta__['sample_min'] = np.min(self.__samples__)
-            self.__msmeta__['sample_max'] = np.max(self.__samples__)
-            self.__msmeta__['sample_stdev'] = np.std(self.__samples__)
-            self.__msmeta__['num_gaps'] = len(
-                [gap for gap in gaps if gap[6] > 0]
-                ) + self.__get_head_and_trail_gaps()
-            self.__msmeta__['num_overlaps'] = len(
-                [gap for gap in gaps if gap[6] < 0]
-                )
-            self.__msmeta__['overlaps_len'] = abs(
-                sum([gap[6] for gap in gaps if gap[6] < 0])
-                )
-            self.__msmeta__['gaps_len'] = sum(
-                [gap[6] for gap in gaps if gap[6] > 0]) + \
-                ((self.__st__[0].stats['starttime'] - self.start_time) +
-                 (self.end_time - self.__st__[-1].stats['endtime']))
-            start_time = self.start_time
-            end_time = self.end_time
-            # set the availability with respect to the
-            # requested time interval
-            self.__msmeta__['percent_availability'] = 100*(
-                (end_time - start_time - self.__msmeta__['gaps_len']) /
-                (end_time - start_time)
-                )
+        if not self.data:
+            return
 
-    def __get_head_and_trail_gaps(self):
+        gaps = self.data.getGaps()
+
+        # Make sure there is no integer division by chance.
+        npts = float(self.number_of_records)
+
+        self._ms_meta['sample_rms'] = \
+            np.sqrt(sum((tr.data ** 2).sum() for tr in self.data)) / npts
+
+        self._ms_meta['sample_min'] = min([tr.data.min() for tr in self.data])
+        self._ms_meta['sample_max'] = max([tr.data.max() for tr in self.data])
+
+        self._ms_meta['sample_mean'] = \
+            sum(tr.data.sum() for tr in self.data) / npts
+
+        self._ms_meta['sample_stdev'] = sum(
+            ((tr.data - self._ms_meta["sample_mean"]) ** 2).sum()
+            for tr in self.data) / npts
+
+        self._ms_meta['num_gaps'] = len(
+            [gap for gap in gaps if gap[6] > 0]
+            ) + self._get_head_and_tail_gaps()
+        self._ms_meta['num_overlaps'] = len(
+            [gap for gap in gaps if gap[6] < 0]
+            )
+        self._ms_meta['overlaps_len'] = abs(
+            sum([gap[6] for gap in gaps if gap[6] < 0])
+            )
+        self._ms_meta['gaps_len'] = sum(
+            [gap[6] for gap in gaps if gap[6] > 0]) + \
+                                    ((self.data[0].stats['starttime'] - self.starttime) +
+                                     (self.endtime - self.data[-1].stats['endtime']))
+        start_time = self.starttime
+        end_time = self.endtime
+        # set the availability with respect to the
+        # requested time interval
+        self._ms_meta['percent_availability'] = 100 * (
+            (end_time - start_time - self._ms_meta['gaps_len']) /
+            (end_time - start_time)
+            )
+
+    def _get_head_and_tail_gaps(self):
         extra_gaps = 0
-        if(self.__st__[0].stats['starttime'] > self.start_time):
+        if self.data[0].stats['starttime'] > self.starttime:
             extra_gaps += 1
-        if(self.end_time > self.__st__[-1].stats['endtime']):
+        if self.endtime > self.data[-1].stats['endtime']:
             extra_gaps += 1
         return extra_gaps
 
-    def __compute_continuous_seg_sample_metrics__(self):
+    def _compute_continuous_seg_sample_metrics(self):
         """
-        Computes metrics on the samples in the continuous segments
+        Computes metrics on the samples within each continuous segment.
         """
-        if(self.__st__.__nonzero__()):
-            c_segments = []
-            for t in self.__st__:
-                seg = defaultdict()
-                seg['start_time'] = t.stats.starttime.isoformat()
-                seg['end_time'] = t.stats.endtime.isoformat()
-                seg['sample_min'] = np.min(t.data)
-                seg['sample_max'] = np.max(t.data)
-                seg['sample_mean'] = np.mean(t.data)
-                seg['sample_rms'] = np.sqrt(sum([np.square(n)
-                                                 for n in t.data])/len(t.data))
-                seg['sample_stdev'] = np.std(t.data)
-                seg['num_samples'] = t.stats.npts
-                seg['seg_len'] = t.stats.endtime - t.stats.starttime
-                c_segments.append(seg)
-            self.__msmeta__['c_segments'] = c_segments
+        if not self.data:
+            return
 
-    @property
-    def msmeta(self):
-        """
-        Returns the msmeta dictionary previously populated
-        :return: Dictionary with MSEED metadata
-        """
-        return self.__msmeta__
+        c_segments = []
+
+        for tr in self.data:
+            seg = {}
+            seg['start_time'] = str(tr.stats.starttime)
+            seg['end_time'] = str(tr.stats.endtime)
+            seg['sample_min'] = tr.data.min()
+            seg['sample_max'] = tr.data.max()
+            seg['sample_mean'] = tr.data.mean()
+            seg['sample_rms'] = (tr.data ** 2).sum() / tr.stats.npts
+            seg['sample_stdev'] = tr.data.std()
+            seg['num_samples'] = tr.stats.npts
+            seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
+            c_segments.append(seg)
+
+        self._ms_meta['c_segments'] = c_segments
 
     def populate_metadata(self, files, starttime=None, endtime=None,
-                          c_seg=True, **kwargs):
+                          c_seg=True):
         """
-        Reads the MSEED input, computes and extracts the
-        metadata populating the msmeta dictionary
-        :type str
-        :param starttime
-        :type str
-        :param endtime
-        :type list
-        :param files: list containing the Mini-SEED files
+        Reads the MiniSEED files, computes and extracts the metadata populating
+        the msmeta dictionary.
+
+        :param files: list containing the MiniSEED files
+        :type files: list
+        :param starttime: Only use records whose end time is larger then this
+            given time. Also specifies the new official start time of the
+            metadata object.
+        :type starttime: :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only use records whose start time is smaller then this
+            given time. Also specifies the new official end time of the
+            metadata object
+        :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param c_seg: Calculate metrics that analyze the actual data points.
+        :type c_seg: bool
         """
-        stime = UTCDateTime(starttime) if starttime is not None\
-            else start_time
-        etime = UTCDateTime(endtime) if endtime is not None\
-            else endtime
-        self.__read__(files, stime, etime)
-        self.__extract_mseed_stream_metadata__()
-        self.__compute_sample_metrics__()
+        _streams = obspy.Stream()
+        _files = []
+        self.starttime = obspy.UTCDateTime(starttime)
+        self.endtime = obspy.UTCDateTime(endtime)
+
+        for file in files:
+            # Will raise if not a MiniSEED files.
+            st = obspy.read(file, starttime=self.starttime,
+                            endtime=self.endtime, format="mseed")
+            # Empty stream or maybe there is no data in the stream for the
+            # requested time span.
+            if not st:
+                continue
+            _streams += st
+            _files.append(file)
+
+        if not _streams:
+            raise ValueError("Nothing added - no data within the given "
+                             "temporal constraints found.")
+
+        # Do some sanity checks. The class only works with data from a
+        # single location so we have to make sure that the existing data on
+        # this object and the newly added all have the same identifier.
+        ids = set([tr.id for tr in _streams] + [tr.id for tr in self.data])
+
+        if len(ids) != 1:
+            raise ValueError("Existing and newly added data all must have "
+                             "the same SEED id.")
+
+        self.data += _streams
+        # Sort so that gaps and what not work in an ok fashion.
+        self.data.sort()
+        self.files.extend(_files)
+
+        self._extract_mseed_stream_metadata()
+        self._compute_sample_metrics()
         if c_seg:
-            self.__compute_continuous_seg_sample_metrics__()
+            self._compute_continuous_seg_sample_metrics()
 
     def get_json_meta(self):
         """
-        Serializes the msmeta dictionary in json format
+        Serialize the msmeta dictionary to JSON.
+
         :return: JSON containing the MSEED metadata
         """
-        return json.dumps(self.__msmeta__, cls=NumPyEncoder)
+        return json.dumps(self._ms_meta, cls=NumPyEncoder)
+
 
 if __name__ == '__main__':
     import doctest

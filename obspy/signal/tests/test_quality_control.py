@@ -5,11 +5,11 @@ The Quality Control test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-import unittest
-import os
-import numpy as np
-from collections import defaultdict
 
+import os
+import unittest
+
+import obspy
 from obspy.signal.quality_control import MSEEDMetadata
 
 
@@ -20,32 +20,34 @@ class QualityControlTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
 
     def test_populate_metadata_null(self):
         mseed_filenames = []
         files = list()
         for _i in mseed_filenames:
             files.append(os.path.join(self.path, _i))
-        start_time = '2012-07-30T00:00:00'
-        end_time = '2012-07-30T23:59:59'
+        start_time = obspy.UTCDateTime('2012-07-30T00:00:00')
+        end_time = obspy.UTCDateTime('2012-07-30T23:59:59')
         mseed_metadata = MSEEDMetadata()
-        mseed_metadata.populate_metadata(files, start_time, end_time)
-        # print(mseed_metadata.msmeta)
-        self.assertEqual(mseed_metadata.msmeta, defaultdict())
+
+        with self.assertRaises(ValueError) as e:
+            mseed_metadata.populate_metadata(files, start_time, end_time)
+
+        self.assertEqual(
+            e.exception.args[0],
+            "Nothing added - no data within the given temporal constraints "
+            "found.")
 
     def test_populate_metadata(self):
         mseed_filenames = ['VEN1.NL.HHZ.D.2012.07.30.212.0000']
         files = list()
         for _i in mseed_filenames:
             files.append(os.path.join(self.path, _i))
-        start_time = '2012-07-30T00:00:00'
-        end_time = '2012-07-31T00:00:00'
+        start_time = obspy.UTCDateTime('2012-07-30T00:00:00')
+        end_time = obspy.UTCDateTime('2012-07-31T00:00:00')
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time, end_time)
-        # print(mseed_metadata.meta)
-        self.assertEqual(mseed_metadata.msmeta['num_gaps'], 3)
+        self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 3)
 
     def test_populate_metadata_multiple_files(self):
         mseed_filenames = ['LLW.BHZ.BN.1989.172', 'LLW.BHZ.BN.1989.173']
@@ -57,9 +59,8 @@ class QualityControlTestCase(unittest.TestCase):
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time,
                                          end_time, c_seg=False)
-        # print(mseed_metadata.get_json_meta())
-        self.assertEqual(mseed_metadata.msmeta['num_gaps'], 1)
-        self.assertNotIn("c_segments", mseed_metadata.msmeta)
+        self.assertEqual(mseed_metadata._ms_meta['num_gaps'], 1)
+        self.assertNotIn("c_segments", mseed_metadata._ms_meta)
         mseed_more_filenames = ['NA.SEUT..BHZ.D.2015.289',
                                 'NA.SEUT..BHZ.D.2015.290']
         start_time = '2015-10-17T00:00:00'
@@ -70,10 +71,8 @@ class QualityControlTestCase(unittest.TestCase):
             more_files.append(os.path.join(self.path, _i))
         mseed_metadata2.populate_metadata(more_files, start_time,
                                           end_time, c_seg=False)
-        self.assertEqual(mseed_metadata2.msmeta['telemetry_sync_error'], 0)
-        self.assertEqual(mseed_metadata2.msmeta['suspect_time_tag'], 6)
-        # self.assertEqual(mseed_metadata2.msmeta['digitizer_clipping'], 1)
-        # print(mseed_metadata2.msmeta)
+        self.assertEqual(mseed_metadata2._ms_meta['telemetry_sync_error'], 0)
+        self.assertEqual(mseed_metadata2._ms_meta['suspect_time_tag'], 6)
 
     def test_get_json_meta_no_tq(self):
         mseed_filenames = ['fdsnws-dataselect_2015-10-21T11_32_21.mseed']
@@ -84,7 +83,7 @@ class QualityControlTestCase(unittest.TestCase):
         end_time = '2015-01-02T00:00:00'
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time, end_time)
-        self.assertEqual(mseed_metadata.msmeta['timing_quality_max'], None)
+        self.assertEqual(mseed_metadata._ms_meta['timing_quality_max'], None)
 
     def test_get_json_meta(self):
         mseed_filenames = ['SFRA.HGE.CH.2011.101']
@@ -95,10 +94,7 @@ class QualityControlTestCase(unittest.TestCase):
         end_time = '2011-04-11T23:59:59'
         mseed_metadata = MSEEDMetadata()
         mseed_metadata.populate_metadata(files, start_time, end_time)
-        self.assertGreater(mseed_metadata.msmeta['num_gaps'], 10)
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
+        self.assertGreater(mseed_metadata._ms_meta['num_gaps'], 10)
 
 
 def suite():

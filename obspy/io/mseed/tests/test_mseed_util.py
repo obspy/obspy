@@ -98,8 +98,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.swap = 1
         else:
             self.swap = 0
-        self.nperr = np.geterr()
-        np.seterr(all='ignore')
 
     def test_convert_datetime(self):
         """
@@ -1158,9 +1156,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         # Move the file_bfr to where it was before
         file_bfr.seek(prev_pos, os.SEEK_SET)
-
-    def tearDown(self):
-        np.seterr(**self.nperr)
 
 
 def suite():
