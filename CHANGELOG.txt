@@ -47,7 +47,8 @@ master:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
  - obspy.clients.syngine:
-   * New client for the IRIS Syngine service.
+   * New client for the IRIS Syngine service to retrieve custom synthetic
+     seismograms.
  - obspy.imaging:
    * Experimental support for Cartopy when plotting maps. Use the `method`
      argument to functions that plot maps to select between Basemap or Cartopy.
