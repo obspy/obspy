@@ -376,6 +376,21 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(c["sample_stdev"] - 2.8722813232 < 1E-6)
         self.assertTrue(c["sample_rms"] - 5.3385391260156556 < 1E-6)
 
+    def test_json_serialization(self):
+        """
+        Just tests that it actually works and raises no error. We tested the
+        dictionaries enough - now we just test the JSON encoder.
+        """
+        with NamedTemporaryFile() as tf:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                tf.name, format="mseed")
+
+            md = MSEEDMetadata()
+            md.populate_metadata(files=[tf.name])
+
+        self.assertTrue(md.get_json_meta())
+
 
 def suite():
     return unittest.makeSuite(QualityControlTestCase, 'test')
