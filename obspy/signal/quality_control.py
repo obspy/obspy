@@ -35,6 +35,8 @@ class NumPyEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, obspy.UTCDateTime):
+            return str(obj)
         else:
             return super(NumPyEncoder, self).default(obj)
 
