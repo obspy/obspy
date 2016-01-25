@@ -253,12 +253,12 @@ class MSEEDMetadata(object):
 
         for tr in self.data:
             seg = {}
-            seg['start_time'] = str(tr.stats.starttime)
-            seg['end_time'] = str(tr.stats.endtime)
+            seg['start_time'] = tr.stats.starttime
+            seg['end_time'] = tr.stats.endtime
             seg['sample_min'] = tr.data.min()
             seg['sample_max'] = tr.data.max()
             seg['sample_mean'] = tr.data.mean()
-            seg['sample_rms'] = (tr.data ** 2).sum() / tr.stats.npts
+            seg['sample_rms'] = np.sqrt((tr.data ** 2).sum() / tr.stats.npts)
             seg['sample_stdev'] = tr.data.std()
             seg['num_samples'] = tr.stats.npts
             seg['seg_len'] = tr.stats.endtime - tr.stats.starttime

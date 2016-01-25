@@ -321,6 +321,61 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md._ms_meta["sample_stdev"] - 2.8722813232 < 1E-6)
         self.assertTrue(md._ms_meta["sample_rms"] - 5.3385391260156556 < 1E-6)
 
+    def test_continuous_segments_sample_metrics(self):
+        """
+        Tests the metrics on each segment.
+        """
+        d = np.arange(10, dtype=np.int32)
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2, \
+                NamedTemporaryFile() as tf3:
+            obspy.Trace(data=d[:5],
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                    tf1.name, format="mseed")
+            obspy.Trace(data=d[5:],
+                        header={"starttime": obspy.UTCDateTime(10)}).write(
+                    tf2.name, format="mseed")
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(20)}).write(
+                    tf3.name, format="mseed")
+
+            md = MSEEDMetadata()
+            md.populate_metadata(files=[tf1.name, tf2.name, tf3.name])
+
+        c_seg = md._ms_meta["c_segments"]
+        self.assertEqual(len(c_seg), 3)
+
+        c = c_seg[0]
+        self.assertEqual(c["start_time"], obspy.UTCDateTime(0))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(4))
+        self.assertEqual(c["sample_min"], 0)
+        self.assertEqual(c["sample_max"], 4)
+        self.assertEqual(c["sample_mean"], 2.0)
+        self.assertTrue(c["sample_rms"] - 2.4494897427831779 < 1E-6)
+        self.assertTrue(c["sample_stdev"] - 1.4142135623730951 < 1E-6)
+        self.assertEqual(c["num_samples"], 5)
+        self.assertEqual(c["seg_len"], 4.0)
+
+        c = c_seg[1]
+        self.assertEqual(c["start_time"], obspy.UTCDateTime(10))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(14))
+        self.assertEqual(c["sample_min"], 5)
+        self.assertEqual(c["sample_max"], 9)
+        self.assertEqual(c["sample_mean"], 7.0)
+        self.assertTrue(c["sample_rms"] - 7.1414284285428504 < 1E-6)
+        self.assertTrue(c["sample_stdev"] - 1.4142135623730951 < 1E-6)
+        self.assertEqual(c["num_samples"], 5)
+
+        c = c_seg[2]
+        self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(29))
+        self.assertEqual(c["num_samples"], 10)
+        self.assertEqual(c["seg_len"], 9.0)
+        self.assertEqual(c["sample_min"], 0)
+        self.assertEqual(c["sample_max"], 9)
+        self.assertEqual(c["sample_mean"], 4.5)
+        self.assertTrue(c["sample_stdev"] - 2.8722813232 < 1E-6)
+        self.assertTrue(c["sample_rms"] - 5.3385391260156556 < 1E-6)
+
 
 def suite():
     return unittest.makeSuite(QualityControlTestCase, 'test')
