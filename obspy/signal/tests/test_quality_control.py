@@ -273,6 +273,8 @@ class QualityControlTestCase(unittest.TestCase):
         Test extraction of timing quality with a file that actually has it.
         """
         md = MSEEDMetadata()
+        # Test file is constructed and orignally from the obspy.io.mseed
+        # test suite.
         md.populate_metadata(files=[os.path.join(self.path,
                                                  "timingquality.mseed")])
         self.assertEqual(md._ms_meta['timing_quality_mean'], 50.0)
@@ -281,6 +283,43 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(md._ms_meta['timing_quality_median'], 50.0)
         self.assertEqual(md._ms_meta['timing_quality_lower_quartile'], 25.0)
         self.assertEqual(md._ms_meta['timing_quality_upper_quartile'], 75.0)
+
+    def test_overall_sample_metrics(self):
+        """
+        Tests the global metrics on the samples.
+        """
+        with NamedTemporaryFile() as tf:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                tf.name, format="mseed")
+
+            md = MSEEDMetadata()
+            md.populate_metadata(files=[tf.name])
+
+        self.assertEqual(md._ms_meta["sample_min"], 0)
+        self.assertEqual(md._ms_meta["sample_max"], 9)
+        self.assertEqual(md._ms_meta["sample_mean"], 4.5)
+        self.assertTrue(md._ms_meta["sample_stdev"] - 2.8722813232 < 1E-6)
+        self.assertTrue(md._ms_meta["sample_rms"] - 5.3385391260156556 < 1E-6)
+
+        # Make sure they also work if split up across two arrays.
+        d = np.arange(10, dtype=np.int32)
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+            obspy.Trace(data=d[:5],
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                    tf1.name, format="mseed")
+            obspy.Trace(data=d[5:],
+                        header={"starttime": obspy.UTCDateTime(10)}).write(
+                    tf2.name, format="mseed")
+
+            md = MSEEDMetadata()
+            md.populate_metadata(files=[tf1.name, tf2.name])
+
+        self.assertEqual(md._ms_meta["sample_min"], 0)
+        self.assertEqual(md._ms_meta["sample_max"], 9)
+        self.assertEqual(md._ms_meta["sample_mean"], 4.5)
+        self.assertTrue(md._ms_meta["sample_stdev"] - 2.8722813232 < 1E-6)
+        self.assertTrue(md._ms_meta["sample_rms"] - 5.3385391260156556 < 1E-6)
 
 
 def suite():

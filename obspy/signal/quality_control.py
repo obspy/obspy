@@ -183,20 +183,22 @@ class MSEEDMetadata(object):
             return
 
         # Make sure there is no integer division by chance.
-        npts = float(self.number_of_records)
-
-        self._ms_meta['sample_rms'] = \
-            np.sqrt(sum((tr.data ** 2).sum() for tr in self.data)) / npts
+        npts = float(self.number_of_samples)
 
         self._ms_meta['sample_min'] = min([tr.data.min() for tr in self.data])
         self._ms_meta['sample_max'] = max([tr.data.max() for tr in self.data])
 
+        # Manually implement these as they have to work across a list of
+        # arrays.
         self._ms_meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
 
-        self._ms_meta['sample_stdev'] = sum(
+        self._ms_meta['sample_rms'] = \
+            np.sqrt(sum((tr.data ** 2).sum() for tr in self.data)) / npts
+
+        self._ms_meta['sample_stdev'] = np.sqrt(sum(
             ((tr.data - self._ms_meta["sample_mean"]) ** 2).sum()
-            for tr in self.data) / npts
+            for tr in self.data) / npts)
 
         # Get gaps at beginning and end.
         if self.data[0].stats.starttime > self.starttime:
