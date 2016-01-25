@@ -293,7 +293,6 @@ def _read_site(sta_element, _ns):
     net_element = sta_element.getparent()
     region = _tag2obj(net_element, _ns("region"), str)
 
-    
     # The country, place, description are given in the
     # station element
     country = _tag2obj(sta_element, _ns("country"), str)
@@ -495,7 +494,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
         input_units=input_units_name,
         output_units=output_units_name)
 
-    #assuming these are equal to frequencyStart/frequencyEnd
+    # assuming these are equal to frequencyStart/frequencyEnd
     sensitivity.frequency_range_start = \
         _tag2obj(sen_element, _ns("lowFrequency"), float)
     sensitivity.frequency_range_end = \
