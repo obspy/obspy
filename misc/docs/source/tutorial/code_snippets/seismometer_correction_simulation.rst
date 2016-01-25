@@ -6,17 +6,17 @@ Seismometer Correction/Simulation
 Calculating response from filter stages using evalresp..
 --------------------------------------------------------
 
-..using a StationXML file or in general an :class:`~obspy.station.inventory.Inventory` object
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..using a StationXML file or in general an :class:`~obspy.core.inventory.inventory.Inventory` object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-When using the :class:`FDSN client <obspy.fdsn.client.Client>` the response can
+When using the :class:`FDSN client <obspy.clients.fdsn.client.Client>` the response can
 directly be attached to the waveforms and then subsequently removed using
 :meth:`Stream.remove_response() <obspy.core.stream.Stream.remove_response>`:
 
 .. code-block:: python
 
     from obspy import UTCDateTime
-    from obspy.fdsn import Client
+    from obspy.clients.fdsn import Client
 
     t1 = UTCDateTime("2010-09-3T16:30:00.000")
     t2 = UTCDateTime("2010-09-3T17:00:00.000")
@@ -30,8 +30,8 @@ directly be attached to the waveforms and then subsequently removed using
     pre_filt = (0.005, 0.006, 30.0, 35.0)
     st.remove_response(output='DISP', pre_filt=pre_filt)
 
-Alternatively an :class:`~obspy.station.inventory.Inventory` object can be used
-to attach response information:
+Alternatively an :class:`~obspy.core.inventory.inventory.Inventory` object can
+be used to attach response information:
 
 
 .. code-block:: python
@@ -70,9 +70,9 @@ response information from a RESP file.
 ..using a Dataless/Full SEED file (or XMLSEED file)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A :class:`~obspy.xseed.parser.Parser` object created using a Dataless SEED file
-can also be used. For each trace the respective RESP response data is extracted
-internally then. When using
+A :class:`~obspy.io.xseed.parser.Parser` object created using a Dataless SEED
+file can also be used. For each trace the respective RESP response data is
+extracted internally then. When using
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`'s
 :meth:`~obspy.core.trace.Trace.simulate` convenience methods the "date"
 parameter can be omitted (each trace's start time is used internally).

@@ -26,8 +26,8 @@ only one :class:`~obspy.core.trace.Trace` in the given seismogram:
 
 .. doctest::
 
-   >>> from obspy.core import read
-   >>> st = read('https://examples.obspy.org/RJOB_061005_072159.ehz.new')
+   >>> from obspy import read
+   >>> st = read('http://examples.obspy.org/RJOB_061005_072159.ehz.new')
    >>> print(st)
    1 Trace(s) in Stream:
    .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples

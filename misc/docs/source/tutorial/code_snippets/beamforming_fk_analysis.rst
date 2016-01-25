@@ -2,6 +2,10 @@
 Beamforming - FK Analysis
 =========================
 
+.. warning::
+    This example is outdated. The `sonic` routine was replaced by
+    :func:`obspy.signal.array_analysis.array_processing`.
+
 The following code shows how to do an FK Analysis with ObsPy. The data are from
 the blasting of the AGFA skyscraper in Munich. We execute
 :func:`~obspy.signal.array_analysis.sonic` using the following settings:

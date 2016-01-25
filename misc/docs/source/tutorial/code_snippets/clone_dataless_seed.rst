@@ -11,8 +11,8 @@ DatalessSEED volume (stored on our `examples webserver`_):
 
 .. doctest::
 
-    >>> from obspy.core import UTCDateTime
-    >>> from obspy.xseed import Parser
+    >>> from obspy import UTCDateTime
+    >>> from obspy.io.xseed import Parser
     >>>
     >>> p = Parser("https://examples.obspy.org/dataless.seed.BW_RNON")
     >>> blk = p.blockettes
