@@ -150,6 +150,39 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(mseed_metadata._ms_meta['timing_quality_mean'],
                              None)
 
+    def test_extraction_of_basic_mseed_headers(self):
+        """
+        Tests extraction of basic features.
+        """
+        # Mixed files.
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0),
+                                "network": "BW", "station": "ALTM",
+                                "location": "00", "channel": "EHE"}).write(
+                    tf1.name, format="mseed", encoding="STEIM1", reclen=256)
+            obspy.Trace(data=np.arange(10, dtype=np.float32),
+                        header={"starttime": obspy.UTCDateTime(100),
+                                "sampling_rate": 2.0, "network": "BW",
+                                "station": "ALTM", "location": "00",
+                                "channel": "EHE"}).write(
+                    tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
+            md = MSEEDMetadata()
+            md.populate_metadata([tf1.name, tf2.name])
+            self.assertEqual(md._ms_meta["net"], "BW")
+            self.assertEqual(md._ms_meta["sta"], "ALTM")
+            self.assertEqual(md._ms_meta["loc"], "00")
+            self.assertEqual(md._ms_meta["cha"], "EHE")
+            self.assertEqual(md._ms_meta["quality"], "D")
+            self.assertEqual(md._ms_meta["start_time"], obspy.UTCDateTime(0))
+            self.assertEqual(md._ms_meta["end_time"],
+                             obspy.UTCDateTime(104.5))
+            self.assertEqual(md._ms_meta["num_records"], 2)
+            self.assertEqual(md._ms_meta["num_samples"], 20)
+            self.assertEqual(md._ms_meta["sample_rate"], [1.0, 2.0])
+            self.assertEqual(md._ms_meta["record_len"], [256, 1024])
+            self.assertEqual(md._ms_meta["encoding"], ["FLOAT32", "STEIM1"])
+
 
 def suite():
     return unittest.makeSuite(QualityControlTestCase, 'test')

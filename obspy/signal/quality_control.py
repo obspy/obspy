@@ -71,8 +71,9 @@ class MSEEDMetadata(object):
         stats = self.data[0].stats
         m['net'] = stats.network
         m['sta'] = stats.station
-        m['cha'] = stats.channel
         m['loc'] = stats.location
+        m['cha'] = stats.channel
+        m['quality'] = stats.mseed.dataquality
         m['files'] = self.files
 
         # start time of the requested available stream
@@ -84,11 +85,13 @@ class MSEEDMetadata(object):
         m['num_samples'] = self.number_of_samples
 
         # The following are lists as it might contain multiple entries.
-        m['sample_rate'] = set([tr.stats.sampling_rate for tr in self.data])
-        m['record_len'] = set([tr.stats.mseed.record_length
-                               for tr in self.data])
-        m['quality'] = set([tr.stats.mseed.dataquality for tr in self.data])
-        m['encoding'] = set([tr.stats.mseed.encoding for tr in self.data])
+        m['sample_rate'] = \
+            sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
+        m['record_len'] = \
+            sorted(list(set([tr.stats.mseed.record_length
+                             for tr in self.data])))
+        m['encoding'] = \
+            sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
 
         # Setup counters for the MiniSEED header flags.
         data_quality_flags = collections.Counter(
@@ -296,7 +299,8 @@ class MSEEDMetadata(object):
         # Do some sanity checks. The class only works with data from a
         # single location so we have to make sure that the existing data on
         # this object and the newly added all have the same identifier.
-        ids = set([tr.id for tr in _streams] + [tr.id for tr in self.data])
+        ids = set(tr.id + "." + tr.stats.mseed.dataquality
+                  for tr in _streams + self.data.traces)
 
         if len(ids) != 1:
             raise ValueError("Existing and newly added data all must have "
