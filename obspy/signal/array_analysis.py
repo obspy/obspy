@@ -1600,10 +1600,10 @@ class SeismicArray(object):
         allstreams = stream_n + stream_e + stream_z
         self.inventory_cull(allstreams)
 
-        if wlen < smax * self.aperture:
-            raise ValueError('Window length is smaller than maximum given'
-                             ' slowness times aperture.')
         try:
+            if wlen < smax * self.aperture:
+                raise ValueError('Window length is smaller than maximum given'
+                                 ' slowness times aperture.')
             # s/km  slowness range calculated
             u = np.arange(smin, smax, sstep)
             # Slowness range evaluated for (incidence) angle measurement
