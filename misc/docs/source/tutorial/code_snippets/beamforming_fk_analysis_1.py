@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 import obspy
-from obspy.core import AttribDict
+from obspy.core.util import AttribDict
 from obspy.imaging.cm import obspy_sequential
 from obspy.signal.invsim import corn_freq_2_paz
 from obspy.signal.array_analysis import array_processing
