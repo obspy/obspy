@@ -22,8 +22,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core.event import (AttribDict, Catalog, ResourceIdentifier,
-                              UTCDateTime)
+from obspy import UTCDateTime
+from obspy.core.util import AttribDict
+from obspy.core.event import Catalog, ResourceIdentifier
 
 
 class Default(object):
