@@ -135,10 +135,8 @@ def _read_sc3ml(path_or_file_object):
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
 
-    """
-    This needs to be tested, did not find an inventory
-    with the journal entry.
-    """
+    # This needs to be tested, did not find an inventory
+    # with the journal entry.
     journal = root.find(_ns("Journaling"))
     if journal is not None:
         entry = journal.find(_ns("entry"))
@@ -149,12 +147,12 @@ def _read_sc3ml(path_or_file_object):
         created = None
         sender = "ObsPy Inventory"
 
-    """ Set source to this script """
+    # Set source to this script
     source = "sc3ml import"
     module = None
     module_uri = None
 
-    """ Collect all networks from the sc3ml inventory  """
+    # Collect all networks from the sc3ml inventory
     networks = []
     inv_element = root.find(_ns("Inventory"))
     for net_element in inv_element.findall(_ns("network")):
@@ -191,25 +189,21 @@ def _read_network(inventory_root, net_element, _ns):
     :param _ns: namespace
     """
 
-    """ Get the network code as attribute (e.g. <network code="GB">) """
+    # Get the network code as attribute (e.g. <network code="GB">)
     network = obspy.core.inventory.Network(net_element.get("code"))
 
-    """
-    There is no further information in the attributes of <network>
-    Start and end date are included as tags
-    """
+    # There is no further information in the attributes of <network>
+    # Start and end date are included as tags
     network.start_date = _tag2obj(net_element, _ns("start"), obspy.UTCDateTime)
     network.end_date = _tag2obj(net_element, _ns("end"), obspy.UTCDateTime)
     network.description = _tag2obj(net_element, _ns("description"), str)
 
-    """
-    get the restricted_status (boolean)
-    true is evaluated to 'open'; false to 'closed'
-    to match stationXML format
-    """
+    # get the restricted_status (boolean)
+    # true is evaluated to 'open'; false to 'closed'
+    # to match stationXML format
     network.restricted_status = _get_restricted_status(net_element, _ns)
 
-    """ Collect the stations """
+    # Collect the stations
     stations = []
     for sta_element in net_element.findall(_ns("station")):
         stations.append(_read_station(inventory_root, sta_element, _ns))
@@ -243,7 +237,7 @@ def _read_station(inventory_root, sta_element, _ns):
     :param _ns: name space
     """
 
-    """ Read location tags """
+    # Read location tags
     longitude = _read_floattype(sta_element, _ns("longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(sta_element, _ns("latitude"), Latitude,
@@ -256,11 +250,9 @@ def _read_station(inventory_root, sta_element, _ns):
                                            elevation=elevation)
     station.site = _read_site(sta_element, _ns)
 
-    """
-    There is no relevant info in the base node
-    Read the start and end date (creation, termination) from tags
-    "Vault" and "Geology" are not defined in sc3ml ?
-    """
+    # There is no relevant info in the base node
+    # Read the start and end date (creation, termination) from tags
+    # "Vault" and "Geology" are not defined in sc3ml ?
     station.start_date = _tag2obj(sta_element, _ns("start"), obspy.UTCDateTime)
     station.end_date = _tag2obj(sta_element, _ns("end"), obspy.UTCDateTime)
     station.creation_date = _tag2obj(sta_element, _ns("start"),
@@ -268,16 +260,12 @@ def _read_station(inventory_root, sta_element, _ns):
     station.termination_date = _tag2obj(sta_element, _ns("end"),
                                         obspy.UTCDateTime)
 
-    """
-    get the restricted_status (boolean)
-    true is evaluated to 'open'; false to 'closed'
-    """
+    # get the restricted_status (boolean)
+    # true is evaluated to 'open'; false to 'closed'
     station.restricted_status = _get_restricted_status(sta_element, _ns)
 
-    """
-    Get all the channels, sc3ml keeps these in <sensorLocation> tags in the
-    station element. Individual channels are contained within <stream> tags
-    """
+    # Get all the channels, sc3ml keeps these in <sensorLocation> tags in the
+    # station element. Individual channels are contained within <stream> tags
     channels = []
     for sen_loc_element in sta_element.findall(_ns("sensorLocation")):
         for channel in sen_loc_element.findall(_ns("stream")):
@@ -301,19 +289,18 @@ def _read_site(sta_element, _ns):
     :param _ns: namespace
     """
 
-    """ The region is defined in the parent network element """
+    # The region is defined in the parent network element
     net_element = sta_element.getparent()
     region = _tag2obj(net_element, _ns("region"), str)
 
-    """
-    The country, place, description are given in the
-    station element
-    """
+    
+    # The country, place, description are given in the
+    # station element
     country = _tag2obj(sta_element, _ns("country"), str)
     place = _tag2obj(sta_element, _ns("place"), str)
     description = _tag2obj(sta_element, _ns("description"), str)
 
-    """ The name is usually the description"""
+    # The name is usually the description
     name = description
 
     return obspy.core.inventory.Site(name=name, description=None,
@@ -353,7 +340,7 @@ def _read_sensor(equip_element, _ns):
     :param _ns: name space
     """
 
-    """ try to read some element tags, most are missing anyway """
+    # try to read some element tags, most are missing anyway
     resource_id = equip_element.get("publicID")
     equipment_type = _tag2obj(equip_element, _ns("type"), str)
     description = _tag2obj(equip_element, _ns("description"), str)
@@ -377,11 +364,11 @@ def _read_channel(inventory_root, cha_element, _ns):
 
     code = cha_element.get("code")
 
-    """ Information is also kept within the parent <sensorLocation> element """
+    # Information is also kept within the parent <sensorLocation> element
     sen_loc_element = cha_element.getparent()
     location_code = sen_loc_element.get("code")
 
-    """ get site info from the <sensorLocation> element """
+    # get site info from the <sensorLocation> element
     longitude = _read_floattype(sen_loc_element, _ns("longitude"), Longitude,
                                 datum=True)
     latitude = _read_floattype(sen_loc_element, _ns("latitude"), Latitude,
@@ -394,18 +381,14 @@ def _read_channel(inventory_root, cha_element, _ns):
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
 
-    """
-    obtain the sensorID and link to particular publicID <sensor> element in the
-    inventory base node
-    """
+    # obtain the sensorID and link to particular publicID <sensor> element
+    # in the inventory base node
     sensor_id = cha_element.get("sensor")
     sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id +
                                              "']"))
 
-    """
-    obtain the poles and zeros responseID and link to particular <responsePAZ>
-    publicID element in the inventory base node
-    """
+    # obtain the poles and zeros responseID and link to particular
+    # <responsePAZ> publicID element in the inventory base node
     if sensor_element is not None:
         response_id = sensor_element.get("response")
         if response_id is not None:
@@ -421,27 +404,21 @@ def _read_channel(inventory_root, cha_element, _ns):
     else:
         response_element = None
 
-    """
-    obtain the dataloggerID and link to particular <responsePAZ> publicID
-    element in the inventory base node
-    """
+    # obtain the dataloggerID and link to particular <responsePAZ> publicID
+    # element in the inventory base node
     datalogger_id = cha_element.get("datalogger")
     search = "datalogger[@publicID='" + datalogger_id + "']"
     data_log_element = inventory_root.find(_ns(search))
 
     channel.restricted_status = _get_restricted_status(cha_element, _ns)
 
-    """
-    There is no further information in the attributes of <stream>
-    Start and end date are included as tags instead
-    """
+    # There is no further information in the attributes of <stream>
+    # Start and end date are included as tags instead
     channel.start_date = _tag2obj(cha_element, _ns("start"), obspy.UTCDateTime)
     channel.end_date = _tag2obj(cha_element, _ns("end"), obspy.UTCDateTime)
 
-    """
-    Determine sample rate (given is a numerator, denominator)
-    Assuming numerator is # samples and denominator is # seconds
-    """
+    # Determine sample rate (given is a numerator, denominator)
+    # Assuming numerator is # samples and denominator is # seconds
     numerator = _tag2obj(cha_element, _ns("sampleRateNumerator"), int)
     denominator = _tag2obj(cha_element, _ns("sampleRateDenominator"), int)
 
@@ -473,14 +450,12 @@ def _read_channel(inventory_root, cha_element, _ns):
         msg = "Something went hopelessly wrong, found sampling-rate of 0!"
         warnings.warn(msg)
 
-    """
-    Begin to collect digital/analogue filter chains
-    This information is stored as an array in the datalogger element
-    """
+    # Begin to collect digital/analogue filter chains
+    # This information is stored as an array in the datalogger element
     response_fir_id = []
     response_paz_id = []
     if data_log_element is not None:
-        """ Find the decimation element with a particular num/denom """
+        # Find the decimation element with a particular num/denom
         decim_element = data_log_element.find(_ns(
                         "decimation[@sampleRateDenominator='" +
                         str(int(denominator)) + "'][@sampleRateNumerator='" +
@@ -520,7 +495,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
         input_units=input_units_name,
         output_units=output_units_name)
 
-    """ assuming these are equal to frequencyStart/frequencyEnd """
+    #assuming these are equal to frequencyStart/frequencyEnd
     sensitivity.frequency_range_start = \
         _tag2obj(sen_element, _ns("lowFrequency"), float)
     sensitivity.frequency_range_end = \
@@ -555,24 +530,22 @@ def _read_response(root, sen_element, resp_element, cha_element,
         response.resource_id = str(response.resource_id)
     """
 
-    """
-    The sampling rate is not given per FIR filter as in stationXML
-    We are only given a decimation factor per stage, therefore we are required
-    reconstruct the sampling rates at a given stage from this chain of factors
+    # The sampling rate is not given per FIR filter as in stationXML
+    # We are only given a decimation factor per stage, therefore we are
+    # required to reconstruct the sampling rates at a given stage from
+    # this chain of factors
 
-    start with the final sampling_rate after all stages are applied
-    invert the FIR stages to reverse engineer (backwards) the sample rate
-    during any FIR stage
-    """
+    # start with the final sampling_rate after all stages are applied
+    # invert the FIR stages to reverse engineer (backwards) the sample rate
+    # during any FIR stage
+
     samp_rate = float(samp_rate)
     FIR_stage_rates = []
     if len(FIR):
         FIR = FIR[::-1]
         for FIR_id in FIR:
-            """
-            get the particular FIR stage decimation factor
-            multiply the decimated sample rate by this factor
-            """
+            # get the particular FIR stage decimation factor
+            # multiply the decimated sample rate by this factor
             search = "responseFIR[@publicID='" + FIR_id + "']"
             fir_element = root.find(_ns(search))
             if fir_element is None:
@@ -582,29 +555,25 @@ def _read_response(root, sen_element, resp_element, cha_element,
                 samp_rate *= dec_fac
             FIR_stage_rates.append(float(samp_rate))
 
-    """ Return filter chain to original and also revert the rates """
+    # Return filter chain to original and also revert the rates
     FIR = FIR[::-1]
     FIR_stage_rates = FIR_stage_rates[::-1]
 
-    """
-    Attempt to read stages in the proper order
-    sc3ml does not group stages by an ID
-    We are required to do stage counting ourselves
-    """
+    # Attempt to read stages in the proper order
+    # sc3ml does not group stages by an ID
+    # We are required to do stage counting ourselves
 
     stage = 1
-    """ Get the sensor units, default to M/S """
+    # Get the sensor units, default to M/S
     sensor_units = _tag2obj(sen_element, _ns("unit"), str)
     if sensor_units is None:
         msg = "Sensor unit not set, assuming M/S"
         warnings.warn(msg)
         sensor_units = "M/S"
 
-    """
-    Get the first PAZ stage
-    Input unit: M/S or M/S**2
-    Output unit: V
-    """
+    # Get the first PAZ stage
+    # Input unit: M/S or M/S**2
+    # Output unit: V
     if resp_element is not None:
         paz_response = _read_response_stage(resp_element, _ns, samp_rate,
                                             stage, sensor_units, 'V')
@@ -612,11 +581,9 @@ def _read_response(root, sen_element, resp_element, cha_element,
             response.response_stages.append(paz_response)
             stage += 1
 
-    """
-    Apply analogue filter stages (if any)
-    Input unit: V
-    Output unit: V
-    """
+    # Apply analogue filter stages (if any)
+    # Input unit: V
+    # Output unit: V
     if len(analogue):
         for analogue_id in analogue:
             search = "responsePAZ[@publicID='" + analogue_id + "']"
@@ -633,11 +600,9 @@ def _read_response(root, sen_element, resp_element, cha_element,
                 response.response_stages.append(analogue_response)
                 stage += 1
 
-    """
-    Apply datalogger (digitizer)
-    Input unit: V
-    Output unit: COUNTS
-    """
+    # Apply datalogger (digitizer)
+    # Input unit: V
+    # Output unit: COUNTS
     if data_log_element is not None:
         coeff_response = _read_response_stage(data_log_element, _ns,
                                               samp_rate, stage, 'V',
@@ -646,11 +611,9 @@ def _read_response(root, sen_element, resp_element, cha_element,
             response.response_stages.append(coeff_response)
             stage += 1
 
-    """
-    Apply final digital filter stages
-    Input unit: COUNTS
-    Output unit: COUNTS
-    """
+    # Apply final digital filter stages
+    # Input unit: COUNTS
+    # Output unit: COUNTS
     for FIR_id, rate in zip(FIR, FIR_stage_rates):
         search = "responseFIR[@publicID='" + FIR_id + "']"
         stage_element = root.find(_ns(search))
@@ -674,10 +637,8 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
 
     stage_sequence_number = stage_number
 
-    """
-    Obtain the stage gain and frequency
-    Default to a gain of 0 and frequency of 0 if missing
-    """
+    # Obtain the stage gain and frequency
+    # Default to a gain of 0 and frequency of 0 if missing
     stage_gain = _tag2obj(stage, _ns("gain"), float) or 0
     stage_gain_frequency = _tag2obj(stage, _ns("gainFrequency"),
                                     float) or float(0.00)
@@ -689,11 +650,9 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
     if resource_id is not None:
         resource_id = str(resource_id)
 
-    """
-    Determine the decimation parameters
-    This is dependent on the type of stage
-    Decimation delay/correction need to be normalized
-    """
+    # Determine the decimation parameters
+    # This is dependent on the type of stage
+    # Decimation delay/correction need to be normalized
     if(elem_type == "responseFIR"):
         decimation_factor = _tag2obj(stage, _ns("decimationFactor"), int)
         if rate != 0.0:
@@ -735,7 +694,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
     else:
         raise ValueError("Unknown type of response: " + str(elem_type))
 
-    """ set up list of for this stage arguments """
+    # set up list of for this stage arguments
     kwargs = {
         "stage_sequence_number": stage_sequence_number,
         "input_units": str(input_units),
@@ -755,29 +714,25 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         "decimation_correction": decimation_corr
     }
 
-    """
-    Different processing for different types of responses
-    currently supported:
-    PAZ
-    COEFF
-    FIR
-    Polynomial response is not supported, could not find example
-    """
+    # Different processing for different types of responses
+    # currently supported:
+    # PAZ
+    # COEFF
+    # FIR
+    # Polynomial response is not supported, could not find example
     if(elem_type == 'responsePAZ'):
 
-        """ read normalization params """
+        # read normalization params
         normalization_freq = _read_floattype(stage,
                                              _ns("normalizationFrequency"),
                                              Frequency)
         normalization_factor = _tag2obj(stage, _ns("normalizationFactor"),
                                         float)
 
-        """
-        Parse the type of the transfer function
-        A: Laplace (rad)
-        B: Laplace (Hz)
-        D: digital (z-transform)
-        """
+        # Parse the type of the transfer function
+        # A: Laplace (rad)
+        # B: Laplace (Hz)
+        # D: digital (z-transform)
         pz_transfer_function_type = _tag2obj(stage, _ns("type"), str)
         if pz_transfer_function_type == 'A':
             pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
@@ -791,11 +746,9 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             warnings.warn(msg)
             pz_transfer_function_type = 'LAPLACE (RADIANS/SECOND)'
 
-        """
-        Parse string of poles and zeros
-        paz are stored as a string in sc3ml
-        e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
-        """
+        # Parse string of poles and zeros
+        # paz are stored as a string in sc3ml
+        # e.g. (-0.01234,0.01234) (-0.01234,-0.01234)
         zeros_array = stage.find(_ns("zeros")).text
         poles_array = stage.find(_ns("poles")).text
         if zeros_array is not None:
@@ -807,7 +760,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
         else:
             poles_array = []
 
-        """ Keep counter for pole/zero number """
+        # Keep counter for pole/zero number
         cnt = 0
         poles = []
         zeros = []
@@ -818,7 +771,7 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             zeros.append(_tag2pole_or_zero(el, cnt))
             cnt += 1
 
-        """ Return da paz response clazz, mon """
+        # Return the paz response
         return PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_freq,
@@ -834,10 +787,8 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             numerator=numerator, denominator=denominator, **kwargs)
 
     elif(elem_type == 'responsePolynomial'):
-        """
-        Polynomial response (UNTESTED)
-        Currently not implemented in ObsPy (20-11-2015)
-        """
+        # Polynomial response (UNTESTED)
+        # Currently not implemented in ObsPy (20-11-2015)
         f_low = None
         f_high = None
         max_err = None
@@ -849,10 +800,8 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             coeffs = coeffs_str.split(" ")
             coeffs_float = []
             i = 0
-            """
-            pass additional mapping of coefficient counter
-            so that a proper stationXML can be formatted
-            """
+            # pass additional mapping of coefficient counter
+            # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
                                        additional_mapping={str("number"): i})
@@ -866,32 +815,26 @@ def _read_response_stage(stage, _ns, rate, stage_number, input_units,
             coefficients=coeffs, **kwargs)
 
     elif(elem_type == 'responseFIR'):
-        """
-        For the responseFIR obtain the symmetry and
-        list of coefficients
-        """
+        # For the responseFIR obtain the symmetry and
+        # list of coefficients
 
         coeffs_str = _tag2obj(stage, _ns("coefficients"), str)
         coeffs_float = []
         if coeffs_str is not None and coeffs_str != 'None':
             coeffs = coeffs_str.split(" ")
             i = 0
-            """
-            pass additional mapping of coefficient counter
-            so that a proper stationXML can be formatted
-            """
+            # pass additional mapping of coefficient counter
+            # so that a proper stationXML can be formatted
             for c in coeffs:
                 temp = _read_float_var(c, FilterCoefficient,
                                        additional_mapping={str("number"): i})
                 coeffs_float.append(temp)
                 i += 1
 
-        """
-        Write the FIR symmetry to what ObsPy expects
-        A: NONE,
-        B: ODD,
-        C: EVEN
-        """
+        # Write the FIR symmetry to what ObsPy expects
+        # A: NONE,
+        # B: ODD,
+        # C: EVEN
         symmetry = _tag2obj(stage, _ns("symmetry"), str)
         if(symmetry == 'A'):
             symmetry = 'NONE'
