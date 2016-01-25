@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ObsPy implementation for parsing sc3ml format to Inventory
+ObsPy implementation for parsing the sc3ml format to an Inventory object.
 
-Modified after obspy.io.stationXML
-    > obspy.obspy.io.stationxml.core.py
+This is a modified version of obspy.io.stationxml.
 
 :author:
     Mathijs Koymans (koymans@knmi.nl), 11.2015 - [Jollyfant@GitHub]
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
