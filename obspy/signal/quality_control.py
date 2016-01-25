@@ -24,7 +24,7 @@ import json
 import numpy as np
 
 import obspy
-from obspy.io.mseed.util import get_flags, get_start_and_end_time
+from obspy.io.mseed.util import get_flags
 
 
 class NumPyEncoder(json.JSONEncoder):
@@ -169,8 +169,6 @@ class MSEEDMetadata(object):
         """
         if not self.data:
             return
-
-        gaps = self.data.getGaps()
 
         # Make sure there is no integer division by chance.
         npts = float(self.number_of_records)
