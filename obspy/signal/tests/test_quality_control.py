@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import unittest
 
 import numpy as np
@@ -21,6 +22,10 @@ class QualityControlTestCase(unittest.TestCase):
     """
     Test cases for Quality Control.
     """
+    def setUp(self):
+        # Directory where the test files are located
+        self.path = os.path.join(os.path.dirname(__file__), "data")
+
     def test_no_files_given(self):
         """
         Tests the raised exception if no file is given.
@@ -262,6 +267,20 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(md._ms_meta['timing_quality_mean'], None)
             self.assertEqual(md._ms_meta['timing_quality_min'], None)
             self.assertEqual(md._ms_meta['timing_quality_max'], None)
+
+    def test_timing_quality(self):
+        """
+        Test extraction of timing quality with a file that actually has it.
+        """
+        md = MSEEDMetadata()
+        md.populate_metadata(files=[os.path.join(self.path,
+                                                 "timingquality.mseed")])
+        self.assertEqual(md._ms_meta['timing_quality_mean'], 50.0)
+        self.assertEqual(md._ms_meta['timing_quality_min'], 0.0)
+        self.assertEqual(md._ms_meta['timing_quality_max'], 100.0)
+        self.assertEqual(md._ms_meta['timing_quality_median'], 50.0)
+        self.assertEqual(md._ms_meta['timing_quality_lower_quartile'], 25.0)
+        self.assertEqual(md._ms_meta['timing_quality_upper_quartile'], 75.0)
 
 
 def suite():

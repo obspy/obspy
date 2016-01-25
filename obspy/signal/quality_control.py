@@ -140,10 +140,16 @@ class MSEEDMetadata(object):
             timing_quality_mean = timing_quality.mean()
             timing_quality_min = timing_quality.min()
             timing_quality_max = timing_quality.max()
+            timing_quality_median = np.median(timing_quality)
+            timing_quality_lower_quartile = np.percentile(timing_quality, 25)
+            timing_quality_upper_quartile = np.percentile(timing_quality, 75)
         else:
             timing_quality_mean = None
             timing_quality_min = None
             timing_quality_max = None
+            timing_quality_median = None
+            timing_quality_lower_quartile = None
+            timing_quality_upper_quartile = None
 
         m['glitches'] = data_quality_flags["glitches_detected"]
         m['amplifier_saturation'] = \
@@ -165,6 +171,9 @@ class MSEEDMetadata(object):
         m['timing_quality_mean'] = timing_quality_mean
         m['timing_quality_min'] = timing_quality_min
         m['timing_quality_max'] = timing_quality_max
+        m['timing_quality_median'] = timing_quality_median
+        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
+        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
     def _compute_sample_metrics(self):
         """
