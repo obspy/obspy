@@ -60,8 +60,7 @@ class MSEEDMetadata(object):
 
     def _extract_mseed_stream_metadata(self):
         """
-        Extracts metadata from the MSEED header
-        and populates the msmeta dictionary
+        Collect information from the MiniSEED headers.
         """
         if not self.data:
             raise ValueError("Object contains no waveform data.")
@@ -189,35 +188,47 @@ class MSEEDMetadata(object):
             ((tr.data - self._ms_meta["sample_mean"]) ** 2).sum()
             for tr in self.data) / npts
 
-        self._ms_meta['num_gaps'] = len(
-            [gap for gap in gaps if gap[6] > 0]
-            ) + self._get_head_and_tail_gaps()
-        self._ms_meta['num_overlaps'] = len(
-            [gap for gap in gaps if gap[6] < 0]
-            )
-        self._ms_meta['overlaps_len'] = abs(
-            sum([gap[6] for gap in gaps if gap[6] < 0])
-            )
-        self._ms_meta['gaps_len'] = sum(
-            [gap[6] for gap in gaps if gap[6] > 0]) + \
-                                    ((self.data[0].stats['starttime'] - self.starttime) +
-                                     (self.endtime - self.data[-1].stats['endtime']))
-        start_time = self.starttime
-        end_time = self.endtime
-        # set the availability with respect to the
-        # requested time interval
-        self._ms_meta['percent_availability'] = 100 * (
-            (end_time - start_time - self._ms_meta['gaps_len']) /
-            (end_time - start_time)
-            )
+        # Get gaps at beginning and end.
+        if self.data[0].stats.starttime > self.starttime:
+            head_gap_count = 1
+            head_gap_length = self.data[0].stats.starttime - self.starttime
+        else:
+            head_gap_count = 0
+            head_gap_length = 0.0
+        # We define the endtime as the time of the last sample but the next
+        # sample would only start at endtime + delta. Thus the following
+        # scenario would not count as a gap at the end:
+        #     x -- x -- x -- x -- x -- x
+        #                                   | <- self.endtime
+        if (self.data[-1].stats.endtime + self.data[-1].stats.delta) < \
+                self.endtime:
+            tail_gap_count = 1
+            tail_gap_length = self.endtime - (
+                self.data[-1].stats.endtime + self.data[-1].stats.delta)
+        else:
+            tail_gap_count = 0.0
+            tail_gap_length = 0.0
 
-    def _get_head_and_tail_gaps(self):
-        extra_gaps = 0
-        if self.data[0].stats['starttime'] > self.starttime:
-            extra_gaps += 1
-        if self.endtime > self.data[-1].stats['endtime']:
-            extra_gaps += 1
-        return extra_gaps
+        gaps = self.data.getGaps()
+
+        self._ms_meta["num_gaps"] = \
+            len([_i for _i in gaps if _i[-1] > 0]) + head_gap_count + \
+            tail_gap_count
+        self._ms_meta["num_overlaps"] = \
+            len([_i for _i in gaps if _i[-1] < 0])
+        self._ms_meta["gaps_len"] = \
+            sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + head_gap_length \
+            + tail_gap_length
+        self._ms_meta["overlaps_len"] = \
+            sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0)
+
+        # Percentage based availability as total gap length over trace
+        # duration. The trace duration is end - start + dt as the endtime is
+        # the time of the last sample but the last simple still "accounts"
+        # for one more sample. This could well be defined differently.
+        self._ms_meta['percent_availability'] = 100.0 * (
+            (self.endtime - self.starttime - self._ms_meta['gaps_len']) /
+            (self.endtime - self.starttime))
 
     def _compute_continuous_seg_sample_metrics(self):
         """
@@ -262,7 +273,7 @@ class MSEEDMetadata(object):
         :param c_seg: Calculate metrics that analyze the actual data points.
         :type c_seg: bool
         """
-        _streams = obspy.Stream()
+        _streams = []
         _files = []
         self.starttime = obspy.UTCDateTime(starttime) \
             if starttime is not None else None
@@ -277,7 +288,7 @@ class MSEEDMetadata(object):
             # requested time span.
             if not st:
                 continue
-            _streams += st
+            _streams.extend(st.traces)
             _files.append(file)
 
         if not _streams:
@@ -293,7 +304,7 @@ class MSEEDMetadata(object):
             raise ValueError("Existing and newly added data all must have "
                              "the same SEED id.")
 
-        self.data += _streams
+        self.data.traces.extend(_streams)
         # Sort so that gaps and what not work in an ok fashion.
         self.data.sort()
         self.files.extend(_files)
