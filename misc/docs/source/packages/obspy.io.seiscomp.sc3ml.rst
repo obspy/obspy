@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.io.sc3ml
-.. automodule:: obspy.io.sc3ml
+.. currentmodule:: obspy.io.seiscomp.sc3ml
+.. automodule:: obspy.io.seiscomp.sc3ml
 
     .. comment to end block
 

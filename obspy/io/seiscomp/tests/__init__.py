@@ -9,7 +9,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.io.sc3ml"
+MODULE_NAME = "obspy.io.seiscomp.sc3ml"
 
 def suite():
     suite = unittest.TestSuite()

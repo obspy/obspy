@@ -322,7 +322,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
-        'SC3ML = obspy.io.sc3ml.core',
+        'SC3ML = obspy.io.seiscomp.sc3ml',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
@@ -335,8 +335,8 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
         ],
     'obspy.plugin.inventory.SC3ML': [
-        'isFormat = obspy.io.sc3ml.core:_is_sc3ml',
-        'readFormat = obspy.io.sc3ml.core:_read_sc3ml',
+        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',

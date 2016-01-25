@@ -59,26 +59,22 @@ class sc3mlTestCase(unittest.TestCase):
         stationxml_lines = stationxml_bytes.read().decode().splitlines()
         stationxml_arr = [_i.strip() for _i in stationxml_lines if _i.strip()]
 
-        """
-        The following tags can be different between sc3ml/stationXML
+        # The following tags can be different between sc3ml/stationXML
 
-        <Source>SeisComP3</Source> | <Source>sc3ml import</Source>
-        <Sender>ODC</Sender> | <Sender>ObsPy Inventory</Sender>
-        <Created>2015-11-23T11:52:37+00:00</Created>
-        <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
+        # <Source>SeisComP3</Source> | <Source>sc3ml import</Source>
+        # <Sender>ODC</Sender> | <Sender>ObsPy Inventory</Sender>
+        # <Created>2015-11-23T11:52:37+00:00</Created>
+        # <Coefficients> | <Coefficients name="EBR.2002.091.H" ~
 
-        We disregard these differences because they are unimportant
-        """
+        # We disregard these differences because they are unimportant
 
         excluded_tags = ["Source", "Sender", "Created", "Coefficients"]
 
-        """
-        Compare the two stationXMLs line by line
-        If one XML has an entry that the other one does not, this procedure
-        breaks e.g. an extra <type> tag will misalign lines to be compared
-        Often the stationXML has a double sensor <type>/<model> tag that sc3ml
-        lacks
-        """
+        # Compare the two stationXMLs line by line
+        # If one XML has an entry that the other one does not, this procedure
+        # breaks e.g. an extra <type> tag will misalign lines to be compared
+        # Often the stationXML has a double sensor <type>/<model> tag that
+        # sc3ml lacks
         for sc3ml, stationxml in zip(sc3ml_arr, stationxml_arr):
             if(sc3ml != stationxml):
                 tag = str(stationxml).split(">")[0][1:]
@@ -186,13 +182,11 @@ class sc3mlTestCase(unittest.TestCase):
                                          stationxml.
                                          stage_sequence_number)
 
-                        """
-                        We skip checking this stage, because the input sample
-                        rates may not match
-                        StationXML gives a sample rate of 10e-310 (0) for some
-                        channels while this should be the sample rate after
-                        stage 1 (never 0)
-                        """
+                        # We skip checking this stage, because the input
+                        # sample rates may not match
+                        # StationXML gives a sample rate of 10e-310 (0) for
+                        # some channels while this should be the sample rate
+                        # after stage 1 (never 0)
                         if isinstance(sc3ml, CoefficientsTypeResponseStage):
                             continue
 
