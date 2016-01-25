@@ -50,10 +50,9 @@ class MSEEDMetadata(object):
     """
     def __init__(self, files, starttime=None, endtime=None, c_seg=True):
         """
-        Reads the MiniSEED files, computes and extracts the metadata populating
-        the meta dictionary.
+        Reads the MiniSEED files and extracts the data quality metrics.
 
-        :param files: list containing the MiniSEED files
+        :param files: The MiniSEED files.
         :type files: list
         :param starttime: Only use records whose end time is larger then this
             given time. Also specifies the new official start time of the
@@ -63,7 +62,7 @@ class MSEEDMetadata(object):
             given time. Also specifies the new official end time of the
             metadata object
         :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param c_seg: Calculate metrics that analyze the actual data points.
+        :param c_seg: Calculate metrics for each continuous segment.
         :type c_seg: bool
         """
         self.meta = {}
