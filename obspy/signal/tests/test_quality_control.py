@@ -12,6 +12,8 @@ import numpy as np
 
 import obspy
 from obspy.core.util.base import NamedTemporaryFile
+# A bit wild to import a utility function from another test suite ...
+from obspy.io.mseed.tests.test_mseed_util import _create_mseed_file
 from obspy.signal.quality_control import MSEEDMetadata
 
 
@@ -182,6 +184,84 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(md._ms_meta["sample_rate"], [1.0, 2.0])
             self.assertEqual(md._ms_meta["record_len"], [256, 1024])
             self.assertEqual(md._ms_meta["encoding"], ["FLOAT32", "STEIM1"])
+
+    def test_extraction_fixed_header_flags(self):
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+            _create_mseed_file(tf1.name, record_count=35,
+                               starttime=obspy.UTCDateTime(0),
+                               seed=12345, flags={
+                'data_quality_flags': {
+                    "amplifier_saturation_detected": 25,
+                    "digitizer_clipping_detected": 12,
+                    "spikes_detected": 30,
+                    "glitches_detected": 6,
+                    "missing_data_present": 15,
+                    "telemetry_sync_error": 16,
+                    "digital_filter_charging": 4,
+                    "time_tag_uncertain": 8},
+                'activity_flags': {
+                    "calibration_signals_present": 10,
+                    "time_correction_applied": 20,
+                    "beginning_event": 33,
+                    "end_event": 33,
+                    "positive_leap": 34,
+                    "negative_leap": 10,
+                    "event_in_progress": 15},
+                'io_and_clock_flags': {
+                    "station_volume_parity_error": 8,
+                    "long_record_read": 33,
+                    "short_record_read": 24,
+                    "start_time_series": 31,
+                    "end_time_series": 24,
+                    "clock_locked": 32}})
+            _create_mseed_file(tf2.name, record_count=23,
+                               starttime=obspy.UTCDateTime(400),
+                               seed=12345, flags={
+                    'data_quality_flags': {
+                        "amplifier_saturation_detected": 5,
+                        "digitizer_clipping_detected": 7,
+                        "spikes_detected": 5,
+                        "glitches_detected": 3,
+                        "missing_data_present": 5,
+                        "telemetry_sync_error": 3,
+                        "digital_filter_charging": 4,
+                        "time_tag_uncertain": 2},
+                    'activity_flags': {
+                        "calibration_signals_present": 1,
+                        "time_correction_applied": 0,
+                        "beginning_event": 3,
+                        "end_event": 3,
+                        "positive_leap": 4,
+                        "negative_leap": 1,
+                        "event_in_progress": 5},
+                    'io_and_clock_flags': {
+                        "station_volume_parity_error": 1,
+                        "long_record_read": 3,
+                        "short_record_read": 2,
+                        "start_time_series": 3,
+                        "end_time_series": 4,
+                        "clock_locked": 2}})
+
+            md = MSEEDMetadata()
+            md.populate_metadata([tf1.name, tf2.name])
+            # Sum up contributions from both files.
+            self.assertEqual(md._ms_meta["glitches"], 9)
+            self.assertEqual(md._ms_meta['amplifier_saturation'], 30)
+            self.assertEqual(md._ms_meta['digital_filter_charging'], 8)
+            self.assertEqual(md._ms_meta['digitizer_clipping'], 19)
+            self.assertEqual(md._ms_meta['missing_padded_data'], 20)
+            self.assertEqual(md._ms_meta['spikes'], 35)
+            self.assertEqual(md._ms_meta['suspect_time_tag'], 10)
+            self.assertEqual(md._ms_meta['telemetry_sync_error'], 19)
+            self.assertEqual(md._ms_meta['calibration_signal'], 11)
+            self.assertEqual(md._ms_meta['event_begin'], 36)
+            self.assertEqual(md._ms_meta['event_end'], 36)
+            self.assertEqual(md._ms_meta['event_in_progress'], 20)
+            self.assertEqual(md._ms_meta['timing_correction'], 20)
+            self.assertEqual(md._ms_meta['clock_locked'], 34)
+            self.assertEqual(md._ms_meta['timing_quality_mean'], None)
+            self.assertEqual(md._ms_meta['timing_quality_min'], None)
+            self.assertEqual(md._ms_meta['timing_quality_max'], None)
 
 
 def suite():
