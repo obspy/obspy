@@ -51,7 +51,7 @@ def _create_mseed_file(filename, record_count, sampling_rate=1.0,
     }
 
     # With uncompressed float32 it is 50 samples per record.
-    data = np.empty(50 * record_count, dtype=np.float32)
+    data = np.arange(50 * record_count, dtype=np.float32)
     tr = Trace(data=data,
                header={"sampling_rate": sampling_rate, "starttime": starttime})
     tr.write(filename, format="mseed", reclen=256, encoding="FLOAT32")
