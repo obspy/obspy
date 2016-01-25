@@ -27,7 +27,10 @@ import obspy
 from obspy.io.mseed.util import get_flags
 
 
-class NumPyEncoder(json.JSONEncoder):
+class DataQualityEncoder(json.JSONEncoder):
+    """
+    Custom encoder capable of dealing with NumPy and ObsPy types.
+    """
     def default(self, obj):
         if isinstance(obj, np.integer):
             return int(obj)
@@ -38,26 +41,95 @@ class NumPyEncoder(json.JSONEncoder):
         elif isinstance(obj, obspy.UTCDateTime):
             return str(obj)
         else:
-            return super(NumPyEncoder, self).default(obj)
+            return super(DataQualityEncoder, self).default(obj)
 
 
 class MSEEDMetadata(object):
     """
     A container for MSEED specific metadata including QC.
     """
-    def __init__(self):
-        self._ms_meta = {}
+    def __init__(self, files, starttime=None, endtime=None, c_seg=True):
+        """
+        Reads the MiniSEED files, computes and extracts the metadata populating
+        the meta dictionary.
+
+        :param files: list containing the MiniSEED files
+        :type files: list
+        :param starttime: Only use records whose end time is larger then this
+            given time. Also specifies the new official start time of the
+            metadata object.
+        :type starttime: :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Only use records whose start time is smaller then this
+            given time. Also specifies the new official end time of the
+            metadata object
+        :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
+        :param c_seg: Calculate metrics that analyze the actual data points.
+        :type c_seg: bool
+        """
+        self.meta = {}
         self.data = obspy.Stream()
         self.files = []
-        self.starttime = None
-        self.endtime = None
+
+        # Allow anything UTCDateTime can parse.
+        starttime = obspy.UTCDateTime(starttime) \
+            if starttime is not None else None
+        endtime = obspy.UTCDateTime(endtime) \
+            if endtime is not None else None
+
+        for file in files:
+            # Will raise if not a MiniSEED files.
+            st = obspy.read(file, starttime=starttime, endtime=endtime,
+                            format="mseed")
+            # Empty stream or maybe there is no data in the stream for the
+            # requested time span.
+            if not st:
+                continue
+            self.data.extend(st.traces)
+            self.files.append(file)
+
+        if not self.data:
+            raise ValueError("Nothing added - no data within the given "
+                             "temporal constraints found.")
+
+        # Do some sanity checks. The class only works with data from a
+        # single location so we have to make sure that the existing data on
+        # this object and the newly added all have the same identifier.
+        ids = set(tr.id + "." + tr.stats.mseed.dataquality
+                  for tr in self.data)
+
+        if len(ids) != 1:
+            raise ValueError("All traces in all files must have the same SEED "
+                             "id.")
+
+        # Sort so that gaps and what not work in an ok fashion.
+        self.data.sort()
+
+        if starttime is None:
+            self.starttime = self.data[0].stats.starttime
+        else:
+            self.starttime = starttime
+        if endtime is None:
+            self.endtime = self.data[-1].stats.endtime
+        else:
+            self.endtime = endtime
+
+        self._extract_mseed_stream_metadata()
+        self._compute_sample_metrics()
+        if c_seg:
+            self._compute_continuous_seg_sample_metrics()
 
     @property
     def number_of_records(self):
+        """
+        Number of records across files.
+        """
         return sum(tr.stats.mseed.number_of_records for tr in self.data)
 
     @property
     def number_of_samples(self):
+        """
+        Number of samples across files.
+        """
         return sum(tr.stats.npts for tr in self.data)
 
     def _extract_mseed_stream_metadata(self):
@@ -68,7 +140,7 @@ class MSEEDMetadata(object):
             raise ValueError("Object contains no waveform data.")
 
         self.data.sort()
-        m = self._ms_meta
+        m = self.meta
 
         stats = self.data[0].stats
         m['net'] = stats.network
@@ -187,19 +259,19 @@ class MSEEDMetadata(object):
         # Make sure there is no integer division by chance.
         npts = float(self.number_of_samples)
 
-        self._ms_meta['sample_min'] = min([tr.data.min() for tr in self.data])
-        self._ms_meta['sample_max'] = max([tr.data.max() for tr in self.data])
+        self.meta['sample_min'] = min([tr.data.min() for tr in self.data])
+        self.meta['sample_max'] = max([tr.data.max() for tr in self.data])
 
         # Manually implement these as they have to work across a list of
         # arrays.
-        self._ms_meta['sample_mean'] = \
+        self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
 
-        self._ms_meta['sample_rms'] = \
+        self.meta['sample_rms'] = \
             np.sqrt(sum((tr.data ** 2).sum() for tr in self.data)) / npts
 
-        self._ms_meta['sample_stdev'] = np.sqrt(sum(
-            ((tr.data - self._ms_meta["sample_mean"]) ** 2).sum()
+        self.meta['sample_stdev'] = np.sqrt(sum(
+            ((tr.data - self.meta["sample_mean"]) ** 2).sum()
             for tr in self.data) / npts)
 
         # Get gaps at beginning and end.
@@ -225,23 +297,23 @@ class MSEEDMetadata(object):
 
         gaps = self.data.getGaps()
 
-        self._ms_meta["num_gaps"] = \
+        self.meta["num_gaps"] = \
             len([_i for _i in gaps if _i[-1] > 0]) + head_gap_count + \
             tail_gap_count
-        self._ms_meta["num_overlaps"] = \
+        self.meta["num_overlaps"] = \
             len([_i for _i in gaps if _i[-1] < 0])
-        self._ms_meta["gaps_len"] = \
+        self.meta["gaps_len"] = \
             sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + head_gap_length \
             + tail_gap_length
-        self._ms_meta["overlaps_len"] = \
+        self.meta["overlaps_len"] = \
             sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0)
 
         # Percentage based availability as total gap length over trace
         # duration. The trace duration is end - start + dt as the endtime is
         # the time of the last sample but the last simple still "accounts"
         # for one more sample. This could well be defined differently.
-        self._ms_meta['percent_availability'] = 100.0 * (
-            (self.endtime - self.starttime - self._ms_meta['gaps_len']) /
+        self.meta['percent_availability'] = 100.0 * (
+            (self.endtime - self.starttime - self.meta['gaps_len']) /
             (self.endtime - self.starttime))
 
     def _compute_continuous_seg_sample_metrics(self):
@@ -266,81 +338,15 @@ class MSEEDMetadata(object):
             seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
             c_segments.append(seg)
 
-        self._ms_meta['c_segments'] = c_segments
-
-    def populate_metadata(self, files, starttime=None, endtime=None,
-                          c_seg=True):
-        """
-        Reads the MiniSEED files, computes and extracts the metadata populating
-        the msmeta dictionary.
-
-        :param files: list containing the MiniSEED files
-        :type files: list
-        :param starttime: Only use records whose end time is larger then this
-            given time. Also specifies the new official start time of the
-            metadata object.
-        :type starttime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: Only use records whose start time is smaller then this
-            given time. Also specifies the new official end time of the
-            metadata object
-        :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param c_seg: Calculate metrics that analyze the actual data points.
-        :type c_seg: bool
-        """
-        _streams = []
-        _files = []
-        self.starttime = obspy.UTCDateTime(starttime) \
-            if starttime is not None else None
-        self.endtime = obspy.UTCDateTime(endtime) \
-            if endtime is not None else None
-
-        for file in files:
-            # Will raise if not a MiniSEED files.
-            st = obspy.read(file, starttime=self.starttime,
-                            endtime=self.endtime, format="mseed")
-            # Empty stream or maybe there is no data in the stream for the
-            # requested time span.
-            if not st:
-                continue
-            _streams.extend(st.traces)
-            _files.append(file)
-
-        if not _streams:
-            raise ValueError("Nothing added - no data within the given "
-                             "temporal constraints found.")
-
-        # Do some sanity checks. The class only works with data from a
-        # single location so we have to make sure that the existing data on
-        # this object and the newly added all have the same identifier.
-        ids = set(tr.id + "." + tr.stats.mseed.dataquality
-                  for tr in _streams + self.data.traces)
-
-        if len(ids) != 1:
-            raise ValueError("Existing and newly added data all must have "
-                             "the same SEED id.")
-
-        self.data.traces.extend(_streams)
-        # Sort so that gaps and what not work in an ok fashion.
-        self.data.sort()
-        self.files.extend(_files)
-
-        if self.starttime is None:
-            self.starttime = self.data[0].stats.starttime
-        if self.endtime is None:
-            self.endtime = self.data[-1].stats.endtime
-
-        self._extract_mseed_stream_metadata()
-        self._compute_sample_metrics()
-        if c_seg:
-            self._compute_continuous_seg_sample_metrics()
+        self.meta['c_segments'] = c_segments
 
     def get_json_meta(self):
         """
-        Serialize the msmeta dictionary to JSON.
+        Serialize the meta dictionary to JSON.
 
         :return: JSON containing the MSEED metadata
         """
-        return json.dumps(self._ms_meta, cls=NumPyEncoder)
+        return json.dumps(self.meta, cls=DataQualityEncoder)
 
 
 if __name__ == '__main__':
