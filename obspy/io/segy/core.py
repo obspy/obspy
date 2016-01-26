@@ -766,8 +766,8 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'isSEGY': 'obspy.io.segy.core._is_segy',
         'isSU': 'obspy.io.segy.core._is_su',
         'readSEGY': 'obspy.io.segy.core._read_segy',
-        'readSEGYrev1': 'obspy.io.segy.core.readSEGYrev1',
+        'readSEGYrev1': 'obspy.io.segy.segy._read_segy',
         'readSU': 'obspy.io.segy.core._read_su',
-        'readSUFile': 'obspy.io.segy.core.readSUFile',
+        'readSUFile': 'obspy.io.segy.core._read_su',
         'writeSEGY': 'obspy.io.segy.core._write_segy',
         'writeSU': 'obspy.io.segy.core._write_su'})

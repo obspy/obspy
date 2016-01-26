@@ -22,7 +22,7 @@ from obspy import read
 from obspy.core.preview import create_preview
 from obspy.core.util.base import _get_entry_points
 from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModuleBi
+    DynamicAttributeImportRerouteModule
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
 

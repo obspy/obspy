@@ -1111,5 +1111,5 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
     import_map={},
     function_map={
-        'readSEGY': 'obspy.io.segy.segy._read_segy',
-        'readSU': 'obspy.io.segy.segy._read_su'})
+        '_readSEGY': 'obspy.io.segy.segy._read_segy',
+        '_readSU': 'obspy.io.segy.segy._read_su'})

@@ -258,4 +258,5 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         name=__name__, doc=__doc__, locs=locals(),
         import_map={},
         function_map={
-            "relcalstack": "obspy.signal.calibration.rel_calib_stack"})
+            "relcalstack": "obspy.signal.calibration.rel_calib_stack",
+            "_calcresp": "obspy.signal.calibration._calc_resp"})

@@ -90,7 +90,7 @@ _import_map = {
     "obspy.station": "obspy.core.inventory",
     # Misc modules originally in core.
     "obspy.core.ascii": "obspy.io.ascii",
-    "obspy.core.quakeml": "obspy.io.quakeml",
+    "obspy.core.quakeml": "obspy.io.quakeml.core",
     "obspy.core.stationxml": "obspy.io.stationxml",
     # Double renameing here. To make this 'obspy.station.stationxml' work we
     # first need to route it to obspy.core.inventory and then to

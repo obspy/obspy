@@ -218,7 +218,8 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     import_map={},
     function_map={
         'isSEISAN': 'obspy.io.seisan.core._is_seisan',
-        'readSEISAN': 'obspy.io.seisan.core._read_seisan'})
+        'readSEISAN': 'obspy.io.seisan.core._read_seisan',
+        '_getVersion': 'obspy.io.seisan.core._get_version'})
 
 
 if __name__ == '__main__':
