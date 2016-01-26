@@ -471,4 +471,3 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
             "readSACXY": "obspy.io.sac.core._read_sacXY",
             "writeSAC": "obspy.io.sac.core._write_sac",
             "writeSACXY": "obspy.io.sac.core._write_sacXY"})
-
