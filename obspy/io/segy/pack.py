@@ -19,6 +19,9 @@ import sys
 
 import numpy as np
 
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
+
 
 LOG2 = 0.3010299956639812
 # Get the system byte order.
@@ -169,3 +172,15 @@ def pack_4byte_IEEE(file, data, endian='>'):
 
 def pack_1byte_integer(file, data, endian='>'):
     raise NotImplementedError
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            'pack_1byte_Integer': 'obspy.io.segy.pack.pack_1byte_integer',
+            'pack_2byte_Integer': 'obspy.io.segy.pack.pack_2byte_integer',
+            'pack_4byte_Integer': 'obspy.io.segy.pack.pack_4byte_integer',
+            'pack_4byte_Fixed_point':
+                'obspy.io.segy.pack.pack_4byte_fixed_point'})

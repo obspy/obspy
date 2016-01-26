@@ -23,6 +23,9 @@ import warnings
 
 import numpy as np
 
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
+
 from .util import clibsegy
 
 
@@ -159,3 +162,18 @@ class OnTheFlyDataUnpacker:
             fp.seek(self.seek)
             raw = self.unpack_function(fp, self.count, endian=self.endian)
         return raw
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            'unpack_1byte_Integer':
+                'obspy.io.segy.unpack.unpack_1byte_integer',
+            'unpack_2byte_Integer':
+                'obspy.io.segy.unpack.unpack_2byte_integer',
+            'unpack_4byte_Integer':
+                'obspy.io.segy.unpack.unpack_4byte_integer',
+            'unpack_4byte_Fixed_point':
+                'obspy.io.segy.unpack.unpack_4byte_fixed_point'})

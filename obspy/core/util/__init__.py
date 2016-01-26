@@ -59,5 +59,6 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'getExampleFile': 'obspy.core.util.get_example_file',
         'getScriptDirName': 'obspy.core.util.get_script_dir_name',
         'guessDelta': 'obspy.core.util.guess_delta',
+        'toIntOrZero': 'obspy.core.util.misc.to_int_or_zero',
         'scoreatpercentile': 'obspy.core.util.score_at_percentile',
         'uncompressFile': 'obspy.core.util.decorator.uncompress_file'})
