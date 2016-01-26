@@ -727,21 +727,22 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "arPick": "obspy.signal.trigger.ar_pick",
-            "carlSTATrig": "obspy.signal.trigger.carl_STA_trig",
-            "classicSTALTA": "obspy.signal.trigger.classic_STALTA",
-            "classicSTALTAPy": "obspy.signal.trigger.classic_STALTA_py",
-            "coincidenceTrigger": "obspy.signal.trigger.coincidence_trigger",
-            "delayedSTALTA": "obspy.signal.trigger.delayed_STALTA",
-            "pkBaer": "obspy.signal.trigger.pk_baer",
-            "plotTrigger": "obspy.signal.trigger.plot_trigger",
-            "recSTALTA": "obspy.signal.trigger.recursive_STALTA",
-            "recSTALTAPy": "obspy.signal.trigger.recursive_STALTA_py",
-            "triggerOnset": "obspy.signal.trigger.trigger_onset",
-            "zDetect": "obspy.signal.trigger.z_detect"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "arPick": "obspy.signal.trigger.ar_pick",
+        "carlSTATrig": "obspy.signal.trigger.carl_STA_trig",
+        "classicSTALTA": "obspy.signal.trigger.classic_STALTA",
+        "classicSTALTAPy": "obspy.signal.trigger.classic_STALTA_py",
+        "coincidenceTrigger": "obspy.signal.trigger.coincidence_trigger",
+        "delayedSTALTA": "obspy.signal.trigger.delayed_STALTA",
+        "pkBaer": "obspy.signal.trigger.pk_baer",
+        "plotTrigger": "obspy.signal.trigger.plot_trigger",
+        "recSTALTA": "obspy.signal.trigger.recursive_STALTA",
+        "recSTALTAPy": "obspy.signal.trigger.recursive_STALTA_py",
+        "triggerOnset": "obspy.signal.trigger.trigger_onset",
+        "zDetect": "obspy.signal.trigger.z_detect"})
 
 
 if __name__ == '__main__':

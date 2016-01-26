@@ -105,6 +105,7 @@ def _read_pdas(filename, **kwargs):
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'isPDAS': 'obspy.io.pdas.core._is_pdas',

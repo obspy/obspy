@@ -1314,6 +1314,7 @@ def _format_time(value):
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'is_StationXML': 'obspy.io.stationxml.core._is_stationxml',

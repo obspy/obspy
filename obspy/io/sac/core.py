@@ -462,12 +462,13 @@ def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "isSAC": "obspy.io.sac.core._is_sac",
-            "isSACXY": "obspy.io.sac.core._is_sacXY",
-            "readSAC": "obspy.io.sac.core._read_sac",
-            "readSACXY": "obspy.io.sac.core._read_sacXY",
-            "writeSAC": "obspy.io.sac.core._write_sac",
-            "writeSACXY": "obspy.io.sac.core._write_sacXY"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "isSAC": "obspy.io.sac.core._is_sac",
+        "isSACXY": "obspy.io.sac.core._is_sacXY",
+        "readSAC": "obspy.io.sac.core._read_sac",
+        "readSACXY": "obspy.io.sac.core._read_sacXY",
+        "writeSAC": "obspy.io.sac.core._write_sac",
+        "writeSACXY": "obspy.io.sac.core._write_sacXY"})

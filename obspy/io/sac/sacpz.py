@@ -402,6 +402,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'write_SACPZ': 'obspy.io.sac.sacpz._write_sacpz'})

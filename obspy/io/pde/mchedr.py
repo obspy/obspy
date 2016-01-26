@@ -1092,6 +1092,7 @@ def _read_mchedr(filename):
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'isMchedr': 'obspy.io.pde.mchedr._is_mchedr',

@@ -440,16 +440,17 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "bwith": "obspy.signal.freqattributes.bandwidth",
-            "cfrequency": "obspy.signal.freqattributes.central_frequency",
-            "cfrequency_unwindowed":
-                "obspy.signal.freqattributes.central_frequency_unwindowed",
-            "domperiod": "obspy.signal.freqattributes.dominant_period",
-            "logbankm":
-                "obspy.signal.freqattributes.log_spaced_filterbank_matrix",
-            "logcep": "obspy.signal.freqattributes.log_cepstrum",
-            "mper": "obspy.signal.freqattributes.spectrum",
-            "pgm": "obspy.signal.freqattributes.peak_ground_motion"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "bwith": "obspy.signal.freqattributes.bandwidth",
+        "cfrequency": "obspy.signal.freqattributes.central_frequency",
+        "cfrequency_unwindowed":
+            "obspy.signal.freqattributes.central_frequency_unwindowed",
+        "domperiod": "obspy.signal.freqattributes.dominant_period",
+        "logbankm":
+            "obspy.signal.freqattributes.log_spaced_filterbank_matrix",
+        "logcep": "obspy.signal.freqattributes.log_cepstrum",
+        "mper": "obspy.signal.freqattributes.spectrum",
+        "pgm": "obspy.signal.freqattributes.peak_ground_motion"})

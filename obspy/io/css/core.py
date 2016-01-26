@@ -126,8 +126,9 @@ def _read_css(filename, **kwargs):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "isCSS": "obspy.io.css.core._is_css",
-            "readCSS": "obspy.io.css.core._read_css"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "isCSS": "obspy.io.css.core._is_css",
+        "readCSS": "obspy.io.css.core._read_css"})

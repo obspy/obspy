@@ -9,6 +9,8 @@ import sys
 import unittest
 import warnings
 
+from matplotlib import rcParams
+
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
                               read_events)
@@ -17,8 +19,6 @@ from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
 
 BASEMAP_VERSION = get_basemap_version()
-if BASEMAP_VERSION:
-    from matplotlib import rcParams
 
 CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:

@@ -162,6 +162,7 @@ def attach_paz(tr, paz_file):
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'readPaz': 'obspy.io.gse2.paz.read_paz'})

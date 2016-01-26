@@ -615,6 +615,7 @@ def _read_lines(line1, line2, line3, line4, line5):
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'is_ndk': 'obspy.io.ndk.core._is_ndk',

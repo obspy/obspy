@@ -350,8 +350,9 @@ def _read_seg2(filename, **kwargs):  # @UnusedVariable
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "isSEG2": "obspy.io.seg2.seg2._is_seg2",
-            "readSEG2": "obspy.io.seg2.seg2._read_seg2"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "isSEG2": "obspy.io.seg2.seg2._is_seg2",
+        "readSEG2": "obspy.io.seg2.seg2._read_seg2"})
