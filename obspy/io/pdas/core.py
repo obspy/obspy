@@ -12,9 +12,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import sys
+
 import numpy as np
 
 from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 def _is_pdas(filename):
@@ -96,3 +100,12 @@ def _read_pdas(filename, **kwargs):
     tr.stats.pdas = extra_headers
     st = Stream(traces=[tr])
     return st
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'isPDAS': 'obspy.io.pdas.core._is_pdas',
+        'readPDAS': 'obspy.io.pdas.core._read_pdas'})

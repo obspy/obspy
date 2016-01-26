@@ -19,6 +19,7 @@ import fnmatch
 import math
 import os
 import pickle
+import sys
 import warnings
 from glob import glob, has_magic
 
@@ -37,6 +38,8 @@ from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
 from obspy.core.util.decorator import (deprecated_keywords,
                                        map_example_filename, raise_if_masked,
                                        uncompress_file)
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import get_window_times
 
 
@@ -3121,6 +3124,16 @@ def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
             pickle.dump(stream, fp, protocol=protocol)
     else:
         pickle.dump(stream, filename, protocol=protocol)
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'isPickle': 'obspy.core.stream._is_pickle',
+        'readPickle': 'obspy.core.stream._read_pickle',
+        'writePickle': 'obspy.core.stream._write_pickle'})
 
 
 if __name__ == '__main__':

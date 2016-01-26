@@ -30,6 +30,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
+import sys
 import warnings
 
 import numpy as np
@@ -39,6 +40,8 @@ from matplotlib import collections, patches, transforms
 from decorator import decorator
 
 from obspy.core.util.decorator import deprecated
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 D2R = np.pi / 180
@@ -1041,6 +1044,20 @@ class MomentTensor(object):
     @property
     def zz(self):
         return self.mt[2][2]
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'MT2Axes': 'obspy.imaging.beachball.mt2axes',
+        'MT2Plane': 'obspy.imaging.beachball.mt2plane',
+        'Pol2Cart': 'obspy.imaging.beachball.pol2cart',
+        'StrikeDip': 'obspy.imaging.beachball.strike_dip',
+        'TDL': 'obspy.imaging.beachball.tdl',
+        'plotDC': 'obspy.imaging.beachball.plot_dc',
+        'plotMT': 'obspy.imaging.beachball.plot_mt'})
 
 
 if __name__ == '__main__':

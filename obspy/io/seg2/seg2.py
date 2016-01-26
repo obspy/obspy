@@ -15,14 +15,17 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2
 
-import warnings
 from copy import deepcopy
 from struct import unpack
+import sys
+import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from .header import MONTHS
 
 
@@ -343,3 +346,12 @@ def _read_seg2(filename, **kwargs):  # @UnusedVariable
     st = seg2.read_file(filename)
     warnings.warn(WARNING_HEADER)
     return st
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            "isSEG2": "obspy.io.seg2.seg2._is_seg2",
+            "readSEG2": "obspy.io.seg2.seg2._read_seg2"})

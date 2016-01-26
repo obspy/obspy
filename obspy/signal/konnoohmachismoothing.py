@@ -22,9 +22,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import sys
 import warnings
 
 import numpy as np
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 def konno_ohmachi_smoothing_window(frequencies, center_frequency,
@@ -259,3 +263,19 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
                 normalize=normalize)
             count -= 1
         return new_spec
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            "calculateSmoothingMatrix":
+                "obspy.signal.konnoohmachismoothing."
+                "calculate_smoothing_matrix",
+            "konnoOhmachiSmoothing":
+            "obspy.signal.konnoohmachismoothing."
+                "konno_ohmachi_smoothing",
+            "konnoOhmachiSmoothingWindow":
+            "obspy.signal.konnoohmachismoothing."
+                "konno_ohmachi_smoothing_window"})

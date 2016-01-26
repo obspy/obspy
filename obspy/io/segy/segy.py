@@ -17,8 +17,12 @@ from future.builtins import *  # NOQA
 import io
 import os
 from struct import pack, unpack
+import sys
 
 import numpy as np
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 from .header import (BINARY_FILE_HEADER_FORMAT,
                      DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
@@ -1100,3 +1104,12 @@ def autodetectEndianAndSanityCheckSU(file):
             the ObsPy developers so they can implement additional tests.
             """.strip()
         raise Exception(msg)
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'readSEGY': 'obspy.io.segy.segy._read_segy',
+        'readSU': 'obspy.io.segy.segy._read_su'})
