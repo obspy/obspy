@@ -166,14 +166,15 @@ class OnTheFlyDataUnpacker:
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            'unpack_1byte_Integer':
-                'obspy.io.segy.unpack.unpack_1byte_integer',
-            'unpack_2byte_Integer':
-                'obspy.io.segy.unpack.unpack_2byte_integer',
-            'unpack_4byte_Integer':
-                'obspy.io.segy.unpack.unpack_4byte_integer',
-            'unpack_4byte_Fixed_point':
-                'obspy.io.segy.unpack.unpack_4byte_fixed_point'})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'unpack_1byte_Integer':
+            'obspy.io.segy.unpack.unpack_1byte_integer',
+        'unpack_2byte_Integer':
+            'obspy.io.segy.unpack.unpack_2byte_integer',
+        'unpack_4byte_Integer':
+            'obspy.io.segy.unpack.unpack_4byte_integer',
+        'unpack_4byte_Fixed_point':
+            'obspy.io.segy.unpack.unpack_4byte_fixed_point'})

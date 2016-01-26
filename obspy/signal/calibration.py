@@ -255,8 +255,9 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "relcalstack": "obspy.signal.calibration.rel_calib_stack",
-            "_calcresp": "obspy.signal.calibration._calc_resp"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "relcalstack": "obspy.signal.calibration.rel_calib_stack",
+        "_calcresp": "obspy.signal.calibration._calc_resp"})

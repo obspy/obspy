@@ -246,10 +246,11 @@ def _timestring(t):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            '_ID_key': 'obspy.imaging.util._id_key'})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        '_ID_key': 'obspy.imaging.util._id_key'})
 
 
 if __name__ == '__main__':

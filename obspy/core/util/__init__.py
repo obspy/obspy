@@ -45,6 +45,7 @@ from obspy.core.util.version import get_git_version as _get_version_string
 # Remove once 0.11 has been released!
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={"geodetics": "obspy.geodetics"},
     function_map={
         "FlinnEngdahl": "obspy.geodetics.FlinnEngdahl",

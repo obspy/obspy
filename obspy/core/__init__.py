@@ -127,9 +127,7 @@ from obspy.scripts.runtests import run_tests
 # Remove once 0.11 has been released!
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
-    # Remap everything but ascii. On Python 2, ascii is a built-in function
-    # so it would require significant additional logic to implement and this
-    # is probably not worth it here.
+    original_module=sys.modules[__name__],
     import_map={"stationxml": "obspy.io.stationxml.core",
                 "quakeml": "obspy.io.quakeml.core",
                 "json": "obspy.io.json.core"})

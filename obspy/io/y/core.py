@@ -398,6 +398,7 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'isY': 'obspy.io.y.core._is_y',

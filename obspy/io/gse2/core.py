@@ -180,11 +180,12 @@ def _read_gse1(filename, headonly=False, verify_chksum=True,
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "isGSE1": "obspy.io.gse2.core._is_gse1",
-            "isGSE2": "obspy.io.gse2.core._is_gse2",
-            "readGSE1": "obspy.io.gse2.core._read_gse1",
-            "readGSE2": "obspy.io.gse2.core._read_gse2",
-            "writeGSE2": "obspy.io.gse2.core._write_gse2"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "isGSE1": "obspy.io.gse2.core._is_gse1",
+        "isGSE2": "obspy.io.gse2.core._is_gse2",
+        "readGSE1": "obspy.io.gse2.core._read_gse1",
+        "readGSE2": "obspy.io.gse2.core._read_gse2",
+        "writeGSE2": "obspy.io.gse2.core._write_gse2"})

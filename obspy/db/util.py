@@ -81,7 +81,8 @@ def parse_mapping_data(lines):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "parseMappingData": "obspy.db.util.parse_mapping_data"})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "parseMappingData": "obspy.db.util.parse_mapping_data"})

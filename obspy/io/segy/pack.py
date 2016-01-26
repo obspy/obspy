@@ -176,11 +176,12 @@ def pack_1byte_integer(file, data, endian='>'):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            'pack_1byte_Integer': 'obspy.io.segy.pack.pack_1byte_integer',
-            'pack_2byte_Integer': 'obspy.io.segy.pack.pack_2byte_integer',
-            'pack_4byte_Integer': 'obspy.io.segy.pack.pack_4byte_integer',
-            'pack_4byte_Fixed_point':
-                'obspy.io.segy.pack.pack_4byte_fixed_point'})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'pack_1byte_Integer': 'obspy.io.segy.pack.pack_1byte_integer',
+        'pack_2byte_Integer': 'obspy.io.segy.pack.pack_2byte_integer',
+        'pack_4byte_Integer': 'obspy.io.segy.pack.pack_4byte_integer',
+        'pack_4byte_Fixed_point':
+            'obspy.io.segy.pack.pack_4byte_fixed_point'})

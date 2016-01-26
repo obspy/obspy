@@ -166,7 +166,8 @@ class _MSStruct(object):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            '_getMSFileInfo': 'obspy.io.mseed.msstruct._get_ms_file_info'})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        '_getMSFileInfo': 'obspy.io.mseed.msstruct._get_ms_file_info'})

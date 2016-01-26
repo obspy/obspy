@@ -267,15 +267,16 @@ def konno_ohmachi_smoothing(spectra, frequencies, bandwidth=40, count=1,
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        import_map={},
-        function_map={
-            "calculateSmoothingMatrix":
-                "obspy.signal.konnoohmachismoothing."
-                "calculate_smoothing_matrix",
-            "konnoOhmachiSmoothing":
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "calculateSmoothingMatrix":
             "obspy.signal.konnoohmachismoothing."
-                "konno_ohmachi_smoothing",
-            "konnoOhmachiSmoothingWindow":
-            "obspy.signal.konnoohmachismoothing."
-                "konno_ohmachi_smoothing_window"})
+            "calculate_smoothing_matrix",
+        "konnoOhmachiSmoothing":
+        "obspy.signal.konnoohmachismoothing."
+            "konno_ohmachi_smoothing",
+        "konnoOhmachiSmoothingWindow":
+        "obspy.signal.konnoohmachismoothing."
+            "konno_ohmachi_smoothing_window"})

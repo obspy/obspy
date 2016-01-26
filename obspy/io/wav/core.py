@@ -178,6 +178,7 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         'isWAV': 'obspy.io.wav.core._is_wav',
