@@ -7,11 +7,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import os
+import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.compatibility import from_buffer
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 DTYPE = {
@@ -119,3 +122,12 @@ def _read_css(filename, **kwargs):
         tr = Trace(data, header=header)
         traces.append(tr)
     return Stream(traces=traces)
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            "isCSS": "obspy.io.css.core._is_css",
+            "readCSS": "obspy.io.css.core._read_css"})

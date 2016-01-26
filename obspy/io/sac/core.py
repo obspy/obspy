@@ -15,9 +15,13 @@ from future.utils import native_str
 
 import os
 import struct
+import sys
 
 from obspy import Stream
+
 from obspy.core.compatibility import is_bytes_buffer
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from .sactrace import SACTrace
 
 
@@ -455,3 +459,16 @@ def __write_sac(trace, buf, byteorder="<", **kwargs):  # @UnusedVariable
         raise ValueError(msg)
     sac = SACTrace.from_obspy_trace(trace)
     sac.write(buf, ascii=False, byteorder=byteorder)
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+        name=__name__, doc=__doc__, locs=locals(),
+        import_map={},
+        function_map={
+            "isSAC": "obspy.io.sac.core._is_sac",
+            "isSACXY": "obspy.io.sac.core._is_sacXY",
+            "readSAC": "obspy.io.sac.core._read_sac",
+            "readSACXY": "obspy.io.sac.core._read_sacXY",
+            "writeSAC": "obspy.io.sac.core._write_sac",
+            "writeSACXY": "obspy.io.sac.core._write_sacXY"})
+

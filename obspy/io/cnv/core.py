@@ -12,8 +12,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import warnings
 from bisect import bisect_right
+import sys
+import warnings
+
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
@@ -161,6 +166,14 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
     # Close if a file has been opened by this function.
     if file_opened is True:
         fh.close()
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'write_CNV': 'obspy.io.cnv.core._write_cnv'})
 
 
 if __name__ == '__main__':

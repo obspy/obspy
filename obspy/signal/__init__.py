@@ -195,7 +195,65 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import sys
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
+
 from .spectral_estimation import PPSD
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'arPick': 'obspy.signal.trigger.ar_pick',
+        'bandpass': 'obspy.signal.filter.bandpass',
+        'bandstop': 'obspy.signal.filter.bandstop',
+        'bwith': 'obspy.signal.bwith',
+        'carlSTATrig': 'obspy.signal.carlSTATrig',
+        'centroid': 'obspy.signal.centroid',
+        'cfrequency': 'obspy.signal.cfrequency',
+        'classicSTALTA': 'obspy.signal.classicSTALTA',
+        'classicSTALTAPy': 'obspy.signal.classicSTALTAPy',
+        'coincidenceTrigger': 'obspy.signal.coincidenceTrigger',
+        'cornFreq2Paz': 'obspy.signal.cornFreq2Paz',
+        'cosTaper': 'obspy.signal.cosTaper',
+        'delayedSTALTA': 'obspy.signal.delayedSTALTA',
+        'domperiod': 'obspy.signal.domperiod',
+        'eigval': 'obspy.signal.eigval',
+        'envelope': 'obspy.signal.envelope',
+        'estimateMagnitude': 'obspy.signal.estimateMagnitude',
+        'highpass': 'obspy.signal.highpass',
+        'instBwith': 'obspy.signal.instBwith',
+        'instFreq': 'obspy.signal.instFreq',
+        'integerDecimation': 'obspy.signal.integerDecimation',
+        'konnoOhmachiSmoothing': 'obspy.signal.konnoOhmachiSmoothing',
+        'logcep': 'obspy.signal.logcep',
+        'lowpass': 'obspy.signal.lowpass',
+        'lowpassFIR': 'obspy.signal.lowpassFIR',
+        'normEnvelope': 'obspy.signal.normEnvelope',
+        'pazToFreqResp': 'obspy.signal.pazToFreqResp',
+        'pkBaer': 'obspy.signal.pkBaer',
+        'psd': 'obspy.signal.psd',
+        'recSTALTA': 'obspy.signal.recSTALTA',
+        'recSTALTAPy': 'obspy.signal.recSTALTAPy',
+        'remezFIR': 'obspy.signal.remezFIR',
+        'rotate_LQT_ZNE': 'obspy.signal.rotate_LQT_ZNE',
+        'rotate_NE_RT': 'obspy.signal.rotate_NE_RT',
+        'rotate_RT_NE': 'obspy.signal.rotate_RT_NE',
+        'rotate_ZNE_LQT': 'obspy.signal.rotate_ZNE_LQT',
+        'seisSim': 'obspy.signal.seisSim',
+        'sonogram': 'obspy.signal.sonogram',
+        'specInv': 'obspy.signal.specInv',
+        'triggerOnset': 'obspy.signal.triggerOnset',
+        'utlGeoKm': 'obspy.signal.utlGeoKm',
+        'utlLonLat': 'obspy.signal.utlLonLat',
+        'xcorr': 'obspy.signal.xcorr',
+        'xcorrPickCorrection': 'obspy.signal.xcorrPickCorrection',
+        'xcorr_3C': 'obspy.signal.xcorr_3C',
+        'zDetect': 'obspy.signal.zDetect'})
 
 
 if __name__ == '__main__':

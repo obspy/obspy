@@ -25,10 +25,13 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import doctest
+import sys
 
 import numpy as np
 
 from obspy.core import AttribDict
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 def read_paz(paz_file):
@@ -154,6 +157,14 @@ def attach_paz(tr, paz_file):
         tr.stats.paz.seismometer_gain
     # A0_normalization_factor convention for gse2 paz in Observatory in FFB
     tr.stats.paz.gain = 1.0
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        'readPaz': 'obspy.io.gse2.paz.read_paz'})
 
 
 if __name__ == '__main__':

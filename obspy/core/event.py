@@ -32,6 +32,7 @@ import inspect
 import io
 import os
 import re
+import sys
 import warnings
 import weakref
 from copy import deepcopy
@@ -56,6 +57,8 @@ from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import (deprecated, map_example_filename,
                                        uncompress_file)
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.imaging.cm import obspy_sequential
 
 
@@ -3441,6 +3444,16 @@ class Catalog(object):
                 plt.show()
 
         return fig
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    import_map={},
+    function_map={
+        "readEvents": "obspy.core.event.read_events",
+        "_createExampleCatalog": "obspy.core.event._create_example_catalog",
+        "_eventTypeClassFactory": "_event_type_class_factory"})
 
 
 if __name__ == '__main__':

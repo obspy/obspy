@@ -45,31 +45,14 @@ FUNCTION_MAPS = {
     'obspy.geodetics': {
         "calcVincentyInverse": "calc_vincenty_inverse",
         "gps2DistAzimuth": "gps2dist_azimuth"},
-    # 'obspy.core.util': {
-    #     'complexifyString': 'complexify_string',
-    #     'createEmptyDataChunk': 'create_empty_data_chunk',
-    #     'getExampleFile': 'get_example_file',
-    #     'getScriptDirName': 'get_script_dir_name',
-    #     'guessDelta': 'guess_delta',
-    #     'scoreatpercentile': 'score_at_percentile',
-    #     'uncompressFile': 'uncompress_file'},
-    # 'obspy.core.util.base': {
-    #     'createEmptyDataChunk': 'create_empty_data_chunk',
-    #     'getBasemapVersion': 'get_basemap_version',
-    #     'getExampleFile': 'get_example_file',
-    #     'getMatplotlibVersion': 'get_matplotlib_version',
-    #     'getSciPyVersion': 'get_scipy_version',
-    #     'getScriptDirName': 'get_script_dir_name'},
-    # 'obspy.core.util.decorator': {
-    #     'getExampleFile': 'get_example_file',
-    #     'raiseIfMasked': 'raise_if_masked',
-    #     'skipIfNoData': 'skip_if_no_data',
-    #     'uncompressFile': 'uncompress_file'},
-    # 'obspy.core.util.misc': {
-    #     'complexifyString': 'complexify_string',
-    #     'flatnotmaskedContiguous': 'flat_not_masked_contiguous',
-    #     'guessDelta': 'guess_delta',
-    #     'scoreatpercentile': 'score_at_percentile'},
+    'obspy.core.util': {
+        'complexifyString': 'complexify_string',
+        'createEmptyDataChunk': 'create_empty_data_chunk',
+        'getExampleFile': 'get_example_file',
+        'getScriptDirName': 'get_script_dir_name',
+        'guessDelta': 'guess_delta',
+        'scoreatpercentile': 'score_at_percentile',
+        'uncompressFile': 'uncompress_file'},
     'obspy.io.css.core': {
         'isCSS': '_is_css',
         'readCSS': '_read_css'},
@@ -173,53 +156,53 @@ FUNCTION_MAPS = {
         'readQ': '_read_q',
         'writeASC': '_write_asc',
         'writeQ': '_write_q'},
-    # 'obspy.signal': {
-    #     'arPick': 'arPick',
-    #     'bandpass': 'bandpass',
-    #     'bandstop': 'bandstop',
-    #     'bwith': 'bwith',
-    #     'carlSTATrig': 'carlSTATrig',
-    #     'centroid': 'centroid',
-    #     'cfrequency': 'cfrequency',
-    #     'classicSTALTA': 'classicSTALTA',
-    #     'classicSTALTAPy': 'classicSTALTAPy',
-    #     'coincidenceTrigger': 'coincidenceTrigger',
-    #     'cornFreq2Paz': 'cornFreq2Paz',
-    #     'cosTaper': 'cosTaper',
-    #     'delayedSTALTA': 'delayedSTALTA',
-    #     'domperiod': 'domperiod',
-    #     'eigval': 'eigval',
-    #     'envelope': 'envelope',
-    #     'estimateMagnitude': 'estimateMagnitude',
-    #     'highpass': 'highpass',
-    #     'instBwith': 'instBwith',
-    #     'instFreq': 'instFreq',
-    #     'integerDecimation': 'integerDecimation',
-    #     'konnoOhmachiSmoothing': 'konnoOhmachiSmoothing',
-    #     'logcep': 'logcep',
-    #     'lowpass': 'lowpass',
-    #     'lowpassFIR': 'lowpassFIR',
-    #     'normEnvelope': 'normEnvelope',
-    #     'pazToFreqResp': 'pazToFreqResp',
-    #     'pkBaer': 'pkBaer',
-    #     'psd': 'psd',
-    #     'recSTALTA': 'recSTALTA',
-    #     'recSTALTAPy': 'recSTALTAPy',
-    #     'remezFIR': 'remezFIR',
-    #     'rotate_LQT_ZNE': 'rotate_LQT_ZNE',
-    #     'rotate_NE_RT': 'rotate_NE_RT',
-    #     'rotate_RT_NE': 'rotate_RT_NE',
-    #     'rotate_ZNE_LQT': 'rotate_ZNE_LQT',
-    #     'seisSim': 'seisSim',
-    #     'sonogram': 'sonogram',
-    #     'specInv': 'specInv',
-    #     'triggerOnset': 'triggerOnset',
-    #     'utlGeoKm': 'utlGeoKm',
-    #     'utlLonLat': 'utlLonLat',
-    #     'xcorr': 'xcorr',
-    #     'xcorrPickCorrection': 'xcorrPickCorrection',
-    #     'xcorr_3C': 'xcorr_3C',
-    #     'zDetect': 'zDetect'},
+    'obspy.signal': {
+        'arPick': 'arPick',
+        'bandpass': 'bandpass',
+        'bandstop': 'bandstop',
+        'bwith': 'bwith',
+        'carlSTATrig': 'carlSTATrig',
+        'centroid': 'centroid',
+        'cfrequency': 'cfrequency',
+        'classicSTALTA': 'classicSTALTA',
+        'classicSTALTAPy': 'classicSTALTAPy',
+        'coincidenceTrigger': 'coincidenceTrigger',
+        'cornFreq2Paz': 'cornFreq2Paz',
+        'cosTaper': 'cosTaper',
+        'delayedSTALTA': 'delayedSTALTA',
+        'domperiod': 'domperiod',
+        'eigval': 'eigval',
+        'envelope': 'envelope',
+        'estimateMagnitude': 'estimateMagnitude',
+        'highpass': 'highpass',
+        'instBwith': 'instBwith',
+        'instFreq': 'instFreq',
+        'integerDecimation': 'integerDecimation',
+        'konnoOhmachiSmoothing': 'konnoOhmachiSmoothing',
+        'logcep': 'logcep',
+        'lowpass': 'lowpass',
+        'lowpassFIR': 'lowpassFIR',
+        'normEnvelope': 'normEnvelope',
+        'pazToFreqResp': 'pazToFreqResp',
+        'pkBaer': 'pkBaer',
+        'psd': 'psd',
+        'recSTALTA': 'recSTALTA',
+        'recSTALTAPy': 'recSTALTAPy',
+        'remezFIR': 'remezFIR',
+        'rotate_LQT_ZNE': 'rotate_LQT_ZNE',
+        'rotate_NE_RT': 'rotate_NE_RT',
+        'rotate_RT_NE': 'rotate_RT_NE',
+        'rotate_ZNE_LQT': 'rotate_ZNE_LQT',
+        'seisSim': 'seisSim',
+        'sonogram': 'sonogram',
+        'specInv': 'specInv',
+        'triggerOnset': 'triggerOnset',
+        'utlGeoKm': 'utlGeoKm',
+        'utlLonLat': 'utlLonLat',
+        'xcorr': 'xcorr',
+        'xcorrPickCorrection': 'xcorrPickCorrection',
+        'xcorr_3C': 'xcorr_3C',
+        'zDetect': 'zDetect'},
     'obspy.signal.calibration': {
         'relcalstack': 'rel_calib_stack'},
     'obspy.signal.cpxtrace': {
@@ -339,24 +322,3 @@ class DynamicAttributeImportRerouteModule(ModuleType):
                                         self.import_map[name]),
                       ObsPyDeprecationWarning)
         return importlib.import_module(real_module_name)
-
-
-def _create_deprecated_function(old_name, new_name, module_name, func):
-    from obspy.core.util.decorator import deprecated
-    msg = FUNCTION_RENAME_MSG.format(old=old_name, new=new_name,
-                                     mod=module_name)
-
-    @deprecated(msg)
-    def deprecated_func(*args, **kwargs):
-        return func(*args, **kwargs)
-    return deprecated_func
-
-
-def _add_deprecated_functions():
-    for mod_name, mapping in FUNCTION_MAPS.items():
-        mod = importlib.import_module(mod_name)
-        for old_name, new_name in mapping.items():
-            func = getattr(mod, new_name)
-            deprecated_func = _create_deprecated_function(
-                old_name, new_name, mod_name, func)
-            setattr(mod, old_name, deprecated_func)

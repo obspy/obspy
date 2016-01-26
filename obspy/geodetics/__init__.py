@@ -32,6 +32,7 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         "gps2DistAzimuth": "obspy.geodetics.base.gps2dist_azimuth"
     })
 
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
