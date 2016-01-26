@@ -26,8 +26,7 @@ from subprocess import STDOUT, CalledProcessError, check_output
 
 import numpy as np
 
-from obspy.core.util.deprecation_helpers import (
-    DynamicAttributeImportRerouteModule, ObsPyDeprecationWarning)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 # The following dictionary maps the first character of the channel_id to the
