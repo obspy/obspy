@@ -19,7 +19,6 @@ import fnmatch
 import math
 import os
 import pickle
-import sys
 import warnings
 from glob import glob, has_magic
 
@@ -35,11 +34,9 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin)
-from obspy.core.util.decorator import (deprecated_keywords,
+from obspy.core.util.decorator import (deprecated_keywords, deprecated,
                                        map_example_filename, raise_if_masked,
                                        uncompress_file)
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import get_window_times
 
 
@@ -3051,6 +3048,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
 
+@deprecated("Renamed to '_is_pickle'. Use that instead.")
+def isPickle(*args, **kwargs):
+    return _is_pickle(*args, **kwargs)
+
+
+@deprecated("Renamed to '_read_pickle'. Use that instead.")
+def readPickle(*args, **kwargs):
+    return _read_pickle(*args, **kwargs)
+
+
+@deprecated("Renamed to '_write_pickle'. Use that instead.")
+def writePickle(*args, **kwargs):
+    return _write_pickle(*args, **kwargs)
+
+
 def _is_pickle(filename):  # @UnusedVariable
     """
     Check whether a file is a pickled ObsPy Stream file.
@@ -3124,17 +3136,6 @@ def _write_pickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
             pickle.dump(stream, fp, protocol=protocol)
     else:
         pickle.dump(stream, filename, protocol=protocol)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isPickle': 'obspy.core.stream._is_pickle',
-        'readPickle': 'obspy.core.stream._read_pickle',
-        'writePickle': 'obspy.core.stream._write_pickle'})
 
 
 if __name__ == '__main__':
