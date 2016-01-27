@@ -538,6 +538,28 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(_times_processed,
                                           ppsd._times_processed)
 
+    def test_issue1216(self):
+        tr, paz = _get_sample_data()
+        st = Stream([tr])
+        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
+        ppsd.add(st)
+        # After adding data internal representation of hist stack is None
+        self.assertIsNone(ppsd._current_hist_stack)
+        # Accessing the current_histogram property calculates the default stack
+        self.assertIsNotNone(ppsd.current_histogram)
+        self.assertIsNotNone(ppsd._current_hist_stack)
+        # Adding the same data again does not invalidate the internal stack
+        ppsd.add(st)
+        self.assertIsNotNone(ppsd._current_hist_stack)
+        # Adding new data invalidates the internal stack
+        tr.stats.starttime += 3600
+        st2 = Stream([tr])
+        ppsd.add(st2)
+        self.assertIsNone(ppsd._current_hist_stack)
+        # Accessing current_histogram again calculates the stack
+        self.assertIsNotNone(ppsd.current_histogram)
+        self.assertIsNotNone(ppsd._current_hist_stack)
+
 
 def suite():
     return unittest.makeSuite(PsdTestCase, 'test')
