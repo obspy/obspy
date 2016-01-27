@@ -7,8 +7,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import unittest
-
 import numpy as np
 
 from obspy.signal.array_analysis import SeismicArray
@@ -19,6 +19,8 @@ class ArrayTestCase(unittest.TestCase):
     Test cases for array_analysis functions.
     """
     def setUp(self):
+        self.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 'data'))
         self.array_coords = np.array([[0.0, 0.0, 0.0],
                                       [-5.0, 7.0, 0.0],
                                       [5.0, 7.0, 0.0],
@@ -37,20 +39,9 @@ class ArrayTestCase(unittest.TestCase):
         self.Vp = 1.93
         self.Vs = 0.326
 
-    def tearDown(self):
-        pass
-
     def test_array_rotation(self):
         # tests function array_rotation_strain with synthetic data with pure
         # rotation and no strain
-        array_coords = self.array_coords
-        subarray = self.subarray
-        ts1 = self.ts1
-        ts2 = self.ts2
-        ts3 = self.ts3
-        sigmau = self.sigmau
-        vp = self.Vp
-        vs = self.Vs
 
         rotx = 0.00001 * np.exp(-1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-30 * np.pi, 30 * np.pi, 1000))
@@ -61,13 +52,15 @@ class ArrayTestCase(unittest.TestCase):
 
         for stat in range(7):
             for t in range(1000):
-                ts1[t, stat] = -1. * array_coords[stat, 1] * rotz[t]
-                ts2[t, stat] = array_coords[stat, 0] * rotz[t]
-                ts3[t, stat] = array_coords[stat, 1] * rotx[t] - \
-                    array_coords[stat, 0] * roty[t]
+                self.ts1[t, stat] = -1. * self.array_coords[stat, 1] * rotz[t]
+                self.ts2[t, stat] = self.array_coords[stat, 0] * rotz[t]
+                self.ts3[t, stat] = self.array_coords[stat, 1] * rotx[t] - \
+                    self.array_coords[stat, 0] * roty[t]
 
-        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp,
-                                                 Vs, array_coords, sigmau)
+        out = SeismicArray.array_rotation_strain(self.subarray, self.ts1,
+                                                 self.ts2, self.ts3, self.Vp,
+                                                 self.Vs, self.array_coords,
+                                                 self.sigmau)
 
         np.testing.assert_array_almost_equal(rotx, out['ts_w1'], decimal=12)
         np.testing.assert_array_almost_equal(roty, out['ts_w2'], decimal=12)
@@ -82,16 +75,7 @@ class ArrayTestCase(unittest.TestCase):
     def test_array_dilation(self):
         # tests function array_rotation_strain with synthetic data with pure
         # dilation and no rotation or shear strain
-        array_coords = self.array_coords
-        subarray = self.subarray
-        ts1 = self.ts1
-        ts2 = self.ts2
-        ts3 = self.ts3
-        sigmau = self.sigmau
-        vp = self.Vp
-        vs = self.Vs
-
-        eta = 1 - 2 * vs ** 2 / vp ** 2
+        eta = 1 - 2 * self.Vs ** 2 / self.Vp ** 2
 
         dilation = .00001 * np.exp(
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
@@ -99,12 +83,14 @@ class ArrayTestCase(unittest.TestCase):
 
         for stat in range(7):
             for t in range(1000):
-                ts1[t, stat] = array_coords[stat, 0] * dilation[t]
-                ts2[t, stat] = array_coords[stat, 1] * dilation[t]
-                ts3[t, stat] = array_coords[stat, 2] * dilation[t]
+                self.ts1[t, stat] = self.array_coords[stat, 0] * dilation[t]
+                self.ts2[t, stat] = self.array_coords[stat, 1] * dilation[t]
+                self.ts3[t, stat] = self.array_coords[stat, 2] * dilation[t]
 
-        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
-                                    array_coords, sigmau)
+        out = SeismicArray.array_rotation_strain(self.subarray, self.ts1,
+                                                 self.ts2, self.ts3, self.Vp,
+                                                 self.Vs, self.array_coords,
+                                                 self.sigmau)
 
         # remember free surface boundary conditions!
         # see Spudich et al, 1995, (A2)
@@ -128,14 +114,6 @@ class ArrayTestCase(unittest.TestCase):
     def test_array_horizontal_shear(self):
         # tests function array_rotation_strain with synthetic data with pure
         # horizontal shear strain, no rotation or dilation
-        array_coords = self.array_coords
-        subarray = self.subarray
-        ts1 = self.ts1
-        ts2 = self.ts2
-        sigmau = self.sigmau
-        vp = self.Vp
-        vs = self.Vs
-
         shear_strainh = .00001 * np.exp(
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-10 * np.pi, 10 * np.pi, 1000))
@@ -144,10 +122,13 @@ class ArrayTestCase(unittest.TestCase):
 
         for stat in range(7):
             for t in range(1000):
-                ts1[t, stat] = array_coords[stat, 1] * shear_strainh[t]
-                ts2[t, stat] = array_coords[stat, 0] * shear_strainh[t]
+                self.ts1[t, stat] = self.array_coords[stat, 1] * shear_strainh[t]
+                self.ts2[t, stat] = self.array_coords[stat, 0] * shear_strainh[t]
 
-        out = SeismicArray.array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
+        out = SeismicArray.array_rotation_strain(self.subarray, self.ts1,
+                                                 self.ts2, ts3, self.Vp,
+                                                 self.Vs, self.array_coords,
+                                                 self.sigmau)
 
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],
                                              decimal=12)
@@ -166,6 +147,28 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
+    def test_three_component_beamforming(self):
+        """
+        Integration test for 3cbf. Parameter values are fairly arbitrary.
+        """
+        from obspy.core import inventory
+        from obspy import read
+
+        pfield = SeismicArray('pfield', inventory=inventory.read_inventory(
+                os.path.join(self.path, 'pfield_inv_for_instaseis.xml'),
+                format='stationxml'))
+        vel = read(os.path.join(self.path, 'pfield_instaseis.mseed'))
+        out = pfield.three_component_beamforming(vel.select(channel='BXN'),
+                                                 vel.select(channel='BXE'),
+                                                 vel.select(channel='BXZ'),
+                                                 64, 0, 0.6, 0.03,
+                                                 wavetype='P',
+                                                 freq_range=[0.1, .3],
+                                                 whiten=True, coherency=False)
+        self.assertEqual(out.max_pow_baz, 246)
+        self.assertEqual(out.max_pow_slow, 0.3)
+        np.testing.assert_array_almost_equal(out.max_rel_power, 1.22923997,
+                                             decimal=8)
 
 def suite():
     return unittest.makeSuite(ArrayTestCase, 'test')

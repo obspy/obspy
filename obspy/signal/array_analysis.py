@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from obspy.core import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
-from obspy.signal.util import util_geo_km, nextpow2
+from obspy.signal.util import util_geo_km, next_pow_2
 from obspy.core import Trace
 from obspy.core.inventory import Inventory
 from scipy.integrate import cumtrapz
@@ -916,17 +916,7 @@ class SeismicArray(object):
                 start = UTCDateTime()
                 outarr = self._covariance_array_processing(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
-
-                # make output human readable, adjust backazimuth to values
-                # between 0 and 360
                 t, rel_power, abs_power, baz, slow = outarr.T
-                baz[baz < 0.0] += 360
-                out = BeamformerResult(inventory=self.inventory, times=t,
-                                       max_rel_power=rel_power,
-                                       max_abs_power=abs_power,
-                                       max_pow_baz=baz, max_pow_slow=slow,
-                                       slowness_range=np.arange(sll, slm, sls),
-                                       method=method)
 
             else:
                 kwargs = dict(
@@ -947,15 +937,27 @@ class SeismicArray(object):
                 start = UTCDateTime()
                 outarr = self._beamforming(st_workon, **kwargs)
                 print("Total time in routine: %f\n" % (UTCDateTime() - start))
-
-                # make output human readable, adjust backazimuth to values
-                # between 0 and 360
                 t, rel_power, baz, slow_x, slow_y, slow = outarr.T
-                baz[baz < 0.0] += 360
-                out = BeamformerResult(inventory=self.inventory, times=t,
-                                       max_rel_power=rel_power,
-                                       max_pow_baz=baz, max_pow_slow=slow,
+                abs_power = None
+
+            baz[baz < 0.0] += 360
+            if wlen < 0:
+                # Need to explicitly specify the timestep of the analysis.
+                out = BeamformerResult(inventory=self.inventory,
+                                       win_starttimes=t,
                                        slowness_range=np.arange(sll, slm, sls),
+                                       max_rel_power=rel_power,
+                                       max_abs_power=abs_power,
+                                       max_pow_baz=baz, max_pow_slow=slow,
+                                       method=method,
+                                       timestep=endtime - starttime)
+            else:
+                out = BeamformerResult(inventory=self.inventory,
+                                       win_starttimes=t,
+                                       slowness_range=np.arange(sll, slm, sls),
+                                       max_rel_power=rel_power,
+                                       max_abs_power=abs_power,
+                                       max_pow_baz=baz, max_pow_slow=slow,
                                        method=method)
 
             # now let's do the plotting
@@ -1097,7 +1099,7 @@ class SeismicArray(object):
             nstep = int(nsamp * win_frac)
 
         # generate plan for rfftr
-        nfft = nextpow2(nsamp)
+        nfft = next_pow_2(nsamp)
         deltaf = fs / float(nfft)
         nlow = int(frqlow / float(deltaf) + 0.5)
         nhigh = int(frqhigh / float(deltaf) + 0.5)
@@ -1625,11 +1627,11 @@ class SeismicArray(object):
                                     uindex=uindex)
 
             out = BeamformerResult(inventory=self.inventory,
-                                   times=window_start_times, slowness_range=u,
-                                   full_beamres=bf_results, freqs=freqs,
-                                   incidence=incidence,
+                                   win_starttimes=window_start_times,
+                                   slowness_range=u, full_beamres=bf_results,
+                                   freqs=freqs, incidence=incidence,
                                    method='3C ({})'.format(wavetype),
-                                   timestep=wlen*win_frac*win_average)
+                                   timestep=wlen * win_frac * win_average)
 
         finally:
             self.inventory = invbkp
@@ -2631,7 +2633,7 @@ class SeismicArray(object):
                             beam_max = beam
             if method == 'SWP':
                 # generate plan for rfftr
-                nfft = nextpow2(nsamp)
+                nfft = next_pow_2(nsamp)
                 deltaf = fs / float(nfft)
                 nlow = int(frqlow / float(deltaf) + 0.5)
                 nhigh = int(frqhigh / float(deltaf) + 0.5)
@@ -3064,24 +3066,26 @@ class BeamformerResult(object):
     :param method: Method used for the beamforming.
     """
 
-    def __init__(self, inventory, times, slowness_range, max_rel_power=None,
-                 max_abs_power=None, max_pow_baz=None, max_pow_slow=None,
-                 full_beamres=None, freqs=None, incidence=None, method=None,
-                 timestep=None):
+    def __init__(self, inventory, win_starttimes, slowness_range,
+                 max_rel_power=None, max_abs_power=None, max_pow_baz=None,
+                 max_pow_slow=None, full_beamres=None, freqs=None,
+                 incidence=None, method=None, timestep=None):
 
         self.inventory = copy.deepcopy(inventory)
-        self.times = times
-        self.starttime = times[0]
+        self.win_starttimes = win_starttimes
+        self.starttime = win_starttimes[0]
         if timestep is not None:
             self.timestep = timestep
-        elif timestep is None and len(times) == 1:
+        elif timestep is None and len(win_starttimes) == 1:
             msg = "Can't calculate a timestep. Please set manually."
             warnings.warn(msg)
+            self.timestep = None
         else:
-            self.timestep = times[1] - times[0]
-        # Don't use unjustified higher precision.
-        self.endtime = UTCDateTime(times[-1] + self.timestep,
-                                   precision=times[-1].precision)
+            self.timestep = win_starttimes[1] - win_starttimes[0]
+        if self.timestep is not None:
+            # Don't use unjustified higher precision.
+            self.endtime = UTCDateTime(win_starttimes[-1] + self.timestep,
+                                       precision=win_starttimes[-1].precision)
         self.max_rel_power = max_rel_power
         if max_rel_power is not None:
             self.max_rel_power = self.max_rel_power.astype(float)
@@ -3128,7 +3132,7 @@ class BeamformerResult(object):
                for attr in attrs):
             raise ValueError('Frequency and slowness range parameters must be '
                              'equal.')
-        times = np.append(self.times, other.times)
+        times = np.append(self.win_starttimes, other.win_starttimes)
         if self.full_beamres is not None and other.full_beamres is not None:
             full_beamres = np.append(self.full_beamres,
                                      other.full_beamres, axis=2)
@@ -3186,10 +3190,10 @@ class BeamformerResult(object):
         if extended:
             # With pcolormesh, will miss one window if only plotting window
             # start times.
-            plot_times = list(self.times)
+            plot_times = list(self.win_starttimes)
             plot_times.append(self.endtime)
         else:
-            plot_times = self.times
+            plot_times = self.win_starttimes
         # Honestly, this is black magic to me.
         newtimes = np.array([t.timestamp / (24*3600) + 719163
                              for t in plot_times])
@@ -3385,6 +3389,8 @@ class BeamformerResult(object):
          if average_freqs is True).
         :param show: Whether to call plt.show() immediately.
         """
+        if self.full_beamres is None:
+            raise ValueError('Insufficient data for this plotting method.')
         if average_freqs is True and plot_frequencies is not None:
             warnings.warn("Ignoring plot_frequencies, only plotting an average"
                           " of all frequencies.")
@@ -3454,7 +3460,7 @@ class BeamformerResult(object):
                                  'frequencies,\n for window {} '
                                  '(starting {})'
                                  .format(self.method, iwin,
-                                         self.times[iwin]))
+                                         self.win_starttimes[iwin]))
 
         # Plotting all windows, selected frequencies.
         if average_freqs is False and average_windows is False:
@@ -3469,7 +3475,7 @@ class BeamformerResult(object):
                                          ' {} Hz,\n, window {} (starting {}).'
                                          .format(self.method,
                                                  self.freqs[ifreq], iwin,
-                                                 self.times[iwin]))
+                                                 self.win_starttimes[iwin]))
 
         if show is True:
             plt.show()
