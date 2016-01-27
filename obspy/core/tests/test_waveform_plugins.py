@@ -16,7 +16,8 @@ import numpy as np
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
+                                  WAVEFORM_ACCEPT_BYTEORDER)
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -76,7 +77,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # create waveform file with given format and byte order
                     with NamedTemporaryFile() as tf:
                         outfile = tf.name
-                        tr.write(outfile, format=format, byteorder=byteorder)
+                        if format in WAVEFORM_ACCEPT_BYTEORDER:
+                            tr.write(outfile, format=format,
+                                     byteorder=byteorder)
+                        else:
+                            tr.write(outfile, format=format)
                         if format == 'Q':
                             outfile += '.QHD'
                         # read in again using auto detection
@@ -141,6 +146,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].id, ".MANZ1..EHE")
                     elif format not in ['WAV']:
                         self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
+                    if format not in WAVEFORM_ACCEPT_BYTEORDER:
+                        break
 
     def test_isFormat(self):
         """
