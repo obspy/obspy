@@ -609,18 +609,22 @@ class PPSD(object):
 
     @property
     def current_histogram(self):
+        self.__check_histogram()
         return self._current_hist_stack
 
     @property
     def current_histogram_cumulative(self):
+        self.__check_histogram()
         return self._current_hist_stack_cumulative
 
     @property
     def current_histogram_count(self):
+        self.__check_histogram()
         return len(self._current_times_used)
 
     @property
     def current_times_used(self):
+        self.__check_histogram()
         return list(map(UTCDateTime, self._current_times_used))
 
     def _setup_period_binning(self, period_smoothing_width_octaves,
@@ -747,6 +751,21 @@ class PPSD(object):
         else:
             return False
 
+    def __check_histogram(self):
+        # check if any data has been added yet
+        if self._current_hist_stack is None:
+            if self._times_processed:
+                self.calculate_histogram()
+            else:
+                msg = 'No data accumulated'
+                raise Exception(msg)
+
+    def __invalidate_histogram(self):
+        self._current_hist_stack = None
+        self._current_hist_stack_cumulative = None
+        self._current_times_used = []
+        self._current_times_all_details = []
+
     def add(self, stream, verbose=False):
         """
         Process all traces with compatible information and add their spectral
@@ -808,6 +827,8 @@ class PPSD(object):
 
             # enforce time limits, pad zeros if gaps
             # tr.trim(t, t+PPSD_LENGTH, pad=True)
+        if changed:
+            self.__invalidate_histogram()
         return changed
 
     def __process(self, tr):
@@ -1517,14 +1538,7 @@ class PPSD(object):
         :param xaxis_frequency: If set to `True`, the x axis will be frequency
             in Hertz as opposed to the default of period in seconds.
         """
-        # check if any data has been added yet
-        if self._current_hist_stack is None:
-            if self._times_processed:
-                self.calculate_histogram()
-            else:
-                msg = 'No data to plot'
-                raise Exception(msg)
-
+        self.__check_histogram()
         fig = plt.figure()
         fig.ppsd = AttribDict()
 
