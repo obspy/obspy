@@ -162,6 +162,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
         ]
         formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
+        # Get all the test directories.
+        paths = {}
+        for f in formats:
+            path = f.dist.location + '.' + f.module_name
+            path = path.rsplit('.', 1)[0] + '.tests.data'
+            path = path.replace('.', os.path.sep)
+            if os.path.exists(path):
+                paths[f.name] = path
+        self.assertTrue(len(paths) > 0)
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -170,17 +179,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             is_format = load_entry_point(
                 format.dist.key, 'obspy.plugin.waveform.' + format.name,
                 'isFormat')
-            # get all the test directories.
-            paths = [os.path.join(f.dist.location, 'obspy',
-                                  f.module_name.split('.')[1], 'tests', 'data')
-                     for f in formats
-                     if f.module_name.split('.')[1] !=
-                     format.module_name.split('.')[1]]
-            # Remove double paths because some modules can have two file
-            # formats.
-            paths = set(paths)
-            # Remove path if one module defines two file formats.
-            for path in paths:
+            for f, path in paths.items():
+                if format.name in paths and paths[f] == paths[format.name]:
+                    continue
                 # Collect all files found.
                 filelist = []
                 # Walk every path.
