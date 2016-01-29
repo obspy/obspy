@@ -166,9 +166,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         paths = {}
         all_paths = []
         for f in formats:
-            path = f.dist.location + '.' + f.module_name
-            path = path.rsplit('.', 1)[0] + '.tests.data'
-            path = path.replace('.', os.path.sep)
+            sep = os.path.sep
+            path = f.dist.location + sep + f.module_name.replace('.', sep)
+            path = path.rsplit(sep, 1)[0] + sep + 'tests' + sep + 'data'
             all_paths.append(path)
             if os.path.exists(path):
                 paths[f.name] = path
