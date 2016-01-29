@@ -164,13 +164,16 @@ class WaveformPluginsTestCase(unittest.TestCase):
         formats = list(formats_ep.values())
         # Get all the test directories.
         paths = {}
+        all_paths = []
         for f in formats:
             path = f.dist.location + '.' + f.module_name
             path = path.rsplit('.', 1)[0] + '.tests.data'
             path = path.replace('.', os.path.sep)
+            all_paths.append(path)
             if os.path.exists(path):
                 paths[f.name] = path
-        self.assertTrue(len(paths) > 0)
+        msg = 'Test data directories do not exist:\n    '
+        self.assertTrue(len(paths) > 0, msg + '\n    '.join(all_paths))
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
