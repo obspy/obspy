@@ -56,7 +56,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             for native_byteorder in ['<', '>']:
-                for byteorder in ['<', '>', '=']:
+                for byteorder in (['<', '>', '='] if format in
+                                  WAVEFORM_ACCEPT_BYTEORDER else [None]):
                     if format == 'SAC' and byteorder == '=':
                         # SAC file format enforces '<' or '>'
                         # byteorder on writing
@@ -77,11 +78,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # create waveform file with given format and byte order
                     with NamedTemporaryFile() as tf:
                         outfile = tf.name
-                        if format in WAVEFORM_ACCEPT_BYTEORDER:
+                        if byteorder is None:
+                            tr.write(outfile, format=format)
+                        else:
                             tr.write(outfile, format=format,
                                      byteorder=byteorder)
-                        else:
-                            tr.write(outfile, format=format)
                         if format == 'Q':
                             outfile += '.QHD'
                         # read in again using auto detection
@@ -146,8 +147,6 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].id, ".MANZ1..EHE")
                     elif format not in ['WAV']:
                         self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
-                    if format not in WAVEFORM_ACCEPT_BYTEORDER:
-                        break
 
     def test_isFormat(self):
         """
