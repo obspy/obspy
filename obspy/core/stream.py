@@ -129,7 +129,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     .. rubric:: _`Further Examples`
 
-    Example waveform files may be retrieved via http://examples.obspy.org.
+    Example waveform files may be retrieved via https://examples.obspy.org.
 
     (1) Reading multiple local files using wildcards.
 
@@ -158,7 +158,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     (3) Reading a remote file via HTTP protocol.
 
         >>> from obspy import read
-        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
+        >>> st = read("https://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
@@ -171,7 +171,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         1 Trace(s) in Stream:
         XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - ... | 40.0 Hz, 635 samples
 
-        >>> st = read("http://examples.obspy.org/slist.ascii.bz2")
+        >>> st = read("https://examples.obspy.org/slist.ascii.bz2")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - ... | 40.0 Hz, 635 samples
@@ -181,7 +181,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> from future import standard_library
         >>> with standard_library.hooks(): from urllib import request
         >>> import io
-        >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
+        >>> example_url = "https://examples.obspy.org/loc_RJOB20050831023349.z"
         >>> stringio_obj = io.BytesIO(request.urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
@@ -192,7 +192,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
         >>> from obspy import read
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
-        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
+        >>> st = read("https://examples.obspy.org/loc_RJOB20050831023349.z",
         ...           starttime=dt, endtime=dt+10)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -1987,7 +1987,7 @@ class Stream(object):
             instead by using the option `seedresp` (see documentation of
             :func:`~obspy.signal.invsim.simulate_seismometer` and the
             `ObsPy Tutorial
-            <http://docs.obspy.org/master/tutorial/code_snippets/\
+            <https://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::

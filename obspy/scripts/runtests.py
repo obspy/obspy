@@ -68,7 +68,7 @@ the names of all available test cases.
     >>> tests = ['obspy.core.tests.test_stats.StatsTestCase.test_init']
     >>> obspy.core.run_tests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
 
-(7) Report test results to http://tests.obspy.org/::
+(7) Report test results to https://tests.obspy.org/::
 
         $ obspy-runtests -r
 

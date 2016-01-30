@@ -20,7 +20,7 @@ seismological time series (see Beyreuther et al. 2010, Megies et al. 2011).
 The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
-For more information visit http://www.obspy.org.
+For more information visit https://www.obspy.org.
 
 
 Dependencies

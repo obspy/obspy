@@ -59,6 +59,6 @@ test:
     - obspy-runtests -r
 
 about:
-  home: http://obspy.org
+  home: https://obspy.org
   license: LGPLv3
   summary: "ObsPy: A Python Toolbox for seismology/seismological observatories."

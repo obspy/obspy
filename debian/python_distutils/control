@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 5),
 Standards-Version: 3.9.3
 Vcs-Git: git://github.com/obspy/obspy.git
 Vcs-Browser: https://github.com/obspy/obspy
-Homepage: http://www.obspy.org
+Homepage: https://www.obspy.org
 
 Package: python-obspy
 Architecture: any
@@ -45,8 +45,8 @@ Description: ObsPy: A Python Toolbox for seismology seismological observatories
  clients to access data centers and seismological signal processing routines
  which allow the manipulation of seismological time series.
  .
- For more information visit http://www.obspy.org.
-Homepage: http://www.obspy.org
+ For more information visit https://www.obspy.org.
+Homepage: https://www.obspy.org
 
 Package: python-obspy-dbg
 Architecture: any
@@ -59,8 +59,8 @@ Description: ObsPy: A Python Toolbox for seismology
  clients to access data centers and seismological signal processing routines
  which allow the manipulation of seismological time series.
  .
- For more information visit http://www.obspy.org.
+ For more information visit https://www.obspy.org.
  .
  This package provides data and image files, primarily those needed to run the
  test suite.
-Homepage: http://www.obspy.org
+Homepage: https://www.obspy.org

@@ -445,7 +445,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     compared. Also see :func:`obspy.signal.trigger.coincidence_trigger` and the
     corresponding example in the
     `Trigger/Picker Tutorial
-    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+    <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     - computes cross correlation on each component (one stream serves as
       template, one as a longer search stream)

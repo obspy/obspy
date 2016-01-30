@@ -5,8 +5,8 @@ from obspy.signal.cross_correlation import xcorr_pick_correction
 
 
 # read example data of two small earthquakes
-st1 = obspy.read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.a.slist.gz")
-st2 = obspy.read("http://examples.obspy.org/BW.UH1..EHZ.D.2010.147.b.slist.gz")
+st1 = obspy.read("https://examples.obspy.org/BW.UH1..EHZ.D.2010.147.a.slist.gz")
+st2 = obspy.read("https://examples.obspy.org/BW.UH1..EHZ.D.2010.147.b.slist.gz")
 # select the single traces to use in correlation.
 # to avoid artifacts from preprocessing there should be some data left and
 # right of the short time window actually used in the correlation.

@@ -37,7 +37,7 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
 
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 SCHEMA_VERSION = "1.0"
 
 

@@ -2,7 +2,7 @@
 
 [![TravisCI Status](https://travis-ci.org/obspy/obspy.svg?branch=master)](https://travis-ci.org/obspy/obspy)
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/xqrbaj9phjm6l2vw/branch/master?svg=true)](https://ci.appveyor.com/project/obspy/obspy)
-[![PEP8 Status](https://docs.obspy.org/master/_images/pep8.svg)](http://pep8.obspy.org)
+[![PEP8 Status](https://docs.obspy.org/master/_images/pep8.svg)](https://pep8.obspy.org)
 [![Coverage Status](https://img.shields.io/coveralls/obspy/obspy.svg)](https://coveralls.io/r/obspy/obspy?branch=master)
 [![PyPI Version](https://img.shields.io/pypi/v/obspy.svg)](https://pypi.python.org/pypi/obspy)
 [![Downloads](https://img.shields.io/pypi/dm/obspy.svg)](https://pypi.python.org/pypi/obspy)

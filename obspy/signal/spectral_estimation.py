@@ -237,7 +237,7 @@ class PPSD(object):
         correctly taken into account during response removal.
         This is obviously not the case for a static PAZ dictionary!
 
-    .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
+    .. _`ObsPy Tutorial`: https://docs.obspy.org/tutorial/
     """
     NPZ_STORE_KEYS_LIST_TYPES = [
         # things related to processed data

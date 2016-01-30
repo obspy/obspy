@@ -1717,16 +1717,16 @@ class StreamTestCase(unittest.TestCase):
 
         # 2 - via http
         # dtype
-        tr = read('http://examples.obspy.org/test.sac', dtype=np.int32)[0]
+        tr = read('https://examples.obspy.org/test.sac', dtype=np.int32)[0]
         self.assertEqual(tr.data.dtype, np.int32)
         # start/end time
-        tr2 = read('http://examples.obspy.org/test.sac',
+        tr2 = read('https://examples.obspy.org/test.sac',
                    starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
         self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
         self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
-        tr = read('http://examples.obspy.org/test.sac', headonly=True)[0]
+        tr = read('https://examples.obspy.org/test.sac', headonly=True)[0]
         self.assertFalse(tr.data)
 
         # 3 - some example within obspy

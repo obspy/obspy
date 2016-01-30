@@ -25,7 +25,7 @@ We love pull requests! Here's a quick guide:
 
 ## Additional Resources
 
- * [Style Guide](http://docs.obspy.org/coding_style.html)
+ * [Style Guide](https://docs.obspy.org/coding_style.html)
  * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * Performance Tips:
     * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)

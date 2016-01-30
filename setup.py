@@ -12,7 +12,7 @@ al. 2010, Megies et al. 2011).
 The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
-For more information visit http://www.obspy.org.
+For more information visit https://www.obspy.org.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -664,7 +664,7 @@ def setupPackage():
         version=get_git_version(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
-        url="http://www.obspy.org",
+        url="https://www.obspy.org",
         author='The ObsPy Development Team',
         author_email='devs@obspy.org',
         license='GNU Lesser General Public License, Version 3 (LGPLv3)',
