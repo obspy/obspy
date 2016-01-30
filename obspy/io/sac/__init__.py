@@ -9,7 +9,7 @@ defined by IRIS (http://www.iris.edu/files/sac-manual/).
     The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The SAC implementation in ObsPy is a modified version of ``PySac``
 (https://github.com/LANL-Seismoacoustics/pysac), developed under U.S.

@@ -10,7 +10,7 @@
  * Copyright (C) ObsPy Development Team, 2014.
  *
  * This file is licensed under the terms of the GNU Lesser General Public
- * License, Version 3 (http://www.gnu.org/copyleft/lesser.html).
+ * License, Version 3 (https://www.gnu.org/copyleft/lesser.html).
  *
  */
 

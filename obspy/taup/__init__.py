@@ -7,7 +7,7 @@ obspy.taup - Ray Theoretical Travel Times and Paths
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 This package started out as port of the Java TauP Toolkit by [Crotwell1999]_ so
 please look there for more details about the algorithms used and further

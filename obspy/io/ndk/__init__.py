@@ -11,7 +11,7 @@ Global Centroid-Moment-Tensor (CMT) catalog.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The  `NDK
 <http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/

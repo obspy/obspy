@@ -10,7 +10,7 @@ files in the Q and ASC format used by the Seismic Handler software package
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

@@ -7,7 +7,7 @@ Python interface to the Seismic Analysis Code (SAC) file format.
     C. Satriano, L. Krischer, and J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 The SACTrace object maintains consistency between SAC headers and manages

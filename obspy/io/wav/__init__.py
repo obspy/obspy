@@ -9,7 +9,7 @@ files in the WAV(audio) format. The data are squeezed to audible frequencies.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

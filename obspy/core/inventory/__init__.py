@@ -15,7 +15,7 @@ developed as a human readable XML replacement for Dataless SEED.
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

@@ -18,7 +18,7 @@ For more information visit http://www.obspy.org.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 # Importing setuptools monkeypatches some of distutils commands so things like
 # 'python setup.py develop' work. Wrap in try/except so it is not an actual

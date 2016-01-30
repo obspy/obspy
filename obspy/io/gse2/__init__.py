@@ -14,7 +14,7 @@ gse2001.pdf.
     The ObsPy Development Team (devs@obspy.org) & Stefan Stange
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

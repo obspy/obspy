@@ -7,7 +7,7 @@ Non-geographical restrictions and constraints for the mass downloader.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

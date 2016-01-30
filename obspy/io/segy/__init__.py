@@ -12,7 +12,7 @@ and SU (Seismic Unix) format.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 .. note::
     The module can currently read files that are in accordance to the SEG Y

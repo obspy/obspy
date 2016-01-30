@@ -25,7 +25,7 @@ Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------
@@ -154,7 +154,7 @@ Further Resources
 .. _IPGP:
         http://www.ipgp.fr
 .. _`GNU Lesser General Public License, Version 3`:
-        http://www.gnu.org/copyleft/lesser.html
+        https://www.gnu.org/copyleft/lesser.html
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

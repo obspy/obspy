@@ -18,7 +18,7 @@ in a previous packet, so has to be retrieved from memory see
     The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
