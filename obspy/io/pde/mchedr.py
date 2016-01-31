@@ -200,8 +200,7 @@ class Unpickler(object):
     def _angle_between(self, u1, u2):
         """
         Returns the angle in degrees between unit vectors 'u1' and 'u2':
-        Source: http://stackoverflow.com/questions/2827393/\
-angles-between-two-n-dimensional-vectors-in-python
+        Source: https://stackoverflow.com/q/2827393
         """
         angle = np.arccos(np.dot(u1, u2))
         if np.isnan(angle):

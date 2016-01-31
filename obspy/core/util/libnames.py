@@ -24,11 +24,11 @@ def cleanse_pymodule_filename(filename):
     "_".
 
     See bug report:
-     - http://stackoverflow.com/questions/21853678/install-obspy-in-cygwin
+     - https://stackoverflow.com/q/21853678
      - See #755
 
     See also:
-     - http://stackoverflow.com/questions/7552311/
+     - https://stackoverflow.com/q/7552311
      - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
 
     >>> print(cleanse_pymodule_filename("0blup-bli.554_3!32"))

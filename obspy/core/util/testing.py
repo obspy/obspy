@@ -123,7 +123,7 @@ def write_png(arr, filename):
     """
     Custom write_png() function. matplotlib < 1.3 cannot write RGBA png files.
 
-    Modified from http://stackoverflow.com/a/19174800/1657047
+    Modified from https://stackoverflow.com/a/19174800
     """
     import zlib
     import struct

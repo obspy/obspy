@@ -364,8 +364,7 @@ from . import arrayio as _io
 # getters/setters.
 #
 # See:
-# http://stackoverflow.com/questions/2123585/ +
-#       python-multiple-properties-one-setter-getter
+# https://stackoverflow.com/q/2123585
 #
 # floats
 def _floatgetter(hdr):

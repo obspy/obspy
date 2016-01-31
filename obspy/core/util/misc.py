@@ -472,8 +472,7 @@ def factorize_int(x):
     Could be done faster but faster algorithm have much more lines of code and
     this is fast enough for our purposes.
 
-    http://stackoverflow.com/questions/14550794/\
-    python-integer-factorization-into-primes
+    https://stackoverflow.com/q/14550794
 
     >>> factorize_int(1800004)
     [2, 2, 450001]
