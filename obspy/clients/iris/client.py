@@ -620,7 +620,7 @@ class Client(object):
         (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
-        `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
+        `Flinn-Engdahl <https://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
         seismic region code or region name.
 
         :type lat: float
@@ -830,7 +830,7 @@ class Client(object):
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
-        `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+        `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 
         :type network: str
         :param network: Network code, e.g. ``'IU'``.

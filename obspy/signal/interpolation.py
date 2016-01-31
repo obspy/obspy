@@ -185,7 +185,7 @@ def lanczos_interpolation(data, old_start, old_dt, new_start, new_dt, new_npts,
                           a, window="lanczos", *args, **kwargs):
     r"""
     Function performing Lanczos resampling, see
-    http://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
+    https://en.wikipedia.org/wiki/Lanczos_resampling for details. Essentially a
     finite support version of sinc resampling (the ideal reconstruction
     filter). For large values of ``a`` it converges towards sinc resampling. If
     used for downsampling, make sure to apply an appropriate anti-aliasing

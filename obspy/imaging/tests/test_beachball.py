@@ -31,7 +31,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Create beachball examples in tests/output directory.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         data = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
                 [274, 13, 55],
                 [130, 79, 98],
@@ -128,7 +128,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Test AuxPlane function - all values are taken from MatLab.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         s1 = 132.18005257215460
         d1 = 84.240987194376590
         r1 = 98.963372641038790
@@ -179,7 +179,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Tests mt2axes.
         """
-        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
         (T, N, P) = mt2axes(mt)
         self.assertAlmostEqual(T.val, 2.52461359)

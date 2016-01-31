@@ -203,7 +203,7 @@ class UTCDateTime(object):
 
         >>> UTCDateTime.DEFAULT_PRECISION = 6
 
-    .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
+    .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
     DEFAULT_PRECISION = 6

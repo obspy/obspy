@@ -21,7 +21,7 @@ IRIS (http://service.iris.edu/irisws/):
 
 * :meth:`~obspy.clients.iris.client.Client.evalresp()` - evaluates instrument
   response information stored at the IRIS DMC and outputs ASCII data or
-  `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+  `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 * :meth:`~obspy.clients.iris.client.Client.resp()` - provides access to channel
   response information in the SEED RESP format (as used by evalresp)
 * :meth:`~obspy.clients.iris.client.Client.sacpz()` - provides access to

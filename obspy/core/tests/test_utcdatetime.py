@@ -929,7 +929,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_string_with_timezone(self):
         """
         Test that all valid ISO time zone specifications are parsed properly
-        http://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC
+        https://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC
         """
         # positive
         t = UTCDateTime("2013-09-01T12:34:56Z")
