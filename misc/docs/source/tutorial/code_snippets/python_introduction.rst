@@ -72,7 +72,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
     Official Python tutorial.
 * https://docs.python.org/3/library/index.html
     Python library reference
-* http://software-carpentry.org/v4/
+* http://software-carpentry.org/
     Very instructive video lectures on various computer related topics. A good
     starting point for learning Python and Version Control with Subversion.
 * https://ipython.org/
@@ -92,10 +92,6 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 * https://trac.osgeo.org/gdal/wiki/GdalOgrInPython
    Package which allows to directly read a GeoTiff which then can be plotted
    with the basemap toolkit.
-* http://www.tramy.us/numpybook.pdf
-   The official NumPy reference.
-* http://openbook.galileocomputing.de/python/
-   An German Python book (free).
 * https://svn.geophysik.uni-muenchen.de/trac/mtspecpy
    Multitaper spectrum bindings for Python
 
