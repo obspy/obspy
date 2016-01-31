@@ -209,9 +209,8 @@ class CoreTestCase(unittest.TestCase):
         """
         Test that an obspy trace is correctly written to SAC.
         All the header variables which are tagged as required by
-        http://www.iris.edu/manuals/sac/SAC_Manuals/FileFormatPt2.html
+        https://ds.iris.edu/files/sac-manual/manual/file_format.html
         are controlled in this test
-        also see http://www.iris.edu/software/sac/manual/file_format.html
         """
         # setUp is called before every test, not only once at the
         # beginning, that is we allocate the data just here

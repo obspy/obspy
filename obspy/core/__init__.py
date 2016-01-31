@@ -101,7 +101,7 @@ Station Metadata
 
 Station metadata are handled in a hierarchy of classes closely modelled after
 the de-facto standard format
-`FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was developed as a
+`FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was developed as a
 human readable XML replacement for Dataless SEED.
 See :mod:`obspy.core.inventory` for more details.
 

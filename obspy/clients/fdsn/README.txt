@@ -16,7 +16,7 @@ Overview
 FDSN Web service client for ObsPy.
 
 The obspy.clients.fdsn package contains a client to access web servers that
-implement the FDSN web service definitions (http://www.fdsn.org/webservices/).
+implement the FDSN web service definitions (https://www.fdsn.org/webservices/).
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

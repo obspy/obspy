@@ -744,7 +744,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information
@@ -895,7 +895,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information

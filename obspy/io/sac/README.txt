@@ -18,7 +18,7 @@ Overview
 SAC read and write support for ObsPy.
 
 This module provides read and write support for ASCII and binary SAC files as
-defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
+defined by IRIS (https://ds.iris.edu/files/sac-manual/).
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

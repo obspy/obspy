@@ -110,7 +110,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     displacement and vice versa is still under construction. It works
     but I cannot guarantee that the values are correct. For more
     information on the SAC-pole-zero format see:
-    http://www.iris.edu/files/sac-manual/commands/transfer.html. For a
+    https://ds.iris.edu/files/sac-manual/commands/transfer.html. For a
     useful discussion on polezero files and transfer functions in
     general see:
     http://seis-uk.le.ac.uk/equipment/downloads/data_management/\

@@ -3,7 +3,7 @@
 obspy.clients.iris - IRIS Web service client for ObsPy
 ======================================================
 The obspy.clients.iris package contains a client for the DMC Web services
-provided by IRIS (http://service.iris.edu/irisws/).
+provided by IRIS (https://service.iris.edu/irisws/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -15,7 +15,7 @@ Web service Interfaces
 ----------------------
 
 Each of the following methods directly wrap a single Web service provided by
-IRIS (http://service.iris.edu/irisws/):
+IRIS (https://service.iris.edu/irisws/):
 
 **Request Tools**
 

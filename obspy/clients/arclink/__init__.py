@@ -142,7 +142,7 @@ Further Resources
 .. _BGR:
         http://www.bgr.de
 .. _IRIS:
-        http://www.iris.edu
+        https://www.iris.edu/hq/
 .. _NERIES:
         http://www.neries-eu.org
 .. _INGV:

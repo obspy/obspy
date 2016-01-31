@@ -118,4 +118,4 @@ here:
 
 .. _matplotlib: http://matplotlib.org/
 
-.. _evalresp: http://www.iris.edu/ds/nodes/dmc/software/downloads/evalresp/
+.. _evalresp: https://ds.iris.edu/ds/nodes/dmc/software/downloads/evalresp/

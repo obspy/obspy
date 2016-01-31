@@ -5,7 +5,7 @@ Mass Downloader for FDSN Compliant Web Services
 ===============================================
 
 This package contains functionality to query and integrate data from any number
-of `FDSN web service <http://www.fdsn.org/webservices/>`_ providers
+of `FDSN web service <https://www.fdsn.org/webservices/>`_ providers
 simultaneously. The package aims to formulate download requests in a way that
 is convenient for seismologists without having to worry about political and
 technical data center issues. It can be used by itself or as a library

@@ -360,7 +360,7 @@ class Client(object):
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
-        `RESP <http://www.iris.edu/ds/nodes/dmc/kb/questions/60/>`_
+        `RESP <https://ds.iris.edu/ds/nodes/dmc/kb/questions/60>`_
         format (as used by evalresp). Users can query for channel response by
         network, station, channel, location and time.
 

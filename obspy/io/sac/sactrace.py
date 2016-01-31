@@ -1467,7 +1467,7 @@ class SACTrace(object):
         nzyear	= 1978
 
         """
-        # http://ds.iris.edu/files/sac-manual/commands/listhdr.html
+        # https://ds.iris.edu/files/sac-manual/commands/listhdr.html
         print(self._format_header_str(hdrlist))
 
     def lh(self, *args, **kwargs):

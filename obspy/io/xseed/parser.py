@@ -40,7 +40,7 @@ from .utils import IGNORE_ATTR, SEEDParserException, to_tag
 
 CONTINUE_FROM_LAST_RECORD = b'*'
 HEADERS = ['V', 'A', 'S']
-# @see: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
+# @see: https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf, p. 24-26
 HEADER_INFO = {
     'V': {'name': 'Volume Index Control Header',
           'blockettes': [10, 11, 12]},
@@ -69,7 +69,7 @@ class Parser(object):
     .. seealso::
 
         The SEED file format description can be found at
-        http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
+        https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf .
 
         The XML-SEED format was proposed in [Tsuboi2004]_.
     """

@@ -3,16 +3,16 @@
 obspy.io.mseed - MiniSEED read and write support
 ================================================
 This module provides read and write support for the `MiniSEED
-<http://www.iris.edu/ds/nodes/dmc/data/formats/#miniseed>`_ (and the
+<https://ds.iris.edu/ds/nodes/dmc/data/formats/#miniseed>`_ (and the
 data part of full SEED) waveform data format and some other convenient
 methods to handle MiniSEED files. It utilizes
-`libmseed <http://www.iris.edu/ds/nodes/dmc/software/downloads/libmseed/>`_,
+`libmseed <https://ds.iris.edu/ds/nodes/dmc/software/downloads/libmseed/>`_,
 a C library by Chad Trabant.
 
 .. seealso::
 
     The format is  defined in the
-    `SEED Manual <http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf>`_.
+    `SEED Manual <https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf>`_.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
