@@ -271,9 +271,6 @@ class Trace(object):
         _data_sanity_checks(data)
         # set some defaults if not set yet
         if header is None:
-            # Default values: For detail see
-            # http://www.obspy.org/wiki/\
-            # KnownIssues#DefaultParameterValuesinPython
             header = {}
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
