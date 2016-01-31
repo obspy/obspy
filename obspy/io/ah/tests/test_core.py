@@ -184,7 +184,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test reading AH v1 files of the STsR-TSG System at Borovoye.
 
-        .. seealso:: http://www.ldeo.columbia.edu/res/pi/Monitoring/Data/
+        .. seealso:: https://www.ldeo.columbia.edu/res/pi/Monitoring/Data/
         """
         # 1 - BRV.TSG.DS.lE21
         testfile = os.path.join(self.path, 'TSG', 'BRV.TSG.DS.lE21.resp')

@@ -59,7 +59,7 @@ def fetch_avatar():
 
         m = hashlib.md5()
         m.update(email.strip().lower().encode())
-        uri = 'http://www.gravatar.com/avatar/%s?d=404&size=%d' % (
+        uri = 'https://www.gravatar.com/avatar/%s?d=404&size=%d' % (
             m.hexdigest(),
             AVATAR_SIZE)
 

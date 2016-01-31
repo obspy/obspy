@@ -2,7 +2,7 @@
 """
 Decryption class of ArcLink/WebDC client for ObsPy.
 
-.. seealso:: http://www.seiscomp3.org/wiki/doc/applications/arclink-encryption
+.. seealso:: https://www.seiscomp3.org/wiki/doc/applications/arclink-encryption
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

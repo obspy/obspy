@@ -126,7 +126,7 @@ Further Resources
 -----------------
 * ArcLink protocol specifications:
 
-  * http://www.seiscomp3.org/wiki/doc/applications/arclink
+  * https://www.seiscomp3.org/wiki/doc/applications/arclink
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
   * https://raw.github.com/obspy/obspy/master/obspy/arclink/docs/protocol.txt
 
@@ -140,7 +140,7 @@ Further Resources
 .. _GEOFON:
         http://geofon.gfz-potsdam.de
 .. _BGR:
-        http://www.bgr.de
+        https://www.bgr.de
 .. _IRIS:
         https://www.iris.edu/hq/
 .. _NERIES:

@@ -96,7 +96,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    The official NumPy reference.
 * http://openbook.galileocomputing.de/python/
    An German Python book (free).
-* http://svn.geophysik.uni-muenchen.de/trac/mtspecpy
+* https://svn.geophysik.uni-muenchen.de/trac/mtspecpy
    Multitaper spectrum bindings for Python
 
 

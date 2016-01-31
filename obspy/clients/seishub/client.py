@@ -51,7 +51,7 @@ def _unpickle(data):
     if PY2:
         obj = pickle.loads(data)
     else:
-        # http://api.mongodb.org/python/current/\
+        # https://api.mongodb.org/python/current/\
         # python3.html#why-can-t-i-share-pickled-objectids-\
         # between-some-versions-of-python-2-and-3
         obj = pickle.loads(data, encoding="latin-1")

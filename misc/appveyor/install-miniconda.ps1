@@ -3,7 +3,7 @@
 # Borrwed from: Olivier Grisel and Kyle Kastner
 # License: BSD 3 clause
 
-$MINICONDA_URL = "http://repo.continuum.io/miniconda/"
+$MINICONDA_URL = "https://repo.continuum.io/miniconda/"
 
 function DownloadMiniconda ($version, $platform_suffix) {
     $webclient = New-Object System.Net.WebClient

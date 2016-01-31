@@ -50,11 +50,11 @@ class BeachballTestCase(unittest.TestCase):
                 [1, -1, 0, 0, 0, 0],
                 # Lars
                 [1, -1, 0, 0, 0, -1],
-                # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
+                # https://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
                 [179, 55, -78],
                 [10, 42.5, 90],
                 [10, 42.5, 92],
-                # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
+                # https://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
                 [150, 87, 1],
                 # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/
                 # 2nd.html
