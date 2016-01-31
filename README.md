@@ -8,7 +8,7 @@
 [![Downloads](https://img.shields.io/pypi/dm/obspy.svg)](https://pypi.python.org/pypi/obspy)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/obspy.svg)](https://pypi.python.org/pypi/obspy/)
 [![License](https://img.shields.io/pypi/l/obspy.svg)](https://pypi.python.org/pypi/obspy/)
-[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17641.svg)](http://dx.doi.org/10.5281/zenodo.17641)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.17641.svg)](https://dx.doi.org/10.5281/zenodo.17641)
 [![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/obspy/obspy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![LGPLv3](https://www.gnu.org/graphics/lgplv3-88x31.png)](https://www.gnu.org/licenses/lgpl.html)
 
