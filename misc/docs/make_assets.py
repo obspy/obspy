@@ -12,7 +12,7 @@ import shutil
 import sys
 
 
-CDN_URL = 'http://netdna.bootstrapcdn.com/bootstrap/3.1.1/'
+CDN_URL = 'https://netdna.bootstrapcdn.com/bootstrap/3.1.1/'
 
 ASSETS = {
     'source/_static/css/base.css': 'https://tests.obspy.org/static/base.css',

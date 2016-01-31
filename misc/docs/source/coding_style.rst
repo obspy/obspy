@@ -33,7 +33,7 @@ manner:
 >>> import matplotlib.pylab as plt 
 
 .. _NumPy: http://www.numpy.org/
-.. _SciPy: http://scipy.scipy.org/
+.. _SciPy: https://scipy.scipy.org/
 .. _matplotlib: http://matplotlib.org/
 
 Naming

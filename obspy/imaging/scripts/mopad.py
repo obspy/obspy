@@ -3562,7 +3562,7 @@ class BeachBall:
         point - (2,) array
 
         See
-        http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        https://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         """
         # using take instead of getitem, about ten times faster, see
         # http://wesmckinney.com/blog/?p=215

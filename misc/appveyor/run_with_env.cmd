@@ -16,7 +16,7 @@
 :: https://stackoverflow.com/a/13751649
 ::
 :: Author: Olivier Grisel
-:: License: CC0 1.0 Universal: http://creativecommons.org/publicdomain/zero/1.0/
+:: License: CC0 1.0 Universal: https://creativecommons.org/publicdomain/zero/1.0/
 @ECHO OFF
 
 SET COMMAND_TO_RUN=%*

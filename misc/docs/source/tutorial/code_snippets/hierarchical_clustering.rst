@@ -52,5 +52,5 @@ right-hand subplot:
 .. plot:: tutorial/code_snippets/hierarchical_clustering.py
 
 
-.. _`SciPy`: http://docs.scipy.org/doc/scipy/reference/cluster.html
+.. _`SciPy`: https://docs.scipy.org/doc/scipy/reference/cluster.html
 .. _`examples webserver`: https://examples.obspy.org

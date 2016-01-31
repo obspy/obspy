@@ -1058,7 +1058,7 @@ master/seishub/plugins/seismology/event.py
         SubElement(iconstyle, "scale").text = "0.5"
         icon = SubElement(iconstyle, "Icon")
         SubElement(icon, "href").text = \
-            "http://maps.google.com/mapfiles/kml/shapes/earthquake.png"
+            "https://maps.google.com/mapfiles/kml/shapes/earthquake.png"
         hotspot = SubElement(iconstyle, "hotSpot")
         hotspot.set("x", "0.5")
         hotspot.set("y", "0")

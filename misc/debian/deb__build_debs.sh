@@ -27,7 +27,7 @@ DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 CODENAME=`lsb_release -cs`
 # the lsb-release package in raspbian wheezy
-# (http://www.raspberrypi.org/downloads) does not report the codename
+# (https://www.raspberrypi.org/downloads) does not report the codename
 # correctly, so fix this
 if [ "$CODENAME" == "n/a" ] && [ `arch` == "armv6l" ]; then CODENAME=wheezy; fi
 BUILDDIR=/tmp/python-obspy_build

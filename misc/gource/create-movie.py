@@ -29,7 +29,7 @@ MUSIC = 'Severe Tire Damage.mp3'
 MUSIC_COPYRIGHT = (
     '''Music: "Severe Tire Damage" Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 3.0
-http://creativecommons.org/licenses/by/3.0/''')
+https://creativecommons.org/licenses/by/3.0/''')
 
 
 def fetch_avatar():

@@ -2,7 +2,7 @@
 
 This directory contains a collections of scripts and Dockerfiles enabling developers to test ObsPy on various Unix based operating systems.
 
-It requires a working installation of [Docker](http://www.docker.com/). It has been designed to work with a remote Docker installation so it works fine on OSX and I guess Windows as well.
+It requires a working installation of [Docker](https://www.docker.com/). It has been designed to work with a remote Docker installation so it works fine on OSX and I guess Windows as well.
 
 The `run_obspy_tests.sh` script will test the **current state of the repository** on the specified Docker image. The following command will execute the ObsPy test suite on a CentOS 6 image.
 

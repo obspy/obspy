@@ -1114,7 +1114,7 @@ class Stream(object):
 
         Short Version: For all color values, you can either use:
 
-        * legal `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_,
+        * legal `HTML color names <https://www.w3.org/TR/css3-color/#html4>`_,
           e.g. ``'blue'``,
         * HTML hex strings, e.g. ``'#EE00FF'``,
         * pass an string of a R, G, B tuple, where each of the components is a

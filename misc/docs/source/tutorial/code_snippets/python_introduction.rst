@@ -77,7 +77,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
     starting point for learning Python and Version Control with Subversion.
 * http://ipython.org/
     An enhanced interactive Python shell.
-* http://docs.scipy.org/doc/
+* https://docs.scipy.org/doc/
    NumPy and SciPy are the matrix based computation modules of Python. The
    allow fast array manipulation (functions in C). NumPy and SciPy provide
    access to FFTW, LAPACK, ATLAS or BLAS. That is svd, eigenvalues...
@@ -89,7 +89,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    renderer.
 * http://matplotlib.org/basemap/
    Package plotting 2D data on maps in Python. Similar to GMT.
-* http://trac.osgeo.org/gdal/wiki/GdalOgrInPython
+* https://trac.osgeo.org/gdal/wiki/GdalOgrInPython
    Package which allows to directly read a GeoTiff which then can be plotted
    with the basemap toolkit.
 * http://www.tramy.us/numpybook.pdf
