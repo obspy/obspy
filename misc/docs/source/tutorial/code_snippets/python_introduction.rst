@@ -75,7 +75,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 * http://software-carpentry.org/v4/
     Very instructive video lectures on various computer related topics. A good
     starting point for learning Python and Version Control with Subversion.
-* http://ipython.org/
+* https://ipython.org/
     An enhanced interactive Python shell.
 * https://docs.scipy.org/doc/
    NumPy and SciPy are the matrix based computation modules of Python. The
@@ -101,4 +101,4 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 
 
 .. _Python: https://www.python.org
-.. _IPython: http://ipython.org
+.. _IPython: https://ipython.org
