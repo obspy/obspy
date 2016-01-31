@@ -671,7 +671,7 @@ class Stream(object):
 
         :return: Stream object
         """
-        # see also http://docs.python.org/reference/datamodel.html
+        # see also https://docs.python.org/3/reference/datamodel.html
         return self.__class__(traces=self.traces[max(0, i):max(0, j):k])
 
     def append(self, trace):

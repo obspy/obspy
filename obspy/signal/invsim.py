@@ -290,7 +290,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
                                 freqs, nfreqs, rtyp, vbs, start_stage,
                                 stop_stage, stdio_flag, C.c_int(0))
         # optimizing performance, see
-        # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
         try:
             nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
         except ValueError:

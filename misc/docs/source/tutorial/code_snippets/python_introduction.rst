@@ -68,9 +68,9 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
 
 .. rubric:: Further Resources
 
-* https://docs.python.org/2/tutorial/
+* https://docs.python.org/3/tutorial/
     Official Python tutorial.
-* https://docs.python.org/2/library/index.html
+* https://docs.python.org/3/library/index.html
     Python library reference
 * http://software-carpentry.org/v4/
     Very instructive video lectures on various computer related topics. A good

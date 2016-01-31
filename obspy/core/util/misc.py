@@ -386,7 +386,7 @@ def CatchOutput():
 
     Always use with "with" statement. Does nothing otherwise.
 
-    Based on: http://bugs.python.org/msg184312
+    Based on: https://bugs.python.org/msg184312
 
     >>> with CatchOutput() as out:  # doctest: +SKIP
     ...    os.system('echo "mystdout"')

@@ -29,7 +29,7 @@ def cleanse_pymodule_filename(filename):
 
     See also:
      - https://stackoverflow.com/q/7552311
-     - http://docs.python.org/2/reference/lexical_analysis.html#identifiers
+     - https://docs.python.org/3/reference/lexical_analysis.html#identifiers
 
     >>> print(cleanse_pymodule_filename("0blup-bli.554_3!32"))
     _blup_bli_554_3_32

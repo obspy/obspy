@@ -7,7 +7,7 @@ This document aims to give an overview of how to contribute to ObsPy. It tries t
  * Make sure you have a GitHub account
  * [Download](http://git-scm.com/downloads) and install git
  * Read the [git documentation](http://git-scm.com/book/en/Git-Basics)
- 
+
 
 ## Git workflow
 
@@ -28,7 +28,7 @@ We love pull requests! Here's a quick guide:
  * [Style Guide](https://docs.obspy.org/coding_style.html)
  * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * Performance Tips:
-    * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+    * [Python](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
     * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
     * [SciPy](http://wiki.scipy.org/PerformancePython)
     * [NumPy Book](http://csc.ucdavis.edu/~chaos/courses/nlp/Software/NumPyBook.pdf)

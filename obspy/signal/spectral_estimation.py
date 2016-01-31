@@ -1305,7 +1305,7 @@ class PPSD(object):
         """
         if compress:
             # due to an bug in older python version we can't use with
-            # http://bugs.python.org/issue8601
+            # https://bugs.python.org/issue8601
             file_ = bz2.BZ2File(filename, 'wb')
             pickle.dump(self, file_)
             file_.close()
@@ -1333,10 +1333,10 @@ class PPSD(object):
             # version "0" of the pickle protocol, the pickled data is
             # guaranteed to be ASCII encoded and hence cannot start with this
             # magic number.
-            # cf. http://docs.python.org/2/library/pickle.html
+            # cf. https://docs.python.org/3/library/pickle.html
             #
             # due to an bug in older python version we can't use with
-            # http://bugs.python.org/issue8601
+            # https://bugs.python.org/issue8601
             file_ = bz2.BZ2File(filename, 'rb')
             ppsd = pickle.load(file_)
             file_.close()

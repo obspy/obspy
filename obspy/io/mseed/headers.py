@@ -28,7 +28,7 @@ clibmseed = _load_CDLL("mseed")
 # Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
 # ctypes.c_int for earlier versions.
 #
-# http://svn.python.org/projects/ctypes/trunk/
+# https://svn.python.org/projects/ctypes/trunk/
 #           ctypeslib/ctypeslib/contrib/pythonhdr.py
 if hasattr(C.pythonapi, 'Py_InitModule4'):
     Py_ssize_t = C.c_int
