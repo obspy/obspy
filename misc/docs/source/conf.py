@@ -114,6 +114,10 @@ gallery_plot_classes = ['col-xs-12',  # One column on extra-small
                         'col-sm-6',   # Two columns on small
                         'col-md-4']   # Three columns on medium and up
 
+# Use MathJax CDN script over HTTPS. (Remove when depending on Sphinx >= 1.3).
+mathjax_path = ('https://cdn.mathjax.org/mathjax/latest/MathJax.js?'
+                'config=TeX-AMS-MML_HTMLorMML')
+
 # -- Options for HTML output --------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
