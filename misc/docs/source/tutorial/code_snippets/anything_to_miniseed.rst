@@ -14,4 +14,4 @@ stations or anything else via the SeedLink_ protocol.
    :literal:
 
 .. _MiniSEED: https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf
-.. _SeedLink: https://ds.iris.edu/ds/nodes/dmc/services/seedlink/x
+.. _SeedLink: https://ds.iris.edu/ds/nodes/dmc/services/seedlink/
