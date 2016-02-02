@@ -134,3 +134,17 @@ SeedLink
 To connect to a real time SeedLink server, use the :mod:`obspy.seedlink`
 module. Also see the :ref:`ObsPy Tutorial <seedlink-tutorial>` for a more
 detailed introduction.
+
+---------------
+Syngine Service
+---------------
+
++----------------------+--------------------------------+
+| Available Data Types | Format                         |
++======================+================================+
+| Waveforms            | MiniSEED and zipped SAC files  |
++----------------------+--------------------------------+
+
+Use the :mod:`obspy.clients.syngine` module to download high-frequency global
+synthetic seismograms for any source receiver combination from the IRIS syngine
+service.
