@@ -5,9 +5,9 @@ This document aims to give an overview of how to contribute to ObsPy. It tries t
 ## Getting Started
 
  * Make sure you have a GitHub account
- * [Download](http://git-scm.com/downloads) and install git
- * Read the [git documentation](http://git-scm.com/book/en/Git-Basics)
- 
+ * [Download](https://git-scm.com/downloads) and install git
+ * Read the [git documentation](https://git-scm.com/book/en/Git-Basics)
+
 
 ## Git workflow
 
@@ -25,11 +25,11 @@ We love pull requests! Here's a quick guide:
 
 ## Additional Resources
 
- * [Style Guide](http://docs.obspy.org/coding_style.html)
+ * [Style Guide](https://docs.obspy.org/coding_style.html)
  * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * Performance Tips:
-    * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
-    * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
-    * [SciPy](http://wiki.scipy.org/PerformancePython)
+    * [Python](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+    * [NumPy and ctypes](https://www.scipy.org/Cookbook/Ctypes)
+    * [SciPy](https://wiki.scipy.org/PerformancePython)
     * [NumPy Book](http://csc.ucdavis.edu/~chaos/courses/nlp/Software/NumPyBook.pdf)
  * [Interesting reading on git, github](https://github.com/obspy/obspy/wiki/Interesting-Reading-on-Git%2C-GitHub)

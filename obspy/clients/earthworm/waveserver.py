@@ -6,7 +6,7 @@ Low-level Earthworm Wave Server tools.
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -153,7 +153,7 @@ def get_sock_char_line(sock, timeout=10.):
     indat = b'^'
     try:
         while indat[-1:] != b'\n':
-            # see http://obspy.org/ticket/383
+            # see https://github.com/obspy/obspy/issues/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
             chunks.append(indat)

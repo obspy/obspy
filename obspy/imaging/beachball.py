@@ -20,9 +20,9 @@ Most source code provided here are adopted from
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
-.. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
+.. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
 from __future__ import (absolute_import, division, print_function,
@@ -297,7 +297,7 @@ def plot_mt(T, N, P, size=200, plot_zerotrace=True,
 
     Adapted from ps_tensor / utilmeca.c / `Generic Mapping Tools (GMT)`_.
 
-    .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
+    .. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
     """
     # check if one or two widths are specified (Circle or Ellipse)
     try:
@@ -917,7 +917,7 @@ def mt2axes(mt):
     :return: tuple of :class:`~PrincipalAxis` T, N and P
 
     Adapted from ps_tensor / utilmeca.c /
-    `Generic Mapping Tools (GMT) <http://gmt.soest.hawaii.edu>`_.
+    `Generic Mapping Tools (GMT) <https://gmt.soest.hawaii.edu>`_.
     """
     (D, V) = np.linalg.eigh(mt.mt)
     pl = np.arcsin(-V[0])

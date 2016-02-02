@@ -1191,7 +1191,7 @@ ms_readleapseconds (char *envvarname)
  * Read leap seconds from the specified file and populate the global
  * leapsecondlist.  The file is expected to be standard IETF leap
  * second list format.  The list is usually available from:
- * http://www.ietf.org/timezones/data/leap-seconds.list
+ * https://www.ietf.org/timezones/data/leap-seconds.list
  * 
  * Returns positive number of leap seconds read on success and -1 on error.
  ***************************************************************************/

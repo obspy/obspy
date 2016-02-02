@@ -5,12 +5,12 @@
  *
  * Therefore ObsPy, which is licensed under the terms of the LGPL, ships an obspy_spline.c
  * which is a wrapper around the LGPL licensed SPLINE library of John Burkardt
- * (http://people.sc.fsu.edu/~jburkardt/c_src/spline/spline.html).
+ * (https://people.sc.fsu.edu/~jburkardt/c_src/spline/spline.html).
  *
  * Copyright (C) ObsPy Development Team, 2014.
  *
  * This file is licensed under the terms of the GNU Lesser General Public
- * License, Version 3 (http://www.gnu.org/copyleft/lesser.html).
+ * License, Version 3 (https://www.gnu.org/copyleft/lesser.html).
  *
  */
 

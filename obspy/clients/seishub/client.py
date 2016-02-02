@@ -6,7 +6,7 @@ SeisHub database client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -51,7 +51,7 @@ def _unpickle(data):
     if PY2:
         obj = pickle.loads(data)
     else:
-        # http://api.mongodb.org/python/current/\
+        # https://api.mongodb.org/python/current/\
         # python3.html#why-can-t-i-share-pickled-objectids-\
         # between-some-versions-of-python-2-and-3
         obj = pickle.loads(data, encoding="latin-1")
@@ -1058,7 +1058,7 @@ master/seishub/plugins/seismology/event.py
         SubElement(iconstyle, "scale").text = "0.5"
         icon = SubElement(iconstyle, "Icon")
         SubElement(icon, "href").text = \
-            "http://maps.google.com/mapfiles/kml/shapes/earthquake.png"
+            "https://maps.google.com/mapfiles/kml/shapes/earthquake.png"
         hotspot = SubElement(iconstyle, "hotSpot")
         hotspot.set("x", "0.5")
         hotspot.set("y", "0")

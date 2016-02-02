@@ -9,7 +9,7 @@ from obspy.signal.array_analysis import array_processing
 
 
 # Load data
-st = obspy.read("http://examples.obspy.org/agfa.mseed")
+st = obspy.read("https://examples.obspy.org/agfa.mseed")
 
 # Set PAZ and coordinates for all 5 channels
 st[0].stats.paz = AttribDict({

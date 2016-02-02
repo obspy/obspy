@@ -7,7 +7,7 @@ Test suite for the StationXML reader and writer.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -165,7 +165,7 @@ class StationXMLTestCase(unittest.TestCase):
         module_URI_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<ModuleURI>")][0]
         self.assertEqual(module_URI_line,
-                         "<ModuleURI>http://www.obspy.org</ModuleURI>")
+                         "<ModuleURI>https://www.obspy.org</ModuleURI>")
 
     def test_reading_other_module_tags(self):
         """

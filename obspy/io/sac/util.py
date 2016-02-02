@@ -122,7 +122,7 @@ def byteswap(*arrays):
 
     References
     ----------
-    http://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
+    https://docs.scipy.org/doc/numpy/user/basics.byteswapping.html
 
     """
     return [arr.newbyteorder('S') for arr in arrays]

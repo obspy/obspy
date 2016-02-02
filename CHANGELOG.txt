@@ -541,7 +541,7 @@ master:
      most operating systems
  - obspy.fdsn:
    * new client module to access servers based on the FDSN web service
-     definition (http://www.fdsn.org/webservices/)
+     definition (https://www.fdsn.org/webservices/)
  - obspy.gse2:
    * read/write STA2 header line which is officially mandatory but in
      pratice often not used

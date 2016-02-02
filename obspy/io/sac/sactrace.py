@@ -7,7 +7,7 @@ Python interface to the Seismic Analysis Code (SAC) file format.
     C. Satriano, L. Krischer, and J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 The SACTrace object maintains consistency between SAC headers and manages
@@ -364,8 +364,7 @@ from . import arrayio as _io
 # getters/setters.
 #
 # See:
-# http://stackoverflow.com/questions/2123585/ +
-#       python-multiple-properties-one-setter-getter
+# https://stackoverflow.com/q/2123585
 #
 # floats
 def _floatgetter(hdr):
@@ -1468,7 +1467,7 @@ class SACTrace(object):
         nzyear	= 1978
 
         """
-        # http://ds.iris.edu/files/sac-manual/commands/listhdr.html
+        # https://ds.iris.edu/files/sac-manual/commands/listhdr.html
         print(self._format_header_str(hdrlist))
 
     def lh(self, *args, **kwargs):

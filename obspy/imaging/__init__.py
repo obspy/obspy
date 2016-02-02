@@ -11,7 +11,7 @@ beachballs. The module :mod:`obspy.imaging` depends on the plotting module
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 Seismograms
@@ -23,7 +23,7 @@ arguments to adjust the plot, such as color and tick format changes.
 Additionally the start and end time of the plot can be given as
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
-Examples files may be retrieved via http://examples.obspy.org.
+Examples files may be retrieved via https://examples.obspy.org.
 
 >>> from obspy import read
 >>> st = read()
@@ -90,7 +90,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 
     respectively.
 
-.. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
+.. _`Generic Mapping Tools (GMT)`: https://gmt.soest.hawaii.edu
 .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 
 

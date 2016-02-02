@@ -23,7 +23,7 @@ characteristic functions and a coincidence triggering routine.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -532,7 +532,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
     .. note::
         An example can be found in the
         `Trigger/Picker Tutorial
-        <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+        <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     .. note::
         Setting `trigger_type=None` precomputed characteristic functions can

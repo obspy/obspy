@@ -16,7 +16,7 @@
 obspy:
     pkgrepo.managed:
         - humanname: ObsPy - Python framework for seismology
-        - name: deb http://deb.obspy.org {{ grains['oscodename'] }} main
+        - name: deb https://deb.obspy.org {{ grains['oscodename'] }} main
         - file: /etc/apt/sources.list.d/obspy.list
         - key_url: https://raw.github.com/obspy/obspy/master/misc/debian/public.key
 

@@ -6,7 +6,7 @@ Header files for the FDSN webservice.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -32,7 +32,7 @@ class FDSNRedirectException(FDSNException):
 
 
 # A curated list collecting some implementations:
-# http://www.fdsn.org/webservices/datacenters/
+# https://www.fdsn.org/webservices/datacenters/
 # http://www.orfeus-eu.org/eida/eida_odc.html
 URL_MAPPINGS = {
     "BGR": "http://eida.bgr.de",

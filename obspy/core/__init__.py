@@ -23,7 +23,7 @@ files.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Waveform Data
 -------------
@@ -55,7 +55,7 @@ Example
 A :class:`~obspy.core.stream.Stream` with an example seismogram can be created
 by calling :func:`~obspy.core.stream.read()` without any arguments.
 Local files can be read by specifying the filename, files stored on http
-servers (e.g. at http://examples.obspy.org) can be read by specifying their
+servers (e.g. at https://examples.obspy.org) can be read by specifying their
 URL. For details see the documentation of :func:`~obspy.core.stream.read`.
 
 >>> from obspy import read
@@ -101,7 +101,7 @@ Station Metadata
 
 Station metadata are handled in a hierarchy of classes closely modelled after
 the de-facto standard format
-`FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was developed as a
+`FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was developed as a
 human readable XML replacement for Dataless SEED.
 See :mod:`obspy.core.inventory` for more details.
 

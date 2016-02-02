@@ -13,5 +13,5 @@ stations or anything else via the SeedLink_ protocol.
 .. include:: anything_to_miniseed.py
    :literal:
 
-.. _MiniSEED: http://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf
-.. _SeedLink: http://www.iris.edu/ds/nodes/dmc/services/seedlink/
+.. _MiniSEED: https://www.fdsn.org/seed_manual/SEEDManual_V2.4.pdf
+.. _SeedLink: https://ds.iris.edu/ds/nodes/dmc/services/seedlink/x

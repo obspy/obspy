@@ -6,7 +6,7 @@ Module for handling ObsPy Trace objects.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -1282,7 +1282,7 @@ class Trace(object):
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
             :func:`~obspy.signal.invsim.simulate_seismometer` and the `ObsPy
-            Tutorial <http://docs.obspy.org/master/tutorial/code_snippets/\
+            Tutorial <https://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
@@ -2482,9 +2482,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read, read_inventory
-            st = read("http://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
+            st = read("https://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
             tr = st[0]
-            inv = read_inventory("http://examples.obspy.org/IU_ULN.xml")
+            inv = read_inventory("https://examples.obspy.org/IU_ULN.xml")
             tr.attach_response(inv)
             pre_filt = [0.001, 0.005, 45, 50]
             output = "DISP"

@@ -3,13 +3,13 @@
 obspy.io.sac - SAC read and write support for ObsPy
 ===================================================
 This module provides read and write support for ASCII and binary SAC-files as
-defined by IRIS (http://www.iris.edu/files/sac-manual/).
+defined by IRIS (https://ds.iris.edu/files/sac-manual/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & C. J. Ammon & J. MacCarthy
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The SAC implementation in ObsPy is a modified version of ``PySac``
 (https://github.com/LANL-Seismoacoustics/pysac), developed under U.S.

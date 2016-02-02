@@ -443,7 +443,7 @@ class PsdTestCase(unittest.TestCase):
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
             # OK) test by changing the left x limit a bit further out (by two
             # days, axis is in mpl days). See e.g.
-            # http://tests.obspy.org/30657/#1
+            # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
             fig.savefig(ic.name)
 
@@ -459,7 +459,7 @@ class PsdTestCase(unittest.TestCase):
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
             # OK) test by changing the left x limit a bit further out (by two
             # days, axis is in mpl days). See e.g.
-            # http://tests.obspy.org/30657/#1
+            # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
             fig.savefig(ic.name)
         #  b) now reuse figure and set the histogram with a different stack,

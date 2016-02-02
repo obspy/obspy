@@ -25,7 +25,7 @@ Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Basic Usage
 -----------
@@ -126,7 +126,7 @@ Further Resources
 -----------------
 * ArcLink protocol specifications:
 
-  * http://www.seiscomp3.org/wiki/doc/applications/arclink
+  * https://www.seiscomp3.org/wiki/doc/applications/arclink
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
   * https://raw.github.com/obspy/obspy/master/obspy/clients/arclink/docs/\
 protocol.txt
@@ -141,9 +141,9 @@ protocol.txt
 .. _GEOFON:
         http://geofon.gfz-potsdam.de
 .. _BGR:
-        http://www.bgr.de
+        https://www.bgr.de
 .. _IRIS:
-        http://www.iris.edu
+        https://www.iris.edu/hq/
 .. _NERIES:
         http://www.neries-eu.org
 .. _INGV:
@@ -155,7 +155,7 @@ protocol.txt
 .. _IPGP:
         http://www.ipgp.fr
 .. _`GNU Lesser General Public License, Version 3`:
-        http://www.gnu.org/copyleft/lesser.html
+        https://www.gnu.org/copyleft/lesser.html
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

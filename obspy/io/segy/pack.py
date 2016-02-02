@@ -42,7 +42,7 @@ def pack_4byte_IBM(file, data, endian='>'):
     if data.dtype != np.float64 and data.dtype != np.float32:
         raise WrongDtypeException
     # Calculate the values. The theory is explained in
-    # http://www.codeproject.com/KB/applications/libnumber.aspx
+    # https://www.codeproject.com/KB/applications/libnumber.aspx
 
     # Calculate the signs.
     signs = np.empty(len(data), dtype=np.uint8)

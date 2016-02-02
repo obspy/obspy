@@ -2,13 +2,13 @@
 """
 Decryption class of ArcLink/WebDC client for ObsPy.
 
-.. seealso:: http://www.seiscomp3.org/wiki/doc/applications/arclink-encryption
+.. seealso:: https://www.seiscomp3.org/wiki/doc/applications/arclink-encryption
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

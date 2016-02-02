@@ -26,7 +26,7 @@ significantly by explicitly specifying the file format ("-f FORMAT"), otherwise
 the format is autodetected.
 
 See also the example in the Tutorial section:
-http://tutorial.obspy.org
+https://tutorial.obspy.org
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

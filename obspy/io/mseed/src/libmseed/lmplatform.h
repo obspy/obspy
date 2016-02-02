@@ -14,7 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License (GNU-LGPL) for more details.  The
  * GNU-LGPL and further information can be found here:
- * http://www.gnu.org/
+ * https://www.gnu.org/
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *

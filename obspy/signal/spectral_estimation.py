@@ -15,7 +15,7 @@ Various Routines Related to Spectral Estimation
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -237,7 +237,7 @@ class PPSD(object):
         correctly taken into account during response removal.
         This is obviously not the case for a static PAZ dictionary!
 
-    .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
+    .. _`ObsPy Tutorial`: https://docs.obspy.org/tutorial/
     """
     NPZ_STORE_KEYS_LIST_TYPES = [
         # things related to processed data
@@ -1305,7 +1305,7 @@ class PPSD(object):
         """
         if compress:
             # due to an bug in older python version we can't use with
-            # http://bugs.python.org/issue8601
+            # https://bugs.python.org/issue8601
             file_ = bz2.BZ2File(filename, 'wb')
             pickle.dump(self, file_)
             file_.close()
@@ -1333,10 +1333,10 @@ class PPSD(object):
             # version "0" of the pickle protocol, the pickled data is
             # guaranteed to be ASCII encoded and hence cannot start with this
             # magic number.
-            # cf. http://docs.python.org/2/library/pickle.html
+            # cf. https://docs.python.org/3/library/pickle.html
             #
             # due to an bug in older python version we can't use with
-            # http://bugs.python.org/issue8601
+            # https://bugs.python.org/issue8601
             file_ = bz2.BZ2File(filename, 'rb')
             ppsd = pickle.load(file_)
             file_.close()

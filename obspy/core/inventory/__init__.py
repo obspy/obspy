@@ -4,7 +4,7 @@ obspy.core.inventory - Classes for handling station metadata
 ============================================================
 This module provides a class hierarchy to consistently handle station metadata.
 This class hierarchy is closely modelled after the upcoming de-facto standard
-format `FDSN StationXML <http://www.fdsn.org/xml/station/>`_ which was
+format `FDSN StationXML <https://www.fdsn.org/xml/station/>`_ which was
 developed as a human readable XML replacement for Dataless SEED.
 
 .. note:: IRIS is maintaining a Java tool for converting dataless SEED into
@@ -15,7 +15,7 @@ developed as a human readable XML replacement for Dataless SEED.
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

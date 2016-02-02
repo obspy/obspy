@@ -6,7 +6,7 @@ IRIS Web service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -360,7 +360,7 @@ class Client(object):
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
-        `RESP <http://www.iris.edu/ds/nodes/dmc/kb/questions/60/>`_
+        `RESP <https://ds.iris.edu/ds/nodes/dmc/kb/questions/60>`_
         format (as used by evalresp). Users can query for channel response by
         network, station, channel, location and time.
 
@@ -620,7 +620,7 @@ class Client(object):
         (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
-        `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
+        `Flinn-Engdahl <https://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
         seismic region code or region name.
 
         :type lat: float
@@ -830,7 +830,7 @@ class Client(object):
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
-        `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+        `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 
         :type network: str
         :param network: Network code, e.g. ``'IU'``.

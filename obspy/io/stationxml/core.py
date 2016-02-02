@@ -7,7 +7,7 @@ Functions dealing with reading and writing StationXML.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -37,7 +37,7 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
 
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 SCHEMA_VERSION = "1.0"
 
 

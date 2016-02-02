@@ -5,14 +5,14 @@ obspy.io.segy - SEG Y and SU read and write support for ObsPy
 
 The obspy.io.segy package contains methods in order to read and write files
 in the
-`SEG Y (rev. 1) <http://www.seg.org/documents/10161/77915/seg_y_rev1.pdf>`_
+`SEG Y (rev. 1) <https://www.seg.org/documents/10161/77915/seg_y_rev1.pdf>`_
 and SU (Seismic Unix) format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 .. note::
     The module can currently read files that are in accordance to the SEG Y

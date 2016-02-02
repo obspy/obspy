@@ -67,9 +67,9 @@ def unpack_4byte_IBM(file, count, endian='>'):
 #    # Swap the byte order if necessary.
 #    if BYTEORDER != endian:
 #        data = data.byteswap()
-#    # See http://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
+#    # See https://mail.scipy.org/pipermail/scipy-user/2009-January/019392.html
 #    # XXX: Might need check for values out of range:
-#    # http://bytes.com/topic/c/answers/
+#    # https://bytes.com/topic/c/answers/
 #    #         221981-c-code-converting-ibm-370-floating-point-ieee-754-a
 #    sign = np.bitwise_and(np.right_shift(data, 31), 0x01)
 #    exponent = np.bitwise_and(np.right_shift(data, 24), 0x7f)

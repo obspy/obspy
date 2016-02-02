@@ -6,7 +6,7 @@ Earthworm Wave Server client for ObsPy.
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """

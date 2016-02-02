@@ -6,7 +6,7 @@ Module containing a UTC-based datetime class.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -203,7 +203,7 @@ class UTCDateTime(object):
 
         >>> UTCDateTime.DEFAULT_PRECISION = 6
 
-    .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
+    .. _ISO8601:2004: https://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
     DEFAULT_PRECISION = 6

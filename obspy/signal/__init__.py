@@ -8,7 +8,7 @@ correction and coordinate transformations.
 :copyright: The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Filter
 ------
@@ -187,8 +187,8 @@ network coincidence refer to :func:`obspy.signal.trigger.coincidence_trigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
-.. _`trigger`: http://tutorial.obspy.org/code_snippets/trigger_tutorial.html
-.. _`Tutorial`: http://tutorial.obspy.org
+.. _`trigger`: https://tutorial.obspy.org/code_snippets/trigger_tutorial.html
+.. _`Tutorial`: https://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
 from __future__ import (absolute_import, division, print_function,

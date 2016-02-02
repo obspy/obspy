@@ -6,7 +6,7 @@ MAINTAINER Lion Krischer
 RUN linux32 yum install -y gcc tar bzip2
 
 
-RUN linux32 curl http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
+RUN linux32 curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
 RUN linux32 chmod +x miniconda.sh
 
 RUN linux32 ./miniconda.sh -b -p /miniconda

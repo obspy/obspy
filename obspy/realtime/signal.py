@@ -18,7 +18,7 @@ in a previous packet, so has to be retrieved from memory see
     The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -510,7 +510,7 @@ MWP_CONST *= 7900.0 * 7900.0 * 7900.0  # Pvel**3
 MWP_CONST *= 2.0  # FP average radiation pattern
 MWP_CONST *= (10000.0 / 90.0)  # distance deg -> km
 MWP_CONST *= 1000.0  # distance km -> meters
-# http://mail.python.org/pipermail/python-list/2010-February/1235196.html, ff.
+# https://mail.python.org/pipermail/python-list/2010-February/567089.html, ff.
 try:
     FLOAT_MIN = sys.float_info.min
 except AttributeError:

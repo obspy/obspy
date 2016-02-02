@@ -11,7 +11,7 @@ web services.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 Example
@@ -25,7 +25,7 @@ Don't use this module directly but utilize it through the
 >>> print(inv)  # # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
 Inventory created at ...
     Created by: ObsPy ...
-            http://www.obspy.org
+            https://www.obspy.org
     Sending institution: None
     Contains:
         Networks (2):

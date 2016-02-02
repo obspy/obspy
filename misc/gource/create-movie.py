@@ -29,7 +29,7 @@ MUSIC = 'Severe Tire Damage.mp3'
 MUSIC_COPYRIGHT = (
     '''Music: "Severe Tire Damage" Kevin MacLeod (incompetech.com)
 Licensed under Creative Commons: By Attribution 3.0
-http://creativecommons.org/licenses/by/3.0/''')
+https://creativecommons.org/licenses/by/3.0/''')
 
 
 def fetch_avatar():
@@ -59,7 +59,7 @@ def fetch_avatar():
 
         m = hashlib.md5()
         m.update(email.strip().lower().encode())
-        uri = 'http://www.gravatar.com/avatar/%s?d=404&size=%d' % (
+        uri = 'https://www.gravatar.com/avatar/%s?d=404&size=%d' % (
             m.hexdigest(),
             AVATAR_SIZE)
 

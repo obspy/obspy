@@ -7,7 +7,7 @@ Provides the Inventory class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -32,7 +32,7 @@ from .network import Network
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 
 
 def _createExampleInventory():
