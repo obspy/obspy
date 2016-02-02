@@ -92,7 +92,7 @@ KEYWORDS = [
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
     'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
@@ -323,6 +323,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
+        'SC3ML = obspy.io.seiscomp.sc3ml',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
@@ -333,6 +334,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
         'readFormat = obspy.io.stationxml.core:_read_stationxml',
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
+        ],
+    'obspy.plugin.inventory.SC3ML': [
+        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
         ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',

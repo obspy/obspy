@@ -56,6 +56,9 @@ master:
      (e.g. for use in Google Earth)
  - obspy.io.mseed:
    * Upgrade to libmseed 2.16
+ - obspy.io.seiscomp.sc3ml:
+   * New module reading SeisComP3 inventory files to ObsPy inventory objects
+     (see #1182).
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
  - obspy.io.stationtxt:
