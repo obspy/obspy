@@ -17,7 +17,14 @@ import numpy as np
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
-                                  WAVEFORM_ACCEPT_BYTEORDER)
+                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+
+
+def _get_default_eps(group, subgroup=None):
+    eps = _get_entry_points(group, subgroup=subgroup)
+    eps = {ep: f for ep, f in eps.items()
+           if any(m in f.module_name for m in DEFAULT_MODULES)}
+    return eps
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -34,8 +41,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tmpfile = tf.name
             # create empty file
             open(tmpfile, 'wb').close()
-            formats_ep = _get_entry_points('obspy.plugin.waveform',
-                                           'readFormat')
+            formats_ep = _get_default_eps('obspy.plugin.waveform',
+                                          'readFormat')
             # using format keyword
             for ep in formats_ep.values():
                 is_format = load_entry_point(
@@ -49,7 +56,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -159,7 +166,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             os.path.join('core', 'tests', 'data',
                          'IU_ULN_00_LH1_2015-07-18T02.mseed'),
         ]
-        formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
+        formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
         # Get all the test directories.
         paths = {}
@@ -212,7 +219,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 500)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -286,9 +293,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
         data = np.arange(10, dtype=np.int32)
@@ -389,9 +396,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         # find all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         stream_orig = read()
         for format in formats:
