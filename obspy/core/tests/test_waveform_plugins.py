@@ -16,7 +16,15 @@ import numpy as np
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import NamedTemporaryFile, _get_entry_points
+from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
+                                  DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
+
+
+def _get_default_eps(group, subgroup=None):
+    eps = _get_entry_points(group, subgroup=subgroup)
+    eps = {ep: f for ep, f in eps.items()
+           if any(m in f.module_name for m in DEFAULT_MODULES)}
+    return eps
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -33,8 +41,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tmpfile = tf.name
             # create empty file
             open(tmpfile, 'wb').close()
-            formats_ep = _get_entry_points('obspy.plugin.waveform',
-                                           'readFormat')
+            formats_ep = _get_default_eps('obspy.plugin.waveform',
+                                          'readFormat')
             # using format keyword
             for ep in formats_ep.values():
                 is_format = load_entry_point(
@@ -48,14 +56,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             for native_byteorder in ['<', '>']:
-                for byteorder in ['<', '>', '=']:
+                for byteorder in (['<', '>', '='] if format in
+                                  WAVEFORM_ACCEPT_BYTEORDER else [None]):
                     if format == 'SAC' and byteorder == '=':
                         # SAC file format enforces '<' or '>'
                         # byteorder on writing
@@ -76,7 +85,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # create waveform file with given format and byte order
                     with NamedTemporaryFile() as tf:
                         outfile = tf.name
-                        tr.write(outfile, format=format, byteorder=byteorder)
+                        if byteorder is None:
+                            tr.write(outfile, format=format)
+                        else:
+                            tr.write(outfile, format=format,
+                                     byteorder=byteorder)
                         if format == 'Q':
                             outfile += '.QHD'
                         # read in again using auto detection
@@ -153,8 +166,20 @@ class WaveformPluginsTestCase(unittest.TestCase):
             os.path.join('core', 'tests', 'data',
                          'IU_ULN_00_LH1_2015-07-18T02.mseed'),
         ]
-        formats_ep = _get_entry_points('obspy.plugin.waveform', 'isFormat')
+        formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
+        # Get all the test directories.
+        paths = {}
+        all_paths = []
+        for f in formats:
+            path = os.path.join(f.dist.location,
+                                *f.module_name.split('.')[:-1])
+            path = os.path.join(path, 'tests', 'data')
+            all_paths.append(path)
+            if os.path.exists(path):
+                paths[f.name] = path
+        msg = 'Test data directories do not exist:\n    '
+        self.assertTrue(len(paths) > 0, msg + '\n    '.join(all_paths))
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -163,17 +188,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
             is_format = load_entry_point(
                 format.dist.key, 'obspy.plugin.waveform.' + format.name,
                 'isFormat')
-            # get all the test directories.
-            paths = [os.path.join(f.dist.location, 'obspy',
-                                  f.module_name.split('.')[1], 'tests', 'data')
-                     for f in formats
-                     if f.module_name.split('.')[1] !=
-                     format.module_name.split('.')[1]]
-            # Remove double paths because some modules can have two file
-            # formats.
-            paths = set(paths)
-            # Remove path if one module defines two file formats.
-            for path in paths:
+            for f, path in paths.items():
+                if format.name in paths and paths[f] == paths[format.name]:
+                    continue
                 # Collect all files found.
                 filelist = []
                 # Walk every path.
@@ -202,7 +219,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 500)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _get_entry_points('obspy.plugin.waveform', 'writeFormat')
+        formats = _get_default_eps('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -276,9 +293,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
         data = np.arange(10, dtype=np.int32)
@@ -379,9 +396,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         # find all plugins with both read and write method
         formats_write = \
-            set(_get_entry_points('obspy.plugin.waveform', 'writeFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'writeFormat'))
         formats_read = \
-            set(_get_entry_points('obspy.plugin.waveform', 'readFormat'))
+            set(_get_default_eps('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         stream_orig = read()
         for format in formats:

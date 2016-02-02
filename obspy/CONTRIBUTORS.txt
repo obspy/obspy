@@ -13,6 +13,7 @@ Martin van Driel
 Fabian Engels
 Sven Egdorf
 Laura Ermert
+Tom Eulenfeld
 Marc Grunberg
 Conny Hammer
 Sebastian Heimann
@@ -43,7 +44,6 @@ Bernhard Morgenstern
 Nathaniel C. Miller
 Mark P. Panning
 Celso Reyes
-Tom Richter
 Adam Ringler
 Nicolas Rothenhäusler
 Emiliano Russo
