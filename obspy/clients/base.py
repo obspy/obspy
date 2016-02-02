@@ -188,9 +188,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :param params: Additional URL parameters.
         :type params: dict
         :param filename: String or file like object. Will download directly
-            to the file. If given, this function will return nothing.
+            to the file. If specified, this function will return nothing.
         :type filename: str or file-like object
-        :param data: If given, a POST request will be sent with the data in
+        :param data: If specified, a POST request will be sent with the data in
             the body of the request.
         :type data: dictionary, bytes, or file-like object
         :return: The response object assuming ``filename`` is ``None``.

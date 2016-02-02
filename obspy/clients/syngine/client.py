@@ -512,11 +512,11 @@ class Client(WaveformClient, HTTPClient):
         :param format: Specify output file to be either miniSEED or a ZIP
             archive of SAC files, either ``miniseed`` or ``saczip``.
         :type format: str
-        :param filename: Will download directly to the given file. If given,
-            this method will return nothing.
+        :param filename: Will download directly to the specified file. If
+            given, this method will return nothing.
         :type filename: str or file-like object
-        :param data: If given this will be sent directly sent to the Syngine
-            service as a POST payload. All other parameters except the
+        :param data: If specified this will be sent directly sent to the
+            Syngine service as a POST payload. All other parameters except the
             ``filename`` parameter will be silently ignored. Likely not that
             useful for most people.
         :type data: dictionary, bytes, or file-like object
