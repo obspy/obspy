@@ -74,8 +74,8 @@ the :meth:`~obspy.clients.syngine.client.Client.get_waveforms_bulk()` method
 for details. This example specifies a bunch of receiver coordinates and
 requests seismograms for all of these.
 
->>> bulk = [{"latitude": 10.1, "longitude": 12.2, "stacode": "AA"},
-...         {"latitude": 14.5, "longitude": 10.0, "stacode": "BB"}]
+>>> bulk = [{"latitude": 10.1, "longitude": 12.2, "stationcode": "AA"},
+...         {"latitude": 14.5, "longitude": 10.0, "stationcode": "BB"}]
 >>> st = client.get_waveforms_bulk(
 ...     model="ak135f_5s", eventid="GCMT:C201002270634A",
 ...     bulk=bulk, starttime="P-10", endtime="P+20")

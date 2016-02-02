@@ -404,13 +404,13 @@ class Client(WaveformClient, HTTPClient):
         >>> from obspy.clients.syngine import Client
         >>> c = Client()
         >>> bulk = [
-        ...     {"netcode": "IU", "stacode": "ANMO"},  # net/sta codes
-        ...     {"latitude": 47.0, "longitude": 12.1}, # coordinates
+        ...     {"networkcode": "IU", "stationcode": "ANMO"},  # net/sta codes
+        ...     {"latitude": 47.0, "longitude": 12.1},         # coordinates
         ...     {"latitude": 47.0, "longitude": 12.1,
-        ...      "netcode": "AA", "stacode": "BB",
-        ...      "loccode": "CC"},                     # optional net/sta/loc
-        ...     ["IU", "ANTO"],                        # net/sta as list
-        ...     [33.2, -123.5]                         # lat/lon as list/tuple
+        ...      "networkcode": "AA", "stationcode": "BB",
+        ...      "locationcode": "CC"},   # optional # net/sta/loc
+        ...     ["IU", "ANTO"],           # net/sta as list
+        ...     [33.2, -123.5]            # lat/lon as list/tuple
         ... ]
 
         Just pass that on to the bulk waveform method and retrieve the data.
@@ -564,6 +564,10 @@ class Client(WaveformClient, HTTPClient):
                 buf.write("{key}={value}\n".format(key=key,
                                                    value=value).encode())
 
+            _map = {"networkcode": "NETCODE",
+                    "stationcode": "STACODE",
+                    "locationcode": "LOCCODE"}
+
             # Write the bulk content.
             for item in bulk:
                 # Dictionary like items.
@@ -575,11 +579,13 @@ class Client(WaveformClient, HTTPClient):
                                 "latitude and longitude if either is given." %
                                 str(item))
                         bulk_item = "{latitude} {longitude}".format(**item)
-                        for _i in ("netcode", "stacode", "loccode"):
+                        for _i in ("networkcode", "stationcode",
+                                   "locationcode"):
                             if _i in item:
-                                bulk_item += " %s=%s" % (_i.upper(), item[_i])
-                    elif "stacode" in item and "netcode" in item:
-                        bulk_item = "{netcode} {stacode}".format(**item)
+                                bulk_item += " %s=%s" % (_map[_i], item[_i])
+                    elif "stationcode" in item and "networkcode" in item:
+                        bulk_item = "{networkcode} {stationcode}".format(
+                            **item)
                     else:
                         raise ValueError("Item '%s' in bulk is malformed." %
                                          str(item))
