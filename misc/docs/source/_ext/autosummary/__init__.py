@@ -53,12 +53,15 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import os
 import re
 import sys
 import inspect
 import posixpath
 
+from six import text_type
 from docutils.parsers.rst import directives
 from docutils.statemachine import ViewList
 from docutils import nodes
@@ -122,7 +125,7 @@ def autosummary_table_visit_html(self, node):
             par = col1_entry[0]
             for j, subnode in enumerate(list(par)):
                 if isinstance(subnode, nodes.Text):
-                    new_text = unicode(subnode.astext())
+                    new_text = text_type(subnode.astext())
                     new_text = new_text.replace(u" ", u"\u00a0")
                     par[j] = nodes.Text(new_text)
     except IndexError:
@@ -210,7 +213,7 @@ class Autosummary(Directive):
             # adapt to a change with sphinx 1.3:
             # for sphinx >= 1.3 env.config.source_suffix is a list
             # see sphinx-doc/sphinx@bf3bdcc7f505a2761c0e83c9b1550e7206929f74
-            if map(int, sphinx.__version__.split(".")[:2]) < [1, 3]:
+            if list(map(int, sphinx.__version__.split(".")[:2])) < [1, 3]:
                 suffixes = [suffixes]
             dirname = posixpath.dirname(env.docname)
 
@@ -488,7 +491,7 @@ def _import_by_name(name):
             return obj, parent
         else:
             return sys.modules[modname], None
-    except (ValueError, ImportError, AttributeError, KeyError), e:
+    except (ValueError, ImportError, AttributeError, KeyError) as e:
         raise ImportError(*e.args)
 
 
@@ -532,7 +535,7 @@ def process_generate_options(app):
     if not genfiles:
         return
 
-    from generate import generate_autosummary_docs
+    from .generate import generate_autosummary_docs
 
     genfiles = [genfile + (not genfile.endswith(ext) and ext or '')
                 for genfile in genfiles]

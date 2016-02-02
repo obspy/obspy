@@ -108,6 +108,8 @@ modindex_common_prefix = ['obspy.']
 
 # File formats to generate.
 plot_formats = [('png', 110), ('hires.png', 200)]
+if READ_THE_DOCS:
+    plot_formats += [('pdf', 200)]
 
 # Classes to use for gallery. Bootstrap-specific.
 gallery_plot_classes = ['col-xs-12',  # One column on extra-small
