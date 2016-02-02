@@ -7,7 +7,7 @@ ObsPy client for the IRIS Syngine service.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -53,7 +53,7 @@ class Client(WaveformClient, HTTPClient):
         self._base_url = base_url
 
     def _get_url(self, path):
-        return "/".join([self._base_url.rstrip("/"), path])
+        return "/".join([self._base_url, path])
 
     def _handle_requests_http_error(self, r):
         msg = "HTTP code %i when downloading '%s':\n\n%s" % (
@@ -132,7 +132,7 @@ class Client(WaveformClient, HTTPClient):
                 value = t(value)
                 # String arguments are stripped and empty strings are not
                 # allowed.
-                if t is str:
+                if t is native_str:
                     value = value.strip()
                     if not value:
                         raise ValueError("String argument '%s' must not be "
@@ -140,7 +140,6 @@ class Client(WaveformClient, HTTPClient):
                 params[key] = t(value)
 
         # These can be absolute times, relative times or phase relative times.
-        # jo
         temporal_bounds = ["starttime", "endtime"]
         for key in temporal_bounds:
             try:
@@ -153,13 +152,13 @@ class Client(WaveformClient, HTTPClient):
             elif isinstance(value, (int, float)):
                 value = float(value)
             # If a string like object, attempt to parse it to a datetime
-            # object, otherwise assume its a phase-relative time and let the
-            # Syngine service deal with the erorr handling.
+            # object, otherwise assume it`s a phase-relative time and let the
+            # Syngine service deal with the error handling.
             elif isinstance(value, (str, native_str)):
                 try:
                     value = obspy.UTCDateTime(value)
                 except:
-                    value = (value)
+                    pass
             # Last but not least just try to pass it to the datetime
             # constructor without catching the error.
             else:
@@ -185,18 +184,20 @@ class Client(WaveformClient, HTTPClient):
     def __read_to_stream(self, r):
         with io.BytesIO(r.content) as buf:
             # First try to read the file in a normal way, otherwise assume
-            # its a saczip file.
+            # it's a saczip file.
             try:
                 st = obspy.read(buf)
             except:
                 st = obspy.Stream()
-                zip_obj = zipfile.ZipFile(io.BytesIO(r.content))
+                # Seek as some bytes might have been already read.
+                buf.seek(0, 0)
+                zip_obj = zipfile.ZipFile(buf)
                 for name in zip_obj.namelist():
                     # Skip the log file.
                     if name.lower() == "syngine.log":
                         continue
-                    st += obspy.read(io.BytesIO(zip_obj.read(name)))
-                return st
+                    with io.BytesIO(zip_obj.read(name)) as buf_2:
+                        st += obspy.read(buf_2)
         return st
 
     def get_waveforms(
@@ -215,7 +216,7 @@ class Client(WaveformClient, HTTPClient):
         This method is strongly tied to the actual implementation on the
         server side. The default values and all the exception handling are
         deferred to the service. Please see `the Syngine documentation
-        <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
+        <https://ds.iris.edu/ds/products/syngine/>`_ for more details and the
         default values of all parameters.
 
         .. rubric:: Example
@@ -234,23 +235,23 @@ class Client(WaveformClient, HTTPClient):
         :param model: Specify the model.
         :type model: str
         :param network: Specify a network code combined with ``station`` to
-            identify receiver coordinates of a operating station.
+            identify receiver coordinates of an operating station.
         :type network: str
-        :param station: Specify a network code combined with ``network`` to
-            identify receiver coordinates of a operating station.
+        :param station: Specify a station code combined with ``network`` to
+            identify receiver coordinates of an operating station.
         :type station: str
         :param receiverlatitude: Specify the receiver latitude in degrees.
         :type receiverlatitude: float
         :param receiverlongitude: Specify the receiver longitude in degrees.
         :type receiverlongitude: float
-        :param networkcode: Specify the network code for synthetic. Optional
-            when using ``receiverlatitude`` and ``receiverlongitude``.
+        :param networkcode: Specify the network code for the synthetics.
+            Optional when using ``receiverlatitude`` and ``receiverlongitude``.
         :type networkcode: str
-        :param stationcode: Specify the station code for synthetic. Optional
-            when using ``receiverlatitude`` and ``receiverlongitude``.
+        :param stationcode: Specify the station code for the synthetics.
+            Optional when using ``receiverlatitude`` and ``receiverlongitude``.
         :type stationcode: str
-        :param locationcode: Specify the location code for synthetic. Optional
-            in any usage.
+        :param locationcode: Specify the location code for the synthetics.
+            Optional in any usage.
         :type locationcode: str
         :param eventid: Specify an event identifier in the form
             [catalog]:[eventid]. The centroid time and location and moment
@@ -288,10 +289,11 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example ``P-10`` (meaning Pwave arrival time minus 10
+            for example ``P-10`` (meaning P wave arrival time minus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``origintime``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str, or
+            float
         :param endtime: Specifies the desired end time for the synthetic
             trace(s). This may be specified as either:
 
@@ -302,10 +304,11 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example ``P-10`` (meaning Pwave arrival time minus 10
+            for example ``P+10`` (meaning P wave arrival time plus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``starttime``.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str,
+            or float
         :param label: Specify a label to be included in file names and HTTP
             file name suggestions.
         :type label: str
@@ -330,8 +333,8 @@ class Client(WaveformClient, HTTPClient):
         :param format: Specify output file to be either miniSEED or a ZIP
             archive of SAC files, either ``miniseed`` or ``saczip``.
         :type format: str
-        :param filename: Will download directly to the given file. If given,
-            this method will return nothing.
+        :param filename: Will download directly to the specified file. If
+            given, this method will return nothing.
         :type filename: str or file-like object
         """
         arguments = {
@@ -386,7 +389,7 @@ class Client(WaveformClient, HTTPClient):
         This method is strongly tied to the actual implementation on the
         server side. The default values and all the exception handling are
         deferred to the service. Please see the `Syngine documentation
-        <http://ds.iris.edu/ds/products/syngine/>`_ for more details and the
+        <https://ds.iris.edu/ds/products/syngine/>`_ for more details and the
         default values of all parameters.
 
         This method uses the POST functionalities of the Syngine service.
@@ -401,9 +404,9 @@ class Client(WaveformClient, HTTPClient):
         >>> from obspy.clients.syngine import Client
         >>> c = Client()
         >>> bulk = [
-        ...     {"netcode": "IU" ,"stacode": "ANMO"},  # net/sta codes
-        ...     {"latitude": 47.0,"longitude": 12.1},  # coordinates
-        ...     {"latitude": 47.0,"longitude": 12.1,
+        ...     {"netcode": "IU", "stacode": "ANMO"},  # net/sta codes
+        ...     {"latitude": 47.0, "longitude": 12.1}, # coordinates
+        ...     {"latitude": 47.0, "longitude": 12.1,
         ...      "netcode": "AA", "stacode": "BB",
         ...      "loccode": "CC"},                     # optional net/sta/loc
         ...     ["IU", "ANTO"],                        # net/sta as list
@@ -465,10 +468,11 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example ``P-10`` (meaning Pwave arrival time minus 10
+            for example ``P-10`` (meaning P wave arrival time minus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``origintime``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str,
+            or float
         :param endtime: Specifies the desired end time for the synthetic
             trace(s). This may be specified as either:
 
@@ -479,10 +483,11 @@ class Client(WaveformClient, HTTPClient):
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
             ``phase[+-]offset`` it is interpreted as a phase-relative time,
-            for example ``P-10`` (meaning Pwave arrival time minus 10
+            for example ``P+10`` (meaning P wave arrival time plus 10
             seconds). If the value is a numerical value it is interpreted as an
             offset, in seconds, from the ``starttime``.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, str,
+            or float
         :param label: Specify a label to be included in file names and HTTP
             file name suggestions.
         :type label: str

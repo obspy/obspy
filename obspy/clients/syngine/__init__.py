@@ -4,7 +4,7 @@ obspy.clients.syngine - Client for the IRIS Syngine service
 ===========================================================
 
 This module offers methods to download from the IRIS syngine service
-(http://ds.iris.edu/ds/products/syngine/). The service is able to generate
+(https://ds.iris.edu/ds/products/syngine/). The service is able to generate
 fully three dimensional synthetics through various 1D Earth models with
 arbitrary source-receiver geometries and source mechanisms.
 
@@ -12,7 +12,7 @@ arbitrary source-receiver geometries and source mechanisms.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 
 Basic Usage
@@ -44,7 +44,7 @@ IU.ANMO.SE.MXE | 2010-02-27T06:35:14... - ... | 4.0 Hz, 15520 samples
 
 The available parameters are explained in detail in the
 :meth:`~obspy.clients.syngine.client.Client.get_waveforms()` method and on
-the `Syngine <http://ds.iris.edu/ds/products/syngine/>`_ website.
+the `Syngine <https://ds.iris.edu/ds/products/syngine/>`_ website.
 
 
 The queries are quite flexible. The following uses a station name wildcard

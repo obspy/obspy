@@ -18,6 +18,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.syngine import Client
 from obspy.clients.base import DEFAULT_TESTING_USER_AGENT, ClientHTTPException
 
+
 BASE_URL = "http://service.iris.edu/irisws/syngine/1"
 
 
@@ -63,13 +64,13 @@ class ClientTestCase(unittest.TestCase):
         """
         info = self.c.get_model_info("test")
 
-        self.assertTrue(isinstance(info, obspy.core.AttribDict))
+        self.assertIsInstance(info, obspy.core.AttribDict)
         # Check two random keys.
         self.assertEqual(info.dump_type, "displ_only")
         self.assertEqual(info.time_scheme, "newmark2")
         # Check that both arrays have been converted to numpy arrays.
-        self.assertTrue(isinstance(info.slip, np.ndarray))
-        self.assertTrue(isinstance(info.sliprate, np.ndarray))
+        self.assertIsInstance(info.slip, np.ndarray)
+        self.assertIsInstance(info.sliprate, np.ndarray)
 
     def test_get_available_models_mock(self):
         with mock.patch("requests.get") as p:
@@ -85,10 +86,9 @@ class ClientTestCase(unittest.TestCase):
 
     def test_get_available_models(self):
         models = self.c.get_available_models()
-        self.assertTrue(isinstance(models, dict))
-        keys = list(models.keys())
-        self.assertTrue(len(keys) > 3)
-        self.assertIn("ak135f_5s", keys)
+        self.assertIsInstance(models, dict)
+        self.assertGreater(len(models), 3)
+        self.assertIn("ak135f_5s", models)
         # Check random key.
         self.assertEqual(models["ak135f_5s"]["components"],
                          "vertical and horizontal")
@@ -128,7 +128,7 @@ class ClientTestCase(unittest.TestCase):
                                       components="ZRT",
                                       eventid="GCMT:M110302J")
 
-        self.assertTrue(isinstance(st, obspy.Stream))
+        self.assertIsInstance(st, obspy.Stream)
 
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[1]["url"],
@@ -153,7 +153,7 @@ class ClientTestCase(unittest.TestCase):
                                       endtime=1800.0,
                                       eventid="GCMT:M110302J")
 
-        self.assertTrue(isinstance(st, obspy.Stream))
+        self.assertIsInstance(st, obspy.Stream)
 
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[1]["url"],
@@ -179,7 +179,7 @@ class ClientTestCase(unittest.TestCase):
                                       endtime="ScS+60",
                                       eventid="GCMT:M110302J")
 
-        self.assertTrue(isinstance(st, obspy.Stream))
+        self.assertIsInstance(st, obspy.Stream)
 
         self.assertEqual(p.call_count, 1)
         self.assertEqual(p.call_args[1]["url"],
@@ -197,14 +197,14 @@ class ClientTestCase(unittest.TestCase):
 
     def test_error_handling_arguments(self):
         # Floating points value
-        self.assertRaises(ValueError, self.c.get_waveforms, model="test",
-                          receiverlatitude="a")
+        with self.assertRaises(ValueError):
+            self.c.get_waveforms(model="test", receiverlatitude="a")
         # Int.
-        self.assertRaises(ValueError, self.c.get_waveforms, model="test",
-                          kernelwidth="a")
+        with self.assertRaises(ValueError):
+            self.c.get_waveforms(model="test", kernelwidth="a")
         # Time.
-        self.assertRaises(TypeError, self.c.get_waveforms, model="test",
-                          origintime="a")
+        with self.assertRaises(TypeError):
+            self.c.get_waveforms(model="test", origintime="a")
 
     def test_source_mechanisms_mock(self):
         r = RequestsMockResponse()
@@ -251,8 +251,8 @@ class ClientTestCase(unittest.TestCase):
 
     def test_error_handling(self):
         """
-        Tests the error handling. The clients just passes on most things to
-        syngine and relies on the service for the error detection.
+        Tests the error handling. The clients just pass on most things to
+        syngine and rely on the service for the error detection.
         """
         # Wrong components.
         with self.assertRaises(ClientHTTPException) as cm:

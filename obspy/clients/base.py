@@ -193,7 +193,7 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         :param data: If given, a POST request will be sent with the data in
             the body of the request.
         :type data: dictionary, bytes, or file-like object
-        :return: The response object resulting in the error.
+        :return: The response object assuming ``filename`` is ``None``.
         :rtype: :class:`requests.Response`
         """
         _request_args = {"url": url,
