@@ -299,7 +299,7 @@ class Client(WaveformClient, HTTPClient):
 
             * an absolute date and time
             * a phase-relative offset
-            * an offset from origin time in seconds
+            * an offset from start time in seconds
 
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
@@ -478,7 +478,7 @@ class Client(WaveformClient, HTTPClient):
 
             * an absolute date and time
             * a phase-relative offset
-            * an offset from origin time in seconds
+            * an offset from start time in seconds
 
             If the value is recognized as a date and time, it is interpreted
             as an absolute time. If the value is in the form
