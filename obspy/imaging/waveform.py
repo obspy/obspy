@@ -1160,7 +1160,9 @@ class WaveformPlotting(object):
                 for _i, tr in enumerate(self.stream):
                     self._tr_offsets[_i] = tr.stats.distance
             except:
-                msg = 'Define trace.stats.distance in meters to epicenter'
+                msg = 'trace.stats.distance undefined ' +\
+                      '(set before plotting [in m], ' +\
+                      'or use the ev_coords argument)'
                 raise ValueError(msg)
         else:
             # Define offset as degree from epicenter
