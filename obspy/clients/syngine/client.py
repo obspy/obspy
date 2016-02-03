@@ -404,11 +404,11 @@ class Client(WaveformClient, HTTPClient):
         >>> from obspy.clients.syngine import Client
         >>> c = Client()
         >>> bulk = [
-        ...     {"networkcode": "IU", "stationcode": "ANMO"},  # net/sta codes
-        ...     {"latitude": 47.0, "longitude": 12.1},         # coordinates
+        ...     {"network": "IU", "station": "ANMO"},  # net/sta codes
+        ...     {"latitude": 47.0, "longitude": 12.1}, # coordinates
         ...     {"latitude": 47.0, "longitude": 12.1,
         ...      "networkcode": "AA", "stationcode": "BB",
-        ...      "locationcode": "CC"},   # optional # net/sta/loc
+        ...      "locationcode": "CC"},   # optional net/sta/loc
         ...     ["IU", "ANTO"],           # net/sta as list
         ...     [33.2, -123.5]            # lat/lon as list/tuple
         ... ]
@@ -583,8 +583,8 @@ class Client(WaveformClient, HTTPClient):
                                    "locationcode"):
                             if _i in item:
                                 bulk_item += " %s=%s" % (_map[_i], item[_i])
-                    elif "stationcode" in item and "networkcode" in item:
-                        bulk_item = "{networkcode} {stationcode}".format(
+                    elif "station" in item and "network" in item:
+                        bulk_item = "{network} {station}".format(
                             **item)
                     else:
                         raise ValueError("Item '%s' in bulk is malformed." %

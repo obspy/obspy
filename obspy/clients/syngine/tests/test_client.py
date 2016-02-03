@@ -321,7 +321,7 @@ class ClientTestCase(unittest.TestCase):
             p.side_effect = side_effect
             self.c.get_waveforms_bulk(
                     model="ak135f_5s", bulk=[
-                        {"networkcode": "IU", "stationcode": "ANMO"},
+                        {"network": "IU", "station": "ANMO"},
                         {"latitude": 12, "longitude": 13.1},
                         {"latitude": 12, "longitude": 13.1,
                          "networkcode": "IU"},
