@@ -98,7 +98,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
     #ax2d.spines['top'].set_color('none')
     if isinstance(kind, list):
         nplots = len(kind)
-        maxcolumns = 3 # the maximum number of plots in one row
+        maxcolumns = 3  # the maximum number of plots in one row
         ncols = min(nplots, maxcolumns)
         nrows = int(np.ceil(nplots / ncols))
         figsize = ncols * 5., nrows * 5.
@@ -139,8 +139,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
     elif kind == 'vtk':
         # this saves two files, one with the vector field and one
         # with the nodal lines of the beachball
-        fname_vtkrpattern = 'rpattern.vtk'
-        fname_vtkbeachlines = 'beachlines.vtk'
+        fname_rpattern = 'rpattern.vtk'
+        fname_beachlines = 'beachlines.vtk'
         _write_vtk_files(ned_mt,
                          fname_rpattern=fname_rpattern,
                          fname_beachlines=fname_beachlines)
@@ -176,7 +176,7 @@ def _plot_p_quiver(ax3d, ned_mt):
         loc *= (1. + mag/2.)
         color = cmap(norm(mag))
         ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                  length=abs(mag)/2., color=color)
+                    length=abs(mag)/2., color=color)
     ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
              xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
              xticklabels=['South', 'North'],
@@ -273,7 +273,7 @@ def _plot_s_quiver(ax3d, ned_mt):
         cmap = plt.get_cmap('Greens')
         color = cmap(norm(mag))
         ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                  length=abs(mag)/5., color=color)
+                    length=abs(mag)/5., color=color)
     ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
              xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
              xticklabels=['South', 'North'],
@@ -410,6 +410,7 @@ def _plot_mayavi(ned_mt):
     plot_sphere(0.7)
 
     mlab.show()
+
 
 def _write_vtk_files(ned_mt, fname_rpattern='rpattern.vtk',
                      fname_beachlines='beachlines.vtk'):
