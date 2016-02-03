@@ -107,7 +107,8 @@ INSTALL_REQUIRES = [
     'lxml',
     'setuptools',
     'sqlalchemy',
-    'decorator']
+    'decorator',
+    'requests']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2', 'pyimgur'],
     'arclink': ['m2crypto'],

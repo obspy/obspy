@@ -98,4 +98,5 @@ The functionality is provided through the following packages:
    obspy.clients.neic
    obspy.clients.seedlink
    obspy.clients.seishub
+   obspy.clients.syngine
    obspy.db

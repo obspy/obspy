@@ -28,7 +28,7 @@ install:
   - "conda create -q --yes -n test python=%PYTHON_VERSION%"
   - "activate test"
   # Install default dependencies
-  - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy flake8 mock nose gdal decorator"
+  - "conda install -q --yes pip numpy scipy matplotlib=1.3.1 lxml sqlalchemy flake8 mock nose gdal decorator requests"
   # additional dependecies
   - "pip install suds-jurko"
   - "pip install pyimgur"

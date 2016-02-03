@@ -50,31 +50,200 @@ class MyNewClient(WaveformClient, StationClient):
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import with_metaclass
+from future.utils import PY2, with_metaclass
 
 from abc import ABCMeta, abstractmethod
+import io
+import platform
+import sys
+
+import requests
+
+import obspy
+
+
+# Default user agents all HTTP clients should utilize.
+if PY2:
+    platform_ = platform.platform().decode("ascii", "ignore")
+else:
+    encoding = sys.getdefaultencoding() or "UTF-8"
+    platform_ = platform.platform().encode(encoding).decode("ascii", "ignore")
+# The default User Agent that will be sent with every request.
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (
+    obspy.__version__, platform_, platform.python_version())
+# The user agent tests should use by default.
+DEFAULT_TESTING_USER_AGENT = "ObsPy %s (test suite) (%s, Python %s)" % (
+    obspy.__version__, platform_, platform.python_version())
 
 
 class ClientException(Exception):
-    """Base exception for Client classes."""
+    """
+    Base exception for Client classes.
+    """
     pass
 
 
-class BaseClient(with_metaclass(ABCMeta, object)):
+class ClientHTTPException(ClientException,
+                          requests.exceptions.RequestException):
+    """
+    Exception that should be raised for all HTTP exceptions.
+
+    Inherits from :class:`requests.exceptions.Request.Exception` so catching
+    the main requests exception catches this one as well.
+    """
+    pass
+
+
+class BaseClient(object):
     """
     Base class for common methods.
-
     """
+    def __init__(self, debug=False):
+        self._debug = debug
+
+
+class RemoteBaseClient(with_metaclass(ABCMeta, BaseClient)):
+    def __init__(self, debug=False, timeout=120):
+        """
+        Base class for all remote mixin classes.
+
+        :param debug: Passed on to the :class:`BaseClient` constructor.
+        :type debug: bool
+        :param timeout: The network timeout in seconds.
+        :type timeout: float
+        """
+        self._timeout = timeout
+        BaseClient.__init__(self, debug=debug)
+
     @abstractmethod
     def get_service_version(self):
-        """Return a semantic version number as a string."""
+        """
+        Return a semantic version number of the remote service as a string.
+        """
         pass
+
+
+class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
+    """
+    Mix-in class to add HTTP capabilities.
+
+    :param debug: Passed on to the :class:`BaseClient` constructor.
+    :type debug: bool
+    :param timeout: Passed on to the :class:`RemoteBaseClient` constructor.
+    :type timeout: float
+
+    .. rubric:: Example
+
+    from obspy.clients.base import (WaveformClient, HTTPClient,
+                                    DEFAULT_USER_AGENT)
+
+    class NewClient(WaveformClient, HTTPClient):
+        def __init__(self, user_agent=DEFAULT_USER_AGENT, debug=False,
+                     timeout=20):
+            HTTPClient.__init__(self, user_agent=user_agent, debug=debug,
+                                timeout=timeout)
+
+        def _handle_requests_http_error(self, r):
+            r.raise_for_status()
+
+        def get_service_version(self):
+            ...
+
+        def get_waveforms(...):
+            ...
+    """
+    def __init__(self, debug=False, timeout=120,
+                 user_agent=DEFAULT_USER_AGENT):
+        self._user_agent = user_agent
+        RemoteBaseClient.__init__(self, debug=debug, timeout=timeout)
+
+    @abstractmethod
+    def _handle_requests_http_error(self, r):
+        """
+        Error handling for the HTTP errors.
+
+        Method called when the _download() method downloads something with a
+        status code different than 200.
+
+        The error codes mean different things for different web services
+        thus this needs to be implemented by every HTTPClient.
+
+        :param r: The response object resulting in the error.
+        :type r: :class:`requests.Response`
+        """
+        pass
+
+    def _download(self, url, params=None, filename=None, data=None):
+        """
+        Download the URL with GET or POST and the chosen parameters.
+
+        Will call the ``_handle_requests_http_error()`` method if the response
+        comes back with an HTTP code other than 200. Returns the response
+        object if successful and ``filename`` is not given - if given it will
+        save the response to the specified file and return ``None``.
+
+        By default it will send a GET request - if data is given it will
+        send a POST request.
+
+        :param url: The URL to download from.
+        :type url: str
+        :param params: Additional URL parameters.
+        :type params: dict
+        :param filename: String or file like object. Will download directly
+            to the file. If specified, this function will return nothing.
+        :type filename: str or file-like object
+        :param data: If specified, a POST request will be sent with the data in
+            the body of the request.
+        :type data: dictionary, bytes, or file-like object
+        :return: The response object assuming ``filename`` is ``None``.
+        :rtype: :class:`requests.Response`
+        """
+        _request_args = {"url": url,
+                         "headers": {"User-Agent": self._user_agent},
+                         "params": params}
+
+        # Stream to file - no need to keep it in memory for large files.
+        if filename:
+            _request_args["stream"] = True
+
+        if self._debug:
+            # Construct the same URL requests would construct.
+            from requests import PreparedRequest  # noqa
+            p = PreparedRequest()
+            p.prepare(method="GET", **_request_args)
+            print("Downloading %s ..." % p.url)
+
+        if data is None:
+            r = requests.get(**_request_args)
+        else:
+            _request_args["data"] = data
+            r = requests.post(**_request_args)
+
+        # Only accept code 200.
+        if r.status_code != 200:
+            self._handle_requests_http_error(r)
+
+        # Return if nothing else happens.
+        if not filename:
+            return r
+
+        _chunk_size = 1024
+        if hasattr(filename, "write"):
+            for chunk in r.iter_content(chunk_size=_chunk_size):
+                if not chunk:
+                    continue
+                filename.write(chunk)
+        else:
+            with io.open(filename, "wb") as fh:
+                for chunk in r.iter_content(chunk_size=_chunk_size):
+                    if not chunk:
+                        continue
+                    fh.write(chunk)
 
 
 class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Stream objects.
-
     """
     @abstractmethod
     def get_waveforms(self, *args, **kwargs):
@@ -102,7 +271,6 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: Limit results to time series samples on or before the
             specified end time
-
         """
         pass
 
@@ -110,7 +278,6 @@ class WaveformClient(with_metaclass(ABCMeta, BaseClient)):
 class EventClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Catalog objects.
-
     """
     @abstractmethod
     def get_events(self, *args, **kwargs):
@@ -163,7 +330,6 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
         :type magnitudetype: str, optional
         :param magnitudetype: Specify a magnitude type to use for testing the
             minimum and maximum limits.
-
         """
         pass
 
@@ -171,7 +337,6 @@ class EventClient(with_metaclass(ABCMeta, BaseClient)):
 class StationClient(with_metaclass(ABCMeta, BaseClient)):
     """
     Base class for Clients supporting Inventory objects.
-
     """
     @abstractmethod
     def get_stations(self, *args, **kwargs):
@@ -237,6 +402,5 @@ class StationClient(with_metaclass(ABCMeta, BaseClient)):
         :param maxradius: Limit results to stations within the specified
             maximum number of degrees from the geographic point defined by the
             latitude and longitude parameters.
-
         """
         pass
