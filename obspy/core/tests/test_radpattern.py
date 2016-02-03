@@ -24,12 +24,13 @@ class RadPatternTestCase(unittest.TestCase):
 
         # mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
         # Peru 2001/6/23 20:34:23:
-        # mt = [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
+        mt = [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
         # mt = [1., -0.5, -0.5, 0., 0, 0.1]
         # mt = [0., 0., 0., 0., 1, 0.]
-        mt = [-1., 0.5, 0.5, 0., 0, 0.]
+        #mt = [-1., 0.5, 0.5, 0., 0, 0.]
 
-        plot_3drpattern(mt, kind='p_sphere')
+        plot_3drpattern(mt, kind=['s_sphere', 'p_sphere',
+                        'beachball', 's_quiver', 'p_quiver'])
 
 
 def suite():

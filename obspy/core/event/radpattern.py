@@ -29,7 +29,7 @@ from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
 
 def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
-                    p_sphere_tension='inwards'):
+                    p_sphere_direction='inwards'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
     calculations are based on Aki & Richards Eq 4.29
@@ -84,381 +84,467 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         msg = 'coordinate system {:s} not known'.format(coordinate_system)
         raise NotImplementedError(msg)
 
+    # adjusted beachball plot:
+    #ax3d = fig.add_axes((0.01, 0.01, 0.48, 0.98), projection='3d')
+    #size = 0.8  # shrink ax to make it more similar to the 3d plot
+    #width, height = size * 0.5, size * 1.
+    #left = 0.5 + (0.5-width)/2.
+    #bottom = (1.-height)/2.
+    #axbball = fig.add_axes((left, bottom, width, height))
 
-    if kind == 'p_quiver':
-        # precompute even spherical grid and directional cosine array
-        points = spherical_grid(nlat=14)
+    #ax2d.spines['left'].set_position('center')
+    #ax2d.spines['right'].set_color('none')
+    #ax2d.spines['bottom'].set_position('center')
+    #ax2d.spines['top'].set_color('none')
+    if isinstance(kind, list):
+        nplots = len(kind)
+        maxcolumns = 3 # the maximum number of plots in one row
+        ncols = min(nplots, maxcolumns)
+        nrows = int(np.ceil(nplots / ncols))
+        figsize = ncols * 5., nrows * 5.
+        fig = plt.figure(figsize=figsize, facecolor='white')
 
-        # get radiation pattern
-        disp = farfield_p(ned_mt, points)
+        for iplot in range(nplots):
+            iax = iplot + 1
+            if kind[iplot] == 'p_quiver':
+                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
+                _plot_p_quiver(ax3d, ned_mt)
 
-        # normalized magnitude:
-        magn = np.sum(disp * points, axis=0)
-        magn /= np.max(np.abs(magn))
+            elif kind[iplot] == 'p_sphere':
+                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
+                _plot_p_sphere(ax3d, ned_mt, p_sphere_direction)
 
-        # plot
-        # there is a mlab3d bug that quiver vector colors and lengths 
-        # can only be changed if we plot each arrow independently
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        for loc, vec, mag in zip(points.T, disp.T, magn.T):
-            # compute colours and displace points along normal
-            norm = plt.Normalize(-1., 1.)
-            cmap = plt.get_cmap('bwr')
-            loc *= (1. + mag/2.)
-            color = cmap(norm(mag))
-            ax.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                      length=abs(mag)/2., color=color)
-        ax.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5))
-        plt.show()
+            elif kind[iplot] == 's_quiver':
+                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
+                _plot_s_quiver(ax3d, ned_mt)
 
-    elif kind == 'p_sphere':
-        # generate spherical mesh that is aligned with the moment tensor null
-        # axis. MOPAD should use NED coordinate system to avoid internal
-        # coordinate transformations
-        mtensor = MomentTensor(ned_mt, system='NED')
+            elif kind[iplot] == 's_sphere':
+                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
+                _plot_s_sphere(ax3d, ned_mt)
 
-        # use the most isolated eigenvector as axis of symmetry
-        evecs = mtensor.get_eigvecs()
-        evals = np.abs(mtensor.get_eigvals())**2
-        evals_dev = np.abs(evals-np.mean(evals))
-        if p_sphere_tension == 'outwards':
-            evec_max = evecs[np.argmax(evals_dev)]
-        elif p_sphere_tension == 'inwards':
-            evec_max = evecs[np.argmax(evals)]
+            elif kind[iplot] == 'beachball':
+                ax2d = fig.add_subplot(nrows, ncols, iax)
+                ax2d.spines['left'].set_position('center')
+                ax2d.spines['right'].set_color('none')
+                ax2d.spines['bottom'].set_position('center')
+                ax2d.spines['top'].set_color('none')
+                _plot_beachball(ax2d, mt)
 
-        symmax = np.ravel(evec_max)
-
-        # make rotation matrix (after numpy mailing list)
-        zaxis = np.array([0., 0., 1.])
-        raxis = np.cross(symmax, zaxis)  # rotate z axis to null
-        raxis_norm = np.linalg.norm(raxis)
-        if raxis_norm < 1e-10:  # check for zero or 180 degree rotation
-            rotmtx = np.eye(3, dtype=np.float64)
-        else:
-            raxis /= raxis_norm
-
-            # angle between z and null
-            angle = np.arccos(np.dot(zaxis, symmax))
-
-            eye = np.eye(3, dtype=np.float64)
-            raxis2 = np.outer(raxis, raxis)
-            skew = np.array([[0, raxis[2], -raxis[1]],
-                             [-raxis[2], 0, raxis[0]],
-                             [raxis[1], -raxis[0], 0]])
-
-            rotmtx = (raxis2 + np.cos(angle) * (eye - raxis2) +
-                      np.sin(angle) * skew)
-
-        # make uv sphere that is aligned with z-axis
-        ntheta, nphi = 100, 100
-        sshape = (ntheta, nphi)
-        u = np.linspace(0, 2 * np.pi, nphi)
-        v = np.linspace(0, np.pi, ntheta)
-
-        x = np.outer(np.cos(u), np.sin(v))
-        y = np.outer(np.sin(u), np.sin(v))
-        z = np.outer(np.ones(np.size(u)), np.cos(v))
-
-        # ravel point array and rotate them to the null axis
-        points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
-        points = np.dot(rotmtx, points)
-
-        # get radiation pattern
-        disp = farfield_p(ned_mt, points)
-        magn = np.sum(disp * points, axis=0)
-        magn /= np.max(np.abs(magn))
-
-        # compute colours and displace points along normal
-        norm = plt.Normalize(-1., 1.)
-        cmap = plt.get_cmap('bwr')
-        if p_sphere_tension == 'outwards':
-            points *= (1. + np.abs(magn) / 2.)
-        elif p_sphere_tension == 'inwards':
-            points *= (1. + magn/2.)
-        colors = np.array([cmap(norm(val)) for val in magn])
-        colors = colors.reshape(ntheta, nphi, 4)
-
-        x = points[0].reshape(sshape)
-        y = points[1].reshape(sshape)
-        z = points[2].reshape(sshape)
-
-        # plot 3d radiation pattern and beachball
-        fig = plt.figure(figsize=plt.figaspect(0.5), facecolor='white')
-        ax3d = fig.add_axes((0.01, 0.01, 0.48, 0.98), projection='3d')
-        ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
-        # uncomment next line to plot the null axis
-        # ax3d.plot([0, null[0]], [0, null[1]], [0, null[2]])
-        ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
-                 xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
-                 xticklabels=['South', 'North'],
-                 yticklabels=['West', 'East'],
-                 zticklabels=['Up', 'Down'],
-                 title='p-wave farfield')
-        ax3d.view_init(elev=-110., azim=0.)
-
-        bball = Beach(mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
-                      bgcolor=cmap(norm(-0.7)))
-        size = 0.8  # shrink ax to make it more similar to the 3d plot
-        width, height = size * 0.5, size * 1.
-        left = 0.5 + (0.5-width)/2.
-        bottom = (1.-height)/2.
-        axbball = fig.add_axes((left, bottom, width, height))
-
-        axbball.spines['left'].set_position('center')
-        axbball.spines['right'].set_color('none')
-        axbball.spines['bottom'].set_position('center')
-        axbball.spines['top'].set_color('none')
-
-        axbball.add_collection(bball)
-        axbball.set(xlim=(-50, 50), ylim=(-50, 50),
-                    xticks=(-40, 40), yticks=(-40, 40),
-                    xticklabels=('West', 'East'),
-                    yticklabels=('South', 'North'),
-                    title='lower hemisphere stereographical projection')
-
-        plt.show()
-
-    elif kind == 's_quiver':
-        # precompute even spherical grid and directional cosine array
-        points = spherical_grid(nlat=14)
-
-        # get radiation pattern
-        disp = farfield_s(ned_mt, points)
-
-        # normalized magnitude (positive only):
-        magn = np.sqrt(np.sum(disp * disp, axis=0))
-        magn /= np.max(np.abs(magn))
-
-        # plot
-        # there is a mlab3d bug that quiver vector colors and lengths 
-        # can only be changed if we plot each arrow independently
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        for loc, vec, mag in zip(points.T, disp.T, magn.T):
-            norm = plt.Normalize(-1., 1.)
-            cmap = plt.get_cmap('Greens')
-            color = cmap(norm(mag))
-            ax.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                      length=abs(mag)/5., color=color)
-        ax.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5))
-        plt.show()
-        plt.show()
-
-    elif kind == 's_sphere':
-        # generate spherical mesh that is aligned with the moment tensor null
-        # axis. MOPAD should use NED coordinate system to avoid internal
-        # coordinate transformations
-        mtensor = MomentTensor(ned_mt, system='NED')
-
-        # use the most isolated eigenvector as axis of symmetry
-        evecs = mtensor.get_eigvecs()
-        evals = np.abs(mtensor.get_eigvals())**2
-        evals_dev = np.abs(evals-np.mean(evals))
-        if p_sphere_tension == 'outwards':
-            evec_max = evecs[np.argmax(evals_dev)]
-        elif p_sphere_tension == 'inwards':
-            evec_max = evecs[np.argmax(evals)]
-
-        symmax = np.ravel(evec_max)
-
-        # make rotation matrix (after numpy mailing list)
-        zaxis = np.array([0., 0., 1.])
-        raxis = np.cross(symmax, zaxis)  # rotate z axis to null
-        raxis_norm = np.linalg.norm(raxis)
-        if raxis_norm < 1e-10:  # check for zero or 180 degree rotation
-            rotmtx = np.eye(3, dtype=np.float64)
-        else:
-            raxis /= raxis_norm
-
-            # angle between z and null
-            angle = np.arccos(np.dot(zaxis, symmax))
-
-            eye = np.eye(3, dtype=np.float64)
-            raxis2 = np.outer(raxis, raxis)
-            skew = np.array([[0, raxis[2], -raxis[1]],
-                             [-raxis[2], 0, raxis[0]],
-                             [raxis[1], -raxis[0], 0]])
-
-            rotmtx = (raxis2 + np.cos(angle) * (eye - raxis2) +
-                      np.sin(angle) * skew)
-
-        # make uv sphere that is aligned with z-axis
-        ntheta, nphi = 100, 100
-        sshape = (ntheta, nphi)
-        u = np.linspace(0, 2 * np.pi, nphi)
-        v = np.linspace(0, np.pi, ntheta)
-
-        x = np.outer(np.cos(u), np.sin(v))
-        y = np.outer(np.sin(u), np.sin(v))
-        z = np.outer(np.ones(np.size(u)), np.cos(v))
-
-        # ravel point array and rotate them to the null axis
-        points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
-        points = np.dot(rotmtx, points)
-
-        # get radiation pattern
-        disp = farfield_s(ned_mt, points)
-        magn = np.sqrt(np.sum(disp * disp, axis=0))
-        magn /= np.max(np.abs(magn))
-
-        # compute colours and displace points for normalized vectors
-        norm = plt.Normalize(-1., 1.)
-        cmap = plt.get_cmap('bwr')
-        x *= (1. + np.abs(magn.reshape(x.shape)) / 2.)
-        y *= (1. + np.abs(magn.reshape(x.shape)) / 2.)
-        z *= (1. + np.abs(magn.reshape(x.shape)) / 2.)
-        colors = np.array([cmap(norm(val)) for val in magn])
-        colors = colors.reshape(x.shape[0], x.shape[1], 4)
-
-        # plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+        fig.tight_layout(pad=0.1)
         plt.show()
 
     elif kind == 'mayavi':
-        # use mayavi if possible.
-        try:
-            from mayavi import mlab
-        except ImportError as err:
-            print(err)
-            print("mayavi import error. Use kind='vtk' for vtk file "
-                  "output of the radiation pattern that can be used "
-                  "by external software like paraview")
-
-        # get mopad moment tensor
-        mopad_mt = MomentTensor(ned_mt, system='NED')
-        bb = BeachBall(mopad_mt, npoints=200)
-        bb._setup_BB(unit_circle=False)
-
-        # extract the coordinates of the nodal lines
-        neg_nodalline = bb._nodalline_negative
-        pos_nodalline = bb._nodalline_positive
-
-        # plot radiation pattern and nodal lines
-        points = spherical_grid(nlat=nlat)
-        dispp = farfield_p(ned_mt, points)
-        disps = farfield_s(ned_mt, points)
-
-        # get vector lengths
-        normp = np.sum(dispp * points, axis=0)
-        normp /= np.max(np.abs(magn))
-
-        norms = np.sqrt(np.sum(disps * disps, axis=0))
-        norms /= np.max(np.abs(magn))
-
-        # p wave radiation pattern
-        mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
-        pts1 = mlab.quiver3d(points[0], points[1], points[2],
-                             dispp[0], dispp[1], dispp[2],
-                             scalars=normp, vmin=-rangep, vmax=rangep)
-        pts1.glyph.color_mode = 'color_by_scalar'
-        mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-        mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-        plot_sphere(0.7)
-
-        # s wave radiation pattern
-        mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
-        pts2 = mlab.quiver3d(points[0], points[1], points[2],
-                      disps[0], disps[1], disps[2], scalars=norms,
-                      vmin=-ranges, vmax=ranges)
-        pts2.glyph.color_mode = 'color_by_scalar'
-        mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-        mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-        plot_sphere(0.7)
-
-        mlab.show()
+        _plot_mayavi(ned_mt)
 
     elif kind == 'vtk':
         # this saves two files, one with the vector field and one
         # with the nodal lines of the beachball
         fname_vtkrpattern = 'rpattern.vtk'
         fname_vtkbeachlines = 'beachlines.vtk'
-
-        # output a vtkfile that can for exampled be displayed by paraview
-        mtensor = MomentTensor(ned_mt, system='NED')
-        bb = BeachBall(mtensor, npoints=200)
-        bb._setup_BB(unit_circle=False)
-
-        # extract the coordinates of the nodal lines
-        neg_nodalline = bb._nodalline_negative
-        pos_nodalline = bb._nodalline_positive
-
-        # plot radiation pattern and nodal lines
-        points = spherical_grid()
-        ndim, npoints = points.shape
-        dispp = farfield_p(ned_mt, points)
-        disps = farfield_s(ned_mt, points)
-
-        # output to file
-        with open(fname_vtkrpattern, 'w') as vtk_file:
-            vtk_header = '# vtk DataFile Version 2.0\n' + \
-                         'radiation pattern vector field\n' + \
-                         'ASCII\n' + \
-                         'DATASET UNSTRUCTURED_GRID\n' + \
-                         'POINTS {:d} float\n'.format(npoints)
-
-            vtk_file.write(vtk_header)
-            # write point locations
-            for x, y, z in np.transpose(points):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-            # write vector field
-            vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
-            vtk_file.write('VECTORS s_radiation float\n')
-            for x, y, z in np.transpose(disps):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-            vtk_file.write('VECTORS p_radiation float\n'.format(npoints))
-            for x, y, z in np.transpose(dispp):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-
-        with open(fname_vtkbeachlines, 'w') as vtk_file:
-            npts_neg = neg_nodalline.shape[1]
-            npts_pos = pos_nodalline.shape[1]
-            npts_tot = npts_neg+npts_pos
-            vtk_header = '# vtk DataFile Version 2.0\n' + \
-                         'beachball nodal lines\n' + \
-                         'ASCII\n' + \
-                         'DATASET UNSTRUCTURED_GRID\n' + \
-                         'POINTS {:d} float\n'.format(npts_tot)
-
-            vtk_file.write(vtk_header)
-            # write point locations
-            for x, y, z in np.transpose(neg_nodalline):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-            for x, y, z in np.transpose(pos_nodalline):
-                vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
-
-            # write line segments
-            vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
-
-            ipoints = list(range(0, npts_neg)) + [0]
-            vtk_file.write('{:d} '.format(npts_neg+1))
-            for ipoint in ipoints:
-                if ipoint % 30 == 29:
-                    vtk_file.write('\n')
-                vtk_file.write('{:d} '.format(ipoint))
-            vtk_file.write('\n')
-
-            ipoints = list(range(0, npts_pos)) + [0]
-            vtk_file.write('{:d} '.format(npts_pos + 1))
-            for ipoint in ipoints:
-                if ipoint % 30 == 29:
-                    vtk_file.write('\n')
-                vtk_file.write('{:d} '.format(ipoint + npts_neg))
-            vtk_file.write('\n')
-
-            # cell types. 4 means cell type is a poly_line
-            vtk_file.write('\nCELL_TYPES 2\n')
-            vtk_file.write('4\n4')
+        _write_vtk_files(ned_mt,
+                         fname_rpattern=fname_rpattern,
+                         fname_beachlines=fname_beachlines)
 
     else:
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
 
 
-def spherical_grid(nlat=30):
+def _plot_p_quiver(ax3d, ned_mt):
     """
-    generates a simple grid with adapted longitude spacing
+    private routine that plots the p_wave farfield into the
+    input ax object
+
+    :param ax3d: a matplotlib ax with 3d projection activated
+    :param ned_mt: the 6 comp moment tensor in NED orientation
+    """
+    # precompute even spherical grid and directional cosine array
+    points = equalarea_spherical_grid(nlat=14)
+
+    # get radiation pattern
+    disp = farfield_p(ned_mt, points)
+
+    # normalized magnitude:
+    magn = np.sum(disp * points, axis=0)
+    magn /= np.max(np.abs(magn))
+
+    # there is a mlab3d bug that quiver vector colors and lengths
+    # can only be changed if we plot each arrow independently
+    for loc, vec, mag in zip(points.T, disp.T, magn.T):
+        # compute colours and displace points along normal
+        norm = plt.Normalize(-1., 1.)
+        cmap = plt.get_cmap('bwr')
+        loc *= (1. + mag/2.)
+        color = cmap(norm(mag))
+        ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
+                  length=abs(mag)/2., color=color)
+    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
+             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
+             xticklabels=['South', 'North'],
+             yticklabels=['West', 'East'],
+             zticklabels=['Up', 'Down'],
+             title='p-wave farfield')
+    ax3d.view_init(elev=-110., azim=0.)
+
+
+def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
+    """
+    private function that plots a p radiation pattern sphere into
+    ax3d
+    :param ax3d: matplotlib 3d ax object
+    :param ned_mt: moment tensor in NED convention
+    :param p_sphere_direction: if this is 'inwards', the tension regions
+                               of the beachball deform the radiation sphere
+                               inwards. If 'outwards' it deforms outwards.
+    """
+    # generate spherical mesh that is aligned with the moment tensor null
+    # axis. MOPAD should use NED coordinate system to avoid internal
+    # coordinate transformations
+    mtensor = MomentTensor(ned_mt, system='NED')
+
+    # use the most isolated eigenvector as axis of symmetry
+    evecs = mtensor.get_eigvecs()
+    evals = np.abs(mtensor.get_eigvals())**2
+    evals_dev = np.abs(evals-np.mean(evals))
+    if p_sphere_direction == 'outwards':
+        evec_max = evecs[np.argmax(evals_dev)]
+    elif p_sphere_direction == 'inwards':
+        evec_max = evecs[np.argmax(evals)]
+    orientation = np.ravel(evec_max)
+
+    # get a uv sphere that is oriented along the moment tensor axes
+    ntheta, nphi = 100, 100
+    points = oriented_uv_sphere(ntheta=ntheta, nphi=nphi,
+                                orientation=orientation)
+    sshape = (ntheta, nphi)
+
+    # get radiation pattern
+    disp = farfield_p(ned_mt, points)
+    magn = np.sum(disp * points, axis=0)
+    magn /= np.max(np.abs(magn))
+
+    # compute colours and displace points along normal
+    norm = plt.Normalize(-1., 1.)
+    cmap = plt.get_cmap('bwr')
+    if p_sphere_direction == 'outwards':
+        points *= (1. + np.abs(magn) / 2.)
+    elif p_sphere_direction == 'inwards':
+        points *= (1. + magn/2.)
+    colors = np.array([cmap(norm(val)) for val in magn])
+    colors = colors.reshape(ntheta, nphi, 4)
+
+    x = points[0].reshape(sshape)
+    y = points[1].reshape(sshape)
+    z = points[2].reshape(sshape)
+
+    # plot 3d radiation pattern and beachball
+    ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
+             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
+             xticklabels=['South', 'North'],
+             yticklabels=['West', 'East'],
+             zticklabels=['Up', 'Down'],
+             title='p-wave farfield')
+    ax3d.view_init(elev=-110., azim=0.)
+
+
+def _plot_s_quiver(ax3d, ned_mt):
+    """
+    private routine that plots the s_wave farfield into the
+    input ax object
+
+    :param ax3d: a matplotlib ax with 3d projection activated
+    :param ned_mt: the 6 comp moment tensor in NED orientation
+    """
+    # precompute even spherical grid and directional cosine array
+    points = equalarea_spherical_grid(nlat=14)
+
+    # get radiation pattern
+    disp = farfield_s(ned_mt, points)
+
+    # normalized magnitude (positive only):
+    magn = np.sqrt(np.sum(disp * disp, axis=0))
+    magn /= np.max(np.abs(magn))
+
+    # plot
+    # there is a mlab3d bug that quiver vector colors and lengths
+    # can only be changed if we plot each arrow independently
+    for loc, vec, mag in zip(points.T, disp.T, magn.T):
+        norm = plt.Normalize(-1., 1.)
+        cmap = plt.get_cmap('Greens')
+        color = cmap(norm(mag))
+        ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
+                  length=abs(mag)/5., color=color)
+    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
+             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
+             xticklabels=['South', 'North'],
+             yticklabels=['West', 'East'],
+             zticklabels=['Up', 'Down'],
+             title='s-wave farfield')
+    ax3d.view_init(elev=-110., azim=0.)
+
+
+def _plot_s_sphere(ax3d, ned_mt):
+    """
+    private function that plots a s radiation pattern sphere into
+    ax3d
+    :param ax3d: matplotlib 3d ax object
+    :param ned_mt: moment tensor in NED convention
+    :param p_sphere_direction: if this is 'inwards', the tension regions
+                               of the beachball deform the radiation sphere
+                               inwards. If 'outwards' it deforms outwards.
+    """
+    # generate spherical mesh that is aligned with the moment tensor null
+    # axis. MOPAD should use NED coordinate system to avoid internal
+    # coordinate transformations
+    mtensor = MomentTensor(ned_mt, system='NED')
+
+    # use the most isolated eigenvector as axis of symmetry
+    evecs = mtensor.get_eigvecs()
+    evals = np.abs(mtensor.get_eigvals())**2
+    evals_dev = np.abs(evals-np.mean(evals))
+    evec_max = evecs[np.argmax(evals_dev)]
+    orientation = np.ravel(evec_max)
+
+    # get a uv sphere that is oriented along the moment tensor axes
+    ntheta, nphi = 100, 100
+    points = oriented_uv_sphere(ntheta=ntheta, nphi=nphi,
+                                orientation=orientation)
+    sshape = (ntheta, nphi)
+
+    # get radiation pattern
+    disp = farfield_s(ned_mt, points)
+    magn = np.sqrt(np.sum(disp * disp, axis=0))
+    magn /= np.max(np.abs(magn))
+
+    # compute colours and displace points along normal
+    norm = plt.Normalize(0., 1.)
+    cmap = plt.get_cmap('Greens')
+    points *= (1. + magn/2.)
+    colors = np.array([cmap(norm(val)) for val in magn])
+    colors = colors.reshape(ntheta, nphi, 4)
+
+    x = points[0].reshape(sshape)
+    y = points[1].reshape(sshape)
+    z = points[2].reshape(sshape)
+
+    # plot
+    ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
+    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
+             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
+             xticklabels=['South', 'North'],
+             yticklabels=['West', 'East'],
+             zticklabels=['Up', 'Down'],
+             title='p-wave farfield')
+    ax3d.view_init(elev=-110., azim=0.)
+
+
+def _plot_beachball(ax2d, rtp_mt):
+    """
+    private function that plots a beachball into a 2d matplotlib ax
+
+    :param ax2d: 2d matplotlib ax
+    :param rtp_mt: moment tensor in RTP convention
+    """
+    norm = plt.Normalize(-1., 1.)
+    cmap = plt.get_cmap('bwr')
+    bball = Beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
+                  bgcolor=cmap(norm(-0.7)))
+
+    ax2d.add_collection(bball)
+    ax2d.set(xlim=(-50, 50), ylim=(-50, 50),
+             xticks=(-40, 40), yticks=(-40, 40),
+             xticklabels=('West', 'East'),
+             yticklabels=('South', 'North'),
+             title='lower hemisphere stereographical projection')
+
+
+def _plot_mayavi(ned_mt):
+    # use mayavi if possible.
+    try:
+        from mayavi import mlab
+    except ImportError as err:
+        print(err)
+        print("mayavi import error. Use kind='vtk' for vtk file "
+              "output of the radiation pattern that can be used "
+              "by external software like paraview")
+
+    # get mopad moment tensor
+    mopad_mt = MomentTensor(ned_mt, system='NED')
+    bb = BeachBall(mopad_mt, npoints=200)
+    bb._setup_BB(unit_circle=False)
+
+    # extract the coordinates of the nodal lines
+    neg_nodalline = bb._nodalline_negative
+    pos_nodalline = bb._nodalline_positive
+
+    # plot radiation pattern and nodal lines
+    points = spherical_grid(nlat=nlat)
+    dispp = farfield_p(ned_mt, points)
+    disps = farfield_s(ned_mt, points)
+
+    # get vector lengths
+    normp = np.sum(dispp * points, axis=0)
+    normp /= np.max(np.abs(magn))
+
+    norms = np.sqrt(np.sum(disps * disps, axis=0))
+    norms /= np.max(np.abs(magn))
+
+    # p wave radiation pattern
+    mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+    pts1 = mlab.quiver3d(points[0], points[1], points[2],
+                         dispp[0], dispp[1], dispp[2],
+                         scalars=normp, vmin=-rangep, vmax=rangep)
+    pts1.glyph.color_mode = 'color_by_scalar'
+    mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+    mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+    plot_sphere(0.7)
+
+    # s wave radiation pattern
+    mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+    pts2 = mlab.quiver3d(points[0], points[1], points[2],
+                         disps[0], disps[1], disps[2], scalars=norms,
+                         vmin=-ranges, vmax=ranges)
+    pts2.glyph.color_mode = 'color_by_scalar'
+    mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+    mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
+    plot_sphere(0.7)
+
+    mlab.show()
+
+def _write_vtk_files(ned_mt, fname_rpattern='rpattern.vtk',
+                     fname_beachlines='beachlines.vtk'):
+    # output a vtkfile that can for exampled be displayed by paraview
+    mtensor = MomentTensor(ned_mt, system='NED')
+    bb = BeachBall(mtensor, npoints=200)
+    bb._setup_BB(unit_circle=False)
+
+    # extract the coordinates of the nodal lines
+    neg_nodalline = bb._nodalline_negative
+    pos_nodalline = bb._nodalline_positive
+
+    # plot radiation pattern and nodal lines
+    points = spherical_grid()
+    ndim, npoints = points.shape
+    dispp = farfield_p(ned_mt, points)
+    disps = farfield_s(ned_mt, points)
+
+    # write vector field
+    with open(fname_rpattern, 'w') as vtk_file:
+        vtk_header = '# vtk DataFile Version 2.0\n' + \
+                     'radiation pattern vector field\n' + \
+                     'ASCII\n' + \
+                     'DATASET UNSTRUCTURED_GRID\n' + \
+                     'POINTS {:d} float\n'.format(npoints)
+
+        vtk_file.write(vtk_header)
+        # write point locations
+        for x, y, z in np.transpose(points):
+            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+        # write vector field
+        vtk_file.write('POINT_DATA {:d}\n'.format(npoints))
+        vtk_file.write('VECTORS s_radiation float\n')
+        for x, y, z in np.transpose(disps):
+            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+        vtk_file.write('VECTORS p_radiation float\n'.format(npoints))
+        for x, y, z in np.transpose(dispp):
+            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+
+    # write nodal lines
+    with open(fname_beachlines, 'w') as vtk_file:
+        npts_neg = neg_nodalline.shape[1]
+        npts_pos = pos_nodalline.shape[1]
+        npts_tot = npts_neg+npts_pos
+        vtk_header = '# vtk DataFile Version 2.0\n' + \
+                     'beachball nodal lines\n' + \
+                     'ASCII\n' + \
+                     'DATASET UNSTRUCTURED_GRID\n' + \
+                     'POINTS {:d} float\n'.format(npts_tot)
+
+        vtk_file.write(vtk_header)
+        # write point locations
+        for x, y, z in np.transpose(neg_nodalline):
+            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+        for x, y, z in np.transpose(pos_nodalline):
+            vtk_file.write('{:.3e} {:.3e} {:.3e}\n'.format(x, y, z))
+
+        # write line segments
+        vtk_file.write('\nCELLS 2 {:d}\n'.format(npts_tot + 4))
+
+        ipoints = list(range(0, npts_neg)) + [0]
+        vtk_file.write('{:d} '.format(npts_neg+1))
+        for ipoint in ipoints:
+            if ipoint % 30 == 29:
+                vtk_file.write('\n')
+            vtk_file.write('{:d} '.format(ipoint))
+        vtk_file.write('\n')
+
+        ipoints = list(range(0, npts_pos)) + [0]
+        vtk_file.write('{:d} '.format(npts_pos + 1))
+        for ipoint in ipoints:
+            if ipoint % 30 == 29:
+                vtk_file.write('\n')
+            vtk_file.write('{:d} '.format(ipoint + npts_neg))
+        vtk_file.write('\n')
+
+        # cell types. 4 means cell type is a poly_line
+        vtk_file.write('\nCELL_TYPES 2\n')
+        vtk_file.write('4\n4')
+
+
+# ===== SUPPORT FUNCTIONS FOR SPHERICAL MESHES ETC STARTING HERE:
+def oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
+    """
+    returns a uv sphere (equidistant lat/lon grid) with its north-pole
+    rotated to the input axis. It returns the spherical grid points
+    that can be used to generate a QuadMesh on the sphere for surface
+    plotting.
+
+    :param nlat: number of latitudinal grid points (default = 100)
+    :param nphi: number of longitudinal grid points (default = 100)
+    :param orientation: axis of the north-pole of the sphere
+                        (default = [0, 0, 1])
+    """
+    # make rotation matrix (after numpy mailing list)
+    zaxis = np.array([0., 0., 1.])
+    raxis = np.cross(orientation, zaxis)  # rotate z axis to null
+    raxis_norm = np.linalg.norm(raxis)
+    if raxis_norm < 1e-10:  # check for zero or 180 degree rotation
+        rotmtx = np.eye(3, dtype=np.float64)
+    else:
+        raxis /= raxis_norm
+
+        # angle between z and null
+        angle = np.arccos(np.dot(zaxis, orientation))
+
+        eye = np.eye(3, dtype=np.float64)
+        raxis2 = np.outer(raxis, raxis)
+        skew = np.array([[0, raxis[2], -raxis[1]],
+                         [-raxis[2], 0, raxis[0]],
+                         [raxis[1], -raxis[0], 0]])
+
+        rotmtx = (raxis2 + np.cos(angle) * (eye - raxis2) +
+                  np.sin(angle) * skew)
+
+    # make uv sphere that is aligned with z-axis
+    ntheta, nphi = 100, 100
+    u = np.linspace(0, 2 * np.pi, nphi)
+    v = np.linspace(0, np.pi, ntheta)
+
+    x = np.outer(np.cos(u), np.sin(v))
+    y = np.outer(np.sin(u), np.sin(v))
+    z = np.outer(np.ones(np.size(u)), np.cos(v))
+
+    # ravel point array and rotate them to the null axis
+    points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
+    points = np.dot(rotmtx, points)
+    return points
+
+
+def equalarea_spherical_grid(nlat=30):
+    """
+    generates a simple spherical equalarea grid that adjust the
+    number of longitude samples to the longitude. This grid is useful
+    to plot vectors on the sphere but not surfaces.
 
     :param nlat: number of nodes in lat direction. The number of
                  nodes in lon direction is 2*nlat+1 at the equator
@@ -596,6 +682,7 @@ def fullmt(mt):
                          [mt[3], mt[1], mt[5]],
                          [mt[4], mt[5], mt[2]]]))
     return mt_full
+
 
 if __name__ == '__main__':
     import doctest
