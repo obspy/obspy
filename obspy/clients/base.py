@@ -177,8 +177,10 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
         """
         Download the URL with GET or POST and the chosen parameters.
 
-        Will only return if it manages to download with HTTP code 200,
-        otherwise the _handle_requests_http_error() method is called.
+        Will call the ``_handle_requests_http_error()`` method if the response
+        comes back with an HTTP code other than 200. Returns the response
+        object if successful and ``filename`` is not given - if given it will
+        save the response to the specified file and return ``None``.
 
         By default it will send a GET request - if data is given it will
         send a POST request.
