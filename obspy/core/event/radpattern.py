@@ -62,7 +62,6 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
              3D vector array with shape [3,npts] that contains the
              displacement vector for each grid point
-
     """
 
     # reoorder all moment tensors to NED convention
@@ -85,22 +84,32 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         msg = 'coordinate system {:s} not known'.format(coordinate_system)
         raise NotImplementedError(msg)
 
-    # matplotlib options:
-    vlength = 0.1  # length of vectors
-    nlat = 30      # points for quiver sphere
 
     if kind == 'p_quiver':
         # precompute even spherical grid and directional cosine array
-        points = spherical_grid(nlat=nlat)
+        points = spherical_grid(nlat=14)
 
         # get radiation pattern
         disp = farfield_p(ned_mt, points)
 
+        # normalized magnitude:
+        magn = np.sum(disp * points, axis=0)
+        magn /= np.max(np.abs(magn))
+
         # plot
+        # there is a mlab3d bug that quiver vector colors and lengths 
+        # can only be changed if we plot each arrow independently
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.quiver(points[0], points[1], points[2],
-                  disp[0], disp[1], disp[2], length=vlength)
+        for loc, vec, mag in zip(points.T, disp.T, magn.T):
+            # compute colours and displace points along normal
+            norm = plt.Normalize(-1., 1.)
+            cmap = plt.get_cmap('bwr')
+            loc *= (1. + mag/2.)
+            color = cmap(norm(mag))
+            ax.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
+                      length=abs(mag)/2., color=color)
+        ax.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5))
         plt.show()
 
     elif kind == 'p_sphere':
@@ -212,32 +221,85 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
 
     elif kind == 's_quiver':
         # precompute even spherical grid and directional cosine array
-        points = spherical_grid(nlat=nlat)
+        points = spherical_grid(nlat=14)
 
         # get radiation pattern
         disp = farfield_s(ned_mt, points)
 
+        # normalized magnitude (positive only):
+        magn = np.sqrt(np.sum(disp * disp, axis=0))
+        magn /= np.max(np.abs(magn))
+
         # plot
+        # there is a mlab3d bug that quiver vector colors and lengths 
+        # can only be changed if we plot each arrow independently
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.quiver(points[0], points[1], points[2],
-                  disp[0], disp[1], disp[2], length=vlength)
+        for loc, vec, mag in zip(points.T, disp.T, magn.T):
+            norm = plt.Normalize(-1., 1.)
+            cmap = plt.get_cmap('Greens')
+            color = cmap(norm(mag))
+            ax.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
+                      length=abs(mag)/5., color=color)
+        ax.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5))
+        plt.show()
         plt.show()
 
     elif kind == 's_sphere':
-        # lat/lon sphere
-        u = np.linspace(0, 2 * np.pi, 200)
-        v = np.linspace(0, np.pi, 200)
+        # generate spherical mesh that is aligned with the moment tensor null
+        # axis. MOPAD should use NED coordinate system to avoid internal
+        # coordinate transformations
+        mtensor = MomentTensor(ned_mt, system='NED')
+
+        # use the most isolated eigenvector as axis of symmetry
+        evecs = mtensor.get_eigvecs()
+        evals = np.abs(mtensor.get_eigvals())**2
+        evals_dev = np.abs(evals-np.mean(evals))
+        if p_sphere_tension == 'outwards':
+            evec_max = evecs[np.argmax(evals_dev)]
+        elif p_sphere_tension == 'inwards':
+            evec_max = evecs[np.argmax(evals)]
+
+        symmax = np.ravel(evec_max)
+
+        # make rotation matrix (after numpy mailing list)
+        zaxis = np.array([0., 0., 1.])
+        raxis = np.cross(symmax, zaxis)  # rotate z axis to null
+        raxis_norm = np.linalg.norm(raxis)
+        if raxis_norm < 1e-10:  # check for zero or 180 degree rotation
+            rotmtx = np.eye(3, dtype=np.float64)
+        else:
+            raxis /= raxis_norm
+
+            # angle between z and null
+            angle = np.arccos(np.dot(zaxis, symmax))
+
+            eye = np.eye(3, dtype=np.float64)
+            raxis2 = np.outer(raxis, raxis)
+            skew = np.array([[0, raxis[2], -raxis[1]],
+                             [-raxis[2], 0, raxis[0]],
+                             [raxis[1], -raxis[0], 0]])
+
+            rotmtx = (raxis2 + np.cos(angle) * (eye - raxis2) +
+                      np.sin(angle) * skew)
+
+        # make uv sphere that is aligned with z-axis
+        ntheta, nphi = 100, 100
+        sshape = (ntheta, nphi)
+        u = np.linspace(0, 2 * np.pi, nphi)
+        v = np.linspace(0, np.pi, ntheta)
 
         x = np.outer(np.cos(u), np.sin(v))
         y = np.outer(np.sin(u), np.sin(v))
         z = np.outer(np.ones(np.size(u)), np.cos(v))
 
+        # ravel point array and rotate them to the null axis
         points = np.vstack((x.flatten(), y.flatten(), z.flatten()))
+        points = np.dot(rotmtx, points)
 
         # get radiation pattern
         disp = farfield_s(ned_mt, points)
-        magn = np.sum(disp * disp, axis=0)
+        magn = np.sqrt(np.sum(disp * disp, axis=0))
         magn /= np.max(np.abs(magn))
 
         # compute colours and displace points for normalized vectors
@@ -253,27 +315,6 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
-        plt.show()
-
-    elif kind == 'both_quiver':
-        # precompute even spherical grid and directional cosine array
-        points = spherical_grid(nlat=nlat)
-
-        # get radiation pattern
-        dispp = farfield_p(ned_mt, points)
-        disps = farfield_s(ned_mt, points)
-
-        # plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        ax.quiver(points[0], points[1], points[2],
-                  dispp[0], dispp[1], dispp[2], length=vlength)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        qs = ax.quiver(points[0], points[1], points[2],
-                       disps[0], disps[1], disps[2], length=vlength)
-        qs.set_array(normp)
         plt.show()
 
     elif kind == 'mayavi':
@@ -300,6 +341,14 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         dispp = farfield_p(ned_mt, points)
         disps = farfield_s(ned_mt, points)
 
+        # get vector lengths
+        normp = np.sum(dispp * points, axis=0)
+        normp /= np.max(np.abs(magn))
+
+        norms = np.sqrt(np.sum(disps * disps, axis=0))
+        norms /= np.max(np.abs(magn))
+
+        # p wave radiation pattern
         mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
         pts1 = mlab.quiver3d(points[0], points[1], points[2],
                              dispp[0], dispp[1], dispp[2],
@@ -309,10 +358,12 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
         plot_sphere(0.7)
 
+        # s wave radiation pattern
         mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
-        mlab.quiver3d(points[0], points[1], points[2],
-                      disps[0], disps[1], disps[2],
+        pts2 = mlab.quiver3d(points[0], points[1], points[2],
+                      disps[0], disps[1], disps[2], scalars=norms,
                       vmin=-ranges, vmax=ranges)
+        pts2.glyph.color_mode = 'color_by_scalar'
         mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
         mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
         plot_sphere(0.7)
@@ -320,6 +371,8 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         mlab.show()
 
     elif kind == 'vtk':
+        # this saves two files, one with the vector field and one
+        # with the nodal lines of the beachball
         fname_vtkrpattern = 'rpattern.vtk'
         fname_vtkbeachlines = 'beachlines.vtk'
 
