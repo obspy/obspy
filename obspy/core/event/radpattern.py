@@ -74,15 +74,15 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         signs = [1, 1, 1, -1, 1, -1]
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
-        rtp_mt = mt
+        #rtp_mt = mt
     elif coordinate_system == 'DSE':
         signs = [1, 1, 1, -1, -1, 1]
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
-        rtp_mt = None  # should be set
+        #rtp_mt = None  # should be set
     elif coordinate_system == 'NED':
         ned_mt = mt
-        rtp_mt = None  # should be set
+        #rtp_mt = None  # should be set
     else:
         msg = 'coordinate system {:s} not known'.format(coordinate_system)
         raise NotImplementedError(msg)
@@ -351,6 +351,13 @@ def _plot_beachball(ax2d, rtp_mt):
 
 
 def _plot_mayavi(ned_mt):
+    """
+    This function uses the mayavi (vtk) library to plot the radiation
+    pattern to screen. Note that you might have to set the QT_API environmental
+    variable to e.g. export QT_API=pyqt that mayavi works properly.
+
+    :param ned_mt: moment tensor in NED convention
+    """
     # use mayavi if possible.
     try:
         from mayavi import mlab
@@ -400,7 +407,7 @@ def _plot_mayavi(ned_mt):
     pts1.glyph.color_mode = 'color_by_scalar'
     mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
     mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-    mlab.mesh(x, y, z, color=(0,0,0))
+    mlab.mesh(x, y, z, color=(0, 0, 0))
 
     # s wave radiation pattern
     mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
@@ -410,7 +417,7 @@ def _plot_mayavi(ned_mt):
     pts2.glyph.color_mode = 'color_by_scalar'
     mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
     mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-    mlab.mesh(x, y, z, color=(0,0,0))
+    mlab.mesh(x, y, z, color=(0, 0, 0))
 
     mlab.show()
 
