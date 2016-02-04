@@ -64,7 +64,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
              displacement vector for each grid point
     """
 
-    # reoorder all moment tensors to NED convention
+    # reoorder all moment tensors to NED and RTP convention
     # name : COMPONENT              : NED sign and index
     # NED  : NN, EE, DD, NE, ND, ED : [0, 1, 2, 3, 4, 5]
     # USE  : UU, SS, EE, US, UE, SE : [1, 2, 0, -5, 3, -4]
@@ -74,28 +74,20 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         signs = [1, 1, 1, -1, 1, -1]
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+        rtp_mt = mt
     elif coordinate_system == 'DSE':
         signs = [1, 1, 1, -1, -1, 1]
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+        rtp_mt = None  # should be set
     elif coordinate_system == 'NED':
         ned_mt = mt
+        rtp_mt = None  # should be set
     else:
         msg = 'coordinate system {:s} not known'.format(coordinate_system)
         raise NotImplementedError(msg)
 
-    # adjusted beachball plot:
-    #ax3d = fig.add_axes((0.01, 0.01, 0.48, 0.98), projection='3d')
-    #size = 0.8  # shrink ax to make it more similar to the 3d plot
-    #width, height = size * 0.5, size * 1.
-    #left = 0.5 + (0.5-width)/2.
-    #bottom = (1.-height)/2.
-    #axbball = fig.add_axes((left, bottom, width, height))
-
-    #ax2d.spines['left'].set_position('center')
-    #ax2d.spines['right'].set_color('none')
-    #ax2d.spines['bottom'].set_position('center')
-    #ax2d.spines['top'].set_color('none')
+    # matplotlib plotting is triggered when kind is a list of strings
     if isinstance(kind, list):
         nplots = len(kind)
         maxcolumns = 3  # the maximum number of plots in one row
@@ -123,7 +115,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                 _plot_s_sphere(ax3d, ned_mt)
 
             elif kind[iplot] == 'beachball':
-                ax2d = fig.add_subplot(nrows, ncols, iax)
+                ax2d = fig.add_subplot(nrows, ncols, iax, aspect='equal')
                 ax2d.spines['left'].set_position('center')
                 ax2d.spines['right'].set_color('none')
                 ax2d.spines['bottom'].set_position('center')
@@ -182,7 +174,7 @@ def _plot_p_quiver(ax3d, ned_mt):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='p-wave farfield')
+             title='p wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -243,7 +235,7 @@ def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='p-wave farfield')
+             title='p wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -279,7 +271,7 @@ def _plot_s_quiver(ax3d, ned_mt):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='s-wave farfield')
+             title='s wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -334,7 +326,7 @@ def _plot_s_sphere(ax3d, ned_mt):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='p-wave farfield')
+             title='s wave farfield')
     ax3d.view_init(elev=-110., azim=0.)
 
 
