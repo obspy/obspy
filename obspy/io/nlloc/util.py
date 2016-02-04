@@ -36,8 +36,9 @@ def read_nlloc_scatter(filename, coordinate_converter=None):
         If left `None` NonLinLoc (x, y, z) output is left unchanged (e.g. if
         it is in geographical coordinates already like for NonLinLoc in
         global mode).
-        The function should accept three arguments x, y, z and return a
-        tuple of three values (lon, lat, depth in kilometers).
+        The function should accept three arguments x, y, z (each of type
+        :class:`numpy.ndarray`) and return a tuple of three
+        :class:`numpy.ndarray`s (lon, lat, depth in kilometers).
     :returns: NonLinLoc scatter information as structured numpy array (fields:
         "x", "y", "z", "pdf").
     """

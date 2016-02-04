@@ -67,8 +67,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         If left `None` NonLinLoc (x, y, z) output is left unchanged (e.g. if
         it is in geographical coordinates already like for NonLinLoc in
         global mode).
-        The function should accept three arguments x, y, z and return a
-        tuple of three values (lon, lat, depth in kilometers).
+        The function should accept three arguments x, y, z (each of type
+        :class:`numpy.ndarray`) and return a tuple of three
+        :class:`numpy.ndarray`s (lon, lat, depth in kilometers).
     :type picks: list of :class:`~obspy.core.event.Pick`
     :param picks: Original picks used to generate the NonLinLoc location.
         If provided, the output event will include the original picks and the

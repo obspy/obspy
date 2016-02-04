@@ -109,7 +109,7 @@ INSTALL_REQUIRES = [
     'sqlalchemy',
     'decorator']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2', 'pyimgur'],
+    'tests': ['flake8>=2', 'pyimgur', 'pyproj'],
     'arclink': ['m2crypto'],
     'io.shapefile': ['gdal'],
     }

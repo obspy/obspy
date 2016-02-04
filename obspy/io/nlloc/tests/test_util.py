@@ -34,16 +34,23 @@ class NLLOCTestCase(unittest.TestCase):
             inspect.currentframe())))
         self.datapath = os.path.join(self.path, "data")
 
-    @unittest.skipIf(not HAS_PYPROJ, 'pyproj not installed')
-    def test_read_nlloc_scatter(self):
+    def test_read_nlloc_scatter_plain(self):
         """
-        Test reading NLLoc scatter file
+        Test reading NLLoc scatter file without coordinate conversion.
         """
+        # test without coordinate manipulation
         filename = os.path.join(self.datapath, "nlloc.scat")
         got = read_nlloc_scatter(filename)
         filename = os.path.join(self.datapath, "nlloc_scat.npy")
         expected = np.load(filename)
         np.testing.assert_array_equal(got, expected)
+
+    @unittest.skipIf(not HAS_PYPROJ, 'pyproj not installed')
+    def test_read_nlloc_scatter_coordinate_conversion(self):
+        """
+        Test reading NLLoc scatter file including coordinate conversion.
+        """
+        # test including coordinate manipulation
         filename = os.path.join(self.datapath, "nlloc.scat")
         got = read_nlloc_scatter(
             filename, coordinate_converter=_coordinate_conversion)
