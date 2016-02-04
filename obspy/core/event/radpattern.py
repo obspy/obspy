@@ -378,36 +378,47 @@ def _plot_mayavi(ned_mt):
     pos_nodalline = bb._nodalline_positive
 
     # plot radiation pattern and nodal lines
-    points = spherical_grid(nlat=nlat)
+    points = equalarea_spherical_grid(nlat=30)
     dispp = farfield_p(ned_mt, points)
     disps = farfield_s(ned_mt, points)
 
     # get vector lengths
     normp = np.sum(dispp * points, axis=0)
-    normp /= np.max(np.abs(magn))
+    normp /= np.max(np.abs(normp))
 
     norms = np.sqrt(np.sum(disps * disps, axis=0))
-    norms /= np.max(np.abs(magn))
+    norms /= np.max(np.abs(norms))
+
+    # make sphere to block view to the other side of the beachball
+    rad = 0.8
+    pi = np.pi
+    cos = np.cos
+    sin = np.sin
+    phi, theta = np.mgrid[0:pi:101j, 0:2 * pi:101j]
+
+    x = rad * sin(phi) * cos(theta)
+    y = rad * sin(phi) * sin(theta)
+    z = rad * cos(phi)
 
     # p wave radiation pattern
     mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
     pts1 = mlab.quiver3d(points[0], points[1], points[2],
                          dispp[0], dispp[1], dispp[2],
-                         scalars=normp, vmin=-rangep, vmax=rangep)
+                         scalars=normp, vmin=-1., vmax=1.)
     pts1.glyph.color_mode = 'color_by_scalar'
     mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
     mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-    plot_sphere(0.7)
+    mlab.mesh(x, y, z, color=(0,0,0))
 
     # s wave radiation pattern
     mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
     pts2 = mlab.quiver3d(points[0], points[1], points[2],
                          disps[0], disps[1], disps[2], scalars=norms,
-                         vmin=-ranges, vmax=ranges)
+                         vmin=-0., vmax=1.)
     pts2.glyph.color_mode = 'color_by_scalar'
     mlab.plot3d(*neg_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
     mlab.plot3d(*pos_nodalline, color=(0, 0.5, 0), tube_radius=0.01)
-    plot_sphere(0.7)
+    mlab.mesh(x, y, z, color=(0,0,0))
 
     mlab.show()
 
