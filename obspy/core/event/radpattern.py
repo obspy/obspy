@@ -28,7 +28,8 @@ from obspy.imaging.mopad_wrapper import Beach
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
 
-def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
+def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
+                    coordinate_system='RTP',
                     p_sphere_direction='inwards'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
@@ -57,6 +58,10 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                         is a state file that sets paraview parameters to plot
                         rpattern.vtk and beachlines.vtk
 
+    :param coordinate_system: the only implemented option so far is 'RTP'.
+                              Should be extended to support NED, USE, DSE, NED
+                              in the future
+
     :return: 3D grid point array with shape [3,npts] that contains
              the sperical grid points
 
@@ -74,18 +79,18 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
         signs = [1, 1, 1, -1, 1, -1]
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
-        #rtp_mt = mt
-    elif coordinate_system == 'DSE':
-        signs = [1, 1, 1, -1, -1, 1]
-        indices = [1, 2, 0, 5, 3, 4]
-        ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
-        #rtp_mt = None  # should be set
-    elif coordinate_system == 'NED':
-        ned_mt = mt
-        #rtp_mt = None  # should be set
+        rtp_mt = mt
+    # for the following option, the moment tensor has to be converted to
+    # RTP coordinates as well
+    #elif coordinate_system == 'DSE':
+    #    signs = [1, 1, 1, -1, -1, 1]
+    #    indices = [1, 2, 0, 5, 3, 4]
+    #    ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+    #elif coordinate_system == 'NED':
+    #    ned_mt = mt
     else:
-        msg = 'coordinate system {:s} not known'.format(coordinate_system)
-        raise NotImplementedError(msg)
+        msg = 'moment tensor in {:s} coordinates not implemented yet'
+        raise NotImplementedError(msg.format(coordinate_system))
 
     # matplotlib plotting is triggered when kind is a list of strings
     if isinstance(kind, list):
@@ -120,7 +125,7 @@ def plot_3drpattern(mt, kind='both_sphere', coordinate_system='RTP',
                 ax2d.spines['right'].set_color('none')
                 ax2d.spines['bottom'].set_position('center')
                 ax2d.spines['top'].set_color('none')
-                _plot_beachball(ax2d, mt)
+                _plot_beachball(ax2d, rtp_mt)
 
         fig.tight_layout(pad=0.1)
         plt.show()
@@ -361,11 +366,19 @@ def _plot_mayavi(ned_mt):
     # use mayavi if possible.
     try:
         from mayavi import mlab
-    except ImportError as err:
+    except Exception as err:
         print(err)
-        print("mayavi import error. Use kind='vtk' for vtk file "
-              "output of the radiation pattern that can be used "
-              "by external software like paraview")
+        msg = "obspy failed to import mayavi. " +\
+              "You need to install the mayavi module " +\
+              "(e.g. conda install mayavi, pip install mayavi). " +\
+              "If it is installed and still doesn't work, " +\
+              "try setting the environmental variable QT_API to " +\
+              "pyqt (e.g. export QT_API=pyqt) before running the " +\
+              "code. Another option is to avoid mayavi and " +\
+              "directly use kind='vtk' for vtk file output of the " +\
+              "radiation pattern that can be used by external " +\
+              "software like paraview"
+        raise ImportError(msg)
 
     # get mopad moment tensor
     mopad_mt = MomentTensor(ned_mt, system='NED')
@@ -376,8 +389,12 @@ def _plot_mayavi(ned_mt):
     neg_nodalline = bb._nodalline_negative
     pos_nodalline = bb._nodalline_positive
 
+    # add the first point to the end to close the nodal line
+    neg_nodalline = np.hstack((neg_nodalline, neg_nodalline[:, 0][:, None]))
+    pos_nodalline = np.hstack((pos_nodalline, pos_nodalline[:, 0][:, None]))
+
     # plot radiation pattern and nodal lines
-    points = equalarea_spherical_grid(nlat=30)
+    points = equalarea_spherical_grid(nlat=20)
     dispp = farfield_p(ned_mt, points)
     disps = farfield_s(ned_mt, points)
 
