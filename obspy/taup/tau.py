@@ -744,7 +744,8 @@ class TauPyModel(object):
                               source_longitude_in_deg,
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg,
-                              phase_list=("ttall",)):
+                              phase_list=("ttall",),
+                              resample=False):
         """
         Return ray paths of every given phase with geographical info.
 
@@ -771,6 +772,10 @@ class TauPyModel(object):
             calculated. If this is empty, all phases in arrivals object
             will be used.
         :type phase_list: list of str
+        :param resample: adds sample points to allow for easy cartesian
+                         interpolation. This is especially useful for phases
+                         like Pdiff.
+        :type resample: boolean
         :return: List of ``Arrival`` objects, each of which has the time,
             corresponding phase name, ray parameter, takeoff angle, etc. as
             attributes.
@@ -787,13 +792,13 @@ class TauPyModel(object):
                                           phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            try:
-                arrivals = add_geo_to_arrivals(
-                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
-                    receiver_latitude_in_deg, receiver_longitude_in_deg,
-                    self.model.radius_of_planet, self.planet_flattening)
-            except ImportError as e:
-                warnings.warn("ImportError: " + str(e))
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening,
+                                           resample=resample)
         else:
             msg = "Not able to evaluate positions of pierce points. " + \
                   "Arrivals object will not be modified. " + \
@@ -805,7 +810,8 @@ class TauPyModel(object):
 
     def get_ray_paths_geo(self, source_depth_in_km, source_latitude_in_deg,
                           source_longitude_in_deg, receiver_latitude_in_deg,
-                          receiver_longitude_in_deg, phase_list=("ttall",)):
+                          receiver_longitude_in_deg, phase_list=("ttall",),
+                          resample=False):
         """
         Return ray paths of every given phase with geographical info.
 
@@ -848,13 +854,13 @@ class TauPyModel(object):
                                       phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            try:
-                arrivals = add_geo_to_arrivals(
-                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
-                    receiver_latitude_in_deg, receiver_longitude_in_deg,
-                    self.model.radius_of_planet, self.planet_flattening)
-            except ImportError as e:
-                warnings.warn("ImportError: " + str(e))
+            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
+                                           source_longitude_in_deg,
+                                           receiver_latitude_in_deg,
+                                           receiver_longitude_in_deg,
+                                           self.model.radius_of_planet,
+                                           self.planet_flattening,
+                                           resample=resample)
         else:
             msg = "Not able to evaluate positions of points on path. " + \
                   "Arrivals object will not be modified. " + \

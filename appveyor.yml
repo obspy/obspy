@@ -113,6 +113,7 @@ install:
   # additional dependencies
   - "pip install pyimgur"
   - "pip install -U future"
+  - "pip install geographiclib"
   # list package versions
   - "conda list"
 
