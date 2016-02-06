@@ -773,6 +773,63 @@ class Inventory(ComparingObject):
 
         return fig
 
+    def get_ray_paths(self, evcoords, coordinate_system='RTP'):
+        """
+        This function returns lat, lon, depth coordinates from an event location
+        to all stations in the inventory object
+        """
+        # extract all stations and their location
+        stlats = []
+        stlons = []
+        labels = []
+        for network in self:
+            for station in network:
+                if station.latitude is None or station.longitude is None:
+                    msg = ("Station '%s' does not have latitude/longitude "
+                           "information and will not be plotted." % label)
+                    warnings.warn(msg)
+                    continue
+                label_ = "   " + ".".join((network.code, station.code))
+                stlats.append(station.latitude)
+                stlons.append(station.longitude)
+                labels.append(label_)
+
+        # initialize taup model
+        from obspy.taup import TauPyModel
+        import numpy as np
+        model = TauPyModel(model="iasp91")
+
+        # now loop through all stations and compute the greatcircles
+        greatcircles = []
+        for stlat, stlon, stlabel in zip(stlats, stlons, labels):
+            phase_list = ('P', 'Pdiff', 'PKP')
+            arrivals = model.get_ray_paths_geo(evcoords[2], evcoords[0],
+                                               evcoords[1], stlat, stlon,
+                                               phase_list=phase_list)
+            if len(arrivals) == 0:
+                continue
+
+            r_earth = arrivals.model.radiusOfEarth
+            for arr in arrivals:
+                if coordinate_system == 'RTP':
+                    radii = (r_earth - arr.path['depth']) / r_earth
+                    thetas = np.radians(90. - arr.path['lat'])
+                    phis = np.radians(arr.path['lon'])
+                    gcircle = np.array([radii, thetas, phis])
+        
+                if coordinate_system == 'XYZ':
+                    radii = (r_earth - arr.path['depth']) / r_earth
+                    thetas = np.radians(90. - arr.path['lat'])
+                    phis = np.radians(arr.path['lon'])
+                    gcircle = np.array([radii * np.sin(thetas) * np.cos(phis),
+                                        radii * np.sin(thetas) * np.sin(phis),
+                                        radii * np.cos(thetas)])
+        
+                greatcircles.append((gcircle, arr.name, stlabel))
+
+        return greatcircles
+
+
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
                       endtime=None, axes=None, unwrap_phase=False,
