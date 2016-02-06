@@ -5,7 +5,8 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy import read_inventory
+from obspy import read_inventory, read_events
+from obspy.imaging.ray_paths import plot_rays
 
 
 class PathPlottingTestCase(unittest.TestCase):
@@ -14,8 +15,9 @@ class PathPlottingTestCase(unittest.TestCase):
     """
     def test_pathplotting(self):
         inv = read_inventory('data/IU.xml')
-        evcoords = 20., 30., 100.
-        inv.plot_rays(evcoords, kind='mayavi')
+        cat = read_events()
+        plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
+                  kind='mayavi', colorscheme='dark')
 
 
 def suite():
