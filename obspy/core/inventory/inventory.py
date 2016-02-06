@@ -790,12 +790,13 @@ class Inventory(ComparingObject):
                   "radiation pattern that can be used by external " +\
                   "software like paraview"
             raise ImportError(msg)
-        
+
         greatcircles = self.get_ray_paths(evcoords, coordinate_system='XYZ')
-        
+
         fig = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
-        colordict = {'P':(0., 0.5, 0.), 'PKP':(0.5, 0., 0.), 'Pdiff':(0., 0., 0.5)}
-        fig.scene.disable_render = True # Super duper trick
+        colordict = {'P': (0., 0.5, 0.), 'PKP': (0.5, 0., 0.),
+                     'Pdiff': (0., 0., 0.5)}
+        fig.scene.disable_render = True  # faster rendering trick (?)
         for gcircle, name, stlabel in greatcircles:
             color = colordict[name]
             # use only every third point for plotting
@@ -803,32 +804,30 @@ class Inventory(ComparingObject):
                         tube_radius=0.004)
             mlab.points3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
                           scale_factor=0.01, color=(0.8, 0.8, 0.8))
-            mlab.text3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1], stlabel,
-                        scale=(0.01, 0.01, 0.01), color=(0.8, 0.8, 0.8))
+            mlab.text3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
+                        stlabel, scale=(0.01, 0.01, 0.01),
+                        color=(0.8, 0.8, 0.8))
         fig.scene.disable_render = False
-        
+
         # make surface
         data_source = mlab.pipeline.open('data/coastlines.vtk')
-        surface = mlab.pipeline.surface(data_source, opacity=1.0, color=(0.5,0.5,0.5))
-        
-        # make CMB
+        mlab.pipeline.surface(data_source, opacity=1.0, color=(0.5, 0.5, 0.5))
+
+        # make CMB sphere
         rad = 0.55
-        pi = np.pi
-        cos = np.cos
-        sin = np.sin
-        phi, theta = np.mgrid[0:pi:101j, 0:2 * pi:101j]
-        
-        x = rad * sin(phi) * cos(theta)
-        y = rad * sin(phi) * sin(theta)
-        z = rad * cos(phi)
+        phi, theta = np.mgrid[0:np.pi:101j, 0:2 * np.pi:101j]
+
+        x = rad * np.sin(phi) * np.cos(theta)
+        y = rad * np.sin(phi) * np.sin(theta)
+        z = rad * np.cos(phi)
         mlab.mesh(x, y, z, color=(0, 0, 0.3), opacity=0.4)
-        
+
         mlab.show()
 
     def plot_rays(self, evcoords, kind='mayavi'):
         """
-        plots raypaths between an event and and inventory. This could be extended
-        to plot all rays between a catalogue and an inventory
+        plots raypaths between an event and and inventory. This could be
+        extended to plot all rays between a catalogue and an inventory
         """
         # use mayavi if possible.
         if kind == 'mayavi':
@@ -836,8 +835,8 @@ class Inventory(ComparingObject):
 
     def get_ray_paths(self, evcoords, coordinate_system='RTP'):
         """
-        This function returns lat, lon, depth coordinates from an event location
-        to all stations in the inventory object
+        This function returns lat, lon, depth coordinates from an event
+        location to all stations in the inventory object
         """
         # extract all stations and their location
         stlats = []
@@ -876,7 +875,7 @@ class Inventory(ComparingObject):
                     thetas = np.radians(90. - arr.path['lat'])
                     phis = np.radians(arr.path['lon'])
                     gcircle = np.array([radii, thetas, phis])
-        
+
                 if coordinate_system == 'XYZ':
                     radii = (r_earth - arr.path['depth']) / r_earth
                     thetas = np.radians(90. - arr.path['lat'])
@@ -884,11 +883,10 @@ class Inventory(ComparingObject):
                     gcircle = np.array([radii * np.sin(thetas) * np.cos(phis),
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
-        
+
                 greatcircles.append((gcircle, arr.name, stlabel))
 
         return greatcircles
-
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
