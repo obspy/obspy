@@ -19,6 +19,7 @@ import fnmatch
 import os
 import textwrap
 import warnings
+import numpy as np
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
@@ -773,6 +774,66 @@ class Inventory(ComparingObject):
 
         return fig
 
+    def _plot_rays_mayavi(self, evcoords):
+        try:
+            from mayavi import mlab
+        except Exception as err:
+            print(err)
+            msg = "obspy failed to import mayavi. " +\
+                  "You need to install the mayavi module " +\
+                  "(e.g. conda install mayavi, pip install mayavi). " +\
+                  "If it is installed and still doesn't work, " +\
+                  "try setting the environmental variable QT_API to " +\
+                  "pyqt (e.g. export QT_API=pyqt) before running the " +\
+                  "code. Another option is to avoid mayavi and " +\
+                  "directly use kind='vtk' for vtk file output of the " +\
+                  "radiation pattern that can be used by external " +\
+                  "software like paraview"
+            raise ImportError(msg)
+        
+        greatcircles = self.get_ray_paths(evcoords, coordinate_system='XYZ')
+        
+        fig = mlab.figure(size=(800, 800), bgcolor=(0, 0, 0))
+        colordict = {'P':(0., 0.5, 0.), 'PKP':(0.5, 0., 0.), 'Pdiff':(0., 0., 0.5)}
+        fig.scene.disable_render = True # Super duper trick
+        for gcircle, name, stlabel in greatcircles:
+            color = colordict[name]
+            # use only every third point for plotting
+            mlab.plot3d(*gcircle[:, ::3], color=color, tube_sides=3,
+                        tube_radius=0.004)
+            mlab.points3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
+                          scale_factor=0.01, color=(0.8, 0.8, 0.8))
+            mlab.text3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1], stlabel,
+                        scale=(0.01, 0.01, 0.01), color=(0.8, 0.8, 0.8))
+        fig.scene.disable_render = False
+        
+        # make surface
+        data_source = mlab.pipeline.open('data/coastlines.vtk')
+        surface = mlab.pipeline.surface(data_source, opacity=1.0, color=(0.5,0.5,0.5))
+        
+        # make CMB
+        rad = 0.55
+        pi = np.pi
+        cos = np.cos
+        sin = np.sin
+        phi, theta = np.mgrid[0:pi:101j, 0:2 * pi:101j]
+        
+        x = rad * sin(phi) * cos(theta)
+        y = rad * sin(phi) * sin(theta)
+        z = rad * cos(phi)
+        mlab.mesh(x, y, z, color=(0, 0, 0.3), opacity=0.4)
+        
+        mlab.show()
+
+    def plot_rays(self, evcoords, kind='mayavi'):
+        """
+        plots raypaths between an event and and inventory. This could be extended
+        to plot all rays between a catalogue and an inventory
+        """
+        # use mayavi if possible.
+        if kind == 'mayavi':
+            self._plot_rays_mayavi(evcoords)
+
     def get_ray_paths(self, evcoords, coordinate_system='RTP'):
         """
         This function returns lat, lon, depth coordinates from an event location
@@ -796,7 +857,6 @@ class Inventory(ComparingObject):
 
         # initialize taup model
         from obspy.taup import TauPyModel
-        import numpy as np
         model = TauPyModel(model="iasp91")
 
         # now loop through all stations and compute the greatcircles
