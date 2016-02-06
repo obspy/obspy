@@ -46,7 +46,7 @@ def main(argv=None):
     print(st.__str__(extended=True))
     if args.print_gaps:
         print()
-        st.printGaps()
+        st.print_gaps()
 
 
 if __name__ == "__main__":

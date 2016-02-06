@@ -406,12 +406,12 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
     """
     Reads a single file from a plug-in's readFormat function.
     """
-    EPS = ENTRY_POINTS[plugin_type]
+    eps = ENTRY_POINTS[plugin_type]
     # get format entry point
     format_ep = None
     if not format:
         # auto detect format - go through all known formats in given sort order
-        for format_ep in EPS.values():
+        for format_ep in eps.values():
             # search isFormat for given entry point
             is_format = load_entry_point(
                 format_ep.dist.key,
@@ -436,10 +436,10 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
         # format given via argument
         format = format.upper()
         try:
-            format_ep = EPS[format]
+            format_ep = eps[format]
         except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(EPS)))
+            raise TypeError(msg % (format, ', '.join(eps)))
     # file format should be known by now
     try:
         # search readFormat for given entry point
@@ -449,7 +449,7 @@ def _read_from_plugin(plugin_type, filename, format=None, **kwargs):
             'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
-        raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
+        raise TypeError(msg % (format_ep.name, ', '.join(eps)))
     # read
     list_obj = read_format(filename, **kwargs)
     return list_obj, format_ep.name

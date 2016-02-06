@@ -16,7 +16,6 @@ class CodeFormattingTestCase(unittest.TestCase):
     """
     Test codebase for compliance with the flake8 tool.
     """
-
     @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
@@ -28,7 +27,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         self.assertGreater(file_count, 10)
         self.assertEqual(error_count, 0, "\n" + message.decode())
 
-    def test_use_ObsPyDeprecationWarning(self):
+    def test_use_obspy_deprecation_warning(self):
         """
         Tests that ObsPyDeprecationWarning is used rather than the usual
         DeprecationWarning when using `warnings.warn()`

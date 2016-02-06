@@ -661,7 +661,7 @@ class ResourceIdentifier(object):
                 pass
 
     @deprecated("Method 'getReferredObject' was renamed to "
-                "'get_referred_object'. Use that instead.")
+                "'get_referred_object'. Use that instead.")  # noqa
     def getReferredObject(self):
         return self.get_referred_object()
 
@@ -680,7 +680,7 @@ class ResourceIdentifier(object):
             return None
 
     @deprecated("Method 'setReferredObject' was renamed to "
-                "'set_referred_object'. Use that instead.")
+                "'set_referred_object'. Use that instead.")  # noqa
     def setReferredObject(self, referred_object):
         return self.set_referred_object(referred_object)
 
@@ -719,7 +719,7 @@ class ResourceIdentifier(object):
             referred_object
 
     @deprecated("Method 'convertIDToQuakeMLURI' was renamed to "
-                "'convert_id_to_quakeml_uri'. Use that instead.")
+                "'convert_id_to_quakeml_uri'. Use that instead.")  # noqa
     def convertIDToQuakeMLURI(self, authority_id="local"):
         return self.convert_id_to_quakeml_uri(authority_id=authority_id)
 
@@ -741,7 +741,7 @@ class ResourceIdentifier(object):
         self.id = self.get_quakeml_uri(authority_id=authority_id)
 
     @deprecated("Method 'getQuakeMLURI' was renamed to "
-                "'get_quakeml_uri'. Use that instead.")
+                "'get_quakeml_uri'. Use that instead.")  # noqa
     def getQuakeMLURI(self, authority_id="local"):
         return self.get_quakeml_uri(authority_id=authority_id)
 
@@ -1140,7 +1140,7 @@ class WaveformStreamID(__WaveformStreamID):
           channel_code: 'EHZ'
          location_code: ''
     >>> # Can also return the SEED string.
-    >>> print(stream_id.getSEEDString())
+    >>> print(stream_id.get_seed_string())
     BW.FUR..EHZ
     """
     def __init__(self, network_code=None, station_code=None,
@@ -1167,7 +1167,7 @@ class WaveformStreamID(__WaveformStreamID):
                                                channel_code=channel_code,
                                                resource_uri=resource_uri)
 
-    def getSEEDString(self):
+    def get_seed_string(self):
         return "%s.%s.%s.%s" % (
             self.network_code if self.network_code else "",
             self.station_code if self.station_code else "",
@@ -3034,31 +3034,31 @@ class Catalog(object):
         # Helper functions. Only first argument might be None. Avoid
         # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
-        def __is_smaller(value_1, value_2):
+        def _is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:
                 return True
             return False
 
-        def __is_smaller_or_equal(value_1, value_2):
+        def _is_smaller_or_equal(value_1, value_2):
             if value_1 is None or value_1 <= value_2:
                 return True
             return False
 
-        def __is_greater(value_1, value_2):
+        def _is_greater(value_1, value_2):
             if value_1 is None or value_1 <= value_2:
                 return False
             return True
 
-        def __is_greater_or_equal(value_1, value_2):
+        def _is_greater_or_equal(value_1, value_2):
             if value_1 is None or value_1 < value_2:
                 return False
             return True
 
         # Map the function to the operators.
-        operator_map = {"<": __is_smaller,
-                        "<=": __is_smaller_or_equal,
-                        ">": __is_greater,
-                        ">=": __is_greater_or_equal}
+        operator_map = {"<": _is_smaller,
+                        "<=": _is_smaller_or_equal,
+                        ">": _is_greater,
+                        ">=": _is_greater_or_equal}
 
         try:
             inverse = kwargs["inverse"]

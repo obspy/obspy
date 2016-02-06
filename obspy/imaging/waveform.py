@@ -602,7 +602,7 @@ class WaveformPlotting(object):
 
         for pick in getattr(event, 'picks', []):
             # check that network/station/location matches
-            if pick.waveform_id.getSEEDString().split(".")[:-1] != \
+            if pick.waveform_id.get_seed_string().split(".")[:-1] != \
                seed_id.split(".")[:-1]:
                 continue
             x_pos, y_pos = time2xy(pick.time)
@@ -1414,7 +1414,7 @@ class WaveformPlotting(object):
         self._minmax_warning_text = None
 
     def _draw_overlap_axvspans(self, st, ax):
-        for _, _, _, _, start, end, delta, _ in st.getGaps():
+        for _, _, _, _, start, end, delta, _ in st.get_gaps():
             if delta > 0:
                 continue
             start = self._time_to_xvalue(start)

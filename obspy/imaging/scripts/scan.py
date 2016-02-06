@@ -101,7 +101,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
             sys.stdout.write("    " + line + "\n")
         sys.stdout.flush()
     for tr in stream:
-        _id = tr.getId()
+        _id = tr.get_id()
         _samp_int_list = samp_int_dict.setdefault(_id, [])
         try:
             _samp_int_list.\

@@ -380,7 +380,7 @@ def wrap_long_string(string, line_length=79, prefix="",
 
 
 @contextmanager
-def CatchOutput():
+def CatchOutput():  # noqa -> this name is IMHO okay for a context manager.
     """
     A context manager that catches stdout/stderr/exit() for its scope.
 
@@ -446,7 +446,7 @@ def CatchOutput():
 
 
 @contextmanager
-def TemporaryWorkingDirectory():
+def TemporaryWorkingDirectory():  # noqa --> this name is IMHO ok for a CM
     """
     A context manager that changes to a temporary working directory.
 

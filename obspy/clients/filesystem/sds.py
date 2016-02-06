@@ -322,7 +322,7 @@ class Client(object):
 
         total_duration = endtime - starttime
         # sum up gaps in the middle
-        gaps = [gap[6] for gap in st.getGaps()]
+        gaps = [gap[6] for gap in st.get_gaps()]
         gap_sum = np.sum(gaps)
         gap_count = len(gaps)
         # check if we have a gap at start or end

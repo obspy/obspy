@@ -338,7 +338,7 @@ class TraceTestCase(unittest.TestCase):
         # start time should be before end time
         self.assertRaises(ValueError, trace.trim, end, start)
 
-    def test_trimAllDoesNotChangeDtype(self):
+    def test_trim_all_does_not_change_dtype(self):
         """
         If a Trace is completely trimmed, e.g. no data samples are remaining,
         the dtype should remain unchanged.
@@ -353,7 +353,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(tr.data), 0)
         self.assertEqual(tr.data.dtype, np.int16)
 
-    def test_addTraceWithGap(self):
+    def test_add_trace_with_gap(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -386,7 +386,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addTraceWithOverlap(self):
+    def test_add_trace_with_overlap(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -416,7 +416,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addSameTrace(self):
+    def test_add_same_trace(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -430,7 +430,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addTraceWithinTrace(self):
+    def test_add_trace_within_trace(self):
         """
         Tests __add__ method of the Trace class.
         """
@@ -461,7 +461,7 @@ class TraceTestCase(unittest.TestCase):
         # verify
         trace.verify()
 
-    def test_addGapAndOverlap(self):
+    def test_add_gap_and_overlap(self):
         """
         Test order of merging traces.
         """
@@ -505,12 +505,12 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
         np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
 
-    def test_addIntoGap(self):
+    def test_add_into_gap(self):
         """
         Test __add__ method of the Trace class
         Adding a trace that fits perfectly into gap in a trace
         """
-        myArray = np.arange(6, dtype=np.int32)
+        my_array = np.arange(6, dtype=np.int32)
 
         stats = Stats()
         stats.network = 'VI'
@@ -522,15 +522,15 @@ class TraceTestCase(unittest.TestCase):
 
         bigtrace = Trace(data=np.array([], dtype=np.int32), header=stats)
         bigtrace_sort = bigtrace.copy()
-        stats['npts'] = len(myArray)
-        myTrace = Trace(data=myArray, header=stats)
+        stats['npts'] = len(my_array)
+        my_trace = Trace(data=my_array, header=stats)
 
         stats['npts'] = 2
-        trace1 = Trace(data=myArray[0:2].copy(), header=stats)
+        trace1 = Trace(data=my_array[0:2].copy(), header=stats)
         stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 2)
-        trace2 = Trace(data=myArray[2:4].copy(), header=stats)
+        trace2 = Trace(data=my_array[2:4].copy(), header=stats)
         stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
-        trace3 = Trace(data=myArray[4:6].copy(), header=stats)
+        trace3 = Trace(data=my_array[4:6].copy(), header=stats)
 
         tr1 = bigtrace
         tr2 = bigtrace_sort
@@ -551,23 +551,23 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(tr, Trace))
                 self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
-            self.assertTrue((bigtrace_sort.data == myArray).all())
+            self.assertTrue((bigtrace_sort.data == my_array).all())
 
             fail_pattern = "\n\tExpected %s\n\tbut got  %s"
-            failinfo = fail_pattern % (myTrace, bigtrace_sort)
-            failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
-            self.assertEqual(bigtrace_sort, myTrace, failinfo)
+            failinfo = fail_pattern % (my_trace, bigtrace_sort)
+            failinfo += fail_pattern % (my_trace.data, bigtrace_sort.data)
+            self.assertEqual(bigtrace_sort, my_trace, failinfo)
 
-            failinfo = fail_pattern % (myArray, bigtrace.data)
-            self.assertTrue((bigtrace.data == myArray).all(), failinfo)
+            failinfo = fail_pattern % (my_array, bigtrace.data)
+            self.assertTrue((bigtrace.data == my_array).all(), failinfo)
 
-            failinfo = fail_pattern % (myTrace, bigtrace)
-            failinfo += fail_pattern % (myTrace.data, bigtrace.data)
-            self.assertEqual(bigtrace, myTrace, failinfo)
+            failinfo = fail_pattern % (my_trace, bigtrace)
+            failinfo += fail_pattern % (my_trace.data, bigtrace.data)
+            self.assertEqual(bigtrace, my_trace, failinfo)
 
             for array_ in (bigtrace.data, bigtrace_sort.data):
-                failinfo = fail_pattern % (myArray.dtype, array_.dtype)
-                self.assertEqual(myArray.dtype, array_.dtype, failinfo)
+                failinfo = fail_pattern % (my_array.dtype, array_.dtype)
+                self.assertEqual(my_array.dtype, array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -592,7 +592,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertIn("processing", tr2.stats)
         self.assertIn("trim", tr2.stats.processing[0])
 
-    def test_slice_noStarttimeOrEndtime(self):
+    def test_slice_no_starttime_or_endtime(self):
         """
         Tests the slicing of trace objects with no start time or end time
         provided. Compares results against the equivalent trim() operation
@@ -712,7 +712,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr2.stats.starttime, UTCDateTime(10))
         self.assertEqual(tr2.stats.endtime, UTCDateTime(40))
 
-    def test_trimFloatingPoint(self):
+    def test_trim_floating_point(self):
         """
         Tests the slicing of trace objects.
         """
@@ -796,7 +796,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
-    def test_trimFloatingPointWithPadding1(self):
+    def test_trim_floating_point_with_padding_1(self):
         """
         Tests the slicing of trace objects with the use of the padding option.
         """
@@ -833,7 +833,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data.ctypes.data, mem_pos)
         self.assertEqual(tr.stats, org_stats)
 
-    def test_trimFloatingPointWithPadding2(self):
+    def test_trim_floating_point_with_padding_2(self):
         """
         Use more complicated times and sampling rate.
         """
@@ -896,7 +896,7 @@ class TraceTestCase(unittest.TestCase):
         tr2.data = np.arange(10, dtype=np.float32)
         self.assertRaises(TypeError, tr.__add__, tr2)
 
-    def test_addOverlapsDefaultMethod(self):
+    def test_add_overlaps_default_method(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -985,7 +985,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(), [None] * 10)
 
-    def test_addWithDifferentSamplingRates(self):
+    def test_add_with_different_sampling_rates(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -1015,7 +1015,7 @@ class TraceTestCase(unittest.TestCase):
         tr2 + tr4
         tr4 + tr2
 
-    def test_addWithDifferentDatatypesOrID(self):
+    def test_add_with_different_datatypes_or_id(self):
         """
         Test __add__ method of the Trace object.
         """
@@ -1109,7 +1109,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(tr0 == object, False)
             self.assertEqual(tr0 != object, True)
 
-    def test_nearestSample(self):
+    def test_nearest_sample(self):
         """
         This test case shows that the libmseed is actually flooring the
         starttime to the next sample value, regardless if it is the nearest
@@ -1180,7 +1180,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.endtime,
                          UTCDateTime("2010-06-20T20:19:58.495000Z"))
 
-    def test_maskedArrayToString(self):
+    def test_masked_array_to_string(self):
         """
         Masked arrays should be marked using __str__.
         """
@@ -1245,7 +1245,7 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             tr.data, np.concatenate([[0.0], np.cumsum(data)[:-1] * 0.1]))
 
-    def test_issue317(self):
+    def test_issue_317(self):
         """
         Tests times after breaking a stream into parts and merging it again.
         """
@@ -1420,7 +1420,7 @@ class TraceTestCase(unittest.TestCase):
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
 
-    def test_raiseMasked(self):
+    def test_raise_masked(self):
         """
         Tests that detrend() raises in case of a masked array. (see #498)
         """
@@ -1481,7 +1481,7 @@ class TraceTestCase(unittest.TestCase):
                 kwargs[key if key != "location" else "locid"], tr.stats[key],
                 msg="'%s' did not get passed on to evalresp" % key)
 
-    def test_issue540(self):
+    def test_issue_540(self):
         """
         Trim with pad=True and given fill value should not return a masked
         NumPy array.

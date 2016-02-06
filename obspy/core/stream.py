@@ -206,7 +206,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     st = Stream()
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
-        st = _createExampleStream(headonly=headonly)
+        st = _create_example_stream(headonly=headonly)
     elif not isinstance(pathname_or_url, (str, native_str)):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
@@ -282,7 +282,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
     return stream
 
 
-def _createExampleStream(headonly=False):
+def _create_example_stream(headonly=False):
     """
     Create an example stream.
 
@@ -741,7 +741,7 @@ class Stream(object):
             raise TypeError(msg)
         return self
 
-    def getGaps(self, min_gap=None, max_gap=None):
+    def get_gaps(self, min_gap=None, max_gap=None):
         """
         Determine all trace gaps/overlaps of the Stream object.
 
@@ -764,9 +764,9 @@ class Stream(object):
 
         >>> from obspy import read, UTCDateTime
         >>> st = read()
-        >>> st.getGaps()
+        >>> st.get_gaps()
         []
-        >>> st.printGaps()  # doctest: +ELLIPSIS
+        >>> st.print_gaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         Total: 0 gap(s) and 0 overlap(s)
 
@@ -781,10 +781,10 @@ class Stream(object):
         <...Trace object at 0x...>
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
-        >>> st.getGaps()[0]  # doctest: +SKIP
+        >>> st.get_gaps()[0]  # doctest: +SKIP
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13),
           UTCDateTime(2009, 8, 24, 0, 20, 14), 1.0, 99]]
-        >>> st.printGaps()  # doctest: +ELLIPSIS
+        >>> st.print_gaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 1 gap(s) and 0 overlap(s)
@@ -1195,7 +1195,7 @@ class Stream(object):
         """
         return self.traces.pop(index)
 
-    def printGaps(self, min_gap=None, max_gap=None):
+    def print_gaps(self, min_gap=None, max_gap=None):
         """
         Print gap/overlap list summary information of the Stream object.
 
@@ -1210,9 +1210,9 @@ class Stream(object):
 
         >>> from obspy import read, UTCDateTime
         >>> st = read()
-        >>> st.getGaps()
+        >>> st.get_gaps()
         []
-        >>> st.printGaps()  # doctest: +ELLIPSIS
+        >>> st.print_gaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 Next Sample ...
         Total: 0 gap(s) and 0 overlap(s)
 
@@ -1227,9 +1227,9 @@ class Stream(object):
         <...Trace object at 0x...>
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
-        >>> st.getGaps()  # doctest: +ELLIPSIS
+        >>> st.get_gaps()  # doctest: +ELLIPSIS
         [[..., UTCDateTime(2009, 8, 24, 0, 20, 13), ...
-        >>> st.printGaps()  # doctest: +ELLIPSIS
+        >>> st.print_gaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 1 gap(s) and 0 overlap(s)
@@ -1246,14 +1246,14 @@ class Stream(object):
         <...Trace object at 0x...>
         >>> st.append(tr)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
-        >>> st.getGaps()  # doctest: +ELLIPSIS
+        >>> st.get_gaps()  # doctest: +ELLIPSIS
         [[...'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
-        >>> st.printGaps()  # doctest: +ELLIPSIS
+        >>> st.print_gaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 0 gap(s) and 1 overlap(s)
         """
-        result = self.getGaps(min_gap, max_gap)
+        result = self.get_gaps(min_gap, max_gap)
         print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
                                                 'Next Sample', 'Delta',
                                                 'Samples'))
@@ -1817,7 +1817,7 @@ class Stream(object):
             trace.verify()
         return self
 
-    def _mergeChecks(self):
+    def _merge_checks(self):
         """
         Sanity checks for merging.
         """
@@ -1895,7 +1895,7 @@ class Stream(object):
         if method == -1:
             return
         # check sampling rates and dtypes
-        self._mergeChecks()
+        self._merge_checks()
         # remember order of traces
         order = [id(i) for i in self.traces]
         # order matters!
@@ -1910,7 +1910,7 @@ class Stream(object):
                 # skip empty traces
                 if len(trace) == 0:
                     continue
-                _id = trace.getId()
+                _id = trace.get_id()
                 if _id not in traces_dict:
                     traces_dict[_id] = [trace]
                 else:
@@ -2833,7 +2833,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.traces = [_i for _i in self.traces if _i.stats.npts]
         # check sampling rates and dtypes
         try:
-            self._mergeChecks()
+            self._merge_checks()
         except Exception as e:
             if "Can't merge traces with same ids but" in str(e):
                 msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
@@ -3049,17 +3049,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
 
 @deprecated("Renamed to '_is_pickle'. Use that instead.")
-def isPickle(*args, **kwargs):
+def isPickle(*args, **kwargs):  # noqa
     return _is_pickle(*args, **kwargs)
 
 
 @deprecated("Renamed to '_read_pickle'. Use that instead.")
-def readPickle(*args, **kwargs):
+def readPickle(*args, **kwargs):  # noqa
     return _read_pickle(*args, **kwargs)
 
 
 @deprecated("Renamed to '_write_pickle'. Use that instead.")
-def writePickle(*args, **kwargs):
+def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
 
 

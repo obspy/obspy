@@ -38,11 +38,11 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 # Import shared libgse2
-clibgse2 = _load_CDLL("gse2")
+clibgse2 = _load_cdll("gse2")
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
