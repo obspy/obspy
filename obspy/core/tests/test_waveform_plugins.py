@@ -33,7 +33,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     """
     longMessage = True
 
-    def test_raiseOnEmptyFile(self):
+    def test_raise_on_empty_file(self):
         """
         Test case ensures that empty files do raise warnings.
         """
@@ -50,7 +50,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     'isFormat')
                 self.assertFalse(False, is_format(tmpfile))
 
-    def test_readAndWrite(self):
+    def test_read_and_write(self):
         """
         Tests read and write methods for all waveform plug-ins.
         """
@@ -155,12 +155,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     elif format not in ['WAV']:
                         self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
 
-    def test_isFormat(self):
+    def test_is_format(self):
         """
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
-        KNOWN_FALSE = [
+        known_false = [
             os.path.join('seisan', 'tests', 'data', 'SEISAN_Bug',
                          '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
             os.path.join('core', 'tests', 'data',
@@ -198,7 +198,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if any([n in file for n in KNOWN_FALSE]):
+                    if any([n in file for n in known_false]):
                         continue
                     if is_format(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
@@ -211,7 +211,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                               false_positives])
             raise Exception(msg)
 
-    def test_readThreadSafe(self):
+    def test_read_thread_safe(self):
         """
         Tests for race conditions. Reading n_threads (currently 30) times
         the same waveform file in parallel and compare the results which must
@@ -250,7 +250,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     timeout = 570  # 30 seconds under Travis' limit
                 cond = threading.Condition()
 
-                def testFunction(streams, cond):
+                def test_functions(streams, cond):
                     st = read(outfile, format=format)
                     streams.append(st)
                     with cond:
@@ -259,7 +259,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 # created class.
                 our_threads = []
                 for _i in range(n_threads):
-                    thread = threading.Thread(target=testFunction,
+                    thread = threading.Thread(target=test_functions,
                                               args=(streams, cond))
                     thread.start()
                     our_threads.append(thread)
@@ -286,7 +286,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     os.remove(outfile[:-4] + '.QBN')
                     os.remove(outfile[:-4] + '.QHD')
 
-    def test_issue193(self):
+    def test_issue_193(self):
         """
         Test for issue #193: if non-contiguous array is written correctly.
         """
@@ -318,7 +318,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     os.remove(tempfile[:-4] + '.QHD')
             np.testing.assert_array_equal(tr.data, tr_test.data)
 
-    def test_readGzip2File(self):
+    def test_read_gzip2_file(self):
         """
         Tests reading gzip compressed waveforms.
         """
@@ -329,7 +329,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'tspair.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_readBzip2File(self):
+    def test_read_bzip2_file(self):
         """
         Tests reading bzip2 compressed waveforms.
         """
@@ -340,7 +340,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_readTarArchive(self):
+    def test_read_tar_archive(self):
         """
         Tests reading tar compressed waveforms.
         """
@@ -364,7 +364,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, "slist.ascii"))
         self.assertEqual(st1, st2)
 
-    def test_readZipArchive(self):
+    def test_read_zip_archive(self):
         """
         Tests reading zip compressed waveforms.
         """
@@ -375,7 +375,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st2 = read(os.path.join(ascii_path, 'slist.ascii'))
         self.assertEqual(st1, st2)
 
-    def test_raiseOnUnknownFormat(self):
+    def test_raise_on_unknown_format(self):
         """
         Test case for issue #338:
         """

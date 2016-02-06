@@ -720,7 +720,7 @@ class PPSD(object):
         :type stream: :class:`~obspy.core.stream.Stream`
         """
         self._times_gaps += [[gap[4].timestamp, gap[5].timestamp]
-                             for gap in stream.getGaps()]
+                             for gap in stream.get_gaps()]
 
     def __insert_data_times(self, stream):
         """

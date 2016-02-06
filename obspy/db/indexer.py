@@ -439,7 +439,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 stats = os.stat(filepath)
                 stream = read(filepath, **kwargs)
                 # get gap and overlap information
-                gap_list = stream.getGaps()
+                gap_list = stream.get_gaps()
                 # merge channels and replace gaps/overlaps with 0 to prevent
                 # generation of masked arrays
                 stream.merge(fill_value=0)

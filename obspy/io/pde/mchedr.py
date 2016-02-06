@@ -821,7 +821,7 @@ class Unpickler(object):
         # network_code is required for QuakeML validation
         waveform_id.network_code = '  '
         station_string = \
-            waveform_id.getSEEDString()\
+            waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         prefix = '/'.join((res_id_prefix, 'waveformstream',
                            evid, station_string))
@@ -911,7 +911,7 @@ class Unpickler(object):
 
         evid = event.resource_id.id.split('/')[-1]
         station_string = \
-            pick.waveform_id.getSEEDString()\
+            pick.waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         amplitude = None
         if Z_amplitude is not None:
@@ -960,7 +960,7 @@ class Unpickler(object):
 
         evid = event.resource_id.id.split('/')[-1]
         station_string = \
-            p_pick.waveform_id.getSEEDString()\
+            p_pick.waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         origin = event.origins[0]
         for phase, arrival_time in arrivals:

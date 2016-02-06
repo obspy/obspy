@@ -24,7 +24,7 @@ from obspy.core.util.decorator import deprecated
 
 
 @deprecated("Method 'createPreview' was renamed to 'create_preview'. Use "
-            "that instead.")
+            "that instead.")  # noqa
 def createPreview(trace, delta=60):
     return create_preview(trace, delta)
 
@@ -93,7 +93,7 @@ def create_preview(trace, delta=60):
 
 
 @deprecated("Method 'mergePreviews' was renamed to 'merge_previews'. Use "
-            "that instead.")
+            "that instead.")  # noqa
 def mergePreviews(stream):
     return merge_previews(stream)
 
@@ -171,7 +171,7 @@ def merge_previews(stream):
 
 
 @deprecated("Method 'resamplePreview' was renamed to 'resample_preview'. Use "
-            "that instead.")
+            "that instead.")  # noqa
 def resamplePreview(trace, samples, method='accurate'):
     return resample_preview(trace, samples, method)
 

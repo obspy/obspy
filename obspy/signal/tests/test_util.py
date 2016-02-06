@@ -12,7 +12,7 @@ import unittest
 
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 from obspy.signal.cross_correlation import xcorr
 
 
@@ -70,7 +70,7 @@ class UtilTestCase(unittest.TestCase):
         window_len = 100
         corp = np.empty(2 * window_len + 1, dtype=np.float64)
 
-        lib = _load_CDLL("signal")
+        lib = _load_cdll("signal")
         #
         shift = C.c_int()
         coe_p = C.c_double()

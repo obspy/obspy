@@ -1074,7 +1074,7 @@ def _write_response(parent, resp):
                             else False
                             for key in ['frequency_range_start',
                                         'frequency_range_end',
-                                        'frequency_range_DB_variation']]
+                                        'frequency_range_db_variation']]
         # frequency range group properly described
         if all(freq_range_group):
             etree.SubElement(sub, "FrequencyStart").text = \

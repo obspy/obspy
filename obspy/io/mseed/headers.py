@@ -11,7 +11,7 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 HPTERROR = -2145916800000000
@@ -19,7 +19,7 @@ HPTERROR = -2145916800000000
 ENDIAN = {0: '<', 1: '>'}
 
 # Import shared libmseed
-clibmseed = _load_CDLL("mseed")
+clibmseed = _load_cdll("mseed")
 
 
 # XXX: Do we still support Python 2.4 ????

@@ -200,9 +200,9 @@ class RtTrace(Trace):
         # sanity checks
         if self.have_appended_data:
             #  check id
-            if self.getId() != trace.getId():
-                raise TypeError("Trace ID differs:", self.getId(),
-                                trace.getId())
+            if self.get_id() != trace.get_id():
+                raise TypeError("Trace ID differs:", self.get_id(),
+                                trace.get_id())
             #  check sample rate
             if self.stats.sampling_rate != trace.stats.sampling_rate:
                 raise TypeError("Sampling rate differs:",
@@ -367,7 +367,7 @@ class RtTrace(Trace):
 
         # add processing information to the stats dictionary
         proc_info = "realtime_process:%s:%s" % (process_name, options)
-        self._addProcessingInfo(proc_info)
+        self._add_processing_info(proc_info)
 
         return len(self.processing)
 

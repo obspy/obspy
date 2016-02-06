@@ -76,7 +76,7 @@ def _get_lib_name(lib, add_extension_suffix):
     return libname
 
 
-def _load_CDLL(name):
+def _load_cdll(name):
     """
     Helper function to load a shared library built during ObsPy installation
     with ctypes.

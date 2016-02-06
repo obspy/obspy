@@ -54,13 +54,12 @@ def add_unittests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_unittests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests",
+    module_tests = __import__(module_name + ".tests",
                               fromlist=[native_str("obspy")])
-    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
+    filename_pattern = os.path.join(module_tests.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
+    module_names = (".".join([module_name, "tests", name]) for name in names)
     for module_name in module_names:
         module = __import__(module_name,
                             fromlist=[native_str("obspy")])
@@ -85,12 +84,12 @@ def add_doctests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_doctests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist=[native_str("obspy")])
-    MODULE_PATH = MODULE.__path__[0]
-    MODULE_PATH_LEN = len(MODULE_PATH)
+    module_name = module_name
+    module = __import__(module_name, fromlist=[native_str("obspy")])
+    module_path = module.__path__[0]
+    module_path_len = len(module_path)
 
-    for root, _dirs, files in os.walk(MODULE_PATH):
+    for root, _dirs, files in os.walk(module_path):
         # skip directories without __init__.py
         if '__init__.py' not in files:
             continue
@@ -109,8 +108,8 @@ def add_doctests(testsuite, module_name):
             if not file.endswith('.py'):
                 continue
             # get module name
-            parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
-            module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
+            parts = root[module_path_len:].split(os.sep)[1:]
+            module_name = ".".join([module_name] + parts + [file[:-3]])
             try:
                 module = __import__(module_name,
                                     fromlist=[native_str("obspy")])
@@ -220,9 +219,9 @@ def compare_images(expected, actual, tol):
         return None
 
     # Save diff image, expand differences in luminance domain
-    absDiffImage = np.abs(expected_image - actual_image)
-    absDiffImage *= 10.0
-    save_image_np = np.clip(absDiffImage, 0.0, 1.0)
+    abs_diff_image = np.abs(expected_image - actual_image)
+    abs_diff_image *= 10.0
+    save_image_np = np.clip(abs_diff_image, 0.0, 1.0)
     # Hard-code the alpha channel to fully solid
     save_image_np[:, :, 3] = 1.0
 
@@ -626,7 +625,7 @@ def compare_xml_strings(doc1, doc2):
         raise AssertionError("Strings are not equal.\n" + err_msg)
 
 
-def remove_unique_IDs(xml_string, remove_creation_time=False):
+def remove_unique_ids(xml_string, remove_creation_time=False):
     """
     Removes unique ID parts of e.g. 'publicID="..."' attributes from xml
     strings.

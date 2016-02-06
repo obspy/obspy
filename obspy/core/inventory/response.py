@@ -1378,7 +1378,7 @@ class InstrumentSensitivity(ComparingObject):
     def __init__(self, value, frequency, input_units,
                  output_units, input_units_description=None,
                  output_units_description=None, frequency_range_start=None,
-                 frequency_range_end=None, frequency_range_DB_variation=None):
+                 frequency_range_end=None, frequency_range_db_variation=None):
         """
         :type value: float
         :param value: Complex type for sensitivity and frequency ranges.
@@ -1424,8 +1424,8 @@ class InstrumentSensitivity(ComparingObject):
         :type frequency_range_end: float, optional
         :param frequency_range_end: End of the frequency range for which the
             SensitivityValue is valid within the dB variation specified.
-        :type frequency_range_DB_variation: float, optional
-        :param frequency_range_DB_variation: Variation in decibels within the
+        :type frequency_range_db_variation: float, optional
+        :param frequency_range_db_variation: Variation in decibels within the
             specified range.
         """
         self.value = value
@@ -1436,7 +1436,7 @@ class InstrumentSensitivity(ComparingObject):
         self.output_units_description = output_units_description
         self.frequency_range_start = frequency_range_start
         self.frequency_range_end = frequency_range_end
-        self.frequency_range_DB_variation = frequency_range_DB_variation
+        self.frequency_range_db_variation = frequency_range_db_variation
 
     def __str__(self):
         ret = ("Instrument Sensitivity:\n"
