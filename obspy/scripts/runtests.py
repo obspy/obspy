@@ -96,6 +96,7 @@ import os
 import platform
 import sys
 import time
+import traceback
 import types
 import unittest
 import warnings
@@ -168,11 +169,24 @@ def _get_suites(verbosity=1, names=[]):
             test = name
         try:
             suite.append(ut.loadTestsFromName(test, None))
-        except Exception as e:
+        except Exception:
             status = False
             if verbosity:
-                print(e)
-                print("Cannot import test suite for module obspy.%s" % name)
+                msg = (">>> Cannot import test suite for module obspy.%s due "
+                       "to:" % name)
+                msg += "\n" + "-" * len(msg)
+                print(msg)
+                # Extract traceback from the exception.
+                exc_info = sys.exc_info()
+                stack = traceback.extract_stack()
+                tb = traceback.extract_tb(exc_info[2])
+                full_tb = stack[:-1] + tb
+                exc_line = traceback.format_exception_only(
+                        *exc_info[:2])
+                tb = "".join(traceback.format_list(full_tb))
+                tb += "\n"
+                tb += "".join(exc_line)
+                print(tb)
         else:
             suites[name] = ut.suiteClass(suite)
     return suites, status
