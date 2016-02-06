@@ -60,10 +60,10 @@ def add_unittests(testsuite, module_name):
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([module_name, "tests", name]) for name in names)
-    for module_name in module_names:
-        module = __import__(module_name,
-                            fromlist=[native_str("obspy")])
-        testsuite.addTest(module.suite())
+    for _module_name in module_names:
+        _module = __import__(_module_name,
+                             fromlist=[native_str("obspy")])
+        testsuite.addTest(_module.suite())
 
 
 def add_doctests(testsuite, module_name):
@@ -84,7 +84,6 @@ def add_doctests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_doctests(suite, "obspy.core")
     """
-    module_name = module_name
     module = __import__(module_name, fromlist=[native_str("obspy")])
     module_path = module.__path__[0]
     module_path_len = len(module_path)
@@ -109,11 +108,11 @@ def add_doctests(testsuite, module_name):
                 continue
             # get module name
             parts = root[module_path_len:].split(os.sep)[1:]
-            module_name = ".".join([module_name] + parts + [file[:-3]])
+            _module_name = ".".join([module_name] + parts + [file[:-3]])
             try:
-                module = __import__(module_name,
-                                    fromlist=[native_str("obspy")])
-                testsuite.addTest(doctest.DocTestSuite(module))
+                _module = __import__(_module_name,
+                                     fromlist=[native_str("obspy")])
+                testsuite.addTest(doctest.DocTestSuite(_module))
             except ValueError:
                 pass
 
