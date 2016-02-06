@@ -800,7 +800,7 @@ class Inventory(ComparingObject):
         for gcircle, name, stlabel in greatcircles:
             color = colordict[name]
             # use only every third point for plotting
-            mlab.plot3d(*gcircle[:, ::3], color=color, tube_sides=3,
+            mlab.plot3d(*gcircle[:, ::10], color=color, tube_sides=3,
                         tube_radius=0.004)
             mlab.points3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
                           scale_factor=0.01, color=(0.8, 0.8, 0.8))
@@ -815,7 +815,7 @@ class Inventory(ComparingObject):
 
         # make CMB sphere
         rad = 0.55
-        phi, theta = np.mgrid[0:np.pi:101j, 0:2 * np.pi:101j]
+        phi, theta = np.mgrid[0:np.pi:51j, 0:2 * np.pi:51j]
 
         x = rad * np.sin(phi) * np.cos(theta)
         y = rad * np.sin(phi) * np.sin(theta)
