@@ -2684,15 +2684,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         data = np.fft.irfft(data)[0:npts]
 
         if plot:
-            ax6.plot(times, data, color="k")
-            plt.subplots_adjust(wspace=0.4)
-            if plot is True and fig is None:
-                plt.show()
-            elif plot is True and fig is not None:
-                pass
-            else:
-                plt.savefig(plot)
-                plt.close(fig)
+            # Oftentimes raises numpy warnings which we don't want to see.
+            _t = np.geterr()
+            np.seterr(all="ignore")
+            try:
+                ax6.plot(times, data, color="k")
+                plt.subplots_adjust(wspace=0.4)
+                if plot is True and fig is None:
+                    plt.show()
+                elif plot is True and fig is not None:
+                    pass
+                else:
+                    plt.savefig(plot)
+                    plt.close(fig)
+            finally:
+                np.seterr(**_t)
 
         # assign processed data and store processing information
         self.data = data
