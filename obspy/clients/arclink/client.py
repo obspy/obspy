@@ -387,7 +387,7 @@ class Client(object):
         return data
 
     @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
 
@@ -498,7 +498,7 @@ class Client(object):
         return stream
 
     @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def saveWaveform(self, *args, **kwargs):
         return self.save_waveforms(*args, **kwargs)
 
@@ -608,7 +608,7 @@ class Client(object):
             fh.close()
 
     @deprecated("'getRouting' has been renamed to 'get_routing'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getRouting(self, *args, **kwargs):
         return self.get_routing(*args, **kwargs)
 
@@ -715,7 +715,7 @@ class Client(object):
         return out
 
     @deprecated("'getQC' has been renamed to 'get_qc'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getQC(self, *args, **kwargs):
         return self.get_qc(*args, **kwargs)
 
@@ -772,7 +772,7 @@ class Client(object):
         return result
 
     @deprecated("'getMetadata' has been renamed to 'get_metadata'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getMetadata(self, *args, **kwargs):
         return self.get_metadata(*args, **kwargs)
 
@@ -859,7 +859,7 @@ class Client(object):
             data['coordinates'][key] = result[id][key]
         return data
 
-    def __parsePAZ(self, xml_doc, xml_ns):
+    def __parse_paz(self, xml_doc, xml_ns):
         """
         """
         paz = AttribDict()
@@ -932,7 +932,7 @@ class Client(object):
         return paz
 
     @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getPAZ(self, *args, **kwargs):
         return self.get_paz(*args, **kwargs)
 
@@ -1018,7 +1018,7 @@ class Client(object):
             raise ArcLinkException(msg)
 
     @deprecated("'saveResponse' has been renamed to 'save_response'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def saveResponse(self, *args, **kwargs):
         return self.save_response(*args, **kwargs)
 
@@ -1074,7 +1074,7 @@ class Client(object):
                 fp.write(data)
 
     @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getInventory(self, *args, **kwargs):
         return self.get_inventory(*args, **kwargs)
 
@@ -1359,7 +1359,7 @@ class Client(object):
                         if not xml_paz:
                             continue
                         # parse PAZ
-                        paz = self.__parsePAZ(xml_paz[0], xml_ns)
+                        paz = self.__parse_paz(xml_paz[0], xml_ns)
 
                         # convert from Hz (Analog) to rad/s (Laplace)
                         if paz['response_type'] == "B":
@@ -1383,11 +1383,11 @@ class Client(object):
                         temp['paz'] = paz
 
                         # add some seismometer-specific "nice to have" stuff
-                        publicID = xml_paz[0].get('publicID')
+                        public_id = xml_paz[0].get('publicID')
                         try:
                             paz['sensor_manufacturer'] = \
-                                sensors[publicID]['manufacturer']
-                            paz['sensor_model'] = sensors[publicID]['model']
+                                sensors[public_id]['manufacturer']
+                            paz['sensor_model'] = sensors[public_id]['model']
                         except:
                             paz['sensor_manufacturer'] = None
                             paz['sensor_model'] = None
@@ -1395,7 +1395,7 @@ class Client(object):
         return data
 
     @deprecated("'getNetworks' has been renamed to 'get_networks'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getNetworks(self, *args, **kwargs):
         return self.get_networks(*args, **kwargs)
 
@@ -1419,7 +1419,7 @@ class Client(object):
                                   endtime=endtime, route=route)
 
     @deprecated("'getStations' has been renamed to 'get_stations'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getStations(self, *args, **kwargs):
         return self.get_stations(*args, **kwargs)
 
