@@ -253,7 +253,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(minradius["type"], float)
         self.assertEqual(minradius["options"], [])
 
-    def test_IRIS_event_catalog_availability(self):
+    def test_iris_event_catalog_availability(self):
         """
         Tests the parsing of the available event catalogs.
         """
@@ -261,7 +261,7 @@ class ClientTestCase(unittest.TestCase):
                          set(("ANF", "GCMT", "TEST", "ISC", "UofW",
                               "NEIC PDE")))
 
-    def test_IRIS_event_contributors_availability(self):
+    def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
@@ -272,7 +272,7 @@ class ClientTestCase(unittest.TestCase):
                               "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
                               "NEIC PDE-Q")))
 
-    def test_simple_XML_parser(self):
+    def test_simple_xml_parser(self):
         """
         Tests the simple XML parsing helper function.
         """
@@ -291,7 +291,7 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries_event(self):
+    def test_iris_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page.
@@ -329,7 +329,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected,
                              filename + '\n' + failmsg(got, expected))
 
-    def test_IRIS_example_queries_station(self):
+    def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -381,7 +381,7 @@ class ClientTestCase(unittest.TestCase):
                           ignore_lines=ignore_lines)
             self.assertEqual(msg, "", filename + '\n' + msg)
 
-    def test_IRIS_example_queries_dataselect(self):
+    def test_iris_example_queries_dataselect(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -440,7 +440,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(FDSNException, self.client.get_stations,
                           network="IU", net="IU")
 
-    def test_help_function_with_IRIS(self):
+    def test_help_function_with_iris(self):
         """
         Tests the help function with the IRIS example.
 
