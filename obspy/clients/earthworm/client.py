@@ -48,7 +48,7 @@ class Client(object):
         self.debug = debug
 
     @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
 
@@ -126,7 +126,7 @@ class Client(object):
         return st
 
     @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def saveWaveform(self, *args, **kwargs):
         return self.save_waveforms(*args, **kwargs)
 
