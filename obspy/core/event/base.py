@@ -22,24 +22,17 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 from future.utils import native_str
 
 import collections
 import copy
-import glob
 import inspect
-import io
-import os
 import re
 import sys
 import warnings
 import weakref
 from copy import deepcopy
 from uuid import uuid4
-
-with standard_library.hooks():
-    import urllib.request
 
 from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      DataUsedWaveType, EvaluationMode,
@@ -49,112 +42,11 @@ from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      OriginUncertaintyDescription, PickOnset,
                                      PickPolarity, SourceTimeFunctionType)
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
-from obspy.core.util.decorator import (deprecated, map_example_filename,
-                                       uncompress_file)
+from obspy.core.util import AttribDict
+from obspy.core.util.decorator import deprecated
 
 
 ATTRIBUTE_HAS_ERRORS = True
-
-
-@map_example_filename("pathname_or_url")
-def read_events(pathname_or_url=None, format=None, **kwargs):
-    """
-    Read event files into an ObsPy Catalog object.
-
-    The :func:`~obspy.core.event.read_events` function opens either one or
-    multiple event files given via file name or URL using the
-    ``pathname_or_url`` attribute.
-
-    :type pathname_or_url: str or StringIO.StringIO, optional
-    :param pathname_or_url: String containing a file name or a URL or a open
-        file-like object. Wildcards are allowed for a file name. If this
-        attribute is omitted, an example :class:`~obspy.core.event.Catalog`
-        object will be returned.
-    :type format: str, optional
-    :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
-        `Supported Formats`_ section below for a list of supported formats.
-    :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
-
-    .. rubric:: _`Supported Formats`
-
-    Additional ObsPy modules extend the functionality of the
-    :func:`~obspy.core.event.read_events` function. The following table
-    summarizes all known file formats currently supported by ObsPy.
-
-    Please refer to the `Linked Function Call`_ of each module for any extra
-    options available at the import stage.
-
-    %s
-
-    Next to the :func:`~obspy.core.event.read_events` function the
-    :meth:`~obspy.core.event.Catalog.write` method of the returned
-    :class:`~obspy.core.event.Catalog` object can be used to export the data to
-    the file system.
-    """
-    if pathname_or_url is None:
-        # if no pathname or URL specified, return example catalog
-        return _create_example_catalog()
-    elif not isinstance(pathname_or_url, (str, native_str)):
-        # not a string - we assume a file-like object
-        try:
-            # first try reading directly
-            catalog = _read(pathname_or_url, format, **kwargs)
-        except TypeError:
-            # if this fails, create a temporary file which is read directly
-            # from the file system
-            pathname_or_url.seek(0)
-            with NamedTemporaryFile() as fh:
-                fh.write(pathname_or_url.read())
-                catalog = _read(fh.name, format, **kwargs)
-        return catalog
-    elif isinstance(pathname_or_url, bytes) and \
-            pathname_or_url.strip().startswith(b'<'):
-        # XML string
-        return _read(io.BytesIO(pathname_or_url), format, **kwargs)
-    elif "://" in pathname_or_url[:10]:
-        # URL
-        # extract extension if any
-        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib.request.urlopen(pathname_or_url).read())
-            catalog = _read(fh.name, format, **kwargs)
-        return catalog
-    else:
-        pathname = pathname_or_url
-        # File name(s)
-        pathnames = sorted(glob.glob(pathname))
-        if not pathnames:
-            # try to give more specific information why the stream is empty
-            if glob.has_magic(pathname) and not glob.glob(pathname):
-                raise Exception("No file matching file pattern: %s" % pathname)
-            elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
-                raise IOError(2, "No such file or directory", pathname)
-
-        catalog = _read(pathnames[0], format, **kwargs)
-        if len(pathnames) > 1:
-            for filename in pathnames[1:]:
-                catalog.extend(_read(filename, format, **kwargs).events)
-        return catalog
-
-
-@uncompress_file
-def _read(filename, format=None, **kwargs):
-    """
-    Reads a single event file into a ObsPy Catalog object.
-    """
-    catalog, format = _read_from_plugin('event', filename, format=format,
-                                        **kwargs)
-    for event in catalog:
-        event._format = format
-    return catalog
-
-
-def _create_example_catalog():
-    """
-    Create an example catalog.
-    """
-    return read_events('/path/to/neries_events.xml')
 
 
 class QuantityError(AttribDict):
