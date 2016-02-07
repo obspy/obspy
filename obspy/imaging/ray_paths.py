@@ -28,7 +28,7 @@ import ipdb
 
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
               evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
-              colorscheme='default'):
+              colorscheme='default', animate=False):
     """
     plots raypaths between an event and and inventory. This could be
     extended to plot all rays between a catalogue and an inventory
@@ -38,7 +38,7 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
         _plot_rays_mayavi(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
             evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
-            phase_list=phase_list, colorscheme=colorscheme)
+            phase_list=phase_list, colorscheme=colorscheme, animate=animate)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
@@ -147,7 +147,7 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                       evlat=None, evlon=None, evdepth_km=None,
-                      phase_list=['P'], colorscheme='default'):
+                      phase_list=['P'], colorscheme='default', animate=False):
     try:
         from mayavi import mlab
         from mayavi.tools.pipeline import line_source
@@ -176,15 +176,14 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         # colors (a distinct colors for each phase):
         lightness = 0.4
         saturation = 1.0
-        ncolors = nphases + 2  # two extra colors for continents and events
+        ncolors = nphases
         hues = np.linspace(0., 1. - 1./ncolors, ncolors)
-
         raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
-                     in hues[2:]]
+                     in hues]
 
-        labelcolor = hls_to_rgb(hues[0], 0.8, 0.5)
-        continentcolor = hls_to_rgb(hues[0], 0.3, 0.2)
-        eventcolor = hls_to_rgb(hues[1], 0.8, 0.5)
+        labelcolor = hls_to_rgb(0.0, 0.8, 0.5)
+        continentcolor = hls_to_rgb(0., 0.3, 0.2)
+        eventcolor = hls_to_rgb(0.5, 0.8, 0.5)
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
         # sizes:
@@ -317,7 +316,17 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.1, line_width=0.5)
     icb.actor.property.interpolation = 'gouraud'
 
-    mlab.show()
+    if animate:
+        @mlab.show
+        @mlab.animate(delay=20)
+        def anim():
+             while 1:
+                 fig.scene.camera.azimuth(0.1)
+                 fig.scene.render()
+                 yield
+        anim() # Starts the animation.
+    else:
+        mlab.show()
 
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
