@@ -31,7 +31,7 @@ MATPLOTLIB_VERSION = get_matplotlib_version()
 
 def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
                     coordinate_system='RTP',
-                    p_sphere_direction='inwards'):
+                    p_sphere_direction='inwards', fig=None, show=True):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
     calculations are based on [Aki1980]_ eq. 4.29.
@@ -62,6 +62,11 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
     :param coordinate_system: the only implemented option so far is 'RTP'.
                               Should be extended to support NED, USE, DSE, NED
                               in the future
+    :type fig: :class:`matplotlib.figure.Figure`
+    :param fig: Figure instance to use.
+    :type show: bool
+    :param show: Whether to show the figure after plotting or not. Can be
+        used to do further customization of the plot before showing it.
 
     :return: 3D grid point array with shape [3,npts] that contains
              the sperical grid points
@@ -100,7 +105,8 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
         ncols = min(nplots, maxcolumns)
         nrows = int(np.ceil(nplots / ncols))
         figsize = ncols * 5., nrows * 5.
-        fig = plt.figure(figsize=figsize, facecolor='white')
+        if not fig:
+            fig = plt.figure(figsize=figsize, facecolor='white')
 
         for iplot in range(nplots):
             iax = iplot + 1
@@ -130,7 +136,9 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
                 _plot_beachball(ax2d, rtp_mt)
 
         fig.tight_layout(pad=0.1)
-        plt.show()
+        if show:
+            plt.show()
+        return fig
 
     elif kind == 'mayavi':
         _plot_mayavi(ned_mt)

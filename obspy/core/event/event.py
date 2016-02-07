@@ -18,6 +18,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import matplotlib.pyplot as plt
+
 from obspy.core.event_header import EventType, EventTypeCertainty
 
 from .base import (_event_type_class_factory,
@@ -204,19 +206,40 @@ class Event(__Event):
         except AttributeError:
             return None
 
-    def plot(self):
+    def plot(self, kind=['beachball', 'p_sphere', 's_sphere'], show=True,
+             outfile=None):
         """
         plots the preferred focal mechanism and radiation pattern
+
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+        :type outfile: str
+        :param outfile: Output file path to directly save the resulting image
+            (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
+            will not be displayed interactively. The given path/filename is
+            also used to automatically determine the output format. Supported
+            file formats depend on your matplotlib backend.  Most backends
+            support png, pdf, ps, eps and svg. Defaults to ``None``.
+        :returns: Figure instance with the plot.
         """
-        fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
         try:
+            fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
             mtensor = fm.moment_tensor.tensor
-            mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
-                  mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
-            plot_3drpattern(mt, kind='p_sphere')
-        except AttributeError as err:
-            print(err)
-            print("Could not access event's moment tensor.")
+        except (IndexError, AttributeError) as e:
+            msg = "Could not access event's moment tensor ({}).".format(str(e))
+            raise ValueError(msg)
+
+        mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
+              mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
+        fig = plot_3drpattern(mt, kind=kind, coordinate_system='RTP',
+                              show=False)
+
+        if outfile:
+            fig.savefig(outfile)
+        if show:
+            plt.show()
+        return fig
 
     def write(self, filename, format, **kwargs):
         """
