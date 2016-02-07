@@ -591,7 +591,7 @@ def farfield(mt, points, type):
         pass
     else:
         raise ValueError('points should have shape 2 x npoints or 3 x npoints')
-    Mpq = fullmt(mt)
+    m_pq = fullmt(mt)
 
     # precompute directional cosine array
     dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
@@ -607,19 +607,19 @@ def farfield(mt, points, type):
             # loop through displacement component [n index]
             gamma = gammas[:, ipoint]
             gammapq = np.outer(gamma, gamma)
-            gammatimesmt = gammapq * Mpq
+            gammatimesmt = gammapq * m_pq
             for n in range(ndim):
                 disp[n, ipoint] = gamma[n] * np.sum(gammatimesmt.flatten())
     else:
         for ipoint in range(npoints):
             # loop through displacement component [n index]
             gamma = gammas[:, ipoint]
-            Mp = np.dot(Mpq, gamma)
+            m_p = np.dot(m_pq, gamma)
             for n in range(ndim):
                 psum = 0.0
                 for p in range(ndim):
                     deltanp = int(n == p)
-                    psum += (gamma[n] * gamma[p] - deltanp) * Mp[p]
+                    psum += (gamma[n] * gamma[p] - deltanp) * m_p[p]
                 disp[n, ipoint] = psum
 
     return disp
