@@ -33,13 +33,13 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
                     p_sphere_direction='inwards'):
     """
     Plots the P farfield radiation pattern on a unit sphere grid
-    calculations are based on Aki & Richards Eq 4.29
+    calculations are based on [Aki1980]_ eq. 4.29.
 
 
     :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
         system is 1,2,3 = Up,South,East which equals r,theta,phi -
-        Harvard/Global CMT convention). The relation to Aki and Richards
+        Harvard/Global CMT convention). The relation to [Aki1980]_
         x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
 
@@ -605,8 +605,8 @@ def equalarea_spherical_grid(nlat=30):
 
 def farfield_p(mt, points):
     """
-    Returns the P farfield radiation pattern
-    based on Aki & Richards Eq 4.29
+    Return the P/S farfield radiation pattern
+    based on [Aki1980]_ eq. 4.29.
 
     :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
                six independent components of the moment tensor)
@@ -655,7 +655,7 @@ def farfield_p(mt, points):
 def farfield_s(mt, points):
     """
     Returns the S farfield radiation pattern
-    based on Aki & Richards Eq 4.29
+    based on [Aki2002]_ eq. 4.29.
 
     :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
                six independent components of the moment tensor)
