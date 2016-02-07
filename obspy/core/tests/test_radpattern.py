@@ -8,7 +8,7 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-from obspy.core.event import plot_3drpattern
+from obspy.core.event.radpattern import plot_3drpattern
 from obspy.core.util.base import get_matplotlib_version
 
 

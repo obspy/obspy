@@ -37,7 +37,6 @@ from .base import (_event_type_class_factory, Amplitude,
                    TimeWindow, WaveformStreamID)
 from .catalog import Catalog, read_events
 from .event import Event
-from .radpattern import plot_3drpattern, farfield_p, farfield_s
 
 if __name__ == '__main__':
     import doctest

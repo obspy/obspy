@@ -5,11 +5,7 @@
 # ---------------------------------------------------------------------
 
 """
-This script contains the following functions to compute and plot radiation
-patterns:
-    farfield_p
-    farfield_s
-    plot_3drpattern
+Functions to compute and plot radiation patterns
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -110,19 +106,20 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
             iax = iplot + 1
             if kind[iplot] == 'p_quiver':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_p_quiver(ax3d, ned_mt)
+                _plot_quiver(ax3d, ned_mt, type="P")
 
             elif kind[iplot] == 'p_sphere':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_p_sphere(ax3d, ned_mt, p_sphere_direction)
+                _plot_sphere(ax3d, ned_mt, type="P",
+                             p_sphere_direction=p_sphere_direction)
 
             elif kind[iplot] == 's_quiver':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_s_quiver(ax3d, ned_mt)
+                _plot_quiver(ax3d, ned_mt, type="S")
 
             elif kind[iplot] == 's_sphere':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_s_sphere(ax3d, ned_mt)
+                _plot_sphere(ax3d, ned_mt, type="S")
 
             elif kind[iplot] == 'beachball':
                 ax2d = fig.add_subplot(nrows, ncols, iax, aspect='equal')
@@ -151,56 +148,23 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
 
 
-def _plot_p_quiver(ax3d, ned_mt):
+def _plot_sphere(ax3d, ned_mt, type, p_sphere_direction='inwards'):
     """
-    private routine that plots the p_wave farfield into the
-    input ax object
-
-    :param ax3d: a matplotlib ax with 3d projection activated
-    :param ned_mt: the 6 comp moment tensor in NED orientation
-    """
-    if MATPLOTLIB_VERSION < [1, 4]:
-        msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
-        raise ImportError(msg)
-    # precompute even spherical grid and directional cosine array
-    points = equalarea_spherical_grid(nlat=14)
-
-    # get radiation pattern
-    disp = farfield_p(ned_mt, points)
-
-    # normalized magnitude:
-    magn = np.sum(disp * points, axis=0)
-    magn /= np.max(np.abs(magn))
-
-    # there is a mlab3d bug that quiver vector colors and lengths
-    # can only be changed if we plot each arrow independently
-    for loc, vec, mag in zip(points.T, disp.T, magn.T):
-        # compute colours and displace points along normal
-        norm = plt.Normalize(-1., 1.)
-        cmap = plt.get_cmap('bwr')
-        loc *= (1. + mag/2.)
-        color = cmap(norm(mag))
-        ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                    length=abs(mag)/2., color=color)
-    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
-             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
-             xticklabels=['South', 'North'],
-             yticklabels=['West', 'East'],
-             zticklabels=['Up', 'Down'],
-             title='p wave farfield')
-    ax3d.view_init(elev=-110., azim=0.)
-
-
-def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
-    """
-    private function that plots a p radiation pattern sphere into
+    private function that plots a radiation pattern sphere into
     ax3d
     :param ax3d: matplotlib 3d ax object
     :param ned_mt: moment tensor in NED convention
     :param p_sphere_direction: if this is 'inwards', the tension regions
                                of the beachball deform the radiation sphere
                                inwards. If 'outwards' it deforms outwards.
+    :param type: 'P' or 'S' (P or S wave).
     """
+    type = type.upper()
+    if type not in ("P", "S"):
+        msg = ("type must be 'P' or 'S'")
+        raise ValueError(msg)
+    is_p_wave = type == "P"
+
     # generate spherical mesh that is aligned with the moment tensor null
     # axis. MOPAD should use NED coordinate system to avoid internal
     # coordinate transformations
@@ -210,10 +174,13 @@ def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
     evecs = mtensor.get_eigvecs()
     evals = np.abs(mtensor.get_eigvals())**2
     evals_dev = np.abs(evals-np.mean(evals))
-    if p_sphere_direction == 'outwards':
+    if is_p_wave:
+        if p_sphere_direction == 'outwards':
+            evec_max = evecs[np.argmax(evals_dev)]
+        elif p_sphere_direction == 'inwards':
+            evec_max = evecs[np.argmax(evals)]
+    else:
         evec_max = evecs[np.argmax(evals_dev)]
-    elif p_sphere_direction == 'inwards':
-        evec_max = evecs[np.argmax(evals)]
     orientation = np.ravel(evec_max)
 
     # get a uv sphere that is oriented along the moment tensor axes
@@ -223,16 +190,25 @@ def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
     sshape = (ntheta, nphi)
 
     # get radiation pattern
-    disp = farfield_p(ned_mt, points)
-    magn = np.sum(disp * points, axis=0)
+    if is_p_wave:
+        disp = farfield(ned_mt, points, type="P")
+        magn = np.sum(disp * points, axis=0)
+        cmap = plt.get_cmap('bwr')
+        norm = plt.Normalize(-1, 1)
+    else:
+        disp = farfield(ned_mt, points, type="S")
+        magn = np.sqrt(np.sum(disp * disp, axis=0))
+        cmap = plt.get_cmap('Greens')
+        norm = plt.Normalize(0, 1)
     magn /= np.max(np.abs(magn))
 
     # compute colours and displace points along normal
-    norm = plt.Normalize(-1., 1.)
-    cmap = plt.get_cmap('bwr')
-    if p_sphere_direction == 'outwards':
-        points *= (1. + np.abs(magn) / 2.)
-    elif p_sphere_direction == 'inwards':
+    if is_p_wave:
+        if p_sphere_direction == 'outwards':
+            points *= (1. + np.abs(magn) / 2.)
+        elif p_sphere_direction == 'inwards':
+            points *= (1. + magn/2.)
+    else:
         points *= (1. + magn/2.)
     colors = np.array([cmap(norm(val)) for val in magn])
     colors = colors.reshape(ntheta, nphi, 4)
@@ -248,101 +224,67 @@ def _plot_p_sphere(ax3d, ned_mt, p_sphere_direction):
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='p wave farfield')
+             title='{} wave farfield'.format(type))
     ax3d.view_init(elev=-110., azim=0.)
 
 
-def _plot_s_quiver(ax3d, ned_mt):
+def _plot_quiver(ax3d, ned_mt, type):
     """
-    private routine that plots the s_wave farfield into the
+    private routine that plots the wave farfield into the
     input ax object
 
     :param ax3d: a matplotlib ax with 3d projection activated
     :param ned_mt: the 6 comp moment tensor in NED orientation
+    :type type: str
+    :param type: 'P' or 'S' (P or S wave).
     """
     if MATPLOTLIB_VERSION < [1, 4]:
         msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
         raise ImportError(msg)
+
+    type = type.upper()
+    if type not in ("P", "S"):
+        msg = ("type must be 'P' or 'S'")
+        raise ValueError(msg)
+    is_p_wave = type == "P"
+
     # precompute even spherical grid and directional cosine array
     points = equalarea_spherical_grid(nlat=14)
 
-    # get radiation pattern
-    disp = farfield_s(ned_mt, points)
-
-    # normalized magnitude (positive only):
-    magn = np.sqrt(np.sum(disp * disp, axis=0))
-    magn /= np.max(np.abs(magn))
+    if is_p_wave:
+        # get radiation pattern
+        disp = farfield(ned_mt, points, type="P")
+        # normalized magnitude:
+        magn = np.sum(disp * points, axis=0)
+        magn /= np.max(np.abs(magn))
+        cmap = plt.get_cmap('bwr')
+    else:
+        # get radiation pattern
+        disp = farfield(ned_mt, points, type="S")
+        # normalized magnitude (positive only):
+        magn = np.sqrt(np.sum(disp * disp, axis=0))
+        magn /= np.max(np.abs(magn))
+        cmap = plt.get_cmap('Greens')
 
     # plot
     # there is a mlab3d bug that quiver vector colors and lengths
     # can only be changed if we plot each arrow independently
     for loc, vec, mag in zip(points.T, disp.T, magn.T):
         norm = plt.Normalize(-1., 1.)
-        cmap = plt.get_cmap('Greens')
         color = cmap(norm(mag))
+        if is_p_wave:
+            loc *= (1. + mag/2.)
+            length = abs(mag) / 2.0
+        else:
+            length = abs(mag) / 5.0
         ax3d.quiver(loc[0], loc[1], loc[2], vec[0], vec[1], vec[2],
-                    length=abs(mag)/5., color=color)
+                    length=length, color=color)
     ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
              xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
              xticklabels=['South', 'North'],
              yticklabels=['West', 'East'],
              zticklabels=['Up', 'Down'],
-             title='s wave farfield')
-    ax3d.view_init(elev=-110., azim=0.)
-
-
-def _plot_s_sphere(ax3d, ned_mt):
-    """
-    private function that plots a s radiation pattern sphere into
-    ax3d
-    :param ax3d: matplotlib 3d ax object
-    :param ned_mt: moment tensor in NED convention
-    :param p_sphere_direction: if this is 'inwards', the tension regions
-                               of the beachball deform the radiation sphere
-                               inwards. If 'outwards' it deforms outwards.
-    """
-    # generate spherical mesh that is aligned with the moment tensor null
-    # axis. MOPAD should use NED coordinate system to avoid internal
-    # coordinate transformations
-    mtensor = MomentTensor(ned_mt, system='NED')
-
-    # use the most isolated eigenvector as axis of symmetry
-    evecs = mtensor.get_eigvecs()
-    evals = np.abs(mtensor.get_eigvals())**2
-    evals_dev = np.abs(evals-np.mean(evals))
-    evec_max = evecs[np.argmax(evals_dev)]
-    orientation = np.ravel(evec_max)
-
-    # get a uv sphere that is oriented along the moment tensor axes
-    ntheta, nphi = 100, 100
-    points = oriented_uv_sphere(ntheta=ntheta, nphi=nphi,
-                                orientation=orientation)
-    sshape = (ntheta, nphi)
-
-    # get radiation pattern
-    disp = farfield_s(ned_mt, points)
-    magn = np.sqrt(np.sum(disp * disp, axis=0))
-    magn /= np.max(np.abs(magn))
-
-    # compute colours and displace points along normal
-    norm = plt.Normalize(0., 1.)
-    cmap = plt.get_cmap('Greens')
-    points *= (1. + magn/2.)
-    colors = np.array([cmap(norm(val)) for val in magn])
-    colors = colors.reshape(ntheta, nphi, 4)
-
-    x = points[0].reshape(sshape)
-    y = points[1].reshape(sshape)
-    z = points[2].reshape(sshape)
-
-    # plot
-    ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
-    ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
-             xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
-             xticklabels=['South', 'North'],
-             yticklabels=['West', 'East'],
-             zticklabels=['Up', 'Down'],
-             title='s wave farfield')
+             title='{} wave farfield'.format(type))
     ax3d.view_init(elev=-110., azim=0.)
 
 
@@ -406,8 +348,8 @@ def _plot_mayavi(ned_mt):
 
     # plot radiation pattern and nodal lines
     points = equalarea_spherical_grid(nlat=20)
-    dispp = farfield_p(ned_mt, points)
-    disps = farfield_s(ned_mt, points)
+    dispp = farfield(ned_mt, points, type="P")
+    disps = farfield(ned_mt, points, type="S")
 
     # get vector lengths
     normp = np.sum(dispp * points, axis=0)
@@ -464,8 +406,8 @@ def _write_vtk_files(ned_mt, fname_rpattern='rpattern.vtk',
     # plot radiation pattern and nodal lines
     points = spherical_grid()
     ndim, npoints = points.shape
-    dispp = farfield_p(ned_mt, points)
-    disps = farfield_s(ned_mt, points)
+    dispp = farfield(ned_mt, points, type="P")
+    disps = farfield(ned_mt, points, type="S")
 
     # write vector field
     with open(fname_rpattern, 'w') as vtk_file:
@@ -614,7 +556,7 @@ def equalarea_spherical_grid(nlat=30):
     return points
 
 
-def farfield_p(mt, points):
+def farfield(mt, points, type):
     """
     Return the P/S farfield radiation pattern
     based on [Aki1980]_ eq. 4.29.
@@ -625,10 +567,18 @@ def farfield_p(mt, points):
     :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
                    (theta,phi) The normalized displacement of the moment
                    tensor source is computed at these points.
+    :type type: str
+    :param type: 'P' or 'S' (P or S wave).
 
     :return: 3D vector array with shape [3,npts] that contains the
              displacement vector for each grid point
     """
+    type = type.upper()
+    if type not in ("P", "S"):
+        msg = ("type must be 'P' or 'S'")
+        raise ValueError(msg)
+    is_p_wave = type == "P"
+
     ndim, npoints = points.shape
     if ndim == 2:
         # points are given as theta,phi
@@ -652,65 +602,25 @@ def farfield_p(mt, points):
     disp = np.empty((ndim, npoints))
 
     # loop through points
-    for ipoint in range(npoints):
-        # loop through displacement component [n index]
-        gamma = gammas[:, ipoint]
-        gammapq = np.outer(gamma, gamma)
-        gammatimesmt = gammapq * Mpq
-        for n in range(ndim):
-            disp[n, ipoint] = gamma[n] * np.sum(gammatimesmt.flatten())
-
-    return disp
-
-
-def farfield_s(mt, points):
-    """
-    Returns the S farfield radiation pattern
-    based on [Aki2002]_ eq. 4.29.
-
-    :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
-               six independent components of the moment tensor)
-
-    :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
-                   (theta,phi) The normalized displacement of the moment
-                   tensor source is computed at these points.
-
-    :return: 3D vector array with shape [3,npts] that contains the
-             displacement vector for each grid point
-    """
-    ndim, npoints = points.shape
-    if ndim == 2:
-        # points are given as theta,phi
-        points = np.empty((3, npoints))
-        points[0] = np.sin(points[0]) * np.cos(points[1])
-        points[1] = np.sin(points[0]) * np.sin(points[1])
-        points[2] = np.cos(points[0])
-    elif ndim == 3:
-        # points are given as x,y,z, (same system as the moment tensor)
-        pass
+    if is_p_wave:
+        for ipoint in range(npoints):
+            # loop through displacement component [n index]
+            gamma = gammas[:, ipoint]
+            gammapq = np.outer(gamma, gamma)
+            gammatimesmt = gammapq * Mpq
+            for n in range(ndim):
+                disp[n, ipoint] = gamma[n] * np.sum(gammatimesmt.flatten())
     else:
-        raise ValueError('points should have shape 2 x npoints or 3 x npoints')
-    Mpq = fullmt(mt)
-
-    # precompute directional cosine array
-    dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
-                    points[2] * points[2])
-    gammas = points / dists
-
-    # initialize displacement array
-    disp = np.empty((ndim, npoints))
-
-    # loop through points
-    for ipoint in range(npoints):
-        # loop through displacement component [n index]
-        gamma = gammas[:, ipoint]
-        Mp = np.dot(Mpq, gamma)
-        for n in range(ndim):
-            psum = 0.0
-            for p in range(ndim):
-                deltanp = int(n == p)
-                psum += (gamma[n] * gamma[p] - deltanp) * Mp[p]
-            disp[n, ipoint] = psum
+        for ipoint in range(npoints):
+            # loop through displacement component [n index]
+            gamma = gammas[:, ipoint]
+            Mp = np.dot(Mpq, gamma)
+            for n in range(ndim):
+                psum = 0.0
+                for p in range(ndim):
+                    deltanp = int(n == p)
+                    psum += (gamma[n] * gamma[p] - deltanp) * Mp[p]
+                disp[n, ipoint] = psum
 
     return disp
 
