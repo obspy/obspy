@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
+from obspy.imaging.source import plot_radiation_pattern
 
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
@@ -226,7 +227,6 @@ class Event(__Event):
             support png, pdf, ps, eps and svg. Defaults to ``None``.
         :returns: Figure instance with the plot.
         """
-        from .radpattern import plot_3drpattern
         try:
             fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
             mtensor = fm.moment_tensor.tensor
@@ -236,8 +236,8 @@ class Event(__Event):
 
         mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
               mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
-        fig = plot_3drpattern(mt, kind=kind, coordinate_system='RTP',
-                              show=False)
+        fig = plot_radiation_pattern(
+            mt, kind=kind, coordinate_system='RTP', show=False)
 
         if outfile:
             fig.savefig(outfile)

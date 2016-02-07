@@ -32,7 +32,6 @@
        header
        magnitude
        origin
-       radpattern
        source
 
     .. comment to end block

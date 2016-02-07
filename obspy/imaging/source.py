@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
 from obspy.core.util.base import get_matplotlib_version
+from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
 
@@ -28,11 +29,11 @@ from obspy.imaging.mopad_wrapper import Beach
 MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
-def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
-                    coordinate_system='RTP',
-                    p_sphere_direction='inwards', fig=None, show=True):
+def plot_radiation_pattern(
+        mt, kind=['p_sphere', 'beachball'], coordinate_system='RTP',
+        p_sphere_direction='inwards', fig=None, show=True):
     """
-    Plots the P farfield radiation pattern on a unit sphere grid
+    Plots the P/S farfield radiation pattern on a unit sphere grid
     calculations are based on [Aki1980]_ eq. 4.29.
 
 
@@ -111,20 +112,21 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
             iax = iplot + 1
             if kind[iplot] == 'p_quiver':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_quiver(ax3d, ned_mt, type="P")
+                _plot_radiation_pattern_quiver(ax3d, ned_mt, type="P")
 
             elif kind[iplot] == 'p_sphere':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_sphere(ax3d, ned_mt, type="P",
-                             p_sphere_direction=p_sphere_direction)
+                _plot_radiation_pattern_sphere(
+                    ax3d, ned_mt, type="P",
+                    p_sphere_direction=p_sphere_direction)
 
             elif kind[iplot] == 's_quiver':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_quiver(ax3d, ned_mt, type="S")
+                _plot_radiation_pattern_quiver(ax3d, ned_mt, type="S")
 
             elif kind[iplot] == 's_sphere':
                 ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_sphere(ax3d, ned_mt, type="S")
+                _plot_radiation_pattern_sphere(ax3d, ned_mt, type="S")
 
             elif kind[iplot] == 'beachball':
                 ax2d = fig.add_subplot(nrows, ncols, iax, aspect='equal')
@@ -140,22 +142,23 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
         return fig
 
     elif kind == 'mayavi':
-        _plot_mayavi(ned_mt)
+        _plot_radiation_pattern_mayavi(ned_mt)
 
     elif kind == 'vtk':
         # this saves two files, one with the vector field and one
         # with the nodal lines of the beachball
         fname_rpattern = 'rpattern.vtk'
         fname_beachlines = 'beachlines.vtk'
-        _write_vtk_files(ned_mt,
-                         fname_rpattern=fname_rpattern,
-                         fname_beachlines=fname_beachlines)
+        _write_radiation_pattern_vtk(
+            ned_mt, fname_rpattern=fname_rpattern,
+            fname_beachlines=fname_beachlines)
 
     else:
         raise NotImplementedError('{:s} not implemented yet'.format(kind))
 
 
-def _plot_sphere(ax3d, ned_mt, type, p_sphere_direction='inwards'):
+def _plot_radiation_pattern_sphere(
+        ax3d, ned_mt, type, p_sphere_direction='inwards'):
     """
     private function that plots a radiation pattern sphere into
     ax3d
@@ -192,8 +195,8 @@ def _plot_sphere(ax3d, ned_mt, type, p_sphere_direction='inwards'):
 
     # get a uv sphere that is oriented along the moment tensor axes
     ntheta, nphi = 100, 100
-    points = oriented_uv_sphere(ntheta=ntheta, nphi=nphi,
-                                orientation=orientation)
+    points = _oriented_uv_sphere(ntheta=ntheta, nphi=nphi,
+                                 orientation=orientation)
     sshape = (ntheta, nphi)
 
     # get radiation pattern
@@ -235,7 +238,7 @@ def _plot_sphere(ax3d, ned_mt, type, p_sphere_direction='inwards'):
     ax3d.view_init(elev=-110., azim=0.)
 
 
-def _plot_quiver(ax3d, ned_mt, type):
+def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     """
     private routine that plots the wave farfield into the
     input ax object
@@ -256,7 +259,7 @@ def _plot_quiver(ax3d, ned_mt, type):
     is_p_wave = type == "P"
 
     # precompute even spherical grid and directional cosine array
-    points = equalarea_spherical_grid(nlat=14)
+    points = _equalarea_spherical_grid(nlat=14)
 
     if is_p_wave:
         # get radiation pattern
@@ -315,7 +318,7 @@ def _plot_beachball(ax2d, rtp_mt):
              title='lower hemisphere stereographical projection')
 
 
-def _plot_mayavi(ned_mt):
+def _plot_radiation_pattern_mayavi(ned_mt):
     """
     This function uses the mayavi (vtk) library to plot the radiation
     pattern to screen. Note that you might have to set the QT_API environmental
@@ -354,7 +357,7 @@ def _plot_mayavi(ned_mt):
     pos_nodalline = np.hstack((pos_nodalline, pos_nodalline[:, 0][:, None]))
 
     # plot radiation pattern and nodal lines
-    points = equalarea_spherical_grid(nlat=20)
+    points = _equalarea_spherical_grid(nlat=20)
     dispp = farfield(ned_mt, points, type="P")
     disps = farfield(ned_mt, points, type="S")
 
@@ -399,8 +402,9 @@ def _plot_mayavi(ned_mt):
     mlab.show()
 
 
-def _write_vtk_files(ned_mt, fname_rpattern='rpattern.vtk',
-                     fname_beachlines='beachlines.vtk'):
+def _write_radiation_pattern_vtk(
+        ned_mt, fname_rpattern='rpattern.vtk',
+        fname_beachlines='beachlines.vtk'):
     # output a vtkfile that can for exampled be displayed by paraview
     mtensor = MomentTensor(ned_mt, system='NED')
     bb = BeachBall(mtensor, npoints=200)
@@ -480,7 +484,7 @@ def _write_vtk_files(ned_mt, fname_rpattern='rpattern.vtk',
 
 
 # ===== SUPPORT FUNCTIONS FOR SPHERICAL MESHES ETC STARTING HERE:
-def oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
+def _oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
     """
     returns a uv sphere (equidistant lat/lon grid) with its north-pole
     rotated to the input axis. It returns the spherical grid points
@@ -528,7 +532,7 @@ def oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
     return points
 
 
-def equalarea_spherical_grid(nlat=30):
+def _equalarea_spherical_grid(nlat=30):
     """
     generates a simple spherical equalarea grid that adjust the
     number of longitude samples to the longitude. This grid is useful
@@ -561,83 +565,6 @@ def equalarea_spherical_grid(nlat=30):
     points[2] = np.cos(colatgrid)
 
     return points
-
-
-def farfield(mt, points, type):
-    """
-    Return the P/S farfield radiation pattern
-    based on [Aki1980]_ eq. 4.29.
-
-    :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
-               six independent components of the moment tensor)
-
-    :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
-                   (theta,phi) The normalized displacement of the moment
-                   tensor source is computed at these points.
-    :type type: str
-    :param type: 'P' or 'S' (P or S wave).
-
-    :return: 3D vector array with shape [3,npts] that contains the
-             displacement vector for each grid point
-    """
-    type = type.upper()
-    if type not in ("P", "S"):
-        msg = ("type must be 'P' or 'S'")
-        raise ValueError(msg)
-    is_p_wave = type == "P"
-
-    ndim, npoints = points.shape
-    if ndim == 2:
-        # points are given as theta,phi
-        points = np.empty((3, npoints))
-        points[0] = np.sin(points[0]) * np.cos(points[1])
-        points[1] = np.sin(points[0]) * np.sin(points[1])
-        points[2] = np.cos(points[0])
-    elif ndim == 3:
-        # points are given as x,y,z, (same system as the moment tensor)
-        pass
-    else:
-        raise ValueError('points should have shape 2 x npoints or 3 x npoints')
-    m_pq = fullmt(mt)
-
-    # precompute directional cosine array
-    dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
-                    points[2] * points[2])
-    gammas = points / dists
-
-    # initialize displacement array
-    disp = np.empty((ndim, npoints))
-
-    # loop through points
-    if is_p_wave:
-        for ipoint in range(npoints):
-            # loop through displacement component [n index]
-            gamma = gammas[:, ipoint]
-            gammapq = np.outer(gamma, gamma)
-            gammatimesmt = gammapq * m_pq
-            for n in range(ndim):
-                disp[n, ipoint] = gamma[n] * np.sum(gammatimesmt.flatten())
-    else:
-        for ipoint in range(npoints):
-            # loop through displacement component [n index]
-            gamma = gammas[:, ipoint]
-            m_p = np.dot(m_pq, gamma)
-            for n in range(ndim):
-                psum = 0.0
-                for p in range(ndim):
-                    deltanp = int(n == p)
-                    psum += (gamma[n] * gamma[p] - deltanp) * m_p[p]
-                disp[n, ipoint] = psum
-
-    return disp
-
-
-def fullmt(mt):
-    """takes 6 comp moment tensor and returns full 3x3 moment tensor"""
-    mt_full = np.array(([[mt[0], mt[3], mt[4]],
-                         [mt[3], mt[1], mt[5]],
-                         [mt[4], mt[5], mt[2]]]))
-    return mt_full
 
 
 if __name__ == '__main__':

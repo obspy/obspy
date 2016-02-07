@@ -23,6 +23,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import numpy as np
+
 from obspy.core.event.base import (
     _event_type_class_factory, ResourceIdentifier, CreationInfo)
 from obspy.core.event.header import (
@@ -441,6 +443,83 @@ class FocalMechanism(__FocalMechanism):
         standard and how to output it to QuakeML see the
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
+
+
+def farfield(mt, points, type):
+    """
+    Returns the P/S farfield radiation pattern
+    based on [Aki1980]_ eq. 4.29.
+
+    :param mt: Focal mechanism NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
+               six independent components of the moment tensor)
+
+    :param points: 3D vector array with shape [3,npts] (x,y,z) or [2,npts]
+                   (theta,phi) The normalized displacement of the moment
+                   tensor source is computed at these points.
+    :type type: str
+    :param type: 'P' or 'S' (P or S wave).
+
+    :return: 3D vector array with shape [3,npts] that contains the
+             displacement vector for each grid point
+    """
+    type = type.upper()
+    if type not in ("P", "S"):
+        msg = ("type must be 'P' or 'S'")
+        raise ValueError(msg)
+    is_p_wave = type == "P"
+
+    ndim, npoints = points.shape
+    if ndim == 2:
+        # points are given as theta,phi
+        points = np.empty((3, npoints))
+        points[0] = np.sin(points[0]) * np.cos(points[1])
+        points[1] = np.sin(points[0]) * np.sin(points[1])
+        points[2] = np.cos(points[0])
+    elif ndim == 3:
+        # points are given as x,y,z, (same system as the moment tensor)
+        pass
+    else:
+        raise ValueError('points should have shape 2 x npoints or 3 x npoints')
+    m_pq = fullmt(mt)
+
+    # precompute directional cosine array
+    dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
+                    points[2] * points[2])
+    gammas = points / dists
+
+    # initialize displacement array
+    disp = np.empty((ndim, npoints))
+
+    # loop through points
+    if is_p_wave:
+        for ipoint in range(npoints):
+            # loop through displacement component [n index]
+            gamma = gammas[:, ipoint]
+            gammapq = np.outer(gamma, gamma)
+            gammatimesmt = gammapq * m_pq
+            for n in range(ndim):
+                disp[n, ipoint] = gamma[n] * np.sum(gammatimesmt.flatten())
+    else:
+        for ipoint in range(npoints):
+            # loop through displacement component [n index]
+            gamma = gammas[:, ipoint]
+            m_p = np.dot(m_pq, gamma)
+            for n in range(ndim):
+                psum = 0.0
+                for p in range(ndim):
+                    deltanp = int(n == p)
+                    psum += (gamma[n] * gamma[p] - deltanp) * m_p[p]
+                disp[n, ipoint] = psum
+
+    return disp
+
+
+def fullmt(mt):
+    """takes 6 comp moment tensor and returns full 3x3 moment tensor"""
+    mt_full = np.array(([[mt[0], mt[3], mt[4]],
+                         [mt[3], mt[1], mt[5]],
+                         [mt[4], mt[5], mt[2]]]))
+    return mt_full
 
 
 if __name__ == '__main__':
