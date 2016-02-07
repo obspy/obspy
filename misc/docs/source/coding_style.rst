@@ -177,6 +177,43 @@ Tests
           # XXX: here it fails
           ...
 
+Citations
+---------
+
+References to publications (journal articles, books, etc.) should be properly
+reproducible. A bibtex entry in `obspy/misc/docs/source/bibliography` should be
+made for each single publication (ideally with an URL or DOI), using first
+author and year as article identifier::
+
+    @article{Beyreuther2010,
+    author = {Beyreuther, Moritz and Barsch, Robert and Krischer,
+              Lion and Megies, Tobias and Behr, Yannik and Wassermann, Joachim},
+    title = {ObsPy: A Python Toolbox for Seismology},
+    volume = {81},
+    number = {3},
+    pages = {530-533},
+    year = {May/June 2010},
+    doi = {10.1785/gssrl.81.3.530},
+    URL = {http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/},
+    eprint = {http://srl.geoscienceworld.org/content/81/3/530.full.pdf+html},
+    journal = {Seismological Research Letters}
+    }
+
+This entry can then be referenced (using the bibtex article identifier) in
+docstrings in the source code with the following Sphinx syntax to be converted
+to a link to the bibliography section:
+
+  .. code-block:: python
+
+      def some_function():
+          """
+          Function to do something.
+
+          See [Beyreuther2010]_ for details.
+          """
+          return None
+
+
 Miscellaneous
 -------------
 
