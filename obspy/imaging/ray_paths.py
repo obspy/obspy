@@ -171,7 +171,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
         coordinate_system='XYZ')
 
-    # define colors and style
+    # define colorschemes
     if colorscheme == 'dark' or colorscheme == 'default':
         # colors (a distinct colors for each phase):
         lightness = 0.4
@@ -193,20 +193,23 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         evtextsize = (0.01, 0.01, 0.01)
         evmarkersize = 0.03
     elif colorscheme == 'bright':
-        # colors:
-        lightness = 0.4
+        # colors (a distinct colors for each phase):
+        lightness = 0.2
         saturation = 1.0
-        colors = [hls_to_rgb(hue, lightness, saturation) for hue
-                  in np.linspace(0., 1., nphases)]
-        labelcolor = (0.2, 0.0, 0.0)
-        continentcolor = (0.9, 0.9, 0.9)
-        eventcolor = (0.0, 0.2, 0.0)
-        cmbcolor = (0.7, 0.7, 1.0)
+        ncolors = nphases + 2  # two extra colors for continents and events
+        hues = np.linspace(0., 1. - 1./ncolors, ncolors)
+
+        raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
+                     in hues[2:]]
+
+        labelcolor = hls_to_rgb(hues[0], 0.2, 0.5)
+        continentcolor = hls_to_rgb(hues[0], 0.6, 0.2)
+        eventcolor = hls_to_rgb(hues[1], 0.2, 0.5)
+        cmbcolor = continentcolor
         bgcolor = (1, 1, 1)
         # sizes:
         # everything has to be larger in bright background plot because it
         # is more difficult to read
-        tube_width = 0.003
         sttextsize = (0.02, 0.02, 0.02)
         stmarkersize = 0.02
         evtextsize = (0.02, 0.02, 0.02)
@@ -214,41 +217,73 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     else:
         raise ValueError('colorscheme {:s} not recognized'.format(colorscheme))
 
-    fig = mlab.figure(size=(800, 800), bgcolor=bgcolor)
-
-    # loop through, and plot all paths and their labels
+    # assemble each phase and all stations/events to plot them in a single call
     stations = []
     events = []
-    phases = [] * nphases
-
-    # assemble each phase to plot all rays together
+    phases = [[] for iphase in range(nphases)]
     for gcircle, name, stlabel, evlabel in greatcircles:
-        color = raycolors[phase_list.index(name)]
-        # use only every third point for plotting
-        #mlab.plot3d(*gcircle[:, ::10], color=color, tube_sides=3,
-         #           tube_radius=tube_width)
-        ray = line_source(*gcircle[:, ::10])
-        mlab.pipeline.surface(ray, color=color, line_width=0.5)
+        iphase = phase_list.index(name)
+        phases[iphase].append(gcircle)
 
         if stlabel not in stations:
-            mlab.points3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
-                          scale_factor=stmarkersize, color=labelcolor)
-            mlab.text3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
-                        stlabel, scale=sttextsize,
-                        color=labelcolor)
-            stations.append(stlabel)
+            x, y, z = gcircle[0, -1], gcircle[1, -1], gcircle[2, -1]
+            stations.append((x, y, z, stlabel))
 
         if evlabel not in events:
-            mlab.points3d(gcircle[0, 0], gcircle[1, 0], gcircle[2, 0],
-                          scale_factor=evmarkersize, color=eventcolor)
-            mlab.text3d(gcircle[0, 0], gcircle[1, 0], gcircle[2, 0],
-                        evlabel, scale=evtextsize,
-                        color=eventcolor)
-            events.append(evlabel)
+            x, y, z = gcircle[0, 0], gcircle[1, 0], gcircle[2, 0]
+            events.append((x, y, z, evlabel))
+
+    # now begin mayavi plotting
+    fig = mlab.figure(size=(800, 800), bgcolor=bgcolor)
+
+    # make the connectivity of each phase and plot them
+    for iphase, phase in enumerate(phases):
+        index = 0
+        connects = []
+        for ray in phase:
+            ndim, npoints = ray.shape
+            connects.append(np.vstack(
+                            [np.arange(index,   index + npoints - 1.5),
+                             np.arange(index + 1, index + npoints - .5)]).T)
+            index += npoints
+
+        # collapse all points of the phase into a long array
+        points = np.hstack(phase)
+        connects = np.vstack(connects)
+
+        # Create the points
+        src = mlab.pipeline.scalar_scatter(*points)
+
+        # Connect them
+        src.mlab_source.dataset.lines = connects
+
+        # The stripper filter cleans up connected lines
+        lines = mlab.pipeline.stripper(src)
+
+        color = raycolors[iphase]
+        mlab.pipeline.surface(lines, line_width=0.5, color=color)
+
+    # plot all stations
+    fig.scene.disable_render = True # Super duper trick
+    stxs, stys, stzs, stlabels = zip(*stations)
+    mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
+                  color=labelcolor)
+    for stx, sty, stz, stlabel in stations:
+        mlab.text3d(stx, sty, stz, stlabel, scale=sttextsize,
+                    color=labelcolor)
+
+    # plot all events
+    evxs, evys, evzs, evlabels = zip(*events)
+    mlab.points3d(evxs, evys, evzs, scale_factor=evmarkersize,
+                  color=eventcolor)
+    for evx, evy, evz, evlabel in events:
+        mlab.text3d(evx, evy, evz, evlabel, scale=evtextsize,
+                    color=eventcolor)
+    fig.scene.disable_render = False # Super duper trick
 
     # make surface
     data_source = mlab.pipeline.open('data/coastlines.vtk')
-    coastmesh = mlab.pipeline.surface(data_source, opacity=0.7,
+    coastmesh = mlab.pipeline.surface(data_source, opacity=1.0,
                                           color=continentcolor)
     coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
 
@@ -264,24 +299,23 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # make CMB sphere
     rad = 0.546
-    phi, theta = np.mgrid[0:np.pi:21j, 0:2 * np.pi:21j]
+    phi, theta = np.mgrid[0:np.pi:51j, 0:2 * np.pi:51j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
     z = rad * np.cos(phi)
-    mlab.mesh(x, y, z, color=cmbcolor, opacity=0.2, line_width=0.5,
-              representation='wireframe')
-    #mesh.actor.property.interpolation = 'gouraud'
+    cmb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.1, line_width=0.5)
+    cmb.actor.property.interpolation = 'gouraud'
 
     # make ICB sphere
     rad = 0.1915
-    phi, theta = np.mgrid[0:np.pi:7j, 0:2 * np.pi:7j]
+    phi, theta = np.mgrid[0:np.pi:31j, 0:2 * np.pi:31j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
     z = rad * np.cos(phi)
-    mlab.mesh(x, y, z, color=cmbcolor, opacity=0.7, line_width=0.5,
-              representation='wireframe')
+    icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.1, line_width=0.5)
+    icb.actor.property.interpolation = 'gouraud'
 
     mlab.show()
 

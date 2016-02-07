@@ -19,7 +19,8 @@ class PathPlottingTestCase(unittest.TestCase):
         #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
         #          kind='mayavi', colorscheme='dark')
         plot_rays(inventory=inv, evlat=20., evlon=10., evdepth_km=200.,
-                  phase_list=['PKiKP'], kind='mayavi')
+                  phase_list=['PKP', 'PKIKP', 'PKJKP', 'PcP', 'PKiKP'],
+                  kind='mayavi')
 
 
 def suite():
