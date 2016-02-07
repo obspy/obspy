@@ -37,6 +37,110 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
             evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
             phase_list=phase_list, colorscheme=colorscheme)
+    elif kind == 'vtkfiles':
+        _write_vtk_files(
+            inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
+            evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
+            phase_list=phase_list)
+
+
+def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
+                     evlat=None, evlon=None, evdepth_km=None,
+                     phase_list=('P')):
+
+    # define file names
+    fname_paths = 'paths.vtk'
+    fname_events = 'events.vtk'
+    fname_stations = 'stations.vtk'
+
+    # get 3d paths for all station/event combinations
+    greatcircles = get_ray_paths(
+        inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
+        evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
+        coordinate_system='XYZ')
+
+    # now assemble all points, stations and connectivity
+    stations = []  # unique list of stations
+    events = []  # unique list of events
+    lines = []  # contains the points that constitute each ray
+    npoints_tot = 0  # this is the total number of points of all rays
+    istart_ray = 0  # this is the first point of each ray in the loop
+    points = []
+    for gcircle, name, stlabel, evlabel in greatcircles:
+        points_ray = gcircle[:, ::3]  # use every third point
+        ndim, npoints_ray = points_ray.shape
+        iend_ray = istart_ray + npoints_ray
+        connect_ray = np.arange(istart_ray, iend_ray, dtype=int)
+
+        lines.append(connect_ray)
+        points.append(points_ray)
+        if stlabel not in stations:
+            stations.append((gcircle[:, -1], stlabel))
+
+        if evlabel not in events:
+            events.append((gcircle[:, 0], evlabel))
+
+        npoints_tot += npoints_ray
+        istart_ray += npoints_ray
+
+    # write the ray paths in one file
+    with open(fname_paths, 'w') as vtk_file:
+        # write some header information
+        vtk_header = ('# vtk DataFile Version 2.0\n'
+                      '3d ray paths\n'
+                      'ASCII\n'
+                      'DATASET UNSTRUCTURED_GRID\n'
+                      'POINTS {:d} float\n'.format(npoints_tot))
+        vtk_file.write(vtk_header)
+
+        # write a long list of all points
+        all_points = np.hstack(points)
+        for x, y, z in np.hstack(points).T:
+            vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(x, y, z))
+
+        # now write connectivity
+        nlines = len(lines)
+        npoints_connect = npoints_tot + nlines
+        vtk_file.write('CELLS {:d} {:d}\n'.format(nlines, npoints_connect))
+        for line in lines:
+            vtk_file.write('{:d} '.format(len(line)))
+            for ipoint in line:
+                if ipoint % 30 == 29:
+                    vtk_file.write('\n')
+                vtk_file.write('{:d} '.format(ipoint))
+
+        # cell types. 4 means cell type is a poly_line
+        vtk_file.write('\nCELL_TYPES {:d}\n'.format(nlines))
+        for line in lines:
+            vtk_file.write('4\n')
+
+    # write the stations in another file
+    with open(fname_stations, 'w') as vtk_file:
+        # write some header information
+        vtk_header = ('# vtk DataFile Version 2.0\n'
+                      'station locations\n'
+                      'ASCII\n'
+                      'DATASET UNSTRUCTURED_GRID\n'
+                      'POINTS {:d} float\n'.format(len(stations)))
+        vtk_file.write(vtk_header)
+
+        # write a long list of all points
+        for location, stlabel in stations:
+            vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(*location))
+
+    # write the events in another file
+    with open(fname_events, 'w') as vtk_file:
+        # write some header information
+        vtk_header = ('# vtk DataFile Version 2.0\n'
+                      'event locations\n'
+                      'ASCII\n'
+                      'DATASET UNSTRUCTURED_GRID\n'
+                      'POINTS {:d} float\n'.format(len(events)))
+        vtk_file.write(vtk_header)
+
+        # write a long list of all points
+        for location, evlabel in events:
+            vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(*location))
 
 
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
@@ -58,7 +162,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                "software like paraview")
         raise ImportError(msg)
 
-    greatcircles, stations, events = get_ray_paths(
+    greatcircles = get_ray_paths(
         inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
         evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
         coordinate_system='XYZ')
@@ -244,7 +348,4 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     
                 greatcircles.append((gcircle, arr.name, stlabel, evlabel))
 
-    stations = zip(stlats, stlons, stlabels)
-    events = zip(evlats, evlons, evdepths, evlabels)
-
-    return greatcircles, stations, events
+    return greatcircles
