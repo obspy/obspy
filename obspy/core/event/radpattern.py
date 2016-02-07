@@ -3,7 +3,6 @@
 # Filename: radpattern.py
 #  Purpose: Computes and plots radiation patterns
 # ---------------------------------------------------------------------
-
 """
 Functions to compute and plot radiation patterns
 

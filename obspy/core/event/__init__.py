@@ -21,22 +21,19 @@ format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-
 from future.builtins import *  # NOQA
 
-from .base import (_event_type_class_factory, Amplitude,
-                   Arrival, Axis, Comment, CompositeTime,
-                   ConfidenceEllipsoid, CreationInfo,
-                   DataUsed, EventDescription, FocalMechanism,
-                   Magnitude, MomentTensor, NodalPlane,
-                   NodalPlanes, Origin, OriginQuality,
-                   OriginUncertainty, Pick, PrincipalAxes,
-                   QuantityError, ResourceIdentifier,
-                   SourceTimeFunction, StationMagnitude,
-                   StationMagnitudeContribution, Tensor,
-                   TimeWindow, WaveformStreamID)
+from .base import (
+    Comment, CompositeTime, ConfidenceEllipsoid, CreationInfo, DataUsed,
+    QuantityError, ResourceIdentifier, TimeWindow, WaveformStreamID)
 from .catalog import Catalog, read_events
-from .event import Event
+from .event import Event, EventDescription
+from .magnitude import (
+    Amplitude, Magnitude, StationMagnitude, StationMagnitudeContribution)
+from .origin import Origin, OriginQuality, OriginUncertainty, Pick, Arrival
+from .source import (
+    Axis, FocalMechanism, MomentTensor, NodalPlane, NodalPlanes, PrincipalAxes,
+    SourceTimeFunction, Tensor)
 
 if __name__ == '__main__':
     import doctest

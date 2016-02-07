@@ -2,7 +2,9 @@
 """
 obspy.core.event.catalog - The Catalog class definition
 =======================================================
-Catalog class
+This module provides a class hierarchy to consistently handle event metadata.
+This class hierarchy is closely modelled after the de-facto standard format
+`QuakeML <https://quake.ethz.ch/quakeml/>`_.
 
 .. note::
 
@@ -324,31 +326,31 @@ class Catalog(object):
         # Helper functions. Only first argument might be None. Avoid
         # unorderable types by checking first shortcut on positive is None
         # also for the greater stuff (is confusing but correct)
-        def __is_smaller(value_1, value_2):
+        def _is_smaller(value_1, value_2):
             if value_1 is None or value_1 < value_2:
                 return True
             return False
 
-        def __is_smaller_or_equal(value_1, value_2):
+        def _is_smaller_or_equal(value_1, value_2):
             if value_1 is None or value_1 <= value_2:
                 return True
             return False
 
-        def __is_greater(value_1, value_2):
+        def _is_greater(value_1, value_2):
             if value_1 is None or value_1 <= value_2:
                 return False
             return True
 
-        def __is_greater_or_equal(value_1, value_2):
+        def _is_greater_or_equal(value_1, value_2):
             if value_1 is None or value_1 < value_2:
                 return False
             return True
 
         # Map the function to the operators.
-        operator_map = {"<": __is_smaller,
-                        "<=": __is_smaller_or_equal,
-                        ">": __is_greater,
-                        ">=": __is_greater_or_equal}
+        operator_map = {"<": _is_smaller,
+                        "<=": _is_smaller_or_equal,
+                        ">": _is_greater,
+                        ">=": _is_greater_or_equal}
 
         try:
             inverse = kwargs["inverse"]
@@ -505,7 +507,8 @@ class Catalog(object):
     def plot(self, projection='global', resolution='l',
              continent_fill_color='0.9', water_fill_color='1.0',
              label='magnitude', color='depth', colormap=None, show=True,
-             outfile=None, method=None, fig=None, **kwargs):  # @UnusedVariable
+             outfile=None, method=None, fig=None, title=None,
+             **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
 
@@ -577,7 +580,8 @@ class Catalog(object):
             * ``None`` to pick the best available library
 
             Defaults to ``None``.
-        :type fig: :class:`matplotlib.figure.Figure`
+        :type fig: :class:`matplotlib.figure.Figure` (or
+            :class:`matplotlib.axes.Axes`)
         :param fig: Figure instance to reuse, returned from a previous
             inventory/catalog plot call with `method=basemap`.
             If a previous basemap plot is reused, any kwargs regarding the
@@ -586,6 +590,11 @@ class Catalog(object):
             that multiple plots using colorbars likely are problematic, but
             e.g. one station plot (without colorbar) and one event plot (with
             colorbar) together should work well.
+            If an :class:`~matplotlib.axes.Axes` is supplied, the given axes is
+            used to plot into and no colorbar will be produced.
+        :type title: str
+        :param title: Title above plot. If left ``None``, an automatic title
+            will be generated. Set to ``""`` for no title.
         :returns: Figure instance with the plot.
 
         .. rubric:: Examples
@@ -638,7 +647,8 @@ class Catalog(object):
             fig = inv.plot(show=False)
             cat.plot(fig=fig)
         """
-        from obspy.imaging.maps import plot_map
+        from obspy.imaging.maps import plot_map, _plot_basemap_into_axes
+        import matplotlib
         import matplotlib.pyplot as plt
 
         if color not in ('date', 'depth'):
@@ -686,7 +696,6 @@ class Catalog(object):
         if colormap is None:
             colormap = obspy_sequential
 
-        title = kwargs.pop('title', None)
         if title is None:
             if len(lons) > 1:
                 # if we have a `None` in the origin time list it likely ends up
@@ -721,12 +730,28 @@ class Catalog(object):
         else:
             size_plot = 15.0 ** 2
 
-        fig = plot_map(method, lons, lats, size_plot, colors, labels,
-                       projection=projection, resolution=resolution,
-                       continent_fill_color=continent_fill_color,
-                       water_fill_color=water_fill_color,
-                       colormap=colormap, marker="o", title=title,
-                       show=False, fig=fig, **kwargs)
+        if isinstance(fig, matplotlib.axes.Axes):
+            if method is not None and method != "basemap":
+                msg = ("Plotting into an matplotlib.axes.Axes instance "
+                       "currently only implemented for `method='basemap'`.")
+                raise NotImplementedError(msg)
+            ax = fig
+            fig = ax.figure
+            _plot_basemap_into_axes(
+                ax=ax, lons=lons, lats=lats, size=size_plot,
+                color=colors, bmap=None, labels=labels,
+                projection=projection, resolution=resolution,
+                continent_fill_color=continent_fill_color,
+                water_fill_color=water_fill_color,
+                colormap=colormap, marker="o", title=title,
+                show=False, **kwargs)
+        else:
+            fig = plot_map(method, lons, lats, size_plot, colors, labels,
+                           projection=projection, resolution=resolution,
+                           continent_fill_color=continent_fill_color,
+                           water_fill_color=water_fill_color,
+                           colormap=colormap, marker="o", title=title,
+                           show=False, fig=fig, **kwargs)
 
         if outfile:
             fig.savefig(outfile)

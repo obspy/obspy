@@ -2,6 +2,9 @@
 """
 obspy.core.event.event - The Event class definition
 ===================================================
+This module provides a class hierarchy to consistently handle event metadata.
+This class hierarchy is closely modelled after the de-facto standard format
+`QuakeML <https://quake.ethz.ch/quakeml/>`_.
 
 .. note::
 
@@ -20,11 +23,11 @@ from future.builtins import *  # NOQA
 
 import matplotlib.pyplot as plt
 
-from obspy.core.event_header import EventType, EventTypeCertainty
+from obspy.core.event.header import (
+    EventType, EventTypeCertainty, EventDescriptionType)
 
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
-from .radpattern import plot_3drpattern
 
 
 __Event = _event_type_class_factory(
@@ -223,6 +226,7 @@ class Event(__Event):
             support png, pdf, ps, eps and svg. Defaults to ``None``.
         :returns: Figure instance with the plot.
         """
+        from .radpattern import plot_3drpattern
         try:
             fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
             mtensor = fm.moment_tensor.tensor
@@ -259,7 +263,43 @@ class Event(__Event):
         >>> event = read_events()[0]  # doctest: +SKIP
         >>> event.write("example.xml", format="QUAKEML")  # doctest: +SKIP
         """
+        from .catalog import Catalog
         Catalog(events=[self]).write(filename, format, **kwargs)
+
+
+__EventDescription = _event_type_class_factory(
+    "__EventDescription",
+    class_attributes=[("text", str),
+                      ("type", EventDescriptionType)])
+
+
+class EventDescription(__EventDescription):
+    """
+    Free-form string with additional event description. This can be a
+    well-known name, like 1906 San Francisco Earthquake. A number of categories
+    can be given in type.
+
+    :type text: str, optional
+    :param text: Free-form text with earthquake description.
+    :type type: str, optional
+    :param type: Category of earthquake description. Values
+        can be taken from the following:
+
+        * ``"felt report"``
+        * ``"Flinn-Engdahl region"``
+        * ``"local time"``
+        * ``"tectonic summary"``
+        * ``"nearest cities"``
+        * ``"earthquake name"``
+        * ``"region name"``
+
+    .. note::
+
+        For handling additional information not covered by the QuakeML
+        standard and how to output it to QuakeML see the
+        :ref:`ObsPy Tutorial <quakeml-extra>`.
+    """
+
 
 if __name__ == '__main__':
     import doctest
