@@ -22,6 +22,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 
 import numpy as np
+from colorsys import hls_to_rgb
+import ipdb
 
 
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
@@ -145,9 +147,10 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                       evlat=None, evlon=None, evdepth_km=None,
-                      phase_list=('P'), colorscheme='default'):
+                      phase_list=['P'], colorscheme='default'):
     try:
         from mayavi import mlab
+        from mayavi.tools.pipeline import line_source
     except Exception as err:
         print(err)
         msg = ("obspy failed to import mayavi. "
@@ -162,6 +165,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                "software like paraview")
         raise ImportError(msg)
 
+    nphases = len(phase_list)
     greatcircles = get_ray_paths(
         inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
         evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
@@ -169,27 +173,31 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # define colors and style
     if colorscheme == 'dark' or colorscheme == 'default':
-        # colors:
-        colordict = {'P': (0., 0.5, 0.), 'PKP': (0.5, 0., 0.),
-                     'Pdiff': (0., 0., 0.5), 'PKiKP': (0.5, 0.5, 0.),
-                     'PKIKP': (0., 0.5, 0.5), 'PPP': (0.3, 0.8, 0.2),
-                     'PcP': (0.8, 0.2, 0.3)}
-        labelcolor = (1.0, 0.7, 0.7)
-        continentcolor = (0.1, 0.1, 0.1)
-        eventcolor = (0.7, 1.0, 0.7)
-        cmbcolor = (0.0, 0.0, 0.2)
+        # colors (a distinct colors for each phase):
+        lightness = 0.4
+        saturation = 1.0
+        ncolors = nphases + 2  # two extra colors for continents and events
+        hues = np.linspace(0., 1. - 1./ncolors, ncolors)
+
+        raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
+                     in hues[2:]]
+
+        labelcolor = hls_to_rgb(hues[0], 0.8, 0.5)
+        continentcolor = hls_to_rgb(hues[0], 0.3, 0.2)
+        eventcolor = hls_to_rgb(hues[1], 0.8, 0.5)
+        cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
         # sizes:
-        tube_width = 0.001
         sttextsize = (0.01, 0.01, 0.01)
         stmarkersize = 0.01
         evtextsize = (0.01, 0.01, 0.01)
-        evmarkersize = 0.01
+        evmarkersize = 0.03
     elif colorscheme == 'bright':
         # colors:
-        colordict = {'P': (0., 0.3, 0.), 'PKP': (0.3, 0., 0.),
-                     'Pdiff': (0., 0., 0.3), 'PKiKP': (0.3, 0.3, 0.),
-                     'PKIKP': (0., 0.3, 0.3), 'PPP': (0.3, 0.8, 0.2)}
+        lightness = 0.4
+        saturation = 1.0
+        colors = [hls_to_rgb(hue, lightness, saturation) for hue
+                  in np.linspace(0., 1., nphases)]
         labelcolor = (0.2, 0.0, 0.0)
         continentcolor = (0.9, 0.9, 0.9)
         eventcolor = (0.0, 0.2, 0.0)
@@ -209,52 +217,77 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     fig = mlab.figure(size=(800, 800), bgcolor=bgcolor)
 
     # loop through, and plot all paths and their labels
-    fig.scene.disable_render = True  # faster rendering trick (?)
-    plotted_stations = []
-    plotted_events = []
-    for gcircle, name, stlabel, evlabel in greatcircles:
-        color = colordict[name]
-        # use only every third point for plotting
-        mlab.plot3d(*gcircle[:, ::10], color=color, tube_sides=3,
-                    tube_radius=tube_width)
+    stations = []
+    events = []
+    phases = [] * nphases
 
-        if stlabel not in plotted_stations:
+    # assemble each phase to plot all rays together
+    for gcircle, name, stlabel, evlabel in greatcircles:
+        color = raycolors[phase_list.index(name)]
+        # use only every third point for plotting
+        #mlab.plot3d(*gcircle[:, ::10], color=color, tube_sides=3,
+         #           tube_radius=tube_width)
+        ray = line_source(*gcircle[:, ::10])
+        mlab.pipeline.surface(ray, color=color, line_width=0.5)
+
+        if stlabel not in stations:
             mlab.points3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
                           scale_factor=stmarkersize, color=labelcolor)
             mlab.text3d(gcircle[0, -1], gcircle[1, -1], gcircle[2, -1],
                         stlabel, scale=sttextsize,
                         color=labelcolor)
-            plotted_stations.append(stlabel)
+            stations.append(stlabel)
 
-        if evlabel not in plotted_events:
+        if evlabel not in events:
             mlab.points3d(gcircle[0, 0], gcircle[1, 0], gcircle[2, 0],
-                          scale_factor=evmarkersize, color=eventcolor,
-                          mode='2dtriangle')
+                          scale_factor=evmarkersize, color=eventcolor)
             mlab.text3d(gcircle[0, 0], gcircle[1, 0], gcircle[2, 0],
                         evlabel, scale=evtextsize,
                         color=eventcolor)
-            plotted_events.append(evlabel)
-
-    fig.scene.disable_render = False
+            events.append(evlabel)
 
     # make surface
     data_source = mlab.pipeline.open('data/coastlines.vtk')
-    mlab.pipeline.surface(data_source, opacity=1.0, color=continentcolor)
+    coastmesh = mlab.pipeline.surface(data_source, opacity=0.7,
+                                          color=continentcolor)
+    coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
 
-    # make CMB sphere
-    rad = 0.55
+    # make block sphere that hides the backside of the continents
+    rad = 0.99
     phi, theta = np.mgrid[0:np.pi:51j, 0:2 * np.pi:51j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
     z = rad * np.cos(phi)
-    mlab.mesh(x, y, z, color=cmbcolor, opacity=0.4)
+    blocksphere = mlab.mesh(x, y, z, color=bgcolor)
+    blocksphere.actor.property.frontface_culling = True  # front not rendered
+
+    # make CMB sphere
+    rad = 0.546
+    phi, theta = np.mgrid[0:np.pi:21j, 0:2 * np.pi:21j]
+
+    x = rad * np.sin(phi) * np.cos(theta)
+    y = rad * np.sin(phi) * np.sin(theta)
+    z = rad * np.cos(phi)
+    mlab.mesh(x, y, z, color=cmbcolor, opacity=0.2, line_width=0.5,
+              representation='wireframe')
+    #mesh.actor.property.interpolation = 'gouraud'
+
+    # make ICB sphere
+    rad = 0.1915
+    phi, theta = np.mgrid[0:np.pi:7j, 0:2 * np.pi:7j]
+
+    x = rad * np.sin(phi) * np.cos(theta)
+    y = rad * np.sin(phi) * np.sin(theta)
+    z = rad * np.cos(phi)
+    mlab.mesh(x, y, z, color=cmbcolor, opacity=0.7, line_width=0.5,
+              representation='wireframe')
 
     mlab.show()
 
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
-                  evlat=None, evlon=None, evdepth_km=None, phase_list=('P'),
+                  evlat=None, evlon=None, evdepth_km=None, phase_list=['P'],
                   coordinate_system='XYZ'):
     """
     This function returns lat, lon, depth coordinates from an event
