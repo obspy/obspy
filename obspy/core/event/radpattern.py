@@ -25,8 +25,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
+from obspy.core.util.base import get_matplotlib_version
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
+
+
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
@@ -155,6 +159,9 @@ def _plot_p_quiver(ax3d, ned_mt):
     :param ax3d: a matplotlib ax with 3d projection activated
     :param ned_mt: the 6 comp moment tensor in NED orientation
     """
+    if MATPLOTLIB_VERSION < [1, 4]:
+        msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
+        raise ImportError(msg)
     # precompute even spherical grid and directional cosine array
     points = equalarea_spherical_grid(nlat=14)
 
@@ -253,6 +260,9 @@ def _plot_s_quiver(ax3d, ned_mt):
     :param ax3d: a matplotlib ax with 3d projection activated
     :param ned_mt: the 6 comp moment tensor in NED orientation
     """
+    if MATPLOTLIB_VERSION < [1, 4]:
+        msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
+        raise ImportError(msg)
     # precompute even spherical grid and directional cosine array
     points = equalarea_spherical_grid(nlat=14)
 
