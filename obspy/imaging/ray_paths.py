@@ -28,7 +28,7 @@ import ipdb
 
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
               evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
-              colorscheme='default', animate=False):
+              colorscheme='default', animate=False, savemovie=False):
     """
     plots raypaths between an event and and inventory. This could be
     extended to plot all rays between a catalogue and an inventory
@@ -38,7 +38,8 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
         _plot_rays_mayavi(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
             evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
-            phase_list=phase_list, colorscheme=colorscheme, animate=animate)
+            phase_list=phase_list, colorscheme=colorscheme, animate=animate,
+            savemovie=False)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
@@ -147,7 +148,8 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                       evlat=None, evlon=None, evdepth_km=None,
-                      phase_list=['P'], colorscheme='default', animate=False):
+                      phase_list=['P'], colorscheme='default', animate=False,
+                      savemovie=False):
     try:
         from mayavi import mlab
         from mayavi.tools.pipeline import line_source
@@ -181,9 +183,9 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
                      in hues]
 
-        labelcolor = hls_to_rgb(0.0, 0.8, 0.5)
-        continentcolor = hls_to_rgb(0., 0.3, 0.2)
-        eventcolor = hls_to_rgb(0.5, 0.8, 0.5)
+        labelcolor = hls_to_rgb(0.6, 0.8, 0.7)
+        continentcolor = hls_to_rgb(0.6, 0.3, 0.2)
+        eventcolor = hls_to_rgb(0.0, 0.8, 0.7)
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
         # sizes:
@@ -282,7 +284,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # make surface
     data_source = mlab.pipeline.open('data/coastlines.vtk')
-    coastmesh = mlab.pipeline.surface(data_source, opacity=1.0,
+    coastmesh = mlab.pipeline.surface(data_source, opacity=1.0, line_width=0.5,
                                           color=continentcolor)
     coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
 
@@ -303,7 +305,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
     z = rad * np.cos(phi)
-    cmb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.1, line_width=0.5)
+    cmb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     cmb.actor.property.interpolation = 'gouraud'
 
     # make ICB sphere
@@ -313,17 +315,23 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
     z = rad * np.cos(phi)
-    icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.1, line_width=0.5)
+    icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     icb.actor.property.interpolation = 'gouraud'
+    mlab.view(azimuth=0., elevation=90., distance=5., focalpoint=(0., 0., 0.))
 
+    savemovie = True
     if animate:
         @mlab.show
         @mlab.animate(delay=20)
         def anim():
-             while 1:
-                 fig.scene.camera.azimuth(0.1)
-                 fig.scene.render()
-                 yield
+            iframe = 0
+            while 1:
+                if savemovie and iframe<360:
+                    mlab.savefig('{:05d}.png'.format(iframe))
+                fig.scene.camera.azimuth(1.)
+                fig.scene.render()
+                iframe += 1
+                yield
         anim() # Starts the animation.
     else:
         mlab.show()

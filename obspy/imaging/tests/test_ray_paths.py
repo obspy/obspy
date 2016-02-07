@@ -16,11 +16,12 @@ class PathPlottingTestCase(unittest.TestCase):
     def test_pathplotting(self):
         inv = read_inventory('data/IU.xml')
         cat = read_events()
+        cat.plot()
         #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
         #          kind='mayavi', colorscheme='dark')
         plot_rays(inventory=inv, catalog=cat,
-                  phase_list=['PKP', 'PKIKP','PKJKP'], colorscheme='dark',
-                  animate=True, kind='mayavi')
+                  phase_list=['Pdiff','PKP'], colorscheme='dark',
+                  animate=True, savemovie=True, kind='mayavi')
 
 
 def suite():
