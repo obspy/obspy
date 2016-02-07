@@ -249,7 +249,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
             index += npoints
 
         # collapse all points of the phase into a long array
-        points = np.hstack(phase)
+        if len(phase) > 1:
+            points = np.hstack(phase)
+        else:
+            points = phase[0]
         connects = np.vstack(connects)
 
         # Create the points
@@ -363,6 +366,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     elif stlat is not None and stlon is not None:
         stlats.append(stlat)
         stlons.append(stlon)
+        stlabels.append('')
     else:
         raise ValueError("either inventory or stlat and stlon have to be set")
 
@@ -409,7 +413,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
         for evlat, evlon, evdepth_km, evlabel in zip(evlats, evlons, evdepths,
                                                      evlabels):
             arrivals = model.get_ray_paths_geo(
-                    evlat, evlon, evdepth_km, stlat, stlon,
+                    evdepth_km, evlat, evlon, stlat, stlon,
                     phase_list=phase_list)
             if len(arrivals) == 0:
                 continue
