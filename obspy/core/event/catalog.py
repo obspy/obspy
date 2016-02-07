@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event - The Catalog class definition
-======================================================
+obspy.core.event.catalog - The Catalog class definition
+=======================================================
 Catalog class
+
+.. note::
+
+    For handling additional information not covered by the QuakeML standard and
+    how to output it to QuakeML see the :ref:`ObsPy Tutorial <quakeml-extra>`.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -31,7 +36,6 @@ from .event import Event
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
 EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
-ATTRIBUTE_HAS_ERRORS = True
 
 
 class Catalog(object):

@@ -23,9 +23,10 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D  # NOQA
+
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
 from obspy.imaging.mopad_wrapper import Beach
-from mpl_toolkits.mplot3d import Axes3D  # NOQA
 
 
 def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
@@ -82,12 +83,12 @@ def plot_3drpattern(mt, kind=['p_sphere', 'beachball'],
         rtp_mt = mt
     # for the following option, the moment tensor has to be converted to
     # RTP coordinates as well
-    #elif coordinate_system == 'DSE':
-    #    signs = [1, 1, 1, -1, -1, 1]
-    #    indices = [1, 2, 0, 5, 3, 4]
-    #    ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
-    #elif coordinate_system == 'NED':
-    #    ned_mt = mt
+    # elif coordinate_system == 'DSE':
+    #     signs = [1, 1, 1, -1, -1, 1]
+    #     indices = [1, 2, 0, 5, 3, 4]
+    #     ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
+    # elif coordinate_system == 'NED':
+    #     ned_mt = mt
     else:
         msg = 'moment tensor in {:s} coordinates not implemented yet'
         raise NotImplementedError(msg.format(coordinate_system))

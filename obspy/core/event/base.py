@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event - Classes for handling event metadata
-======================================================
+obspy.core.event.base - Classes for handling event metadata
+===========================================================
 This module provides a class hierarchy to consistently handle event metadata.
-This class hierarchy is closely modelled after the de-facto standard
-format `QuakeML <https://quake.ethz.ch/quakeml/>`_.
+This class hierarchy is closely modelled after the de-facto standard format
+`QuakeML <https://quake.ethz.ch/quakeml/>`_.
 
 .. figure:: /_images/Event.png
 
@@ -50,13 +50,10 @@ from obspy.core.event_header import (AmplitudeCategory, AmplitudeUnit,
                                      PickPolarity, SourceTimeFunctionType)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile, _read_from_plugin
-from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import (deprecated, map_example_filename,
                                        uncompress_file)
 
 
-EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
-EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 ATTRIBUTE_HAS_ERRORS = True
 
 

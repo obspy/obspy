@@ -27,7 +27,7 @@ class RadPatternTestCase(unittest.TestCase):
         mt = [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
         # mt = [1., -0.5, -0.5, 0., 0, 0.1]
         # mt = [0., 0., 0., 0., 1, 0.]
-        #mt = [-1., 0.5, 0.5, 0., 0, 0.]
+        # mt = [-1., 0.5, 0.5, 0., 0, 0.]
 
         plot_3drpattern(mt, kind=['s_sphere', 'p_sphere',
                         'beachball', 's_quiver', 'p_quiver'])

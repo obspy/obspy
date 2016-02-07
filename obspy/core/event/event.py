@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.core.event.event - Event Class
-======================================================
+obspy.core.event.event - The Event class definition
+===================================================
 
 .. note::
 
@@ -20,17 +20,9 @@ from future.builtins import *  # NOQA
 
 from obspy.core.event_header import EventType, EventTypeCertainty
 
-from obspy.core.util.base import ENTRY_POINTS
-
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
-
 from .radpattern import plot_3drpattern
-
-
-EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
-EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
-ATTRIBUTE_HAS_ERRORS = True
 
 
 __Event = _event_type_class_factory(
@@ -224,7 +216,7 @@ class Event(__Event):
             plot_3drpattern(mt, kind='p_sphere')
         except AttributeError as err:
             print(err)
-            print('Couldn\'t access event\'s moment tensor')
+            print("Could not access event's moment tensor.")
 
     def write(self, filename, format, **kwargs):
         """
