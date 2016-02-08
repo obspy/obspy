@@ -554,11 +554,11 @@ def _wildcarded_except(exclude=[]):
     replacing all format string place holders with ``*`` wildcards, except
     named fields as specified in ``exclude``.
     """
-    def __wildcarded(match):
+    def _wildcarded(match):
         if match.group(1) in exclude:
             return match.group(0)
         return "*"
-    return __wildcarded
+    return _wildcarded
 
 
 def _parse_path_to_dict(path, pattern, group_map):
