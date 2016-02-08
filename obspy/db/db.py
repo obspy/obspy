@@ -124,7 +124,7 @@ class WaveformChannel(Base):
         return "<WaveformChannel('%s')>" % (self.id)
 
     @deprecated("'get_preview' has been renamed to 'get_preview'. Use that "
-                "instead.")
+                "instead.")  # noqa
     def getPreview(self, apply_calibration=False):
         return self.get_preview(apply_calibration)
 

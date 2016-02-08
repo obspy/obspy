@@ -49,8 +49,7 @@ from obspy.db.util import parse_mapping_data
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
-
-    def do_GET(self):
+    def do_GET(self):  # noqa
         """
         Respond to a GET request.
         """
@@ -108,7 +107,7 @@ class WaveformIndexer(http.server.HTTPServer, WaveformFileCrawler):
             self.iterate()
 
 
-def _runIndexer(options):
+def _run_indexer(options):
     logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
     # initialize crawler
     service = WaveformIndexer((options.host, options.port), MyHandler)
@@ -151,8 +150,8 @@ def _runIndexer(options):
             metadata.drop_all(engine, checkfirst=True)
         metadata.create_all(engine, checkfirst=True)
         # initialize database + options
-        Session = sessionmaker(bind=engine)
-        service.session = Session
+        _session = sessionmaker(bind=engine)
+        service.session = _session
         service.options = options
         service.mappings = mappings
         # set queues
@@ -276,7 +275,7 @@ Default path option is 'data=*.*'.""")
     else:
         logging.basicConfig(filename=options.log, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
-    _runIndexer(args)
+    _run_indexer(args)
 
 
 if __name__ == "__main__":
