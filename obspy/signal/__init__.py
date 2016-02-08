@@ -121,8 +121,8 @@ Again, there are convenience methods implemented on
             'zeros': [0j, 0j]}
     for tr in st:
         df = tr.stats.sampling_rate
-        tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
-                          water_level=60.0)
+        tr.data = simulate_seismometer(tr.data, df, paz_remove=sts2,
+                                       paz_simulate=inst2hz, water_level=60.0)
     st.plot()
 
 Trigger
@@ -135,14 +135,14 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 The following example demonstrates a recursive STA/LTA triggering:
 
 >>> from obspy import read
->>> from obspy.signal.trigger import recursive_STALTA, plot_trigger
+>>> from obspy.signal.trigger import recursive_sta_lta, plot_trigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
 <...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
->>> cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
+>>> cft = recursive_sta_lta(tr.data, int(sta * tr.stats.sampling_rate),
 ...                        int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
@@ -151,13 +151,13 @@ The following example demonstrates a recursive STA/LTA triggering:
 .. plot::
 
     from obspy import read
-    from obspy.signal.trigger import recursive_STALTA, plot_trigger
+    from obspy.signal.trigger import recursive_sta_lta, plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
     sta = 0.5
     lta = 4
-    cft = recursive_STALTA(tr.data, int(sta * tr.stats.sampling_rate),
+    cft = recursive_sta_lta(tr.data, int(sta * tr.stats.sampling_rate),
                     int(lta * tr.stats.sampling_rate))
     thr_on = 4
     thr_off = 0.7
@@ -213,15 +213,15 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'bandpass': 'obspy.signal.filter.bandpass',
         'bandstop': 'obspy.signal.filter.bandstop',
         'bwith': 'obspy.signal.freqattributes.bandwidth',
-        'carlSTATrig': 'obspy.signal.trigger.carl_STA_trig',
+        'carlSTATrig': 'obspy.signal.trigger.carl_sta_trig',
         'centroid': 'obspy.signal.cpxtrace.centroid',
         'cfrequency': 'obspy.signal.freqattributes.central_frequency',
-        'classicSTALTA': 'obspy.signal.trigger.classic_STALTA',
-        'classicSTALTAPy': 'obspy.signal.trigger.classic_STALTA_py',
+        'classicSTALTA': 'obspy.signal.trigger.classic_sta_lta',
+        'classicSTALTAPy': 'obspy.signal.trigger.classic_sta_lta_py',
         'coincidenceTrigger': 'obspy.signal.trigger.coincidence_trigger',
         'cornFreq2Paz': 'obspy.signal.invsim.corn_freq_2_paz',
         'cosTaper': 'obspy.signal.invsim.cosine_taper',
-        'delayedSTALTA': 'obspy.signal.trigger.delayed_STALTA',
+        'delayedSTALTA': 'obspy.signal.trigger.delayed_sta_lta',
         'domperiod': 'obspy.signal.freqattributes.dominant_period',
         'eigval': 'obspy.signal.polarization.eigval',
         'envelope': 'obspy.signal.cpxtrace.envelope',
@@ -239,8 +239,8 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'pazToFreqResp': 'obspy.signal.invsim.paz_to_freq_resp',
         'pkBaer': 'obspy.signal.trigger.pk_baer',
         'psd': 'obspy.signal.spectral_estimation.psd',
-        'recSTALTA': 'obspy.signal.trigger.recursive_STALTA',
-        'recSTALTAPy': 'obspy.signal.trigger.recursive_STALTA_py',
+        'recSTALTA': 'obspy.signal.trigger.recursive_sta_lta',
+        'recSTALTAPy': 'obspy.signal.trigger.recursive_sta_lta_py',
         'remezFIR': 'obspy.signal.filter.remezFIR',
         'rotate_LQT_ZNE': 'obspy.signal.rotate.rotate_LQT_ZNE',
         'rotate_NE_RT': 'obspy.signal.rotate.rotate_NE_RT',
