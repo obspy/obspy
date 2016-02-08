@@ -43,7 +43,7 @@ class PlotTestCase(unittest.TestCase):
             with ImageComparison(self.path, 'plot.png') as ic:
                 obspy_plot(['--outfile', ic.name] + all_files)
 
-    def test_plotNoMerge(self):
+    def test_plot_no_merge(self):
         """
         Run obspy-plot without trace merging
         """

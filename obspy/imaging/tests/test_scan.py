@@ -51,7 +51,7 @@ class ScanTestCase(unittest.TestCase):
             with ImageComparison(self.path, 'scan.png') as ic:
                 obspy_scan([os.curdir] + ['--output', ic.name, '--quiet'])
 
-    def test_scanTimes(self):
+    def test_scan_times(self):
         """
         Checks for timing related options
         """
@@ -68,7 +68,7 @@ class ScanTestCase(unittest.TestCase):
                            ['--event-time', '2004-02-07T18:28:18'] +
                            ['--quiet'])
 
-    def test_multipleSamplingrates(self):
+    def test_multiple_sampling_rates(self):
         """
         Check for multiple sampling rates
         """

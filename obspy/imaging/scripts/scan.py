@@ -46,7 +46,7 @@ from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
 
-def compressStartend(x, stop_iteration, merge_overlaps=False):
+def compress_start_end(x, stop_iteration, merge_overlaps=False):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
     by merging overlapping and exactly fitting pieces into one.
@@ -355,7 +355,7 @@ def main(argv=None):
             warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
 
-        startend_compressed = compressStartend(startend, 1000)
+        startend_compressed = compress_start_end(startend, 1000)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
         if not args.no_x:

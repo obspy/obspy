@@ -249,27 +249,27 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
                            width=width, height=height, ax=map_ax)
             # not most elegant way to calculate some round lats/lons
 
-            def linspace2(val1, val2, N):
+            def linspace2(val1, val2, n):
                 """
-                returns around N 'nice' values between val1 and val2
+                returns around n 'nice' values between val1 and val2
                 """
                 dval = val2 - val1
-                round_pos = int(round(-np.log10(1. * dval / N)))
+                round_pos = int(round(-np.log10(1. * dval / n)))
                 # Fake negative rounding as not supported by future as of now.
                 if round_pos < 0:
                     factor = 10 ** (abs(round_pos))
-                    delta = round(2. * dval / N / factor) * factor / 2
+                    delta = round(2. * dval / n / factor) * factor / 2
                 else:
-                    delta = round(2. * dval / N, round_pos) / 2
+                    delta = round(2. * dval / n, round_pos) / 2
                 new_val1 = np.ceil(val1 / delta) * delta
                 new_val2 = np.floor(val2 / delta) * delta
-                N = (new_val2 - new_val1) / delta + 1
-                return np.linspace(new_val1, new_val2, N)
+                n = (new_val2 - new_val1) / delta + 1
+                return np.linspace(new_val1, new_val2, n)
 
-            N1 = int(np.ceil(height / max(width, height) * 8))
-            N2 = int(np.ceil(width / max(width, height) * 8))
+            n_1 = int(np.ceil(height / max(width, height) * 8))
+            n_2 = int(np.ceil(width / max(width, height) * 8))
             parallels = linspace2(lat_0 - height / 2 / deg2m_lat,
-                                  lat_0 + height / 2 / deg2m_lat, N1)
+                                  lat_0 + height / 2 / deg2m_lat, n_1)
 
             # Old basemap versions have problems with non-integer parallels.
             try:
@@ -281,7 +281,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
             if min(lons) < -150 and max(lons) > 150:
                 lon_0 %= 360
             meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                                  lon_0 + width / 2 / deg2m_lon, N2)
+                                  lon_0 + width / 2 / deg2m_lon, n_2)
             meridians[meridians > 180] -= 360
             bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
         else:
