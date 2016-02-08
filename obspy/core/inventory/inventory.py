@@ -19,7 +19,6 @@ import fnmatch
 import os
 import textwrap
 import warnings
-import numpy as np
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
@@ -774,13 +773,14 @@ class Inventory(ComparingObject):
 
         return fig
 
-    def plot_rays(self, evcoords, kind='mayavi'):
+    def plot_rays(self, *args, **kwargs):
         """
-        plots raypaths between an event and and inventory. This could be
-        extended to plot all rays between a catalogue and an inventory
+        Plot ray paths between this inventory and one or more events.
+
+        All options are passed to :func:`obspy.imaging.ray_paths.plot_rays`.
         """
         from obspy.imaging.ray_paths import plot_rays
-        plot_rays(self, evcoords, kind=kind)
+        plot_rays(inventory=self, *args, **kwargs)
 
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,

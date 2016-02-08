@@ -1,15 +1,10 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# ------------------------------------------------------------------
-# Filename: ray_paths.py
-#  Purpose: ray paths
-#   Author: Matthias Meschede
-#    Email: sippl@geophysik.uni-muenchen.de
-#
-# Copyright (C) 2008-2012 Matthias Meschede
-# --------------------------------------------------------------------
 """
-Plotting spectrogram of seismograms.
+Plotting 3D ray paths.
 
+:author:
+    Matthias Meschede
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
@@ -20,38 +15,44 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+from colorsys import hls_to_rgb, rgb_to_hls
 
 import numpy as np
-from colorsys import hls_to_rgb, rgb_to_hls
 from matplotlib.colors import hex2color
 
 
-def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
-              evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
-              colorscheme='default', animate=False, savemovie=False,
-              figsize=(800, 800), fname_coastlines='internal',
+def plot_rays(inventory=None, catalog=None, station_latitude=None,
+              station_longitude=None, event_latitude=None,
+              event_longitude=None, event_depth_in_km=None, phase_list=('P',),
+              kind='mayavi', colorscheme='default', animate=False,
+              savemovie=False, figsize=(800, 800), coastlines='internal',
               taup_model='iasp91'):
     """
-    plots raypaths between an event and and inventory. This could be
-    extended to plot all rays between a catalogue and an inventory
+    Plot ray paths between this inventory and one or more events.
     """
-    # use mayavi if possible.
     if kind == 'mayavi':
         _plot_rays_mayavi(
-            inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
-            evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
-            phase_list=phase_list, colorscheme=colorscheme, animate=animate,
-            savemovie=savemovie, figsize=figsize, taup_model='iasp91',
-            fname_coastlines=fname_coastlines)
+            inventory=inventory, catalog=catalog,
+            event_latitude=event_latitude, event_longitude=event_longitude,
+            event_depth_in_km=event_depth_in_km,
+            station_latitude=station_latitude,
+            station_longitude=station_longitude, phase_list=phase_list,
+            colorscheme=colorscheme, animate=animate, savemovie=savemovie,
+            figsize=figsize, taup_model='iasp91', coastlines=coastlines)
     elif kind == 'vtkfiles':
         _write_vtk_files(
-            inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
-            evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
-            phase_list=phase_list)
+            inventory=inventory, catalog=catalog,
+            event_latitude=event_latitude, event_longitude=event_longitude,
+            event_depth_in_km=event_depth_in_km,
+            station_latitude=station_latitude,
+            station_longitude=station_longitude, phase_list=phase_list)
+    else:
+        raise NotImplementedError
 
 
-def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
-                     evlat=None, evlon=None, evdepth_km=None,
+def _write_vtk_files(inventory=None, catalog=None, station_latitude=None,
+                     station_longitude=None, event_latitude=None,
+                     event_longitude=None, event_depth_in_km=None,
                      phase_list=('P'), taup_model='iasp91'):
 
     # define file names
@@ -61,8 +62,9 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # get 3d paths for all station/event combinations
     greatcircles = get_ray_paths(
-        inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
-        evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
+        inventory=inventory, catalog=catalog, stlat=station_latitude,
+        stlon=station_longitude, evlat=event_latitude, evlon=event_longitude,
+        evdepth_km=event_depth_in_km, phase_list=phase_list,
         coordinate_system='XYZ', taup_model=taup_model)
 
     # now assemble all points, stations and connectivity
@@ -148,11 +150,12 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
             vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(*location))
 
 
-def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
-                      evlat=None, evlon=None, evdepth_km=None,
+def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
+                      station_longitude=None, event_latitude=None,
+                      event_longitude=None, event_depth_in_km=None,
                       phase_list=['P'], colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
-                      fname_coastlines='internal'):
+                      coastlines='internal'):
     try:
         from mayavi import mlab
     except Exception as err:
@@ -177,8 +180,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     nphases = len(phase_list)
 
     greatcircles = get_ray_paths(
-        inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
-        evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
+        inventory=inventory, catalog=catalog, stlat=station_latitude,
+        stlon=station_longitude,
+        evlat=event_latitude, evlon=event_longitude,
+        evdepth_km=event_depth_in_km, phase_list=phase_list,
         coordinate_system='XYZ', taup_model=model)
 
     # define colorschemes
@@ -311,12 +316,12 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     fig.scene.disable_render = False # Super duper trick
 
     # read and plot coastlines
-    if fname_coastlines == 'internal':
+    if coastlines == 'internal':
         from mayavi.sources.builtin_surface import BuiltinSurface
         data_source = BuiltinSurface(source='earth', name="Continents")
         data_source.data_source.on_ratio = 1
     else:
-        data_source = mlab.pipeline.open(fname_coastlines)
+        data_source = mlab.pipeline.open(coastlines)
     coastmesh = mlab.pipeline.surface(data_source, opacity=1.0, line_width=0.5,
                                       color=continentcolor)
     coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
@@ -461,14 +466,14 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                     phase_list=phase_list)
             if len(arrivals) == 0:
                 continue
-    
+
             for arr in arrivals:
                 if coordinate_system == 'RTP':
                     radii = (r_earth - arr.path['depth']) / r_earth
                     thetas = np.radians(90. - arr.path['lat'])
                     phis = np.radians(arr.path['lon'])
                     gcircle = np.array([radii, thetas, phis])
-    
+
                 if coordinate_system == 'XYZ':
                     radii = (r_earth - arr.path['depth']) / r_earth
                     thetas = np.radians(90. - arr.path['lat'])
@@ -476,7 +481,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                     gcircle = np.array([radii * np.sin(thetas) * np.cos(phis),
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
-    
+
                 greatcircles.append((gcircle, arr.name, stlabel, evlabel))
 
     return greatcircles
