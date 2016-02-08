@@ -199,7 +199,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
         import urllib.parse
         import http.client
     import codecs
-    from xml.etree import ElementTree as etree
+    from xml.etree import ElementTree
     from xml.sax.saxutils import escape
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
@@ -302,20 +302,20 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
         for key, value in result.items():
             key = key.split('(')[0].strip()
             if isinstance(value, dict):
-                child = etree.SubElement(doc, key)
+                child = ElementTree.SubElement(doc, key)
                 _dict2xml(child, value)
             elif value is not None:
                 if isinstance(value, (str, native_str)):
-                    etree.SubElement(doc, key).text = value
+                    ElementTree.SubElement(doc, key).text = value
                 elif isinstance(value, (str, native_str)):
-                    etree.SubElement(doc, key).text = str(value, 'utf-8')
+                    ElementTree.SubElement(doc, key).text = str(value, 'utf-8')
                 else:
-                    etree.SubElement(doc, key).text = str(value)
+                    ElementTree.SubElement(doc, key).text = str(value)
             else:
-                etree.SubElement(doc, key)
-    root = etree.Element("report")
+                ElementTree.SubElement(doc, key)
+    root = ElementTree.Element("report")
     _dict2xml(root, result)
-    xml_doc = etree.tostring(root)
+    xml_doc = ElementTree.tostring(root)
     print()
     # send result to report server
     params = urllib.parse.urlencode({
@@ -357,11 +357,11 @@ class _TextTestResult(unittest._TextTestResult):
     """
     timer = []
 
-    def startTest(self, test):
+    def startTest(self, test):  # noqa
         self.start = time.time()
         super(_TextTestResult, self).startTest(test)
 
-    def stopTest(self, test):
+    def stopTest(self, test):  # noqa
         super(_TextTestResult, self).stopTest(test)
         self.timer.append((test, time.time() - self.start))
 
@@ -456,7 +456,7 @@ class _TextTestRunner:
         runs = 0
         faileds = 0
         erroreds = 0
-        wasSuccessful = True
+        was_successful = True
         if self.verbosity:
             self.stream.writeln()
         for result in results.values():
@@ -464,7 +464,7 @@ class _TextTestRunner:
             faileds += failed
             erroreds += errored
             if not result.wasSuccessful():
-                wasSuccessful = False
+                was_successful = False
                 result.printErrors()
             runs += result.testsRun
         if self.verbosity:
@@ -472,7 +472,7 @@ class _TextTestRunner:
             self.stream.writeln("Ran %d test%s in %.3fs" %
                                 (runs, runs != 1 and "s" or "", time_taken))
             self.stream.writeln()
-        if not wasSuccessful:
+        if not was_successful:
             self.stream.write("FAILED (")
             if faileds:
                 self.stream.write("failures=%d" % faileds)
