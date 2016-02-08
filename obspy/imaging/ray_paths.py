@@ -29,7 +29,8 @@ from matplotlib.colors import hex2color
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
               evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
               colorscheme='default', animate=False, savemovie=False,
-              figsize=(800, 800)):
+              figsize=(800, 800), fname_coastlines='internal',
+              taup_model='iasp91'):
     """
     plots raypaths between an event and and inventory. This could be
     extended to plot all rays between a catalogue and an inventory
@@ -40,7 +41,8 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
             evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
             phase_list=phase_list, colorscheme=colorscheme, animate=animate,
-            savemovie=savemovie, figsize=figsize)
+            savemovie=savemovie, figsize=figsize, taup_model='iasp91',
+            fname_coastlines=fname_coastlines)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
@@ -50,7 +52,7 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
 
 def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
                      evlat=None, evlon=None, evdepth_km=None,
-                     phase_list=('P')):
+                     phase_list=('P'), taup_model='iasp91'):
 
     # define file names
     fname_paths = 'paths.vtk'
@@ -61,7 +63,7 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
     greatcircles = get_ray_paths(
         inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
         evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
-        coordinate_system='XYZ')
+        coordinate_system='XYZ', taup_model=taup_model)
 
     # now assemble all points, stations and connectivity
     stations = []  # unique list of stations
@@ -149,7 +151,8 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                       evlat=None, evlon=None, evdepth_km=None,
                       phase_list=['P'], colorscheme='default', animate=False,
-                      savemovie=False, figsize=(800, 800)):
+                      savemovie=False, figsize=(800, 800), taup_model='iasp91',
+                      fname_coastlines='internal'):
     try:
         from mayavi import mlab
     except Exception as err:
@@ -166,14 +169,20 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                "software like paraview")
         raise ImportError(msg)
 
+    if isinstance(taup_model, str):
+        from obspy.taup import TauPyModel
+        model = TauPyModel(model=taup_model)
+    else:
+        model = taup_model
     nphases = len(phase_list)
+
     greatcircles = get_ray_paths(
         inventory=inventory, catalog=catalog, stlat=stlat, stlon=stlon,
         evlat=evlat, evlon=evlon, evdepth_km=evdepth_km, phase_list=phase_list,
-        coordinate_system='XYZ')
+        coordinate_system='XYZ', taup_model=model)
 
     # define colorschemes
-    if colorscheme == 'obspy' or colorscheme == 'default':
+    if colorscheme == 'dark' or colorscheme == 'default':
         # we use the color set that is used in taup, but adjust the lightness
         # to get nice shiny rays that are well visible in the dark 3d plots
         from obspy.taup.tau import COLORS
@@ -197,30 +206,6 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
 
-        # sizes:
-        sttextsize = (0.01, 0.01, 0.01)
-        stmarkersize = 0.01
-        evtextsize = (0.01, 0.01, 0.01)
-        evmarkersize = 0.03
-
-    elif colorscheme == 'dark':
-        # colors (a distinct colors for each phase):
-        ncolors = nphases + 1
-        # hue0 (continents) [0.6 = start with blue]
-        hue0 = 0.6
-        hues = (np.linspace(0, 1. - 1./ncolors, ncolors) + hue0) % 1. 
-
-        label_hue = hues[0]
-        ray_hues = hues[1:]
-        ray_light = 0.4
-        ray_sat = 1.0
-        raycolors = [hls_to_rgb(hue, ray_light, ray_sat) for hue in ray_hues]
-
-        stationcolor = hls_to_rgb(label_hue, 0.8, 0.7)
-        continentcolor = hls_to_rgb(label_hue, 0.3, 0.2)
-        eventcolor = stationcolor
-        cmbcolor = continentcolor
-        bgcolor = (0, 0, 0)
         # sizes:
         sttextsize = (0.01, 0.01, 0.01)
         stmarkersize = 0.01
@@ -319,13 +304,18 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                     color=eventcolor)
     fig.scene.disable_render = False # Super duper trick
 
-    # make surface
-    data_source = mlab.pipeline.open('data/coastlines.vtk')
+    # read and plot coastlines
+    if fname_coastlines == 'internal':
+        from mayavi.sources.builtin_surface import BuiltinSurface
+        data_source = BuiltinSurface(source='earth', name="Continents")
+        data_source.data_source.on_ratio = 1
+    else:
+        data_source = mlab.pipeline.open('data/coastlines.vtk')
     coastmesh = mlab.pipeline.surface(data_source, opacity=1.0, line_width=0.5,
-                                          color=continentcolor)
+                                      color=continentcolor)
     coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
 
-    # make block sphere that hides the backside of the continents
+    # plot block sphere that hides the backside of the continents
     rad = 0.99
     phi, theta = np.mgrid[0:np.pi:51j, 0:2 * np.pi:51j]
 
@@ -336,8 +326,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     blocksphere.actor.property.frontface_culling = True  # front not rendered
 
     # make CMB sphere
-    rad = 0.546
-    phi, theta = np.mgrid[0:np.pi:51j, 0:2 * np.pi:51j]
+    r_earth = model.model.radiusOfEarth
+    r_cmb = r_earth - model.model.cmbDepth
+    rad = r_cmb / r_earth
+    phi, theta = np.mgrid[0: np.pi: 101j, 0: 2 * np.pi: 101j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
@@ -346,7 +338,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     cmb.actor.property.interpolation = 'gouraud'
 
     # make ICB sphere
-    rad = 0.1915
+    r_iocb = r_earth - model.model.iocbDepth
+    rad = r_iocb / r_earth
     phi, theta = np.mgrid[0:np.pi:31j, 0:2 * np.pi:31j]
 
     x = rad * np.sin(phi) * np.cos(theta)
@@ -377,7 +370,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                   evlat=None, evlon=None, evdepth_km=None, phase_list=['P'],
-                  coordinate_system='XYZ'):
+                  coordinate_system='XYZ', taup_model='iasp91'):
     """
     This function returns lat, lon, depth coordinates from an event
     location to all stations in the inventory object
@@ -443,9 +436,12 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
         raise ValueError("either catalog or evlat, evlon and evdepth_km have "
                          "to be set")
 
-    # initialize taup model
-    from obspy.taup import TauPyModel
-    model = TauPyModel(model="iasp91")
+    # initialize taup model if it is not provided
+    if isinstance(taup_model, str):
+        from obspy.taup import TauPyModel
+        model = TauPyModel(model=taup_model)
+    else:
+        model = taup_model
 
     # now loop through all stations and source combinations
     greatcircles = []

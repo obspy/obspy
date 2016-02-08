@@ -19,8 +19,9 @@ class PathPlottingTestCase(unittest.TestCase):
         #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
         #          kind='mayavi', colorscheme='dark')
         plot_rays(inventory=inv, catalog=cat,
-                  phase_list=['PcP'], animate=True, savemovie=True,
-                  kind='mayavi', figsize=(1920, 1080))
+                  phase_list=['Pdiff'], animate=False, savemovie=False,
+                  kind='mayavi', figsize=(1920, 1080),
+                  fname_coastlines='data/coastlines.vtk')
         #plot_rays(stlat=0.,stlon=30, evlat=0., evlon=70, evdepth_km=200.,
         #          phase_list=['P'], colorscheme='dark', kind='mayavi')
 
