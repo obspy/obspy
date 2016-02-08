@@ -69,7 +69,7 @@ class Client(object):
         self.debug = debug
 
     @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
 
@@ -132,7 +132,7 @@ class Client(object):
                                        endtime - starttime)
 
     @deprecated("'getWaveformNSCL' has been renamed to 'get_waveforms_nscl'. "
-                "Use that instead.")
+                "Use that instead.")  # noqa
     def getWaveformNSCL(self, *args, **kwargs):
         return self.get_waveforms_nscl(*args, **kwargs)
 
