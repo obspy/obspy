@@ -2130,23 +2130,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classic_STALTA`).
+            :func:`obspy.signal.trigger.classic_sta_lta`).
 
         ``'recstalta'``
             Recursive STA/LTA
-            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
+            (uses :func:`obspy.signal.trigger.recursive_sta_lta`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recursive_STALTA_py`).
+            :func:`obspy.signal.trigger.recursive_sta_lta_py`).
 
         ``'delayedstalta'``
             Delayed STA/LTA.
-            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
+            (uses :func:`obspy.signal.trigger.delayed_sta_lta`).
 
         ``'carlstatrig'``
-            Computes the carl_STA_trig characteristic function (uses
-            :func:`obspy.signal.trigger.carl_STA_trig`).
+            Computes the carl_sta_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_sta_trig`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).

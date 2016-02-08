@@ -16,8 +16,8 @@ import numpy as np
 
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
-    ar_pick, classic_STALTA, classic_STALTA_py, coincidence_trigger, pk_baer,
-    recursive_STALTA, recursive_STALTA_py, trigger_onset)
+    ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
+    recursive_sta_lta, recursive_sta_lta_py, trigger_onset)
 from obspy.signal.util import clibsignal
 
 
@@ -34,10 +34,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTAC(self):
         """
-        Test case for ctypes version of recursive_STALTA
+        Test case for ctypes version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c1 = recursive_STALTA(self.data, nsta, nlta)
+        c1 = recursive_sta_lta(self.data, nsta, nlta)
         self.assertAlmostEqual(c1[99], 0.80810165)
         self.assertAlmostEqual(c1[100], 0.75939449)
         self.assertAlmostEqual(c1[101], 0.91763978)
@@ -45,10 +45,10 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTAPy(self):
         """
-        Test case for python version of recursive_STALTA
+        Test case for python version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c2 = recursive_STALTA_py(self.data, nsta, nlta)
+        c2 = recursive_sta_lta_py(self.data, nsta, nlta)
         self.assertAlmostEqual(c2[99], 0.80810165)
         self.assertAlmostEqual(c2[100], 0.75939449)
         self.assertAlmostEqual(c2[101], 0.91763978)
@@ -56,7 +56,7 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_recSTALTARaise(self):
         """
-        Type checking recursive_STALTA
+        Type checking recursive_sta_lta
         """
         ndat = 1
         charfct = np.empty(ndat, dtype=np.float64)
@@ -422,11 +422,11 @@ class TriggerTestCase(unittest.TestCase):
 
     def test_classicSTALTAPyC(self):
         """
-        Test case for ctypes version of recursive_STALTA
+        Test case for ctypes version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c1 = classic_STALTA(self.data, nsta, nlta)
-        c2 = classic_STALTA_py(self.data, nsta, nlta)
+        c1 = classic_sta_lta(self.data, nsta, nlta)
+        c2 = classic_sta_lta_py(self.data, nsta, nlta)
         self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         self.assertTrue(np.allclose(ref, c2[99:103]))

@@ -76,7 +76,7 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=15)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],
                                              decimal=15)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
     def test_array_dilation(self):
@@ -122,7 +122,7 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=15)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_w3'],
                                              decimal=15)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
     def test_array_horizontal_shear(self):
@@ -164,7 +164,7 @@ class ArrayTestCase(unittest.TestCase):
                                              decimal=12)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_w3'],
                                              decimal=12)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
     def test_get_geometry(self):
