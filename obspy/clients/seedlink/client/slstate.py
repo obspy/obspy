@@ -90,7 +90,7 @@ class SLState(object):
         self.netdly_time = 0.0
         self.keepalive_time = 0.0
 
-    def getPacket(self):
+    def get_packet(self):
         """
         Returns last received packet.
 
@@ -98,25 +98,25 @@ class SLState(object):
             send.
         :raise SeedLinkException: if there is not a packet ready to send.
 
-        See also: :meth:`packetAvailable`
+        See also: :meth:`packet_available`
         """
-        if not self.packetAvailable():
+        if not self.packet_available():
             raise SeedLinkException("SLPacket not available to send")
         return SLPacket(self.databuf, self.sendptr)
 
-    def packetAvailable(self):
+    def packet_available(self):
         """
         Check for full packet available to send.
 
         :return: true if data buffer contains a full packet to send.
 
-        See also: :meth:`getPacket`
+        See also: :meth:`get_packet`
 
         """
         return self.recptr - self.sendptr >= \
             SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
 
-    def bytesRemaining(self):
+    def bytes_remaining(self):
         """
         Return number of bytes remaining in receiving buffer.
 
@@ -125,7 +125,7 @@ class SLState(object):
         """
         return self.BUFSIZE - self.recptr
 
-    def isError(self):
+    def is_error(self):
         """
         Check for SeedLink ERROR packet.
 
@@ -141,7 +141,7 @@ class SLState(object):
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
             SLPacket.ERRORSIGNATURE.lower()  # @UndefinedVariable
 
-    def isEnd(self):
+    def is_end(self):
         """
         Check for SeedLink END packet.
 
@@ -156,7 +156,7 @@ class SLState(object):
                             len(SLPacket.ENDSIGNATURE)].lower() == \
             SLPacket.ENDSIGNATURE.lower()  # @UndefinedVariable
 
-    def packetIsInfo(self):
+    def packet_is_info(self):
         """
         Check for SeedLink INFO packet.
 
@@ -172,14 +172,14 @@ class SLState(object):
                             len(SLPacket.INFOSIGNATURE)].lower() == \
             SLPacket.INFOSIGNATURE.lower()  # @UndefinedVariable
 
-    def incrementSendPointer(self):
+    def increment_send_pointer(self):
         """
         Increments the send pointer by size of one packet.
 
         """
         self.sendptr += SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
 
-    def packDataBuffer(self):
+    def pack_data_buffer(self):
         """
         Packs the buffer by removing all sent packets and shifting remaining
         bytes to beginning of buffer.
@@ -194,11 +194,11 @@ class SLState(object):
         self.recptr -= self.sendptr
         self.sendptr = 0
 
-    def appendBytes(self, bytes_):
+    def append_bytes(self, bytes_):
         """
         Appends bytes to the receive buffer after the last received data.
         """
-        if self.bytesRemaining() < len(bytes_):
+        if self.bytes_remaining() < len(bytes_):
             msg = "not enough bytes remaining in buffer to append new bytes"
             raise SeedLinkException(msg)
 

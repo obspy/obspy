@@ -23,7 +23,7 @@ class SLPacketTestCase(unittest.TestCase):
 
         return data
 
-    def test_getStringPayload(self):
+    def test_get_string_payload(self):
         """
         Test parsing of SeedLink MiniSEED payload as XML string.
 

@@ -56,7 +56,7 @@ class Client(object):
         Open new connection to seedlink server.
         """
         self._slclient.slconn = SeedLinkConnection(timeout=self.timeout)
-        self._slclient.slconn.setSLAddress(self._server_url)
+        self._slclient.slconn.set_sl_address(self._server_url)
         self._slclient.slconn.netto = self.timeout
 
     @deprecated("'get_waveform' has been renamed to 'get_waveforms'. Use "
@@ -156,7 +156,7 @@ class Client(object):
             return False
         elif type_ == SLPacket.TYPE_SLINFT:
             if self.debug:
-                print("Complete INFO:" + self.slconn.getInfoString())
+                print("Complete INFO:" + self.slconn.get_info_string())
             return False
 
         # process packet data
