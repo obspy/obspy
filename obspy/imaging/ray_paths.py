@@ -28,7 +28,8 @@ from matplotlib.colors import hex2color
 
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
               evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
-              colorscheme='default', animate=False, savemovie=False):
+              colorscheme='default', animate=False, savemovie=False,
+              figsize=(800, 800)):
     """
     plots raypaths between an event and and inventory. This could be
     extended to plot all rays between a catalogue and an inventory
@@ -39,7 +40,7 @@ def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
             evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
             phase_list=phase_list, colorscheme=colorscheme, animate=animate,
-            savemovie=False)
+            savemovie=savemovie, figsize=figsize)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
@@ -148,10 +149,9 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
 def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
                       evlat=None, evlon=None, evdepth_km=None,
                       phase_list=['P'], colorscheme='default', animate=False,
-                      savemovie=False):
+                      savemovie=False, figsize=(800, 800)):
     try:
         from mayavi import mlab
-        from mayavi.tools.pipeline import line_source
     except Exception as err:
         print(err)
         msg = ("obspy failed to import mayavi. "
@@ -187,12 +187,12 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         ray_hues = color_hues[1:]
 
         # now convert all of the hues to rgb colors:
-        ray_light = 0.6
+        ray_light = 0.4
         ray_sat = 1.0
         raycolors = [hls_to_rgb(ray_hues[iphase % (ncolors - 1)],
                      ray_light, ray_sat) for iphase in range(nphases)]
         stationcolor = hls_to_rgb(continent_hue, 0.8, 0.7)
-        continentcolor = hls_to_rgb(continent_hue, 0.4, 0.2)
+        continentcolor = hls_to_rgb(continent_hue, 0.3, 0.2)
         eventcolor = stationcolor
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
@@ -269,7 +269,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
             events.append((x, y, z, evlabel))
 
     # now begin mayavi plotting
-    fig = mlab.figure(size=(800, 800), bgcolor=bgcolor)
+    fig = mlab.figure(size=figsize, bgcolor=bgcolor)
 
     # make the connectivity of each phase and plot them
     for iphase, phase in enumerate(phases):
