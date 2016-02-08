@@ -19,8 +19,8 @@ class PathPlottingTestCase(unittest.TestCase):
         #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
         #          kind='mayavi', colorscheme='dark')
         plot_rays(inventory=inv, catalog=cat,
-                  phase_list=['PKiKP'], colorscheme='dark',
-                  animate=True, savemovie=True, kind='mayavi')
+                  phase_list=['P','PcP'], animate=False, 
+                  kind='mayavi')
         #plot_rays(stlat=0.,stlon=30, evlat=0., evlon=70, evdepth_km=200.,
         #          phase_list=['P'], colorscheme='dark', kind='mayavi')
 

@@ -22,8 +22,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 
 import numpy as np
-from colorsys import hls_to_rgb
-import ipdb
+from colorsys import hls_to_rgb, rgb_to_hls
+from matplotlib.colors import hex2color
 
 
 def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
@@ -97,7 +97,6 @@ def _write_vtk_files(inventory=None, catalog=None, stlat=None, stlon=None,
         vtk_file.write(vtk_header)
 
         # write a long list of all points
-        all_points = np.hstack(points)
         for x, y, z in np.hstack(points).T:
             vtk_file.write('{:.4e} {:.4e} {:.4e}\n'.format(x, y, z))
 
@@ -174,18 +173,52 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         coordinate_system='XYZ')
 
     # define colorschemes
-    if colorscheme == 'dark' or colorscheme == 'default':
-        # colors (a distinct colors for each phase):
-        lightness = 0.4
-        saturation = 1.0
-        ncolors = nphases
-        hues = np.linspace(0., 1. - 1./ncolors, ncolors)
-        raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
-                     in hues]
+    if colorscheme == 'obspy' or colorscheme == 'default':
+        # we use the color set that is used in taup, but adjust the lightness
+        # to get nice shiny rays that are well visible in the dark 3d plots
+        from obspy.taup.tau import COLORS
+        ncolors = len(COLORS)
+        color_hues = [rgb_to_hls(*hex2color(col))[0] for col in COLORS]
+        # swap green and red to start with red:
+        color_hues[2], color_hues[1] = color_hues[1], color_hues[2]
+        # first color is for the continents etc:
+        continent_hue = color_hues[0]
+        # the remaining colors are for the rays:
+        ray_hues = color_hues[1:]
 
-        labelcolor = hls_to_rgb(0.6, 0.8, 0.7)
-        continentcolor = hls_to_rgb(0.6, 0.3, 0.2)
-        eventcolor = hls_to_rgb(0.0, 0.8, 0.7)
+        # now convert all of the hues to rgb colors:
+        ray_light = 0.6
+        ray_sat = 1.0
+        raycolors = [hls_to_rgb(ray_hues[iphase % (ncolors - 1)],
+                     ray_light, ray_sat) for iphase in range(nphases)]
+        stationcolor = hls_to_rgb(continent_hue, 0.8, 0.7)
+        continentcolor = hls_to_rgb(continent_hue, 0.4, 0.2)
+        eventcolor = stationcolor
+        cmbcolor = continentcolor
+        bgcolor = (0, 0, 0)
+
+        # sizes:
+        sttextsize = (0.01, 0.01, 0.01)
+        stmarkersize = 0.01
+        evtextsize = (0.01, 0.01, 0.01)
+        evmarkersize = 0.03
+
+    elif colorscheme == 'dark':
+        # colors (a distinct colors for each phase):
+        ncolors = nphases + 1
+        # hue0 (continents) [0.6 = start with blue]
+        hue0 = 0.6
+        hues = (np.linspace(0, 1. - 1./ncolors, ncolors) + hue0) % 1. 
+
+        label_hue = hues[0]
+        ray_hues = hues[1:]
+        ray_light = 0.4
+        ray_sat = 1.0
+        raycolors = [hls_to_rgb(hue, ray_light, ray_sat) for hue in ray_hues]
+
+        stationcolor = hls_to_rgb(label_hue, 0.8, 0.7)
+        continentcolor = hls_to_rgb(label_hue, 0.3, 0.2)
+        eventcolor = stationcolor
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
         # sizes:
@@ -193,6 +226,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         stmarkersize = 0.01
         evtextsize = (0.01, 0.01, 0.01)
         evmarkersize = 0.03
+
     elif colorscheme == 'bright':
         # colors (a distinct colors for each phase):
         lightness = 0.2
@@ -203,7 +237,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         raycolors = [hls_to_rgb(hue, lightness, saturation) for hue
                      in hues[2:]]
 
-        labelcolor = hls_to_rgb(hues[0], 0.2, 0.5)
+        stationcolor = hls_to_rgb(hues[0], 0.2, 0.5)
         continentcolor = hls_to_rgb(hues[0], 0.6, 0.2)
         eventcolor = hls_to_rgb(hues[1], 0.2, 0.5)
         cmbcolor = continentcolor
@@ -271,10 +305,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     fig.scene.disable_render = True # Super duper trick
     stxs, stys, stzs, stlabels = zip(*stations)
     mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
-                  color=labelcolor)
+                  color=stationcolor)
     for stx, sty, stz, stlabel in stations:
         mlab.text3d(stx, sty, stz, stlabel, scale=sttextsize,
-                    color=labelcolor)
+                    color=stationcolor)
 
     # plot all events
     evxs, evys, evzs, evlabels = zip(*events)
@@ -322,7 +356,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     icb.actor.property.interpolation = 'gouraud'
     mlab.view(azimuth=0., elevation=90., distance=5., focalpoint=(0., 0., 0.))
 
-    savemovie = True
+    # to make a movie from the image files, you can use the command:
+    # avconv -qscale 5 -r 20 -b 9600 -i %05d.png -vf scale=800:752 movie.mp4
     if animate:
         @mlab.show
         @mlab.animate(delay=20)
@@ -399,6 +434,11 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
         evlons.append(evlon)
         evdepths.append(evdepth_km)
         evlabels.append('')
+    elif event is not None:
+        raise NotImplementedError("Event input not implemented yet. "
+                                  "You should either provide a complete "
+                                  "catalogue or the evlat, evlon, evdepth_km "
+                                  "arguments")
     else:
         raise ValueError("either catalog or evlat, evlon and evdepth_km have "
                          "to be set")
