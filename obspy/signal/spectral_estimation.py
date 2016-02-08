@@ -40,7 +40,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
-from obspy.imaging.scripts.scan import compressStartend
+from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version, AttribDict
 from obspy.core.util.decorator import deprecated_keywords, deprecated
@@ -1746,7 +1746,7 @@ class PPSD(object):
             ends = [date2num((t + self.ppsd_length).datetime)
                     for t in times]
             startends = np.array([starts, ends])
-            startends = compressStartend(startends.T, 20, merge_overlaps=True)
+            startends = compress_start_end(startends.T, 20, merge_overlaps=True)
             starts, ends = startends[:, 0], startends[:, 1]
             for start, end in zip(starts, ends):
                 ax.axvspan(start, end, 0, 0.6, fc=color, lw=0)

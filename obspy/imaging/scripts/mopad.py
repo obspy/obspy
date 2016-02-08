@@ -8,6 +8,10 @@
 #
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
 # --------------------------------------------------------------------
+#
+# Completely skip this file for flake8 testing - it is not our code.
+#
+# flake8: noqa
 """
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 

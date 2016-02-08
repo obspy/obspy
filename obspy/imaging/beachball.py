@@ -79,7 +79,7 @@ def mopad_fallback(func, *args, **kwargs):
 
 
 @deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):
+def Beach(*args, **kwargs):  # noqa
     return beach(*args, **kwargs)
 
 
@@ -197,7 +197,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
 
 @deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")
+            "instead.")  # noqa
 def Beachball(*args, **kwargs):
     return beachball(*args, **kwargs)
 
@@ -288,7 +288,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         return fig
 
 
-def plot_mt(T, N, P, size=200, plot_zerotrace=True,
+def plot_mt(T, N, P, size=200, plot_zerotrace=True,  # noqa
             x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
@@ -627,75 +627,76 @@ def plot_dc(np1, size=200, xy=(0, 0), width=200):
         assert(len(width) == 2)
     except TypeError:
         width = (width, width)
-    S1 = np1.strike
-    D1 = np1.dip
-    R1 = np1.rake
+    s_1 = np1.strike
+    d_1 = np1.dip
+    r_1 = np1.rake
 
-    M = 0
-    if R1 > 180:
-        R1 -= 180
-        M = 1
-    if R1 < 0:
-        R1 += 180
-        M = 1
+    m = 0
+    if r_1 > 180:
+        r_1 -= 180
+        m = 1
+    if r_1 < 0:
+        r_1 += 180
+        m = 1
 
     # Get azimuth and dip of second plane
-    (S2, D2, _R2) = AuxPlane(S1, D1, R1)
+    (s_2, d_2, _r_2) = aux_plane(s_1, d_1, r_1)
 
-    D = size / 2
+    d = size / 2
 
-    if D1 >= 90:
-        D1 = 89.9999
-    if D2 >= 90:
-        D2 = 89.9999
+    if d_1 >= 90:
+        d_1 = 89.9999
+    if d_2 >= 90:
+        d_2 = 89.9999
 
     # arange checked for numerical stability, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
     l1 = np.sqrt(
-        np.power(90 - D1, 2) / (
+        np.power(90 - d_1, 2) / (
             np.power(np.sin(phi), 2) +
-            np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
+            np.power(np.cos(phi), 2) *
+            np.power(90 - d_1, 2) / np.power(90, 2)))
     l2 = np.sqrt(
-        np.power(90 - D2, 2) / (
+        np.power(90 - d_2, 2) / (
             np.power(np.sin(phi), 2) + np.power(np.cos(phi), 2) *
-            np.power(90 - D2, 2) / np.power(90, 2)))
+            np.power(90 - d_2, 2) / np.power(90, 2)))
 
     inc = 1
-    (X1, Y1) = pol2cart(phi + S1 * D2R, l1)
+    (x_1, y_1) = pol2cart(phi + s_1 * D2R, l1)
 
-    if M == 1:
-        lo = S1 - 180
-        hi = S2
+    if m == 1:
+        lo = s_1 - 180
+        hi = s_2
         if lo > hi:
             inc = -1
-        th1 = np.arange(S1 - 180, S2, inc)
-        (Xs1, Ys1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (X2, Y2) = pol2cart(phi + S2 * D2R, l2)
-        th2 = np.arange(S2 + 180, S1, -inc)
+        th1 = np.arange(s_1 - 180, s_2, inc)
+        (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+        (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
+        th2 = np.arange(s_2 + 180, s_1, -inc)
     else:
-        hi = S1 - 180
-        lo = S2 - 180
+        hi = s_1 - 180
+        lo = s_2 - 180
         if lo > hi:
             inc = -1
         th1 = np.arange(hi, lo, -inc)
-        (Xs1, Ys1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (X2, Y2) = pol2cart(phi + S2 * D2R, l2)
-        X2 = X2[::-1]
-        Y2 = Y2[::-1]
-        th2 = np.arange(S2, S1, inc)
-    (Xs2, Ys2) = pol2cart(th2 * D2R, 90 * np.ones((1, len(th2))))
-    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]))
-    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]))
+        (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+        (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
+        x_2 = x_2[::-1]
+        y_2 = y_2[::-1]
+        th2 = np.arange(s_2, s_1, inc)
+    (xs_2, ys_2) = pol2cart(th2 * D2R, 90 * np.ones((1, len(th2))))
+    x = np.concatenate((x_1, xs_1[0], x_2, xs_2[0]))
+    y = np.concatenate((y_1, ys_1[0], y_2, ys_2[0]))
 
-    X = X * D / 90
-    Y = Y * D / 90
+    x = x * d / 90
+    y = y * d / 90
 
     # calculate resolution
     res = [value / float(size) for value in width]
 
     # construct the patches
     collect = [patches.Ellipse(xy, width=width[0], height=width[1])]
-    collect.append(xy2patch(Y, X, res, xy))
+    collect.append(xy2patch(y, x, res, xy))
     return ['b', 'w'], collect
 
 
@@ -750,7 +751,7 @@ def strike_dip(n, e, u):
     return (strike, dip)
 
 
-def AuxPlane(s1, d1, r1):
+def aux_plane(s1, d1, r1):
     """
     Get Strike and dip of second plane.
 
@@ -804,32 +805,32 @@ def mt2plane(mt):
     written by Andy Michael, Chen Ji and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
-    D = np.array([d[1], d[0], d[2]])
-    V = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
+    d = np.array([d[1], d[0], d[2]])
+    v = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
                  [v[2, 1], -v[2, 0], -v[2, 2]],
                  [-v[0, 1], v[0, 0], v[0, 2]]])
-    IMAX = D.argmax()
-    IMIN = D.argmin()
-    AE = (V[:, IMAX] + V[:, IMIN]) / np.sqrt(2.0)
-    AN = (V[:, IMAX] - V[:, IMIN]) / np.sqrt(2.0)
-    AER = np.sqrt(np.power(AE[0], 2) + np.power(AE[1], 2) + np.power(AE[2], 2))
-    ANR = np.sqrt(np.power(AN[0], 2) + np.power(AN[1], 2) + np.power(AN[2], 2))
-    AE = AE / AER
-    if not ANR:
-        AN = np.array([np.nan, np.nan, np.nan])
+    imax = d.argmax()
+    imin = d.argmin()
+    ae = (v[:, imax] + v[:, imin]) / np.sqrt(2.0)
+    an = (v[:, imax] - v[:, imin]) / np.sqrt(2.0)
+    aer = np.sqrt(np.power(ae[0], 2) + np.power(ae[1], 2) + np.power(ae[2], 2))
+    anr = np.sqrt(np.power(an[0], 2) + np.power(an[1], 2) + np.power(an[2], 2))
+    ae = ae / aer
+    if not anr:
+        an = np.array([np.nan, np.nan, np.nan])
     else:
-        AN = AN / ANR
-    if AN[2] <= 0.:
-        AN1 = AN
-        AE1 = AE
+        an = an / anr
+    if an[2] <= 0.:
+        an1 = an
+        ae1 = ae
     else:
-        AN1 = -AN
-        AE1 = -AE
-    (ft, fd, fl) = tdl(AN1, AE1)
+        an1 = -an
+        ae1 = -ae
+    (ft, fd, fl) = tdl(an1, ae1)
     return NodalPlane(360 - ft, fd, 180 - fl)
 
 
-def tdl(AN, BN):
+def tdl(an, bn):
     """
     Helper function for mt2plane.
 
@@ -837,79 +838,79 @@ def tdl(AN, BN):
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
     written by Andy Michael, Chen Ji and Oliver Boyd.
     """
-    XN = AN[0]
-    YN = AN[1]
-    ZN = AN[2]
-    XE = BN[0]
-    YE = BN[1]
-    ZE = BN[2]
-    AAA = 1.0 / (1000000)
-    CON = 57.2957795
-    if np.fabs(ZN) < AAA:
-        FD = 90.
-        AXN = np.fabs(XN)
-        if AXN > 1.0:
-            AXN = 1.0
-        FT = np.arcsin(AXN) * CON
-        ST = -XN
-        CT = YN
-        if ST >= 0. and CT < 0:
-            FT = 180. - FT
-        if ST < 0. and CT <= 0:
-            FT = 180. + FT
-        if ST < 0. and CT > 0:
-            FT = 360. - FT
-        FL = np.arcsin(abs(ZE)) * CON
-        SL = -ZE
-        if np.fabs(XN) < AAA:
-            CL = XE / YN
+    xn = an[0]
+    yn = an[1]
+    zn = an[2]
+    xe = bn[0]
+    ye = bn[1]
+    ze = bn[2]
+    aaa = 1.0 / (1000000)
+    con = 57.2957795
+    if np.fabs(zn) < aaa:
+        fd = 90.
+        axn = np.fabs(xn)
+        if axn > 1.0:
+            axn = 1.0
+        ft = np.arcsin(axn) * con
+        st = -xn
+        ct = yn
+        if st >= 0. and ct < 0:
+            ft = 180. - ft
+        if st < 0. and ct <= 0:
+            ft = 180. + ft
+        if st < 0. and ct > 0:
+            ft = 360. - ft
+        fl = np.arcsin(abs(ze)) * con
+        sl = -ze
+        if np.fabs(xn) < aaa:
+            cl = xe / yn
         else:
-            CL = -YE / XN
-        if SL >= 0. and CL < 0:
-            FL = 180. - FL
-        if SL < 0. and CL <= 0:
-            FL = FL - 180.
-        if SL < 0. and CL > 0:
-            FL = -FL
+            cl = -ye / xn
+        if sl >= 0. and cl < 0:
+            fl = 180. - fl
+        if sl < 0. and cl <= 0:
+            fl = fl - 180.
+        if sl < 0. and cl > 0:
+            fl = -fl
     else:
-        if -ZN > 1.0:
-            ZN = -1.0
-        FDH = np.arccos(-ZN)
-        FD = FDH * CON
-        SD = np.sin(FDH)
-        if SD == 0:
+        if -zn > 1.0:
+            zn = -1.0
+        fdh = np.arccos(-zn)
+        fd = fdh * con
+        sd = np.sin(fdh)
+        if sd == 0:
             return
-        ST = -XN / SD
-        CT = YN / SD
-        SX = np.fabs(ST)
-        if SX > 1.0:
-            SX = 1.0
-        FT = np.arcsin(SX) * CON
-        if ST >= 0. and CT < 0:
-            FT = 180. - FT
-        if ST < 0. and CT <= 0:
-            FT = 180. + FT
-        if ST < 0. and CT > 0:
-            FT = 360. - FT
-        SL = -ZE / SD
-        SX = np.fabs(SL)
-        if SX > 1.0:
-            SX = 1.0
-        FL = np.arcsin(SX) * CON
-        if ST == 0:
-            CL = XE / CT
+        st = -xn / sd
+        ct = yn / sd
+        sx = np.fabs(st)
+        if sx > 1.0:
+            sx = 1.0
+        ft = np.arcsin(sx) * con
+        if st >= 0. and ct < 0:
+            ft = 180. - ft
+        if st < 0. and ct <= 0:
+            ft = 180. + ft
+        if st < 0. and ct > 0:
+            ft = 360. - ft
+        sl = -ze / sd
+        sx = np.fabs(sl)
+        if sx > 1.0:
+            sx = 1.0
+        fl = np.arcsin(sx) * con
+        if st == 0:
+            cl = xe / ct
         else:
-            XXX = YN * ZN * ZE / SD / SD + YE
-            CL = -SD * XXX / XN
-            if CT == 0:
-                CL = YE / ST
-        if SL >= 0. and CL < 0:
-            FL = 180. - FL
-        if SL < 0. and CL <= 0:
-            FL = FL - 180.
-        if SL < 0. and CL > 0:
-            FL = -FL
-    return (FT, FD, FL)
+            xxx = yn * zn * ze / sd / sd + ye
+            cl = -sd * xxx / xn
+            if ct == 0:
+                cl = ye / st
+        if sl >= 0. and cl < 0:
+            fl = 180. - fl
+        if sl < 0. and cl <= 0:
+            fl = fl - 180.
+        if sl < 0. and cl > 0:
+            fl = -fl
+    return (ft, fd, fl)
 
 
 def mt2axes(mt):
@@ -922,9 +923,9 @@ def mt2axes(mt):
     Adapted from ps_tensor / utilmeca.c /
     `Generic Mapping Tools (GMT) <https://gmt.soest.hawaii.edu>`_.
     """
-    (D, V) = np.linalg.eigh(mt.mt)
-    pl = np.arcsin(-V[0])
-    az = np.arctan2(V[2], -V[1])
+    (d, v) = np.linalg.eigh(mt.mt)
+    pl = np.arcsin(-v[0])
+    az = np.arctan2(v[2], -v[1])
     for i in range(0, 3):
         if pl[i] <= 0:
             pl[i] = -pl[i]
@@ -936,10 +937,10 @@ def mt2axes(mt):
     pl *= R2D
     az *= R2D
 
-    T = PrincipalAxis(D[2], az[2], pl[2])
-    N = PrincipalAxis(D[1], az[1], pl[1])
-    P = PrincipalAxis(D[0], az[0], pl[0])
-    return (T, N, P)
+    t = PrincipalAxis(d[2], az[2], pl[2])
+    n = PrincipalAxis(d[1], az[1], pl[1])
+    p = PrincipalAxis(d[0], az[0], pl[0])
+    return (t, n, p)
 
 
 class PrincipalAxis(object):
@@ -1000,16 +1001,16 @@ class MomentTensor(object):
     """
     def __init__(self, *args):
         if len(args) == 2:
-            A = args[0]
+            a = args[0]
             self.expo = args[1]
-            if len(A) == 6:
+            if len(a) == 6:
                 # six independent components
-                self.mt = np.array([[A[0], A[3], A[4]],
-                                    [A[3], A[1], A[5]],
-                                    [A[4], A[5], A[2]]])
-            elif isinstance(A, np.ndarray) and A.shape == (3, 3):
+                self.mt = np.array([[a[0], a[3], a[4]],
+                                    [a[3], a[1], a[5]],
+                                    [a[4], a[5], a[2]]])
+            elif isinstance(a, np.ndarray) and a.shape == (3, 3):
                 # full matrix
-                self.mt = A
+                self.mt = a
             else:
                 raise TypeError("Wrong size of input parameter.")
         elif len(args) == 7:

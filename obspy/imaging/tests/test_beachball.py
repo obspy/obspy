@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import ImageComparison
-from obspy.imaging.beachball import (tdl, AuxPlane, beach, beachball,
+from obspy.imaging.beachball import (tdl, aux_plane, beach, beachball,
                                      MomentTensor, mt2axes, mt2plane,
                                      strike_dip)
 
@@ -82,7 +82,7 @@ class BeachballTestCase(unittest.TestCase):
             with ImageComparison(self.path, filename) as ic:
                 beachball(data_, outfile=ic.name)
 
-    def test_BeachBallOutputFormats(self):
+    def test_beachball_output_format(self):
         """
         Tests various output formats.
         """
@@ -113,7 +113,7 @@ class BeachballTestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.svg') as tf:
             beachball(fm, format='svg', outfile=tf.name)
 
-    def test_StrikeDip(self):
+    def test_strike_dip(self):
         """
         Test strike_dip function - all values are taken from MatLab.
         """
@@ -124,15 +124,15 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(strike, 254.64386091007400)
         self.assertAlmostEqual(dip, 10.641291652406172)
 
-    def test_AuxPlane(self):
+    def test_aux_plane(self):
         """
-        Test AuxPlane function - all values are taken from MatLab.
+        Test aux_plane function - all values are taken from MatLab.
         """
         # https://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         s1 = 132.18005257215460
         d1 = 84.240987194376590
         r1 = 98.963372641038790
-        (s2, d2, r2) = AuxPlane(s1, d1, r1)
+        (s2, d2, r2) = aux_plane(s1, d1, r1)
         self.assertAlmostEqual(s2, 254.64386091007400)
         self.assertAlmostEqual(d2, 10.641291652406172)
         self.assertAlmostEqual(r2, 32.915578422454380)
@@ -140,32 +140,32 @@ class BeachballTestCase(unittest.TestCase):
         s1 = 160.55
         d1 = 76.00
         r1 = -46.78
-        (s2, d2, r2) = AuxPlane(s1, d1, r1)
+        (s2, d2, r2) = aux_plane(s1, d1, r1)
         self.assertAlmostEqual(s2, 264.98676854650216)
         self.assertAlmostEqual(d2, 45.001906942415623)
         self.assertAlmostEqual(r2, -159.99404307049076)
 
-    def test_AuxPlane735(self):
+    def test_aux_plane_735(self):
         """
-        Test AuxPlane precision issue #735
+        Test aux_plane precision issue #735
         """
-        s, d, r = AuxPlane(164, 90, -32)
+        s, d, r = aux_plane(164, 90, -32)
         self.assertAlmostEqual(s, 254.)
         self.assertAlmostEqual(d, 58.)
         self.assertAlmostEqual(r, -180.)
 
-    def test_TDL(self):
+    def test_tdl(self):
         """
         Test tdl function - all values are taken from MatLab.
         """
-        AN = [0.737298200871146, -0.668073596186761, -0.100344571703004]
-        BN = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
-        (FT, FD, FL) = tdl(AN, BN)
-        self.assertAlmostEqual(FT, 227.81994742784540)
-        self.assertAlmostEqual(FD, 84.240987194376590)
-        self.assertAlmostEqual(FL, 81.036627358961210)
+        an = [0.737298200871146, -0.668073596186761, -0.100344571703004]
+        bn = [-0.178067035261159, -0.048901208638715, -0.982802524796805]
+        (ft, fd, fl) = tdl(an, bn)
+        self.assertAlmostEqual(ft, 227.81994742784540)
+        self.assertAlmostEqual(fd, 84.240987194376590)
+        self.assertAlmostEqual(fl, 81.036627358961210)
 
-    def test_MT2Plane(self):
+    def test_mt2plane(self):
         """
         Tests mt2plane.
         """
@@ -175,7 +175,7 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.dip, 79.022700906654734)
         self.assertAlmostEqual(np.rake, 97.769255185515192)
 
-    def test_MT2Axes(self):
+    def test_mt2axes(self):
         """
         Tests mt2axes.
         """
