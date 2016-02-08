@@ -58,7 +58,7 @@ class Client(object):
             self.session = session
 
     @deprecated("'getNetworkIDs' has been renamed to 'get_network_ids'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getNetworkIDs(self):
         return self.get_network_ids()
 
@@ -74,7 +74,7 @@ class Client(object):
         return [r[0] for r in results if len(r) == 1]
 
     @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
-                "Use that instead.")
+                "Use that instead.")  # noqa
     def getStationIds(self, *args, **kwargs):
         return self.get_station_ids(*args, **kwargs)
 
@@ -96,7 +96,7 @@ class Client(object):
         return [r[0] for r in results if len(r) == 1]
 
     @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getLocationIds(self, *args, **kwargs):
         return self.get_location_ids(*args, **kwargs)
 
@@ -123,7 +123,7 @@ class Client(object):
         return [r[0] for r in results if len(r) == 1]
 
     @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getChannelIds(self, *args, **kwargs):
         return self.get_channel_ids(*args, **kwargs)
 
@@ -155,7 +155,7 @@ class Client(object):
         return [r[0] for r in results if len(r) == 1]
 
     @deprecated("'getEndtimes' has been renamed to 'get_endtimes'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getEndtimes(self, *args, **kwargs):
         return self.get_endtimes(*args, **kwargs)
 
@@ -197,7 +197,7 @@ class Client(object):
         return adict
 
     @deprecated("'getWaveformPath' has been renamed to 'get_waveform_path'. "
-                "Use that instead.")
+                "Use that instead.")  # noqa
     def getWaveformPath(self, *args, **kwargs):
         return self.get_waveform_path(*args, **kwargs)
 
@@ -254,7 +254,7 @@ class Client(object):
         return file_dict
 
     @deprecated("'getPreview' has been renamed to 'get_preview'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getPreview(self, *args, **kwargs):
         return self.get_preview(*args, **kwargs)
 
