@@ -62,17 +62,17 @@ class SLNetStation(object):
         else:
             self.btime = None
 
-    def appendSelectors(self, newSelectors):
+    def append_selectors(self, new_selectors):
         """
         Appends a selectors String to the current selectors for this
         SLNetStation.
 
         :return: 0 if selectors added successfully, 1 otherwise
         """
-        self.selectors.append(newSelectors)
+        self.selectors.append(new_selectors)
         return 1
 
-    def getSelectors(self):
+    def get_selectors(self):
         """
         Returns the selectors as an array of Strings
 
@@ -80,7 +80,7 @@ class SLNetStation(object):
         """
         return self.selectors
 
-    def getSLTimeStamp(self):
+    def get_sl_time_stamp(self):
         """
         Returns the time stamp in SeedLink string format:
         "year,month,day,hour,minute,second"

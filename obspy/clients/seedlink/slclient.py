@@ -154,13 +154,13 @@ class SLClient(object):
                 self.ppackets = True
             elif args[optind] == "-nt":
                 optind += 1
-                self.slconn.setNetTimout(int(args[optind]))
+                self.slconn.set_net_timeout(int(args[optind]))
             elif args[optind] == "-nd":
                 optind += 1
-                self.slconn.setNetDelay(int(args[optind]))
+                self.slconn.set_net_delay(int(args[optind]))
             elif args[optind] == "-k":
                 optind += 1
-                self.slconn.setKeepAlive(int(args[optind]))
+                self.slconn.set_keep_alive(int(args[optind]))
             elif args[optind] == "-l":
                 optind += 1
                 self.streamfile = args[optind]
@@ -185,8 +185,8 @@ class SLClient(object):
             elif args[optind].startswith("-"):
                 print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
-            elif self.slconn.getSLAddress() is None:
-                self.slconn.setSLAddress(args[optind])
+            elif self.slconn.get_sl_address() is None:
+                self.slconn.set_sl_address(args[optind])
             else:
                 print("Unknown option: " + args[optind], file=sys.stderr)
                 return -1
@@ -197,28 +197,29 @@ class SLClient(object):
         """
         Initializes this SLClient.
         """
-        if self.slconn.getSLAddress() is None:
+        if self.slconn.get_sl_address() is None:
             message = "no SeedLink server specified"
             raise SeedLinkException(message)
 
         if self.verbose >= 2:
             self.ppackets = True
-        if self.slconn.getSLAddress().startswith(":"):
-            self.slconn.setSLAddress("127.0.0.1" + self.slconn.getSLAddress())
+        if self.slconn.get_sl_address().startswith(":"):
+            self.slconn.set_sl_address("127.0.0.1" +
+                                       self.slconn.get_sl_address())
         if self.streamfile is not None:
-            self.slconn.readStreamList(self.streamfile, self.selectors)
+            self.slconn.read_stream_list(self.streamfile, self.selectors)
         if self.multiselect is not None:
-            self.slconn.parseStreamlist(self.multiselect, self.selectors)
+            self.slconn.parse_stream_list(self.multiselect, self.selectors)
         else:
             if self.streamfile is None:
-                self.slconn.setUniParams(self.selectors, -1, None)
+                self.slconn.set_uni_params(self.selectors, -1, None)
         if self.statefile is not None:
-            self.slconn.setStateFile(self.statefile)
+            self.slconn.set_state_file(self.statefile)
         else:
             if self.begin_time is not None:
-                self.slconn.setBeginTime(self.begin_time)
+                self.slconn.set_begin_time(self.begin_time)
             if self.end_time is not None:
-                self.slconn.setEndTime(self.end_time)
+                self.slconn.set_end_time(self.end_time)
 
     def run(self, packet_handler=None):
         """
@@ -236,7 +237,7 @@ class SLClient(object):
         if packet_handler is None:
             packet_handler = self.packet_handler
         if self.infolevel is not None:
-            self.slconn.requestInfo(self.infolevel)
+            self.slconn.request_info(self.infolevel)
         # Loop with the connection manager
         count = 1
         slpack = self.slconn.collect()
@@ -289,7 +290,7 @@ class SLClient(object):
         if (type == SLPacket.TYPE_SLINF):
             return False
         if (type == SLPacket.TYPE_SLINFT):
-            print("Complete INFO:\n" + self.slconn.getInfoString())
+            print("Complete INFO:\n" + self.slconn.get_info_string())
             if self.infolevel is not None:
                 return True
             else:
@@ -300,7 +301,7 @@ class SLClient(object):
             # if (count % 100 == 0 and not self.slconn.state.expect_info):
             if (count % 100 == 0):
                 infostr = "ID"
-                self.slconn.requestInfo(infostr)
+                self.slconn.request_info(infostr)
         except SeedLinkException as sle:
             print(self.__class__.__name__ + ": " + sle.value)
 
@@ -344,14 +345,13 @@ class SLClient(object):
         Main method - creates and runs an SLClient using the specified
         command line arguments
         """
-        slClient = None
         try:
-            slClient = SLClient()
-            rval = slClient.parse_cmd_line_args(args)
+            sl_client = SLClient()
+            rval = sl_client.parse_cmd_line_args(args)
             if (rval != 0):
                 sys.exit(rval)
-            slClient.initialize()
-            slClient.run()
+            sl_client.initialize()
+            sl_client.run()
         except Exception as e:
             logger.critical(e)
             traceback.print_exc()
