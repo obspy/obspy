@@ -29,7 +29,7 @@ from obspy.signal.headers import clibsignal
 
 
 @deprecated("'utlGeoKm' has been renamed to 'util_geo_km'. Use that instead.")
-def utlGeoKm(*args, **kwargs):
+def utlGeoKm(*args, **kwargs):  # noqa
     return util_geo_km(*args, **kwargs)
 
 
@@ -61,7 +61,7 @@ def util_geo_km(orig_lon, orig_lat, lon, lat):
 
 
 @deprecated("'utlLonLat' has been renamed to 'util_lon_lat'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def utlLonLat(*args, **kwargs):
     return util_lon_lat(*args, **kwargs)
 
