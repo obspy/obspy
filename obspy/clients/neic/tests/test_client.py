@@ -16,7 +16,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.neic.client.Client.
     """
-    def test_getWaveform(self):
+    def test_get_waveform(self):
         """
         Tests get_waveforms method. Tests against get_waveforms_nscl method.
         """
@@ -36,7 +36,7 @@ class ClientTestCase(unittest.TestCase):
                                        endtime=t + duration)
             self.assertEqual(st, st2)
 
-    def test_getWaveformNSCL(self):
+    def test_get_waveform_nscl(self):
         """
         Tests get_waveforms_nscl method.
         """
