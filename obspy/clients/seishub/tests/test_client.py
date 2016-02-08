@@ -63,7 +63,7 @@ class ClientTestCase(unittest.TestCase):
 #        self.assertEqual(st[0].stats.location, '')
 #        self.assertEqual(st[0].stats.channel, 'EHZ')
 
-    def test_getEventList(self):
+    def test_get_event_list(self):
         c = self.client.event
         # UTCDateTimes
         events = c.get_list(min_datetime=UTCDateTime("2009-01-01T00:00:00"),
@@ -78,7 +78,7 @@ class ClientTestCase(unittest.TestCase):
                             max_datetime="2009-01-10 00:00:00")
         self.assertEqual(len(events), 4)
 
-    def test_getNetworkIds(self):
+    def test_get_network_ids(self):
         items = ['KT', 'BW', 'CZ', 'GR', 'NZ']
         data = self.client.waveform.get_network_ids()
         for item in items:
@@ -89,7 +89,7 @@ class ClientTestCase(unittest.TestCase):
         time = self.client.ping()
         self.assertTrue(isinstance(time, float))
 
-    def test_getStationIds(self):
+    def test_get_station_ids(self):
         # 1 - some selected stations
         stations = ['FUR', 'FURT', 'ROTZ', 'RTAK', 'MANZ', 'WET']
         data = self.client.waveform.get_station_ids()
@@ -101,7 +101,7 @@ class ClientTestCase(unittest.TestCase):
         for station in stations:
             self.assertIn(station, data)
 
-    def test_getLocationIds(self):
+    def test_get_location_ids(self):
         # 1 - all locations
         items = ['', '10']
         data = self.client.waveform.get_location_ids()
@@ -119,7 +119,7 @@ class ClientTestCase(unittest.TestCase):
         for item in items:
             self.assertIn(item, data)
 
-    def test_getChannelIds(self):
+    def test_get_channel_ids(self):
         # 1 - all channels
         items = ['AEX', 'AEY', 'BAN', 'BAZ', 'BHE', 'BHN', 'BHZ', 'EHE', 'EHN',
                  'EHZ', 'HHE', 'HHN', 'HHZ', 'LHE', 'LHN', 'LHZ', 'SHE', 'SHN',
@@ -146,11 +146,11 @@ class ClientTestCase(unittest.TestCase):
         for item in items:
             self.assertIn(item, data)
 
-    def test_getPreview(self):
+    def test_get_preview(self):
         # multiple channels / MiniSEED
         t1 = UTCDateTime('20080101')
         t2 = UTCDateTime('20080201')
-        st = self.client.waveform.get_preview("BW", "M*", "", "EHZ", t1, t2)
+        st = self.client.waveform.get_previews("BW", "M*", "", "EHZ", t1, t2)
         self.assertEqual(len(st), 4)
         self.assertEqual(st[0].stats.network, 'BW')
         self.assertEqual(st[0].stats.channel, 'EHZ')
@@ -158,14 +158,14 @@ class ClientTestCase(unittest.TestCase):
         # single channel / GSE2
         t1 = UTCDateTime('20090101')
         t2 = UTCDateTime('20100101')
-        st = self.client.waveform.get_preview("BW", "RTLI", "", "EHN", t1, t2)
+        st = self.client.waveform.get_previews("BW", "RTLI", "", "EHN", t1, t2)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].id, 'BW.RTLI..EHN')
         self.assertEqual(st[0].stats.delta, 30.0)
         self.assertEqual(len(st[0]), 205642)
         self.assertEqual(st[0].stats.npts, 205642)
 
-    def test_getPreviewByIds(self):
+    def test_get_preview_by_ids(self):
         # multiple channels / MiniSEED
         t1 = UTCDateTime('20080101')
         t2 = UTCDateTime('20080201')
@@ -184,7 +184,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].id, 'BW.MANZ..EHE')
         self.assertEqual(st[1].id, 'BW.ROTZ..EHE')
 
-    def test_getPAZ(self):
+    def test_get_paz(self):
         t = UTCDateTime('20090808')
         c = self.client
         # test the deprecated call too for one/two releases
@@ -215,7 +215,7 @@ class ClientTestCase(unittest.TestCase):
         data = c.station.get_paz("BW.RLAS..BJZ", t)
         self.assertEqual(data, result)
 
-    def test_getCoordinates(self):
+    def test_get_coordinates(self):
         t = UTCDateTime("2010-05-03T23:59:30")
         data = self.client.station.get_coordinates(network="BW", station="UH1",
                                                    datetime=t, location="")
@@ -223,16 +223,16 @@ class ClientTestCase(unittest.TestCase):
                   'longitude': 11.636093000000001}
         self.assertEqual(data, result)
 
-    def test_getWaveform_with_metadata(self):
+    def test_get_waveform_with_metadata(self):
         # metadata change during t1 -> t2 !
         t1 = UTCDateTime("2010-05-03T23:59:30")
         t2 = UTCDateTime("2010-05-04T00:00:30")
         client = self.client
         self.assertRaises(Exception, client.waveform.get_waveforms, "BW",
-                          "UH1", "", "EH*", t1, t2, getPAZ=True,
-                          getCoordinates=True)
+                          "UH1", "", "EH*", t1, t2, get_paz=True,
+                          get_coordinates=True)
         st = client.waveform.get_waveforms("BW", "UH1", "", "EH*", t1, t2,
-                                           getPAZ=True, getCoordinates=True,
+                                           get_paz=True, get_coordinates=True,
                                            metadata_timecheck=False)
         result = AttribDict({'zeros': [0j, 0j, 0j], 'sensitivity': 251650000.0,
                              'poles': [(-0.88 + 0.88j), (-0.88 - 0.88j),
@@ -246,7 +246,7 @@ class ClientTestCase(unittest.TestCase):
                              'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
 
-    def test_getPAZCallChange(self):
+    def test_get_paz_call_change(self):
         t = UTCDateTime("2012-05-10")
         c = self.client
         datas = []
@@ -324,7 +324,7 @@ class ClientTestCase(unittest.TestCase):
         # get_list() is called if get_paz or get_coordinates ends up making a
         # request to server so we just overwrite it and let it raise to check
         # that no request is issued
-        c.station.get_list = raiseOnCall
+        c.station.get_list = raise_on_call
         # after second t1 requests
         ret = c.station.get_coordinates(net, sta, t1)
         self.assertEqual(ret, coords1)
@@ -355,7 +355,7 @@ class RequestException(Exception):
     pass
 
 
-def raiseOnCall(*args, **kwargs):
+def raise_on_call(*args, **kwargs):
     raise RequestException("Unwanted request to server.")
 
 
