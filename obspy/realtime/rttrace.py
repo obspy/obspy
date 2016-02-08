@@ -367,7 +367,7 @@ class RtTrace(Trace):
 
         # add processing information to the stats dictionary
         proc_info = "realtime_process:%s:%s" % (process_name, options)
-        self._add_processing_info(proc_info)
+        self._internal_add_processing_info(proc_info)
 
         return len(self.processing)
 
