@@ -1624,15 +1624,21 @@ class PPSD(object):
                 label.set_ha("right")
                 label.set_rotation(30)
 
-        if filename is not None:
-            plt.savefig(filename)
-            plt.close()
-        elif show:
-            plt.draw()
-            plt.show()
-        else:
-            plt.draw()
-            return fig
+        # Catch underflow warnings due to plotting on log-scale.
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            if filename is not None:
+                plt.savefig(filename)
+                plt.close()
+            elif show:
+                plt.draw()
+                plt.show()
+            else:
+                plt.draw()
+                return fig
+        finally:
+            np.seterr(**_t)
 
     def _plot_histogram(self, fig, draw=False, filename=None):
         """

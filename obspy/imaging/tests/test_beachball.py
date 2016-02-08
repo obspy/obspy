@@ -87,13 +87,16 @@ class BeachballTestCase(unittest.TestCase):
         Tests various output formats.
         """
         fm = [115, 35, 50]
-        # PDF
-        data = beachball(fm, format='pdf')
-        self.assertEqual(data[0:4], b"%PDF")
-        # as file
-        # create and compare image
-        with NamedTemporaryFile(suffix='.pdf') as tf:
-            beachball(fm, format='pdf', outfile=tf.name)
+        # PDF - Some matplotlib versions internally raise some warnings here
+        # which we don't want to see in the tests.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            data = beachball(fm, format='pdf')
+            self.assertEqual(data[0:4], b"%PDF")
+            # as file
+            # create and compare image
+            with NamedTemporaryFile(suffix='.pdf') as tf:
+                beachball(fm, format='pdf', outfile=tf.name)
         # PS
         data = beachball(fm, format='ps')
         self.assertEqual(data[0:4], b"%!PS")
