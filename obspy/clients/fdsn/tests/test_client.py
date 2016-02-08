@@ -296,39 +296,46 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
         """
         client = self.client
 
-        queries = [
-            dict(eventid=609301),
-            dict(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                 endtime=UTCDateTime("2001-01-07T01:05:00"),
-                 catalog="ISC"),
-            dict(starttime=UTCDateTime("2001-01-07T14:00:00"),
-                 endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-                 maxlatitude=40, minlongitude=-170, maxlongitude=170,
-                 includeallmagnitudes=True, minmagnitude=4,
-                 orderby="magnitude"),
-        ]
-        result_files = ["events_by_eventid.xml",
-                        "events_by_time.xml",
-                        "events_by_misc.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_events(**query)
-            expected = read_events(file_)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_events(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            self.assertEqual(got, expected,
-                             filename + '\n' + failmsg(got, expected))
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
+
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            self.assertGreater(event.magnitudes[0].mag, 3.999)
 
     def test_iris_example_queries_station(self):
         """
