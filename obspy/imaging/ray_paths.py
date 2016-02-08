@@ -468,16 +468,14 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                 continue
 
             for arr in arrivals:
+                radii = (r_earth - arr.path['depth']) / r_earth
+                thetas = np.radians(90. - arr.path['lat'])
+                phis = np.radians(arr.path['lon'])
+
                 if coordinate_system == 'RTP':
-                    radii = (r_earth - arr.path['depth']) / r_earth
-                    thetas = np.radians(90. - arr.path['lat'])
-                    phis = np.radians(arr.path['lon'])
                     gcircle = np.array([radii, thetas, phis])
 
                 if coordinate_system == 'XYZ':
-                    radii = (r_earth - arr.path['depth']) / r_earth
-                    thetas = np.radians(90. - arr.path['lat'])
-                    phis = np.radians(arr.path['lon'])
                     gcircle = np.array([radii * np.sin(thetas) * np.cos(phis),
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
