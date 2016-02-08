@@ -196,7 +196,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         ray_hues = color_hues[1:]
 
         # now convert all of the hues to rgb colors:
-        ray_light = 0.4
+        ray_light = 0.45
         ray_sat = 1.0
         raycolors = [hls_to_rgb(ray_hues[iphase % (ncolors - 1)],
                      ray_light, ray_sat) for iphase in range(nphases)]
@@ -207,9 +207,9 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         bgcolor = (0, 0, 0)
 
         # sizes:
-        sttextsize = (0.01, 0.01, 0.01)
+        sttextsize = (0.02, 0.02, 0.02)
         stmarkersize = 0.01
-        evtextsize = (0.01, 0.01, 0.01)
+        evtextsize = (0.03, 0.03, 0.03)
         evmarkersize = 0.03
 
     elif colorscheme == 'bright':
@@ -238,20 +238,24 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         raise ValueError('colorscheme {:s} not recognized'.format(colorscheme))
 
     # assemble each phase and all stations/events to plot them in a single call
-    stations = []
-    events = []
+    stations_loc = []
+    stations_lab = []
+    events_loc = []
+    events_lab = []
     phases = [[] for iphase in range(nphases)]
     for gcircle, name, stlabel, evlabel in greatcircles:
         iphase = phase_list.index(name)
         phases[iphase].append(gcircle)
 
-        if stlabel not in stations:
+        if stlabel not in stations_lab:
             x, y, z = gcircle[0, -1], gcircle[1, -1], gcircle[2, -1]
-            stations.append((x, y, z, stlabel))
+            stations_loc.append((x, y, z))
+            stations_lab.append(stlabel)
 
-        if evlabel not in events:
+        if evlabel not in events_lab:
             x, y, z = gcircle[0, 0], gcircle[1, 0], gcircle[2, 0]
-            events.append((x, y, z, evlabel))
+            events_loc.append((x, y, z))
+            events_lab.append(evlabel)
 
     # now begin mayavi plotting
     fig = mlab.figure(size=figsize, bgcolor=bgcolor)
@@ -270,8 +274,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         # collapse all points of the phase into a long array
         if len(phase) > 1:
             points = np.hstack(phase)
-        else:
+        elif len(phase) == 1:
             points = phase[0]
+        else:
+            continue
         connects = np.vstack(connects)
 
         # Create the points
@@ -288,19 +294,19 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # plot all stations
     fig.scene.disable_render = True # Super duper trick
-    stxs, stys, stzs, stlabels = zip(*stations)
+    stxs, stys, stzs = zip(*stations_loc)
     mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
                   color=stationcolor)
-    for stx, sty, stz, stlabel in stations:
-        mlab.text3d(stx, sty, stz, stlabel, scale=sttextsize,
+    for loc, stlabel in zip(stations_loc, stations_lab):
+        mlab.text3d(loc[0], loc[1], loc[2], stlabel, scale=sttextsize,
                     color=stationcolor)
 
     # plot all events
-    evxs, evys, evzs, evlabels = zip(*events)
+    evxs, evys, evzs = zip(*events_loc)
     mlab.points3d(evxs, evys, evzs, scale_factor=evmarkersize,
                   color=eventcolor)
-    for evx, evy, evz, evlabel in events:
-        mlab.text3d(evx, evy, evz, evlabel, scale=evtextsize,
+    for loc, evlabel in zip(events_loc, events_lab):
+        mlab.text3d(loc[0], loc[1], loc[2], evlabel, scale=evtextsize,
                     color=eventcolor)
     fig.scene.disable_render = False # Super duper trick
 
@@ -310,7 +316,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
         data_source = BuiltinSurface(source='earth', name="Continents")
         data_source.data_source.on_ratio = 1
     else:
-        data_source = mlab.pipeline.open('data/coastlines.vtk')
+        data_source = mlab.pipeline.open(fname_coastlines)
     coastmesh = mlab.pipeline.surface(data_source, opacity=1.0, line_width=0.5,
                                       color=continentcolor)
     coastmesh.actor.actor.scale = np.array([1.02, 1.02, 1.02])
@@ -336,6 +342,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, stlat=None, stlon=None,
     z = rad * np.cos(phi)
     cmb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     cmb.actor.property.interpolation = 'gouraud'
+    #cmb.actor.property.interpolation = 'flat'
 
     # make ICB sphere
     r_iocb = r_earth - model.model.iocbDepth
@@ -443,6 +450,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     else:
         model = taup_model
 
+    r_earth = model.model.radiusOfEarth
     # now loop through all stations and source combinations
     greatcircles = []
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
@@ -454,7 +462,6 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
             if len(arrivals) == 0:
                 continue
     
-            r_earth = arrivals.model.radiusOfEarth
             for arr in arrivals:
                 if coordinate_system == 'RTP':
                     radii = (r_earth - arr.path['depth']) / r_earth
