@@ -32,7 +32,7 @@ REALTIME_PROCESS_FUNCTIONS = {
     'differentiate': (signal.differentiate, 1),
     'boxcar': (signal.boxcar, 1),
     'tauc': (signal.tauc, 2),
-    'mwpintegral': (signal.mwpIntegral, 1),
+    'mwpintegral': (signal.mwpintegral, 1),
     'kurtosis': (signal.kurtosis, 3),
 }
 
@@ -67,7 +67,7 @@ class RtTrace(Trace):
 
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
-        >>> from obspy.realtime.signal import calculateMwpMag
+        >>> from obspy.realtime.signal import calculate_mwp_mag
         >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
         >>> len(data_trace)
         12684
@@ -89,7 +89,7 @@ class RtTrace(Trace):
         >>> rt_trace = RtTrace()
         >>> rt_trace.register_rt_process('integrate')
         1
-        >>> rt_trace.register_rt_process('mwpIntegral', mem_time=240,
+        >>> rt_trace.register_rt_process('mwpintegral', mem_time=240,
         ...     ref_time=(data_trace.stats.starttime + ref_time_offset),
         ...     max_time=120, gain=1.610210e+09)
         2
@@ -107,7 +107,7 @@ class RtTrace(Trace):
         >>> peak = np.amax(np.abs(rt_trace.data))
         >>> print(peak)
         0.136404
-        >>> mwp = calculateMwpMag(peak, epicentral_distance)
+        >>> mwp = calculate_mwp_mag(peak, epicentral_distance)
         >>> print(mwp)  # doctest: +ELLIPSIS
         8.78902911791...
     """

@@ -47,7 +47,7 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertFalse(tr2 != tr3)
         self.assertFalse(tr2.__ne__(tr3))
 
-    def test_registerRtProcess(self):
+    def test_register_rt_process(self):
         """
         Testing register_rt_process method.
         """
@@ -84,7 +84,7 @@ class RtTraceTestCase(unittest.TestCase):
         # check kwargs
         self.assertIn("maeh", tr.stats.processing[1])
 
-    def test_appendSanityChecks(self):
+    def test_append_sanity_checks(self):
         """
         Testing sanity checks of append method.
         """
@@ -116,7 +116,7 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertRaises(TypeError, rtr.append, 1)
         self.assertRaises(TypeError, rtr.append, "2323")
 
-    def test_appendOverlap(self):
+    def test_append_overlap(self):
         """
         Appending overlapping traces should raise a UserWarning/TypeError
         """
@@ -130,7 +130,7 @@ class RtTraceTestCase(unittest.TestCase):
         # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
 
-    def test_appendGap(self):
+    def test_append_gap(self):
         """
         Appending a traces with a time gap should raise a UserWarning/TypeError
         """
@@ -163,7 +163,7 @@ class RtTraceTestCase(unittest.TestCase):
         rtr.register_rt_process(np.square)
         rtr.copy()
 
-    def test_appendNotFloat32(self):
+    def test_append_not_float32(self):
         """
         Test for not using float32.
         """
@@ -174,7 +174,7 @@ class RtTraceTestCase(unittest.TestCase):
         for trace in traces:
             rtr.append(trace)
 
-    def test_missingOrWrongArgumentInRtProcess(self):
+    def test_missing_or_wrong_argument_in_rt_process(self):
         """
         Tests handling of missing/wrong arguments.
         """
