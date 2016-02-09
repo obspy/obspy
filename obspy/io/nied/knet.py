@@ -58,14 +58,15 @@ def _is_knet_ascii(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_knet_ascii, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, _internal_is_knet_ascii,
+                             reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError, UnicodeDecodeError):
         return False
 
 
-def __is_knet_ascii(buf):
+def _internal_is_knet_ascii(buf):
     """
     Checks if the file is a valid K-NET/KiK-net ASCII file.
 
@@ -248,10 +249,10 @@ def _read_knet_ascii(filename_or_buf, **kwargs):
     :param filename: K-NET/KiK-net ASCII file to be read.
     :type filename: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_knet_ascii, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_knet_ascii, **kwargs)
 
 
-def __read_knet_ascii(buf, **kwargs):
+def _internal_read_knet_ascii(buf, **kwargs):
     """
     Reads a K-NET/KiK-net ASCII file and returns an ObsPy Stream object.
 

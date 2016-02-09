@@ -75,7 +75,7 @@ def _is_fnetmt_catalog(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_fnetmt_catalog,
+        return _buffer_proxy(filename_or_buf, _internal_is_fnetmt_catalog,
                              reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
@@ -83,7 +83,7 @@ def _is_fnetmt_catalog(filename_or_buf):
         return False
 
 
-def __is_fnetmt_catalog(buf):
+def _internal_is_fnetmt_catalog(buf):
     """
     Test whether file is an F-net moment tensor catalog file by reading the
     header and the first data line. Reads at most 40 lines.
@@ -127,10 +127,11 @@ def _read_fnetmt_catalog(filename_or_buf, **kwargs):
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_fnetmt_catalog, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_fnetmt_catalog,
+                         **kwargs)
 
 
-def __read_fnetmt_catalog(buf, **kwargs):
+def _internal_read_fnetmt_catalog(buf, **kwargs):
     """
     Reads an F-net moment tensor catalog file to a
     :class:`~obspy.core.event.Catalog` object.
@@ -165,7 +166,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
         # If there is something, jump back to the beginning of the line and
         # read the next event.
         if line:
-            events.append(__read_single_fnetmt_entry(line.decode()))
+            events.append(_internal_read_single_fnetmt_entry(line.decode()))
 
     # Consistency check
     if len(events) != nevents:
@@ -176,7 +177,7 @@ def __read_fnetmt_catalog(buf, **kwargs):
                    events=events, description=headerlines[:-1])
 
 
-def __read_single_fnetmt_entry(line, **kwargs):
+def _internal_read_single_fnetmt_entry(line, **kwargs):
     """
     Reads a single F-net moment tensor solution to a
     :class:`~obspy.core.event.Event` object.
