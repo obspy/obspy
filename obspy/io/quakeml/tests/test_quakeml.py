@@ -66,7 +66,7 @@ class QuakeMLTestCase(unittest.TestCase):
             catalog[2].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
 
-    def test_USGS_eventype(self):
+    def test_usgs_eventype(self):
         filename = os.path.join(self.path, 'usgs_event.xml')
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
@@ -273,7 +273,7 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_stationmagnitudecontribution(self):
+    def test_station_magnitude_contribution(self):
         """
         Tests the station magnitude contribution object.
         """
@@ -307,7 +307,7 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         compare_xml_strings(original, processed)
 
-    def test_stationmagnitude(self):
+    def test_station_magnitude(self):
         """
         Tests StationMagnitude object.
         """
@@ -572,7 +572,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 catalog2 = _read_quakeml(tmpfile)
         self.assertTrue(len(catalog2), 1)
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
         Tests reading a QuakeML document via read_events.
         """
@@ -691,7 +691,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             ev.preferred_focal_mechanism(), ev.focal_mechanisms[1])
 
-    def test_creating_minimal_QuakeML_with_MT(self):
+    def test_creating_minimal_quakeml_with_mt(self):
         """
         Tests the creation of a minimal QuakeML containing origin, magnitude
         and moment tensor.
