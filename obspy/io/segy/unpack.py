@@ -44,7 +44,7 @@ clibsegy.ibm2ieee.argtypes = [
 clibsegy.ibm2ieee.restype = C.c_void_p
 
 
-def unpack_4byte_IBM(file, count, endian='>'):
+def unpack_4byte_ibm(file, count, endian='>'):
     """
     Unpacks 4 byte IBM floating points.
     """
@@ -61,7 +61,7 @@ def unpack_4byte_IBM(file, count, endian='>'):
 
 # Old pure Python/NumPy code
 #
-# def unpack_4byte_IBM(file, count, endian='>'):
+# def unpack_4byte_ibm(file, count, endian='>'):
 #    """
 #    Unpacks 4 byte IBM floating points.
 #    """
@@ -118,7 +118,7 @@ def unpack_4byte_fixed_point(file, count, endian='>'):
     raise NotImplementedError
 
 
-def unpack_4byte_IEEE(file, count, endian='>'):
+def unpack_4byte_ieee(file, count, endian='>'):
     """
     Unpacks 4 byte IEEE floating points.
     """
