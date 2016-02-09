@@ -51,17 +51,17 @@ class TauPCreate(object):
         filename = self.input_filename
         if self.debug:
             print("filename =", filename)
-        self.vMod = VelocityModel.read_velocity_file(filename)
-        if self.vMod is None:
+        self.v_mod = VelocityModel.read_velocity_file(filename)
+        if self.v_mod is None:
             raise IOError("Velocity model file not found: " + filename)
         # If model was read:
         if self.debug:
             print("Done reading velocity model.")
-            print("Radius of model " + self.vMod.model_name + " is " +
-                  str(self.vMod.radius_of_planet))
+            print("Radius of model " + self.v_mod.model_name + " is " +
+                  str(self.v_mod.radius_of_planet))
         # if self.debug:
-        #    print("velocity mode: " + self.vMod)
-        return self.vMod
+        #    print("velocity mode: " + self.v_mod)
+        return self.v_mod
 
     def create_tau_model(self, v_mod):
         """
@@ -74,40 +74,40 @@ class TauPCreate(object):
             raise ValueError("v_mod is None.")
         if v_mod.is_spherical is False:
             raise Exception("Flat slowness model not yet implemented.")
-        SlownessModel.DEBUG = self.debug
+        SlownessModel.debug = self.debug
         if self.debug:
             print("Using parameters provided in TauP_config.ini (or defaults "
                   "if not) to call SlownessModel...")
 
-        self.sMod = SlownessModel(
+        self.s_mod = SlownessModel(
             v_mod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
             self.max_range_interval * pi / 180.0, self.max_interp_error,
             self.allow_inner_core_s,
             _DEFAULT_VALUES["slowness_tolerance"])
         if self.debug:
             print("Parameters are:")
-            print("taup.create.min_delta_p = " + str(self.sMod.minDeltaP) +
+            print("taup.create.min_delta_p = " + str(self.s_mod.min_delta_p) +
                   " sec / radian")
-            print("taup.create.maxDeltaP = " + str(self.sMod.maxDeltaP) +
+            print("taup.create.max_delta_p = " + str(self.s_mod.max_delta_p) +
                   " sec / radian")
-            print("taup.create.maxDepthInterval = " +
-                  str(self.sMod.maxDepthInterval) + " kilometers")
-            print("taup.create.maxRangeInterval = " +
-                  str(self.sMod.maxRangeInterval) + " degrees")
-            print("taup.create.maxInterpError = " +
-                  str(self.sMod.maxInterpError) + " seconds")
-            print("taup.create.allowInnerCoreS = " +
-                  str(self.sMod.allowInnerCoreS))
-            print("Slow model " + " " + str(self.sMod.get_num_layers(True)) +
-                  " P layers," + str(self.sMod.get_num_layers(False)) +
+            print("taup.create.max_depth_interval = " +
+                  str(self.s_mod.max_depth_interval) + " kilometers")
+            print("taup.create.max_range_interval = " +
+                  str(self.s_mod.max_range_interval) + " degrees")
+            print("taup.create.max_interp_error = " +
+                  str(self.s_mod.max_interp_error) + " seconds")
+            print("taup.create.allow_inner_core_s = " +
+                  str(self.s_mod.allow_inner_core_s))
+            print("Slow model " + " " + str(self.s_mod.get_num_layers(True)) +
+                  " P layers," + str(self.s_mod.get_num_layers(False)) +
                   " S layers")
         # if self.debug:
-        #    print(self.sMod)
+        #    print(self.s_mod)
         # set the debug flags to value given here:
-        TauModel.DEBUG = self.debug
-        SlownessModel.DEBUG = self.debug
+        TauModel.debug = self.debug
+        SlownessModel.debug = self.debug
         # Creates tau model from slownesses.
-        return TauModel(self.sMod, radius_of_planet=v_mod.radius_of_planet)
+        return TauModel(self.s_mod, radius_of_planet=v_mod.radius_of_planet)
 
     def run(self):
         """
@@ -118,7 +118,7 @@ class TauPCreate(object):
         file.
         """
         try:
-            self.tau_model = self.create_tau_model(self.vMod)
+            self.tau_model = self.create_tau_model(self.v_mod)
             # this reassigns model! Used to be TauModel() class,
             # now it's an instance of it.
             if self.debug:

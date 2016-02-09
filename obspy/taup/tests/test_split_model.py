@@ -23,18 +23,18 @@ class SplitTauModelTestCase(unittest.TestCase):
         depth = 110
         tau_model = TauModel.from_file('iasp91')
         splitTMod = tau_model.split_branch(depth)
-        self.assertEqual(tau_model.tauBranches.shape[1] + 1,
-                         splitTMod.tauBranches.shape[1])
+        self.assertEqual(tau_model.tau_branches.shape[1] + 1,
+                         splitTMod.tau_branches.shape[1])
         self.assertEqual(len(tau_model.ray_params) + 2,
                          len(splitTMod.ray_params))
 
-        branch_count = tau_model.tauBranches.shape[1]
+        branch_count = tau_model.tau_branches.shape[1]
         split_branch_index = tau_model.find_branch(depth)
 
-        new_P_ray_param = splitTMod.sMod.getSlownessLayer(
-            splitTMod.sMod.layer_number_above(depth, True), True)['botP']
-        new_S_ray_param = splitTMod.sMod.getSlownessLayer(
-            splitTMod.sMod.layer_number_above(depth, False), False)['botP']
+        new_P_ray_param = splitTMod.s_mod.get_slowness_layer(
+            splitTMod.s_mod.layer_number_above(depth, True), True)['bot_p']
+        new_S_ray_param = splitTMod.s_mod.get_slowness_layer(
+            splitTMod.s_mod.layer_number_above(depth, False), False)['bot_p']
 
         pIndex = sIndex = len(splitTMod.ray_params)
         ray_params = splitTMod.ray_params

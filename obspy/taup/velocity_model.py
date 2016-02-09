@@ -74,13 +74,14 @@ class VelocityModel(object):
         """
         above = self.layers[:-1]
         below = self.layers[1:]
-        mask = np.logical_or(above['botPVelocity'] != below['topPVelocity'],
-                             above['botSVelocity'] != below['topSVelocity'])
+        mask = np.logical_or(
+            above['bot_p_velocity'] != below['top_p_velocity'],
+            above['bot_s_velocity'] != below['top_s_velocity'])
 
         discontinuities = np.empty((mask != 0).sum() + 2)
-        discontinuities[0] = self.layers[0]['topDepth']
-        discontinuities[1:-1] = above[mask]['botDepth']
-        discontinuities[-1] = self.layers[-1]['botDepth']
+        discontinuities[0] = self.layers[0]['top_depth']
+        discontinuities[1:-1] = above[mask]['bot_depth']
+        discontinuities[-1] = self.layers[-1]['bot_depth']
 
         return discontinuities
 
@@ -102,8 +103,8 @@ class VelocityModel(object):
         """
         depth = np.atleast_1d(depth)
         layer = np.logical_and(
-            self.layers['topDepth'][np.newaxis, :] < depth[:, np.newaxis],
-            depth[:, np.newaxis] <= self.layers['botDepth'][np.newaxis, :])
+            self.layers['top_depth'][np.newaxis, :] < depth[:, np.newaxis],
+            depth[:, np.newaxis] <= self.layers['bot_depth'][np.newaxis, :])
         layer = np.where(layer)[-1]
         if len(layer):
             return layer
@@ -128,8 +129,8 @@ class VelocityModel(object):
         """
         depth = np.atleast_1d(depth)
         layer = np.logical_and(
-            self.layers['topDepth'][np.newaxis, :] <= depth[:, np.newaxis],
-            depth[:, np.newaxis] < self.layers['botDepth'][np.newaxis, :])
+            self.layers['top_depth'][np.newaxis, :] <= depth[:, np.newaxis],
+            depth[:, np.newaxis] < self.layers['bot_depth'][np.newaxis, :])
         layer = np.where(layer)[-1]
         if len(layer):
             return layer
@@ -206,7 +207,7 @@ class VelocityModel(object):
             :class:`float`, shape equivalent to ``layer``)
         """
         layer = self.layers[layer]
-        return layer['topDepth']
+        return layer['top_depth']
 
     def depth_at_bottom(self, layer):
         """
@@ -222,7 +223,7 @@ class VelocityModel(object):
             :class:`float`, shape equivalent to ``layer``)
         """
         layer = self.layers[layer]
-        return layer['botDepth']
+        return layer['bot_depth']
 
     def validate(self):
         """
@@ -280,7 +281,7 @@ class VelocityModel(object):
                 self.min_radius))
 
         # Check for gaps
-        gaps = self.layers[:-1]['botDepth'] != self.layers[1:]['topDepth']
+        gaps = self.layers[:-1]['bot_depth'] != self.layers[1:]['top_depth']
         gaps = np.where(gaps)[0]
         if gaps:
             msg = ("There is a gap in the velocity model between layer(s) %s "
@@ -288,7 +289,7 @@ class VelocityModel(object):
             raise ValueError(msg)
 
         # Check for zero thickness
-        probs = self.layers['botDepth'] == self.layers['topDepth']
+        probs = self.layers['bot_depth'] == self.layers['top_depth']
         probs = np.where(probs)[0]
         if probs:
             msg = ("There is a zero thickness layer in the velocity model at "
@@ -296,8 +297,8 @@ class VelocityModel(object):
             raise ValueError(msg)
 
         # Check for negative P velocity
-        probs = np.logical_or(self.layers['topPVelocity'] <= 0.0,
-                              self.layers['botPVelocity'] <= 0.0)
+        probs = np.logical_or(self.layers['top_p_velocity'] <= 0.0,
+                              self.layers['bot_p_velocity'] <= 0.0)
         probs = np.where(probs)[0]
         if probs:
             msg = ("There is a negative P velocity layer in the velocity "
@@ -305,8 +306,8 @@ class VelocityModel(object):
             raise ValueError(msg)
 
         # Check for negative S velocity
-        probs = np.logical_or(self.layers['topSVelocity'] < 0.0,
-                              self.layers['botSVelocity'] < 0.0)
+        probs = np.logical_or(self.layers['top_s_velocity'] < 0.0,
+                              self.layers['bot_s_velocity'] < 0.0)
         probs = np.where(probs)[0]
         if probs:
             msg = ("There is a negative S velocity layer in the velocity "
@@ -315,10 +316,10 @@ class VelocityModel(object):
 
         # Check for zero P velocity
         probs = np.logical_or(
-            np.logical_and(self.layers['topPVelocity'] != 0.0,
-                           self.layers['botPVelocity'] == 0.0),
-            np.logical_and(self.layers['topPVelocity'] == 0.0,
-                           self.layers['botPVelocity'] != 0.0))
+            np.logical_and(self.layers['top_p_velocity'] != 0.0,
+                           self.layers['bot_p_velocity'] == 0.0),
+            np.logical_and(self.layers['top_p_velocity'] == 0.0,
+                           self.layers['bot_p_velocity'] != 0.0))
         probs = np.where(probs)[0]
         if probs:
             msg = ("There is a layer that goes to zero P velocity (top or "
@@ -330,13 +331,13 @@ class VelocityModel(object):
 
         # Check for negative S velocity
         probs = np.logical_or(
-            np.logical_and(self.layers['topSVelocity'] != 0.0,
-                           self.layers['botSVelocity'] == 0.0),
-            np.logical_and(self.layers['topSVelocity'] == 0.0,
-                           self.layers['botSVelocity'] != 0.0))
+            np.logical_and(self.layers['top_s_velocity'] != 0.0,
+                           self.layers['bot_s_velocity'] == 0.0),
+            np.logical_and(self.layers['top_s_velocity'] == 0.0,
+                           self.layers['bot_s_velocity'] != 0.0))
         # This warning will always pop up for the top layer even
         #  in IASP91, therefore ignore it.
-        probs = np.logical_and(probs, self.layers['topDepth'] != 0)
+        probs = np.logical_and(probs, self.layers['top_depth'] != 0)
         probs = np.where(probs)[0]
         if probs:
             msg = ("There is a layer that goes to zero S velocity (top or "
@@ -430,27 +431,27 @@ class VelocityModel(object):
 
         layers = np.empty(data.shape[0] - 1, dtype=VelocityLayer)
 
-        layers['topDepth'] = data[:-1, 0]
-        layers['botDepth'] = data[1:, 0]
+        layers['top_depth'] = data[:-1, 0]
+        layers['bot_depth'] = data[1:, 0]
 
-        layers['topPVelocity'] = data[:-1, 1]
-        layers['botPVelocity'] = data[1:, 1]
+        layers['top_p_velocity'] = data[:-1, 1]
+        layers['bot_p_velocity'] = data[1:, 1]
 
-        layers['topSVelocity'] = data[:-1, 2]
-        layers['botSVelocity'] = data[1:, 2]
+        layers['top_s_velocity'] = data[:-1, 2]
+        layers['bot_s_velocity'] = data[1:, 2]
 
-        layers['topDensity'] = data[:-1, 3]
-        layers['botDensity'] = data[1:, 3]
+        layers['top_density'] = data[:-1, 3]
+        layers['bot_density'] = data[1:, 3]
 
         # We do not at present support varying attenuation
-        layers['topQp'].fill(_DEFAULT_VALUES["qp"])
-        layers['botQp'].fill(_DEFAULT_VALUES["qp"])
-        layers['topQs'].fill(_DEFAULT_VALUES["qs"])
-        layers['botQs'].fill(_DEFAULT_VALUES["qs"])
+        layers['top_qp'].fill(_DEFAULT_VALUES["qp"])
+        layers['bot_qp'].fill(_DEFAULT_VALUES["qp"])
+        layers['top_qs'].fill(_DEFAULT_VALUES["qs"])
+        layers['bot_qs'].fill(_DEFAULT_VALUES["qs"])
 
         # Don't use zero thickness layers; first order discontinuities are
         # taken care of by storing top and bottom depths.
-        mask = layers['topDepth'] == layers['botDepth']
+        mask = layers['top_depth'] == layers['bot_depth']
         layers = layers[~mask]
 
         # tvel files cannot have named discontinuities so it is really only
@@ -573,27 +574,27 @@ class VelocityModel(object):
 
         layers = np.empty(data.shape[0] - 1, dtype=VelocityLayer)
 
-        layers['topDepth'] = data[:-1, 0]
-        layers['botDepth'] = data[1:, 0]
+        layers['top_depth'] = data[:-1, 0]
+        layers['bot_depth'] = data[1:, 0]
 
-        layers['topPVelocity'] = data[:-1, 1]
-        layers['botPVelocity'] = data[1:, 1]
+        layers['top_p_velocity'] = data[:-1, 1]
+        layers['bot_p_velocity'] = data[1:, 1]
 
-        layers['topSVelocity'] = data[:-1, 2]
-        layers['botSVelocity'] = data[1:, 2]
+        layers['top_s_velocity'] = data[:-1, 2]
+        layers['bot_s_velocity'] = data[1:, 2]
 
-        layers['topDensity'] = data[:-1, 3]
-        layers['botDensity'] = data[1:, 3]
+        layers['top_density'] = data[:-1, 3]
+        layers['bot_density'] = data[1:, 3]
 
         # We do not at present support varying attenuation
-        layers['topQp'].fill(_DEFAULT_VALUES["qp"])
-        layers['botQp'].fill(_DEFAULT_VALUES["qp"])
-        layers['topQs'].fill(_DEFAULT_VALUES["qs"])
-        layers['botQs'].fill(_DEFAULT_VALUES["qs"])
+        layers['top_qp'].fill(_DEFAULT_VALUES["qp"])
+        layers['bot_qp'].fill(_DEFAULT_VALUES["qp"])
+        layers['top_qs'].fill(_DEFAULT_VALUES["qs"])
+        layers['bot_qs'].fill(_DEFAULT_VALUES["qs"])
 
         # Don't use zero thickness layers; first order discontinuities are
         # taken care of by storing top and bottom depths.
-        mask = layers['topDepth'] == layers['botDepth']
+        mask = layers['top_depth'] == layers['bot_depth']
         layers = layers[~mask]
 
         radius_of_planet = data[-1, 0]
@@ -632,32 +633,33 @@ class VelocityModel(object):
         above = self.layers[:-1]
         below = self.layers[1:]
         # Only look for discontinuities:
-        mask = np.logical_or(above['botPVelocity'] != below['topPVelocity'],
-                             above['botSVelocity'] != below['topSVelocity'])
+        mask = np.logical_or(
+            above['bot_p_velocity'] != below['top_p_velocity'],
+            above['bot_s_velocity'] != below['top_s_velocity'])
 
         # Find discontinuity closest to current Moho
-        moho_diff = np.abs(self.moho_depth - above['botDepth'])
+        moho_diff = np.abs(self.moho_depth - above['bot_depth'])
         moho_diff[~mask] = moho_min
         moho = np.argmin(moho_diff)
         if moho_diff[moho] < moho_min:
-            temp_moho_depth = above[moho]['botDepth']
+            temp_moho_depth = above[moho]['bot_depth']
 
         # Find discontinuity closest to current CMB
-        cmb_diff = np.abs(self.cmb_depth - above['botDepth'])
+        cmb_diff = np.abs(self.cmb_depth - above['bot_depth'])
         cmb_diff[~mask] = cmb_min
         cmb = np.argmin(cmb_diff)
         if cmb_diff[cmb] < cmb_min:
-            temp_cmb_depth = above[cmb]['botDepth']
+            temp_cmb_depth = above[cmb]['bot_depth']
 
         # Find discontinuity closest to current IOCB
-        iocb_diff = self.iocb_depth - above['botDepth']
+        iocb_diff = self.iocb_depth - above['bot_depth']
         iocb_diff[~mask] = iocb_min
         # IOCB must transition from S==0 to S!=0
-        iocb_diff[above['botSVelocity'] != 0.0] = iocb_min
-        iocb_diff[below['topSVelocity'] <= 0.0] = iocb_min
+        iocb_diff[above['bot_s_velocity'] != 0.0] = iocb_min
+        iocb_diff[below['top_s_velocity'] <= 0.0] = iocb_min
         iocb = np.argmin(iocb_diff)
         if iocb_diff[iocb] < iocb_min:
-            temp_iocb_depth = above[iocb]['botDepth']
+            temp_iocb_depth = above[iocb]['bot_depth']
 
         if self.moho_depth != temp_moho_depth \
                 or self.cmb_depth != temp_cmb_depth \
