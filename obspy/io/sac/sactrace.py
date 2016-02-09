@@ -397,8 +397,8 @@ def _intgetter(hdr):
 def _intsetter(hdr):
     def set_int(self, value):
         if not isinstance(value, (np.integer, int)):
-            warnings.warn("Non-integers may be truncated.")
-            print(" {}: {}".format(hdr, value))
+            warnings.warn("Non-integers may be truncated. ({}: {})".format(
+                hdr, value))
         if value is None:
             value = HD.INULL
         self._hi[HD.INTHDRS.index(hdr)] = value
