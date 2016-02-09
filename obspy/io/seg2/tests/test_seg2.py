@@ -71,7 +71,7 @@ class SEG2TestCase(unittest.TestCase):
         self.dir = os.path.dirname(__file__)
         self.path = os.path.join(self.dir, 'data')
 
-    def test_readDataFormat2(self):
+    def test_read_data_format_2(self):
         """
         Test reading a SEG2 data format code 2 file (int32).
         """
