@@ -860,7 +860,7 @@ class Response(ComparingObject):
         stage_objects = []
 
         for stage_number in stage_list:
-            st = ew.stage()
+            st = ew.Stage()
             st.sequence_no = stage_number
 
             stage_blkts = []
@@ -1043,7 +1043,7 @@ class Response(ComparingObject):
             stage_objects.append(st)
 
         # Attach the instrument sensitivity as stage 0 at the end.
-        st = ew.stage()
+        st = ew.Stage()
         st.sequence_no = 0
         st.input_units = 0
         st.output_units = 0
@@ -1055,7 +1055,7 @@ class Response(ComparingObject):
         st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
-        chan = ew.channel()
+        chan = ew.Channel()
         if not stage_objects:
             msg = "At least one stage is needed."
             raise ValueError(msg)
