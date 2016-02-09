@@ -25,26 +25,14 @@ class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
-    # The following really need to be class attributes. For some reason.
-
-    # Depth for which tau model as constructed.
-    source_depth = 0.0
-    radiusOfEarth = 6371.0
-    # Branch with the source at its top.
-    sourceBranch = 0
-    # Depths that should not have reflections or phase conversions. For
-    # instance, if the source is not at a branch boundary then
-    # noDisconDepths contains source depth and reflections and phase
-    # conversions are not allowed at this branch boundary. If the source
-    # happens to fall on a real discontinuity then then it is not
-    # included.
-    noDisconDepths = []
-
-    def __init__(self, sMod, spherical=True, debug=False, skip_calc=False):
+    def __init__(self, sMod, radius_of_planet, is_spherical=True, debug=False,
+                 skip_calc=False):
         self.debug = debug
-        self.radiusOfEarth = 6371.0
+        # Depth for which tau model as constructed.
+        self.source_depth = 0.0
+        self.radius_of_planet = radius_of_planet
         # True if this is a spherical slowness model. False if flat.
-        self.spherical = spherical
+        self.is_spherical = is_spherical
         # Ray parameters used to construct the tau branches. This may only be
         # a subset of the slownesses/ray parameters saved in the slowness
         # model due to high slowness zones (low velocity zones).
@@ -60,6 +48,15 @@ class TauModel(object):
 
         self.sMod = sMod
 
+        # Branch with the source at its top.
+        self.sourceBranch = 0
+        # Depths that should not have reflections or phase conversions. For
+        # instance, if the source is not at a branch boundary then
+        # noDisconDepths contains source depth and reflections and phase
+        # conversions are not allowed at this branch boundary. If the source
+        # happens to fall on a real discontinuity then it is not included.
+        self.noDisconDepths = []
+
         if not skip_calc:
             self.calcTauIncFrom()
 
@@ -69,11 +66,11 @@ class TauModel(object):
         """
         # First, we must have at least 1 slowness layer to calculate a
         #  distance. Otherwise we must signal an exception.
-        if self.sMod.getNumLayers(True) == 0 \
-                or self.sMod.getNumLayers(False) == 0:
+        if self.sMod.get_num_layers(True) == 0 \
+                or self.sMod.get_num_layers(False) == 0:
             raise SlownessModelError(
-                "Can't calculate tauInc when getNumLayers() = 0. I need more "
-                "slowness samples.")
+                "Can't calculate tauInc when get_num_layers() = 0. "
+                "I need more slowness samples.")
         self.sMod.validate()
         # Create an array holding the ray parameter that we will use for
         # constructing the tau splines. Only store ray parameters that are
@@ -86,8 +83,8 @@ class TauModel(object):
         # waves have been constructed to be a subset of the S samples.
         rayNum = 0
         minPSoFar = self.sMod.SLayers[0]['topP']
-        tempRayParams = np.empty(
-            2 * self.sMod.getNumLayers(False) + len(self.sMod.criticalDepths))
+        tempRayParams = np.empty(2 * self.sMod.get_num_layers(False) +
+                                 len(self.sMod.criticalDepths))
         # Make sure we get the top slowness of the very top layer
         tempRayParams[rayNum] = minPSoFar
         rayNum += 1
@@ -143,7 +140,8 @@ class TauModel(object):
                 minPSoFar = min(minPSoFar,
                                 min(topSLayer['topP'], botSLayer['botP']))
                 botSLayer = self.sMod.getSlownessLayer(
-                    self.sMod.layerNumberAbove(botCritDepth['depth'], isPWave),
+                    self.sMod.layer_number_above(botCritDepth['depth'],
+                                                 isPWave),
                     isPWave)
                 minPSoFar = min(minPSoFar, botSLayer['botP'])
         # Here we decide which branches are the closest to the Moho, CMB,
@@ -153,20 +151,21 @@ class TauModel(object):
         bestCmb = 1e300
         bestIocb = 1e300
         for branchNum, tBranch in enumerate(self.tauBranches[0]):
-            if abs(tBranch.topDepth - self.sMod.vMod.mohoDepth) <= bestMoho:
+            if abs(tBranch.topDepth - self.sMod.vMod.moho_depth) <= bestMoho:
                 # Branch with Moho at its top.
                 self.mohoBranch = branchNum
-                bestMoho = abs(tBranch.topDepth - self.sMod.vMod.mohoDepth)
-            if abs(tBranch.topDepth - self.sMod.vMod.cmbDepth) < bestCmb:
+                bestMoho = abs(tBranch.topDepth - self.sMod.vMod.moho_depth)
+            if abs(tBranch.topDepth - self.sMod.vMod.cmb_depth) < bestCmb:
                 self.cmbBranch = branchNum
-                bestCmb = abs(tBranch.topDepth - self.sMod.vMod.cmbDepth)
-            if abs(tBranch.topDepth - self.sMod.vMod.iocbDepth) < bestIocb:
+                bestCmb = abs(tBranch.topDepth - self.sMod.vMod.cmb_depth)
+            if abs(tBranch.topDepth - self.sMod.vMod.iocb_depth) < bestIocb:
                 self.iocbBranch = branchNum
-                bestIocb = abs(tBranch.topDepth - self.sMod.vMod.iocbDepth)
-        # Now set mohoDepth etc. to the top of the branches we have decided on.
-        self.mohoDepth = self.tauBranches[0, self.mohoBranch].topDepth
-        self.cmbDepth = self.tauBranches[0, self.cmbBranch].topDepth
-        self.iocbDepth = self.tauBranches[0, self.iocbBranch].topDepth
+                bestIocb = abs(tBranch.topDepth - self.sMod.vMod.iocb_depth)
+        # Now set moho_depth etc. to the top of the branches we have decided
+        # on.
+        self.moho_depth = self.tauBranches[0, self.mohoBranch].topDepth
+        self.cmb_depth = self.tauBranches[0, self.cmbBranch].topDepth
+        self.iocb_depth = self.tauBranches[0, self.iocbBranch].topDepth
         self.validate()
 
     def __str__(self):
@@ -202,9 +201,9 @@ class TauModel(object):
         if self.source_depth != 0:
             raise TauModelError("Can't depth correct a TauModel that is not "
                                 "originally for a surface source.")
-        if depth > self.radiusOfEarth:
+        if depth > self.radius_of_planet:
             raise TauModelError("Can't depth correct to a source deeper than "
-                                "the radius of the Earth.")
+                                "the radius of the planet.")
         depthCorrected = self.loadFromDepthCache(depth)
         if depthCorrected is None:
             depthCorrected = self.splitBranch(depth)
@@ -282,13 +281,13 @@ class TauModel(object):
                 self.tauBranches[pOrS, branchToSplit].topDepth, depth,
                 pOrS == 0)
             newTauBranches[pOrS, branchToSplit].createBranch(
-                outSMod, self.tauBranches[pOrS, branchToSplit].maxRayParam,
+                outSMod, self.tauBranches[pOrS, branchToSplit].max_ray_param,
                 outRayParams)
             newTauBranches[pOrS, branchToSplit + 1] = \
                 self.tauBranches[pOrS, branchToSplit].difference(
                     newTauBranches[pOrS, branchToSplit],
                     indexP, indexS, outSMod,
-                    newTauBranches[pOrS, branchToSplit].minRayParam,
+                    newTauBranches[pOrS, branchToSplit].min_ray_param,
                     outRayParams)
         for i in range(branchToSplit + 1, len(self.tauBranches[0])):
             for pOrS in range(2):
@@ -312,41 +311,44 @@ class TauModel(object):
         if self.source_depth > depth:
             outSourceBranch += 1
         outmohoBranch = self.mohoBranch
-        if self.mohoDepth > depth:
+        if self.moho_depth > depth:
             outmohoBranch += 1
         outcmbBranch = self.cmbBranch
-        if self.cmbDepth > depth:
+        if self.cmb_depth > depth:
             outcmbBranch += 1
         outiocbBranch = self.iocbBranch
-        if self.iocbDepth > depth:
+        if self.iocb_depth > depth:
             outiocbBranch += 1
         # No overloaded constructors - so do it this way to bypass the
         # calcTauIncFrom in the __init__.
-        tMod = TauModel(outSMod, spherical=self.spherical, debug=self.debug,
-                        skip_calc=True)
-        tMod.source_depth = self.source_depth
-        tMod.sourceBranch = outSourceBranch
-        tMod.mohoBranch = outmohoBranch
-        tMod.mohoDepth = self.mohoDepth
-        tMod.cmbBranch = outcmbBranch
-        tMod.cmbDepth = self.cmbDepth
-        tMod.iocbBranch = outiocbBranch
-        tMod.iocbDepth = self.iocbDepth
-        tMod.ray_params = outRayParams
-        tMod.tauBranches = newTauBranches
-        tMod.noDisconDepths = self.noDisconDepths + [depth]
-        tMod.validate()
-        return tMod
+        tau_model = TauModel(
+            outSMod,
+            radius_of_planet=outSMod.vMod.radius_of_planet,
+            is_spherical=self.is_spherical,
+            debug=self.debug, skip_calc=True)
+        tau_model.source_depth = self.source_depth
+        tau_model.sourceBranch = outSourceBranch
+        tau_model.mohoBranch = outmohoBranch
+        tau_model.moho_depth = self.moho_depth
+        tau_model.cmbBranch = outcmbBranch
+        tau_model.cmb_depth = self.cmb_depth
+        tau_model.iocbBranch = outiocbBranch
+        tau_model.iocb_depth = self.iocb_depth
+        tau_model.ray_params = outRayParams
+        tau_model.tauBranches = newTauBranches
+        tau_model.noDisconDepths = self.noDisconDepths + [depth]
+        tau_model.validate()
+        return tau_model
 
     def findBranch(self, depth):
         """Finds the branch that either has the depth as its top boundary, or
         strictly contains the depth. Also, we allow the bottom-most branch to
-        contain its bottom depth, so that the center of the earth is contained
+        contain its bottom depth, so that the center of the planet is contained
         within the bottom branch."""
         for i, tb in enumerate(self.tauBranches[0]):
             if tb.topDepth <= depth < tb.botDepth:
                 return i
-        # Check to see if depth is centre of the Earth.
+        # Check to see if depth is centre of the planet.
         if self.tauBranches[0, -1].botDepth == depth:
             return len(self.tauBranches) - 1
         else:
@@ -377,19 +379,19 @@ class TauModel(object):
             TauModel
             ========
             cmbBranch <type 'int'>
-            cmbDepth <type 'float'>
+            cmb_depth <type 'float'>
             debug <type 'bool'>
             iocbBranch <type 'int'>
-            iocbDepth <type 'float'>
+            iocb_depth <type 'float'>
             mohoBranch <type 'int'>
-            mohoDepth <type 'float'>
+            moho_depth <type 'float'>
             noDisconDepths <type 'list'> (of float!?)
-            radiusOfEarth <type 'float'>
+            radius_of_planet <type 'float'>
             ray_params <type 'numpy.ndarray'> (1D, float)
             sMod <class 'obspy.taup.slowness_model.SlownessModel'>
             sourceBranch <type 'int'>
             source_depth <type 'float'>
-            spherical <type 'bool'>
+            is_spherical <type 'bool'>
             tauBranches <type 'numpy.ndarray'> (2D, type TauBranch)
 
             TauBranch
@@ -398,8 +400,8 @@ class TauModel(object):
             botDepth <type 'float'>
             dist <type 'numpy.ndarray'>
             isPWave <type 'bool'>
-            maxRayParam <type 'float'>
-            minRayParam <type 'float'>
+            max_ray_param <type 'float'>
+            min_ray_param <type 'float'>
             minTurnRayParam <type 'float'>
             tau <type 'numpy.ndarray'>
             time <type 'numpy.ndarray'>
@@ -408,7 +410,6 @@ class TauModel(object):
             SlownessModel
             =============
             DEBUG <type 'bool'>
-            DEFAULT_SLOWNESS_TOLERANCE <type 'float'>
             PLayers <type 'numpy.ndarray'>
             PWAVE <type 'bool'>
             SLayers <type 'numpy.ndarray'>
@@ -423,30 +424,29 @@ class TauModel(object):
             maxInterpError <type 'float'>
             maxRangeInterval <type 'float'>
             minDeltaP <type 'float'>
-            radiusOfEarth <type 'float'>
+            radius_of_planet <type 'float'>
             slowness_tolerance <type 'float'>
             vMod <class 'obspy.taup.velocity_model.VelocityModel'>
 
             VelocityModel
             =============
-            cmbDepth <type 'float'>
-            default_cmb <type 'float'>
-            default_iocb <type 'float'>
-            default_moho <type 'int'>
-            iocbDepth <type 'float'>
-            isSpherical <type 'bool'>
+            cmb_depth <type 'float'>
+            iocb_depth <type 'float'>
+            is_spherical <type 'bool'>
             layers <type 'numpy.ndarray'>
-            maxRadius <type 'float'>
-            minRadius <type 'int'>
-            modelName <type 'unicode'>
-            mohoDepth <type 'float'>
-            radiusOfEarth <type 'float'>
+            max_radius <type 'float'>
+            min_radius <type 'int'>
+            model_name <type 'unicode'>
+            moho_depth <type 'float'>
+            radius_of_planet <type 'float'>
         """
         # a) handle simple contents
-        keys = ['cmbBranch', 'cmbDepth', 'debug', 'iocbBranch', 'iocbDepth',
-                'mohoBranch', 'mohoDepth', 'noDisconDepths', 'radiusOfEarth',
-                'ray_params', 'sourceBranch', 'source_depth', 'spherical']
+        keys = ['cmbBranch', 'cmb_depth', 'debug', 'iocbBranch', 'iocb_depth',
+                'mohoBranch', 'moho_depth', 'noDisconDepths',
+                'radius_of_planet', 'ray_params', 'sourceBranch',
+                'source_depth', 'is_spherical']
         arrays = {k: getattr(self, k) for k in keys}
+
         # b) handle .tauBranches
         i, j = self.tauBranches.shape
         for j_ in range(j):
@@ -455,9 +455,9 @@ class TauModel(object):
                 # later reconstruction of array in deserialization.
                 key = 'tauBranches_%i/%i_%i/%i' % (j_, j, i_, i)
                 arrays[key] = self.tauBranches[i_][j_]._to_array()
+
         # c) handle simple contents of .sMod
         dtypes = [(native_str('DEBUG'), np.bool_),
-                  (native_str('DEFAULT_SLOWNESS_TOLERANCE'), np.float_),
                   (native_str('PWAVE'), np.bool_),
                   (native_str('SWAVE'), np.bool_),
                   (native_str('allowInnerCoreS'), np.bool_),
@@ -466,13 +466,14 @@ class TauModel(object):
                   (native_str('maxInterpError'), np.float_),
                   (native_str('maxRangeInterval'), np.float_),
                   (native_str('minDeltaP'), np.float_),
-                  (native_str('radiusOfEarth'), np.float_),
+                  (native_str('radius_of_planet'), np.float_),
                   (native_str('slowness_tolerance'), np.float_)]
         slowness_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
             slowness_model[key] = getattr(self.sMod, key)
         arrays['sMod'] = slowness_model
+
         # d) handle complex contents of .sMod
         arrays['sMod.PLayers'] = self.sMod.PLayers
         arrays['sMod.SLayers'] = self.sMod.SLayers
@@ -485,26 +486,25 @@ class TauModel(object):
             else:
                 arr_ = np.vstack([data_._to_array() for data_ in data])
             arrays['sMod.' + key] = arr_
+
         # e) handle .sMod.vMod
-        dtypes = [(native_str('cmbDepth'), np.float_),
-                  (native_str('default_cmb'), np.float_),
-                  (native_str('default_iocb'), np.float_),
-                  (native_str('default_moho'), np.int_),
-                  (native_str('iocbDepth'), np.float_),
-                  (native_str('isSpherical'), np.bool_),
-                  (native_str('maxRadius'), np.float_),
-                  (native_str('minRadius'), np.int_),
-                  (native_str('modelName'), np.str_,
-                   len(self.sMod.vMod.modelName)),
-                  (native_str('mohoDepth'), np.float_),
-                  (native_str('radiusOfEarth'), np.float_)]
+        dtypes = [(native_str('cmb_depth'), np.float_),
+                  (native_str('iocb_depth'), np.float_),
+                  (native_str('is_spherical'), np.bool_),
+                  (native_str('max_radius'), np.float_),
+                  (native_str('min_radius'), np.int_),
+                  (native_str('model_name'), np.str_,
+                   len(self.sMod.vMod.model_name)),
+                  (native_str('moho_depth'), np.float_),
+                  (native_str('radius_of_planet'), np.float_)]
         velocity_model = np.empty(shape=(), dtype=dtypes)
         for dtype in dtypes:
             key = dtype[0]
             velocity_model[key] = getattr(self.sMod.vMod, key)
         arrays['vMod'] = velocity_model
         arrays['vMod.layers'] = self.sMod.vMod.layers
-        # finally save the collection of (structured) arrays to binary file
+
+        # finally save the collection of (structured) arrays to a binary file
         np.savez_compressed(filename, **arrays)
 
     @staticmethod
@@ -515,12 +515,15 @@ class TauModel(object):
         # XXX: Make this a with statement when old NumPy support is dropped.
         npz = np.load(filename)
         try:
-            model = TauModel(sMod=None, skip_calc=True)
+            model = TauModel(sMod=None,
+                             radius_of_planet=float(npz["radius_of_planet"]),
+                             skip_calc=True)
             complex_contents = [
                 'tauBranches', 'sMod', 'vMod',
                 'sMod.PLayers', 'sMod.SLayers', 'sMod.criticalDepths',
                 'sMod.fluidLayerDepths', 'sMod.highSlownessLayerDepthsP',
                 'sMod.highSlownessLayerDepthsS', 'vMod.layers']
+
             # a) handle simple contents
             for key in npz.keys():
                 # we have multiple, dynamic key names for individual tau
@@ -531,6 +534,7 @@ class TauModel(object):
                 if arr.ndim == 0:
                     arr = arr[()]
                 setattr(model, key, arr)
+
             # b) handle .tauBranches
             tau_branch_keys = [key for key in npz.keys()
                                if key.startswith('tauBranches_')]
@@ -547,6 +551,7 @@ class TauModel(object):
             # make a copy just in case..
             branches = np.copy(branches)
             setattr(model, "tauBranches", branches)
+
             # c) handle simple contents of .sMod
             slowness_model = SlownessModel(vMod=None, skip_model_creation=True)
             setattr(model, "sMod", slowness_model)
@@ -556,6 +561,7 @@ class TauModel(object):
                 if arr.ndim == 0:
                     arr = arr.flatten()[0]
                 setattr(slowness_model, key, arr)
+
             # d) handle complex contents of .sMod
             for key in ['PLayers', 'SLayers', 'criticalDepths']:
                 setattr(slowness_model, key, npz['sMod.' + key])
@@ -567,18 +573,21 @@ class TauModel(object):
                 else:
                     data = [DepthRange._from_array(x) for x in arr_]
                 setattr(slowness_model, key, data)
+
             # e) handle .sMod.vMod
-            velocity_model = VelocityModel()
+            velocity_model = VelocityModel(
+                model_name=native_str(npz["vMod"]["model_name"]),
+                radius_of_planet=float(npz["vMod"]["radius_of_planet"]),
+                min_radius=float(npz["vMod"]["min_radius"]),
+                max_radius=float(npz["vMod"]["max_radius"]),
+                moho_depth=float(npz["vMod"]["moho_depth"]),
+                cmb_depth=float(npz["vMod"]["cmb_depth"]),
+                iocb_depth=float(npz["vMod"]["iocb_depth"]),
+                is_spherical=bool(npz["vMod"]["is_spherical"]),
+                layers=None
+            )
             setattr(slowness_model, "vMod", velocity_model)
-            for key in npz['vMod'].dtype.names:
-                # restore scalar types from 0d array
-                arr = npz['vMod'][key]
-                if arr.ndim == 0:
-                    arr = arr.flatten()[0]
-                setattr(velocity_model, key, arr)
             setattr(velocity_model, 'layers', npz['vMod.layers'])
-            setattr(velocity_model, 'modelName',
-                    native_str(velocity_model.modelName))
         finally:
             if hasattr(npz, 'close'):
                 npz.close()

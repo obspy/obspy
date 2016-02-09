@@ -29,7 +29,7 @@ class TauP_Pierce(TauP_Time):
         Override TauP_Time.depth_correct so that the pierce points may be
         added.
         """
-        tModOrig = self.model
+        orig_tau_model = self.model
         mustRecalc = False
         # First check if depth_corrected_model is correct as it is. Check to
         # make sure source depth is the same, and then check to make sure
@@ -60,7 +60,7 @@ class TauP_Pierce(TauP_Time):
                 for addDepth in self.addDepth:
                     self.model = self.model.splitBranch(addDepth)
             TauP_Time.depth_correct(self, depth, receiver_depth)
-            self.model = tModOrig
+            self.model = orig_tau_model
 
     def calculate(self, degrees):
         """

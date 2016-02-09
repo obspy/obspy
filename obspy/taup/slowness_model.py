@@ -12,13 +12,13 @@ import math
 
 import numpy as np
 
+from . import _DEFAULT_VALUES
 from .helper_classes import (CriticalDepth, DepthRange, SlownessLayer,
                              SlownessModelError, SplitLayerInfo, TimeDist)
 from .slowness_layer import (bullenDepthFor,
                              bullenRadialSlowness, create_from_vlayer,
                              evaluateAtBullen)
-from .velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
-                             VelocityLayer, evaluateVelocityAtBottom,
+from .velocity_layer import (VelocityLayer, evaluateVelocityAtBottom,
                              evaluateVelocityAtTop)
 
 
@@ -33,36 +33,33 @@ class SlownessModel(object):
     """
     Storage and methods for generating slowness-depth pairs.
     """
-    DEBUG = False
-    DEFAULT_SLOWNESS_TOLERANCE = 1e-16
-    radiusOfEarth = 6371.0
-
-    # NB if the following are actually cleared (lists are mutable) every
-    # time createSample is called, maybe it would be better to just put these
-    # initialisations into the relevant methods? They do have to be
-    # persistent across method calls in createSample though, so don't.
-
-    # Stores the layer number for layers in the velocity model with a critical
-    # point at their top. These form the "branches" of slowness sampling.
-    criticalDepths = None  # will be list of CriticalDepth objects
-    # Store depth ranges that contains a high slowness zone for P/S. Stored as
-    # DepthRange objects, containing the top depth and bottom depth.
-    highSlownessLayerDepthsP = []  # will be list of DepthRanges
-    highSlownessLayerDepthsS = []
-    # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
-    # DepthRange objects, containing the top depth and bottom depth.
-    fluidLayerDepths = []
-    PLayers = None
-    SLayers = None
-    # For methods that have an isPWave parameter
-    SWAVE = False
-    PWAVE = True
-
     def __init__(self, vMod, minDeltaP=0.1, maxDeltaP=11, maxDepthInterval=115,
                  maxRangeInterval=2.5 * math.pi / 180, maxInterpError=0.05,
                  allowInnerCoreS=True,
-                 slowness_tolerance=DEFAULT_SLOWNESS_TOLERANCE,
+                 slowness_tolerance=_DEFAULT_VALUES["slowness_tolerance"],
                  skip_model_creation=False):
+        self.DEBUG = False
+        # NB if the following are actually cleared (lists are mutable) every
+        # time createSample is called, maybe it would be better to just put
+        # these initialisations into the relevant methods? They do have to be
+        # persistent across method calls in createSample though, so don't.
+
+        # Stores the layer number for layers in the velocity model with a
+        # critical point at their top. These form the "branches" of slowness
+        # sampling.
+        self.criticalDepths = None  # will be list of CriticalDepth objects
+        # Store depth ranges that contains a high slowness zone for P/S. Stored
+        # as DepthRange objects, containing the top depth and bottom depth.
+        self.highSlownessLayerDepthsP = []  # will be list of DepthRanges
+        self.highSlownessLayerDepthsS = []
+        # Stores depth ranges that are fluid, ie S velocity is zero. Stored as
+        # DepthRange objects, containing the top depth and bottom depth.
+        self.fluidLayerDepths = []
+        self.PLayers = None
+        self.SLayers = None
+        # For methods that have an isPWave parameter
+        self.SWAVE = False
+        self.PWAVE = True
 
         self.vMod = vMod
         self.minDeltaP = minDeltaP
@@ -78,15 +75,15 @@ class SlownessModel(object):
 
     def __str__(self):
         desc = "".join([
-            "radiusOfEarth=", str(self.radiusOfEarth), "\n maxDeltaP=",
+            "radius_of_planet=", str(self.radius_of_planet), "\n maxDeltaP=",
             str(self.maxDeltaP),
             "\n minDeltaP=", str(self.minDeltaP), "\n maxDepthInterval=",
             str(self.maxDepthInterval), "\n maxRangeInterval=",
             str(self.maxRangeInterval),
             "\n allowInnerCoreS=", str(self.allowInnerCoreS),
             "\n slownessTolerance=", str(self.slowness_tolerance),
-            "\n getNumLayers('P')=", str(self.getNumLayers(self.PWAVE)),
-            "\n getNumLayers('S')=", str(self.getNumLayers(self.SWAVE)),
+            "\n get_num_layers('P')=", str(self.get_num_layers(self.PWAVE)),
+            "\n get_num_layers('S')=", str(self.get_num_layers(self.SWAVE)),
             "\n fluidLayerDepths.size()=", str(len(self.fluidLayerDepths)),
             "\n highSlownessLayerDepthsP.size()=",
             str(len(self.highSlownessLayerDepthsP)),
@@ -127,8 +124,8 @@ class SlownessModel(object):
         """
         # Some checks on the velocity model
         self.vMod.validate()
-        if self.vMod.getNumLayers() == 0:
-            raise SlownessModelError("velModel.getNumLayers()==0")
+        if len(self.vMod) == 0:
+            raise SlownessModelError("velModel.get_num_layers()==0")
         if self.vMod.layers[0]['topSVelocity'] == 0:
             raise SlownessModelError(
                 "Unable to handle zero S velocity layers at surface. "
@@ -137,7 +134,7 @@ class SlownessModel(object):
         if self.DEBUG:
             print("start createSample")
 
-        self.radiusOfEarth = self.vMod.radiusOfEarth
+        self.radius_of_planet = self.vMod.radius_of_planet
 
         if self.DEBUG:
             print("findCriticalPoints")
@@ -171,7 +168,7 @@ class SlownessModel(object):
         Critical points are first order discontinuities in velocity/slowness,
         local extrema in slowness. A high slowness zone is a low velocity zone,
         but it is possible to have a slightly low velocity zone within a
-        spherical Earth that is not a high slowness zone and thus does not
+        spherical planet that is not a high slowness zone and thus does not
         exhibit any of the pathological behavior of a low velocity zone.
         """
         highSlownessZoneP = DepthRange()
@@ -205,8 +202,18 @@ class SlownessModel(object):
             currVLayer['topQp'], currVLayer['topQp'],
             currVLayer['topQs'], currVLayer['topQs'])],
             dtype=VelocityLayer)
-        currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
-        currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
+
+        currSLayer = create_from_vlayer(
+                vLayer=currVLayer,
+                isPWave=self.SWAVE,
+                radius_of_planet=self.vMod.radius_of_planet,
+                isSpherical=self.vMod.is_spherical)
+        currPLayer = create_from_vlayer(
+            vLayer=currVLayer,
+            isPWave=self.PWAVE,
+            radius_of_planet=self.vMod.radius_of_planet,
+            isSpherical=self.vMod.is_spherical)
+
         # We know that the top is always a critical slowness so add 0
         self.criticalDepths[cd_count] = (0, 0, 0, 0)
         cd_count += 1
@@ -237,14 +244,18 @@ class SlownessModel(object):
                 fluidZone = DepthRange(topDepth=currVLayer['topDepth'])
             # If already in fluid zone, check if exited (java line 909)
             if inFluidZone is True and currVLayer['topSVelocity'] != 0:
-                if prevVLayer['botDepth'] > self.vMod.iocbDepth:
+                if prevVLayer['botDepth'] > self.vMod.iocb_depth:
                     belowOuterCore = True
                 inFluidZone = False
                 fluidZone.botDepth = prevVLayer['botDepth']
                 self.fluidLayerDepths.append(fluidZone)
 
-            currPLayer = create_from_vlayer(currVLayer,
-                                            self.PWAVE)
+            currPLayer = create_from_vlayer(
+                    vLayer=currVLayer,
+                    isPWave=self.PWAVE,
+                    radius_of_planet=self.vMod.radius_of_planet,
+                    isSpherical=self.vMod.is_spherical)
+
             # If we are in a fluid zone ( S velocity = 0.0 ) or if we are below
             # the outer core and allowInnerCoreS=false then use the P velocity
             # structure to look for critical points.
@@ -252,8 +263,11 @@ class SlownessModel(object):
                     or (belowOuterCore and self.allowInnerCoreS is False):
                 currSLayer = currPLayer
             else:
-                currSLayer = create_from_vlayer(currVLayer,
-                                                self.SWAVE)
+                currSLayer = create_from_vlayer(
+                        vLayer=currVLayer,
+                        isPWave=self.SWAVE,
+                        radius_of_planet=self.vMod.radius_of_planet,
+                        isSpherical=self.vMod.is_spherical)
 
             if prevSLayer['botP'] != currSLayer['topP'] \
                     or prevPLayer['botP'] != currPLayer['topP']:
@@ -390,16 +404,16 @@ class SlownessModel(object):
                       " minPSoFar=" + str(minPSoFar))
 
         # We know that the bottommost depth is always a critical slowness,
-        # so we add vMod.getNumLayers()
+        # so we add vMod.get_num_layers()
         # java line 1094
-        self.criticalDepths[cd_count] = (self.radiusOfEarth,
-                                         self.vMod.getNumLayers(),
+        self.criticalDepths[cd_count] = (self.radius_of_planet,
+                                         len(self.vMod),
                                          -1,
                                          -1)
         cd_count += 1
 
         # Check if the bottommost depth is contained within a high slowness
-        # zone, might happen in a flat non-whole-earth model
+        # zone, might happen in a flat non-whole-planet model
         if inHighSlownessZoneS:
             highSlownessZoneS.botDepth = currVLayer['botDepth']
             self.highSlownessLayerDepthsS.append(highSlownessZoneS)
@@ -408,18 +422,18 @@ class SlownessModel(object):
             self.highSlownessLayerDepthsP.append(highSlownessZoneP)
 
         # Check if the bottommost depth is contained within a fluid zone, this
-        # would be the case if we have a non whole earth model with the bottom
+        # would be the case if we have a non whole planet model with the bottom
         # in the outer core or if allowInnerCoreS == false and we want to use
         # the P velocity structure in the inner core.
         if inFluidZone:
-            fluidZone['botDepth'] = currVLayer['botDepth']
+            fluidZone.botDepth = currVLayer['botDepth']
             self.fluidLayerDepths.append(fluidZone)
 
         self.criticalDepths = self.criticalDepths[:cd_count]
 
         self.validate()
 
-    def getNumLayers(self, isPWave):
+    def get_num_layers(self, isPWave):
         """
         Number of slowness layers.
 
@@ -458,13 +472,13 @@ class SlownessModel(object):
         :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
             because there are no layers to search, or if there is an increase
             in slowness, i.e., a negative velocity gradient, that just balances
-            the decrease in slowness due to the spherical Earth, or if the ray
+            the decrease in slowness due to the spherical planet, or if the ray
             parameter ``p`` is not contained within the specified layer range.
         """
-        topLayerNum = self.vMod.layerNumberBelow(topDepth)[0]
+        topLayerNum = self.vMod.layer_number_below(topDepth)[0]
         if self.vMod.layers[topLayerNum]['botDepth'] == topDepth:
             topLayerNum += 1
-        botLayerNum = self.vMod.layerNumberAbove(botDepth)[0]
+        botLayerNum = self.vMod.layer_number_above(botDepth)[0]
         return self.findDepth_from_layers(ray_param, topLayerNum, botLayerNum,
                                           isPWave)
 
@@ -499,7 +513,7 @@ class SlownessModel(object):
         :raises SlownessModelError: If ``topCriticalLayer > botCriticalLayer``
             because there are no layers to search, or if there is an increase
             in slowness, i.e., a negative velocity gradient, that just balances
-            the decrease in slowness due to the spherical Earth, or if the ray
+            the decrease in slowness due to the spherical planet, or if the ray
             parameter ``p`` is not contained within the specified layer range.
         """
         # topP = 1.1e300  # dummy numbers
@@ -541,7 +555,7 @@ class SlownessModel(object):
             # Is p a total reflection? botP is the slowness at the bottom
             # of the last velocity layer from the previous loop, set topP
             # to be the slowness at the top of the next layer.
-            if layerNum < self.vMod.getNumLayers() - 1:
+            if layerNum < len(self.vMod) - 1:
                 velLayer = self.vMod.layers[layerNum + 1]
                 topVelocity = evaluateVelocityAtTop(velLayer, waveType)
                 if (isPWave is False and
@@ -578,19 +592,19 @@ class SlownessModel(object):
         :param velocity: The velocity to convert, in km/s.
         :type velocity: float
         :param depth: The depth (in km) at which to perform the calculation.
-            Must be less than the radius of the Earth defined in this model, or
-            the result is undefined.
+            Must be less than the radius of the planet defined in this
+            model, or the result is undefined.
         :type depth: float
 
         :returns: The slowness, in s/km.
         :rtype: float
         """
-        if velocity == 0:
+        if np.any(velocity == 0):
             raise SlownessModelError(
                 "toSlowness: velocity can't be zero, at depth" +
                 str(depth),
                 "Maybe related to using S velocities in outer core?")
-        return (self.radiusOfEarth - depth) / velocity
+        return (self.radius_of_planet - depth) / velocity
 
     def interpolate(self, p, topVelocity, topDepth, slope):
         """
@@ -617,10 +631,10 @@ class SlownessModel(object):
         if np.any(denominator == 0):
             raise SlownessModelError(
                 "Negative velocity gradient that just balances the slowness "
-                "gradient of the spherical slowness, i.e. Earth flattening. "
+                "gradient of the spherical slowness, i.e. planet flattening. "
                 "Instructions unclear; explode.")
         else:
-            depth = (self.radiusOfEarth +
+            depth = (self.radius_of_planet +
                      p * (topDepth * slope - topVelocity)) / denominator
             return depth
 
@@ -652,14 +666,22 @@ class SlownessModel(object):
         as well as sampling each point specified within the VelocityModel. The
         P and S sampling will also be compatible.
         """
-
-        self.PLayers = create_from_vlayer(self.vMod.layers, self.PWAVE)
+        self.PLayers = create_from_vlayer(
+            vLayer=self.vMod.layers,
+            isPWave=self.PWAVE,
+            radius_of_planet=self.vMod.radius_of_planet,
+            isSpherical=self.vMod.is_spherical)
 
         with np.errstate(divide='ignore'):
-            self.SLayers = create_from_vlayer(self.vMod.layers, self.SWAVE)
+            self.SLayers = create_from_vlayer(
+                vLayer=self.vMod.layers,
+                isPWave=self.SWAVE,
+                radius_of_planet=self.vMod.radius_of_planet,
+                isSpherical=self.vMod.is_spherical)
+
         mask = self.depthInFluid(self.vMod.layers['topDepth'])
         if not self.allowInnerCoreS:
-            mask |= self.vMod.layers['topDepth'] >= self.vMod.iocbDepth
+            mask |= self.vMod.layers['topDepth'] >= self.vMod.iocb_depth
         self.SLayers[mask] = self.PLayers[mask]
 
         # Check for first order discontinuity. However, we only consider
@@ -672,7 +694,7 @@ class SlownessModel(object):
                 above['botSVelocity'] != below['topSVelocity'],
                 np.logical_or(
                     self.allowInnerCoreS,
-                    below['topDepth'] < self.vMod.iocbDepth)))
+                    below['topDepth'] < self.vMod.iocb_depth)))
 
         index = np.where(mask)[0] + 1
         above = above[mask]
@@ -697,20 +719,30 @@ class SlownessModel(object):
         currVLayer['botPVelocity'] = below['topPVelocity']
         currVLayer['topSVelocity'] = topSVel
         currVLayer['botSVelocity'] = botSVel
-        currVLayer['topDensity'].fill(DEFAULT_DENSITY)
-        currVLayer['botDensity'].fill(DEFAULT_DENSITY)
-        currVLayer['topQp'].fill(DEFAULT_QP)
-        currVLayer['botQp'].fill(DEFAULT_QP)
-        currVLayer['topQs'].fill(DEFAULT_QS)
-        currVLayer['botQs'].fill(DEFAULT_QS)
+        currVLayer['topDensity'].fill(_DEFAULT_VALUES["density"])
+        currVLayer['botDensity'].fill(_DEFAULT_VALUES["density"])
+        currVLayer['topQp'].fill(_DEFAULT_VALUES["qp"])
+        currVLayer['botQp'].fill(_DEFAULT_VALUES["qp"])
+        currVLayer['topQs'].fill(_DEFAULT_VALUES["qs"])
+        currVLayer['botQs'].fill(_DEFAULT_VALUES["qs"])
 
-        currPLayer = create_from_vlayer(currVLayer, self.PWAVE)
+        currPLayer = create_from_vlayer(
+                vLayer=currVLayer,
+                isPWave=self.PWAVE,
+                radius_of_planet=self.vMod.radius_of_planet,
+                isSpherical=self.vMod.is_spherical)
+
         self.PLayers = np.insert(self.PLayers, index, currPLayer)
 
-        currSLayer = create_from_vlayer(currVLayer, self.SWAVE)
+        currSLayer = create_from_vlayer(
+                vLayer=currVLayer,
+                isPWave=self.SWAVE,
+                radius_of_planet=self.vMod.radius_of_planet,
+                isSpherical=self.vMod.is_spherical)
+
         mask2 = (above['botSVelocity'] == 0) & (below['topSVelocity'] == 0)
         if not self.allowInnerCoreS:
-            mask2 |= currVLayer['topDepth'] >= self.vMod.iocbDepth
+            mask2 |= currVLayer['topDepth'] >= self.vMod.iocb_depth
         currSLayer = np.where(mask2,
                               currPLayer,
                               currSLayer)
@@ -719,7 +751,7 @@ class SlownessModel(object):
         # Make sure that all high slowness layers are sampled exactly
         # at their bottom
         for highZone in self.highSlownessLayerDepthsS:
-            sLayerNum = self.layerNumberAbove(highZone.botDepth, self.SWAVE)
+            sLayerNum = self.layer_number_above(highZone.botDepth, self.SWAVE)
             highSLayer = self.SLayers[sLayerNum]
             while highSLayer['topDepth'] == highSLayer['botDepth'] and (
                     (highSLayer['topP'] - highZone.ray_param) *
@@ -729,7 +761,7 @@ class SlownessModel(object):
             if highZone.ray_param != highSLayer['botP']:
                 self.addSlowness(highZone.ray_param, self.SWAVE)
         for highZone in self.highSlownessLayerDepthsP:
-            sLayerNum = self.layerNumberAbove(highZone.botDepth, self.PWAVE)
+            sLayerNum = self.layer_number_above(highZone.botDepth, self.PWAVE)
             highSLayer = self.PLayers[sLayerNum]
             while highSLayer['topDepth'] == highSLayer['botDepth'] and (
                     (highSLayer['topP'] - highZone.ray_param) *
@@ -755,7 +787,7 @@ class SlownessModel(object):
         for p in uniq:
             self.addSlowness(p, self.PWAVE)
 
-    def layerNumberAbove(self, depth, isPWave):
+    def layer_number_above(self, depth, isPWave):
         """
         Find the index of the slowness layer that contains the given depth.
 
@@ -763,7 +795,7 @@ class SlownessModel(object):
         of the two or possibly more (since total reflections are zero
         thickness layers) layers.
 
-        .. seealso:: :meth:`layerNumberBelow`
+        .. seealso:: :meth:`layer_number_below`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -799,7 +831,7 @@ class SlownessModel(object):
 
         return foundLayerNum
 
-    def layerNumberBelow(self, depth, isPWave):
+    def layer_number_below(self, depth, isPWave):
         """
         Find the index of the slowness layer that contains the given depth.
 
@@ -807,7 +839,7 @@ class SlownessModel(object):
         the two or possibly more (since total reflections are zero thickness
         layers) layers.
 
-        .. seealso:: :meth:`layerNumberAbove`
+        .. seealso:: :meth:`layer_number_above`
 
         :param depth: The depth to find, in km.
         :type depth: :class:`float` or :class:`~numpy.ndarray`
@@ -894,8 +926,8 @@ class SlownessModel(object):
         # If depths are the same only need topVelocity, and just to verify we
         # are not in a fluid.
         nonzero = layers['topDepth'] != layers['botDepth']
-        above = self.vMod.evaluateAbove(layers['botDepth'], wave)
-        below = self.vMod.evaluateBelow(layers['topDepth'], wave)
+        above = self.vMod.evaluate_above(layers['botDepth'], wave)
+        below = self.vMod.evaluate_below(layers['topDepth'], wave)
         topVelocity = np.where(nonzero, below, above)
         botVelocity = np.where(nonzero, above, below)
 
@@ -905,7 +937,7 @@ class SlownessModel(object):
         if not isPWave:
             mask &= topVelocity != 0
             if not self.allowInnerCoreS:
-                iocb_mask = layers['botDepth'] > self.vMod.iocbDepth
+                iocb_mask = layers['botDepth'] > self.vMod.iocb_depth
                 mask &= ~iocb_mask
 
         index = np.where(mask)[0]
@@ -986,8 +1018,8 @@ class SlownessModel(object):
         The maximum is determined by ``self.maxDepthInterval``.
         """
         for wave in [self.SWAVE, self.PWAVE]:
-            # These might change with calls to addSlowness, so be sure we have
-            # the correct copy.
+            # These might change with calls to add_slowness, so be sure we
+            # have the correct copy.
             if wave == self.PWAVE:
                 layers = self.PLayers
             else:
@@ -1005,20 +1037,18 @@ class SlownessModel(object):
             for start, Nd, delta in zip(topDepth, new_count, steps):
                 new_depth = start + np.arange(1, Nd) * delta
                 if wave == self.SWAVE:
-                    velocity = self.vMod.evaluateAbove(new_depth, 'S')
+                    velocity = self.vMod.evaluate_above(new_depth, 'S')
 
                     smask = velocity == 0
                     if not self.allowInnerCoreS:
-                        smask |= new_depth >= self.vMod.iocbDepth
+                        smask |= new_depth >= self.vMod.iocb_depth
                     if np.any(smask):
-                        velocity[smask] = self.vMod.evaluateAbove(
-                            new_depth[smask],
-                            'P')
-
+                        velocity[smask] = self.vMod.evaluate_above(
+                            new_depth[smask], 'P')
                     slowness = self.toSlowness(velocity, new_depth)
                 else:
                     slowness = self.toSlowness(
-                        self.vMod.evaluateAbove(new_depth, 'P'),
+                        self.vMod.evaluate_above(new_depth, 'P'),
                         new_depth)
 
                 for p in slowness:
@@ -1041,7 +1071,7 @@ class SlownessModel(object):
             currTD = None
             j = 0
             sLayer = self.getSlownessLayer(j, currWaveType)
-            while j < self.getNumLayers(currWaveType):
+            while j < self.get_num_layers(currWaveType):
                 prevSLayer = sLayer
                 sLayer = self.getSlownessLayer(j, currWaveType)
                 if (self.depthInHighSlowness(sLayer['botDepth'],
@@ -1096,12 +1126,12 @@ class SlownessModel(object):
                         splitLayer = np.array([(
                             sLayer['topP'], sLayer['topDepth'], splitRayParam,
                             bullenDepthFor(sLayer, splitRayParam,
-                                           self.radiusOfEarth))],
+                                           self.radius_of_planet))],
                             dtype=SlownessLayer)
                         justLayerTime, justLayerDist = bullenRadialSlowness(
                             splitLayer,
                             splitRayParam,
-                            self.radiusOfEarth)
+                            self.radius_of_planet)
                         split_time = allButLayer['time'] + 2 * justLayerTime
                         split_dist = allButLayer['dist'] + 2 * justLayerDist
                         # Python standard division is not IEEE compliant,
@@ -1214,9 +1244,9 @@ class SlownessModel(object):
         """
         # First, if the slowness model contains less than slownessTurnLayer
         # elements we can't calculate a distance.
-        if slownessTurnLayer >= self.getNumLayers(isPWave):
+        if slownessTurnLayer >= self.get_num_layers(isPWave):
             raise SlownessModelError(
-                "Can't calculate a distance when getNumLayers() is smaller "
+                "Can't calculate a distance when get_num_layers() is smaller "
                 "than the given slownessTurnLayer!")
         if p < 0:
             raise SlownessModelError("Ray parameter must not be negative!")
@@ -1241,7 +1271,7 @@ class SlownessModel(object):
         spherical ray parameter ``p`` when passing through layer ``layerNum``.
         Note that this gives half of the true range and time increments since
         there will be both an upgoing and a downgoing path. It also only does
-        the calculation for the simple cases of the centre of the Earth, where
+        the calculation for the simple cases of the centre of the planet, where
         the ray parameter is zero, or for constant velocity layers. Otherwise,
         it calls :func:`~.bullenRadialSlowness`.
 
@@ -1315,7 +1345,7 @@ class SlownessModel(object):
                 tmp_layers = sphericalLayer[turning_layers]
                 turn_depth = bullenDepthFor(tmp_layers,
                                             sphericalRayParam,
-                                            self.radiusOfEarth, check=False)
+                                            self.radius_of_planet, check=False)
                 sphericalLayer['botP'][turning_layers] = sphericalRayParam
                 sphericalLayer['botDepth'][turning_layers] = turn_depth
 
@@ -1326,7 +1356,7 @@ class SlownessModel(object):
                 new_layers = np.repeat(sphericalLayer, len(sphericalRayParam))
                 turn_depth = bullenDepthFor(new_layers,
                                             sphericalRayParam,
-                                            self.radiusOfEarth, check=False)
+                                            self.radius_of_planet, check=False)
                 new_layers['botP'][turning_layers] = \
                     sphericalRayParam[turning_layers]
                 new_layers['botDepth'][turning_layers] = \
@@ -1338,7 +1368,7 @@ class SlownessModel(object):
                 try:
                     turn_depth = bullenDepthFor(sphericalLayer,
                                                 sphericalRayParam,
-                                                self.radiusOfEarth)
+                                                self.radius_of_planet)
                 except SlownessModelError:
                     if check:
                         raise
@@ -1351,7 +1381,7 @@ class SlownessModel(object):
                 # Turn in layer, create temp layers with each p at bottom.
                 turn_depth = bullenDepthFor(sphericalLayer,
                                             sphericalRayParam,
-                                            self.radiusOfEarth, check=False)
+                                            self.radius_of_planet, check=False)
                 turning_layers = np.where(turning_layers)
                 sphericalLayer['botP'][turning_layers] = \
                     sphericalRayParam[turning_layers]
@@ -1380,13 +1410,13 @@ class SlownessModel(object):
         time[zero_thick] = 0
         dist[zero_thick] = 0
 
-        # Check to see if this layer contains the centre of the Earth. If so
+        # Check to see if this layer contains the centre of the planet. If so
         # then the spherical ray parameter should be 0.0 and we calculate the
         # range and time increments using a constant velocity layer (sphere).
         # See eqns. 43 and 44 of [Buland1983]_, although we implement them
         # slightly differently. Note that the distance and time increments are
         # for just downgoing or just upgoing, i.e. from the top of the layer
-        # to the centre of the earth or vice versa but not both. This is in
+        # to the centre of the planet or vice versa but not both. This is in
         # keeping with the convention that these are one way distance and time
         # increments. We will multiply the result by 2 at the end, or if we are
         # doing a 1.5D model, the other direction may be different. The time
@@ -1395,11 +1425,11 @@ class SlownessModel(object):
         # of the sphere. An amazingly simple result!
         centre_layer = np.logical_and(leftover, np.logical_and(
             sphericalRayParam == 0,
-            sphericalLayer['botDepth'] == self.radiusOfEarth))
+            sphericalLayer['botDepth'] == self.radius_of_planet))
         leftover &= ~centre_layer
-        if np.any(layerNum[centre_layer] != self.getNumLayers(isPWave) - 1):
+        if np.any(layerNum[centre_layer] != self.get_num_layers(isPWave) - 1):
             raise SlownessModelError("There are layers deeper than the "
-                                     "centre of the Earth!")
+                                     "centre of the planet!")
         time[centre_layer] = sphericalLayer['topP'][centre_layer]
         dist[centre_layer] = math.pi / 2
 
@@ -1411,8 +1441,8 @@ class SlownessModel(object):
         # spherical Snell's Law. The time increment is just the path length
         # divided by the velocity. To get the distance we first find the
         # angular distance traveled, using the law of sines.
-        topRadius = self.radiusOfEarth - sphericalLayer['topDepth']
-        botRadius = self.radiusOfEarth - sphericalLayer['botDepth']
+        topRadius = self.radius_of_planet - sphericalLayer['topDepth']
+        botRadius = self.radius_of_planet - sphericalLayer['botDepth']
         with np.errstate(invalid='ignore'):
             vel = botRadius / sphericalLayer['botP']
             constant_velocity = np.logical_and(
@@ -1457,11 +1487,11 @@ class SlownessModel(object):
             b * ray_param_const_velocity * vel / (topRadius * botRadius))
 
         # If the layer is not a constant velocity layer or the centre of the
-        #  Earth and p is not zero we have to do it the hard way:
+        # planet and p is not zero we have to do it the hard way:
         time[leftover], dist[leftover] = bullenRadialSlowness(
             sphericalLayer[leftover] if ldim else sphericalLayer,
             sphericalRayParam[leftover] if pdim else sphericalRayParam,
-            self.radiusOfEarth,
+            self.radius_of_planet,
             check=check)
 
         if check and (np.any(time < 0) or np.any(np.isnan(time)) or
@@ -1475,7 +1505,7 @@ class SlownessModel(object):
         """
         Reset the slowness layers that correspond to critical points.
         """
-        self.criticalDepths['pLayerNum'] = self.layerNumberBelow(
+        self.criticalDepths['pLayerNum'] = self.layer_number_below(
             self.criticalDepths['depth'],
             self.PWAVE)
         sLayer = self.getSlownessLayer(self.criticalDepths['pLayerNum'],
@@ -1486,7 +1516,7 @@ class SlownessModel(object):
                 (sLayer['botDepth'] == self.criticalDepths['depth']))
         self.criticalDepths['pLayerNum'][mask] += 1
 
-        self.criticalDepths['sLayerNum'] = self.layerNumberBelow(
+        self.criticalDepths['sLayerNum'] = self.layer_number_below(
             self.criticalDepths['depth'],
             self.SWAVE)
         sLayer = self.getSlownessLayer(self.criticalDepths['sLayerNum'],
@@ -1507,8 +1537,8 @@ class SlownessModel(object):
         super.validate()), i.e. the code above. Both are merged here (in
         fact, it only contained one test).
         """
-        if self.radiusOfEarth <= 0:
-            raise SlownessModelError("Radius of Earth must be positive.")
+        if self.radius_of_planet <= 0:
+            raise SlownessModelError("Radius of planet must be positive.")
         if self.maxDepthInterval <= 0:
             raise SlownessModelError(
                 "maxDepthInterval must be positive and non-zero.")
@@ -1525,7 +1555,7 @@ class SlownessModel(object):
                         "High Slowness zone has zero or negative thickness!")
                 if (highSZoneDepth.topDepth < prevDepth or (
                         highSZoneDepth.topDepth == prevDepth and not
-                        self.vMod.isdiscontinuity(highSZoneDepth.topDepth))):
+                        self.vMod.is_discontinuity(highSZoneDepth.topDepth))):
                     raise SlownessModelError(
                         "High Slowness zone overlaps previous zone.")
                 prevDepth = highSZoneDepth.botDepth
@@ -1572,10 +1602,10 @@ class SlownessModel(object):
                 raise SlownessModelError(
                     "Slowness layer depth (top or bottom) is NaN!")
 
-            if np.any(layers['botDepth'] > self.radiusOfEarth):
+            if np.any(layers['botDepth'] > self.radius_of_planet):
                 raise SlownessModelError(
                     "Slowness layer has a depth larger than radius of the "
-                    "Earth.")
+                    "planet.")
 
         # Everything seems OK.
         return True
@@ -1605,17 +1635,18 @@ class SlownessModel(object):
                 elif sLayer['botDepth'] > depth:
                     minPSoFar = min(minPSoFar,
                                     evaluateAtBullen(sLayer, depth,
-                                                     self.radiusOfEarth))
+                                                     self.radius_of_planet))
                     return minPSoFar
                 else:
                     minPSoFar = min(minPSoFar, sLayer['botP'])
         else:
             sLayer = self.getSlownessLayer(
-                self.layerNumberAbove(depth, isPWave), isPWave)
+                self.layer_number_above(depth, isPWave), isPWave)
             if depth == sLayer['botDepth']:
                 minPSoFar = sLayer['botP']
             else:
-                minPSoFar = evaluateAtBullen(sLayer, depth, self.radiusOfEarth)
+                minPSoFar = evaluateAtBullen(sLayer, depth,
+                                             self.radius_of_planet)
         return minPSoFar
 
     def getMinRayParam(self, depth, isPWave):
@@ -1638,9 +1669,9 @@ class SlownessModel(object):
         """
         minPSoFar = self.getMinTurnRayParam(depth, isPWave)
         sLayerAbove = self.getSlownessLayer(
-            self.layerNumberAbove(depth, isPWave), isPWave)
+            self.layer_number_above(depth, isPWave), isPWave)
         sLayerBelow = self.getSlownessLayer(
-            self.layerNumberBelow(depth, isPWave), isPWave)
+            self.layer_number_below(depth, isPWave), isPWave)
         if sLayerAbove['botDepth'] == depth:
             minPSoFar = min(minPSoFar, sLayerAbove['botP'],
                             sLayerBelow['topP'])
@@ -1670,7 +1701,7 @@ class SlownessModel(object):
 
         :rtype: :class:`~.SplitLayerInfo`
         """
-        layerNum = self.layerNumberAbove(depth, isPWave)
+        layerNum = self.layer_number_above(depth, isPWave)
         sLayer = self.getSlownessLayer(layerNum, isPWave)
         if sLayer['topDepth'] == depth or sLayer['botDepth'] == depth:
             # Depth is already on a slowness layer boundary so no need to
@@ -1700,7 +1731,7 @@ class SlownessModel(object):
         else:
             # Must split properly.
             out = deepcopy(self)
-            p = evaluateAtBullen(sLayer, depth, self.radiusOfEarth)
+            p = evaluateAtBullen(sLayer, depth, self.radius_of_planet)
             topLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
                                   p, depth)],
                                 dtype=SlownessLayer)
@@ -1749,7 +1780,7 @@ class SlownessModel(object):
                 # contains the new slowness sample.
                 topLayer = np.array([(sLayer['topP'], sLayer['topDepth'], p,
                                       bullenDepthFor(sLayer, p,
-                                                     self.radiusOfEarth))],
+                                                     self.radius_of_planet))],
                                     dtype=SlownessLayer)
                 botLayer = (p, topLayer['botDepth'],
                             sLayer['botP'], sLayer['botDepth'])

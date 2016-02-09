@@ -8,23 +8,26 @@ import unittest
 
 import numpy as np
 
+from .. import _DEFAULT_VALUES
 from obspy.taup.slowness_layer import (SlownessLayer, SlownessModelError,
                                        bullenDepthFor, create_from_vlayer)
-from obspy.taup.velocity_layer import (DEFAULT_DENSITY, DEFAULT_QP, DEFAULT_QS,
-                                       VelocityLayer)
+from obspy.taup.velocity_layer import VelocityLayer
 
 
 class TauPySlownessModelTestCase(unittest.TestCase):
     def test_slownesslayer(self):
         vLayer = np.array([(10, 31, 3, 5, 2, 4,
-                            DEFAULT_DENSITY, DEFAULT_DENSITY,
-                            DEFAULT_QP, DEFAULT_QP,
-                            DEFAULT_QS, DEFAULT_QS)],
+                            _DEFAULT_VALUES["density"],
+                            _DEFAULT_VALUES["density"],
+                            _DEFAULT_VALUES["qp"],
+                            _DEFAULT_VALUES["qp"],
+                            _DEFAULT_VALUES["qs"],
+                            _DEFAULT_VALUES["qs"])],
                           dtype=VelocityLayer)
-        a = create_from_vlayer(vLayer, True)
+        a = create_from_vlayer(vLayer, True, radius_of_planet=6371.0)
         self.assertEqual(a['botP'], 1268.0)
         self.assertEqual(a['botDepth'], 31.0)
-        b = create_from_vlayer(vLayer, False)
+        b = create_from_vlayer(vLayer, False, radius_of_planet=6371.0)
         self.assertEqual(b['topP'], 3180.5)
 
 

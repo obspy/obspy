@@ -12,6 +12,7 @@ import inspect
 import os
 from math import pi
 
+from obspy.taup import _DEFAULT_VALUES
 from obspy.taup.slowness_model import SlownessModel
 from obspy.taup.tau_model import TauModel
 from obspy.taup.velocity_model import VelocityModel
@@ -50,19 +51,19 @@ class TauP_Create(object):
         filename = self.input_filename
         if self.debug:
             print("filename =", filename)
-        self.vMod = VelocityModel.readVelocityFile(filename)
+        self.vMod = VelocityModel.read_velocity_file(filename)
         if self.vMod is None:
             raise IOError("Velocity model file not found: " + filename)
         # If model was read:
         if self.debug:
             print("Done reading velocity model.")
-            print("Radius of model " + self.vMod.modelName + " is " +
-                  str(self.vMod.radiusOfEarth))
+            print("Radius of model " + self.vMod.model_name + " is " +
+                  str(self.vMod.radius_of_planet))
         # if self.debug:
         #    print("velocity mode: " + self.vMod)
         return self.vMod
 
-    def createTauModel(self, vMod):
+    def create_tau_model(self, vMod):
         """
         Create :class:`~.TauModel` from velocity model.
 
@@ -71,7 +72,7 @@ class TauP_Create(object):
         """
         if vMod is None:
             raise ValueError("vMod is None.")
-        if vMod.isSpherical is False:
+        if vMod.is_spherical is False:
             raise Exception("Flat slowness model not yet implemented.")
         SlownessModel.DEBUG = self.debug
         if self.debug:
@@ -82,7 +83,7 @@ class TauP_Create(object):
             vMod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
             self.max_range_interval * pi / 180.0, self.max_interp_error,
             self.allow_inner_core_s,
-            SlownessModel.DEFAULT_SLOWNESS_TOLERANCE)
+            _DEFAULT_VALUES["slowness_tolerance"])
         if self.debug:
             print("Parameters are:")
             print("taup.create.min_delta_p = " + str(self.sMod.minDeltaP) +
@@ -97,8 +98,8 @@ class TauP_Create(object):
                   str(self.sMod.maxInterpError) + " seconds")
             print("taup.create.allowInnerCoreS = " +
                   str(self.sMod.allowInnerCoreS))
-            print("Slow model " + " " + str(self.sMod.getNumLayers(True)) +
-                  " P layers," + str(self.sMod.getNumLayers(False)) +
+            print("Slow model " + " " + str(self.sMod.get_num_layers(True)) +
+                  " P layers," + str(self.sMod.get_num_layers(False)) +
                   " S layers")
         # if self.debug:
         #    print(self.sMod)
@@ -106,17 +107,17 @@ class TauP_Create(object):
         TauModel.DEBUG = self.debug
         SlownessModel.DEBUG = self.debug
         # Creates tau model from slownesses.
-        return TauModel(self.sMod)
+        return TauModel(self.sMod, radius_of_planet=vMod.radius_of_planet)
 
     def run(self):
         """
         Create a tau model from a velocity model.
 
         Called by :func:`build_taup_model` after :meth:`loadVMod`; calls
-        :meth:`createTauModel` and writes the result to a ``.npy`` file.
+        :meth:`create_tau_model` and writes the result to a ``.npy`` file.
         """
         try:
-            self.tMod = self.createTauModel(self.vMod)
+            self.tau_model = self.create_tau_model(self.vMod)
             # this reassigns model! Used to be TauModel() class,
             # now it's an instance of it.
             if self.debug:
@@ -125,7 +126,7 @@ class TauP_Create(object):
             dirname = os.path.dirname(self.output_filename)
             if dirname and not os.path.exists(dirname):
                 os.makedirs(dirname)
-            self.tMod.serialize(self.output_filename)
+            self.tau_model.serialize(self.output_filename)
             if self.debug:
                 print("Done Saving " + self.output_filename)
         except IOError as e:

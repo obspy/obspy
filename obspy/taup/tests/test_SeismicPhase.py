@@ -19,7 +19,7 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.depth = 119
-        self.tMod = TauModel.from_file('iasp91').depth_correct(self.depth)
+        self.tau_model = TauModel.from_file('iasp91').depth_correct(self.depth)
 
     def test_shoot_existing_ray_param(self):
         self.do_shoot_existing_ray_param_for_phase('P')
@@ -36,7 +36,7 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
         self.do_shoot_existing_ray_param_for_phase('SKIKS')
 
     def do_shoot_existing_ray_param_for_phase(self, phase_name):
-        phase = SeismicPhase(phase_name, self.tMod)
+        phase = SeismicPhase(phase_name, self.tau_model)
         for i, ray_param in enumerate(phase.ray_param):
             maxRPArrival = phase.shoot_ray(-1, ray_param)
             self.assertAlmostEqual(phase.dist[i], maxRPArrival.purist_dist,
@@ -45,7 +45,7 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
                                    delta=0.0001)
 
     def test_shoot_middle_ray_param(self):
-        phase = SeismicPhase('P', self.tMod)
+        phase = SeismicPhase('P', self.tau_model)
         for i in range(phase.ray_param.shape[0] - 1):
             rp = (phase.ray_param[i] + phase.ray_param[i + 1]) / 2
             timeTol = abs(phase.time[i] - phase.time[i + 1])
