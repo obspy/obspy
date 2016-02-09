@@ -36,7 +36,7 @@ class WrongDtypeException(Exception):
     pass
 
 
-def pack_4byte_IBM(file, data, endian='>'):
+def pack_4byte_ibm(file, data, endian='>'):
     """
     Packs 4 byte IBM floating points. This will only work if the host system
     internally uses little endian byte orders.
@@ -156,7 +156,7 @@ def pack_4byte_fixed_point(file, data, endian='>'):
     raise NotImplementedError
 
 
-def pack_4byte_IEEE(file, data, endian='>'):
+def pack_4byte_ieee(file, data, endian='>'):
     """
     Packs 4 byte IEEE floating points.
     """

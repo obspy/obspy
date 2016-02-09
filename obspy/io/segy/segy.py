@@ -791,18 +791,19 @@ def _read_segy(file, endian=None, textual_header_encoding=None,
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return __read_segy(
+            return _internal_read_segy(
                 open_file, endian=endian,
                 textual_header_encoding=textual_header_encoding,
                 unpack_headers=unpack_headers, headonly=headonly)
     # Otherwise just read it.
-    return __read_segy(file, endian=endian,
-                       textual_header_encoding=textual_header_encoding,
-                       unpack_headers=unpack_headers, headonly=headonly)
+    return _internal_read_segy(file, endian=endian,
+                               textual_header_encoding=textual_header_encoding,
+                               unpack_headers=unpack_headers,
+                               headonly=headonly)
 
 
-def __read_segy(file, endian=None, textual_header_encoding=None,
-                unpack_headers=False, headonly=False):
+def _internal_read_segy(file, endian=None, textual_header_encoding=None,
+                        unpack_headers=False, headonly=False):
     """
     Reads on open file object and returns a SEGYFile object.
 
@@ -856,7 +857,7 @@ class SUFile(object):
             Defaults to False.
         """
         if file is None:
-            self._create_empty_SU_file_object()
+            self._create_empty_su_file_object()
             return
             # Set the endianness to big.
             if endian is None:
@@ -877,13 +878,13 @@ class SUFile(object):
         """
         Tries to automatically determine the endianness of the file at hand.
         """
-        self.endian = autodetectEndianAndSanityCheckSU(self.file)
+        self.endian = autodetect_endian_and_sanity_check_su(self.file)
         if self.endian is False:
             msg = 'Autodetection of Endianness failed. Please specify it ' + \
                   'by hand or contact the developers.'
             raise Exception(msg)
 
-    def _create_empty_SU_file_object(self):
+    def _create_empty_su_file_object(self):
         """
         Creates an empty SUFile object.
         """
@@ -976,14 +977,15 @@ def _read_su(file, endian=None, unpack_headers=False, headonly=False):
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
             hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
-            return __read_su(open_file, endian=endian,
-                             unpack_headers=unpack_headers, headonly=headonly)
+            return _internal_read_su(open_file, endian=endian,
+                                     unpack_headers=unpack_headers,
+                                     headonly=headonly)
     # Otherwise just read it.
-    return __read_su(file, endian=endian, unpack_headers=unpack_headers,
-                     headonly=headonly)
+    return _internal_read_su(file, endian=endian,
+                             unpack_headers=unpack_headers, headonly=headonly)
 
 
-def __read_su(file, endian=None, unpack_headers=False, headonly=False):
+def _internal_read_su(file, endian=None, unpack_headers=False, headonly=False):
     """
     Reads on open file object and returns a SUFile object.
 
@@ -1007,7 +1009,7 @@ def __read_su(file, endian=None, unpack_headers=False, headonly=False):
                   headonly=headonly)
 
 
-def autodetectEndianAndSanityCheckSU(file):
+def autodetect_endian_and_sanity_check_su(file):
     """
     Takes an open file and tries to determine the endianness of a Seismic
     Unix data file by doing some sanity checks with the unpacked header values.

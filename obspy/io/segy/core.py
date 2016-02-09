@@ -26,9 +26,10 @@ from obspy.core.util.deprecation_helpers import \
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
-from .segy import _read_su as _read_suFile
+from .segy import _read_su as _read_su_file
 from .segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile, SEGYTrace,
-                   SEGYTraceHeader, SUFile, autodetectEndianAndSanityCheckSU)
+                   SEGYTraceHeader, SUFile,
+                   autodetect_endian_and_sanity_check_su)
 from .util import unpack_header_value
 
 
@@ -448,7 +449,7 @@ def _is_su(filename):
         Seismic Unix file.
     """
     with open(filename, 'rb') as f:
-        stat = autodetectEndianAndSanityCheckSU(f)
+        stat = autodetect_endian_and_sanity_check_su(f)
     if stat is False:
         return False
     else:
@@ -494,8 +495,8 @@ def _read_su(filename, headonly=False, byteorder=None,
     ... | 2005-12-19T15:07:54.000000Z - ... | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
-    su_object = _read_suFile(filename, endian=byteorder,
-                             unpack_headers=unpack_trace_headers)
+    su_object = _read_su_file(filename, endian=byteorder,
+                              unpack_headers=unpack_trace_headers)
 
     # Create the stream object.
     stream = Stream()
@@ -657,7 +658,7 @@ def _write_su(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     su_file.write(filename, endian=byteorder)
 
 
-def __segy_trace__str__(self, *args, **kwargs):
+def _segy_trace_str_(self, *args, **kwargs):
     """
     Monkey patch for the __str__ method of the Trace object. SEGY object do not
     have network, station, channel codes. It just prints the trace sequence
@@ -755,7 +756,7 @@ if __name__ == '__main__':
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', __segy_trace__str__)
+setattr(Trace, '__str__', _segy_trace_str_)
 
 
 # Remove once 0.11 has been released.

@@ -34,8 +34,8 @@ advantages/disadvantages. Most of the following also applies to SU files with
 some changes (keep in mind that SU files have no file wide headers).
 
 1. Using the standard :func:`~obspy.core.stream.read` function.
-2. Using the :mod:`obspy.io.segy` specific :func:`obspy.io.segy.core._read_segy`
-   function.
+2. Using the :mod:`obspy.io.segy` specific
+   :func:`obspy.io.segy.core._read_segy` function.
 3. Using the internal :func:`obspy.io.segy.segy._read_segy` function.
 
 Reading using methods 1 and 2
