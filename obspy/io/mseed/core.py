@@ -342,10 +342,15 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     alloc_data = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
+    # Collect exceptions. They cannot be raised in the callback as they
+    # could never be caught then. They are collected an raised later on.
+    _errs_and_warnings = []
+
     def log_error_or_warning(msg):
         msg = msg.decode()
         if msg.startswith("ERROR: "):
-            raise InternalMSEEDReadingError(msg[7:].strip())
+            _errs_and_warnings.append(
+                InternalMSEEDReadingError(msg[7:].strip()))
         if msg.startswith("INFO: "):
             msg = msg[6:].strip()
             # Append the offset of the full SEED header if necessary. That way
@@ -355,7 +360,8 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
                        "beginning. Make sure to add that to the reported "
                        "offset to get the actual location in the file." % (
                            msg, offset))
-            warnings.warn(msg, InternalMSEEDReadingWarning)
+            _errs_and_warnings.append((msg, InternalMSEEDReadingWarning))
+
     diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 
     def log_message(msg):
@@ -371,6 +377,11 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         bfr_np, buflen, selections, C.c_int8(unpack_data),
         reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
         alloc_data, diag_print, log_print)
+
+    for _i in _errs_and_warnings:
+        if isinstance(_i, InternalMSEEDReadingError):
+            raise _i
+        warnings.warn(*_i)
 
     # XXX: Check if the freeing works.
     del selections
