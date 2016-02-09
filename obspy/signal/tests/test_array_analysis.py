@@ -49,8 +49,8 @@ class ArrayTestCase(unittest.TestCase):
         ts2 = self.ts2
         ts3 = self.ts3
         sigmau = self.sigmau
-        Vp = self.Vp
-        Vs = self.Vs
+        vp = self.Vp
+        vs = self.Vs
 
         rotx = 0.00001 * np.exp(-1 * np.square(np.linspace(-2, 2, 1000))) * \
             np.sin(np.linspace(-30 * np.pi, 30 * np.pi, 1000))
@@ -66,7 +66,7 @@ class ArrayTestCase(unittest.TestCase):
                 ts3[t, stat] = array_coords[stat, 1] * rotx[t] - \
                     array_coords[stat, 0] * roty[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
+        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
                                     array_coords, sigmau)
 
         np.testing.assert_array_almost_equal(rotx, out['ts_w1'], decimal=12)
@@ -88,10 +88,10 @@ class ArrayTestCase(unittest.TestCase):
         ts2 = self.ts2
         ts3 = self.ts3
         sigmau = self.sigmau
-        Vp = self.Vp
-        Vs = self.Vs
+        vp = self.Vp
+        vs = self.Vs
 
-        eta = 1 - 2 * Vs ** 2 / Vp ** 2
+        eta = 1 - 2 * vs ** 2 / vp ** 2
 
         dilation = .00001 * np.exp(
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
@@ -103,7 +103,7 @@ class ArrayTestCase(unittest.TestCase):
                 ts2[t, stat] = array_coords[stat, 1] * dilation[t]
                 ts3[t, stat] = array_coords[stat, 2] * dilation[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
+        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
                                     array_coords, sigmau)
 
         # remember free surface boundary conditions!
@@ -133,8 +133,8 @@ class ArrayTestCase(unittest.TestCase):
         ts1 = self.ts1
         ts2 = self.ts2
         sigmau = self.sigmau
-        Vp = self.Vp
-        Vs = self.Vs
+        vp = self.Vp
+        vs = self.Vs
 
         shear_strainh = .00001 * np.exp(
             -1 * np.square(np.linspace(-2, 2, 1000))) * \
@@ -147,7 +147,7 @@ class ArrayTestCase(unittest.TestCase):
                 ts1[t, stat] = array_coords[stat, 1] * shear_strainh[t]
                 ts2[t, stat] = array_coords[stat, 0] * shear_strainh[t]
 
-        out = array_rotation_strain(subarray, ts1, ts2, ts3, Vp, Vs,
+        out = array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs,
                                     array_coords, sigmau)
 
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],

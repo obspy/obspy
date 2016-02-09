@@ -26,7 +26,7 @@ class RotateTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_rotate_NE_RTVsPitsa(self):
+    def test_rotate_ne_rt_vs_pitsa(self):
         """
         Test horizontal component rotation against PITSA.
         """
@@ -54,7 +54,7 @@ class RotateTestCase(unittest.TestCase):
             self.assertTrue(np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
                                         atol=1E-5))
 
-    def test_rotate_ZNE_LQTVsPitsa(self):
+    def test_rotate_zne_lqt_vs_pitsa(self):
         """
         Test LQT component rotation against PITSA. Test back-rotation.
         """
@@ -101,7 +101,7 @@ class RotateTestCase(unittest.TestCase):
             self.assertTrue(
                 np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5))
 
-    def test_rotate_NE_RT_NE(self):
+    def test_rotate_ne_rt_ne(self):
         """
         Rotating there and back with the same back-azimuth should not change
         the data.
@@ -120,7 +120,7 @@ class RotateTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
         self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
 
-    def test_rotate2ZNE_round_trip(self):
+    def test_rotate2zne_round_trip(self):
         """
         The rotate2ZNE() function has an inverse argument. Thus round
         tripping should work.

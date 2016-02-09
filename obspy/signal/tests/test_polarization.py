@@ -25,23 +25,23 @@ def _create_test_data():
     x = np.arange(0, 2048 / 20.0, 1.0 / 20.0)
     x *= 2. * np.pi
     y = np.cos(x)
-    trZ = obspy.Trace(data=y)
-    trZ.stats.sampling_rate = 20.
-    trZ.stats.starttime = obspy.UTCDateTime('2014-03-01T00:00')
-    trZ.stats.station = 'POLT'
-    trZ.stats.channel = 'HHZ'
-    trZ.stats.network = 'XX'
+    tr_z = obspy.Trace(data=y)
+    tr_z.stats.sampling_rate = 20.
+    tr_z.stats.starttime = obspy.UTCDateTime('2014-03-01T00:00')
+    tr_z.stats.station = 'POLT'
+    tr_z.stats.channel = 'HHZ'
+    tr_z.stats.network = 'XX'
 
-    trN = trZ.copy()
-    trN.data *= 2.
-    trN.stats.channel = 'HHN'
-    trE = trZ.copy()
-    trE.stats.channel = 'HHE'
+    tr_n = tr_z.copy()
+    tr_n.data *= 2.
+    tr_n.stats.channel = 'HHN'
+    tr_e = tr_z.copy()
+    tr_e.stats.channel = 'HHE'
 
     sz = obspy.Stream()
-    sz.append(trZ)
-    sz.append(trN)
-    sz.append(trE)
+    sz.append(tr_z)
+    sz.append(tr_n)
+    sz.append(tr_e)
     sz.sort(reverse=True)
 
     return sz
@@ -111,7 +111,7 @@ class PolarizationTestCase(unittest.TestCase):
                       np.sum(self.res[:, 43] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
 
-    def test_polarization1D(self):
+    def test_polarization_1d(self):
         """
         1 dimenstional input --- regression test case for bug #919
         """

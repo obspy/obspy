@@ -29,7 +29,7 @@ from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
 PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def __get_sample_data():
+def _internal_get_sample_data():
     """
     Returns some real data (trace and poles and zeroes) for PPSD testing.
 
@@ -67,7 +67,7 @@ def __get_sample_data():
     return tr, paz
 
 
-_sample_data = __get_sample_data()
+_sample_data = _internal_get_sample_data()
 
 
 def _get_sample_data():
@@ -75,7 +75,7 @@ def _get_sample_data():
     return tr.copy(), deepcopy(paz)
 
 
-def __get_ppsd():
+def _internal_get_ppsd():
     """
     Returns ready computed ppsd for testing purposes.
     """
@@ -87,7 +87,7 @@ def __get_ppsd():
     return ppsd
 
 
-_ppsd = __get_ppsd()
+_ppsd = _internal_get_ppsd()
 
 
 def _get_ppsd():
@@ -118,9 +118,9 @@ class PsdTestCase(unittest.TestCase):
         point longer. I dont know were this can come from, for now this last
         sample in the psd is ignored.
         """
-        SAMPLING_RATE = 100.0
-        NFFT = 512
-        NOVERLAP = 0
+        sampling_rate = 100.0
+        nfft = 512
+        noverlap = 0
         file_noise = os.path.join(self.path, "pitsa_noise.npy")
         fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
         file_psd_pitsa = os.path.join(self.path, fn_psd_pitsa)
@@ -130,8 +130,8 @@ class PsdTestCase(unittest.TestCase):
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
-            psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
-                               window=welch_taper, noverlap=NOVERLAP)
+            psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
+                               window=welch_taper, noverlap=noverlap)
             self.assertEqual(len(w), 1)
             self.assertTrue('This wrapper is no longer necessary.' in
                             str(w[0].message))
@@ -166,7 +166,7 @@ class PsdTestCase(unittest.TestCase):
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
-    def test_PPSD(self):
+    def test_ppsd(self):
         """
         Test PPSD routine with some real data.
         """
@@ -226,13 +226,13 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(ppsd_loaded.period_bins,
                                           binning['period_bins'])
 
-    def test_PPSD_w_IRIS(self):
+    def test_ppsd_w_iris(self):
         # Bands to be used this is the upper and lower frequency band pairs
         fres = zip([0.1, 0.05], [0.2, 0.1])
 
-        file_dataANMO = os.path.join(self.path, 'IUANMO.seed')
+        file_data_anmo = os.path.join(self.path, 'IUANMO.seed')
         # Read in ANMO data for one day
-        st = read(file_dataANMO)
+        st = read(file_data_anmo)
 
         # Use a canned ANMO response which will stay static
         paz = {'gain': 86298.5, 'zeros': [0, 0],
@@ -252,9 +252,9 @@ class PsdTestCase(unittest.TestCase):
         perinv = 1 / per
 
         # Read in the results obtained from a Mustang flat file
-        file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
+        file_data_iris = os.path.join(self.path, 'IRISpdfExample')
         data = np.genfromtxt(
-            file_dataIRIS, comments='#', delimiter=',',
+            file_data_iris, comments='#', delimiter=',',
             dtype=[(native_str("freq"), np.float64),
                    (native_str("power"), np.int32),
                    (native_str("hits"), np.int32)])
@@ -273,13 +273,11 @@ class PsdTestCase(unittest.TestCase):
 
         # For each frequency pair we want to compare the mean of the bands
         for fre in fres:
-            pervalGoodOBSPY = []
-
             # determine which bins we want to compare
             mask = (fre[0] < perinv) & (perinv < fre[1])
 
             # Get the values for the bands from the PPSD
-            pervalGoodOBSPY = perval[mask]
+            per_val_good_obspy = perval[mask]
 
             percenlist = []
             # Now we sort out all of the data from the IRIS flat file
@@ -290,10 +288,10 @@ class PsdTestCase(unittest.TestCase):
                 tempvalslist = np.repeat(power[mask_], hits[mask_])
                 percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
-            np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
+            np.testing.assert_allclose(np.mean(per_val_good_obspy),
                                        np.mean(percenlist), rtol=0.0, atol=1.2)
 
-    def test_PPSD_w_IRIS_against_obspy_results(self):
+    def test_ppsd_w_iris_against_obspy_results(self):
         """
         Test against results obtained after merging of #1108.
         """
@@ -360,7 +358,7 @@ class PsdTestCase(unittest.TestCase):
                 self.assertEqual(getattr(ppsd, key),
                                  getattr(results_full, key))
 
-    def test_PPSD_save_and_load_npz(self):
+    def test_ppsd_save_and_load_npz(self):
         """
         Test PPSD.load_npz() and PPSD.save_npz()
         """
@@ -382,7 +380,7 @@ class PsdTestCase(unittest.TestCase):
             else:
                 self.assertEqual(getattr(ppsd, key), getattr(ppsd_loaded, key))
 
-    def test_PPSD_restricted_stacks(self):
+    def test_ppsd_restricted_stacks(self):
         """
         Test PPSD.calculate_histogram() with restrictions to what data should
         be stacked. Also includes image tests.
@@ -487,7 +485,7 @@ class PsdTestCase(unittest.TestCase):
             ppsd._plot_histogram(fig=fig, draw=True)
             fig.savefig(ic.name)
 
-    def test_PPSD_add_npz(self):
+    def test_ppsd_add_npz(self):
         """
         Test PPSD.add_npz().
         """
