@@ -27,7 +27,7 @@ import numpy as np
 from obspy.core.compatibility import from_buffer
 from obspy import UTCDateTime
 
-from . import header as HD
+from . import header as HD  # noqa
 from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int
 
@@ -555,14 +555,14 @@ def validate_sac_content(hf, hi, hs, data, *tests):
     """
     # TODO: move this to util.py and write and use individual test functions,
     # so that all validity checks are in one place?
-    ALL = ('delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime')
+    _all = ('delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime')
 
     if 'all' in tests:
-        tests = ALL
+        tests = _all
 
     if not tests:
         raise ValueError("No validation tests specified.")
-    elif any([(itest not in ALL) for itest in tests]):
+    elif any([(itest not in _all) for itest in tests]):
         msg = "Unrecognized validataion test specified"
         raise ValueError(msg)
 
@@ -581,10 +581,10 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 
     if 'data_hdrs' in tests:
         try:
-            isMIN = hf[HD.FLOATHDRS.index('depmin')] == data.min()
-            isMAX = hf[HD.FLOATHDRS.index('depmax')] == data.max()
-            isMEN = hf[HD.FLOATHDRS.index('depmen')] == data.mean()
-            if not all([isMIN, isMAX, isMEN]):
+            is_min = hf[HD.FLOATHDRS.index('depmin')] == data.min()
+            is_max = hf[HD.FLOATHDRS.index('depmax')] == data.max()
+            is_mean = hf[HD.FLOATHDRS.index('depmen')] == data.mean()
+            if not all([is_min, is_max, is_mean]):
                 msg = "Data headers don't match data array."
                 raise SacInvalidContentError(msg)
         except (AttributeError, ValueError) as e:

@@ -15,7 +15,7 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core import Stats
 
-from . import header as HD
+from . import header as HD  # noqa
 
 # ------------- DATA ----------------------------------------------------------
 TWO_DIGIT_YEAR_MSG = ("SAC file with 2-digit year header field encountered. "
@@ -144,19 +144,19 @@ def is_same_byteorder(bo1, bo2):
 
     """
     # TODO: extend this as is_same_byteorder(*byteorders)
-    BE = ('b', 'big', '>')
-    LE = ('l', 'little', '<')
-    NE = ('n', 'native', '=')
-    OK = BE + LE + NE
+    be = ('b', 'big', '>')
+    le = ('l', 'little', '<')
+    ne = ('n', 'native', '=')
+    ok = be + le + ne
 
-    if (bo1.lower() not in OK) or (bo2.lower() not in OK):
+    if (bo1.lower() not in ok) or (bo2.lower() not in ok):
         raise ValueError("Unrecognized byte order string.")
 
     # make native decide what it is
-    bo1 = sys.byteorder if bo1.lower() in NE else bo1
-    bo2 = sys.byteorder if bo2.lower() in NE else bo2
+    bo1 = sys.byteorder if bo1.lower() in ne else bo1
+    bo2 = sys.byteorder if bo2.lower() in ne else bo2
 
-    return (bo1.lower() in LE) == (bo2.lower() in LE)
+    return (bo1.lower() in le) == (bo2.lower() in le)
 
 
 def _clean_str(value):
@@ -337,8 +337,8 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # ObsPy issue 1204
             # TODO: consolidate relative-time header list in header.py
             relhdrs = ['t' + str(i) for i in range(10)] + ['a', 'f']
-            NR = all([header.get(hdr) in (None, HD.SNULL) for hdr in relhdrs])
-            if header.get('iztype') == 9 and NR:
+            nr = all([header.get(hdr) in (None, HD.SNULL) for hdr in relhdrs])
+            if header.get('iztype') == 9 and nr:
                 reftime = stats['starttime']
                 nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
                 header.update(nztimes)

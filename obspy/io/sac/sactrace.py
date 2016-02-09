@@ -338,7 +338,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-from . import header as HD
+from . import header as HD  # noqa
 from .util import SacError, SacHeaderError
 from . import util as _ut
 from . import arrayio as _io
