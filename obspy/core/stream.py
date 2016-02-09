@@ -2077,12 +2077,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'lowpass_cheby_2'``
             Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
-        ``'lowpassFIR'`` (experimental)
-            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
+        ``'lowpass_fir'`` (experimental)
+            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpass_fir`).
 
-        ``'remezFIR'`` (experimental)
+        ``'remez_fir'`` (experimental)
             Minimax optimal bandpass using Remez algorithm (uses
-            :func:`obspy.signal.filter.remezFIR`).
+            :func:`obspy.signal.filter.remez_fir`).
 
         .. rubric:: Example
 
@@ -2600,13 +2600,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             the rotation is done.
         """
         if method == "NE->RT":
-            func = "rotate_NE_RT"
+            func = "rotate_ne_rt"
         elif method == "RT->NE":
-            func = "rotate_RT_NE"
+            func = "rotate_rt_ne"
         elif method == "ZNE->LQT":
-            func = "rotate_ZNE_LQT"
+            func = "rotate_zne_lqt"
         elif method == "LQT->ZNE":
-            func = "rotate_LQT_ZNE"
+            func = "rotate_lqt_zne"
         else:
             raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
                              "'ZNE->LQT', or 'LQT->ZNE').")

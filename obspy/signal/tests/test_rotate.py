@@ -13,9 +13,9 @@ import unittest
 
 import numpy as np
 
-from obspy.signal.rotate import (rotate_LQT_ZNE, rotate_NE_RT, rotate_RT_NE,
-                                 rotate_ZNE_LQT, _dip_azimuth2ZSE_base_vector,
-                                 rotate2ZNE)
+from obspy.signal.rotate import (rotate_lqt_zne, rotate_ne_rt, rotate_rt_ne,
+                                 rotate_zne_lqt, _dip_azimuth2zse_base_vector,
+                                 rotate2zne)
 
 
 class RotateTestCase(unittest.TestCase):
@@ -38,7 +38,7 @@ class RotateTestCase(unittest.TestCase):
         # test different angles, one from each sector
         for angle in [30, 115, 185, 305]:
             # rotate traces
-            datcorr_r, datcorr_t = rotate_NE_RT(data_n, data_e, angle)
+            datcorr_r, datcorr_t = rotate_ne_rt(data_n, data_e, angle)
             # load pitsa files
             with gzip.open(os.path.join(self.path,
                                         'rjob_20051006_r_%sdeg.gz' %
@@ -69,10 +69,10 @@ class RotateTestCase(unittest.TestCase):
         for ba, inci in ((60, 130), (210, 60)):
             # rotate traces
             data_l, data_q, data_t = \
-                rotate_ZNE_LQT(data_z, data_n, data_e, ba, inci)
+                rotate_zne_lqt(data_z, data_n, data_e, ba, inci)
             # rotate traces back to ZNE
             data_back_z, data_back_n, data_back_e = \
-                rotate_LQT_ZNE(data_l, data_q, data_t, ba, inci)
+                rotate_lqt_zne(data_l, data_q, data_t, ba, inci)
             # load pitsa files
             with gzip.open(os.path.join(self.path,
                                         'rjob_20051006_q_%sba_%sinc.gz' %
@@ -115,14 +115,14 @@ class RotateTestCase(unittest.TestCase):
         data_n = np.require(data_n, np.float64)
         data_e = np.require(data_e, np.float64)
         ba = 33.3
-        new_n, new_e = rotate_NE_RT(data_n, data_e, ba)
-        new_n, new_e = rotate_RT_NE(new_n, new_e, ba)
+        new_n, new_e = rotate_ne_rt(data_n, data_e, ba)
+        new_n, new_e = rotate_rt_ne(new_n, new_e, ba)
         self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
         self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
 
     def test_rotate2zne_round_trip(self):
         """
-        The rotate2ZNE() function has an inverse argument. Thus round
+        The rotate2zne() function has an inverse argument. Thus round
         tripping should work.
         """
         z = np.ones(10, dtype=np.float64)
@@ -133,9 +133,9 @@ class RotateTestCase(unittest.TestCase):
         dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
         azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
 
-        a, b, c = rotate2ZNE(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
+        a, b, c = rotate2zne(z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
-        z_new, n_new, e_new = rotate2ZNE(a, azi_1, dip_1,
+        z_new, n_new, e_new = rotate2zne(a, azi_1, dip_1,
                                          b, azi_2, dip_2,
                                          c, azi_3, dip_3,
                                          inverse=True)
@@ -146,14 +146,14 @@ class RotateTestCase(unittest.TestCase):
 
     def test_base_vector_from_azimuth_and_dip_calculation(self):
         """
-        Tests the _dip_azimuth2ZSE_base_vector() method against a solution
+        Tests the _dip_azimuth2zse_base_vector() method against a solution
         from the Wieland book.
         """
         dip = - (90.0 - np.rad2deg(np.arctan(np.sqrt(2.0))))
 
-        v1 = _dip_azimuth2ZSE_base_vector(dip, -90.0)
-        v2 = _dip_azimuth2ZSE_base_vector(dip, 30.0)
-        v3 = _dip_azimuth2ZSE_base_vector(dip, 150.0)
+        v1 = _dip_azimuth2zse_base_vector(dip, -90.0)
+        v2 = _dip_azimuth2zse_base_vector(dip, 30.0)
+        v3 = _dip_azimuth2zse_base_vector(dip, 150.0)
 
         v1_ref = np.array([np.sqrt(2.0), 0.0, -2.0]) / np.sqrt(6.0)
         v2_ref = np.array([np.sqrt(2.0), -np.sqrt(3.0), 1.0]) / np.sqrt(6.0)
@@ -174,7 +174,7 @@ class RotateTestCase(unittest.TestCase):
         v = np.array([1.0, 1.0, -1.0])
         w = np.array([1.0, -1.0, -1.0])
 
-        z, n, e = rotate2ZNE(
+        z, n, e = rotate2zne(
             u, -90, dip,
             v, 30, dip,
             w, 150, dip)

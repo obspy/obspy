@@ -140,15 +140,15 @@ def flinn(stream, noise_thres=0):
     """
     mask = (stream[0][:] ** 2 + stream[1][:] ** 2 + stream[2][:] ** 2
             ) > noise_thres
-    X = np.zeros((3, mask.sum()), dtype=np.float64)
+    x = np.zeros((3, mask.sum()), dtype=np.float64)
     # East
-    X[0, :] = stream[2][mask]
+    x[0, :] = stream[2][mask]
     # North
-    X[1, :] = stream[1][mask]
+    x[1, :] = stream[1][mask]
     # Z
-    X[2, :] = stream[0][mask]
+    x[2, :] = stream[0][mask]
 
-    covmat = np.cov(X)
+    covmat = np.cov(x)
     eigvec, eigenval, v = np.linalg.svd(covmat)
     # Rectilinearity defined after Montalbetti & Kanasewich, 1970
     rect = 1.0 - np.sqrt(eigenval[1] / eigenval[0])
@@ -183,11 +183,11 @@ def instantaneous_frequency(data, sampling_rate):
     :param sampling_rate: The sampling rate in Hz.
     :type sampling_rate: float
     """
-    X = signal.hilbert(data)
-    DX = np.gradient(X) * sampling_rate
+    x = signal.hilbert(data)
+    dx = np.gradient(x) * sampling_rate
 
-    instf = (X.real * DX.imag - X.imag * DX.real) / \
-            (2 * math.pi * (abs(X) ** 2))
+    instf = (x.real * dx.imag - x.imag * dx.real) / \
+            (2 * math.pi * (abs(x) ** 2))
 
     return instf
 
@@ -220,25 +220,25 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     :returns: list of tuples containing azimuth, incidence, rectilinearity,
         planarity, and ellipticity
     """
-    W = 3.0
+    w = 3.0
     # sort for ZNE
     stream.sort(reverse=True)
-    Z = stream[0].data
-    N = stream[1].data
-    E = stream[2].data
+    z = stream[0].data
+    n = stream[1].data
+    e = stream[2].data
 
-    Zi = instantaneous_frequency(Z, fs)
-    Za = signal.hilbert(Z)
-    Ni = instantaneous_frequency(N, fs)
-    Na = signal.hilbert(N)
-    Ei = instantaneous_frequency(E, fs)
-    Ea = signal.hilbert(E)
+    zi = instantaneous_frequency(z, fs)
+    za = signal.hilbert(z)
+    ni = instantaneous_frequency(n, fs)
+    na = signal.hilbert(n)
+    ei = instantaneous_frequency(e, fs)
+    ea = signal.hilbert(e)
     res = []
 
     offset = int(3 * fs / flow)
     covmat = np.zeros([3, 3], dtype=np.complex128)
     while True:
-        adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
+        adapt = int(3. * w * fs / (zi[offset] + ni[offset] + ei[offset]))
         # in order to account for errors in the inst freq estimation
         if adapt > int(3 * fs / flow):
             adapt = int(3 * fs / flow)
@@ -251,25 +251,25 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
         if (newstart + (adapt / 2) / fs) > etime:
             break
 
-        Zx = Za[int(spoint[2] + offset - adapt / 2):
+        zx = za[int(spoint[2] + offset - adapt / 2):
                 int(spoint[2] + offset + adapt / 2)]
-        Nx = Na[int(spoint[1] + offset - adapt / 2):
+        nx = na[int(spoint[1] + offset - adapt / 2):
                 int(spoint[1] + offset + adapt / 2)]
-        Ex = Ea[int(spoint[0] + offset - adapt / 2):
+        ex = ea[int(spoint[0] + offset - adapt / 2):
                 int(spoint[0] + offset + adapt / 2)]
-        Zx -= Zx.mean()
-        Nx -= Nx.mean()
-        Ex -= Ex.mean()
+        zx -= zx.mean()
+        nx -= nx.mean()
+        ex -= ex.mean()
 
-        covmat[0][0] = np.dot(Ex, Ex.conjugate())
-        covmat[0][1] = np.dot(Ex, Nx.conjugate())
+        covmat[0][0] = np.dot(ex, ex.conjugate())
+        covmat[0][1] = np.dot(ex, nx.conjugate())
         covmat[1][0] = covmat[0][1].conjugate()
-        covmat[0][2] = np.dot(Ex, Zx.conjugate())
+        covmat[0][2] = np.dot(ex, zx.conjugate())
         covmat[2][0] = covmat[0][2].conjugate()
-        covmat[1][1] = np.dot(Nx, Nx.conjugate())
-        covmat[1][2] = np.dot(Zx, Nx.conjugate())
+        covmat[1][1] = np.dot(nx, nx.conjugate())
+        covmat[1][2] = np.dot(zx, nx.conjugate())
         covmat[2][1] = covmat[1][2].conjugate()
-        covmat[2][2] = np.dot(Zx, Zx.conjugate())
+        covmat[2][2] = np.dot(zx, zx.conjugate())
 
         eigvec, eigenval, v = np.linalg.svd(covmat)
 
@@ -281,8 +281,8 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
                 ((eigvec[2][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2)
 
         final = fminbound(fun, 0.0, math.pi, full_output=True)
-        X = 1. - final[1]
-        ellip = math.sqrt(1.0 - X ** 2) / X
+        x = 1. - final[1]
+        ellip = math.sqrt(1.0 - x ** 2) / x
         # rectilinearity defined after Montalbetti & Kanasewich, 1970
         rect = 1. - np.sqrt(eigenval[1] / eigenval[0])
         # planarity defined after [Jurkevics1988]_
@@ -324,35 +324,35 @@ def particle_motion_odr(stream, noise_thres=0):
     :type noise_thres: float
     :returns: azimuth, incidence, error of azimuth, error of incidence
     """
-    Z = []
-    N = []
-    E = []
+    z = []
+    n = []
+    e = []
     comp, npts = np.shape(stream)
 
     for i in range(0, npts):
         if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
                 > noise_thres:
-            Z.append(stream[0][i])
-            N.append(stream[1][i])
-            E.append(stream[2][i])
+            z.append(stream[0][i])
+            n.append(stream[1][i])
+            e.append(stream[2][i])
 
     def fit_func(beta, x):
         # XXX: Eventually this is correct: return beta[0] * x + beta[1]
         return beta[0] * x
 
-    data = scipy.odr.Data(E, N)
+    data = scipy.odr.Data(e, n)
     model = scipy.odr.Model(fit_func)
     odr = scipy.odr.ODR(data, model, beta0=[1.])
     out = odr.run()
     az_slope = out.beta[0]
     az_error = out.sd_beta[0]
 
-    N = np.asarray(N)
-    E = np.asarray(E)
-    Z = np.asarray(Z)
-    R = np.sqrt(N ** 2 + E ** 2)
+    n = np.asarray(n)
+    e = np.asarray(e)
+    z = np.asarray(z)
+    r = np.sqrt(n ** 2 + e ** 2)
 
-    data = scipy.odr.Data(R, abs(Z))
+    data = scipy.odr.Data(r, abs(z))
     model = scipy.odr.Model(fit_func)
     odr = scipy.odr.ODR(data, model, beta0=[1.0])
     out = odr.run()
@@ -499,23 +499,23 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         while (newstart + (nsamp + nstep) / fs) < etime:
             try:
                 data = []
-                Z = []
-                N = []
-                E = []
+                z = []
+                n = []
+                e = []
                 for i, tr in enumerate(stream):
                     dat = tr.data[spoint[i] + offset:
                                   spoint[i] + offset + nsamp]
                     dat = (dat - dat.mean()) * tap
                     if "Z" in tr.stats.channel:
-                        Z = dat.copy()
+                        z = dat.copy()
                     if "N" in tr.stats.channel:
-                        N = dat.copy()
+                        n = dat.copy()
                     if "E" in tr.stats.channel:
-                        E = dat.copy()
+                        e = dat.copy()
 
-                data.append(Z)
-                data.append(N)
-                data.append(E)
+                data.append(z)
+                data.append(n)
+                data.append(e)
             except IndexError:
                 break
 

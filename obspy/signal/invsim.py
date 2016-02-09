@@ -35,7 +35,7 @@ import scipy.signal
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import deprecated
 from obspy.signal import util
-from obspy.signal.detrend import simple as simpleDetrend
+from obspy.signal.detrend import simple as simple_detrend
 from obspy.signal.headers import clibevresp
 from obspy.signal.util import _npts2nfft
 
@@ -49,7 +49,7 @@ WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
 
 
 @deprecated("'cosTaper' has been renamed to 'cosine_taper'. Use that instead.")
-def cosTaper(*args, **kwargs):
+def cosTaper(*args, **kwargs):  # noqa
     return cosine_taper(*args, **kwargs)
 
 
@@ -309,7 +309,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
 
 
 @deprecated("'cornFreq2Paz' has been renamed to 'corn_freq_2_paz'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def cornFreq2Paz(*args, **kwargs):
     return corn_freq_2_paz(*args, **kwargs)
 
@@ -329,7 +329,7 @@ def corn_freq_2_paz(fc, damp=0.707):
 
 
 @deprecated("'pazToFreqResp' has been renamed to 'paz_to_freq_resp'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def pazToFreqResp(*args, **kwargs):
     return paz_to_freq_resp(*args, **kwargs)
 
@@ -391,7 +391,7 @@ def waterlevel(spec, wlev):
 
 
 @deprecated("'specInv' has been renamed to 'invert_spectrum'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def specInv(*args, **kwargs):
     return invert_spectrum(*args, **kwargs)
 
@@ -426,7 +426,7 @@ def invert_spectrum(spec, wlev):
 
 
 @deprecated("'seisSim' has been renamed to 'simulate_seismometer'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def seisSim(*args, **kwargs):
     return simulate_seismometer(*args, **kwargs)
 
@@ -599,7 +599,7 @@ def simulate_seismometer(
     data = np.fft.irfft(data)[0:ndat]
     if pitsasim:
         # linear detrend
-        data = simpleDetrend(data)
+        data = simple_detrend(data)
     if shsim:
         # detrend using least squares
         data = scipy.signal.detrend(data, type="linear")
@@ -612,7 +612,7 @@ def simulate_seismometer(
 
 
 @deprecated("'paz2AmpValueOfFreqResp' has been renamed to "
-            "'paz_2_amplitude_value_of_freq_resp'. Use that instead.")
+            "'paz_2_amplitude_value_of_freq_resp'. Use that instead.")  # noqa
 def paz2AmpValueOfFreqResp(*args, **kwargs):
     return paz_2_amplitude_value_of_freq_resp(*args, **kwargs)
 
@@ -646,7 +646,7 @@ def paz_2_amplitude_value_of_freq_resp(paz, freq):
 
 
 @deprecated("'estimateMagnitude' has been renamed to "
-            "'estimate_magnitude'. Use that instead.")
+            "'estimate_magnitude'. Use that instead.")  # noqa
 def estimateMagnitude(*args, **kwargs):
     return estimate_magnitude(*args, **kwargs)
 
@@ -705,7 +705,7 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
 
 
 @deprecated("'estimateWoodAndersonAmplitude' has been renamed to "
-            "'estimate_wood_anderson_amplitude'. Use that instead.")
+            "'estimate_wood_anderson_amplitude'. Use that instead.")  # noqa
 def estimateWoodAndersonAmplitude(*args, **kwargs):
     return estimate_wood_anderson_amplitude(*args, **kwargs)
 
