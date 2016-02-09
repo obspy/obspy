@@ -36,7 +36,7 @@ except:
     NO_NEGATIVE_TIMESTAMPS = True
 
 
-def _testFunction(filename):
+def _test_function(filename):
     """
     Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
     """
@@ -59,7 +59,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         else:
             self.swap = 0
 
-    def test_invalidRecordLength(self):
+    def test_invalid_record_length(self):
         """
         An invalid record length should raise an exception.
         """
@@ -80,7 +80,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", reclen='A')
 
-    def test_invalidEncoding(self):
+    def test_invalid_encoding(self):
         """
         An invalid encoding should raise an exception.
         """
@@ -98,31 +98,31 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertRaises(ValueError, _write_mseed, st, tempfile,
                               format="MSEED", encoding='FLOAT_64')
 
-    def test_ctypesArgtypes(self):
+    def test_ctypes_arg_types(self):
         """
         Test that ctypes argtypes are set for type checking
         """
-        ArgumentError = C.ArgumentError
+        argument_error = C.ArgumentError
         cl = clibmseed
         args = [C.pointer(C.pointer(C.c_int())), 'a', 1, 1.5, 1, 0, 0, 0, 0]
-        self.assertRaises(ArgumentError, cl.ms_readtraces, *args)
+        self.assertRaises(argument_error, cl.ms_readtraces, *args)
         self.assertRaises(TypeError, cl.ms_readtraces, *args[:-1])
-        self.assertRaises(ArgumentError, cl.ms_readmsr_r, *args)
+        self.assertRaises(argument_error, cl.ms_readmsr_r, *args)
         self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
-        self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
-        self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
+        self.assertRaises(argument_error, cl.mst_printtracelist, *args[:5])
+        self.assertRaises(argument_error, cl.ms_detect, *args[:4])
         args.append(1)  # 10 argument function
-        self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
+        self.assertRaises(argument_error, cl.mst_packgroup, *args)
         args = ['hallo']  # one argument functions
-        self.assertRaises(ArgumentError, cl.msr_starttime, *args)
-        self.assertRaises(ArgumentError, cl.msr_endtime, *args)
-        self.assertRaises(ArgumentError, cl.mst_init, *args)
-        self.assertRaises(ArgumentError, cl.mst_free, *args)
-        self.assertRaises(ArgumentError, cl.mst_initgroup, *args)
-        self.assertRaises(ArgumentError, cl.mst_freegroup, *args)
-        self.assertRaises(ArgumentError, cl.msr_init, *args)
+        self.assertRaises(argument_error, cl.msr_starttime, *args)
+        self.assertRaises(argument_error, cl.msr_endtime, *args)
+        self.assertRaises(argument_error, cl.mst_init, *args)
+        self.assertRaises(argument_error, cl.mst_free, *args)
+        self.assertRaises(argument_error, cl.mst_initgroup, *args)
+        self.assertRaises(argument_error, cl.mst_freegroup, *args)
+        self.assertRaises(argument_error, cl.msr_init, *args)
 
-    def test_brokenLastRecord(self):
+    def test_broken_last_record(self):
         """
         Test if Libmseed is able to read files with broken last record. Use
         both methods, readMSTracesViaRecords and readMSTraces
@@ -137,7 +137,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         data_record = _read_mseed(file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
-    def test_oneSampleOverlap(self):
+    def test_one_sample_overlap(self):
         """
         Both methods readMSTraces and readMSTracesViaRecords should recognize a
         single sample overlap.
@@ -155,7 +155,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             new_stream = _read_mseed(tempfile)
             self.assertEqual(len(new_stream), 2)
 
-    def test_bugWriteReadFloat32SEEDWin32(self):
+    def test_bug_write_read_float32_seed_win32(self):
         """
         Test case for issue #64.
         """
@@ -182,7 +182,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
     @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS,
                      'times before 1970 are not supported on this operation '
                      'system')
-    def test_writeWithDateTimeBefore1970(self):
+    def test_write_with_date_time_before_1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
 
@@ -200,7 +200,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             stream = _read_mseed(tempfile)
             stream.verify()
 
-    def test_invalidDataType(self):
+    def test_invalid_data_type(self):
         """
         Writing data of type int64 and int16 are not supported.
         """
@@ -217,7 +217,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             st = Stream([Trace(data=data)])
             self.assertRaises(Exception, st.write, tempfile, format="MSEED")
 
-    def test_writeWrongEncoding(self):
+    def test_write_wrong_encoding(self):
         """
         Test to write a floating point mseed file with encoding STEIM1.
         An exception should be raised.
@@ -234,7 +234,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertRaises(Exception, st.write, tempfile, format="MSEED",
                               encoding=10)
 
-    def test_writeWrongEncodingViaMseedStats(self):
+    def test_write_wrong_encoding_via_mseed_stats(self):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
         encoding set in stats.mseed.encoding.
@@ -255,7 +255,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 self.assertRaises(UserWarning, st.write, tempfile,
                                   format="MSEED")
 
-    def test_wrongRecordLengthAsArgument(self):
+    def test_wrong_record_length_as_argument(self):
         """
         Specifying a wrong record length should raise an error.
         """
@@ -263,7 +263,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
 
-    def test_read_qualityInformationWarns(self):
+    def test_read_quality_information_warns(self):
         """
         Reading the quality information while reading the data files is no more
         supported in newer obspy.io.mseed versions. Check that a warning is
@@ -279,7 +279,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertRaises(ObsPyDeprecationWarning, read, timingqual,
                               quality=True)
 
-    def test_readWithMissingBlockette010(self):
+    def test_read_with_missing_blockette010(self):
         """
         Reading a Full/Mini-SEED w/o blockette 010 but blockette 008.
         """
@@ -674,7 +674,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
 
-        process = multiprocessing.Process(target=_testFunction,
+        process = multiprocessing.Process(target=_test_function,
                                           args=(filename, ))
         process.start()
         process.join(60)
