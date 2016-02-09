@@ -29,7 +29,7 @@ from obspy import UTCDateTime
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 
-from .libgse2 import uncompress_CM6, verify_checksum
+from .libgse2 import uncompress_cm6, verify_checksum
 
 
 def read(fh, verify_chksum=True):
@@ -53,7 +53,7 @@ def read(fh, verify_chksum=True):
     header = read_header(fh)
     dtype = header['gse1']['datatype']
     if dtype == 'CMP6':
-        data = uncompress_CM6(fh, header['npts'])
+        data = uncompress_cm6(fh, header['npts'])
     elif dtype == 'INTV':
         data = read_integer_data(fh, header['npts'])
     else:
