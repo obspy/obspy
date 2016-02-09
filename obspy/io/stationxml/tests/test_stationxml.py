@@ -162,9 +162,9 @@ class StationXMLTestCase(unittest.TestCase):
             "<Module>")][0]
         self.assertTrue(fnmatch.fnmatch(module_line,
                                         "<Module>ObsPy *</Module>"))
-        module_URI_line = [_i.strip() for _i in lines if _i.strip().startswith(
+        module_uri_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<ModuleURI>")][0]
-        self.assertEqual(module_URI_line,
+        self.assertEqual(module_uri_line,
                          "<ModuleURI>https://www.obspy.org</ModuleURI>")
 
     def test_reading_other_module_tags(self):

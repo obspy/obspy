@@ -91,7 +91,7 @@ def _is_stationxml(path_or_file_object):
             pass
 
 
-def validate_StationXML(path_or_object):
+def validate_stationxml(path_or_object):
     """
     Checks if the given path is a valid StationXML file.
 
@@ -417,11 +417,11 @@ def _read_response_stage(stage_elem, _ns):
     poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
     coefficients_elem = stage_elem.find(_ns("Coefficients"))
     response_list_elem = stage_elem.find(_ns("ResponseList"))
-    FIR_elem = stage_elem.find(_ns("FIR"))
+    fir_elem = stage_elem.find(_ns("FIR"))
     polynomial_elem = stage_elem.find(_ns("Polynomial"))
 
     type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
-                  FIR_elem, polynomial_elem]
+                  fir_elem, polynomial_elem]
 
     # iterate and check for an response element and create alias
     for elem in type_elems:
@@ -545,7 +545,7 @@ def _read_response_stage(stage_elem, _ns):
             response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
-    elif elem is FIR_elem:
+    elif elem is fir_elem:
         symmetry = _tag2obj(elem, _ns("Symmetry"), str)
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
@@ -588,7 +588,7 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
         _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
     sensitivity.frequency_range_end = \
         _tag2obj(sensitivity_element, _ns("FrequencyEnd"), float)
-    sensitivity.frequency_range_DB_variation = \
+    sensitivity.frequency_range_db_variation = \
         _tag2obj(sensitivity_element, _ns("FrequencyDBVariation"), float)
     return sensitivity
 
@@ -797,7 +797,7 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         buf = io.BytesIO()
         tree.write(buf)
         buf.seek(0)
-        validates, errors = validate_StationXML(buf)
+        validates, errors = validate_stationxml(buf)
         buf.close()
         if validates is False:
             msg = "The created file fails to validate.\n"
@@ -1082,7 +1082,7 @@ def _write_response(parent, resp):
             etree.SubElement(sub, "FrequencyEnd").text = \
                 _float_to_str(ins_sens.frequency_range_end)
             etree.SubElement(sub, "FrequencyDBVariation").text = \
-                _float_to_str(ins_sens.frequency_range_DB_variation)
+                _float_to_str(ins_sens.frequency_range_db_variation)
         # frequency range group not present
         elif not any(freq_range_group):
             pass
@@ -1319,7 +1319,7 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     function_map={
         'is_StationXML': 'obspy.io.stationxml.core._is_stationxml',
         'read_StationXML': 'obspy.io.stationxml.core._read_stationxml',
-        'validate_StationXML': 'obspy.io.stationxml.core.validate_StationXML',
+        'validate_StationXML': 'obspy.io.stationxml.core.validate_stationxml',
         'write_StationXML': 'obspy.io.stationxml.core._write_stationxml'})
 
 
