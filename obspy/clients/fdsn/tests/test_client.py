@@ -21,7 +21,7 @@ import unittest
 import warnings
 from difflib import Differ
 
-from obspy import UTCDateTime, read, read_inventory, read_events
+from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client

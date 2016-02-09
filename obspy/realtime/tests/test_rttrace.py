@@ -16,7 +16,7 @@ from obspy import Trace
 from obspy.core.stream import read
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
-from obspy.signal import filter as obspy_filter
+import obspy.signal.filter
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -156,8 +156,8 @@ class RtTraceTestCase(unittest.TestCase):
         rtr.register_rt_process('integrate', test=1, muh='maeh')
         rtr.copy()
         # register ObsPy function call
-        rtr.register_rt_process(obspy_filter.bandpass, freqmin=0, freqmax=1,
-                                df=0.1)
+        rtr.register_rt_process(obspy.signal.filter.bandpass, freqmin=0,
+                                freqmax=1, df=0.1)
         rtr.copy()
         # register NumPy function call
         rtr.register_rt_process(np.square)
