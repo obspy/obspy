@@ -213,9 +213,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.sac.core:_write_sac',
         ],
     'obspy.plugin.waveform.SACXY': [
-        'isFormat = obspy.io.sac.core:_is_sacXY',
-        'readFormat = obspy.io.sac.core:_read_sacXY',
-        'writeFormat = obspy.io.sac.core:_write_sacXY',
+        'isFormat = obspy.io.sac.core:_is_sac_xy',
+        'readFormat = obspy.io.sac.core:_read_sac_xy',
+        'writeFormat = obspy.io.sac.core:_write_sac_xy',
         ],
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.io.seg2.seg2:_is_seg2',
