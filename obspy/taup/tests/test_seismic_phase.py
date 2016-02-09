@@ -38,26 +38,26 @@ class TauPySeismicPhaseTestCase(unittest.TestCase):
     def do_shoot_existing_ray_param_for_phase(self, phase_name):
         phase = SeismicPhase(phase_name, self.tau_model)
         for i, ray_param in enumerate(phase.ray_param):
-            maxRPArrival = phase.shoot_ray(-1, ray_param)
-            self.assertAlmostEqual(phase.dist[i], maxRPArrival.purist_dist,
+            max_rp_arrival = phase.shoot_ray(-1, ray_param)
+            self.assertAlmostEqual(phase.dist[i], max_rp_arrival.purist_dist,
                                    delta=0.0001)
-            self.assertAlmostEqual(phase.time[i], maxRPArrival.time,
+            self.assertAlmostEqual(phase.time[i], max_rp_arrival.time,
                                    delta=0.0001)
 
     def test_shoot_middle_ray_param(self):
         phase = SeismicPhase('P', self.tau_model)
         for i in range(phase.ray_param.shape[0] - 1):
             rp = (phase.ray_param[i] + phase.ray_param[i + 1]) / 2
-            timeTol = abs(phase.time[i] - phase.time[i + 1])
-            maxRPArrival = phase.shoot_ray(-1, rp)
-            self.assertAlmostEqual(phase.dist[i], maxRPArrival.purist_dist,
+            time_tol = abs(phase.time[i] - phase.time[i + 1])
+            max_rp_arrival = phase.shoot_ray(-1, rp)
+            self.assertAlmostEqual(phase.dist[i], max_rp_arrival.purist_dist,
                                    delta=0.1)
-            self.assertAlmostEqual(phase.time[i], maxRPArrival.time,
-                                   delta=timeTol)
-            self.assertAlmostEqual(phase.dist[i + 1], maxRPArrival.purist_dist,
-                                   delta=0.1)
-            self.assertAlmostEqual(phase.time[i + 1], maxRPArrival.time,
-                                   delta=timeTol)
+            self.assertAlmostEqual(phase.time[i], max_rp_arrival.time,
+                                   delta=time_tol)
+            self.assertAlmostEqual(phase.dist[i + 1],
+                                   max_rp_arrival.purist_dist, delta=0.1)
+            self.assertAlmostEqual(phase.time[i + 1], max_rp_arrival.time,
+                                   delta=time_tol)
 
 
 def suite():

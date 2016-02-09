@@ -20,7 +20,7 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_getTravelTimesAK135(self):
+    def test_get_travel_times_ak135(self):
         """
         Tests getTravelTimes method using model ak135.
         """
@@ -59,7 +59,7 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['take-off angle'], float(parts[2]), 0)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3]), 1)
 
-    def test_getTravelTimesIASP91(self):
+    def test_get_travel_times_iasp_91(self):
         """
         Tests getTravelTimes method using model iasp91.
         """

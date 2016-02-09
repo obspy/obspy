@@ -15,7 +15,7 @@ from obspy.taup.velocity_layer import VelocityLayer
 
 
 class TauPySlownessModelTestCase(unittest.TestCase):
-    def test_slownesslayer(self):
+    def test_slowness_layer(self):
         v_layer = np.array([(10, 31, 3, 5, 2, 4,
                             _DEFAULT_VALUES["density"],
                             _DEFAULT_VALUES["density"],
@@ -23,7 +23,7 @@ class TauPySlownessModelTestCase(unittest.TestCase):
                             _DEFAULT_VALUES["qp"],
                             _DEFAULT_VALUES["qs"],
                             _DEFAULT_VALUES["qs"])],
-                          dtype=VelocityLayer)
+                           dtype=VelocityLayer)
         a = create_from_vlayer(v_layer, True, radius_of_planet=6371.0)
         self.assertEqual(a['bot_p'], 1268.0)
         self.assertEqual(a['bot_depth'], 31.0)
@@ -31,7 +31,7 @@ class TauPySlownessModelTestCase(unittest.TestCase):
         self.assertEqual(b['top_p'], 3180.5)
 
 
-class bullen_depth_forTestCase(unittest.TestCase):
+class BullenDepthForTestCase(unittest.TestCase):
     def test_overflow(self):
         sl = np.array([(2548.4, 6.546970605878823, 1846.2459389213773,
                         13.798727310994103)], dtype=SlownessLayer)
@@ -45,7 +45,7 @@ class bullen_depth_forTestCase(unittest.TestCase):
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TauPySlownessModelTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(bullen_depth_forTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(BullenDepthForTestCase, 'test'))
     return suite
 
 

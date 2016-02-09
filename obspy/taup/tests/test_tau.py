@@ -686,39 +686,39 @@ class TauPyModelTestCase(unittest.TestCase):
             self.assertTrue(abs(arr.ray_param_sec_degree -
                                 value["ray_param"]) < 0.11)
 
-    def test_kennet_ak135_ttime_tables_P_deep(self):
+    def test_kennet_ak135_ttime_tables_p_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_deep.txt", phases=["p", "Pdiff", "P"])
 
-    def test_kennet_ak135_ttime_tables_P_shallow(self):
+    def test_kennet_ak135_ttime_tables_p_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_shallow.txt", phases=["p", "Pdiff", "P"])
 
-    def test_kennet_ak135_ttime_tables_PcP(self):
+    def test_kennet_ak135_ttime_tables_pcp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PcP.txt", phases=["PcP"])
 
-    def test_kennet_ak135_ttime_tables_PKIKP(self):
+    def test_kennet_ak135_ttime_tables_pkikp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PKIKP.txt", phases=["PKIKP"])
 
-    def test_kennet_ak135_ttime_tables_S_deep(self):
+    def test_kennet_ak135_ttime_tables_s_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_deep.txt", phases=["s", "S", "Sdiff"])
 
-    def test_kennet_ak135_ttime_tables_S_shallow(self):
+    def test_kennet_ak135_ttime_tables_s_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_shallow.txt", phases=["s", "S", "Sdiff"])
 
-    def test_kennet_ak135_ttime_tables_ScP(self):
+    def test_kennet_ak135_ttime_tables_scp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_ScP.txt", phases=["ScP"])
 
-    def test_kennet_ak135_ttime_tables_ScS(self):
+    def test_kennet_ak135_ttime_tables_scs(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_ScS.txt", phases=["ScS"])
 
-    def test_javaPnPs(self):
+    def test_java_pnps(self):
         """
         Test for Pn Ps waves bug, 53797854298c6ee9dcbf3398bbec3bdd12def964
 
