@@ -23,7 +23,7 @@ class TauPPierce(TauPTime):
         self.only_rev_points = False
         self.only_under_points = False
         self.only_add_points = False
-        self.addDepth = []
+        self.add_depth = []
 
     def depth_correct(self, depth, receiver_depth=None):
         """
@@ -34,14 +34,14 @@ class TauPPierce(TauPTime):
         must_recalc = False
         # First check if depth_corrected_model is correct as it is. Check to
         # make sure source depth is the same, and then check to make sure
-        # each addDepth is in the model.
+        # each add_depth is in the model.
         if self.depth_corrected_model.source_depth == depth:
-            if self.addDepth:
+            if self.add_depth:
                 branch_depths = self.depth_corrected_model.getBranchDepths()
-                for add_depth in self.addDepth:
+                for add_depth in self.add_depth:
                     for branch_depth in branch_depths:
                         if add_depth == branch_depth:
-                            # Found it, so break and go to the next addDepth.
+                            # Found it, so break and go to the next add_depth.
                             break
                         # Didn't find the depth as a branch, so must
                         # recalculate.
@@ -57,8 +57,8 @@ class TauPPierce(TauPTime):
             TauPTime.depth_correct(self, depth, receiver_depth)
         else:
             self.depth_corrected_model = None
-            if self.addDepth is not None:
-                for add_depth in self.addDepth:
+            if self.add_depth is not None:
+                for add_depth in self.add_depth:
                     self.model = self.model.split_branch(add_depth)
             TauPTime.depth_correct(self, depth, receiver_depth)
             self.model = orig_tau_model

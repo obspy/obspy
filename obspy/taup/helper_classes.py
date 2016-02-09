@@ -101,7 +101,7 @@ class DepthRange:
 
 SplitLayerInfo = namedtuple(
     'SplitLayerInfo',
-    ['s_mod', 'neededSplit', 'movedSample', 'ray_param']
+    ['s_mod', 'needed_split', 'moved_sample', 'ray_param']
 )
 
 
