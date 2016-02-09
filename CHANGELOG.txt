@@ -170,7 +170,7 @@ master:
       (see #1102).
     * Updated to libmseed 2.17.
   - obspy.signal:
-    * Bug fixed within rotate.rotate2ZNE(). Additionally it can now also
+    * Bug fixed within rotate.rotate2zne(). Additionally it can now also
       perform the inverse rotation (see #1061).
     * Bug fixed in triggering. When using option `max_len_delete` and a trigger
       occurred right before the end of data, one trigger was potentially lost

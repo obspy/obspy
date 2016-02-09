@@ -40,7 +40,7 @@ from obspy import UTCDateTime
 from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
-from obspy.signal.cross_correlation import templatesMaxSimilarity
+from obspy.signal.cross_correlation import templates_max_similarity
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 
@@ -707,7 +707,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         templates = event_templates.get(sta)
         if templates:
             event['similarity'][sta] = \
-                templatesMaxSimilarity(stream, event['time'], templates)
+                templates_max_similarity(stream, event['time'], templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
@@ -734,7 +734,7 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
             templates = event_templates.get(tmp_sta)
             if templates:
                 event['similarity'][tmp_sta] = \
-                    templatesMaxSimilarity(stream, event['time'], templates)
+                    templates_max_similarity(stream, event['time'], templates)
         # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:

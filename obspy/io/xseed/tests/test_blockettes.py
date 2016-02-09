@@ -136,9 +136,9 @@ class BlocketteTestCase(unittest.TestCase):
             versions = {}
             # prepare SEED
             versions['SEED'] = {}
-            versions['SEED']['blkt'] = blkt()
+            versions['SEED']['Blkt'] = blkt()
             versions['SEED']['data'] = example['SEED']
-            versions['SEED']['blkt'].parse_SEED(example['SEED'])
+            versions['SEED']['Blkt'].parse_SEED(example['SEED'])
 
             # prepare XSEED
             for key, data in example.items():
@@ -148,21 +148,21 @@ class BlocketteTestCase(unittest.TestCase):
                     key = ''
                 versions[key] = {}
                 versions[key]['version'] = key[6:]
-                versions[key]['blkt'] = blkt(xseed_version=key[6:])
-                versions[key]['blkt'].parse_XML(etree.fromstring(data))
+                versions[key]['Blkt'] = blkt(xseed_version=key[6:])
+                versions[key]['Blkt'].parse_XML(etree.fromstring(data))
                 versions[key]['data'] = data
             # loop over all combinations
             errmsg = 'Blockette %s - Getting %s from %s\n%s\n!=\n%s'
             for key1, blkt1 in versions.items():
                 # conversion to SEED
-                seed = blkt1['blkt'].get_SEED()
+                seed = blkt1['Blkt'].get_SEED()
                 self.assertEqual(seed, versions['SEED']['data'],
                                  errmsg % (blkt_number, 'SEED', key1,
                                            seed, versions['SEED']['data']))
                 for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
-                    xseed = etree.tostring(blkt1['blkt'].get_XML(
+                    xseed = etree.tostring(blkt1['Blkt'].get_XML(
                         xseed_version=blkt2['version'])).decode()
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,

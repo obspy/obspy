@@ -234,18 +234,18 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
             'obspy.signal.konnoohmachismoothing.konno_ohmachi_smoothing',
         'logcep': 'obspy.signal.freqattributes.log_cepstrum',
         'lowpass': 'obspy.signal.filter.lowpass',
-        'lowpassFIR': 'obspy.signal.filter.lowpassFIR',
+        'lowpass_fir': 'obspy.signal.filter.lowpass_fir',
         'normEnvelope': 'obspy.signal.cpxtrace.normalized_envelope',
         'pazToFreqResp': 'obspy.signal.invsim.paz_to_freq_resp',
         'pkBaer': 'obspy.signal.trigger.pk_baer',
         'psd': 'obspy.signal.spectral_estimation.psd',
         'recSTALTA': 'obspy.signal.trigger.recursive_sta_lta',
         'recSTALTAPy': 'obspy.signal.trigger.recursive_sta_lta_py',
-        'remezFIR': 'obspy.signal.filter.remezFIR',
-        'rotate_LQT_ZNE': 'obspy.signal.rotate.rotate_LQT_ZNE',
-        'rotate_NE_RT': 'obspy.signal.rotate.rotate_NE_RT',
-        'rotate_RT_NE': 'obspy.signal.rotate.rotate_RT_NE',
-        'rotate_ZNE_LQT': 'obspy.signal.rotate.rotate_ZNE_LQT',
+        'remez_fir': 'obspy.signal.filter.remez_fir',
+        'rotate_lqt_zne': 'obspy.signal.rotate.rotate_lqt_zne',
+        'rotate_ne_rt': 'obspy.signal.rotate.rotate_ne_rt',
+        'rotate_rt_ne': 'obspy.signal.rotate.rotate_rt_ne',
+        'rotate_zne_lqt': 'obspy.signal.rotate.rotate_zne_lqt',
         'seisSim': 'obspy.signal.invsim.simulate_seismometer',
         'sonogram': 'obspy.signal.hoctavbands.sonogram',
         'specInv': 'obspy.signal.invsim.invert_spectrum',
@@ -255,7 +255,7 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'xcorr': 'obspy.signal.cross_correlation.xcorr',
         'xcorrPickCorrection':
             'obspy.signal.cross_correlation.xcorr_pick_correction',
-        'xcorr_3C': 'obspy.signal.cross_correlation.xcorr_3C',
+        'xcorr_3c': 'obspy.signal.cross_correlation.xcorr_3c',
         'zDetect': 'obspy.signal.trigger.z_detect'})
 
 

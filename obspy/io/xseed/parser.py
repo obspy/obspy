@@ -1232,7 +1232,7 @@ class Parser(object):
             components, all the same length and timespan. Furthermore all
             components need to be described in the Parser object.
         """
-        from obspy.signal.rotate import rotate2ZNE
+        from obspy.signal.rotate import rotate2zne
 
         if len(stream) != 3:
             msg = "Stream needs to have three components."
@@ -1266,7 +1266,7 @@ class Parser(object):
             all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
                                   azimuth, dip])
         # Now rotate all three traces.
-        z, n, e = rotate2ZNE(*all_arguments)
+        z, n, e = rotate2zne(*all_arguments)
 
         # Assemble a new Stream object.
         common_header = {

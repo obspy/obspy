@@ -380,8 +380,8 @@ ENTRY_POINTS = {
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
         'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
-        'lowpassFIR = obspy.signal.filter:lowpass_FIR',
-        'remezFIR = obspy.signal.filter:remez_FIR',
+        'lowpass_fir = obspy.signal.filter:lowpass_FIR',
+        'remez_fir = obspy.signal.filter:remez_FIR',
         ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
@@ -390,10 +390,10 @@ ENTRY_POINTS = {
         'lanczos = obspy.signal.interpolation:lanczos_interpolation'
         ],
     'obspy.plugin.rotate': [
-        'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
-        'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
+        'rotate_ne_rt = obspy.signal.rotate:rotate_ne_rt',
+        'rotate_rt_ne = obspy.signal.rotate:rotate_rt_ne',
+        'rotate_zne_lqt = obspy.signal.rotate:rotate_zne_lqt',
+        'rotate_lqt_zne = obspy.signal.rotate:rotate_lqt_zne'
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',

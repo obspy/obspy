@@ -33,7 +33,7 @@
        ~spectral_estimation.PPSD
        ~spectral_estimation.psd
        ~trigger.recursive_sta_lta
-       ~rotate.rotate_NE_RT
+       ~rotate.rotate_ne_rt
        ~invsim.simulate_seismometer
        ~util.util_geo_km
        ~util.util_lon_lat

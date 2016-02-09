@@ -1407,12 +1407,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'lowpass_cheby_2'``
             Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
-        ``'lowpassFIR'`` (experimental)
-            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
+        ``'lowpass_fir'`` (experimental)
+            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpass_fir`).
 
-        ``'remezFIR'`` (experimental)
+        ``'remez_fir'`` (experimental)
             Minimax optimal bandpass using Remez algorithm (uses
-            :func:`obspy.signal.filter.remezFIR`).
+            :func:`obspy.signal.filter.remez_fir`).
 
         .. rubric:: Example
 

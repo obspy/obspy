@@ -158,7 +158,7 @@ CHALEN = 64
 LOCIDLEN = 64
 
 
-class C_COMPLEX(C.Structure):
+class C_COMPLEX(C.Structure):  # noqa
     _fields_ = [("real", C.c_double),
                 ("imag", C.c_double)]
 

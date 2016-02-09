@@ -210,7 +210,7 @@ def envelope(data):
     return data
 
 
-def remezFIR(data, freqmin, freqmax, df):
+def remez_fir(data, freqmin, freqmax, df):
     """
     The minimax optimal bandpass using Remez algorithm. (experimental)
 
@@ -283,7 +283,7 @@ def remezFIR(data, freqmin, freqmax, df):
     return convolve(filt, data)
 
 
-def lowpassFIR(data, freq, df, winlen=2048):
+def lowpass_fir(data, freq, df, winlen=2048):
     """
     FIR-Lowpass Filter. (experimental)
 
