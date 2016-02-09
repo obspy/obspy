@@ -77,7 +77,7 @@ def utf_8_encoder(unicode_csv_data):
             yield line.encode('utf-8')
 
 
-def is_FDSN_station_text_file(path_or_file_object):
+def is_fdsn_station_text_file(path_or_file_object):
     """
     Simple function checking if the passed object contains a valid FDSN
     station text file.
@@ -123,7 +123,7 @@ def is_FDSN_station_text_file(path_or_file_object):
     return False
 
 
-def read_FDSN_station_text_file(path_or_file_object):
+def read_fdsn_station_text_file(path_or_file_object):
     """
     Function reading a FDSN station text file to an inventory object.
 
