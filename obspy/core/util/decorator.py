@@ -13,7 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import functools
 import inspect
 import os
 import re
@@ -24,7 +23,7 @@ import warnings
 import zipfile
 
 import numpy as np
-from decorator import decorator
+from decorator import decorator, decorate
 
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
@@ -56,56 +55,53 @@ def deprecated(warning_msg=None):
 
 
 def deprecated_keywords(keywords):
-    """
-    Decorator for marking keywords as deprecated.
-
-    .. note::
-        Actually, this is not a decorator itself but a decorator factory,
-        returning the correct decorator for the specified options. It can be
-        used just like a decorator.
-
-    :type keywords: dict
-    :param keywords: old/new keyword names as key/value pairs.
-    """
-    def fdec(func):
-        fname = func.__name__
+    def _dec(func, *args, **kwargs):
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
         msg2 = "Deprecated keyword %s in %s() call - ignoring."
         msg3 = ("Conflicting deprecated keywords (%s) in %s() call"
                 " - please use new '%s' keyword instead.")
 
-        @functools.wraps(func)
-        def echo_func(*args, **kwargs):
-            # check if multiple deprecated keywords get mapped to the same new
-            # keyword
-            new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
-            for key, new_key in keywords.items():
-                if key in kwargs:
-                    new_keyword_appearance_counts[new_key] += 1
-            for key_ in keywords.values():
-                if new_keyword_appearance_counts[key_] > 1:
-                    conflicting_keys = ", ".join(
-                        [old_key for old_key, new_key in keywords.items()
-                         if new_key == key_])
-                    raise Exception(msg3 % (conflicting_keys, fname, new_key))
-            # map deprecated keywords to new keywords
-            for kw in kwargs.keys():
-                if kw in keywords:
-                    nkw = keywords[kw]
-                    if nkw is None:
-                        warnings.warn(msg2 % (kw, fname),
-                                      category=ObsPyDeprecationWarning,
-                                      stacklevel=3)
-                    else:
-                        warnings.warn(msg % (kw, fname, nkw),
-                                      category=ObsPyDeprecationWarning,
-                                      stacklevel=3)
-                        kwargs[nkw] = kwargs[kw]
-                    del(kwargs[kw])
-            return func(*args, **kwargs)
-        return echo_func
+        if kwargs:
+            msg = ("This should not have happened.. :(")
+            raise NotImplementedError(msg)
+        kwargs = {k: v for k, v in zip(inspect.getargspec(func).args, args)}
+        # check if multiple deprecated keywords get mapped to the same new
+        # keyword
+        new_keyword_appearance_counts = dict.fromkeys(keywords.values(), 0)
+        for key, new_key in keywords.items():
+            if key in kwargs:
+                new_keyword_appearance_counts[new_key] += 1
+        for key, count in new_keyword_appearance_counts.items():
+            if count > 1:
+                conflicting_keys = ", ".join(
+                    [old_key for old_key, new_key in keywords.items()
+                     if new_key == key])
+                raise Exception(msg3 % (conflicting_keys, func.__name__,
+                                        new_key))
+        # map deprecated keywords to new keywords
+        for kw in kwargs.keys():
+            if kw in keywords:
+                nkw = keywords[kw]
+                if nkw is None:
+                    warnings.warn(msg2 % (kw, func.__name__),
+                                  category=ObsPyDeprecationWarning,
+                                  stacklevel=3)
+                else:
+                    warnings.warn(msg % (kw, func.__name__, nkw),
+                                  category=ObsPyDeprecationWarning,
+                                  stacklevel=3)
+                    kwargs[nkw] = kwargs[kw]
+                del(kwargs[kw])
+        # return func(**kwargs)
+        args = [kwargs[key] for key in inspect.getargspec(func).args]
+        # print(inspect.getargspec(func).args)
+        # print(args)
+        return func(*args)
 
-    return fdec
+    def _deprecated_keywords(func):
+        return decorate(func, _dec)
+
+    return _deprecated_keywords
 
 
 @decorator
