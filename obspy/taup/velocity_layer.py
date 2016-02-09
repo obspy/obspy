@@ -14,31 +14,31 @@ import numpy as np
 #: The VelocityLayer dtype stores a single layer. An entire velocity model is
 #: implemented as an array of layers. The elements are:
 #:
-#: * ``topDepth``: The top depth of the layer.
-#: * ``botDepth``: The bottom depth of the layer.
-#: * ``topPVelocity``: The compressional (P) wave velocity at the top.
-#: * ``botPVelocity``: The compressional (P) wave velocity at the bottom.
-#: * ``topSVelocity``: The shear (S) wave velocity at the top.
-#: * ``botSVelocity``: The shear (S) wave velocity at the bottom.
-#: * ``topDensity``: The density at the top.
-#: * ``botDensity``: The density at the bottom.
-#: * ``topQp``: The P wave attenuation at the top.
-#: * ``botQp``: The P wave attenuation at the bottom.
-#: * ``topQs``: The S wave attenuation at the top.
-#: * ``botQs``: The S wave attenuation at the bottom.
+#: * ``top_depth``: The top depth of the layer.
+#: * ``bot_depth``: The bottom depth of the layer.
+#: * ``top_p_velocity``: The compressional (P) wave velocity at the top.
+#: * ``bot_p_velocity``: The compressional (P) wave velocity at the bottom.
+#: * ``top_s_velocity``: The shear (S) wave velocity at the top.
+#: * ``bot_s_velocity``: The shear (S) wave velocity at the bottom.
+#: * ``top_density``: The density at the top.
+#: * ``bot_density``: The density at the bottom.
+#: * ``top_qp``: The P wave attenuation at the top.
+#: * ``bot_qp``: The P wave attenuation at the bottom.
+#: * ``top_qs``: The S wave attenuation at the top.
+#: * ``bot_qs``: The S wave attenuation at the bottom.
 VelocityLayer = np.dtype([
-    (native_str('topDepth'), np.float_),
-    (native_str('botDepth'), np.float_),
-    (native_str('topPVelocity'), np.float_),
-    (native_str('botPVelocity'), np.float_),
-    (native_str('topSVelocity'), np.float_),
-    (native_str('botSVelocity'), np.float_),
-    (native_str('topDensity'), np.float_),
-    (native_str('botDensity'), np.float_),
-    (native_str('topQp'), np.float_),
-    (native_str('botQp'), np.float_),
-    (native_str('topQs'), np.float_),
-    (native_str('botQs'), np.float_),
+    (native_str('top_depth'), np.float_),
+    (native_str('bot_depth'), np.float_),
+    (native_str('top_p_velocity'), np.float_),
+    (native_str('bot_p_velocity'), np.float_),
+    (native_str('top_s_velocity'), np.float_),
+    (native_str('bot_s_velocity'), np.float_),
+    (native_str('top_density'), np.float_),
+    (native_str('bot_density'), np.float_),
+    (native_str('top_qp'), np.float_),
+    (native_str('bot_qp'), np.float_),
+    (native_str('top_qs'), np.float_),
+    (native_str('bot_qs'), np.float_),
 ])
 
 
@@ -66,11 +66,11 @@ def evaluate_velocity_at_bottom(layer, prop):
     """
     prop = prop.lower()
     if prop == "p":
-        return layer['botPVelocity']
+        return layer['bot_p_velocity']
     elif prop == "s":
-        return layer['botSVelocity']
+        return layer['bot_s_velocity']
     elif prop in "rd":
-        return layer['botDensity']
+        return layer['bot_density']
     raise ValueError("Unknown material property, use p, s, or d.")
 
 
@@ -99,11 +99,11 @@ def evaluate_velocity_at_top(layer, prop):
     """
     prop = prop.lower()
     if prop == "p":
-        return layer['topPVelocity']
+        return layer['top_p_velocity']
     elif prop == "s":
-        return layer['topSVelocity']
+        return layer['top_s_velocity']
     elif prop in "rd":
-        return layer['topDensity']
+        return layer['top_density']
     raise ValueError("Unknown material property, use p, s, or d.")
 
 
@@ -134,15 +134,15 @@ def evaluate_velocity_at(layer, depth, prop):
     :rtype: :class:`~numpy.ndarray` (dtype = :class:`float`, shape equivalent
         to ``layer``)
     """
-    thick = layer['botDepth'] - layer['topDepth']
+    thick = layer['bot_depth'] - layer['top_depth']
     prop = prop.lower()
     if prop == "p":
-        slope = (layer['botPVelocity'] - layer['topPVelocity']) / thick
-        return slope * (depth - layer['topDepth']) + layer['topPVelocity']
+        slope = (layer['bot_p_velocity'] - layer['top_p_velocity']) / thick
+        return slope * (depth - layer['top_depth']) + layer['top_p_velocity']
     elif prop == "s":
-        slope = (layer['botSVelocity'] - layer['topSVelocity']) / thick
-        return slope * (depth - layer['topDepth']) + layer['topSVelocity']
+        slope = (layer['bot_s_velocity'] - layer['top_s_velocity']) / thick
+        return slope * (depth - layer['top_depth']) + layer['top_s_velocity']
     elif prop in "rd":
-        slope = (layer['botDensity'] - layer['topDensity']) / thick
-        return slope * (depth - layer['topDepth']) + layer['topDensity']
+        slope = (layer['bot_density'] - layer['top_density']) / thick
+        return slope * (depth - layer['top_depth']) + layer['top_density']
     raise ValueError("Unknown material property, use p, s, or d.")
