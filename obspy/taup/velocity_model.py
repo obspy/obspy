@@ -11,7 +11,7 @@ import os
 
 import numpy as np
 
-from .velocity_layer import VelocityLayer, evaluateVelocityAt
+from .velocity_layer import VelocityLayer, evaluate_velocity_at
 from . import _DEFAULT_VALUES
 
 
@@ -162,7 +162,7 @@ class VelocityModel(object):
             :class:`float`, shape equivalent to ``depth``)
         """
         layer = self.layers[self.layer_number_above(depth)]
-        return evaluateVelocityAt(layer, depth, prop)
+        return evaluate_velocity_at(layer, depth, prop)
 
     def evaluate_below(self, depth, prop):
         """
@@ -190,7 +190,7 @@ class VelocityModel(object):
             :class:`float`, shape equivalent to ``depth``)
         """
         layer = self.layers[self.layer_number_below(depth)]
-        return evaluateVelocityAt(layer, depth, prop)
+        return evaluate_velocity_at(layer, depth, prop)
 
     def depth_at_top(self, layer):
         """
@@ -374,15 +374,15 @@ class VelocityModel(object):
         :raises ValueError: If the file extension is not ``.tvel``.
         """
         if filename.endswith(".nd"):
-            vMod = cls.read_nd_file(filename)
+            v_mod = cls.read_nd_file(filename)
         elif filename.endswith(".tvel"):
-            vMod = cls.read_tvel_file(filename)
+            v_mod = cls.read_tvel_file(filename)
         else:
             raise ValueError("File type could not be determined, please "
                              "rename your file to end with .tvel or .nd")
 
-        vMod.fix_discontinuity_depths()
-        return vMod
+        v_mod.fix_discontinuity_depths()
+        return v_mod
 
     @classmethod
     def read_tvel_file(cls, filename):
@@ -620,14 +620,14 @@ class VelocityModel(object):
         boundary and deeper than 100 km to avoid problems with shallower fluid
         layers, e.g., oceans.
         """
-        MOHO_MIN = 65.0
-        CMB_MIN = self.radius_of_planet
-        IOCB_MIN = self.radius_of_planet - 100.0
+        moho_min = 65.0
+        cmb_min = self.radius_of_planet
+        iocb_min = self.radius_of_planet - 100.0
 
-        changeMade = False
-        tempMohoDepth = 0.0
-        tempCmbDepth = self.radius_of_planet
-        tempIocbDepth = self.radius_of_planet
+        change_made = False
+        temp_moho_depth = 0.0
+        temp_cmb_depth = self.radius_of_planet
+        temp_iocb_depth = self.radius_of_planet
 
         above = self.layers[:-1]
         below = self.layers[1:]
@@ -637,35 +637,35 @@ class VelocityModel(object):
 
         # Find discontinuity closest to current Moho
         moho_diff = np.abs(self.moho_depth - above['botDepth'])
-        moho_diff[~mask] = MOHO_MIN
+        moho_diff[~mask] = moho_min
         moho = np.argmin(moho_diff)
-        if moho_diff[moho] < MOHO_MIN:
-            tempMohoDepth = above[moho]['botDepth']
+        if moho_diff[moho] < moho_min:
+            temp_moho_depth = above[moho]['botDepth']
 
         # Find discontinuity closest to current CMB
         cmb_diff = np.abs(self.cmb_depth - above['botDepth'])
-        cmb_diff[~mask] = CMB_MIN
+        cmb_diff[~mask] = cmb_min
         cmb = np.argmin(cmb_diff)
-        if cmb_diff[cmb] < CMB_MIN:
-            tempCmbDepth = above[cmb]['botDepth']
+        if cmb_diff[cmb] < cmb_min:
+            temp_cmb_depth = above[cmb]['botDepth']
 
         # Find discontinuity closest to current IOCB
         iocb_diff = self.iocb_depth - above['botDepth']
-        iocb_diff[~mask] = IOCB_MIN
+        iocb_diff[~mask] = iocb_min
         # IOCB must transition from S==0 to S!=0
-        iocb_diff[above['botSVelocity'] != 0.0] = IOCB_MIN
-        iocb_diff[below['topSVelocity'] <= 0.0] = IOCB_MIN
+        iocb_diff[above['botSVelocity'] != 0.0] = iocb_min
+        iocb_diff[below['topSVelocity'] <= 0.0] = iocb_min
         iocb = np.argmin(iocb_diff)
-        if iocb_diff[iocb] < IOCB_MIN:
-            tempIocbDepth = above[iocb]['botDepth']
+        if iocb_diff[iocb] < iocb_min:
+            temp_iocb_depth = above[iocb]['botDepth']
 
-        if self.moho_depth != tempMohoDepth \
-                or self.cmb_depth != tempCmbDepth \
-                or self.iocb_depth != tempIocbDepth:
-            changeMade = True
-        self.moho_depth = tempMohoDepth
-        self.cmb_depth = tempCmbDepth
-        self.iocb_depth = (tempIocbDepth
-                           if tempCmbDepth != tempIocbDepth
+        if self.moho_depth != temp_moho_depth \
+                or self.cmb_depth != temp_cmb_depth \
+                or self.iocb_depth != temp_iocb_depth:
+            change_made = True
+        self.moho_depth = temp_moho_depth
+        self.cmb_depth = temp_cmb_depth
+        self.iocb_depth = (temp_iocb_depth
+                           if temp_cmb_depth != temp_iocb_depth
                            else self.radius_of_planet)
-        return changeMade
+        return change_made

@@ -22,7 +22,7 @@ __DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
     inspect.currentframe()))), "data")
 
 
-class TauP_Create(object):
+class TauPCreate(object):
     """
     The seismic travel time calculation method of [Buland1983]_.
 
@@ -43,7 +43,7 @@ class TauP_Create(object):
         self.max_interp_error = max_interp_error
         self.allow_inner_core_s = allow_inner_core_s
 
-    def loadVMod(self):
+    def load_velocity_model(self):
         """
         Try to load a velocity model.
         """
@@ -63,16 +63,16 @@ class TauP_Create(object):
         #    print("velocity mode: " + self.vMod)
         return self.vMod
 
-    def create_tau_model(self, vMod):
+    def create_tau_model(self, v_mod):
         """
         Create :class:`~.TauModel` from velocity model.
 
         First, a slowness model is created from the velocity model, and then it
         is passed to :class:`~.TauModel`.
         """
-        if vMod is None:
-            raise ValueError("vMod is None.")
-        if vMod.is_spherical is False:
+        if v_mod is None:
+            raise ValueError("v_mod is None.")
+        if v_mod.is_spherical is False:
             raise Exception("Flat slowness model not yet implemented.")
         SlownessModel.DEBUG = self.debug
         if self.debug:
@@ -80,7 +80,7 @@ class TauP_Create(object):
                   "if not) to call SlownessModel...")
 
         self.sMod = SlownessModel(
-            vMod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
+            v_mod, self.min_delta_p, self.max_delta_p, self.max_depth_interval,
             self.max_range_interval * pi / 180.0, self.max_interp_error,
             self.allow_inner_core_s,
             _DEFAULT_VALUES["slowness_tolerance"])
@@ -107,14 +107,15 @@ class TauP_Create(object):
         TauModel.DEBUG = self.debug
         SlownessModel.DEBUG = self.debug
         # Creates tau model from slownesses.
-        return TauModel(self.sMod, radius_of_planet=vMod.radius_of_planet)
+        return TauModel(self.sMod, radius_of_planet=v_mod.radius_of_planet)
 
     def run(self):
         """
         Create a tau model from a velocity model.
 
-        Called by :func:`build_taup_model` after :meth:`loadVMod`; calls
-        :meth:`create_tau_model` and writes the result to a ``.npy`` file.
+        Called by :func:`build_taup_model` after :meth:`load_velocity_model`;
+        calls :meth:`create_tau_model` and writes the result to a ``.npy``
+        file.
         """
         try:
             self.tau_model = self.create_tau_model(self.vMod)
@@ -173,9 +174,9 @@ def build_taup_model(filename, output_folder=None):
     output_filename = os.path.join(output_folder, model_name + ".npz")
 
     print("Building obspy.taup model for '%s' ..." % filename)
-    mod_create = TauP_Create(input_filename=filename,
-                             output_filename=output_filename)
-    mod_create.loadVMod()
+    mod_create = TauPCreate(input_filename=filename,
+                            output_filename=output_filename)
+    mod_create.load_velocity_model()
     mod_create.run()
 
 
