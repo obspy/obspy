@@ -87,7 +87,7 @@ class Blockette(object):
             fields.append(field)
         return fields
 
-    def parse_SEED(self, data, expected_length=0):
+    def parse_seed(self, data, expected_length=0):
         """
         Parse given data for blockette fields and create attributes.
         """
@@ -119,7 +119,7 @@ class Blockette(object):
                 else:
                     warnings.warn(msg, category=Warning)
                 break
-            field.parse_SEED(self, data)
+            field.parse_seed(self, data)
             if field.id == 2:
                 expected_length = field.data
         # strict tests
@@ -139,26 +139,26 @@ class Blockette(object):
         else:
             warnings.warn(msg, category=Warning)
 
-    def get_SEED(self):
+    def get_seed(self):
         """
         Converts the blockette to a valid SEED string and returns it.
         """
         # loop over all blockette fields
         data = b''
         for field in self.get_fields():
-            data += field.get_SEED(self)
+            data += field.get_seed(self)
         # add blockette id and length
         _head = '%03d%04d' % (self.id, len(data) + 7)
         return _head.encode('ascii', 'strict') + data
 
-    def parse_XML(self, xml_doc):
+    def parse_xml(self, xml_doc):
         """
         Reads lxml etree and fills the blockette with the values of it.
         """
         for field in self.get_fields(self.xseed_version):
-            field.parse_XML(self, xml_doc)
+            field.parse_xml(self, xml_doc)
 
-    def get_XML(self, show_optional=False,
+    def get_xml(self, show_optional=False,
                 xseed_version=DEFAULT_XSEED_VERSION):
         """
         Returns a XML document representing this blockette.
@@ -168,6 +168,6 @@ class Blockette(object):
         xml_doc = Element(self.blockette_name, blockette=self.blockette_id)
         # loop over all blockette fields
         for field in self.get_fields(xseed_version=xseed_version):
-            node = field.get_XML(self)
+            node = field.get_xml(self)
             xml_doc.extend(node)
         return xml_doc

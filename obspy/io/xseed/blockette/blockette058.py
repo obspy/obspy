@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import Float, Integer, Loop, VariableString
-from ..utils import format_RESP
+from ..utils import format_resp
 
 
 class Blockette058(Blockette):
@@ -45,7 +45,7 @@ class Blockette058(Blockette):
         ])
     ]
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -73,15 +73,15 @@ class Blockette058(Blockette):
         if blkt_type != 0:
             string += \
                 'B058F04     Gain:                                  %s\n' \
-                % format_RESP(self.sensitivity_gain, 6) + \
+                % format_resp(self.sensitivity_gain, 6) + \
                 'B058F05     Frequency of gain:                     %s HZ\n' \
-                % format_RESP(self.frequency, 6)
+                % format_resp(self.frequency, 6)
         else:
             string += \
                 'B058F04     Sensitivity:                           %s\n' \
-                % format_RESP(self.sensitivity_gain, 6) + \
+                % format_resp(self.sensitivity_gain, 6) + \
                 'B058F05     Frequency of sensitivity:              %s HZ\n' \
-                % format_RESP(self.frequency, 6)
+                % format_resp(self.frequency, 6)
         string += \
             'B058F06     Number of calibrations:                %s\n' \
             % self.number_of_history_values
@@ -92,17 +92,17 @@ class Blockette058(Blockette):
             for _i in range(self.number_of_history_values):
                 string += \
                     'B058F07-08   %2s %13s %13s %s\n' \
-                    % (format_RESP(self.sensitivity_for_calibration[_i], 6),
-                       format_RESP(
+                    % (format_resp(self.sensitivity_for_calibration[_i], 6),
+                       format_resp(
                            self.frequency_of_calibration_sensitivity[_i], 6),
-                        self.time_of_above_calibration[_i].format_seed())
+                       self.time_of_above_calibration[_i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
                 '#\t\tCalibrations:\n' + \
                 '#\t\t i, sensitivity, frequency, time of calibration\n' + \
                 'B058F07-08    0 %13s %13s %s\n' \
-                % (format_RESP(self.sensitivity_for_calibration, 6),
-                   format_RESP(self.frequency_of_calibration_sensitivity, 6),
+                % (format_resp(self.sensitivity_for_calibration, 6),
+                   format_resp(self.frequency_of_calibration_sensitivity, 6),
                    self.time_of_above_calibration.format_seed())
         string += '#\t\t\n'
         return string.encode()

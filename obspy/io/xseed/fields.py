@@ -62,7 +62,7 @@ class Field(object):
     def convert(self, value):
         return value
 
-    def _formatString(self, s):
+    def _format_string(self, s):
         """
         Using SEED specific flags to format strings.
 
@@ -107,7 +107,7 @@ class Field(object):
             raise SEEDTypeException(msg)
         return sn
 
-    def parse_SEED(self, blockette, data):
+    def parse_seed(self, blockette, data):
         """
         """
         try:
@@ -130,7 +130,7 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, text))
 
-    def get_SEED(self, blockette, pos=0):
+    def get_seed(self, blockette, pos=0):
         """
         """
         self.compact = blockette.compact
@@ -149,7 +149,7 @@ class Field(object):
             print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
 
-    def get_XML(self, blockette, pos=0):
+    def get_xml(self, blockette, pos=0):
         """
         """
         if self.ignore:
@@ -195,7 +195,7 @@ class Field(object):
             print('  %s: %s' % (self, [node]))
         return [node]
 
-    def parse_XML(self, blockette, xml_doc, pos=0):
+    def parse_xml(self, blockette, xml_doc, pos=0):
         """
         """
         try:
@@ -321,13 +321,13 @@ class FixedString(Field):
         self.flags = flags
 
     def read(self, data, strict=False):  # @UnusedVariable
-        return self._formatString(data.read(self.length).strip())
+        return self._format_string(data.read(self.length).strip())
 
     def write(self, data, strict=False):  # @UnusedVariable
         # Leave fixed length alphanumeric fields left justified (no leading
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
-        result = format_str % self._formatString(data)
+        result = format_str % self._format_string(data)
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)
@@ -375,7 +375,7 @@ class VariableString(Field):
             return ""
         else:
             if self.flags:
-                return self._formatString(data)
+                return self._format_string(data)
             else:
                 return data
 
@@ -399,7 +399,7 @@ class VariableString(Field):
         return buffer
 
     def write(self, data, strict=False):  # @UnusedVariable
-        result = self._formatString(data).encode('utf-8')
+        result = self._format_string(data).encode('utf-8')
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.max_length, self.attribute_name)
@@ -443,7 +443,7 @@ class Loop(Field):
         self.omit_tag = kwargs.get('omit_tag', False)
         self.flat = kwargs.get('flat', False)
 
-    def parse_SEED(self, blockette, data):
+    def parse_seed(self, blockette, data):
         """
         """
         try:
@@ -458,7 +458,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parse_SEED(blockette, data)
+                field.parse_seed(blockette, data)
                 if debug:
                     temp.append(field.data)
         # debug
@@ -469,7 +469,7 @@ class Loop(Field):
                 print('  LOOP: %s' % (temp))
             blockette.debug = debug
 
-    def get_SEED(self, blockette):
+    def get_seed(self, blockette):
         """
         """
         try:
@@ -482,10 +482,10 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                data += field.get_SEED(blockette, i)
+                data += field.get_seed(blockette, i)
         return data
 
-    def get_XML(self, blockette, pos=0):  # @UnusedVariable
+    def get_xml(self, blockette, pos=0):  # @UnusedVariable
         """
         """
         if self.ignore:
@@ -505,7 +505,7 @@ class Loop(Field):
                 se = SubElement(root, self.field_name)
                 # loop over data fields within one entry
                 for field in self.data_fields:
-                    node = field.get_XML(blockette, _i)
+                    node = field.get_xml(blockette, _i)
                     se.extend(node)
             return root.getchildren()
         # loop over number of entries
@@ -513,7 +513,7 @@ class Loop(Field):
         for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                node = field.get_XML(blockette, _i)
+                node = field.get_xml(blockette, _i)
                 root.extend(node)
         # format output for requested loop type
         if self.flat:
@@ -530,7 +530,7 @@ class Loop(Field):
             # standard loop
             return [root]
 
-    def parse_XML(self, blockette, xml_doc, pos=0):
+    def parse_xml(self, blockette, xml_doc, pos=0):
         """
         """
         try:
@@ -572,4 +572,4 @@ class Loop(Field):
         for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
-                field.parse_XML(blockette, root, i)
+                field.parse_xml(blockette, root, i)

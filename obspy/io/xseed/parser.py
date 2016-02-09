@@ -188,15 +188,15 @@ class Parser(object):
         data.seek(0)
         if first_byte.isdigit():
             # SEED volumes starts with a number
-            self._parse_SEED(data)
+            self._parse_seed(data)
             self._format = 'SEED'
         elif first_byte == b'<':
             # XML files should always starts with an '<'
             try:
-                self._parse_XSEED(data)
+                self._parse_xseed(data)
             except Exception as e:
                 # if it looks like the XML is not XSEED, tell the user
-                if not is_XSEED(data):
+                if not is_xseed(data):
                     msg = ("Encountered an error during parsing XSEED file "
                            "(%s: %s). Note that the XSEED parser can not "
                            "parse StationXML. Please contact developers if "
@@ -207,12 +207,12 @@ class Parser(object):
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-    @deprecated("'getXSEED' has been renamed to 'get_XSEED'. "
-                "Use that instead.")
+    @deprecated("'getXSEED' has been renamed to 'get_xseed'. "
+                "Use that instead.")  # noqa
     def getXSEED(self, *args, **kwargs):
-        return self.get_XSEED(*args, **kwargs)
+        return self.get_xseed(*args, **kwargs)
 
-    def get_XSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
+    def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
 
@@ -244,7 +244,7 @@ class Parser(object):
         # Volume header:
         sub = SubElement(doc, to_tag('Volume Index Control Header'))
         for blkt in self.volume:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         # Delete blockettes 11 and 12 if necessary.
         if version == '1.0':
             self._delete_blockettes_11_and_12()
@@ -252,13 +252,13 @@ class Parser(object):
         sub = SubElement(
             doc, to_tag('Abbreviation Dictionary Control Header'))
         for blkt in self.abbreviations:
-            sub.append(blkt.get_XML(xseed_version=version))
+            sub.append(blkt.get_xml(xseed_version=version))
         if not split_stations:
             # Don't split stations
             for station in self.stations:
                 sub = SubElement(doc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
             if version == '1.0':
                 # To pass the XSD schema test an empty time span control header
                 # is added to the end of the file.
@@ -275,7 +275,7 @@ class Parser(object):
                 cdoc = copy.copy(doc)
                 sub = SubElement(cdoc, to_tag('Station Control Header'))
                 for blkt in station:
-                    sub.append(blkt.get_XML(xseed_version=version))
+                    sub.append(blkt.get_xml(xseed_version=version))
                 if version == '1.0':
                     # To pass the XSD schema test an empty time span control
                     # header is added to the end of the file.
@@ -290,16 +290,16 @@ class Parser(object):
                                       xml_declaration=True, encoding='UTF-8')
             return result
 
-    @deprecated("'writeXSEED' has been renamed to 'write_XSEED'. "
-                "Use that instead.")
+    @deprecated("'writeXSEED' has been renamed to 'write_xseed'. "
+                "Use that instead.")  # noqa
     def writeXSEED(self, *args, **kwargs):
-        return self.write_XSEED(*args, **kwargs)
+        return self.write_xseed(*args, **kwargs)
 
-    def write_XSEED(self, filename, *args, **kwargs):
+    def write_xseed(self, filename, *args, **kwargs):
         """
         Writes a XML-SEED file with given name.
         """
-        result = self.get_XSEED(*args, **kwargs)
+        result = self.get_xseed(*args, **kwargs)
         if isinstance(result, bytes):
             with open(filename, 'wb') as f:
                 f.write(result)
@@ -319,12 +319,12 @@ class Parser(object):
         else:
             raise TypeError
 
-    @deprecated("'get_SEED' has been renamed to 'get_SEED'. "
-                "Use that instead.")
+    @deprecated("'get_seed' has been renamed to 'get_seed'. "
+                "Use that instead.")  # noqa
     def getSEED(self, *args, **kwargs):
-        return self.get_SEED(*args, **kwargs)
+        return self.get_seed(*args, **kwargs)
 
-    def get_SEED(self, compact=False):
+    def get_seed(self, compact=False):
         """
         Returns a SEED representation of the current Parser object.
         """
@@ -362,25 +362,25 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    @deprecated("'writeSEED' has been renamed to 'write_SEED'. "
-                "Use that instead.")
+    @deprecated("'writeSEED' has been renamed to 'write_seed'. "
+                "Use that instead.")  # noqa
     def writeSEED(self, *args, **kwargs):
-        return self.write_SEED(*args, **kwargs)
+        return self.write_seed(*args, **kwargs)
 
-    def write_SEED(self, filename, *args, **kwargs):
+    def write_seed(self, filename, *args, **kwargs):
         """
         Writes a dataless SEED file with given name.
         """
         fh = open(filename, 'wb')
-        fh.write(self.get_SEED(*args, **kwargs))
+        fh.write(self.get_seed(*args, **kwargs))
         fh.close()
 
-    @deprecated("'getRESP' has been renamed to 'get_RESP'. "
-                "Use that instead.")
+    @deprecated("'getRESP' has been renamed to 'get_resp'. "
+                "Use that instead.")  # noqa
     def getRESP(self, *args, **kwargs):
-        return self.get_RESP(*args, **kwargs)
+        return self.get_resp(*args, **kwargs)
 
-    def get_RESP(self):
+    def get_resp(self):
         """
         Returns a RESP representation of the current Parser object.
 
@@ -413,7 +413,7 @@ class Parser(object):
                     resp.seek(_pos)
                     if _len != 0:
                         # Send the blockettes to the parser and append to list.
-                        self._get_RESP_string(resp, blockettes, cur_station)
+                        self._get_resp_string(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
                     # Create the file name.
                     filename = 'RESP.%s.%s.%s.%s' \
@@ -436,7 +436,7 @@ class Parser(object):
             # It might happen that no blockette 52 is specified,
             if len(blockettes) != 0:
                 # One last time for the last channel.
-                self._get_RESP_string(resp, blockettes, cur_station)
+                self._get_resp_string(resp, blockettes, cur_station)
                 resp_list.append([filename, resp])
         # Combine multiple channels.
         new_resp_list = []
@@ -461,7 +461,7 @@ class Parser(object):
         # parse blockettes if not SEED. Needed for XSEED to be initialized.
         # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
-            self.__init__(self.get_SEED())
+            self.__init__(self.get_seed())
         if old_format == "XSEED":
             self._format = "XSEED"
         # split id
@@ -513,12 +513,12 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    @deprecated("'getPAZ' has been renamed to 'get_PAZ'. "
-                "Use that instead.")
+    @deprecated("'getPAZ' has been renamed to 'get_paz'. "
+                "Use that instead.")  # noqa
     def getPAZ(self, *args, **kwargs):
-        return self.get_PAZ(*args, **kwargs)
+        return self.get_paz(*args, **kwargs)
 
-    def get_PAZ(self, seed_id, datetime=None):
+    def get_paz(self, seed_id, datetime=None):
         """
         Return PAZ.
 
@@ -600,7 +600,7 @@ class Parser(object):
         return data
 
     @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. "
-                "Use that instead.")
+                "Use that instead.")  # noqa
     def getCoordinates(self, *args, **kwargs):
         return self.get_coordinates(*args, **kwargs)
 
@@ -627,12 +627,12 @@ class Parser(object):
                 break
         return data
 
-    @deprecated("'writeRESP' has been renamed to 'write_RESP'. "
-                "Use that instead.")
+    @deprecated("'writeRESP' has been renamed to 'write_resp'. "
+                "Use that instead.")  # noqa
     def writeRESP(self, *args, **kwargs):
-        return self.write_RESP(*args, **kwargs)
+        return self.write_resp(*args, **kwargs)
 
-    def write_RESP(self, folder, zipped=False):
+    def write_resp(self, folder, zipped=False):
         """
         Writes for each channel a RESP file within a given folder.
 
@@ -640,7 +640,7 @@ class Parser(object):
         :param zipped: Compresses all files into a single ZIP archive named by
             the folder name extended with the extension '.zip'.
         """
-        new_resp_list = self.get_RESP()
+        new_resp_list = self.get_resp()
         # Check if channel information could be found.
         if len(new_resp_list) == 0:
             msg = ("No channel information could be found. The SEED file "
@@ -664,7 +664,7 @@ class Parser(object):
                 zip_file.writestr(response[0], response[1].read())
             zip_file.close()
 
-    def _parse_SEED(self, data):
+    def _parse_seed(self, data):
         """
         Parses through a whole SEED volume.
 
@@ -735,10 +735,10 @@ class Parser(object):
         # Use parse once again.
         self._parse_merged_data(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
-        self._update_internal_SEED_structure()
+        self._update_internal_seed_structure()
 
     @deprecated("'getInventory' has been renamed to 'get_inventory'. "
-                "Use that instead.")
+                "Use that instead.")  # noqa
     def getInventory(self, *args, **kwargs):
         return self.get_inventory(*args, **kwargs)
 
@@ -807,7 +807,7 @@ class Parser(object):
             return blkt.abbreviation_description
         return ""
 
-    def _parse_XSEED(self, data):
+    def _parse_xseed(self, data):
         """
         Parse a XML-SEED string.
 
@@ -822,12 +822,12 @@ class Parser(object):
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(
-            self._parse_XML_blockette(headers[0].getchildren()[0], 'V',
+            self._parse_xml_blockette(headers[0].getchildren()[0], 'V',
                                       xseed_version))
         # Append all abbreviations.
         for blkt in headers[1].getchildren():
             self.temp['abbreviations'].append(
-                self._parse_XML_blockette(blkt, 'A', xseed_version))
+                self._parse_xml_blockette(blkt, 'A', xseed_version))
         # Append all stations.
         for control_header in headers[2:]:
             if not control_header.tag == 'station_control_header':
@@ -835,11 +835,11 @@ class Parser(object):
             self.temp['stations'].append([])
             for blkt in control_header.getchildren():
                 self.temp['stations'][-1].append(
-                    self._parse_XML_blockette(blkt, 'S', xseed_version))
+                    self._parse_xml_blockette(blkt, 'S', xseed_version))
         # Update internal values.
-        self._update_internal_SEED_structure()
+        self._update_internal_seed_structure()
 
-    def _get_RESP_string(self, resp, blockettes, station):
+    def _get_resp_string(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
         blockettes for one channel and writes them RESP like to the BytesIO.
@@ -881,18 +881,18 @@ class Parser(object):
             if blkt.id not in RESP_BLOCKETTES:
                 continue
             try:
-                resp.write(blkt.get_RESP(
+                resp.write(blkt.get_resp(
                     station, channel_info['Channel'], self.abbreviations))
             except AttributeError:
                 msg = 'RESP output for blockette %s not implemented yet.'
                 raise AttributeError(msg % blkt.id)
 
-    def _parse_XML_blockette(self, XML_blockette, record_type, xseed_version):
+    def _parse_xml_blockette(self, xml_blockette, record_type, xseed_version):
         """
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(XML_blockette.values()[0])
+        blockette_id = int(xml_blockette.values()[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
@@ -905,7 +905,7 @@ class Parser(object):
                                             version=self.version,
                                             record_type=record_type,
                                             xseed_version=xseed_version)
-            blockette_obj.parse_XML(XML_blockette)
+            blockette_obj.parse_xml(xml_blockette)
             return blockette_obj
         elif blockette_id != 0:
             msg = "Unknown blockette type %d found" % blockette_id
@@ -940,7 +940,7 @@ class Parser(object):
                 return_records.append(record)
                 record = b''
                 rec_len = 0
-            blockette_str = blockette_.get_SEED()
+            blockette_str = blockette_.get_seed()
             # Calculate how much of the blockette is too long.
             overhead = rec_len + len(blockette_str) - length
             # If negative overhead: Write blockette.
@@ -1005,7 +1005,7 @@ class Parser(object):
                 return False
         return True
 
-    def _update_internal_SEED_structure(self):
+    def _update_internal_seed_structure(self):
         """
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
@@ -1150,7 +1150,7 @@ class Parser(object):
                                                 compact=self.compact,
                                                 version=self.version,
                                                 record_type=record_type)
-                blockette_obj.parse_SEED(data, blockette_length)
+                blockette_obj.parse_seed(data, blockette_length)
                 root_attribute.append(blockette_obj)
                 self.blockettes.setdefault(blockette_id,
                                            []).append(blockette_obj)
@@ -1219,7 +1219,7 @@ class Parser(object):
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
 
-    def rotate_to_ZNE(self, stream):
+    def rotate_to_zne(self, stream):
         """
         Rotates the three components of a Stream to ZNE.
 
@@ -1289,7 +1289,7 @@ class Parser(object):
         return Stream(traces=[tr_z, tr_n, tr_e])
 
 
-def is_XSEED(path_or_file_object):
+def is_xseed(path_or_file_object):
     """
     Simple function checking if the passed object contains a XML-SEED file.
     Returns True of False. Only checks the name of the root tag, which should
@@ -1297,10 +1297,10 @@ def is_XSEED(path_or_file_object):
 
     >>> from obspy.core.util import get_example_file
     >>> xseed_file = get_example_file("dataless.seed.BW_FURT.xml")
-    >>> is_XSEED(xseed_file)
+    >>> is_xseed(xseed_file)
     True
     >>> stationxml_file = get_example_file("IU_ANMO_00_BHZ.xml")
-    >>> is_XSEED(stationxml_file)
+    >>> is_xseed(stationxml_file)
     False
 
     :param path_or_file_object: File name or file like object.

@@ -20,7 +20,7 @@ Allocate a Parser object and read/write
 
 >>> from obspy.io.xseed import Parser
 >>> sp = Parser("/path/to/dataless.seed.BW_FURT")
->>> sp.write_XSEED("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
+>>> sp.write_xseed("dataless.seed.BW_RJOB.xml") #doctest: +SKIP
 
 The lines above will convert `Dataless SEED`, e.g.::
 
@@ -44,10 +44,10 @@ to the `XML-SEED` representation, e.g.::
 
 
 A response file can be written in a similar manner, just replace
-:meth:`~obspy.io.xseed.parser.Parser.write_XSEED` by
-:meth:`~obspy.io.xseed.parser.Parser.write_RESP`:
+:meth:`~obspy.io.xseed.parser.Parser.write_xseed` by
+:meth:`~obspy.io.xseed.parser.Parser.write_resp`:
 
->>> sp.write_RESP(folder="BW_FURT", zipped=False) #doctest: +SKIP
+>>> sp.write_resp(folder="BW_FURT", zipped=False) #doctest: +SKIP
 
 
 The Parser Object
