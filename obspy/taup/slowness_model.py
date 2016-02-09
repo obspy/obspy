@@ -1719,9 +1719,9 @@ class SlownessModel(object):
         :returns: Information about the split as (or if) it was performed, such
             that:
 
-            * ``neededSplit=True`` if a layer was actually split;
-            * ``movedSample=True`` if a layer was very close, and so moving the
-              layer's depth is better than making a very thin layer;
+            * ``needed_split=True`` if a layer was actually split;
+            * ``moved_sample=True`` if a layer was very close, and so moving
+              the layer's depth is better than making a very thin layer;
             * ``ray_param=...``, the new ray parameter (in s/km), if the layer
               was split.
 

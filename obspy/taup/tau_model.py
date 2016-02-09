@@ -246,7 +246,7 @@ class TauModel(object):
         for is_p_wave in [False, True]:
             split_info = out_s_mod.split_layer(depth, is_p_wave)
             out_s_mod = split_info.s_mod
-            if split_info.neededSplit and not split_info.movedSample:
+            if split_info.needed_split and not split_info.moved_sample:
                 # Split the slowness layers containing depth into two layers
                 # each.
                 new_ray_param = split_info.ray_param
