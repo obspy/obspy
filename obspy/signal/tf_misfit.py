@@ -69,14 +69,21 @@ def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     nfft = util.next_pow_2(npts) * 2
     sf = np.fft.fft(st, n=nfft)
 
-    for n, _f in enumerate(f):
-        a = scale(_f)
-        # time shift necessary, because wavelet is defined around t = 0
-        psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
-        psihf = np.fft.fft(psih, n=nfft)
-        tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
-            (t[1] - t[0])
+    # Ignore underflows.
+    _t = np.geterr()
+    np.seterr(under="ignore")
+    try:
+        for n, _f in enumerate(f):
+            a = scale(_f)
+            # time shift necessary, because wavelet is defined around t = 0
+            psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
+            psihf = np.fft.fft(psih, n=nfft)
+            tminin = int(t[-1] / 2. / (t[1] - t[0]))
+            cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
+                (t[1] - t[0])
+    finally:
+        np.seterr(**_t)
+
     return cwt.T
 
 
