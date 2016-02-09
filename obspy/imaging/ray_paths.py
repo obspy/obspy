@@ -185,6 +185,9 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         evdepth_km=event_depth_in_km, phase_list=phase_list,
         coordinate_system='XYZ', taup_model=model)
 
+    if len(greatcircles) == 0:
+        raise ValueError('no paths found for the input stations and events')
+
     # define colorschemes
     if colorscheme == 'dark' or colorscheme == 'default':
         # we use the color set that is used in taup, but adjust the lightness
