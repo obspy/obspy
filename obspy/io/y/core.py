@@ -75,7 +75,7 @@ def _unpack_with_asciiz_and_decode(fmt, data):
     return tuple(parts)
 
 
-def __parse_tag(fh):
+def _parse_tag(fh):
     """
     Reads and parses a single tag.
 
@@ -125,7 +125,7 @@ def _is_y(filename):
     try:
         # get first tag (16 bytes)
         with open(filename, 'rb') as fh:
-            _, tag_type, _, _ = __parse_tag(fh)
+            _, tag_type, _, _ = _parse_tag(fh)
     except:
         return False
     # The first tag in a Y-file must be the TAG_Y_FILE tag (tag type 0)
@@ -178,7 +178,7 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
         trace.stats.y = AttribDict()
         count = -1
         while True:
-            endian, tag_type, next_tag, _next_same = __parse_tag(fh)
+            endian, tag_type, next_tag, _next_same = _parse_tag(fh)
             if tag_type == 1:
                 # TAG_STATION_INFO
                 # UCHAR Update[8]
