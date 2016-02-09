@@ -61,7 +61,7 @@ NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
-        noverlap=0):
+        noverlap=0):  # noqa
     """
     Wrapper for :func:`matplotlib.mlab.psd`.
 

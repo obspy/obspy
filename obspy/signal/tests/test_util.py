@@ -57,7 +57,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(shift, 10)
         self.assertAlmostEqual(corr, 1, 2)
 
-    def test_SRLXcorr(self):
+    def test_srl_xcorr(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
         Seismologist section of SRL is still working. The test shouldn't be
