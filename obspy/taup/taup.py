@@ -18,7 +18,7 @@ from . import tau
 _MODEL_CACHE = {}
 
 
-def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):
+def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):  # noqa
     """
     Returns travel times.
 
@@ -80,7 +80,7 @@ def getTravelTimes(delta, depth, model='iasp91', phase_list=["ttall"]):
         "dT/dD": arr.ray_param_sec_degree} for arr in tt]
 
 
-def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
+def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,  # noqa
                    phases=None, depth=100, model='iasp91'):
     """
     Basic travel time plotting function.

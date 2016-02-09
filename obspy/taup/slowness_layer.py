@@ -13,7 +13,7 @@ import numpy as np
 
 from .c_wrappers import clibtau
 from .helper_classes import SlownessLayer, SlownessModelError
-from .velocity_layer import evaluateVelocityAtBottom, evaluateVelocityAtTop
+from .velocity_layer import evaluate_velocity_at_bottom, evaluate_velocity_at_top
 
 
 def bullenRadialSlowness(layer, p, radius_of_planet, check=True):
@@ -314,10 +314,10 @@ def create_from_vlayer(vLayer, isPWave, radius_of_planet, isSpherical=True):
     waveType = ('p' if isPWave else 's')
     if isSpherical:
         ret['topP'] = (radius_of_planet - ret['topDepth']) / \
-            evaluateVelocityAtTop(vLayer, waveType)
+                      evaluate_velocity_at_top(vLayer, waveType)
 
         bot_depth = ret["botDepth"]
-        bot_vel = evaluateVelocityAtBottom(vLayer, waveType)
+        bot_vel = evaluate_velocity_at_bottom(vLayer, waveType)
 
         if bot_depth.shape:
             if bot_depth[-1] == radius_of_planet and bot_vel[-1] == 0.0:

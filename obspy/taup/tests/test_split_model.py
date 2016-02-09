@@ -22,14 +22,14 @@ class SplitTauModelTestCase(unittest.TestCase):
     def test_split(self):
         depth = 110
         tau_model = TauModel.from_file('iasp91')
-        splitTMod = tau_model.splitBranch(depth)
+        splitTMod = tau_model.split_branch(depth)
         self.assertEqual(tau_model.tauBranches.shape[1] + 1,
                          splitTMod.tauBranches.shape[1])
         self.assertEqual(len(tau_model.ray_params) + 2,
                          len(splitTMod.ray_params))
 
         branch_count = tau_model.tauBranches.shape[1]
-        split_branch_index = tau_model.findBranch(depth)
+        split_branch_index = tau_model.find_branch(depth)
 
         new_P_ray_param = splitTMod.sMod.getSlownessLayer(
             splitTMod.sMod.layer_number_above(depth, True), True)['botP']
@@ -47,14 +47,14 @@ class SplitTauModelTestCase(unittest.TestCase):
         self.assertTrue(pIndex == len(splitTMod.ray_params) or sIndex < pIndex)
 
         for b in range(branch_count):
-            orig = tau_model.getTauBranch(b, True)
+            orig = tau_model.get_tau_branch(b, True)
             depthBranch = None
             if b < split_branch_index:
-                depthBranch = splitTMod.getTauBranch(b, True)
+                depthBranch = splitTMod.get_tau_branch(b, True)
                 self.assertGreater(depthBranch.dist[pIndex], 0)
                 self.assertGreater(depthBranch.time[pIndex], 0)
             elif b > split_branch_index:
-                depthBranch = splitTMod.getTauBranch(b + 1, True)
+                depthBranch = splitTMod.get_tau_branch(b + 1, True)
                 self.assertAlmostEqual(depthBranch.dist[pIndex], 0,
                                        delta=0.00000001)
                 self.assertAlmostEqual(depthBranch.time[pIndex], 0,
@@ -88,9 +88,9 @@ class SplitTauModelTestCase(unittest.TestCase):
                     atol=0.00000001)
 
         # now check branch split
-        orig = tau_model.getTauBranch(split_branch_index, True)
-        above = splitTMod.getTauBranch(split_branch_index, True)
-        below = splitTMod.getTauBranch(split_branch_index + 1, True)
+        orig = tau_model.get_tau_branch(split_branch_index, True)
+        above = splitTMod.get_tau_branch(split_branch_index, True)
+        below = splitTMod.get_tau_branch(split_branch_index + 1, True)
         self.assertAlmostEqual(above.min_ray_param, below.max_ray_param, 8)
         for i in range(len(above.dist)):
             if i < sIndex:

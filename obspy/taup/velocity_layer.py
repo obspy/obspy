@@ -42,11 +42,11 @@ VelocityLayer = np.dtype([
 ])
 
 
-def evaluateVelocityAtBottom(layer, prop):
+def evaluate_velocity_at_bottom(layer, prop):
     """
     Evaluate material properties at bottom of a velocity layer.
 
-    .. seealso:: :func:`evaluateVelocityAtTop`, :func:`evaluateVelocityAt`
+    .. seealso:: :func:`evaluate_velocity_at_top`, :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
     :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
@@ -74,11 +74,12 @@ def evaluateVelocityAtBottom(layer, prop):
     raise ValueError("Unknown material property, use p, s, or d.")
 
 
-def evaluateVelocityAtTop(layer, prop):
+def evaluate_velocity_at_top(layer, prop):
     """
     Evaluate material properties at top of a velocity layer.
 
-    .. seealso:: :func:`evaluateVelocityAtBottom`, :func:`evaluateVelocityAt`
+    .. seealso:: :func:`evaluate_velocity_at_bottom`,
+        :func:`evaluate_velocity_at`
 
     :param layer: The velocity layer to use for evaluation.
     :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`
@@ -106,12 +107,12 @@ def evaluateVelocityAtTop(layer, prop):
     raise ValueError("Unknown material property, use p, s, or d.")
 
 
-def evaluateVelocityAt(layer, depth, prop):
+def evaluate_velocity_at(layer, depth, prop):
     """
     Evaluate material properties at some depth in a velocity layer.
 
-    .. seealso:: :func:`evaluateVelocityAtTop`,
-        :func:`evaluateVelocityAtBottom`
+    .. seealso:: :func:`evaluate_velocity_at_top`,
+        :func:`evaluate_velocity_at_bottom`
 
     :param layer: The velocity layer to use for evaluation.
     :type layer: :class:`~numpy.ndarray`, dtype = :py:const:`.VelocityLayer`

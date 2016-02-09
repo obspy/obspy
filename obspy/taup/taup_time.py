@@ -12,7 +12,7 @@ from .seismic_phase import SeismicPhase
 from .utils import parse_phase_list
 
 
-class TauP_Time(object):
+class TauPTime(object):
     """
     Calculate travel times for different branches using linear interpolation
     between known slowness samples.
@@ -52,7 +52,7 @@ class TauP_Time(object):
         if receiver_depth != depth:
             # If already split on receiver depth this does nothing.
             self.depth_corrected_model = \
-                self.depth_corrected_model.splitBranch(receiver_depth)
+                self.depth_corrected_model.split_branch(receiver_depth)
             self.arrivals = []
         self.source_depth = depth
         self.receiver_depth = receiver_depth

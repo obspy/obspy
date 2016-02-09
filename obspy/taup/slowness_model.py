@@ -18,8 +18,8 @@ from .helper_classes import (CriticalDepth, DepthRange, SlownessLayer,
 from .slowness_layer import (bullenDepthFor,
                              bullenRadialSlowness, create_from_vlayer,
                              evaluateAtBullen)
-from .velocity_layer import (VelocityLayer, evaluateVelocityAtBottom,
-                             evaluateVelocityAtTop)
+from .velocity_layer import (VelocityLayer, evaluate_velocity_at_bottom,
+                             evaluate_velocity_at_top)
 
 
 def _fixCriticalDepths(criticalDepths, layerNum, isPWave):
@@ -525,8 +525,8 @@ class SlownessModel(object):
                 "findDepth: no layers to search (wrong layer num?)")
         for layerNum in range(topCriticalLayer, botCriticalLayer + 1):
             velLayer = self.vMod.layers[layerNum]
-            topVelocity = evaluateVelocityAtTop(velLayer, waveType)
-            botVelocity = evaluateVelocityAtBottom(velLayer, waveType)
+            topVelocity = evaluate_velocity_at_top(velLayer, waveType)
+            botVelocity = evaluate_velocity_at_bottom(velLayer, waveType)
             topP = self.toSlowness(topVelocity, velLayer['topDepth'])
             botP = self.toSlowness(botVelocity, velLayer['botDepth'])
             # Check to see if we are within 'chatter level' (numerical
@@ -557,13 +557,13 @@ class SlownessModel(object):
             # to be the slowness at the top of the next layer.
             if layerNum < len(self.vMod) - 1:
                 velLayer = self.vMod.layers[layerNum + 1]
-                topVelocity = evaluateVelocityAtTop(velLayer, waveType)
+                topVelocity = evaluate_velocity_at_top(velLayer, waveType)
                 if (isPWave is False and
                         np.any(self.depthInFluid(velLayer['topDepth']))):
                     # Special case for S waves above a fluid. If top next
                     # layer is in a fluid then we should set topVelocity to
                     # be the P velocity at the top of the layer.
-                    topVelocity = evaluateVelocityAtTop(velLayer, 'P')
+                    topVelocity = evaluate_velocity_at_top(velLayer, 'P')
 
                 topP = self.toSlowness(topVelocity, velLayer['topDepth'])
                 if botP >= p >= topP:

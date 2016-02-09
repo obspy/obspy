@@ -22,10 +22,10 @@ class TauBranch(object):
     branch. A branch is a group of layers bounded by discontinuities or
     reversals in slowness gradient.
     """
-    def __init__(self, topDepth=0, botDepth=0, isPWave=False):
-        self.topDepth = topDepth
-        self.botDepth = botDepth
-        self.isPWave = isPWave
+    def __init__(self, top_depth=0, bot_depth=0, is_p_wave=False):
+        self.topDepth = top_depth
+        self.botDepth = bot_depth
+        self.isPWave = is_p_wave
         self.DEBUG = False
 
     def __str__(self):
@@ -40,31 +40,32 @@ class TauBranch(object):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    def createBranch(self, sMod, minPSoFar, ray_params):
+    def create_branch(self, s_mod, min_p_so_far, ray_params):
         """
         Calculates tau for this branch, between slowness layers topLayerNum and
-        botLayerNum, inclusive.
+        bot_layer_num, inclusive.
         """
-        topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
-        botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
-        topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
-        botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
-        if topSLayer['topDepth'] != self.topDepth \
-                or botSLayer['botDepth'] != self.botDepth:
-            if topSLayer['topDepth'] != self.topDepth \
-                    and abs(topSLayer['topDepth'] - self.topDepth) < 0.000001:
+        top_layer_num = s_mod.layer_number_below(self.topDepth, self.isPWave)
+        bot_layer_num = s_mod.layer_number_above(self.botDepth, self.isPWave)
+        top_s_layer = s_mod.getSlownessLayer(top_layer_num, self.isPWave)
+        bot_s_layer = s_mod.getSlownessLayer(bot_layer_num, self.isPWave)
+        if top_s_layer['topDepth'] != self.topDepth \
+                or bot_s_layer['botDepth'] != self.botDepth:
+            if top_s_layer['topDepth'] != self.topDepth \
+                    and abs(top_s_layer['topDepth'] -
+                            self.topDepth) < 0.000001:
                 # Really close, so just move the top.
                 print("Changing topDepth" + str(self.topDepth) + "-->" +
-                      str(topSLayer.topDepth))
-                self.topDepth = topSLayer['topDepth']
-            elif botSLayer['botDepth'] != self.botDepth and \
-                    abs(botSLayer['botDepth'] - self.botDepth) < 0.000001:
+                      str(top_s_layer.topDepth))
+                self.topDepth = top_s_layer['topDepth']
+            elif bot_s_layer['botDepth'] != self.botDepth and \
+                    abs(bot_s_layer['botDepth'] - self.botDepth) < 0.000001:
                 # Really close, so just move the bottom.
                 print("Changing botDepth" + str(self.botDepth) + "-->" +
-                      str(botSLayer['botDepth']))
-                self.botDepth = botSLayer['botDepth']
+                      str(bot_s_layer['botDepth']))
+                self.botDepth = bot_s_layer['botDepth']
             else:
-                raise TauModelError("createBranch: TauBranch not compatible "
+                raise TauModelError("create_branch: TauBranch not compatible "
                                     "with slowness sampling at topDepth" +
                                     str(self.topDepth))
         # Here we set minTurnRayParam to be the ray parameter that turns within
@@ -72,77 +73,79 @@ class TauBranch(object):
         # max_ray_param is the largest ray parameter that can penetrate this
         # branch. min_ray_param is the minimum ray parameter that turns or is
         # totally reflected in this branch.
-        self.max_ray_param = minPSoFar
-        self.minTurnRayParam = sMod.getMinTurnRayParam(self.botDepth,
-                                                       self.isPWave)
-        self.min_ray_param = sMod.getMinRayParam(self.botDepth, self.isPWave)
+        self.max_ray_param = min_p_so_far
+        self.minTurnRayParam = s_mod.getMinTurnRayParam(self.botDepth,
+                                                        self.isPWave)
+        self.min_ray_param = s_mod.getMinRayParam(self.botDepth, self.isPWave)
 
-        timeDist = self.calcTimeDist(sMod, topLayerNum, botLayerNum,
-                                     ray_params)
-        self.time = timeDist['time']
-        self.dist = timeDist['dist']
+        time_dist = self.calc_time_dist(s_mod, top_layer_num, bot_layer_num,
+                                        ray_params)
+        self.time = time_dist['time']
+        self.dist = time_dist['dist']
         self.tau = self.time - ray_params * self.dist
 
-    def calcTimeDist(self, sMod, topLayerNum, botLayerNum, ray_params,
-                     allow_turn_in_layer=False):
-        timeDist = np.zeros(shape=ray_params.shape, dtype=TimeDist)
-        timeDist['p'] = ray_params
+    def calc_time_dist(self, s_mod, top_layer_num, bot_layer_num, ray_params,
+                       allow_turn_in_layer=False):
+        time_dist = np.zeros(shape=ray_params.shape, dtype=TimeDist)
+        time_dist['p'] = ray_params
 
-        layerNum = np.arange(topLayerNum, botLayerNum + 1)
-        layer = sMod.getSlownessLayer(layerNum, self.isPWave)
+        layer_num = np.arange(top_layer_num, bot_layer_num + 1)
+        layer = s_mod.getSlownessLayer(layer_num, self.isPWave)
 
         plen = len(ray_params)
-        llen = len(layerNum)
+        llen = len(layer_num)
         ray_params = np.repeat(ray_params, llen).reshape((plen, llen))
-        layerNum = np.tile(layerNum, plen).reshape((plen, llen))
+        layer_num = np.tile(layer_num, plen).reshape((plen, llen))
 
         # Ignore some errors because we pass in a few invalid combinations that
         # are masked out later.
         with np.errstate(divide='ignore', invalid='ignore'):
-            time, dist = sMod.layerTimeDist(ray_params, layerNum, self.isPWave,
-                                            check=False, allow_turn=True)
+            time, dist = s_mod.layerTimeDist(
+                ray_params, layer_num, self.isPWave, check=False,
+                allow_turn=True)
 
         clibtau.tau_branch_calc_time_dist_inner_loop(
-            ray_params, time, dist, layer, timeDist, ray_params.shape[0],
+            ray_params, time, dist, layer, time_dist, ray_params.shape[0],
             ray_params.shape[1], self.max_ray_param, allow_turn_in_layer)
 
-        return timeDist
+        return time_dist
 
-    def insert(self, ray_param, sMod, index):
+    def insert(self, ray_param, s_mod, index):
         """
         Inserts the distance, time, and tau increment for the slowness sample
         given to the branch. This is used for making the depth correction to a
         tau model for a non-surface source.
         """
-        topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
-        botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
-        topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
-        botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
-        if topSLayer['topDepth'] != self.topDepth \
-                or botSLayer['botDepth'] != self.botDepth:
+        top_layer_num = s_mod.layer_number_below(self.topDepth, self.isPWave)
+        bot_layer_num = s_mod.layer_number_above(self.botDepth, self.isPWave)
+        top_s_layer = s_mod.getSlownessLayer(top_layer_num, self.isPWave)
+        bot_s_layer = s_mod.getSlownessLayer(bot_layer_num, self.isPWave)
+        if top_s_layer['topDepth'] != self.topDepth \
+                or bot_s_layer['botDepth'] != self.botDepth:
             raise TauModelError(
                 "TauBranch depths not compatible with slowness sampling.")
 
         new_time = 0.0
         new_dist = 0.0
-        if topSLayer['botP'] >= ray_param and topSLayer['topP'] >= ray_param:
-            layerNum = np.arange(topLayerNum, botLayerNum + 1)
-            layers = sMod.getSlownessLayer(layerNum, self.isPWave)
+        if top_s_layer['botP'] >= ray_param and \
+                top_s_layer['topP'] >= ray_param:
+            layer_num = np.arange(top_layer_num, bot_layer_num + 1)
+            layers = s_mod.getSlownessLayer(layer_num, self.isPWave)
             # So we don't sum below the turning depth.
             mask = np.cumprod(layers['botP'] >= ray_param).astype(np.bool_)
-            layerNum = layerNum[mask]
-            if len(layerNum):
-                time, dist = sMod.layerTimeDist(ray_param, layerNum,
-                                                self.isPWave)
+            layer_num = layer_num[mask]
+            if len(layer_num):
+                time, dist = s_mod.layerTimeDist(ray_param, layer_num,
+                                                 self.isPWave)
                 new_time = np.sum(time)
                 new_dist = np.sum(dist)
 
-        self.shiftBranch(index)
+        self.shift_branch(index)
         self.time[index] = new_time
         self.dist[index] = new_dist
         self.tau[index] = new_time - ray_param * new_dist
 
-    def shiftBranch(self, index):
+    def shift_branch(self, index):
         new_size = len(self.dist) + 1
 
         self.time.resize(new_size)
@@ -157,154 +160,156 @@ class TauBranch(object):
         self.tau[index + 1:] = self.tau[index:-1]
         self.tau[index] = 0
 
-    def difference(self, topBranch, indexP, indexS, sMod, minPSoFar,
+    def difference(self, top_branch, index_p, index_s, s_mod, min_p_so_far,
                    ray_params):
         """
         Generates a new tau branch by "subtracting" the given tau branch from
         this tau branch (self). The given tau branch is assumed to by the
-        upper part of this branch. indexP specifies where a new ray
+        upper part of this branch. index_p specifies where a new ray
         corresponding to a P wave sample has been added; it is -1 if no ray
-        parameter has been added to topBranch. indexS  is similar to indexP
+        parameter has been added to top_branch. index_s  is similar to index_p
         except for a S wave sample. Note that although the ray parameters
-        for indexP and indexS were for the P and S waves that turned at the
+        for index_p and index_s were for the P and S waves that turned at the
         source depth, both ray parameters need to be added to both P and S
         branches.
         """
-        if topBranch.topDepth != self.topDepth \
-                or topBranch.botDepth > self.botDepth:
-            if topBranch.topDepth != self.topDepth \
-                    and abs(topBranch.topDepth - self.topDepth) < 0.000001:
+        if top_branch.topDepth != self.topDepth \
+                or top_branch.botDepth > self.botDepth:
+            if top_branch.topDepth != self.topDepth \
+                    and abs(top_branch.topDepth - self.topDepth) < 0.000001:
                 # Really close, just move top.
-                self.topDepth = topBranch.topDepth
+                self.topDepth = top_branch.topDepth
             else:
                 raise TauModelError(
                     "TauBranch not compatible with slowness sampling.")
-        if topBranch.isPWave != self.isPWave:
+        if top_branch.isPWave != self.isPWave:
             raise TauModelError(
                 "Can't subtract branches is isPWave doesn't agree.")
         # Find the top and bottom slowness layers of the bottom half.
-        topLayerNum = sMod.layer_number_below(topBranch.botDepth, self.isPWave)
-        botLayerNum = sMod.layer_number_below(self.botDepth, self.isPWave)
-        topSLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
-        botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
-        if botSLayer['topDepth'] == self.botDepth \
-                and botSLayer['botDepth'] > self.botDepth:
+        top_layer_num = s_mod.layer_number_below(top_branch.botDepth,
+                                                 self.isPWave)
+        bot_layer_num = s_mod.layer_number_below(self.botDepth, self.isPWave)
+        top_s_layer = s_mod.getSlownessLayer(top_layer_num, self.isPWave)
+        bot_s_layer = s_mod.getSlownessLayer(bot_layer_num, self.isPWave)
+        if bot_s_layer['topDepth'] == self.botDepth \
+                and bot_s_layer['botDepth'] > self.botDepth:
             # Gone one too far.
-            botLayerNum -= 1
-            botSLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
-        if topSLayer['topDepth'] != topBranch.botDepth \
-                or botSLayer['botDepth'] != self.botDepth:
+            bot_layer_num -= 1
+            bot_s_layer = s_mod.getSlownessLayer(bot_layer_num, self.isPWave)
+        if top_s_layer['topDepth'] != top_branch.botDepth \
+                or bot_s_layer['botDepth'] != self.botDepth:
             raise TauModelError(
                 "TauBranch not compatible with slowness sampling.")
-        # Make sure indexP and indexS really correspond to new ray
+        # Make sure index_p and index_s really correspond to new ray
         # parameters at the top of this branch.
-        sLayer = sMod.getSlownessLayer(sMod.layer_number_below(
-            topBranch.botDepth, True), True)
-        if indexP >= 0 and sLayer['topP'] != ray_params[indexP]:
+        s_layer = s_mod.getSlownessLayer(s_mod.layer_number_below(
+            top_branch.botDepth, True), True)
+        if index_p >= 0 and s_layer['topP'] != ray_params[index_p]:
             raise TauModelError("P wave index doesn't match top layer.")
-        sLayer = sMod.getSlownessLayer(sMod.layer_number_below(
-            topBranch.botDepth, False), False)
-        if indexS >= 0 and sLayer['topP'] != ray_params[indexS]:
+        s_layer = s_mod.getSlownessLayer(s_mod.layer_number_below(
+            top_branch.botDepth, False), False)
+        if index_s >= 0 and s_layer['topP'] != ray_params[index_s]:
             raise TauModelError("S wave index doesn't match top layer.")
-        del sLayer
+        del s_layer
         # Construct the new TauBranch, going from the bottom of the top half
         # to the bottom of the whole branch.
-        botBranch = TauBranch(topBranch.botDepth, self.botDepth, self.isPWave)
-        botBranch.max_ray_param = topBranch.min_ray_param
-        botBranch.minTurnRayParam = self.minTurnRayParam
-        botBranch.min_ray_param = self.min_ray_param
-        PRayParam = -1
-        SRayParam = -1
-        arrayLength = len(self.dist)
-        if indexP != -1:
-            arrayLength += 1
-            PRayParam = ray_params[indexP:indexP + 1]
-            timeDistP = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
-                                               PRayParam)
-        if indexS != -1 and indexS != indexP:
-            arrayLength += 1
-            SRayParam = ray_params[indexS:indexS + 1]
-            timeDistS = botBranch.calcTimeDist(sMod, topLayerNum, botLayerNum,
-                                               SRayParam)
+        bot_branch = TauBranch(top_branch.botDepth, self.botDepth,
+                               self.isPWave)
+        bot_branch.max_ray_param = top_branch.min_ray_param
+        bot_branch.minTurnRayParam = self.minTurnRayParam
+        bot_branch.min_ray_param = self.min_ray_param
+        p_ray_param = -1
+        s_ray_param = -1
+        array_length = len(self.dist)
+        if index_p != -1:
+            array_length += 1
+            p_ray_param = ray_params[index_p:index_p + 1]
+            time_dist_p = bot_branch.calc_time_dist(
+                s_mod, top_layer_num, bot_layer_num, p_ray_param)
+        if index_s != -1 and index_s != index_p:
+            array_length += 1
+            s_ray_param = ray_params[index_s:index_s + 1]
+            time_dist_s = bot_branch.calc_time_dist(s_mod, top_layer_num,
+                                                    bot_layer_num, s_ray_param)
         else:
-            # In case indexS==P then only need one.
-            indexS = -1
+            # In case index_s==P then only need one.
+            index_s = -1
 
-        if indexP == -1:
+        if index_p == -1:
             # Then both indices are -1 so no new ray parameters are added.
-            botBranch.time = self.time - topBranch.time
-            botBranch.dist = self.dist - topBranch.dist
-            botBranch.tau = self.tau - topBranch.tau
+            bot_branch.time = self.time - top_branch.time
+            bot_branch.dist = self.dist - top_branch.dist
+            bot_branch.tau = self.tau - top_branch.tau
         else:
-            botBranch.time = np.empty(arrayLength)
-            botBranch.dist = np.empty(arrayLength)
-            botBranch.tau = np.empty(arrayLength)
+            bot_branch.time = np.empty(array_length)
+            bot_branch.dist = np.empty(array_length)
+            bot_branch.tau = np.empty(array_length)
 
-            if indexS == -1:
-                # Only indexP != -1.
-                botBranch.time[:indexP] = (self.time[:indexP] -
-                                           topBranch.time[:indexP])
-                botBranch.dist[:indexP] = (self.dist[:indexP] -
-                                           topBranch.dist[:indexP])
-                botBranch.tau[:indexP] = (self.tau[:indexP] -
-                                          topBranch.tau[:indexP])
+            if index_s == -1:
+                # Only index_p != -1.
+                bot_branch.time[:index_p] = (self.time[:index_p] -
+                                             top_branch.time[:index_p])
+                bot_branch.dist[:index_p] = (self.dist[:index_p] -
+                                             top_branch.dist[:index_p])
+                bot_branch.tau[:index_p] = (self.tau[:index_p] -
+                                            top_branch.tau[:index_p])
 
-                botBranch.time[indexP] = timeDistP['time']
-                botBranch.dist[indexP] = timeDistP['dist']
-                botBranch.tau[indexP] = (timeDistP['time'] -
-                                         PRayParam * timeDistP['dist'])
+                bot_branch.time[index_p] = time_dist_p['time']
+                bot_branch.dist[index_p] = time_dist_p['dist']
+                bot_branch.tau[index_p] = (time_dist_p['time'] -
+                                           p_ray_param * time_dist_p['dist'])
 
-                botBranch.time[indexP + 1:] = (self.time[indexP:] -
-                                               topBranch.time[indexP + 1:])
-                botBranch.dist[indexP + 1:] = (self.dist[indexP:] -
-                                               topBranch.dist[indexP + 1:])
-                botBranch.tau[indexP + 1:] = (self.tau[indexP:] -
-                                              topBranch.tau[indexP + 1:])
+                bot_branch.time[index_p + 1:] = (self.time[index_p:] -
+                                                 top_branch.time[index_p + 1:])
+                bot_branch.dist[index_p + 1:] = (self.dist[index_p:] -
+                                                 top_branch.dist[index_p + 1:])
+                bot_branch.tau[index_p + 1:] = (self.tau[index_p:] -
+                                                top_branch.tau[index_p + 1:])
 
             else:
-                # Both indexP and S are != -1 so have two new samples
-                botBranch.time[:indexS] = (self.time[:indexS] -
-                                           topBranch.time[:indexS])
-                botBranch.dist[:indexS] = (self.dist[:indexS] -
-                                           topBranch.dist[:indexS])
-                botBranch.tau[:indexS] = (self.tau[:indexS] -
-                                          topBranch.tau[:indexS])
+                # Both index_p and S are != -1 so have two new samples
+                bot_branch.time[:index_s] = (self.time[:index_s] -
+                                             top_branch.time[:index_s])
+                bot_branch.dist[:index_s] = (self.dist[:index_s] -
+                                             top_branch.dist[:index_s])
+                bot_branch.tau[:index_s] = (self.tau[:index_s] -
+                                            top_branch.tau[:index_s])
 
-                botBranch.time[indexS] = timeDistS['time']
-                botBranch.dist[indexS] = timeDistS['dist']
-                botBranch.tau[indexS] = (timeDistS['time'] -
-                                         SRayParam * timeDistS['dist'])
+                bot_branch.time[index_s] = time_dist_s['time']
+                bot_branch.dist[index_s] = time_dist_s['dist']
+                bot_branch.tau[index_s] = (time_dist_s['time'] -
+                                           s_ray_param * time_dist_s['dist'])
 
-                botBranch.time[indexS + 1:indexP] = (
-                    self.time[indexS:indexP - 1] -
-                    topBranch.time[indexS + 1:indexP])
-                botBranch.dist[indexS + 1:indexP] = (
-                    self.dist[indexS:indexP - 1] -
-                    topBranch.dist[indexS + 1:indexP])
-                botBranch.tau[indexS + 1:indexP] = (
-                    self.tau[indexS:indexP - 1] -
-                    topBranch.tau[indexS + 1:indexP])
+                bot_branch.time[index_s + 1:index_p] = (
+                    self.time[index_s:index_p - 1] -
+                    top_branch.time[index_s + 1:index_p])
+                bot_branch.dist[index_s + 1:index_p] = (
+                    self.dist[index_s:index_p - 1] -
+                    top_branch.dist[index_s + 1:index_p])
+                bot_branch.tau[index_s + 1:index_p] = (
+                    self.tau[index_s:index_p - 1] -
+                    top_branch.tau[index_s + 1:index_p])
 
-                botBranch.time[indexP] = timeDistP['time']
-                botBranch.dist[indexP] = timeDistP['dist']
-                botBranch.tau[indexP] = (timeDistP['time'] -
-                                         PRayParam * timeDistP['dist'])
+                bot_branch.time[index_p] = time_dist_p['time']
+                bot_branch.dist[index_p] = time_dist_p['dist']
+                bot_branch.tau[index_p] = (time_dist_p['time'] -
+                                           p_ray_param * time_dist_p['dist'])
 
-                botBranch.time[indexP + 1:] = (self.time[indexP - 1:] -
-                                               topBranch.time[indexP + 1:])
-                botBranch.dist[indexP + 1:] = (self.dist[indexP - 1:] -
-                                               topBranch.dist[indexP + 1:])
-                botBranch.tau[indexP + 1:] = (self.tau[indexP - 1:] -
-                                              topBranch.tau[indexP + 1:])
+                bot_branch.time[index_p + 1:] = (self.time[index_p - 1:] -
+                                                 top_branch.time[index_p + 1:])
+                bot_branch.dist[index_p + 1:] = (self.dist[index_p - 1:] -
+                                                 top_branch.dist[index_p + 1:])
+                bot_branch.tau[index_p + 1:] = (self.tau[index_p - 1:] -
+                                                top_branch.tau[index_p + 1:])
 
-        return botBranch
+        return bot_branch
 
-    def path(self, ray_param, downgoing, sMod):
+    def path(self, ray_param, downgoing, s_mod):
         """
-        Called from TauP_Path to calculate ray paths.
+        Called from TauPPath to calculate ray paths.
         :param ray_param:
         :param downgoing:
-        :param sMod:
+        :param s_mod:
         :return:
         """
         if ray_param > self.max_ray_param:
@@ -312,121 +317,125 @@ class TauBranch(object):
         assert ray_param >= 0
 
         try:
-            topLayerNum = sMod.layer_number_below(self.topDepth, self.isPWave)
-            botLayerNum = sMod.layer_number_above(self.botDepth, self.isPWave)
+            top_layer_num = s_mod.layer_number_below(self.topDepth,
+                                                     self.isPWave)
+            bot_layer_num = s_mod.layer_number_above(self.botDepth,
+                                                     self.isPWave)
         # except NoSuchLayerError as e:
         except SlownessModelError:
             raise SlownessModelError("SlownessModel and TauModel are likely"
                                      "out of sync.")
 
-        thePath = np.empty(botLayerNum - topLayerNum + 1, dtype=TimeDist)
-        pathIndex = 0
+        the_path = np.empty(bot_layer_num - top_layer_num + 1, dtype=TimeDist)
+        path_index = 0
 
         # Check to make sure layers and branches are compatible.
-        sLayer = sMod.getSlownessLayer(topLayerNum, self.isPWave)
-        if sLayer['topDepth'] != self.topDepth:
+        s_layer = s_mod.getSlownessLayer(top_layer_num, self.isPWave)
+        if s_layer['topDepth'] != self.topDepth:
             raise SlownessModelError("Branch and slowness model are not in "
                                      "agreement.")
-        sLayer = sMod.getSlownessLayer(botLayerNum, self.isPWave)
-        if sLayer['botDepth'] != self.botDepth:
+        s_layer = s_mod.getSlownessLayer(bot_layer_num, self.isPWave)
+        if s_layer['botDepth'] != self.botDepth:
             raise SlownessModelError("Branch and slowness model are not in "
                                      "agreement.")
 
         # Downgoing branches:
         if downgoing:
-            sLayerNum = np.arange(topLayerNum, botLayerNum + 1)
-            sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            s_layer_num = np.arange(top_layer_num, bot_layer_num + 1)
+            s_layer = s_mod.getSlownessLayer(s_layer_num, self.isPWave)
 
-            mask = np.cumprod(sLayer['botP'] >= ray_param).astype(np.bool_)
-            mask &= sLayer['topDepth'] != sLayer['botDepth']
-            sLayerNum = sLayerNum[mask]
-            sLayer = sLayer[mask]
+            mask = np.cumprod(s_layer['botP'] >= ray_param).astype(np.bool_)
+            mask &= s_layer['topDepth'] != s_layer['botDepth']
+            s_layer_num = s_layer_num[mask]
+            s_layer = s_layer[mask]
 
-            if len(sLayer):
-                pathIndexEnd = pathIndex + len(sLayer)
-                time, dist = sMod.layerTimeDist(
+            if len(s_layer):
+                path_index_end = path_index + len(s_layer)
+                time, dist = s_mod.layerTimeDist(
                     ray_param,
-                    sLayerNum,
+                    s_layer_num,
                     self.isPWave)
-                thePath[pathIndex:pathIndexEnd]['p'] = ray_param
-                thePath[pathIndex:pathIndexEnd]['time'] = time
-                thePath[pathIndex:pathIndexEnd]['dist'] = dist
-                thePath[pathIndex:pathIndexEnd]['depth'] = sLayer['botDepth']
-                pathIndex = pathIndexEnd
+                the_path[path_index:path_index_end]['p'] = ray_param
+                the_path[path_index:path_index_end]['time'] = time
+                the_path[path_index:path_index_end]['dist'] = dist
+                the_path[path_index:path_index_end]['depth'] = \
+                    s_layer['botDepth']
+                path_index = path_index_end
 
             # Apply Bullen laws on last element, if available.
-            if len(sLayerNum):
-                sLayerNum = sLayerNum[-1] + 1
+            if len(s_layer_num):
+                s_layer_num = s_layer_num[-1] + 1
             else:
-                sLayerNum = topLayerNum
-            if sLayerNum <= botLayerNum:
-                sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
-                if sLayer['topDepth'] != sLayer['botDepth']:
-                    turnDepth = bullenDepthFor(sLayer, ray_param,
-                                               sMod.radius_of_planet)
-                    turnSLayer = np.array([(sLayer['topP'], sLayer['topDepth'],
-                                            ray_param, turnDepth)],
-                                          dtype=SlownessLayer)
+                s_layer_num = top_layer_num
+            if s_layer_num <= bot_layer_num:
+                s_layer = s_mod.getSlownessLayer(s_layer_num, self.isPWave)
+                if s_layer['topDepth'] != s_layer['botDepth']:
+                    turn_depth = bullenDepthFor(s_layer, ray_param,
+                                                s_mod.radius_of_planet)
+                    turn_s_layer = np.array([
+                        (s_layer['topP'], s_layer['topDepth'], ray_param,
+                         turn_depth)], dtype=SlownessLayer)
                     time, dist = bullenRadialSlowness(
-                        turnSLayer,
+                        turn_s_layer,
                         ray_param,
-                        sMod.radius_of_planet)
-                    thePath[pathIndex]['p'] = ray_param
-                    thePath[pathIndex]['time'] = time
-                    thePath[pathIndex]['dist'] = dist
-                    thePath[pathIndex]['depth'] = turnSLayer['botDepth']
-                    pathIndex += 1
+                        s_mod.radius_of_planet)
+                    the_path[path_index]['p'] = ray_param
+                    the_path[path_index]['time'] = time
+                    the_path[path_index]['dist'] = dist
+                    the_path[path_index]['depth'] = turn_s_layer['botDepth']
+                    path_index += 1
 
         # Upgoing branches:
         else:
-            sLayerNum = np.arange(botLayerNum, topLayerNum - 1, -1)
-            sLayer = sMod.getSlownessLayer(sLayerNum, self.isPWave)
+            s_layer_num = np.arange(bot_layer_num, top_layer_num - 1, -1)
+            s_layer = s_mod.getSlownessLayer(s_layer_num, self.isPWave)
 
-            mask = np.logical_or(sLayer['topP'] <= ray_param,
-                                 sLayer['topDepth'] == sLayer['botDepth'])
+            mask = np.logical_or(s_layer['topP'] <= ray_param,
+                                 s_layer['topDepth'] == s_layer['botDepth'])
             mask = np.cumprod(mask).astype(np.bool_)
             mask[-1] = False  # Always leave one element for Bullen.
 
             # Apply Bullen laws on first available element, if possible.
             first_unmasked = np.sum(mask)
-            sLayer2 = sLayer[first_unmasked]
-            if sLayer2['botP'] < ray_param:
-                turnDepth = bullenDepthFor(sLayer2, ray_param,
-                                           sMod.radius_of_planet)
-                turnSLayer = np.array([(sLayer2['topP'], sLayer2['topDepth'],
-                                        ray_param, turnDepth)],
-                                      dtype=SlownessLayer)
+            s_layer_2 = s_layer[first_unmasked]
+            if s_layer_2['botP'] < ray_param:
+                turn_depth = bullenDepthFor(s_layer_2, ray_param,
+                                            s_mod.radius_of_planet)
+                turn_s_layer = np.array([(
+                    s_layer_2['topP'], s_layer_2['topDepth'], ray_param,
+                    turn_depth)], dtype=SlownessLayer)
                 time, dist = bullenRadialSlowness(
-                    turnSLayer,
+                    turn_s_layer,
                     ray_param,
-                    sMod.radius_of_planet)
-                thePath[pathIndex]['p'] = ray_param
-                thePath[pathIndex]['time'] = time
-                thePath[pathIndex]['dist'] = dist
-                thePath[pathIndex]['depth'] = turnSLayer['topDepth']
-                pathIndex += 1
+                    s_mod.radius_of_planet)
+                the_path[path_index]['p'] = ray_param
+                the_path[path_index]['time'] = time
+                the_path[path_index]['dist'] = dist
+                the_path[path_index]['depth'] = turn_s_layer['topDepth']
+                path_index += 1
                 mask[first_unmasked] = True
 
             # Apply regular time/distance calculation on all unmasked and
             # non-zero thickness layers.
-            mask = (~mask) & (sLayer['topDepth'] != sLayer['botDepth'])
-            sLayer = sLayer[mask]
-            sLayerNum = sLayerNum[mask]
+            mask = (~mask) & (s_layer['topDepth'] != s_layer['botDepth'])
+            s_layer = s_layer[mask]
+            s_layer_num = s_layer_num[mask]
 
-            if len(sLayer):
-                pathIndexEnd = pathIndex + len(sLayer)
-                time, dist = sMod.layerTimeDist(
+            if len(s_layer):
+                path_index_end = path_index + len(s_layer)
+                time, dist = s_mod.layerTimeDist(
                     ray_param,
-                    sLayerNum,
+                    s_layer_num,
                     self.isPWave)
-                thePath[pathIndex:pathIndexEnd]['p'] = ray_param
-                thePath[pathIndex:pathIndexEnd]['time'] = time
-                thePath[pathIndex:pathIndexEnd]['dist'] = dist
-                thePath[pathIndex:pathIndexEnd]['depth'] = sLayer['topDepth']
-                pathIndex = pathIndexEnd
+                the_path[path_index:path_index_end]['p'] = ray_param
+                the_path[path_index:path_index_end]['time'] = time
+                the_path[path_index:path_index_end]['dist'] = dist
+                the_path[path_index:path_index_end]['depth'] = \
+                    s_layer['topDepth']
+                path_index = path_index_end
 
-        tempPath = thePath[:pathIndex]
-        return tempPath
+        temp_path = the_path[:path_index]
+        return temp_path
 
     def _to_array(self):
         """
