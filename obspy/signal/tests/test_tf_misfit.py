@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
                                     tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
-from obspy.signal.tf_misfit import plotTfr
+from obspy.signal.tf_misfit import plot_tfr
 
 
 class TfTestCase(unittest.TestCase):
@@ -253,10 +253,15 @@ class TfPlotTestCase(unittest.TestCase):
         t, dt = np.linspace(0., 20 * np.pi, n, retstep=True)
         sig = np.sin(t)
 
-        with ImageComparison(self.path, 'time_frequency_representation.png') \
-                as ic:
-            plotTfr(sig, dt=dt, show=False)
-            plt.savefig(ic.name)
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path,
+                                 'time_frequency_representation.png') as ic:
+                plot_tfr(sig, dt=dt, show=False)
+                plt.savefig(ic.name)
+        finally:
+            np.seterr(**_t)
 
 
 def suite():
