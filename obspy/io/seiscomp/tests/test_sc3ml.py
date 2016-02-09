@@ -28,7 +28,7 @@ from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
                                            FIRResponseStage)
 
 
-class sc3mlTestCase(unittest.TestCase):
+class SC3MLTestCase(unittest.TestCase):
 
     def setUp(self):
         """
@@ -42,7 +42,7 @@ class sc3mlTestCase(unittest.TestCase):
                                                    format="STATIONXML")
         self.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
 
-    def test_compareXML(self):
+    def test_compare_xml(self):
         """
         Easiest way to compare is to write both Inventories back
         to stationXML format and compare line by line
@@ -80,7 +80,7 @@ class sc3mlTestCase(unittest.TestCase):
                 tag = str(stationxml).split(">")[0][1:]
                 assert(tag in excluded_tags)
 
-    def test_compareUpperLevel(self):
+    def test_compare_upper_level(self):
         """
         Assert the top-level contents of the two dictionaries
         Networks, channels, stations, locations
@@ -90,7 +90,7 @@ class sc3mlTestCase(unittest.TestCase):
         for sc3ml, stationxml in zip(stationxml_content, sc3ml_content):
             self.assertEqual(sc3ml, stationxml)
 
-    def test_compareResponse(self):
+    def test_compare_response(self):
         """
         More assertions in the actual response info
         """
@@ -217,7 +217,7 @@ class sc3mlTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(sc3mlTestCase, "test")
+    return unittest.makeSuite(SC3MLTestCase, "test")
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
