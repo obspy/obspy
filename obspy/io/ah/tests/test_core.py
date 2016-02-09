@@ -180,7 +180,7 @@ class CoreTestCase(unittest.TestCase):
         testfile = os.path.join(self.path, 'ah2.t')
         self.assertRaises(NotImplementedError, _read_ah, testfile)
 
-    def test_TSG(self):
+    def test_tsg(self):
         """
         Test reading AH v1 files of the STsR-TSG System at Borovoye.
 
