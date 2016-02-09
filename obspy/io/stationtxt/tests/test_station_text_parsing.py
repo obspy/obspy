@@ -19,8 +19,8 @@ import os
 import unittest
 
 import obspy
-from obspy.io.stationtxt.core import (is_FDSN_station_text_file,
-                                      read_FDSN_station_text_file)
+from obspy.io.stationtxt.core import (is_fdsn_station_text_file,
+                                      read_fdsn_station_text_file)
 from obspy.core.inventory import (Channel, Station, Network, Inventory, Site,
                                   Equipment, Response, InstrumentSensitivity)
 
@@ -45,52 +45,52 @@ class StationTextTestCase(unittest.TestCase):
 
         # Test with filenames.
         for filename in txt_files:
-            self.assertTrue(is_FDSN_station_text_file(filename))
+            self.assertTrue(is_fdsn_station_text_file(filename))
         for filename in non_txt_files:
-            self.assertFalse(is_FDSN_station_text_file(filename))
+            self.assertFalse(is_fdsn_station_text_file(filename))
 
         # Text with open files in binary mode.
         for filename in txt_files:
             with open(filename, "rb") as fh:
-                self.assertTrue(is_FDSN_station_text_file(fh))
+                self.assertTrue(is_fdsn_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
-                self.assertFalse(is_FDSN_station_text_file(fh))
+                self.assertFalse(is_fdsn_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
 
         # Text with open files in text mode.
         for filename in txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
-                self.assertTrue(is_FDSN_station_text_file(fh))
+                self.assertTrue(is_fdsn_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
-                self.assertFalse(is_FDSN_station_text_file(fh))
+                self.assertFalse(is_fdsn_station_text_file(fh))
                 self.assertEqual(fh.tell(), 0)
 
         # Text with BytesIO.
         for filename in txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertTrue(is_FDSN_station_text_file(buf))
+                    self.assertTrue(is_fdsn_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rb") as fh:
                 with io.BytesIO(fh.read()) as buf:
-                    self.assertFalse(is_FDSN_station_text_file(buf))
+                    self.assertFalse(is_fdsn_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
 
         # Text with StringIO.
         for filename in txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertTrue(is_FDSN_station_text_file(buf))
+                    self.assertTrue(is_fdsn_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
         for filename in non_txt_files:
             with open(filename, "rt", encoding="utf8") as fh:
                 with io.StringIO(fh.read()) as buf:
-                    self.assertFalse(is_FDSN_station_text_file(buf))
+                    self.assertFalse(is_fdsn_station_text_file(buf))
                     self.assertEqual(buf.tell(), 0)
 
     def test_reading_network_file(self):
@@ -115,7 +115,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "network_level_fdsn.txt")
-        inv = read_FDSN_station_text_file(filename)
+        inv = read_fdsn_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -126,7 +126,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -136,7 +136,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -148,7 +148,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -160,7 +160,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -200,7 +200,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "station_level_fdsn.txt")
-        inv = read_FDSN_station_text_file(filename)
+        inv = read_fdsn_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -211,7 +211,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -221,7 +221,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -233,7 +233,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -245,7 +245,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -406,7 +406,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "channel_level_fdsn.txt")
-        inv = read_FDSN_station_text_file(filename)
+        inv = read_fdsn_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -417,7 +417,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -427,7 +427,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -439,7 +439,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -451,7 +451,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -476,7 +476,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "unicode_example_fdsn.txt")
-        inv = read_FDSN_station_text_file(filename)
+        inv = read_fdsn_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -487,7 +487,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -497,7 +497,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -509,7 +509,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -521,7 +521,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -566,7 +566,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from a filename.
         filename = os.path.join(self.data_dir, "log_channel_fdsn.txt")
-        inv = read_FDSN_station_text_file(filename)
+        inv = read_fdsn_station_text_file(filename)
         inv_obs = obspy.read_inventory(filename)
 
         # Copy creation date as it will be slightly different otherwise.
@@ -577,7 +577,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in text mode.
         with open(filename, "rt", encoding="utf8") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -587,7 +587,7 @@ class StationTextTestCase(unittest.TestCase):
 
         # Read from open file in binary mode.
         with open(filename, "rb") as fh:
-            inv = read_FDSN_station_text_file(fh)
+            inv = read_fdsn_station_text_file(fh)
             fh.seek(0, 0)
             inv_obs = obspy.read_inventory(fh)
         inv.created = expected_inv.created
@@ -599,7 +599,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rt", encoding="utf8") as fh:
             with io.StringIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -611,7 +611,7 @@ class StationTextTestCase(unittest.TestCase):
         with open(filename, "rb") as fh:
             with io.BytesIO(fh.read()) as buf:
                 buf.seek(0, 0)
-                inv = read_FDSN_station_text_file(buf)
+                inv = read_fdsn_station_text_file(buf)
                 buf.seek(0, 0)
                 inv_obs = obspy.read_inventory(buf)
         inv.created = expected_inv.created
@@ -629,9 +629,9 @@ class StationTextTestCase(unittest.TestCase):
         bad_file = os.path.join(self.data_dir,
                                 "channel_level_fdsn_faulty_header.txt")
 
-        inv_good = read_FDSN_station_text_file(good_file)
+        inv_good = read_fdsn_station_text_file(good_file)
         inv_obs_good = obspy.read_inventory(good_file)
-        inv_bad = read_FDSN_station_text_file(bad_file)
+        inv_bad = read_fdsn_station_text_file(bad_file)
         inv_obs_bad = obspy.read_inventory(bad_file)
 
         # Copy creation dates as it will be slightly different otherwise.
@@ -658,9 +658,9 @@ class StationTextTestCase(unittest.TestCase):
         ]
 
         for file_a, file_b in file_pairs:
-            inv_a = read_FDSN_station_text_file(file_a)
+            inv_a = read_fdsn_station_text_file(file_a)
             inv_obs_a = obspy.read_inventory(file_a)
-            inv_b = read_FDSN_station_text_file(file_b)
+            inv_b = read_fdsn_station_text_file(file_b)
             inv_obs_b = obspy.read_inventory(file_b)
 
             # Copy creation dates as it will be slightly different otherwise.
