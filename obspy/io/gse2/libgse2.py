@@ -175,7 +175,7 @@ def read_header(fh):
     pos = fh.tell()
     line = fh.readline()
     if line.startswith(b'STA2'):
-        header2 = parse_STA2(line)
+        header2 = parse_sta2(line)
         header['network'] = header2.pop("network")
         header['gse2'].update(header2)
     # in case no STA2 line is encountered we need to rewind the file pointer,
@@ -228,7 +228,7 @@ def write_header(f, headdict):
             headdict['gse2']['vang'])).encode('ascii', 'strict')
             )
     try:
-        sta2_line = compile_STA2(headdict)
+        sta2_line = compile_sta2(headdict)
     except:
         msg = "GSE2: Error while compiling the STA2 header line, omitting it."
         warnings.warn(msg)
@@ -236,7 +236,7 @@ def write_header(f, headdict):
         f.write(sta2_line)
 
 
-def uncompress_CM6(f, n_samps):
+def uncompress_cm6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
 
@@ -268,7 +268,7 @@ def uncompress_CM6(f, n_samps):
     return data
 
 
-def compress_CM6(data):
+def compress_cm6(data):
     """
     CM6 compress data
 
@@ -277,17 +277,17 @@ def compress_CM6(data):
     :returns: NumPy chararray containing compressed samples
     """
     data = np.ascontiguousarray(data, np.int32)
-    N = len(data)
+    n = len(data)
     count = [0]  # closure, must be container
     # 4 character bytes per int32_t
-    carr = np.zeros(N * 4, dtype=native_str('c'))
+    carr = np.zeros(n * 4, dtype=native_str('c'))
 
     def writer(char):
         carr[count[0]] = char
         count[0] += 1
         return 0
     cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
-    ierr = clibgse2.compress_6b_buffer(data, N, cwriter)
+    ierr = clibgse2.compress_6b_buffer(data, n, cwriter)
     if ierr != 0:
         msg = "Error status after compress_6b_buffer is NOT 0 but %d"
         raise GSEUtiError(msg % ierr)
@@ -311,9 +311,9 @@ def verify_checksum(fh, data, version=2):
     # find checksum within file
     buf = fh.readline()
     chksum_file = 0
-    CHK_LINE = ('CHK%d' % version).encode('ascii', 'strict')
+    chk_line = ('CHK%d' % version).encode('ascii', 'strict')
     while buf:
-        if buf.startswith(CHK_LINE):
+        if buf.startswith(chk_line):
             chksum_file = int(buf.strip().split()[1])
             break
         buf = fh.readline()
@@ -350,7 +350,7 @@ def read(f, verify_chksum=True):
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     headdict = read_header(f)
-    data = uncompress_CM6(f, headdict['npts'])
+    data = uncompress_cm6(f, headdict['npts'])
     # test checksum only if enabled
     if verify_chksum:
         verify_checksum(f, data, version=2)
@@ -383,9 +383,9 @@ def write(headdict, data, f, inplace=False):
     :type headdict: dict
     :param headdict: ObsPy Header
     """
-    N = len(data)
+    n = len(data)
     #
-    chksum = clibgse2.check_sum(data, N, C.c_int32(0))
+    chksum = clibgse2.check_sum(data, n, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for NumPy array
     # for you
@@ -393,8 +393,8 @@ def write(headdict, data, f, inplace=False):
         data = data.copy()
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
-    clibgse2.diff_2nd(data, N, 0)
-    data_cm6 = compress_CM6(data)
+    clibgse2.diff_2nd(data, n, 0)
+    data_cm6 = compress_cm6(data)
     # set some defaults if not available and convert header entries
     headdict.setdefault('calib', 1.0)
     headdict.setdefault('gse2', {})
@@ -414,7 +414,7 @@ def write(headdict, data, f, inplace=False):
     f.write(("CHK2 %8ld\n\n" % chksum).encode('ascii', 'strict'))
 
 
-def parse_STA2(line):
+def parse_sta2(line):
     """
     Parses a string with a GSE2 STA2 header line.
 
@@ -444,7 +444,7 @@ def parse_STA2(line):
     positions. Here are some real-world examples:
 
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
-    >>> for k, v in sorted(parse_STA2(l).items()):  \
+    >>> for k, v in sorted(parse_sta2(l).items()):  \
             # doctest: +NORMALIZE_WHITESPACE
     ...     print(k, v)
     coordsys
@@ -454,7 +454,7 @@ def parse_STA2(line):
     lon -999.0
     network
     >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
-    >>> for k, v in sorted(parse_STA2(l).items()):
+    >>> for k, v in sorted(parse_sta2(l).items()):
     ...     print(k, v)
     coordsys WGS-84
     edepth 1.234
@@ -480,7 +480,7 @@ def parse_STA2(line):
         return header
 
 
-def compile_STA2(stats):
+def compile_sta2(stats):
     """
     Returns a STA2 line as a string (including newline at end) from a
     :class:`~obspy.core.stats.Stats` object.
