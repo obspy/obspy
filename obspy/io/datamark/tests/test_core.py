@@ -23,7 +23,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_readViaObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -43,7 +43,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
         self.assertEqual(st[0].stats.channel, 'a100')
 
-    def test_readViaModule(self):
+    def test_read_via_module(self):
         """
         Read files via obspy.io.datamark.core._read_datamark function.
         """
