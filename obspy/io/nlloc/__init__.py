@@ -38,9 +38,9 @@ use `pyproj`.
 
 Then, we can load the NonLinLoc Hypocenter-Phase file into an ObsPy
 :class:`~obspy.core.event.Catalog` object using
-:func:`~obspy.core.event.read_events`, supplying our coordinate mapping function
-as `coordinate_converter` kwarg, which will be passed down to the low-level
-routine :func:`~obspy.io.nlloc.core.read_nlloc_hyp`.
+:func:`~obspy.core.event.read_events`, supplying our coordinate mapping
+function as `coordinate_converter` kwarg, which will be passed down to the
+low-level routine :func:`~obspy.io.nlloc.core.read_nlloc_hyp`.
 
 >>> from obspy import read_events
 >>> cat = read_events("/path/to/nlloc.hyp",
