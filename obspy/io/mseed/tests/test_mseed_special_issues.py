@@ -23,7 +23,8 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.mseed import util
-from obspy.io.mseed.core import _read_mseed, _write_mseed
+from obspy.io.mseed.core import _read_mseed, _write_mseed, \
+    InternalMSEEDReadingError, InternalMSEEDReadingWarning
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -42,7 +43,7 @@ def _test_function(filename):
     """
     try:
         st = read(filename)  # noqa @UnusedVariable
-    except ValueError:
+    except (ValueError, InternalMSEEDReadingError):
         # Should occur with broken files
         pass
 
@@ -133,8 +134,14 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             data_string = fp.read()[128:]  # 128 Bytes header
         data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
                                     verbose=0)
-        # test readMSTraces
-        data_record = _read_mseed(file)[0].data
+        # test readMSTraces. Will raise an internal warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            data_record = _read_mseed(file)[0].data
+
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
+
         np.testing.assert_array_equal(data, data_record)
 
     def test_one_sample_overlap(self):
@@ -674,19 +681,21 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
 
-        process = multiprocessing.Process(target=_test_function,
-                                          args=(filename, ))
-        process.start()
-        process.join(60)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            process = multiprocessing.Process(target=_test_function,
+                                              args=(filename, ))
+            process.start()
+            process.join(60)
 
-        fail = process.is_alive()
-        process.terminate()
-        if process.is_alive():
-            if platform.system() == 'Windows':
-                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
-            else:
-                os.kill(process.pid, signal.SIGKILL)
-        self.assertFalse(fail)
+            fail = process.is_alive()
+            process.terminate()
+            if process.is_alive():
+                if platform.system() == 'Windows':
+                    os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+                else:
+                    os.kill(process.pid, signal.SIGKILL)
+            self.assertFalse(fail)
 
     def test_writing_blockette_100(self):
         """
