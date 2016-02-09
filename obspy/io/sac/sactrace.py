@@ -1079,7 +1079,7 @@ class SACTrace(object):
             self.nzhour = new_reftime.hour
             self.nzmin = new_reftime.minute
             self.nzsec = new_reftime.second
-            self.nzmsec = new_reftime.microsecond / 1000
+            self.nzmsec = int(new_reftime.microsecond / 1000)
 
             # get the float seconds between the old and new reftimes
             shift = old_reftime - new_reftime
