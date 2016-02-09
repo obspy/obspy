@@ -89,6 +89,7 @@ install:
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
+  - pip install pep8-naming
   - conda list
   # done installing dependencies
   - git version
