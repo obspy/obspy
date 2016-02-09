@@ -198,7 +198,7 @@ def _read_asc(filename, headonly=False, skip=0, delta=None, length=None,
             elif key == 'START':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                header['starttime'] = toUTCDateTime(value)
+                header['starttime'] = to_utcdatetime(value)
             else:
                 # everything else gets stored into sh entry
                 if key in SH_KEYS_INT:
@@ -270,7 +270,7 @@ def _write_asc(stream, filename, included_headers=None, npl=4,
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            sio.write("START: %s\n" % from_UTCDateTime(dt))
+            sio.write("START: %s\n" % from_utcdatetime(dt))
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
             sio.write("COMP: %c\n" % trace.stats.channel[2])
@@ -441,13 +441,13 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             elif key == 'S021':
                 # 01-JAN-2009_01:01:01.0
                 # 1-OCT-2009_12:46:01.000
-                header['starttime'] = toUTCDateTime(value)
+                header['starttime'] = to_utcdatetime(value)
             elif key == 'S022':
-                header['sh']['P-ONSET'] = toUTCDateTime(value)
+                header['sh']['P-ONSET'] = to_utcdatetime(value)
             elif key == 'S023':
-                header['sh']['S-ONSET'] = toUTCDateTime(value)
+                header['sh']['S-ONSET'] = to_utcdatetime(value)
             elif key == 'S024':
-                header['sh']['ORIGIN'] = toUTCDateTime(value)
+                header['sh']['ORIGIN'] = to_utcdatetime(value)
             elif key:
                 key = INVERTED_SH_IDX.get(key, key)
                 if key in SH_KEYS_INT:
@@ -550,14 +550,14 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             temp += "C002:%c~ " % trace.stats.channel[1]
         # special format for start time
         dt = trace.stats.starttime
-        temp += "S021:%s~ " % from_UTCDateTime(dt)
+        temp += "S021:%s~ " % from_utcdatetime(dt)
         for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
-                value = from_UTCDateTime(value)
+                value = from_utcdatetime(value)
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
@@ -588,7 +588,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
     fh_data.close()
 
 
-def toUTCDateTime(value):
+def to_utcdatetime(value):
     """
     Converts time string used within Seismic Handler into a UTCDateTime.
 
@@ -598,17 +598,17 @@ def toUTCDateTime(value):
 
     .. rubric:: Example
 
-    >>> toUTCDateTime(' 2-JAN-2008_03:04:05.123')
+    >>> to_utcdatetime(' 2-JAN-2008_03:04:05.123')
     UTCDateTime(2008, 1, 2, 3, 4, 5, 123000)
-    >>> toUTCDateTime('2-JAN-2008')
+    >>> to_utcdatetime('2-JAN-2008')
     UTCDateTime(2008, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-08')
+    >>> to_utcdatetime('2-JAN-08')
     UTCDateTime(2008, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-99')
+    >>> to_utcdatetime('2-JAN-99')
     UTCDateTime(1999, 1, 2, 0, 0)
-    >>> toUTCDateTime('2-JAN-2008_1')
+    >>> to_utcdatetime('2-JAN-2008_1')
     UTCDateTime(2008, 1, 2, 1, 0)
-    >>> toUTCDateTime('2-JAN-2008_1:1')
+    >>> to_utcdatetime('2-JAN-2008_1:1')
     UTCDateTime(2008, 1, 2, 1, 1)
     """
     try:
@@ -640,7 +640,7 @@ def toUTCDateTime(value):
     return UTCDateTime(year, month, day, hour, mins) + secs
 
 
-def from_UTCDateTime(dt):
+def from_utcdatetime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
@@ -652,7 +652,7 @@ def from_UTCDateTime(dt):
 
     >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
-    >>> print(from_UTCDateTime(dt))
+    >>> print(from_utcdatetime(dt))
      2-JAN-2008_03:04:05.123
     """
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
@@ -667,7 +667,7 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     original_module=sys.modules[__name__],
     import_map={},
     function_map={
-        'fromUTCDateTime': 'obspy.io.sh.core.from_UTCDateTime',
+        'fromUTCDateTime': 'obspy.io.sh.core.from_utcdatetime',
         'isASC': 'obspy.io.sh.core._is_asc',
         'isQ': 'obspy.io.sh.core._is_q',
         'readASC': 'obspy.io.sh.core._read_asc',
