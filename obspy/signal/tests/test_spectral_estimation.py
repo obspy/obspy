@@ -443,7 +443,12 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            finally:
+                np.seterr(**_t)
 
         # test it again, checking that updating an existing plot with different
         # stack selection works..
@@ -459,7 +464,12 @@ class PsdTestCase(unittest.TestCase):
             # days, axis is in mpl days). See e.g.
             # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            finally:
+                np.seterr(**_t)
         #  b) now reuse figure and set the histogram with a different stack,
         #     image test should fail:
         ppsd.calculate_histogram(**stack_criteria_list[3])
@@ -471,7 +481,12 @@ class PsdTestCase(unittest.TestCase):
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
                     ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
-                fig.savefig(ic.name)
+                _t = np.geterr()
+                np.seterr(under="ignore")
+                try:
+                    fig.savefig(ic.name)
+                except:
+                    np.seterr(**_t)
         except ImageComparisonException:
             pass
         else:
@@ -483,7 +498,12 @@ class PsdTestCase(unittest.TestCase):
         with ImageComparison(self.path_images,
                              'ppsd_restricted_stack.png') as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            except:
+                np.seterr(**_t)
 
     def test_ppsd_add_npz(self):
         """
