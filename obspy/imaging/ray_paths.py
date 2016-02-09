@@ -20,25 +20,24 @@ from colorsys import hls_to_rgb, rgb_to_hls
 import numpy as np
 from matplotlib.colors import hex2color
 
+import ipdb
 
-def plot_rays(inventory=None, catalog=None, station_latitude=None,
-              station_longitude=None, event_latitude=None,
-              event_longitude=None, event_depth_in_km=None, phase_list=('P',),
-              kind='mayavi', colorscheme='default', animate=False,
-              savemovie=False, figsize=(800, 800), coastlines='internal',
-              taup_model='iasp91'):
+
+def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
+              evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
+              colorscheme='default', animate=False, savemovie=False,
+              figsize=(800, 800), fname_coastlines='internal',
+              taup_model='iasp91', icol=0):
     """
     Plot ray paths between this inventory and one or more events.
     """
     if kind == 'mayavi':
         _plot_rays_mayavi(
-            inventory=inventory, catalog=catalog,
-            event_latitude=event_latitude, event_longitude=event_longitude,
-            event_depth_in_km=event_depth_in_km,
-            station_latitude=station_latitude,
-            station_longitude=station_longitude, phase_list=phase_list,
-            colorscheme=colorscheme, animate=animate, savemovie=savemovie,
-            figsize=figsize, taup_model='iasp91', coastlines=coastlines)
+            inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
+            evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
+            phase_list=phase_list, colorscheme=colorscheme, animate=animate,
+            savemovie=savemovie, figsize=figsize, taup_model='iasp91',
+            fname_coastlines=fname_coastlines, icol=icol)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog,
@@ -155,7 +154,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
                       event_longitude=None, event_depth_in_km=None,
                       phase_list=['P'], colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
-                      coastlines='internal'):
+                      fname_coastlines='internal', icol=0):
     try:
         from mayavi import mlab
     except Exception as err:
@@ -197,25 +196,26 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         color_hues[2], color_hues[1] = color_hues[1], color_hues[2]
         # first color is for the continents etc:
         continent_hue = color_hues[0]
+        event_hue = color_hues[-1]
         # the remaining colors are for the rays:
-        ray_hues = color_hues[1:]
+        ray_hues = color_hues[1: -1]
 
         # now convert all of the hues to rgb colors:
         ray_light = 0.45
         ray_sat = 1.0
-        raycolors = [hls_to_rgb(ray_hues[iphase % (ncolors - 1)],
+        raycolors = [hls_to_rgb(ray_hues[(iphase + icol) % (ncolors - 2)],
                      ray_light, ray_sat) for iphase in range(nphases)]
-        stationcolor = hls_to_rgb(continent_hue, 0.8, 0.7)
+        stationcolor = hls_to_rgb(continent_hue, 0.7, 0.7)
         continentcolor = hls_to_rgb(continent_hue, 0.3, 0.2)
-        eventcolor = stationcolor
+        eventcolor = hls_to_rgb(event_hue, 0.7, 0.7)
         cmbcolor = continentcolor
         bgcolor = (0, 0, 0)
 
         # sizes:
-        sttextsize = (0.02, 0.02, 0.02)
+        sttextsize = (0.015, 0.015, 0.015)
         stmarkersize = 0.01
-        evtextsize = (0.03, 0.03, 0.03)
-        evmarkersize = 0.03
+        evtextsize = (0.015, 0.015, 0.015)
+        evmarkersize = 0.05
 
     elif colorscheme == 'bright':
         # colors (a distinct colors for each phase):
@@ -300,16 +300,26 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     # plot all stations
     fig.scene.disable_render = True # Super duper trick
     stxs, stys, stzs = zip(*stations_loc)
-    mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
-                  color=stationcolor)
+    stmarkers = mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
+                              color=stationcolor)
+    stsource = mlab.pipeline.vector_scatter(
+        stxs, stys, stzs, stxs, stys, stzs)
+    stmarkers = mlab.pipeline.glyph(stsource, scale_factor=stmarkersize,
+        scale_mode='none', color=stationcolor, mode='sphere')
+    stmarkers.glyph.glyph_source.glyph_position = 'center'
+
     for loc, stlabel in zip(stations_loc, stations_lab):
         mlab.text3d(loc[0], loc[1], loc[2], stlabel, scale=sttextsize,
                     color=stationcolor)
 
     # plot all events
     evxs, evys, evzs = zip(*events_loc)
-    mlab.points3d(evxs, evys, evzs, scale_factor=evmarkersize,
-                  color=eventcolor)
+    evsource = mlab.pipeline.vector_scatter(
+        evxs, evys, evzs, -np.array(evxs), -np.array(evys), -np.array(evzs))
+    evmarkers = mlab.pipeline.glyph(evsource, scale_factor=evmarkersize,
+        scale_mode='none', color=eventcolor, mode='cone', resolution=8)
+    evmarkers.glyph.glyph_source.glyph_position = 'head'
+
     for loc, evlabel in zip(events_loc, events_lab):
         mlab.text3d(loc[0], loc[1], loc[2], evlabel, scale=evtextsize,
                     color=eventcolor)
@@ -359,7 +369,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     z = rad * np.cos(phi)
     icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     icb.actor.property.interpolation = 'gouraud'
-    mlab.view(azimuth=0., elevation=90., distance=5., focalpoint=(0., 0., 0.))
+    mlab.view(azimuth=0., elevation=90., distance=4., focalpoint=(0., 0., 0.))
 
     # to make a movie from the image files, you can use the command:
     # avconv -qscale 5 -r 20 -b 9600 -i %05d.png -vf scale=800:752 movie.mp4
@@ -433,7 +443,8 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
             evdepths.append(origin.get('depth') * 1e-3)
             magnitude = event.preferred_magnitude() or event.magnitudes[0]
             mag = magnitude.mag
-            evlabels.append('  %.1f' % mag)
+            label = '  {:s} | M{:.1f}'.format(str(origin.time.date), mag)
+            evlabels.append(label)
     elif evlat is not None and evlon is not None and evdepth_km is not None:
         evlats.append(evlat)
         evlons.append(evlon)
