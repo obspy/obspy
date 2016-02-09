@@ -14,7 +14,7 @@ from obspy.io.xseed.parser import Parser
 from obspy.io.xseed.scripts.dataless2resp import main as obspy_dataless2resp
 from obspy.io.xseed.scripts.dataless2xseed import main as obspy_dataless2xseed
 from obspy.io.xseed.scripts.xseed2dataless import main as obspy_xseed2dataless
-from obspy.io.xseed.utils import compare_SEED
+from obspy.io.xseed.utils import compare_seed
 
 
 class ScriptTestCase(unittest.TestCase):
@@ -135,12 +135,12 @@ Parsing file %s
                 actual = fh.read()
 
             try:
-                compare_SEED(expected, actual)
+                compare_seed(expected, actual)
             except Exception:
-                self.fail('compare_SEED raised Exception unexpectedly!')
+                self.fail('compare_seed raised Exception unexpectedly!')
             parser1 = Parser(expected)
             parser2 = Parser(actual)
-            self.assertEqual(parser1.get_SEED(), parser2.get_SEED())
+            self.assertEqual(parser1.get_seed(), parser2.get_seed())
 
 
 def suite():

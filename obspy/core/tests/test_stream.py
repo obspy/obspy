@@ -2080,7 +2080,7 @@ class StreamTestCase(unittest.TestCase):
         for tr in st:
             tr.stats.processing.pop()
 
-        for resp_string, stringio in p.get_RESP():
+        for resp_string, stringio in p.get_resp():
             stringio.seek(0, 0)
             component = resp_string[-1]
             with NamedTemporaryFile() as tf:

@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop, VariableString
-from ..utils import lookup_code, format_RESP
+from ..utils import lookup_code, format_resp
 
 
 RESP = """\
@@ -52,7 +52,7 @@ class Blockette061(Blockette):
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -73,11 +73,11 @@ class Blockette061(Blockette):
             out += '#\t\t  i, coefficient\n'
             for _i in range(self.number_of_coefficients):
                 out += 'B061F09    %4s %13s\n' % \
-                    (_i, format_RESP(self.FIR_coefficient[_i], 6))
+                    (_i, format_resp(self.FIR_coefficient[_i], 6))
         elif self.number_of_coefficients == 1:
             out += '#\t\tNumerator coefficients:\n'
             out += '#\t\t  i, coefficient\n'
             out += 'B061F09    %4s %13s\n' % \
-                (0, format_RESP(self.FIR_coefficient, 6))
+                (0, format_resp(self.FIR_coefficient, 6))
         out += '#\t\t\n'
         return out.encode()
