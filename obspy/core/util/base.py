@@ -34,11 +34,11 @@ from obspy.core.util.misc import to_int_or_zero
 DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.ah', 'io.ascii', 'io.cmtsolution', 'io.cnv', 'io.css',
                    'io.datamark', 'io.gse2', 'io.json', 'io.kinemetrics',
-                   'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc', 'io.pdas',
-                   'io.pde', 'io.quakeml', 'io.sac', 'io.seg2', 'io.segy',
-                   'io.seisan', 'io.sh', 'io.shapefile', 'io.seiscomp',
-                   'io.stationtxt', 'io.stationxml', 'io.wav', 'io.xseed',
-                   'io.y', 'io.zmap', 'realtime', 'signal', 'taup']
+                   'io.kml', 'io.mseed', 'io.ndk', 'io.nied', 'io.nlloc',
+                   'io.pdas', 'io.pde', 'io.quakeml', 'io.sac', 'io.seg2',
+                   'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
+                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
+                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.seedlink',
                    'clients.seishub', 'clients.syngine']
