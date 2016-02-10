@@ -15,7 +15,7 @@ readability of the code by importing the following modules in an unified
 manner:
 
 >>> import numpy as np
->>> import matplotlib.pylab as plt 
+>>> import matplotlib.pylab as plt
 
 .. _NumPy: http://www.numpy.org/
 .. _SciPy: https://scipy.scipy.org/
@@ -32,7 +32,7 @@ Naming
 
 **Naming Convention**
 
-* Use meaningful variable/function/method names, these will help other people a
+* Use meaningful variable/function/method names; these will help other people a
   lot when reading your code.
 * Prepending a single underscore (``_``) means an object is "internal" /
   "private", which means that it is not supposed to be used by end-users and
@@ -79,7 +79,7 @@ Doc Strings / Comments
 
       def someMethod():
           """
-          This is just the short story. 
+          This is just the short story.
 
           The long story is, this docstring would not have been able to fit in
           one line. Therefore we have to break lines.
@@ -182,7 +182,7 @@ Tests
   .. code-block:: python
 
       def test_doSomething():
-          """XXX: This test does something. 
+          """XXX: This test does something.
 
           But fails badly. See ticket #number.
           """
@@ -236,4 +236,4 @@ Miscellaneous
   look nicer on short lines, especially in side-by-side mode.
 * never use multiple statements on the same line, e.g. ``if check: a = 0``.
 * Prefer `list comprehension` to the built-in functions :func:`filter()` and
-  :func:`map()` when appropriate. 
+  :func:`map()` when appropriate.
