@@ -122,7 +122,8 @@ def _run_indexer(options):
             return
         # prepare map file
         if options.mapping_file:
-            data = open(options.mapping_file, 'r').readlines()
+            with open(options.mapping_file, 'r') as f:
+                data = f.readlines()
             mappings = parse_mapping_data(data)
             logging.info("Parsed %d lines from mapping file %s" %
                          (len(data), options.mapping_file))
