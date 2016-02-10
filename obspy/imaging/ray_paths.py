@@ -23,21 +23,26 @@ from matplotlib.colors import hex2color
 import ipdb
 
 
-def plot_rays(inventory=None, catalog=None, stlat=None, stlon=None, evlat=None,
-              evlon=None, evdepth_km=None, phase_list=('P'), kind='mayavi',
-              colorscheme='default', animate=False, savemovie=False,
-              figsize=(800, 800), fname_coastlines='internal',
-              taup_model='iasp91', icol=0):
+def plot_rays(inventory=None, catalog=None, station_latitude=None,
+              station_longitude=None, event_latitude=None,
+              event_longitude=None, event_depth_in_km=None, phase_list=('P',),
+              kind='mayavi', colorscheme='default', animate=False,
+              savemovie=False, figsize=(800, 800), coastlines='internal',
+              taup_model='iasp91', icol=0, event_labels=True,
+              station_labels=True):
     """
     Plot ray paths between this inventory and one or more events.
     """
     if kind == 'mayavi':
         _plot_rays_mayavi(
-            inventory=inventory, catalog=catalog, evlat=evlat, evlon=evlon,
-            evdepth_km=evdepth_km, stlat=stlat, stlon=stlon,
-            phase_list=phase_list, colorscheme=colorscheme, animate=animate,
-            savemovie=savemovie, figsize=figsize, taup_model='iasp91',
-            fname_coastlines=fname_coastlines, icol=icol)
+            inventory=inventory, catalog=catalog,
+            event_latitude=event_latitude, event_longitude=event_longitude,
+            event_depth_in_km=event_depth_in_km,
+            station_latitude=station_latitude,
+            station_longitude=station_longitude, phase_list=phase_list,
+            colorscheme=colorscheme, animate=animate, savemovie=savemovie,
+            figsize=figsize, taup_model='iasp91', coastlines=coastlines,
+            icol=icol, event_labels=event_labels, station_labels=station_labels)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog,
@@ -154,7 +159,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
                       event_longitude=None, event_depth_in_km=None,
                       phase_list=['P'], colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
-                      fname_coastlines='internal', icol=0):
+                      coastlines='internal', icol=0, event_labels=True,
+                      station_labels=True):
     try:
         from mayavi import mlab
     except Exception as err:
@@ -311,9 +317,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         scale_mode='none', color=stationcolor, mode='sphere')
     stmarkers.glyph.glyph_source.glyph_position = 'center'
 
-    for loc, stlabel in zip(stations_loc, stations_lab):
-        mlab.text3d(loc[0], loc[1], loc[2], stlabel, scale=sttextsize,
-                    color=stationcolor)
+    if station_labels:
+        for loc, stlabel in zip(stations_loc, stations_lab):
+            mlab.text3d(loc[0], loc[1], loc[2], stlabel, scale=sttextsize,
+                        color=stationcolor)
 
     # plot all events
     evxs, evys, evzs = zip(*events_loc)
@@ -323,9 +330,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         scale_mode='none', color=eventcolor, mode='cone', resolution=8)
     evmarkers.glyph.glyph_source.glyph_position = 'head'
 
-    for loc, evlabel in zip(events_loc, events_lab):
-        mlab.text3d(loc[0], loc[1], loc[2], evlabel, scale=evtextsize,
-                    color=eventcolor)
+    if event_labels:
+        for loc, evlabel in zip(events_loc, events_lab):
+            mlab.text3d(loc[0], loc[1], loc[2], evlabel, scale=evtextsize,
+                        color=eventcolor)
     fig.scene.disable_render = False # Super duper trick
 
     # read and plot coastlines
@@ -443,6 +451,8 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
             origin = event.preferred_origin() or event.origins[0]
             evlats.append(origin.latitude)
             evlons.append(origin.longitude)
+            if not origin.get('depth'):
+                origin.depth = 0.
             evdepths.append(origin.get('depth') * 1e-3)
             magnitude = event.preferred_magnitude() or event.magnitudes[0]
             mag = magnitude.mag
