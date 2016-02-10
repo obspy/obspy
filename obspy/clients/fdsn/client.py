@@ -47,9 +47,19 @@ from .wadl_parser import WADLParser
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
 RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+
+RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+RE_IPv6 = '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
+          '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
+          '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
+          '|\[' + RE_HEX4 + ':' + \
+          '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
+          ':' + RE_HEX4 + '\])'
 
 URL_REGEX = 'https?://' + \
-            '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3}' + \
+            '(' + RE_IPv4 + \
+            '|' + RE_IPv6 + \
             '|localhost' + \
             '|(?:\w(?:[\w-]{0,61}[\w])?\.){2,}([a-z]{2,6}))' + \
             '(?::\d{2,5})?' + \
