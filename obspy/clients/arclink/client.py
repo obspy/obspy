@@ -26,7 +26,6 @@ import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
 from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -38,10 +37,6 @@ _INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 MSG_NOPAZ = "No Poles and Zeros information returned by server."
-
-MSG_USER_REQUIRED = """Initializing a ArcLink client without the user keyword
-is deprecated! Please provide a proper user identification string such as your
-email address. Defaulting to 'ObsPy client' for now."""
 
 
 class ArcLinkException(Exception):
@@ -110,7 +105,7 @@ class Client(object):
     """
     max_status_requests = MAX_REQUESTS
 
-    def __init__(self, host="webdc.eu", port=18002, user=None,
+    def __init__(self, user, host="webdc.eu", port=18002,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
                  command_delay=0, status_delay=0.5):
@@ -119,11 +114,7 @@ class Client(object):
 
         See :class:`obspy.clients.arclink.client.Client` for all parameters.
         """
-        if user is None:
-            warnings.warn(MSG_USER_REQUIRED, category=ObsPyDeprecationWarning)
-            self.user = 'ObsPy client'
-        else:
-            self.user = user
+        self.user = user
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
