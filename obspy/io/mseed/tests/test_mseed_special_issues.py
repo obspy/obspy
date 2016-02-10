@@ -41,11 +41,13 @@ def _test_function(filename):
     """
     Internal function used by MSEEDSpecialIssueTestCase.test_infinite_loop
     """
-    try:
-        st = read(filename)  # noqa @UnusedVariable
-    except (ValueError, InternalMSEEDReadingError):
-        # Should occur with broken files
-        pass
+    with warnings.catch_warnings(record=True):
+        warnings.simplefilter("always")
+        try:
+            st = read(filename)  # noqa @UnusedVariable
+        except (ValueError, InternalMSEEDReadingError):
+            # Should occur with broken files
+            pass
 
 
 class MSEEDSpecialIssueTestCase(unittest.TestCase):
@@ -681,21 +683,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'infinite-loop.mseed')
 
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            process = multiprocessing.Process(target=_test_function,
-                                              args=(filename, ))
-            process.start()
-            process.join(60)
+        process = multiprocessing.Process(target=_test_function,
+                                          args=(filename, ))
+        process.start()
+        process.join(60)
 
-            fail = process.is_alive()
-            process.terminate()
-            if process.is_alive():
-                if platform.system() == 'Windows':
-                    os.kill(process.pid, signal.CTRL_BREAK_EVENT)
-                else:
-                    os.kill(process.pid, signal.SIGKILL)
-            self.assertFalse(fail)
+        fail = process.is_alive()
+        process.terminate()
+        if process.is_alive():
+            if platform.system() == 'Windows':
+                os.kill(process.pid, signal.CTRL_BREAK_EVENT)
+            else:
+                os.kill(process.pid, signal.SIGKILL)
+        self.assertFalse(fail)
 
     def test_writing_blockette_100(self):
         """
