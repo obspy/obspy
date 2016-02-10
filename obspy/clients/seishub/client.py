@@ -14,7 +14,6 @@ from future.builtins import *  # NOQA
 from future import standard_library
 from future.utils import PY2, native_str
 
-import functools
 import os
 import pickle
 import time
@@ -32,7 +31,6 @@ from lxml.etree import Element, SubElement, tostring
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 
 
@@ -56,50 +54,6 @@ def _unpickle(data):
         # between-some-versions-of-python-2-and-3
         obj = pickle.loads(data, encoding="latin-1")
     return obj
-
-
-def _call_change_get_paz(func):
-    """
-    This is a decorator to intercept a change in the arg list for
-    seishub.client.station.get_paz() with revision [3778].
-
-    * throw a ObsPyDeprecationWarning
-    * make the correct call
-    """
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        # function itself is first arg so len(args) == 3 means we got 2 args.
-        if len(args) > 3:
-            msg = "The arg/kwarg call syntax of get_paz() has changed. " + \
-                  "Please update your code! The old call syntax has been " + \
-                  "deprecated and will stop working with the next version."
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            _self = args[0]
-            network = args[1]
-            station = args[2]
-            datetime = args[3]
-            args = args[4:]
-            if len(args) == 0:
-                location = kwargs.get('location', '')
-                channel = kwargs.get('channel', '')
-            elif len(args) == 1:
-                location = args[0]
-                channel = kwargs.get('channel', '')
-            elif len(args) == 2:
-                location = args[0]
-                channel = args[1]
-            if channel == "":
-                msg = "Requesting PAZ for empty channel codes is not " + \
-                      "supported anymore."
-                warnings.warn(msg, UserWarning)
-            seed_id = ".".join((network, station, location, channel))
-            args = [_self, seed_id, datetime]
-            kwargs = {}
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
 
 
 class Client(object):
@@ -858,7 +812,6 @@ master/seishub/plugins/seismology/waveform.py
     def getPAZ(self, *args, **kwargs):
         return self.get_paz(*args, **kwargs)
 
-    @_call_change_get_paz
     def get_paz(self, seed_id, datetime):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization

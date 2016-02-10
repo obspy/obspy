@@ -15,7 +15,6 @@ with standard_library.hooks():
 
 from obspy.core import AttribDict, UTCDateTime
 from obspy.clients.seishub import Client
-from obspy.io.xseed.utils import SEEDParserException
 
 
 TESTSERVER = "http://teide.geophysik.uni-muenchen.de:8080"
@@ -245,27 +244,6 @@ class ClientTestCase(unittest.TestCase):
                              'elevation': 500.0,
                              'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
-
-    def test_get_paz_call_change(self):
-        t = UTCDateTime("2012-05-10")
-        c = self.client
-        datas = []
-        result = AttribDict(
-            {'gain': 1.0, 'poles': [0j],
-             'sensitivity': 6319100000000.0, 'digitizer_gain': 1000000.0,
-             'seismometer_gain': 6319100.0, 'zeros': [0j]})
-        # test that the old/deprecated call syntax is still working
-        self.assertRaises(SEEDParserException, c.station.get_paz, "BW", "RLAS",
-                          t)
-        datas.append(c.station.get_paz("BW", "RLAS", t, "", "BJZ"))
-        datas.append(c.station.get_paz("BW", "RLAS", t, "", channel="BJZ"))
-        datas.append(c.station.get_paz("BW", "RLAS", t, location="",
-                                       channel="BJZ"))
-        datas.append(c.station.get_paz("BW", "RLAS", t, channel="BJZ",
-                                       location=""))
-        datas.append(c.station.get_paz("BW", "RLAS", t, channel="BJZ"))
-        for data in datas:
-            self.assertEqual(data, result)
 
     def test_localcache(self):
         """

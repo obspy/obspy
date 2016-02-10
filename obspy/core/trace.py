@@ -26,8 +26,7 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import (deprecated_keywords, raise_if_masked,
-                                       skip_if_no_data)
+from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
@@ -1780,7 +1779,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @skip_if_no_data
-    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
@@ -1816,7 +1814,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @skip_if_no_data
-    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
         """
