@@ -17,6 +17,6 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     function_map={
         "is_StationXML": "obspy.io.stationxml.core._is_stationxml",
         "read_StationXML": "obspy.io.stationxml.core._read_stationxml",
-        "validate_stationxml":
+        "validate_StationXML":
             "obspy.io.stationxml.core.validate_stationxml",
         "write_StationXML": "obspy.io.stationxml.core._write_stationxml"})

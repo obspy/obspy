@@ -524,7 +524,12 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         'isGse2': 'obspy.io.gse2.libgse2.is_gse2',
         'readHeader': 'obspy.io.gse2.libgse2.read_header',
         'verifyChecksum': 'obspy.io.gse2.libgse2.verify_checksum',
-        'writeHeader': 'obspy.io.gse2.libgse2.write_header'})
+        'writeHeader': 'obspy.io.gse2.libgse2.write_header',
+        'compile_STA2': 'obspy.io.gse2.libgse2.compile_sta2',
+        'compress_CM6': 'obspy.io.gse2.libgse2.compress_cm6',
+        'parse_STA2': 'obspy.io.gse2.libgse2.parse_sta2',
+        'uncompress_CM6': 'obspy.io.gse2.libgse2.uncompress_cm6'
+    })
 
 
 if __name__ == '__main__':

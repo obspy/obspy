@@ -176,5 +176,9 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
             'obspy.io.segy.unpack.unpack_2byte_integer',
         'unpack_4byte_Integer':
             'obspy.io.segy.unpack.unpack_4byte_integer',
+        'unpack_4byte_IBM':
+            'obspy.io.segy.unpack.unpack_4byte_ibm',
+        'unpack_4byte_IEEE':
+            'obspy.io.segy.unpack.unpack_4byte_ieee',
         'unpack_4byte_Fixed_point':
             'obspy.io.segy.unpack.unpack_4byte_fixed_point'})
