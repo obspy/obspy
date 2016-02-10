@@ -25,7 +25,7 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
-from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
@@ -393,7 +393,7 @@ class Client(object):
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, format="MSEED", compressed=True, metadata=False,
-                      route=True, **kwargs):
+                      route=True):
         """
         Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
@@ -443,13 +443,8 @@ class Client(object):
             st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
-        if kwargs.get('get_paz') or kwargs.get('getCoordinates'):
-            msg = "Keywords get_paz and getCoordinates are deprecated. " + \
-                  "Please use keyword metadata instead."
-            warnings.warn(msg, ObsPyDeprecationWarning)
         # handle deprecated keywords - one must be True to enable metadata
-        metadata = metadata or kwargs.get('get_paz', False) or \
-            kwargs.get('getCoordinates', False)
+        metadata = metadata
         file_stream = io.BytesIO()
         self.save_waveforms(file_stream, network, station, location, channel,
                             starttime, endtime, format=format,
@@ -776,9 +771,8 @@ class Client(object):
     def getMetadata(self, *args, **kwargs):
         return self.get_metadata(*args, **kwargs)
 
-    @deprecated_keywords({'get_paz': None, 'getCoordinates': None})
-    def get_metadata(self, network, station, location, channel, starttime=None,
-                     endtime=None, time=None, route=True):
+    def get_metadata(self, network, station, location, channel, time,
+                     route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity and station
         coordinates for a single channel at a given time.
@@ -815,17 +809,7 @@ class Client(object):
         'coordinates': AttribDict({'latitude': 49.9862, 'elevation': 635.0,
                                    'longitude': 12.1083})}
         """
-        # XXX: deprecation handling
-        if starttime and endtime:
-            # warn if old scheme
-            msg = "The 'starttime' and 'endtime' keywords will be " + \
-                "deprecated. Please use 'time' instead."
-            warnings.warn(msg, category=ObsPyDeprecationWarning)
-        elif starttime and not endtime:
-            # use a single starttime as time keyword
-            time = starttime
-            endtime = time + 0.00001
-        elif not time:
+        if not time:
             # if not temporal keyword is given raise an exception
             raise ValueError("keyword 'time' is required")
         else:
@@ -936,8 +920,8 @@ class Client(object):
     def getPAZ(self, *args, **kwargs):
         return self.get_paz(*args, **kwargs)
 
-    def get_paz(self, network, station, location, channel, starttime=None,
-                endtime=None, time=None, route=True):
+    def get_paz(self, network, station, location, channel, time,
+                route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -972,18 +956,7 @@ class Client(object):
                     'name': 'LMU:STS-2/N/g=1500',
                     'normalization_factor': 60077000.0})
         """
-        # XXX: deprecation handling
-        if starttime and endtime:
-            # warn if old scheme
-            msg = "The 'starttime' and 'endtime' keywords will be " + \
-                "deprecated. Please use 'time' instead. Be aware that the" + \
-                "result of get_paz() will differ using the 'time' keyword."
-            warnings.warn(msg, category=ObsPyDeprecationWarning)
-        elif starttime and not endtime:
-            # use a single starttime as time keyword
-            time = starttime
-            endtime = time + 0.00001
-        elif not time:
+        if not time:
             # if not temporal keyword is given raise an exception
             raise ValueError("keyword 'time' is required")
         else:

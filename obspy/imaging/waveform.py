@@ -40,7 +40,6 @@ import scipy.signal as signal
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
 
@@ -398,7 +397,6 @@ class WaveformPlotting(object):
         ax.set_xlim(xmin, xmax)
         self._draw_overlap_axvspan_legend()
 
-    @deprecated_keywords({'swap_time_axis': None})
     def plot_day(self, *args, **kwargs):
         """
         Extend the seismogram.

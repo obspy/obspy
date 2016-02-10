@@ -436,7 +436,7 @@ def simulate_seismometer(
         remove_sensitivity=True, simulate_sensitivity=True, water_level=600.0,
         zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=None,
         seedresp=None, nfft_pow2=False, pitsasim=True, sacsim=False,
-        shsim=False, **_kwargs):
+        shsim=False):
     """
     Simulate/Correct seismometer.
 

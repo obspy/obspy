@@ -34,9 +34,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin)
-from obspy.core.util.decorator import (deprecated_keywords, deprecated,
-                                       map_example_filename, raise_if_masked,
-                                       uncompress_file)
+from obspy.core.util.decorator import (deprecated, map_example_filename,
+                                       raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times
 
 
@@ -2322,7 +2321,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return [tr.max() for tr in self]
 
-    @deprecated_keywords({'type': 'method'})
     def differentiate(self, method='gradient'):
         """
         Differentiate all traces with respect to time.
@@ -2353,7 +2351,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.differentiate(method=method)
         return self
 
-    @deprecated_keywords({'type': 'method'})
     def integrate(self, method='cumtrapz', **options):
         """
         Integrate all traces with respect to time.

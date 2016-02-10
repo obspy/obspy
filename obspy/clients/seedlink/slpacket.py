@@ -21,7 +21,6 @@ import numpy as np
 
 from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.util import (_convert_msr_to_dict,
                                  _ctypes_array_2_numpy_array,
@@ -73,7 +72,6 @@ class SLPacket(object):
     ERRORSIGNATURE = b"ERROR\r\n"
     ENDSIGNATURE = b"END"
 
-    @deprecated_keywords({'bytes': 'data'})
     def __init__(self, data=None, offset=None):
         if data is None or offset is None:
             return
