@@ -9,11 +9,10 @@ from future.builtins import *  # NOQA
 
 import os
 import sys
-from argparse import SUPPRESS, ArgumentParser
+from argparse import ArgumentParser
 from glob import glob
 
 from obspy import __version__
-from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.io.xseed.parser import Parser
 
 
@@ -87,11 +86,6 @@ def main(argv=None):
     parser.add_argument('-x', '--xml-version', dest='version', default=1.1,
                         help='XML-SEED version, 1.0 or 1.1', type=float)
     parser.add_argument('files', nargs='+', help='files to process')
-
-    # Deprecated arguments
-    action = _get_deprecated_argument_action('-v', '--xml-version')
-    parser.add_argument('-v', dest='version', default=1.1, type=float,
-                        action=action, help=SUPPRESS)
 
     args = parser.parse_args(argv)
 
