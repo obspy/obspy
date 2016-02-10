@@ -7,10 +7,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from argparse import SUPPRESS, ArgumentParser
+from argparse import ArgumentParser
 
 from obspy import Stream, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action
+from obspy.core.util.base import ENTRY_POINTS
 
 
 def main(argv=None):
@@ -27,12 +27,6 @@ def main(argv=None):
                         help='Switch on printing of gap information.')
     parser.add_argument('files', nargs='+',
                         help='Files to process.')
-
-    # Deprecated arguments
-    action = _get_deprecated_argument_action(
-        '--nomerge', '--no-merge', real_action='store_false')
-    parser.add_argument('--nomerge', nargs=0, action=action, dest='merge',
-                        help=SUPPRESS)
 
     args = parser.parse_args(argv)
 
