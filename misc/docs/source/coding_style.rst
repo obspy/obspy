@@ -44,19 +44,19 @@ Naming
   name mangling).
 * Place related classes and top-level functions together in a module. Unlike
   Java, there is no need to limit yourself to one class per module.
-* Use ``CamelCase`` for class names, but ``lower_with_under`` for module
+* Use ``CamelCase`` for class names, but ``snake_case`` for module
   names, variables and functions/methods.
 
-======================  =======================  ========================
-Type                    Public                   Internal / Private
-======================  =======================  ========================
-Packages                ``lower_with_under``
-Modules                 ``lower_with_under.py``  ``_lower_with_under``
-Classes / Exceptions    ``CamelCase``            ``_CamelCase``
-Functions / Methods     ``lower_with_under()``   ``_lower_with_under()``
-Variables / Attributes  ``lower_with_under``     ``_lower_with_under``
-Constants               ``CAPS_WITH_UNDER``      ``_CAPS_WITH_UNDER``
-======================  =======================  ========================
+======================  ===================  ====================
+Type                    Public               Internal / Private
+======================  ===================  ====================
+Packages                ``snake_case``
+Modules                 ``snake_case.py``    ``_snake_case``
+Classes / Exceptions    ``CamelCase``        ``_CamelCase``
+Functions / Methods     ``snake_case()``     ``_snake_case()``
+Variables / Attributes  ``snake_case``       ``_snake_case``
+Constants               ``CAPS_WITH_UNDER``  ``_CAPS_WITH_UNDER``
+======================  ===================  ====================
 
 Doc Strings / Comments
 ----------------------
