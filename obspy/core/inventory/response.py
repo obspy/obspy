@@ -22,7 +22,9 @@ from math import pi
 import numpy as np
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+from obspy.core.util.obspy_types import (CustomComplex,
+                                         ComplexWithUncertainties,
+                                         CustomFloat,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
@@ -1762,9 +1764,10 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
         output_units=lookup_unit(sensor_xseedparser.abbreviations,
                                  b53.stage_signal_output_units),
         pz_transfer_function_type=TRANSFORM_MAP[b53.transfer_function_types],
-        normalization_frequency=b53.normalization_frequency,
-        zeros=list(map(CustomComplex, b53.real_zero, b53.imaginary_zero)),
-        poles=list(map(CustomComplex, b53.real_pole, b53.imaginary_pole)),
+        normalization_frequency=FloatWithUncertainties(
+            b53.normalization_frequency),
+        zeros=list(map(ComplexWithUncertainties, b53.real_zero, b53.imaginary_zero)),
+        poles=list(map(ComplexWithUncertainties, b53.real_pole, b53.imaginary_pole)),
         normalization_factor=b53.A0_normalization_factor,
         resource_id='GENERATOR:obspy_from_RESP',   # XXX what should id be?
     )
@@ -1810,11 +1813,13 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
                 numerator=list(map(FloatWithUncertaintiesAndUnit,
                                    b54.numerator_coefficient)),
                 denominator=denominator,
-                decimation_input_sample_rate=b57.input_sample_rate,
+                decimation_input_sample_rate=FloatWithUncertainties(
+                    b57.input_sample_rate),
                 decimation_factor=b57.decimation_factor,
                 decimation_offset=b57.decimation_offset,
-                decimation_delay=b57.estimated_delay,
-                decimation_correction=b57.correction_applied
+                decimation_delay=FloatWithUncertainties(b57.estimated_delay),
+                decimation_correction=FloatWithUncertainties(
+                    b57.correction_applied)
             )
         else:
             # Basic responsestage
