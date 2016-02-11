@@ -1766,8 +1766,10 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
         pz_transfer_function_type=TRANSFORM_MAP[b53.transfer_function_types],
         normalization_frequency=FloatWithUncertainties(
             b53.normalization_frequency),
-        zeros=list(map(ComplexWithUncertainties, b53.real_zero, b53.imaginary_zero)),
-        poles=list(map(ComplexWithUncertainties, b53.real_pole, b53.imaginary_pole)),
+        zeros=list(map(ComplexWithUncertainties,
+                       b53.real_zero, b53.imaginary_zero)),
+        poles=list(map(ComplexWithUncertainties,
+                       b53.real_pole, b53.imaginary_pole)),
         normalization_factor=b53.A0_normalization_factor,
         resource_id='GENERATOR:obspy_from_RESP',   # XXX what should id be?
     )

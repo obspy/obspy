@@ -10,6 +10,9 @@ This contains code that duplicates functionallity in scan.py and mseed.read.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 from collections import defaultdict, namedtuple
 from calendar import timegm
@@ -134,8 +137,8 @@ class MSeed:
         try:
             self.filehandle = open(filename, 'rb')
         except Exception, e:
-            print "Could not open file %s" % self.filename
-            print e
+            print("Could not open file %s" % self.filename)
+            print(e)
             return
         # Read the first datarecord to get the basic info
         # Average/largeish block size to start)
@@ -150,7 +153,7 @@ class MSeed:
 
         # Is file multiple of blocksize
         if self.filesize % self.block_size != 0:
-            print "%s NOT EVEN block size!!!!!!!!!!!!!" % self.filename
+            print ("%s NOT EVEN block size!!!!!!!!!!!!!" % self.filename)
             return
         # Read last datarecord
         self.filehandle.seek(-self.block_size, 2)
@@ -170,7 +173,7 @@ class MSeed:
         snclLast = self.getSNCL(fixedheader, blockettes)
         # Do fist and last block match? if not then multiplexed
         if self.snclFirst != snclLast:
-            print "%s Multiplexed!!!!!!!!!!!!!!!!!" % self.filename
+            print("%s Multiplexed!!!!!!!!!!!!!!!!!" % self.filename)
             self.multiplexed = True
             return
         self.ReadAllDataRecords()
@@ -405,7 +408,7 @@ def GetManifestOfDIR(dir):
         for root, dirs, files in walk(dir):
             for basename in files:
                 fullname = join(root, basename)
-                print fullname
+                print(fullname)
                 numseen += 1
                 if not isfile(fullname):
                     continue
@@ -416,11 +419,11 @@ def GetManifestOfDIR(dir):
                 else:
                     del mseed
     except KeyboardInterrupt:
-        print "Caught Ctrl-C..."
+        print("Caught Ctrl-C...")
     manifest.reduce21span()
-    print manifest
-    print "Saw: ", numseen
-    print "MSEED:", numseed
+    print(manifest)
+    print("Saw: ", numseen)
+    print("MSEED:", numseed)
     return manifest
 
 
@@ -441,23 +444,23 @@ def make_inventory(manifest):
     net_list = list()
     for network, net_group in groupby(sorted(manifest.keys()),
                                       key=attrgetter('network')):
-        print network
+        print(network)
         net_earliest = UTCDateTime()
         net_latest = UTCDateTime(0.0)
         station_list = list()
         for station, sta_group in groupby(net_group,
                                           key=attrgetter('station')):
-            print station
+            print(station)
             sta_earliest = UTCDateTime()
             sta_latest = UTCDateTime(0.0)
             chan_list = list()
             for location, loc_group in groupby(sta_group,
                                                key=attrgetter('location')):
-                print location
+                print(location)
                 for sncl in loc_group:
-                    print sncl
+                    print(sncl)
                     if sncl.channel in ['LOG', 'VM1', 'VM2', 'VM3']:
-                        print 'skipping...'
+                        print('skipping...')
                         continue
                     start = UTCDateTime(manifest[sncl][0].start)
                     sta_earliest = min(sta_earliest, start)
