@@ -2717,6 +2717,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._internal_add_processing_info(info)
         return self
 
+    @_add_processing_info
     def remove_sensitivity(self, inventory=None):
         """
         Remove instrument sensitivity.
@@ -2739,7 +2740,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         response = self._get_response(inventory)
         self.data = self.data / response.instrument_sensitivity.value
         info = 'remove_sensitivity:inventory=%s' % inventory
-        self._addProcessingInfo(info)
+        self._internal_add_processing_info(info)
         return self
 
 
