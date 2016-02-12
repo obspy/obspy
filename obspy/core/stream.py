@@ -3021,20 +3021,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.remove_response` method of
         :class:`~obspy.core.trace.Trace`.
 
-        >>> from obspy import read
+        >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> # Response object is already attached to example data:
-        >>> resp = st[0].stats.response
-        >>> print(resp)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-        Channel Response
-            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-            4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
-        >>> st.remove_response()  # doctest: +ELLIPSIS
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> st.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
