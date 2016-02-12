@@ -2359,7 +2359,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             each trace in the stream.
         :returns: :class:`obspy.core.inventory.response.Response` object
         """
+        from obspy.core.inventory import Response
         if inventories is None and 'response' in self.stats:
+            if not isinstance(self.stats.response, Response):
+                msg = ("Response attached to Trace.stats must be of type "
+                       "obspy.core.inventory.response.Response "
+                       "(but is of type %s).") % type(response)
+                raise TypeError(msg)
             return self.stats.response
         elif inventories is None:
             msg = ('No response information found. Use `inventory` '
@@ -2545,7 +2551,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
         """
-        from obspy.core.inventory import Response, PolynomialResponseStage
+        from obspy.core.inventory import PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
                                          invert_spectrum)
         if (isinstance(inventory, (str, native_str)) and
@@ -2559,11 +2565,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                    "as first positional argument in the next release.")
             warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         response = self._get_response(inventory)
-        if not isinstance(response, Response):
-            msg = ("Response must be of type "
-                   "obspy.core.inventory.response.Response "
-                   "(but is of type %s).") % type(response)
-            raise TypeError(msg)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
             coefficients = response.instrument_polynomial.coefficients
