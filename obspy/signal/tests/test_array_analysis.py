@@ -12,6 +12,8 @@ import unittest
 import numpy as np
 
 from obspy.signal.array_analysis import SeismicArray
+from obspy.core import inventory
+from obspy import read
 
 
 class ArrayTestCase(unittest.TestCase):
@@ -38,6 +40,10 @@ class ArrayTestCase(unittest.TestCase):
         self.sigmau = 0.0001
         self.Vp = 1.93
         self.Vs = 0.326
+        self.pfield = SeismicArray('pfield', inventory=inventory.read_inventory(
+                os.path.join(self.path, 'pfield_inv_for_instaseis.xml'),
+                format='stationxml'))
+        self.vel = read(os.path.join(self.path, 'pfield_instaseis.mseed'))
 
     def test_array_rotation(self):
         # tests function array_rotation_strain with synthetic data with pure
@@ -122,8 +128,10 @@ class ArrayTestCase(unittest.TestCase):
 
         for stat in range(7):
             for t in range(1000):
-                self.ts1[t, stat] = self.array_coords[stat, 1] * shear_strainh[t]
-                self.ts2[t, stat] = self.array_coords[stat, 0] * shear_strainh[t]
+                self.ts1[t, stat] = self.array_coords[stat, 1] * \
+                    shear_strainh[t]
+                self.ts2[t, stat] = self.array_coords[stat, 0] * \
+                    shear_strainh[t]
 
         out = SeismicArray.array_rotation_strain(self.subarray, self.ts1,
                                                  self.ts2, ts3, self.Vp,
@@ -151,24 +159,38 @@ class ArrayTestCase(unittest.TestCase):
         """
         Integration test for 3cbf. Parameter values are fairly arbitrary.
         """
-        from obspy.core import inventory
-        from obspy import read
-
-        pfield = SeismicArray('pfield', inventory=inventory.read_inventory(
-                os.path.join(self.path, 'pfield_inv_for_instaseis.xml'),
-                format='stationxml'))
-        vel = read(os.path.join(self.path, 'pfield_instaseis.mseed'))
-        out = pfield.three_component_beamforming(vel.select(channel='BXN'),
-                                                 vel.select(channel='BXE'),
-                                                 vel.select(channel='BXZ'),
-                                                 64, 0, 0.6, 0.03,
-                                                 wavetype='P',
-                                                 freq_range=[0.1, .3],
-                                                 whiten=True, coherency=False)
+        out = self.pfield.three_component_beamforming(self.vel.select(
+            channel='BXN'), self.vel.select(channel='BXE'),
+            self.vel.select(channel='BXZ'), 64, 0, 0.6, 0.03, wavetype='P',
+            freq_range=[0.1, .3], whiten=True, coherency=False)
         self.assertEqual(out.max_pow_baz, 246)
         self.assertEqual(out.max_pow_slow, 0.3)
         np.testing.assert_array_almost_equal(out.max_rel_power, 1.22923997,
                                              decimal=8)
+
+    def test_fk_analysis(self):
+        """
+        Integration test for FK-analysis.
+        """
+        out = self.pfield.fk_analysis(self.vel.select(channel='BXZ'), 0.1, 0.3,
+                                      wlen=64, wfrac=0.2, slx=(-0.5, 0.5),
+                                      sly=(-0.5, 0.5), sls=0.03)
+        self.assertEqual(list(out.max_pow_baz), [250.34617594194668,
+                         250.34617594194668, 252.34987578006991,
+                                                 254.35775354279127])
+        self.assertEqual(list(out.max_pow_slow), [0.29732137494637012,
+                                                  0.29732137494637012,
+                                                  0.23086792761230387,
+                                                  0.25961509971494334])
+        self.assertEqual(list(out.max_abs_power), [14422.833620665502,
+                                                   13015.583243478792,
+                                                   93.883822211713934,
+                                                   1.9298134533374038])
+        self.assertEqual(list(out.max_rel_power), [0.96002866762132411,
+                                                   0.96293146139421071,
+                                                   0.93713525165346112,
+                                                   0.95433426076472017])
+
 
 def suite():
     return unittest.makeSuite(ArrayTestCase, 'test')
