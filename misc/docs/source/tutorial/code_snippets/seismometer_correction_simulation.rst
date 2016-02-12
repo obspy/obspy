@@ -31,7 +31,9 @@ directly be attached to the waveforms and then subsequently removed using
     st.remove_response(output='DISP', pre_filt=pre_filt)
 
 Alternatively an :class:`~obspy.core.inventory.inventory.Inventory` object can
-be used to attach response information:
+be directly passed to the
+:meth:`Stream.remove_response() <obspy.core.stream.Stream.remove_response>`:
+method:
 
 
 .. code-block:: python
@@ -41,14 +43,11 @@ be used to attach response information:
     # simply use the included example waveform
     st = read()
     # the corresponding response is included in ObsPy as a StationXML file
-    inv = read_inventory("/path/to/BW_RJOB.xml")
-    # the helper routine automatically picks the correct response for each trace
-    # the routine returns a list of traces for which no matching response could
-    # be found in the inventory
-    st.attach_response(inv)
+    inv = read_inventory()
+    # the routine automatically picks the correct response for each trace
     # define a filter band to prevent amplifying noise during the deconvolution
     pre_filt = (0.005, 0.006, 30.0, 35.0)
-    st.remove_response(output='DISP', pre_filt=pre_filt)
+    st.remove_response(inventory=inv, output='DISP', pre_filt=pre_filt)
 
 Using the `plot` option it is possible to visualize the individual steps during
 response removal in the frequency domain to check the chosen `pre_filt` and
