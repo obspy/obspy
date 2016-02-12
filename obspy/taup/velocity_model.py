@@ -64,9 +64,9 @@ class VelocityModel(object):
         return len(self.layers)
 
     def is_discontinuity(self, depth):
-        return np.any(self.get_discontinuity_depth() == depth)
+        return np.any(self.get_discontinuity_depths() == depth)
 
-    def get_discontinuity_depth(self):
+    def get_discontinuity_depths(self):
         """
         Return the depths of discontinuities within the velocity model.
 

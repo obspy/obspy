@@ -38,7 +38,7 @@ class TauPyVelocityModelTestCase(unittest.TestCase):
             self.assertEqual(test2.validate(), True)
 
             np.testing.assert_equal(
-                test2.get_discontinuity_depth(),
+                test2.get_discontinuity_depths(),
                 [0.0, 20.0, 35.0, 210.0, 410.0, 660.0, 2889.0, 5153.9, 6371.0])
 
             # check boundary cases
