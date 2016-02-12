@@ -1,4 +1,4 @@
-FROM ubuntu:14.10
+FROM ubuntu:15.10
 
 MAINTAINER Lion Krischer
 
