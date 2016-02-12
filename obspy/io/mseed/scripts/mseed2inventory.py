@@ -136,7 +136,7 @@ class MSeed:
         self.endtime = None
         try:
             self.filehandle = open(filename, 'rb')
-        except Exception, e:
+        except Exception as e:
             print("Could not open file %s" % self.filename)
             print(e)
             return
@@ -153,7 +153,7 @@ class MSeed:
 
         # Is file multiple of blocksize
         if self.filesize % self.block_size != 0:
-            print ("%s NOT EVEN block size!!!!!!!!!!!!!" % self.filename)
+            print("%s NOT EVEN block size!!!!!!!!!!!!!" % self.filename)
             return
         # Read last datarecord
         self.filehandle.seek(-self.block_size, 2)
