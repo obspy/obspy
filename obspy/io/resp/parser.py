@@ -16,7 +16,6 @@ from future.builtins import *  # NOQA
 
 import io
 import re
-# from pprint import pprint
 
 from obspy.io.xseed import (parser, blockette, fields)
 
