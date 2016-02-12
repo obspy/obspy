@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 import re
 import warnings
 from struct import unpack
+import sys
 
 import numpy as np
 
@@ -23,6 +24,8 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 INVALID_CHAR_MSG = (
@@ -72,7 +75,7 @@ def _unpack_with_asciiz_and_decode(fmt, data):
     return tuple(parts)
 
 
-def __parse_tag(fh):
+def _parse_tag(fh):
     """
     Reads and parses a single tag.
 
@@ -122,7 +125,7 @@ def _is_y(filename):
     try:
         # get first tag (16 bytes)
         with open(filename, 'rb') as fh:
-            _, tag_type, _, _ = __parse_tag(fh)
+            _, tag_type, _, _ = _parse_tag(fh)
     except:
         return False
     # The first tag in a Y-file must be the TAG_Y_FILE tag (tag type 0)
@@ -175,7 +178,7 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
         trace.stats.y = AttribDict()
         count = -1
         while True:
-            endian, tag_type, next_tag, _next_same = __parse_tag(fh)
+            endian, tag_type, next_tag, _next_same = _parse_tag(fh)
             if tag_type == 1:
                 # TAG_STATION_INFO
                 # UCHAR Update[8]
@@ -390,6 +393,16 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
             else:
                 fh.seek(next_tag, 1)
     return Stream([trace])
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'isY': 'obspy.io.y.core._is_y',
+        'readY': 'obspy.io.y.core._read_y'})
 
 
 if __name__ == '__main__':

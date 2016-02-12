@@ -19,7 +19,7 @@ from obspy.io.xseed.blockette.blockette051 import Blockette051
 from obspy.io.xseed.blockette.blockette053 import Blockette053
 from obspy.io.xseed.blockette.blockette054 import Blockette054
 from obspy.io.xseed.parser import Parser
-from obspy.io.xseed.utils import SEEDParserException, compare_SEED
+from obspy.io.xseed.utils import SEEDParserException, compare_seed
 
 
 class ParserTestCase(unittest.TestCase):
@@ -65,7 +65,7 @@ class ParserTestCase(unittest.TestCase):
                       'zeros': []}
             self.assertEqual(paz, result)
 
-    def test_invalidStartHeader(self):
+    def test_invalid_start_header(self):
         """
         A SEED Volume must start with a Volume Index Control Header.
         """
@@ -73,7 +73,7 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(strict=True)
         self.assertRaises(SEEDParserException, sp.read, data)
 
-    def test_invalidStartBlockette(self):
+    def test_invalid_start_blockette(self):
         """
         A SEED Volume must start with Blockette 010.
         """
@@ -142,13 +142,13 @@ class ParserTestCase(unittest.TestCase):
                   'end_date': '',
                   'sampling_rate': 200.0}]})
 
-    def test_nonExistingFilename(self):
+    def test_non_existing_file_name(self):
         """
         Test reading non existing file.
         """
         self.assertRaises(IOError, Parser, "XYZ")
 
-    def test_blocketteStartsAfterRecord(self):
+    def test_blockette_starts_after_record(self):
         """
         '... 058003504 1.00000E+00 0.00000E+0000 000006S*0543864 ... '
         ' 0543864' -> results in Blockette 005
@@ -156,13 +156,13 @@ class ParserTestCase(unittest.TestCase):
         # create a valid blockette 010 with record length 256
         b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
-        blockette.parse_SEED(b010)
-        self.assertEqual(b010, blockette.get_SEED())
+        blockette.parse_seed(b010)
+        self.assertEqual(b010, blockette.get_seed())
         # create a valid blockette 054
         b054 = b"0540240A0400300300000009" + (b"+1.58748E-03" * 18)
         blockette = Blockette054(strict=True, compact=True)
-        blockette.parse_SEED(b054)
-        self.assertEqual(b054, blockette.get_SEED())
+        blockette.parse_seed(b054)
+        self.assertEqual(b054, blockette.get_seed())
         # combine data
         data = b"000001V " + b010 + (b' ' * 206)
         data += b"000002S " + b054 + (b' ' * 8)
@@ -171,14 +171,14 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(strict=True)
         parser.read(data)
 
-    def test_multipleContinuedStationControlHeader(self):
+    def test_multiple_continued_station_control_header(self):
         """
         """
         # create a valid blockette 010 with record length 256
         b010 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette = Blockette010(strict=True, compact=True)
-        blockette.parse_SEED(b010)
-        self.assertEqual(b010, blockette.get_SEED())
+        blockette.parse_seed(b010)
+        self.assertEqual(b010, blockette.get_seed())
         # create a valid blockette 054
         b054 = b"0540960A0400300300000039"
         nr = b""
@@ -186,15 +186,15 @@ class ParserTestCase(unittest.TestCase):
             # 960 chars
             nr = nr + ("+1.000%02dE-03" % i).encode('ascii', 'strict')
         blockette = Blockette054(strict=True, compact=True)
-        blockette.parse_SEED(b054 + nr)
-        self.assertEqual(b054 + nr, blockette.get_SEED())
+        blockette.parse_seed(b054 + nr)
+        self.assertEqual(b054 + nr, blockette.get_seed())
         # create a blockette 051
         b051 = b'05100271999,123~~0001000000'
         blockette = Blockette051(strict=False)
         # ignore user warning
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
-            blockette.parse_SEED(b051)
+            blockette.parse_seed(b051)
         # combine data (each line equals 256 chars)
         data = b"000001V " + b010 + (b' ' * 206)
         data += b"000002S " + b054 + nr[0:224]  # 256-8-24 = 224
@@ -218,7 +218,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(len(parser.blockettes[51]), 1)
         self.assertEqual(len(parser.blockettes[54]), 2)
 
-    def test_blocketteLongerThanRecordLength(self):
+    def test_blockette_longer_than_record_length(self):
         """
         If a blockette is longer than the record length it should result in
         more than one record.
@@ -227,7 +227,7 @@ class ParserTestCase(unittest.TestCase):
         # Set record length to 100.
         parser.record_length = 100
         # Use a blockette 53 string.
-        SEED_string = b'0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E' \
+        seed_string = b'0530382A01002003+6.00770E+07+2.00000E-02002+0.00000E' \
             b'+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+00+0.00000E+0' \
             b'0+0.00000E+00+0.00000E+00005-3.70040E-02-3.70160E-02+0.00000E+' \
             b'00+0.00000E+00-3.70040E-02+3.70160E-02+0.00000E+00+0.00000E+00' \
@@ -235,7 +235,7 @@ class ParserTestCase(unittest.TestCase):
             b'.67290E+02+0.00000E+00+0.00000E+00-1.31040E+02+4.67290E+02+0.0' \
             b'0000E+00+0.00000E+00'
         blkt_53 = Blockette053()
-        blkt_53.parse_SEED(SEED_string)
+        blkt_53.parse_seed(seed_string)
         # This just tests an internal SEED method.
         records = parser._create_cut_and_flush_record([blkt_53], 'S')
         # This should result in five records.
@@ -248,9 +248,9 @@ class ParserTestCase(unittest.TestCase):
         for record in records:
             new_string += record[2:]
         # Compare the new and the old string.
-        self.assertEqual(new_string.strip(), SEED_string)
+        self.assertEqual(new_string.strip(), seed_string)
 
-    def test_readAndWriteSEED(self):
+    def test_read_and_write_seed(self):
         """
         Reads all SEED records from the Bavarian network and writes them
         again.
@@ -274,16 +274,16 @@ class ParserTestCase(unittest.TestCase):
             # Parse and write the data.
             parser = Parser(f)
             f.close()
-            new_seed = parser.get_SEED()
+            new_seed = parser.get_seed()
             # compare both SEED strings
-            compare_SEED(original_seed, new_seed)
+            compare_seed(original_seed, new_seed)
             del parser
             parser1 = Parser(original_seed)
             parser2 = Parser(new_seed)
-            self.assertEqual(parser1.get_SEED(), parser2.get_SEED())
+            self.assertEqual(parser1.get_seed(), parser2.get_seed())
             del parser1, parser2
 
-    def test_createReadAssertAndWriteXSEED(self):
+    def test_create_read_assert_and_write_xseed(self):
         """
         This test takes some SEED files, reads them to a Parser object
         and converts them back to SEED once. This is done to avoid any
@@ -311,23 +311,23 @@ class ParserTestCase(unittest.TestCase):
                 parser1 = Parser(file)
                 # Convert to SEED once to avoid any issues seen in
                 # test_readAndWriteSEED.
-                original_seed = parser1.get_SEED()
+                original_seed = parser1.get_seed()
                 del parser1
                 # Now read the file, parse it, write XSEED, read XSEED and
                 # write SEED again. The output should be totally identical.
                 parser2 = Parser(original_seed)
-                xseed_string = parser2.get_XSEED(version=version)
+                xseed_string = parser2.get_xseed(version=version)
                 del parser2
                 # Validate XSEED.
                 doc = etree.parse(io.BytesIO(xseed_string))
                 self.assertTrue(xmlschema.validate(doc))
                 del doc
                 parser3 = Parser(xseed_string)
-                new_seed = parser3.get_SEED()
+                new_seed = parser3.get_seed()
                 self.assertEqual(original_seed, new_seed)
                 del parser3, original_seed, new_seed
 
-    def test_readFullSEED(self):
+    def test_read_full_seed(self):
         """
         Test the reading of a full-SEED file. The data portion will be omitted.
         """
@@ -343,7 +343,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
-    def test_getPAZ(self):
+    def test_get_paz(self):
         """
         Test extracting poles and zeros information
         """
@@ -447,13 +447,13 @@ class ParserTestCase(unittest.TestCase):
                         datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
-    def test_getPAZFromXSEED(self):
+    def test_get_paz_from_xseed(self):
         """
         Get PAZ from XSEED file, testcase for #146
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
-        sp2 = Parser(sp1.get_XSEED())
+        sp2 = Parser(sp1.get_xseed())
         paz = sp2.getPAZ('EHE')
         result = {'gain': 1.00000e+00,
                   'zeros': [0j, 0j, 0j],
@@ -465,7 +465,7 @@ class ParserTestCase(unittest.TestCase):
                   'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
-    def test_getCoordinates(self):
+    def test_get_coordinates(self):
         """
         Test extracting coordinates for SEED and XSEED (including #146)
         """
@@ -478,13 +478,13 @@ class ParserTestCase(unittest.TestCase):
         paz = sp.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         # XSEED
-        sp2 = Parser(sp.get_XSEED())
+        sp2 = Parser(sp.get_xseed())
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp2.get_coordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
-    def test_selectDoesNotChangeTheParserFormat(self):
+    def test_select_does_not_change_the_parser_format(self):
         """
         Test that using the _select() method of the Parser object does
         not change the _format attribute.
@@ -494,7 +494,7 @@ class ParserTestCase(unittest.TestCase):
         p._select(p.get_inventory()["channels"][0]["channel_id"])
         self.assertEqual(p._format, "XSEED")
 
-    def test_createRESPFromXSEED(self):
+    def test_create_resp_from_xseed(self):
         """
         Tests RESP file creation from XML-SEED.
         """
@@ -505,11 +505,11 @@ class ParserTestCase(unittest.TestCase):
         # write XML-SEED
         with NamedTemporaryFile() as fh:
             tempfile = fh.name
-            sp1.write_XSEED(tempfile)
+            sp1.write_xseed(tempfile)
             # parse XML-SEED
             sp2 = Parser(tempfile)
             # create RESP files
-            sp2.get_RESP()
+            sp2.get_resp()
         # 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
@@ -517,13 +517,13 @@ class ParserTestCase(unittest.TestCase):
         # write XML-SEED
         with NamedTemporaryFile() as fh:
             tempfile = fh.name
-            sp1.write_XSEED(tempfile)
+            sp1.write_xseed(tempfile)
             # parse XML-SEED
             sp2 = Parser(tempfile)
             # create RESP files
-            sp2.get_RESP()
+            sp2.get_resp()
 
-    def test_compareBlockettes(self):
+    def test_compare_blockettes(self):
         """
         Tests the comparison of two blockettes.
         """
@@ -531,20 +531,20 @@ class ParserTestCase(unittest.TestCase):
         b010_1 = b"0100042 2.4082008,001~2038,001~2009,001~~~"
         blockette1 = Blockette010(strict=True, compact=True,
                                   xseed_version='1.0')
-        blockette1.parse_SEED(b010_1)
+        blockette1.parse_seed(b010_1)
         blockette2 = Blockette010()
-        blockette2.parse_SEED(b010_1)
+        blockette2.parse_seed(b010_1)
         b010_3 = b"0100042 2.4082009,001~2038,001~2009,001~~~"
         blockette3 = Blockette010(strict=True, compact=True)
-        blockette3.parse_SEED(b010_3)
+        blockette3.parse_seed(b010_3)
         blockette4 = Blockette010(xseed_version='1.0')
-        blockette4.parse_SEED(b010_3)
+        blockette4.parse_seed(b010_3)
         self.assertTrue(p._compare_blockettes(blockette1, blockette2))
         self.assertFalse(p._compare_blockettes(blockette1, blockette3))
         self.assertFalse(p._compare_blockettes(blockette2, blockette3))
         self.assertTrue(p._compare_blockettes(blockette3, blockette4))
 
-    def test_missingRequiredDateTimes(self):
+    def test_missing_required_date_times(self):
         """
         A warning should be raised if a blockette misses a required date.
         """
@@ -552,43 +552,43 @@ class ParserTestCase(unittest.TestCase):
         b010 = b"0100034 2.408~2038,001~2009,001~~~"
         # strict raises an exception
         blockette = Blockette010(strict=True)
-        self.assertRaises(SEEDParserException, blockette.parse_SEED, b010)
+        self.assertRaises(SEEDParserException, blockette.parse_seed, b010)
         # If strict is false, a warning is raised. This is tested in
         # test_bug165.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore", UserWarning)
             blockette = Blockette010()
-            blockette.parse_SEED(b010)
-            self.assertEqual(b010, blockette.get_SEED())
+            blockette.parse_seed(b010)
+            self.assertEqual(b010, blockette.get_seed())
         # blockette 10 - missing volume time
         b010 = b"0100034 2.4082008,001~2038,001~~~~"
         # strict raises an exception
         blockette = Blockette010(strict=True)
-        self.assertRaises(SEEDParserException, blockette.parse_SEED, b010)
+        self.assertRaises(SEEDParserException, blockette.parse_seed, b010)
         # non-strict
         blockette = Blockette010()
         # The warning cannot be tested due to being issued only once.
         # A similar case is tested in test_bug165.
-        blockette.parse_SEED(b010)
-        self.assertEqual(b010, blockette.get_SEED())
+        blockette.parse_seed(b010)
+        self.assertEqual(b010, blockette.get_seed())
 
-    def test_issue298a(self):
+    def test_issue_298a(self):
         """
         Test case for issue #298: blockette size exceeds 9999 bytes.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BHE.dataless")
         parser = Parser(file)
-        parser.get_RESP()
+        parser.get_resp()
 
-    def test_issue298b(self):
+    def test_issue_298b(self):
         """
         Second test case for issue #298: blockette size exceeds 9999 bytes.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BH_.dataless")
         parser = Parser(file)
-        parser.get_RESP()
+        parser.get_resp()
 
-    def test_issue319(self):
+    def test_issue_319(self):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
@@ -602,7 +602,7 @@ class ParserTestCase(unittest.TestCase):
             parser = Parser(filename)
             self.assertEqual(parser.version, 2.3)
 
-    def test_issue157(self):
+    def test_issue_157(self):
         """
         Test case for issue #157: re-using parser object.
         """
@@ -623,7 +623,7 @@ class ParserTestCase(unittest.TestCase):
             result = parser.get_coordinates("BW.FURT..EHZ", t)
             self.assertEqual(expected, result)
 
-    def test_issue358(self):
+    def test_issue_358(self):
         """
         Test case for issue #358.
         """
@@ -633,7 +633,7 @@ class ParserTestCase(unittest.TestCase):
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('CL.AIO.00.EHZ', dt)
 
-    def test_issue361(self):
+    def test_issue_361(self):
         """
         Test case for issue #361.
         """
@@ -651,7 +651,7 @@ class ParserTestCase(unittest.TestCase):
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('G.SPB.00.BHZ', dt)
 
-    def test_splitStationsDataless2XSEED(self):
+    def test_split_stations_dataless_to_xseed(self):
         """
         Test case for writing dataless to XSEED with multiple entries.
         """
@@ -661,12 +661,12 @@ class ParserTestCase(unittest.TestCase):
         with NamedTemporaryFile() as fh:
             tempfile = fh.name
             # this will create two files due to two entries in dataless
-            parser.write_XSEED(tempfile, split_stations=True)
+            parser.write_xseed(tempfile, split_stations=True)
             # the second file name is appended with the timestamp of start
             # period
             os.remove(tempfile + '.1301529600.0.xml')
 
-    def test_rotationToZNE(self):
+    def test_rotation_to_zne(self):
         """
         Weak test for rotation of arbitrarily rotated components to ZNE.
         """
@@ -675,7 +675,7 @@ class ParserTestCase(unittest.TestCase):
         # Read the SEED file and rotate the Traces with the information stored
         # in the SEED file.
         p = Parser(os.path.join(self.path, "dataless.seed.II_COCO"))
-        st_r = p.rotate_to_ZNE(st)
+        st_r = p.rotate_to_zne(st)
 
         # Still three channels left.
         self.assertEqual(len(st_r), 3)

@@ -21,7 +21,7 @@ import unittest
 import warnings
 from difflib import Differ
 
-from obspy import UTCDateTime, read, read_inventory, read_events
+from obspy import UTCDateTime, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
@@ -29,6 +29,7 @@ from obspy.clients.fdsn.client import build_url, parse_simple_xml
 from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, FDSNException,
                                        FDSNRedirectException)
 from obspy.core.inventory import Response
+from obspy.geodetics import locations2degrees
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -253,7 +254,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(minradius["type"], float)
         self.assertEqual(minradius["options"], [])
 
-    def test_IRIS_event_catalog_availability(self):
+    def test_iris_event_catalog_availability(self):
         """
         Tests the parsing of the available event catalogs.
         """
@@ -261,7 +262,7 @@ class ClientTestCase(unittest.TestCase):
                          set(("ANF", "GCMT", "TEST", "ISC", "UofW",
                               "NEIC PDE")))
 
-    def test_IRIS_event_contributors_availability(self):
+    def test_iris_event_contributors_availability(self):
         """
         Tests the parsing of the available event contributors.
         """
@@ -272,7 +273,7 @@ class ClientTestCase(unittest.TestCase):
                               "UNKNOWN", "NEIC PDE-M", "NEIC COMCAT",
                               "NEIC PDE-Q")))
 
-    def test_simple_XML_parser(self):
+    def test_simple_xml_parser(self):
         """
         Tests the simple XML parsing helper function.
         """
@@ -291,97 +292,124 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries_event(self):
+    def test_iris_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on the IRIS
         web page.
+
+        Used to be tested against files but that was not maintainable. It
+        now tests if the queries return what was asked for.
         """
         client = self.client
 
-        queries = [
-            dict(eventid=609301),
-            dict(starttime=UTCDateTime("2001-01-07T01:00:00"),
-                 endtime=UTCDateTime("2001-01-07T01:05:00"),
-                 catalog="ISC"),
-            dict(starttime=UTCDateTime("2001-01-07T14:00:00"),
-                 endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
-                 maxlatitude=40, minlongitude=-170, maxlongitude=170,
-                 includeallmagnitudes=True, minmagnitude=4,
-                 orderby="magnitude"),
-        ]
-        result_files = ["events_by_eventid.xml",
-                        "events_by_time.xml",
-                        "events_by_misc.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_events(**query)
-            expected = read_events(file_)
-            self.assertEqual(got, expected, failmsg(got, expected))
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_events(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            self.assertEqual(got, expected,
-                             filename + '\n' + failmsg(got, expected))
+        # Event id query.
+        cat = client.get_events(eventid=609301)
+        self.assertEqual(len(cat), 1)
+        self.assertIn("609301", cat[0].resource_id.id)
 
-    def test_IRIS_example_queries_station(self):
+        # Temporal query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T01:00:00"),
+            endtime=UTCDateTime("2001-01-07T01:05:00"), catalog="ISC")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertEqual(event.origins[0].extra.catalog.value, "ISC")
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T01:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-07T01:05:00"),
+                               event.origins[0].time)
+
+        # Misc query.
+        cat = client.get_events(
+            starttime=UTCDateTime("2001-01-07T14:00:00"),
+            endtime=UTCDateTime("2001-01-08T00:00:00"), minlatitude=15,
+            maxlatitude=40, minlongitude=-170, maxlongitude=170,
+            includeallmagnitudes=True, minmagnitude=4, orderby="magnitude")
+        self.assertGreater(len(cat), 0)
+        for event in cat:
+            self.assertGreater(event.origins[0].time,
+                               UTCDateTime("2001-01-07T14:00:00"))
+            self.assertGreater(UTCDateTime("2001-01-08T00:00:00"),
+                               event.origins[0].time)
+            self.assertGreater(event.origins[0].latitude, 14.9)
+            self.assertGreater(40.1, event.origins[0].latitude)
+            self.assertGreater(event.origins[0].latitude, -170.1)
+            self.assertGreater(170.1, event.origins[0].latitude)
+            self.assertGreater(event.magnitudes[0].mag, 3.999)
+
+    def test_iris_example_queries_station(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
+
+        This test used to download files but that is almost impossible to
+        keep up to date - thus it is now a bit smarter and tests the
+        returned inventory in different ways.
         """
         client = self.client
 
-        queries = [
-            dict(latitude=-56.1, longitude=-26.7, maxradius=15),
-            dict(startafter=UTCDateTime("2003-01-07"),
-                 endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
-                 maxlatitude=55, minlongitude=170, maxlongitude=-170,
-                 network="IM"),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2001-01-01"), net="IU",
-                 sta="ANMO"),
-            dict(starttime=UTCDateTime("2000-01-01"),
-                 endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
-                 location="00"),
-        ]
-        result_files = ["stations_by_latlon.xml",
-                        "stations_by_misc.xml",
-                        "stations_by_station.xml",
-                        "stations_by_station_wildcard.xml",
-                        ]
-        for query, filename in zip(queries, result_files):
-            file_ = os.path.join(self.datapath, filename)
-            # query["filename"] = file_
-            got = client.get_stations(**query)
-            expected = read_inventory(file_, format="STATIONXML")
-            # delete both creating times and modules before comparing objects.
-            got.created = None
-            expected.created = None
-            got.module = None
-            expected.module = None
+        # Radial query.
+        inv = client.get_stations(latitude=-56.1, longitude=-26.7,
+                                  maxradius=15)
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                dist = locations2degrees(sta.latitude, sta.longitude,
+                                         -56.1, -26.7)
+                # small tolerance for WGS84.
+                self.assertGreater(15.1, dist, "%s.%s" % (net.code,
+                                                          sta.code))
 
-            # XXX Py3k: the objects differ in direct comparison, however,
-            # the strings of them are equal
-            self.assertEqual(str(got), str(expected), failmsg(got, expected))
+        # Misc query.
+        inv = client.get_stations(
+            startafter=UTCDateTime("2003-01-07"),
+            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            maxlatitude=55, minlongitude=170, maxlongitude=-170, network="IM")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                msg = "%s.%s" % (net.code, sta.code)
+                self.assertGreater(sta.start_date, UTCDateTime("2003-01-07"),
+                                   msg)
+                if sta.end_date is not None:
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                                       msg)
+                self.assertGreater(sta.latitude, 14.9, msg)
+                self.assertGreater(55.1, sta.latitude, msg)
+                self.assertFalse(-170.1 <= sta.longitude <= 170.1, msg)
+                self.assertEqual(net.code, "IM", msg)
 
-            # test output to file
-            with NamedTemporaryFile() as tf:
-                client.get_stations(filename=tf.name, **query)
-                with open(tf.name, 'rb') as fh:
-                    got = fh.read()
-                with open(file_, 'rb') as fh:
-                    expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>',
-                            '<Module>', '<ModuleURI>']
-            msg = failmsg(got.decode(), expected.decode(),
-                          ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", filename + '\n' + msg)
+        # Simple query
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2001-01-01"), net="IU", sta="ANMO")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2001-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertEqual(sta.code, "ANMO")
 
-    def test_IRIS_example_queries_dataselect(self):
+        # Station wildcard query.
+        inv = client.get_stations(
+            starttime=UTCDateTime("2000-01-01"),
+            endtime=UTCDateTime("2002-01-01"), network="IU", sta="A*",
+            location="00")
+        self.assertGreater(len(inv.networks), 0)  # at least one network
+        for net in inv:
+            self.assertGreater(len(net.stations), 0)  # at least one station
+            for sta in net:
+                self.assertGreater(UTCDateTime("2002-01-01"), sta.start_date)
+                if sta.end_date is not None:
+                    self.assertGreater(sta.end_date, UTCDateTime("2000-01-01"))
+                self.assertEqual(net.code, "IU")
+                self.assertTrue(sta.code.startswith("A"))
+
+    def test_iris_example_queries_dataselect(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
@@ -440,7 +468,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(FDSNException, self.client.get_stations,
                           network="IU", net="IU")
 
-    def test_help_function_with_IRIS(self):
+    def test_help_function_with_iris(self):
         """
         Tests the help function with the IRIS example.
 

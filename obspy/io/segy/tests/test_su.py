@@ -29,7 +29,7 @@ class SUTestCase(unittest.TestCase):
         self.dir = os.path.dirname(__file__)
         self.path = os.path.join(self.dir, 'data')
 
-    def test_readAndWriteSU(self):
+    def test_read_and_write_su(self):
         """
         Reading and writing a SU file should not change it.
         """
@@ -48,7 +48,7 @@ class SUTestCase(unittest.TestCase):
         # Should be identical!
         self.assertEqual(org_data, new_data)
 
-    def test_enforcingByteordersWhileReading(self):
+    def test_enforcing_byteorders_while_reading(self):
         """
         Tests whether or not enforcing the byte order while reading and writing
         does something and works at all. Using the wrong byte order will most
@@ -66,7 +66,7 @@ class SUTestCase(unittest.TestCase):
         # correct.
         self.assertRaises(SEGYTraceReadingError, _read_su, file, endian='>')
 
-    def test_readingAndWritingDifferentByteorders(self):
+    def test_reading_and_writing_different_byteorders(self):
         """
         Writing different byte orders should not change
         """
@@ -98,7 +98,7 @@ class SUTestCase(unittest.TestCase):
         self.assertEqual(su3.endian, '>')
         np.testing.assert_array_equal(data, su3.traces[0].data)
 
-    def test_unpackingSUData(self):
+    def test_unpacking_su_data(self):
         """
         Unpacks data and compares them to data unpacked by Madagascar.
         """
@@ -112,7 +112,7 @@ class SUTestCase(unittest.TestCase):
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
 
-    def test_readBytesIO(self):
+    def test_read_bytes_io(self):
         """
         Tests reading from BytesIO instances.
         """

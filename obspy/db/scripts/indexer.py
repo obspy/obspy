@@ -33,7 +33,7 @@ import logging
 import multiprocessing
 import select
 import sys
-from argparse import SUPPRESS, ArgumentParser
+from argparse import ArgumentParser
 
 with standard_library.hooks():
     import http.server
@@ -42,15 +42,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from obspy import __version__
-from obspy.core.util.base import _get_deprecated_argument_action
 from obspy.db.db import Base
 from obspy.db.indexer import WaveformFileCrawler, worker
 from obspy.db.util import parse_mapping_data
 
 
 class MyHandler(http.server.BaseHTTPRequestHandler):
-
-    def do_GET(self):
+    def do_GET(self):  # noqa
         """
         Respond to a GET request.
         """
@@ -108,7 +106,7 @@ class WaveformIndexer(http.server.HTTPServer, WaveformFileCrawler):
             self.iterate()
 
 
-def _runIndexer(options):
+def _run_indexer(options):
     logging.info("Starting indexer %s:%s ..." % (options.host, options.port))
     # initialize crawler
     service = WaveformIndexer((options.host, options.port), MyHandler)
@@ -124,7 +122,8 @@ def _runIndexer(options):
             return
         # prepare map file
         if options.mapping_file:
-            data = open(options.mapping_file, 'r').readlines()
+            with open(options.mapping_file, 'r') as f:
+                data = f.readlines()
             mappings = parse_mapping_data(data)
             logging.info("Parsed %d lines from mapping file %s" %
                          (len(data), options.mapping_file))
@@ -151,8 +150,8 @@ def _runIndexer(options):
             metadata.drop_all(engine, checkfirst=True)
         metadata.create_all(engine, checkfirst=True)
         # initialize database + options
-        Session = sessionmaker(bind=engine)
-        service.session = Session
+        _session = sessionmaker(bind=engine)
+        service.session = _session
         service.options = options
         service.mappings = mappings
         # set queues
@@ -245,25 +244,6 @@ Default path option is 'data=*.*'.""")
         '-p', '--port', type=int, default=0,
         help="Port number. If not given a free port will be picked.")
 
-    # Deprecated arguments
-    action = _get_deprecated_argument_action(
-        '--check_duplicates', '--check-duplicates', real_action='store_true')
-    parser.add_argument('--check_duplicates', nargs=0,
-                        action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action(
-        '--drop_database', '--drop-database', real_action='store_true')
-    parser.add_argument('--drop_database', nargs=0,
-                        action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action('--mapping_file',
-                                             '--mapping-file')
-    parser.add_argument('--mapping_file', action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action(
-        '--run_once', '--run-once', real_action='store_true')
-    parser.add_argument('--run_once', nargs=0, action=action, help=SUPPRESS)
-
     args = parser.parse_args(argv)
     # set level of verbosity
     if args.verbose:
@@ -276,7 +256,7 @@ Default path option is 'data=*.*'.""")
     else:
         logging.basicConfig(filename=options.log, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
-    _runIndexer(args)
+    _run_indexer(args)
 
 
 if __name__ == "__main__":

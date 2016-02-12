@@ -123,10 +123,6 @@ class SACTraceTestCase(unittest.TestCase):
         with self.assertRaises(IOError):
             sac.write(tempfile, headonly=True, byteorder='little')
 
-    @unittest.skip("Not implemented yet.")
-    def test_write_sac_byteorder(self):
-        pass
-
     def test_read_sac_ascii(self):
         """
         Read an ASCII SAC file.
@@ -141,10 +137,6 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertAlmostEqual(sac.depmen, 9.4771387e-08)
         np.testing.assert_array_almost_equal(self.testdata[0:10],
                                              sac.data[0:10])
-
-    @unittest.skip("Not implemented yet.")
-    def test_write_sac_ascii(self):
-        pass
 
     def test_reftime(self):
         """
@@ -182,10 +174,6 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.nzmsec, nzmsec + 1)
         self.assertAlmostEqual(sac.b, b - 1.0e-3, 6)
         self.assertAlmostEqual(sac.t1, t1 - 1.0e-3, 5)
-
-    @unittest.skip("Not implemented yet.")
-    def test_dict_to_header_arrays(self):
-        pass
 
 
 def suite():

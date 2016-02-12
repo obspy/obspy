@@ -34,7 +34,7 @@ class SEGYTestCase(unittest.TestCase):
         self.files = FILES
         self.dtypes = DTYPES
 
-    def test_unpackSEGYData(self):
+    def test_unpack_segy_data(self):
         """
         Tests the unpacking of various SEG Y files.
         """
@@ -57,7 +57,7 @@ class SEGYTestCase(unittest.TestCase):
             # Compare both.
             np.testing.assert_array_equal(correct_data, data)
 
-    def test_packSEGYData(self):
+    def test_pack_segy_data(self):
         """
         Tests the packing of various SEG Y files.
         """
@@ -173,7 +173,7 @@ class SEGYTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(data, new_data)
                 np.testing.assert_array_equal(data, old_data)
 
-    def test_packAndUnpackIBMFloat(self):
+    def test_pack_and_unpack_ibm_float(self):
         """
         Packing and unpacking IBM floating points might yield some inaccuracies
         due to floating point rounding errors.
@@ -204,7 +204,7 @@ class SEGYTestCase(unittest.TestCase):
                 rms1 = rms(data, new_data)
                 self.assertEqual(True, rms1 < 1E-6)
 
-    def test_packAndUnpackVerySmallIBMFloats(self):
+    def test_pack_and_unpack_very_small_ibm_floats(self):
         """
         The same test as test_packAndUnpackIBMFloat just for small numbers
         because they might suffer more from the inaccuracies.
@@ -234,7 +234,7 @@ class SEGYTestCase(unittest.TestCase):
                 rms1 = rms(data, new_data)
                 self.assertEqual(True, rms1 < 1E-6)
 
-    def test_packAndUnpackIBMSpecialCases(self):
+    def test_pack_and_unpack_ibm_special_cases(self):
         """
         Tests the packing and unpacking of several powers of 16 which are
         problematic because they need separate handling in the algorithm.
@@ -262,7 +262,7 @@ class SEGYTestCase(unittest.TestCase):
             # Test both.
             np.testing.assert_array_equal(new_data, data)
 
-    def test_readAndWriteBinaryFileHeader(self):
+    def test_read_and_write_binary_file_header(self):
         """
         Reading and writing should not change the binary file header.
         """
@@ -284,7 +284,7 @@ class SEGYTestCase(unittest.TestCase):
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
-    def test_readAndWriteTextualFileHeader(self):
+    def test_read_and_write_textual_file_header(self):
         """
         Reading and writing should not change the textual file header.
         """
@@ -315,7 +315,7 @@ class SEGYTestCase(unittest.TestCase):
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
-    def test_readAndWriteTraceHeader(self):
+    def test_read_and_write_trace_header(self):
         """
         Reading and writing should not change the trace header.
         """
@@ -337,7 +337,7 @@ class SEGYTestCase(unittest.TestCase):
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
-    def test_readAndWriteSEGY(self, headonly=False):
+    def test_read_and_write_segy(self, headonly=False):
         """
         Reading and writing again should not change a file.
         """
@@ -376,13 +376,13 @@ class SEGYTestCase(unittest.TestCase):
             self.assertEqual(org_data[:3500], new_data[:3500])
             self.assertEqual(org_data[3502:], new_data[3502:])
 
-    def test_readAndWriteSEGY_headonly(self):
+    def test_read_and_write_segy_headonly(self):
         """
         Reading with headonly=True and writing again should not change a file.
         """
-        self.test_readAndWriteSEGY(headonly=True)
+        self.test_read_and_write_segy(headonly=True)
 
-    def test_unpackBinaryFileHeader(self):
+    def test_unpack_binary_file_header(self):
         """
         Compares some values of the binary header with values read with
         SeisView 2 by the DMNG.
@@ -427,7 +427,7 @@ class SEGYTestCase(unittest.TestCase):
             header.number_of_3200_byte_ext_file_header_records_following,
             0)
 
-    def test_unpackTraceHeader(self):
+    def test_unpack_trace_header(self):
         """
         Compares some values of the first trace header with values read with
         SeisView 2 by the DMNG.
@@ -541,7 +541,7 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.source_measurement_exponent, 0)
         self.assertEqual(header.source_measurement_unit, 0)
 
-    def test_readBytesIO(self):
+    def test_read_bytes_io(self):
         """
         Tests reading from BytesIO instances.
         """

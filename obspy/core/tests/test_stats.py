@@ -77,7 +77,7 @@ class StatsTestCase(unittest.TestCase):
         x = Stats(y)
         self.assertIn('b', dir(x))
 
-    def test_simpleStats(self):
+    def test_simple_stats(self):
         """
         Various setter and getter tests.
         """
@@ -95,7 +95,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats.test2, 1)
         self.assertEqual(stats['test2'], 1)
 
-    def test_nestedStats(self):
+    def test_nested_stats(self):
         """
         Various setter and getter tests.
         """
@@ -126,7 +126,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(stats2.sub1.muh, 'meah')
         self.assertEqual(stats2.sub2.muh2, 'meah2')
 
-    def test_bugfix_setStats(self):
+    def test_bugfix_set_stats(self):
         """
         Test related to issue #4.
         """
@@ -140,7 +140,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(st[1].stats['station'], 'BBB')
         self.assertEqual(st[1].stats.station, 'BBB')
 
-    def test_bugfix_setStats2(self):
+    def test_bugfix_set_stats_2(self):
         """
         Second test related to issue #4.
         """
@@ -157,7 +157,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.station, 'BBB')
         self.assertEqual(st[0].stats['station'], 'BBB')
 
-    def test_bugfix_setStats3(self):
+    def test_bugfix_set_stats_3(self):
         """
         Third test related to issue #4.
         """
@@ -177,7 +177,7 @@ class StatsTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.get('station'), 'BBB')
             self.assertIn('BBB', tr.stats.values())
 
-    def test_pickleStats(self):
+    def test_pickle_stats(self):
         """
         Test pickling Stats objects. Test case for issue #10.
         """
@@ -197,7 +197,7 @@ class StatsTestCase(unittest.TestCase):
         stats2 = pickle.loads(temp)
         self.assertEqual(stats, stats2)
 
-    def test_setCalib(self):
+    def test_set_calib(self):
         """
         Test to prevent setting a calibration factor of 0
         """

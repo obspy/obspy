@@ -76,14 +76,15 @@ def _is_cmtsolution(filename_or_buf):
     :type filename_or_buf: str or file-like object.
     """
     try:
-        return _buffer_proxy(filename_or_buf, __is_cmtsolution, reset_fp=True)
+        return _buffer_proxy(filename_or_buf, _internal_is_cmtsolution,
+                             reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
     except (OSError, FileNotFoundError):
         return False
 
 
-def __is_cmtsolution(buf):
+def _internal_is_cmtsolution(buf):
     """
     Checks if the file is a CMTSOLUTION file.
 
@@ -94,7 +95,7 @@ def __is_cmtsolution(buf):
     # it passes it will be read again but that has really no
     # significant performance impact.
     try:
-        __read_single_cmtsolution(buf)
+        _internal_read_single_cmtsolution(buf)
         return True
     except:
         return False
@@ -107,10 +108,10 @@ def _read_cmtsolution(filename_or_buf, **kwargs):
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __read_cmtsolution, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_read_cmtsolution, **kwargs)
 
 
-def __read_cmtsolution(buf, **kwargs):
+def _internal_read_cmtsolution(buf, **kwargs):
     """
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -137,14 +138,14 @@ def __read_cmtsolution(buf, **kwargs):
         # read the next event.
         if line:
             buf.seek(cur_pos, 0)
-            events.append(__read_single_cmtsolution(buf))
+            events.append(_internal_read_single_cmtsolution(buf))
         cur_pos = buf.tell()
 
     return Catalog(resource_id=_get_resource_id("catalog", str(uuid.uuid4())),
                    events=events)
 
 
-def __read_single_cmtsolution(buf):
+def _internal_read_single_cmtsolution(buf):
     """
     Reads a single CMTSOLUTION file to a :class:`~obspy.core.event.Catalog`
     object.
@@ -309,11 +310,11 @@ def _write_cmtsolution(catalog, filename_or_buf, **kwargs):
     :param filename_or_buf: Filename or file-like object to write to.
     :type filename_or_buf: str, open file, or file-like object.
     """
-    return _buffer_proxy(filename_or_buf, __write_cmtsolution, file_mode="wb",
-                         catalog=catalog, **kwargs)
+    return _buffer_proxy(filename_or_buf, _internal_write_cmtsolution,
+                         file_mode="wb", catalog=catalog, **kwargs)
 
 
-def __write_cmtsolution(buf, catalog, **kwargs):
+def _internal_write_cmtsolution(buf, catalog, **kwargs):
     """
     Write events to a file.
 
@@ -326,13 +327,13 @@ def __write_cmtsolution(buf, catalog, **kwargs):
     if len(catalog) < 1:
         raise ValueError("Catalog must contain at least one event")
     for event in catalog:
-        __write_single_cmtsolution(buf, event)
+        _internal_write_single_cmtsolution(buf, event)
         # Add an empty line between events.
         if len(catalog) > 1:
             buf.write(b"\n")
 
 
-def __write_single_cmtsolution(buf, event, **kwargs):
+def _internal_write_single_cmtsolution(buf, event, **kwargs):
     """
     Write an event to a file.
 

@@ -860,7 +860,7 @@ class Response(ComparingObject):
         stage_objects = []
 
         for stage_number in stage_list:
-            st = ew.stage()
+            st = ew.Stage()
             st.sequence_no = stage_number
 
             stage_blkts = []
@@ -872,7 +872,7 @@ class Response(ComparingObject):
             st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # Map the transfer function type.
                 transfer_fct_mapping = {
                     "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
@@ -890,22 +890,22 @@ class Response(ComparingObject):
                 pz.a0_freq = blockette.normalization_frequency
 
                 # XXX: Find a better way to do this.
-                poles = (ew.complex_number * len(blockette.poles))()
+                poles = (ew.ComplexNumber * len(blockette.poles))()
                 for i, value in enumerate(blockette.poles):
                     poles[i].real = value.real
                     poles[i].imag = value.imag
 
-                zeros = (ew.complex_number * len(blockette.zeros))()
+                zeros = (ew.ComplexNumber * len(blockette.zeros))()
                 for i, value in enumerate(blockette.zeros):
                     zeros[i].real = value.real
                     zeros[i].imag = value.imag
 
                 pz.poles = C.cast(C.pointer(poles),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
                 pz.zeros = C.cast(C.pointer(zeros),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
             elif isinstance(blockette, CoefficientsTypeResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # This type can have either an FIR or an IIR response. If
                 # the number of denominators is 0, it is a FIR. Otherwise
                 # an IIR.
@@ -955,7 +955,7 @@ class Response(ComparingObject):
                        "metadata).")
                 raise NotImplementedError(msg)
             elif isinstance(blockette, FIRResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
 
                 if blockette.symmetry == "NONE":
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
@@ -1003,7 +1003,7 @@ class Response(ComparingObject):
                            "be specified.")
                     raise ValueError(msg)
             else:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                 decimation_blkt = blkt.blkt_info.decimation
 
@@ -1024,7 +1024,7 @@ class Response(ComparingObject):
             # Add the gain if it is available.
             if blockette.stage_gain is not None and \
                     blockette.stage_gain_frequency is not None:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
                 gain_blkt = blkt.blkt_info.gain
                 gain_blkt.gain = blockette.stage_gain
@@ -1043,11 +1043,11 @@ class Response(ComparingObject):
             stage_objects.append(st)
 
         # Attach the instrument sensitivity as stage 0 at the end.
-        st = ew.stage()
+        st = ew.Stage()
         st.sequence_no = 0
         st.input_units = 0
         st.output_units = 0
-        blkt = ew.blkt()
+        blkt = ew.Blkt()
         blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
         gain_blkt = blkt.blkt_info.gain
         gain_blkt.gain = self.instrument_sensitivity.value
@@ -1055,7 +1055,7 @@ class Response(ComparingObject):
         st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
-        chan = ew.channel()
+        chan = ew.Channel()
         if not stage_objects:
             msg = "At least one stage is needed."
             raise ValueError(msg)
@@ -1378,7 +1378,7 @@ class InstrumentSensitivity(ComparingObject):
     def __init__(self, value, frequency, input_units,
                  output_units, input_units_description=None,
                  output_units_description=None, frequency_range_start=None,
-                 frequency_range_end=None, frequency_range_DB_variation=None):
+                 frequency_range_end=None, frequency_range_db_variation=None):
         """
         :type value: float
         :param value: Complex type for sensitivity and frequency ranges.
@@ -1424,8 +1424,8 @@ class InstrumentSensitivity(ComparingObject):
         :type frequency_range_end: float, optional
         :param frequency_range_end: End of the frequency range for which the
             SensitivityValue is valid within the dB variation specified.
-        :type frequency_range_DB_variation: float, optional
-        :param frequency_range_DB_variation: Variation in decibels within the
+        :type frequency_range_db_variation: float, optional
+        :param frequency_range_db_variation: Variation in decibels within the
             specified range.
         """
         self.value = value
@@ -1436,7 +1436,7 @@ class InstrumentSensitivity(ComparingObject):
         self.output_units_description = output_units_description
         self.frequency_range_start = frequency_range_start
         self.frequency_range_end = frequency_range_end
-        self.frequency_range_DB_variation = frequency_range_DB_variation
+        self.frequency_range_db_variation = frequency_range_db_variation
 
     def __str__(self):
         ret = ("Instrument Sensitivity:\n"

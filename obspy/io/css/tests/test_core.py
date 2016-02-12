@@ -66,7 +66,7 @@ class CoreTestCase(unittest.TestCase):
             fh.close()
             assert(not _is_css(tempfile))
 
-    def test_readViaObsPy(self):
+    def test_read_via_obspy(self):
         """
         Read files via obspy.core.stream.read function.
         """
@@ -74,7 +74,7 @@ class CoreTestCase(unittest.TestCase):
         st = read(self.filename)
         self.assertEqual(st, self.st_result)
 
-    def test_readViaModule(self):
+    def test_read_via_module(self):
         """
         Read files via obspy.io.css.core._read_css function.
         """

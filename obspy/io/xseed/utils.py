@@ -17,6 +17,8 @@ import re
 import sys
 
 from obspy import UTCDateTime
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 # Ignore Attributes of Blockettes
@@ -65,7 +67,7 @@ def datetime_2_string(dt, compact=False):
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
-def compare_SEED(seed1, seed2):
+def compare_seed(seed1, seed2):
     """
     Compares two SEED files.
 
@@ -148,7 +150,7 @@ def lookup_code(blockettes, blkt_number, field_name, lookup_code,
     return None
 
 
-def format_RESP(number, digits=4):
+def format_resp(number, digits=4):
     """
     Formats a number according to the RESP format.
     """
@@ -222,7 +224,7 @@ def unique_list(seq):
     return list(keys.keys())
 
 
-def is_RESP(filename):
+def is_resp(filename):
     """
     Check if a file at the specified location appears to be a RESP file.
 
@@ -255,3 +257,21 @@ def is_RESP(filename):
                 return False
     except IOError:
         return False
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'Blockette34Lookup': 'obspy.io.xseed.utils.blockette_34_lookup',
+        'DateTime2String': 'obspy.io.xseed.utils.datetime_2_string',
+        'LookupCode': 'obspy.io.xseed.utils.lookup_code',
+        'compareSEED': 'obspy.io.xseed.utils.compare_seed',
+        'formatRESP': 'obspy.io.xseed.utils.format_resp',
+        'getXPath': 'obspy.io.xseed.utils.get_xpath',
+        'setXPath': 'obspy.io.xseed.utils.set_xpath',
+        'toString': 'obspy.io.xseed.utils.to_string',
+        'toTag': 'obspy.io.xseed.utils.to_tag',
+        'uniqueList': 'obspy.io.xseed.utils.unique_list'})

@@ -21,6 +21,8 @@ import time
 from obspy import read
 from obspy.core.preview import create_preview
 from obspy.core.util.base import _get_entry_points
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
                          WaveformGaps, WaveformPath)
 
@@ -437,7 +439,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 stats = os.stat(filepath)
                 stream = read(filepath, **kwargs)
                 # get gap and overlap information
-                gap_list = stream.getGaps()
+                gap_list = stream.get_gaps()
                 # merge channels and replace gaps/overlaps with 0 to prevent
                 # generation of masked arrays
                 stream.merge(fill_value=0)
@@ -542,3 +544,12 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 pass
     except KeyboardInterrupt:
         return
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'createPreview': 'obspy.db.indexer.create_preview'})

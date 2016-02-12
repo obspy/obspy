@@ -245,7 +245,7 @@ def _add_inventory_layer(data_source, inventory):
                 feature.Destroy()
 
 
-def _get_WGS84_spatial_reference():
+def _get_wgs84_spatial_reference():
     # create the spatial reference
     sr = osr.SpatialReference()
     # Simpler and feels cleaner to initialize by EPSG code but that depends on
@@ -271,7 +271,7 @@ def _get_WGS84_spatial_reference():
 
 
 def _create_layer(data_source, layer_name, field_definitions):
-    sr = _get_WGS84_spatial_reference()
+    sr = _get_wgs84_spatial_reference()
     layer = data_source.CreateLayer(native_str(layer_name), sr,
                                     ogr.wkbPoint)
     # Add the fields we're interested in

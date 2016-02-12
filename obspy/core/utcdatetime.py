@@ -247,7 +247,7 @@ class UTCDateTime(object):
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
-                        self.timestamp = self._parse_ISO_8601(value).timestamp
+                        self.timestamp = self._parse_iso_8601(value).timestamp
                         return
                     except:
                         if iso8601:
@@ -366,7 +366,7 @@ class UTCDateTime(object):
                           1000000) / 1000000.0 + ms
 
     @staticmethod
-    def _parse_ISO_8601(value):
+    def _parse_iso_8601(value):
         """
         Parses an ISO8601:2004 date time string.
         """
@@ -1348,7 +1348,7 @@ class UTCDateTime(object):
             return temp + ":%02d" % (self.minute)
         return temp
 
-    def format_IRIS_web_service(self):
+    def format_iris_web_service(self):
         """
         Returns string representation usable for the IRIS Web services.
 
@@ -1357,7 +1357,7 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
-        >>> print(dt.format_IRIS_web_service())
+        >>> print(dt.format_iris_web_service())
         2008-05-27T12:30:35.045
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \

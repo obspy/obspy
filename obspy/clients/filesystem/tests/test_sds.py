@@ -88,7 +88,7 @@ class SDSTestCase(unittest.TestCase):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
-    def test_read_from_SDS(self):
+    def test_read_from_sds(self):
         """
         Test reading data across year and day breaks from SDS directory
         structure. Also tests looking for data on the wrong side of a day
@@ -138,7 +138,7 @@ class SDSTestCase(unittest.TestCase):
                 st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
                 self.assertEqual(len(st), 1)
 
-    def test_read_from_SDS_with_wildcarded_seed_ids(self):
+    def test_read_from_sds_with_wildcarded_seed_ids(self):
         """
         Test reading data with wildcarded SEED IDs.
         """
@@ -160,7 +160,7 @@ class SDSTestCase(unittest.TestCase):
                 st = client.get_waveforms(net, sta, loc, cha, t-200, t+200)
                 self.assertEqual(len(st), num_matching_ids)
 
-    def test_SDS_report(self):
+    def test_sds_report(self):
         """
         Test command line script for generating SDS report html.
 

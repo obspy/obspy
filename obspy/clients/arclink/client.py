@@ -25,8 +25,7 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
-from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.core.util.decorator import deprecated
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -38,10 +37,6 @@ _INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 MSG_NOPAZ = "No Poles and Zeros information returned by server."
-
-MSG_USER_REQUIRED = """Initializing a ArcLink client without the user keyword
-is deprecated! Please provide a proper user identification string such as your
-email address. Defaulting to 'ObsPy client' for now."""
 
 
 class ArcLinkException(Exception):
@@ -110,7 +105,7 @@ class Client(object):
     """
     max_status_requests = MAX_REQUESTS
 
-    def __init__(self, host="webdc.eu", port=18002, user=None,
+    def __init__(self, user, host="webdc.eu", port=18002,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
                  command_delay=0, status_delay=0.5):
@@ -119,11 +114,7 @@ class Client(object):
 
         See :class:`obspy.clients.arclink.client.Client` for all parameters.
         """
-        if user is None:
-            warnings.warn(MSG_USER_REQUIRED, category=ObsPyDeprecationWarning)
-            self.user = 'ObsPy client'
-        else:
-            self.user = user
+        self.user = user
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
@@ -387,13 +378,13 @@ class Client(object):
         return data
 
     @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, format="MSEED", compressed=True, metadata=False,
-                      route=True, **kwargs):
+                      route=True):
         """
         Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
@@ -443,13 +434,8 @@ class Client(object):
             st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
-        if kwargs.get('get_paz') or kwargs.get('getCoordinates'):
-            msg = "Keywords get_paz and getCoordinates are deprecated. " + \
-                  "Please use keyword metadata instead."
-            warnings.warn(msg, ObsPyDeprecationWarning)
         # handle deprecated keywords - one must be True to enable metadata
-        metadata = metadata or kwargs.get('get_paz', False) or \
-            kwargs.get('getCoordinates', False)
+        metadata = metadata
         file_stream = io.BytesIO()
         self.save_waveforms(file_stream, network, station, location, channel,
                             starttime, endtime, format=format,
@@ -498,7 +484,7 @@ class Client(object):
         return stream
 
     @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def saveWaveform(self, *args, **kwargs):
         return self.save_waveforms(*args, **kwargs)
 
@@ -608,7 +594,7 @@ class Client(object):
             fh.close()
 
     @deprecated("'getRouting' has been renamed to 'get_routing'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getRouting(self, *args, **kwargs):
         return self.get_routing(*args, **kwargs)
 
@@ -715,7 +701,7 @@ class Client(object):
         return out
 
     @deprecated("'getQC' has been renamed to 'get_qc'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getQC(self, *args, **kwargs):
         return self.get_qc(*args, **kwargs)
 
@@ -772,13 +758,12 @@ class Client(object):
         return result
 
     @deprecated("'getMetadata' has been renamed to 'get_metadata'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getMetadata(self, *args, **kwargs):
         return self.get_metadata(*args, **kwargs)
 
-    @deprecated_keywords({'get_paz': None, 'getCoordinates': None})
-    def get_metadata(self, network, station, location, channel, starttime=None,
-                     endtime=None, time=None, route=True):
+    def get_metadata(self, network, station, location, channel, time,
+                     route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity and station
         coordinates for a single channel at a given time.
@@ -815,17 +800,7 @@ class Client(object):
         'coordinates': AttribDict({'latitude': 49.9862, 'elevation': 635.0,
                                    'longitude': 12.1083})}
         """
-        # XXX: deprecation handling
-        if starttime and endtime:
-            # warn if old scheme
-            msg = "The 'starttime' and 'endtime' keywords will be " + \
-                "deprecated. Please use 'time' instead."
-            warnings.warn(msg, category=ObsPyDeprecationWarning)
-        elif starttime and not endtime:
-            # use a single starttime as time keyword
-            time = starttime
-            endtime = time + 0.00001
-        elif not time:
+        if not time:
             # if not temporal keyword is given raise an exception
             raise ValueError("keyword 'time' is required")
         else:
@@ -859,7 +834,7 @@ class Client(object):
             data['coordinates'][key] = result[id][key]
         return data
 
-    def __parsePAZ(self, xml_doc, xml_ns):
+    def __parse_paz(self, xml_doc, xml_ns):
         """
         """
         paz = AttribDict()
@@ -932,12 +907,12 @@ class Client(object):
         return paz
 
     @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getPAZ(self, *args, **kwargs):
         return self.get_paz(*args, **kwargs)
 
-    def get_paz(self, network, station, location, channel, starttime=None,
-                endtime=None, time=None, route=True):
+    def get_paz(self, network, station, location, channel, time,
+                route=True):
         """
         Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
@@ -972,18 +947,7 @@ class Client(object):
                     'name': 'LMU:STS-2/N/g=1500',
                     'normalization_factor': 60077000.0})
         """
-        # XXX: deprecation handling
-        if starttime and endtime:
-            # warn if old scheme
-            msg = "The 'starttime' and 'endtime' keywords will be " + \
-                "deprecated. Please use 'time' instead. Be aware that the" + \
-                "result of get_paz() will differ using the 'time' keyword."
-            warnings.warn(msg, category=ObsPyDeprecationWarning)
-        elif starttime and not endtime:
-            # use a single starttime as time keyword
-            time = starttime
-            endtime = time + 0.00001
-        elif not time:
+        if not time:
             # if not temporal keyword is given raise an exception
             raise ValueError("keyword 'time' is required")
         else:
@@ -1018,7 +982,7 @@ class Client(object):
             raise ArcLinkException(msg)
 
     @deprecated("'saveResponse' has been renamed to 'save_response'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def saveResponse(self, *args, **kwargs):
         return self.save_response(*args, **kwargs)
 
@@ -1074,7 +1038,7 @@ class Client(object):
                 fp.write(data)
 
     @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getInventory(self, *args, **kwargs):
         return self.get_inventory(*args, **kwargs)
 
@@ -1359,7 +1323,7 @@ class Client(object):
                         if not xml_paz:
                             continue
                         # parse PAZ
-                        paz = self.__parsePAZ(xml_paz[0], xml_ns)
+                        paz = self.__parse_paz(xml_paz[0], xml_ns)
 
                         # convert from Hz (Analog) to rad/s (Laplace)
                         if paz['response_type'] == "B":
@@ -1383,11 +1347,11 @@ class Client(object):
                         temp['paz'] = paz
 
                         # add some seismometer-specific "nice to have" stuff
-                        publicID = xml_paz[0].get('publicID')
+                        public_id = xml_paz[0].get('publicID')
                         try:
                             paz['sensor_manufacturer'] = \
-                                sensors[publicID]['manufacturer']
-                            paz['sensor_model'] = sensors[publicID]['model']
+                                sensors[public_id]['manufacturer']
+                            paz['sensor_model'] = sensors[public_id]['model']
                         except:
                             paz['sensor_manufacturer'] = None
                             paz['sensor_model'] = None
@@ -1395,7 +1359,7 @@ class Client(object):
         return data
 
     @deprecated("'getNetworks' has been renamed to 'get_networks'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getNetworks(self, *args, **kwargs):
         return self.get_networks(*args, **kwargs)
 
@@ -1419,7 +1383,7 @@ class Client(object):
                                   endtime=endtime, route=route)
 
     @deprecated("'getStations' has been renamed to 'get_stations'. Use "
-                "that instead.")
+                "that instead.")  # noqa
     def getStations(self, *args, **kwargs):
         return self.get_stations(*args, **kwargs)
 

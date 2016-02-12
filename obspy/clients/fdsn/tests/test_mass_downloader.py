@@ -17,7 +17,7 @@ import collections
 import copy
 import os
 import shutil
-from socket import timeout as SocketTimeout
+from socket import timeout as socket_timeout
 import tempfile
 import unittest
 
@@ -1989,7 +1989,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels))
         }
 
-        patch_download_mseed.side_effect = SocketTimeout("Nooooo")
+        patch_download_mseed.side_effect = socket_timeout("Nooooo")
 
         c.download_mseed()
         self.assertEqual(patch_check_data.call_count, 1)
@@ -2005,7 +2005,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
             ("A", "A"): Station("A", "A", 0, 10, copy.deepcopy(channels))
         }
 
-        patch_download_mseed.side_effect = SocketTimeout("no data available")
+        patch_download_mseed.side_effect = socket_timeout("no data available")
 
         c.download_mseed()
         self.assertEqual(patch_check_data.call_count, 1)
@@ -2167,9 +2167,9 @@ class DownloadHelperTestCase(unittest.TestCase):
             if "iris" in self.base_url:
                 self.services = {"dataselect": "dummy"}
             elif "gfz" in self.base_url:
-                raise SocketTimeout("Random Error")
+                raise socket_timeout("Random Error")
             elif "resif" in self.base_url:
-                raise SocketTimeout("timeout error")
+                raise socket_timeout("timeout error")
             else:
                 self.services = {"dataselect": "dummy", "station": "dummy_2"}
 

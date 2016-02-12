@@ -325,8 +325,8 @@ class Client(object):
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         # convert UTCDateTime to string for query
-        kwargs['starttime'] = UTCDateTime(starttime).format_IRIS_web_service()
-        kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
+        kwargs['starttime'] = UTCDateTime(starttime).format_iris_web_service()
+        kwargs['endtime'] = UTCDateTime(endtime).format_iris_web_service()
         # output
         if filename:
             kwargs['output'] = output
@@ -424,18 +424,18 @@ class Client(object):
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
-                    UTCDateTime(endtime).format_IRIS_web_service()
+                    UTCDateTime(endtime).format_iris_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif 'time' in kwargs:
             try:
                 kwargs['time'] = \
-                    UTCDateTime(kwargs['time']).format_IRIS_web_service()
+                    UTCDateTime(kwargs['time']).format_iris_web_service()
             except:
                 pass
         # build up query
@@ -538,18 +538,18 @@ class Client(object):
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
-                    UTCDateTime(endtime).format_IRIS_web_service()
+                    UTCDateTime(endtime).format_iris_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif starttime:
             try:
                 kwargs['time'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)
@@ -954,7 +954,7 @@ class Client(object):
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         try:
-            kwargs['time'] = UTCDateTime(time).format_IRIS_web_service()
+            kwargs['time'] = UTCDateTime(time).format_iris_web_service()
         except:
             kwargs['time'] = time
         kwargs['minfreq'] = float(minfreq)

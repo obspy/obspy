@@ -19,6 +19,9 @@ import sys
 
 import numpy as np
 
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
+
 
 LOG2 = 0.3010299956639812
 # Get the system byte order.
@@ -33,7 +36,7 @@ class WrongDtypeException(Exception):
     pass
 
 
-def pack_4byte_IBM(file, data, endian='>'):
+def pack_4byte_ibm(file, data, endian='>'):
     """
     Packs 4 byte IBM floating points. This will only work if the host system
     internally uses little endian byte orders.
@@ -153,7 +156,7 @@ def pack_4byte_fixed_point(file, data, endian='>'):
     raise NotImplementedError
 
 
-def pack_4byte_IEEE(file, data, endian='>'):
+def pack_4byte_ieee(file, data, endian='>'):
     """
     Packs 4 byte IEEE floating points.
     """
@@ -169,3 +172,18 @@ def pack_4byte_IEEE(file, data, endian='>'):
 
 def pack_1byte_integer(file, data, endian='>'):
     raise NotImplementedError
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'pack_1byte_Integer': 'obspy.io.segy.pack.pack_1byte_integer',
+        'pack_2byte_Integer': 'obspy.io.segy.pack.pack_2byte_integer',
+        'pack_4byte_Integer': 'obspy.io.segy.pack.pack_4byte_integer',
+        'pack_4byte_IBM': 'obspy.io.segy.pack.pack_4byte_ibm',
+        'pack_4byte_IEEE': 'obspy.io.segy.pack.pack_4byte_ieee',
+        'pack_4byte_Fixed_point':
+            'obspy.io.segy.pack.pack_4byte_fixed_point'})

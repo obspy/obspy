@@ -11,7 +11,7 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 HPTERROR = -2145916800000000
@@ -19,7 +19,7 @@ HPTERROR = -2145916800000000
 ENDIAN = {0: '<', 1: '>'}
 
 # Import shared libmseed
-clibmseed = _load_CDLL("mseed")
+clibmseed = _load_cdll("mseed")
 
 
 # XXX: Do we still support Python 2.4 ????
@@ -141,7 +141,7 @@ class BTime(C.Structure):
 
 
 # Fixed section data of header
-class fsdh_s(C.Structure):
+class FSDHS(C.Structure):
     _fields_ = [
         ('sequence_number', C.c_char * 6),
         ('dataquality', C.c_char),
@@ -165,17 +165,17 @@ class fsdh_s(C.Structure):
 
 
 # Blockette 100, Sample Rate (without header)
-class blkt_100_s(C.Structure):
+class Blkt100S(C.Structure):
     _fields_ = [
         ('samprate', C.c_float),
         ('flags', C.c_byte),
         ('reserved', C.c_ubyte * 3),
     ]
-blkt_100 = blkt_100_s
+blkt_100 = Blkt100S
 
 
 # Blockette 200, Generic Event Detection (without header)
-class blkt_200_s(C.Structure):
+class Blkt200S(C.Structure):
     _fields_ = [
         ('amplitude', C.c_float),
         ('period', C.c_float),
@@ -188,7 +188,7 @@ class blkt_200_s(C.Structure):
 
 
 # Blockette 201, Murdock Event Detection (without header)
-class blkt_201_s(C.Structure):
+class Blkt201S(C.Structure):
     _fields_ = [
         ('amplitude', C.c_float),
         ('period', C.c_float),
@@ -204,7 +204,7 @@ class blkt_201_s(C.Structure):
 
 
 # Blockette 300, Step Calibration (without header)
-class blkt_300_s(C.Structure):
+class Blkt300S(C.Structure):
     _fields_ = [
         ('time', BTime),
         ('numcalibrations', C.c_ubyte),
@@ -221,7 +221,7 @@ class blkt_300_s(C.Structure):
 
 
 # Blockette 310, Sine Calibration (without header)
-class blkt_310_s(C.Structure):
+class Blkt310S(C.Structure):
     _fields_ = [
         ('time', BTime),
         ('reserved1', C.c_ubyte),
@@ -238,7 +238,7 @@ class blkt_310_s(C.Structure):
 
 
 # Blockette 320, Pseudo-random Calibration (without header)
-class blkt_320_s(C.Structure):
+class Blkt320S(C.Structure):
     _fields_ = [
         ('time', BTime),
         ('reserved1', C.c_ubyte),
@@ -255,7 +255,7 @@ class blkt_320_s(C.Structure):
 
 
 # Blockette 390, Generic Calibration (without header)
-class blkt_390_s(C.Structure):
+class Blkt390S(C.Structure):
     _fields_ = [
         ('time', BTime),
         ('reserved1', C.c_ubyte),
@@ -268,7 +268,7 @@ class blkt_390_s(C.Structure):
 
 
 # Blockette 395, Calibration Abort (without header)
-class blkt_395_s(C.Structure):
+class Blkt395S(C.Structure):
     _fields_ = [
         ('time', BTime),
         ('reserved', C.c_ubyte * 2),
@@ -276,7 +276,7 @@ class blkt_395_s(C.Structure):
 
 
 # Blockette 400, Beam (without header)
-class blkt_400_s(C.Structure):
+class Blkt400S(C.Structure):
     _fields_ = [
         ('azimuth', C.c_float),
         ('slowness', C.c_float),
@@ -286,14 +286,14 @@ class blkt_400_s(C.Structure):
 
 
 # Blockette 405, Beam Delay (without header)
-class blkt_405_s(C.Structure):
+class Blkt405S(C.Structure):
     _fields_ = [
         ('delay_values', C.c_ushort * 1),
     ]
 
 
 # Blockette 500, Timing (without header)
-class blkt_500_s(C.Structure):
+class Blkt500S(C.Structure):
     _fields_ = [
         ('vco_correction', C.c_float),
         ('time', BTime),
@@ -307,7 +307,7 @@ class blkt_500_s(C.Structure):
 
 
 # Blockette 1000, Data Only SEED (without header)
-class blkt_1000_s(C.Structure):
+class Blkt1000S(C.Structure):
     _fields_ = [
         ('encoding', C.c_ubyte),
         ('byteorder', C.c_ubyte),
@@ -317,18 +317,18 @@ class blkt_1000_s(C.Structure):
 
 
 # Blockette 1001, Data Extension (without header)
-class blkt_1001_s(C.Structure):
+class Blkt1001S(C.Structure):
     _fields_ = [
         ('timing_qual', C.c_ubyte),
         ('usec', C.c_byte),
         ('reserved', C.c_ubyte),
         ('framecnt', C.c_ubyte),
     ]
-blkt_1001 = blkt_1001_s
+blkt_1001 = Blkt1001S
 
 
 # Blockette 2000, Opaque Data (without header)
-class blkt_2000_s(C.Structure):
+class Blkt2000S(C.Structure):
     _fields_ = [
         ('length', C.c_ushort),
         ('data_offset', C.c_ushort),
@@ -341,20 +341,20 @@ class blkt_2000_s(C.Structure):
 
 
 # Blockette chain link, generic linkable blockette index
-class blkt_link_s(C.Structure):
+class BlktLinkS(C.Structure):
     pass
 
-blkt_link_s._fields_ = [
+BlktLinkS._fields_ = [
     ('blktoffset', C.c_ushort),  # Blockette offset
     ('blkt_type', C.c_ushort),  # Blockette type
     ('next_blkt', C.c_ushort),  # Offset to next blockette
     ('blktdata', C.POINTER(None)),  # Blockette data
     ('blktdatalen', C.c_ushort),  # Length of blockette data in bytes
-    ('next', C.POINTER(blkt_link_s))]
-BlktLink = blkt_link_s
+    ('next', C.POINTER(BlktLinkS))]
+BlktLink = BlktLinkS
 
 
-class StreamState_s(C.Structure):
+class StreamstateS(C.Structure):
     _fields_ = [
         ('packedrecords', C.c_longlong),  # Count of packed records
         ('packedsamples', C.c_longlong),  # Count of packed samples
@@ -362,25 +362,25 @@ class StreamState_s(C.Structure):
         ('comphistory', C.c_byte),        # Control use of lastintsample for
                                           # compression history
     ]
-StreamState = StreamState_s
+StreamState = StreamstateS
 
 
-class MSRecord_s(C.Structure):
+class MsrecordS(C.Structure):
     pass
 
-MSRecord_s._fields_ = [
+MsrecordS._fields_ = [
     ('record', C.POINTER(C.c_char)),  # Mini-SEED record
     ('reclen', C.c_int),              # Length of Mini-SEED record in bytes
                                       # Pointers to SEED data record structures
-    ('fsdh', C.POINTER(fsdh_s)),      # Fixed Section of Data Header
+    ('fsdh', C.POINTER(FSDHS)),      # Fixed Section of Data Header
     ('blkts', C.POINTER(BlktLink)),   # Root of blockette chain
     ('Blkt100',
-     C.POINTER(blkt_100_s)),          # Blockette 100, if present
+     C.POINTER(Blkt100S)),          # Blockette 100, if present
     ('Blkt1000',
-     C.POINTER(blkt_1000_s)),         # Blockette 1000, if present
+     C.POINTER(Blkt1000S)),         # Blockette 1000, if present
     ('Blkt1001',
-     C.POINTER(blkt_1001_s)),         # Blockette 1001, if present
-                                      # Common header fields in accessible form
+     C.POINTER(Blkt1001S)),         # Blockette 1001, if present
+                                    # Common header fields in accessible form
     ('sequence_number', C.c_int),     # SEED record sequence number
     ('network', C.c_char * 11),       # Network designation, NULL terminated
     ('station', C.c_char * 11),       # Station designation, NULL terminated
@@ -402,13 +402,13 @@ MSRecord_s._fields_ = [
     ('ststate',
      C.POINTER(StreamState)),         # Stream processing state information
 ]
-MSRecord = MSRecord_s
+MSRecord = MsrecordS
 
 
-class MSTrace_s(C.Structure):
+class MstraceS(C.Structure):
     pass
 
-MSTrace_s._fields_ = [
+MstraceS._fields_ = [
     ('network', C.c_char * 11),       # Network designation, NULL terminated
     ('station', C.c_char * 11),       # Station designation, NULL terminated
     ('location', C.c_char * 11),      # Location designation, NULL terminated
@@ -426,19 +426,19 @@ MSTrace_s._fields_ = [
     ('prvtptr', C.c_void_p),          # Private pointer for general use
     ('ststate',
      C.POINTER(StreamState)),         # Stream processing state information
-    ('next', C.POINTER(MSTrace_s)),   # Pointer to next trace
+    ('next', C.POINTER(MstraceS)),   # Pointer to next trace
 ]
-MSTrace = MSTrace_s
+MSTrace = MstraceS
 
 
-class MSTraceGroup_s(C.Structure):
+class MstracegroupS(C.Structure):
     pass
 
-MSTraceGroup_s._fields_ = [
+MstracegroupS._fields_ = [
     ('numtraces', C.c_int),            # Number of MSTraces in the trace chain
-    ('traces', C.POINTER(MSTrace_s)),  # Root of the trace chain
+    ('traces', C.POINTER(MstraceS)),  # Root of the trace chain
 ]
-MSTraceGroup = MSTraceGroup_s
+MSTraceGroup = MstracegroupS
 
 
 # Define the high precision time tick interval as 1/modulus seconds */
@@ -447,10 +447,10 @@ HPTMODULUS = 1000000.0
 
 
 # Reading Mini-SEED records from files
-class MSFileParam_s(C.Structure):
+class MsfileparamS(C.Structure):
     pass
 
-MSFileParam_s._fields_ = [
+MsfileparamS._fields_ = [
     ('fp', C.POINTER(Py_ssize_t)),
     ('filename', C.c_char * 512),
     ('rawrec', C.c_char_p),
@@ -462,10 +462,10 @@ MSFileParam_s._fields_ = [
     ('filesize', C.c_long),
     ('recordcount', C.c_int),
 ]
-MSFileParam = MSFileParam_s
+MSFileParam = MsfileparamS
 
 
-class U_DIFF(C.Union):
+class UDIFF(C.Union):
     """
     Union for Steim objects.
     """
@@ -482,7 +482,7 @@ class FRAME(C.Structure):
     """
     _fields_ = [
         ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", U_DIFF * 14),  # compressed data.
+        ("w", UDIFF * 14),  # compressed data.
     ]
 
 
@@ -731,6 +731,6 @@ clibmseed.allocate_bytes.restype = C.c_void_p
 
 
 # Python callback functions for C
-def __PyFile_callback(_f):
+def _py_file_callback(_f):
     return 1
-_PyFile_callback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(__PyFile_callback)
+_PyFile_callback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(_py_file_callback)

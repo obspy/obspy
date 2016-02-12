@@ -16,10 +16,10 @@ import matplotlib.text
 import numpy as np
 
 from .tau_model import TauModel
-from .taup_create import TauP_Create
-from .taup_path import TauP_Path
-from .taup_pierce import TauP_Pierce
-from .taup_time import TauP_Time
+from .taup_create import TauPCreate
+from .taup_path import TauPPath
+from .taup_pierce import TauPPierce
+from .taup_time import TauPTime
 from .taup_geo import calc_dist, add_geo_to_arrivals
 import obspy.geodetics.base as geodetics
 
@@ -144,7 +144,7 @@ class Arrivals(list):
         if not arrivals:
             raise ValueError("Can only plot arrivals with calculated ray "
                              "paths.")
-        discons = self.model.sMod.vMod.get_discontinuity_depth()
+        discons = self.model.s_mod.v_mod.get_discontinuity_depth()
         if plot_type == "spherical":
             if not ax:
                 plt.figure(figsize=(10, 10))
@@ -344,8 +344,8 @@ class TauPyModel(object):
         # Accessing the arrivals not just by list indices but by phase name
         # might be useful, but also difficult: several arrivals can have the
         # same phase.
-        tt = TauP_Time(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree, receiver_depth_in_km)
+        tt = TauPTime(self.model, phase_list, source_depth_in_km,
+                      distance_in_degree, receiver_depth_in_km)
         tt.run()
         return Arrivals(sorted(tt.arrivals, key=lambda x: x.time),
                         model=self.model)
@@ -370,8 +370,8 @@ class TauPyModel(object):
             attributes.
         :rtype: :class:`Arrivals`
         """
-        pp = TauP_Pierce(self.model, phase_list, source_depth_in_km,
-                         distance_in_degree, receiver_depth_in_km)
+        pp = TauPPierce(self.model, phase_list, source_depth_in_km,
+                        distance_in_degree, receiver_depth_in_km)
         pp.run()
         return Arrivals(sorted(pp.arrivals, key=lambda x: x.time),
                         model=self.model)
@@ -396,8 +396,8 @@ class TauPyModel(object):
             attributes.
         :rtype: :class:`Arrivals`
         """
-        rp = TauP_Path(self.model, phase_list, source_depth_in_km,
-                       distance_in_degree, receiver_depth_in_km)
+        rp = TauPPath(self.model, phase_list, source_depth_in_km,
+                      distance_in_degree, receiver_depth_in_km)
         rp.run()
         return Arrivals(sorted(rp.arrivals, key=lambda x: x.time),
                         model=self.model)
@@ -578,4 +578,4 @@ def create_taup_model(model_name, output_dir, input_dir):
         model_file_name = model_name
     else:
         model_file_name = model_name + ".tvel"
-    TauP_Create.main(model_file_name, output_dir, input_dir)
+    TauPCreate.main(model_file_name, output_dir, input_dir)

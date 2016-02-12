@@ -28,7 +28,7 @@ from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
 
 
 @deprecated("'getStartAndEndTime' has been renamed to "
-            "'get_start_and_end_time'. Use that instead.")
+            "'get_start_and_end_time'. Use that instead.")  # noqa
 def getStartAndEndTime(*args, **kwargs):
     return get_start_and_end_time(*args, **kwargs)
 
@@ -103,7 +103,7 @@ def get_start_and_end_time(file_or_file_object):
 
 
 @deprecated("'getTimingAndDataQuality' has been renamed to "
-            "'get_timing_and_data_quality'. Use that instead.")
+            "'get_timing_and_data_quality'. Use that instead.")  # noqa
 def getTimingAndDataQuality(*args, **kwargs):
     return get_timing_and_data_quality(*args, **kwargs)
 
@@ -277,7 +277,7 @@ def get_timing_and_data_quality(file_or_file_object):
 
 
 @deprecated("'getRecordInformation' has been renamed to "
-            "'get_record_information'. Use that instead.")
+            "'get_record_information'. Use that instead.")  # noqa
 def getRecordInformation(*args, **kwargs):
     return get_record_information(*args, **kwargs)
 
@@ -530,7 +530,7 @@ def _ctypes_array_2_numpy_array(buffer_, buffer_elements, sampletype):
     return numpy_array
 
 
-def _convert_MSR_to_dict(m):
+def _convert_msr_to_dict(m):
     """
     Internal method used for setting header attributes.
     """
@@ -544,7 +544,7 @@ def _convert_MSR_to_dict(m):
     return h
 
 
-def _convert_datetime_to_MSTime(dt):
+def _convert_datetime_to_mstime(dt):
     """
     Takes a obspy.util.UTCDateTime object and returns an epoch time in ms.
 
@@ -554,7 +554,7 @@ def _convert_datetime_to_MSTime(dt):
     return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
 
 
-def _convert_MSTime_to_datetime(timestring):
+def _convert_mstime_to_datetime(timestring):
     """
     Takes a Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
 
@@ -1207,7 +1207,7 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
 
 
 @deprecated("'shiftTimeOfFile' has been renamed to "
-            "'shift_time_of_file'. Use that instead.")
+            "'shift_time_of_file'. Use that instead.")  # noqa
 def shiftTimeOfFile(*args, **kwargs):
     return shift_time_of_file(*args, **kwargs)
 
@@ -1269,7 +1269,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
 
     byteorder = info["byteorder"]
     sys_byteorder = "<" if (sys.byteorder == "little") else ">"
-    doSwap = False if (byteorder == sys_byteorder) else True
+    do_swap = False if (byteorder == sys_byteorder) else True
 
     # This is in this scenario somewhat easier to use than BytesIO because one
     # can directly modify the data array.
@@ -1294,7 +1294,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
 
         current_time_shift = current_record[40:44]
         current_time_shift.dtype = np.int32
-        if doSwap:
+        if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift = current_time_shift[0]
 
@@ -1328,7 +1328,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
             year.dtype = np.uint16
             julday.dtype = np.uint16
             msecs.dtype = np.uint16
-            if doSwap:
+            if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
@@ -1343,7 +1343,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
             second[0] = dtime.second
             msecs[0] = dtime.microsecond / 100
             # Swap again.
-            if doSwap:
+            if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
@@ -1363,7 +1363,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         # Now modify the time correction flag.
         current_time_shift += timeshift
         current_time_shift = np.array([current_time_shift], np.int32)
-        if doSwap:
+        if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift.dtype = np.uint8
         current_record[40:44] = current_time_shift[:]

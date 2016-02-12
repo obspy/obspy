@@ -66,7 +66,7 @@ class DeprecatedImportsTestSuite(unittest.TestCase):
         _test_rerouted_imps("obspy.seishub", "obspy.clients.seishub")
         _test_rerouted_imps("obspy.core.util.geodetics", "obspy.geodetics")
         _test_rerouted_imps("obspy.core.ascii", "obspy.io.ascii")
-        _test_rerouted_imps("obspy.core.quakeml", "obspy.io.quakeml")
+        _test_rerouted_imps("obspy.core.quakeml", "obspy.io.quakeml.core")
         _test_rerouted_imps("obspy.core.stationxml", "obspy.io.stationxml")
         _test_rerouted_imps("obspy.core.json", "obspy.io.json"),
 

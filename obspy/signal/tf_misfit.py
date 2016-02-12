@@ -69,14 +69,21 @@ def cwt(st, dt, w0, fmin, fmax, nf=100, wl='morlet'):
     nfft = util.next_pow_2(npts) * 2
     sf = np.fft.fft(st, n=nfft)
 
-    for n, _f in enumerate(f):
-        a = scale(_f)
-        # time shift necessary, because wavelet is defined around t = 0
-        psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
-        psihf = np.fft.fft(psih, n=nfft)
-        tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
-            (t[1] - t[0])
+    # Ignore underflows.
+    _t = np.geterr()
+    np.seterr(under="ignore")
+    try:
+        for n, _f in enumerate(f):
+            a = scale(_f)
+            # time shift necessary, because wavelet is defined around t = 0
+            psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
+            psihf = np.fft.fft(psih, n=nfft)
+            tminin = int(t[-1] / 2. / (t[1] - t[0]))
+            cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
+                (t[1] - t[0])
+    finally:
+        np.seterr(**_t)
+
     return cwt.T
 
 
@@ -107,39 +114,39 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            ar = np.abs(w_2)
 
-    TFEM = (np.abs(W1) - np.abs(W2))
+    _tfem = (np.abs(w_1) - np.abs(w_2))
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return TFEM[0] / np.max(Ar)
+            return _tfem[0] / np.max(ar)
         else:
-            return TFEM / np.max(Ar)
+            return _tfem / np.max(ar)
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TFEM[0] / Ar[0]
+            return _tfem[0] / ar[0]
         else:
-            return TFEM / Ar
+            return _tfem / ar
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -171,39 +178,39 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    TFPM = np.angle(W1 / W2) / np.pi
+    _tfpm = np.angle(w_1 / w_2) / np.pi
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return Ar[0] * TFPM[0] / np.max(Ar)
+            return _ar[0] * _tfpm[0] / np.max(_ar)
         else:
-            return Ar * TFPM / np.max(Ar)
+            return _ar * _tfpm / np.max(_ar)
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TFPM[0]
+            return _tfpm[0]
         else:
-            return TFPM
+            return _tfpm
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -235,39 +242,39 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    TEM = np.sum((np.abs(W1) - np.abs(W2)), axis=1)
+    _tem = np.sum((np.abs(w_1) - np.abs(w_2)), axis=1)
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return TEM[0] / np.max(np.sum(Ar, axis=1))
+            return _tem[0] / np.max(np.sum(_ar, axis=1))
         else:
-            return TEM / np.max(np.sum(Ar, axis=1))
+            return _tem / np.max(np.sum(_ar, axis=1))
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TEM[0] / np.sum(Ar, axis=1)[0]
+            return _tem[0] / np.sum(_ar, axis=1)[0]
         else:
-            return TEM / np.sum(Ar, axis=1)
+            return _tem / np.sum(_ar, axis=1)
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -299,40 +306,40 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W2)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_2)
         else:
-            Ar = np.abs(W1)
+            _ar = np.abs(w_1)
 
-    TPM = np.angle(W1 / W2) / np.pi
-    TPM = np.sum(Ar * TPM, axis=1)
+    _tpm = np.angle(w_1 / w_2) / np.pi
+    _tpm = np.sum(_ar * _tpm, axis=1)
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return TPM[0] / np.max(np.sum(Ar, axis=1))
+            return _tpm[0] / np.max(np.sum(_ar, axis=1))
         else:
-            return TPM / np.max(np.sum(Ar, axis=1))
+            return _tpm / np.max(np.sum(_ar, axis=1))
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TPM[0] / np.sum(Ar, axis=1)[0]
+            return _tpm[0] / np.sum(_ar, axis=1)[0]
         else:
-            return TPM / np.sum(Ar, axis=1)
+            return _tpm / np.sum(_ar, axis=1)
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -364,40 +371,40 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    TEM = np.abs(W1) - np.abs(W2)
-    TEM = np.sum(TEM, axis=2)
+    _tem = np.abs(w_1) - np.abs(w_2)
+    _tem = np.sum(_tem, axis=2)
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return TEM[0] / np.max(np.sum(Ar, axis=2))
+            return _tem[0] / np.max(np.sum(_ar, axis=2))
         else:
-            return TEM / np.max(np.sum(Ar, axis=2))
+            return _tem / np.max(np.sum(_ar, axis=2))
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TEM[0] / np.sum(Ar, axis=2)[0]
+            return _tem[0] / np.sum(_ar, axis=2)[0]
         else:
-            return TEM / np.sum(Ar, axis=2)
+            return _tem / np.sum(_ar, axis=2)
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -429,40 +436,40 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    TPM = np.angle(W1 / W2) / np.pi
-    TPM = np.sum(Ar * TPM, axis=2)
+    _tpm = np.angle(w_1 / w_2) / np.pi
+    _tpm = np.sum(_ar * _tpm, axis=2)
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return TPM[0] / np.max(np.sum(Ar, axis=2))
+            return _tpm[0] / np.max(np.sum(_ar, axis=2))
         else:
-            return TPM / np.max(np.sum(Ar, axis=2))
+            return _tpm / np.max(np.sum(_ar, axis=2))
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return TPM[0] / np.sum(Ar, axis=2)[0]
+            return _tpm[0] / np.sum(_ar, axis=2)[0]
         else:
-            return TPM / np.sum(Ar, axis=2)
+            return _tpm / np.sum(_ar, axis=2)
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -492,39 +499,41 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Envelope Misfit
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    EM = (np.sum(np.sum((np.abs(W1) - np.abs(W2)) ** 2, axis=2), axis=1)) ** .5
+    _em = (np.sum(np.sum((np.abs(w_1) - np.abs(w_2)) ** 2, axis=2),
+                  axis=1)) ** .5
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return EM[0] / (np.sum(Ar ** 2)) ** .5
+            return _em[0] / (np.sum(_ar ** 2)) ** .5
         else:
-            return EM / ((np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5).max()
+            return _em / ((np.sum(np.sum(_ar ** 2, axis=2),
+                                  axis=1)) ** .5).max()
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return EM[0] / (np.sum(Ar ** 2)) ** .5
+            return _em[0] / (np.sum(_ar ** 2)) ** .5
         else:
-            return EM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
+            return _em / (np.sum(np.sum(_ar ** 2, axis=2), axis=1)) ** .5
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
@@ -554,47 +563,48 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Phase Misfit
     """
     if len(st1.shape) == 1:
-        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
-        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        w_2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
-        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
-        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+        w_1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        w_2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
-        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
+        w_1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        w_2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
-            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
-            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+            w_1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            w_2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
     if st2_isref:
-        Ar = np.abs(W2)
+        _ar = np.abs(w_2)
     else:
-        if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
+        if np.abs(w_1).max() > np.abs(w_2).max():
+            _ar = np.abs(w_1)
         else:
-            Ar = np.abs(W2)
+            _ar = np.abs(w_2)
 
-    PM = np.angle(W1 / W2) / np.pi
+    _pm = np.angle(w_1 / w_2) / np.pi
 
-    PM = (np.sum(np.sum((Ar * PM) ** 2, axis=2), axis=1)) ** .5
+    _pm = (np.sum(np.sum((_ar * _pm) ** 2, axis=2), axis=1)) ** .5
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return PM[0] / (np.sum(Ar ** 2)) ** .5
+            return _pm[0] / (np.sum(_ar ** 2)) ** .5
         else:
-            return PM / ((np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5).max()
+            return _pm / ((np.sum(np.sum(_ar ** 2, axis=2),
+                                  axis=1)) ** .5).max()
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return PM[0] / (np.sum(Ar ** 2)) ** .5
+            return _pm[0] / (np.sum(_ar ** 2)) ** .5
         else:
-            return PM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
+            return _pm / (np.sum(np.sum(_ar ** 2, axis=2), axis=1)) ** .5
     else:
         raise ValueError('norm "' + norm + '" not defined!')
 
 
 def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-         st2_isref=True, A=10., k=1.):
+         st2_isref=True, a=10., k=1.):
     """
     Time Frequency Envelope Goodness-of-Fit
 
@@ -614,20 +624,20 @@ def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: time frequency representation of Envelope Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
-    TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref)
-    return A * np.exp(-np.abs(TFEM) ** k)
+    _tfem = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref)
+    return a * np.exp(-np.abs(_tfem) ** k)
 
 
 def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-         st2_isref=True, A=10., k=1.):
+         st2_isref=True, a=10., k=1.):
     """
     Time Frequency Phase Goodness-of-Fit
 
@@ -647,20 +657,20 @@ def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: time frequency representation of Phase Goodness-of-Fit,
         type numpy.ndarray with shape (nf, len(st1)) for single component data
         and (number of components, nf, len(st1)) for multicomponent data
     """
-    TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref)
-    return A * (1 - np.abs(TFPM) ** k)
+    _tfpm = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref)
+    return a * (1 - np.abs(_tfpm) ** k)
 
 
 def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-        st2_isref=True, A=10., k=1.):
+        st2_isref=True, a=10., k=1.):
     """
     Time-dependent Envelope Goodness-of-Fit
 
@@ -680,20 +690,20 @@ def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: time dependent Envelope Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
-    TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    return A * np.exp(-np.abs(TEM) ** k)
+    _tem = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return a * np.exp(-np.abs(_tem) ** k)
 
 
 def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-        st2_isref=True, A=10., k=1.):
+        st2_isref=True, a=10., k=1.):
     """
     Time-dependent Phase Goodness-of-Fit
 
@@ -713,20 +723,20 @@ def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: time dependent Phase Goodness-of-Fit, type numpy.ndarray with
         shape (len(st1),) for single component data and (number of components,
         len(st1)) for multicomponent data
     """
-    TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    return A * (1 - np.abs(TPM) ** k)
+    _tpm = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return a * (1 - np.abs(_tpm) ** k)
 
 
 def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-        st2_isref=True, A=10., k=1.):
+        st2_isref=True, a=10., k=1.):
     """
     Frequency-dependent Envelope Goodness-of-Fit
 
@@ -746,20 +756,20 @@ def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: frequency dependent Envelope Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
-    FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    return A * np.exp(-np.abs(FEM) ** k)
+    _fem = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return a * np.exp(-np.abs(_fem) ** k)
 
 
 def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-        st2_isref=True, A=10., k=1.):
+        st2_isref=True, a=10., k=1.):
     """
     Frequency-dependent Phase Goodness-of-Fit
 
@@ -779,20 +789,20 @@ def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: frequency dependent Phase Goodness-of-Fit, type numpy.ndarray
         with shape (nf,) for single component data and (number of components,
         nf) for multicomponent data
     """
-    FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    return A * (1 - np.abs(FPM) ** k)
+    _fpm = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return a * (1 - np.abs(_fpm) ** k)
 
 
 def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-       st2_isref=True, A=10., k=1.):
+       st2_isref=True, a=10., k=1.):
     """
     Single Valued Envelope Goodness-of-Fit
 
@@ -812,18 +822,18 @@ def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: Single Valued Envelope Goodness-of-Fit
     """
-    EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref)
-    return A * np.exp(-np.abs(EM) ** k)
+    _em = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref)
+    return a * np.exp(-np.abs(_em) ** k)
 
 
 def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
-       st2_isref=True, A=10., k=1.):
+       st2_isref=True, a=10., k=1.):
     """
     Single Valued Phase Goodness-of-Fit
 
@@ -843,14 +853,14 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :type st2_isref: bool
     :param st2_isref: True if st2 is a reference signal, False if none is a
         reference
-    :param A: Maximum value of Goodness-of-Fit for perfect agreement
+    :param a: Maximum value of Goodness-of-Fit for perfect agreement
     :param k: sensitivity of Goodness-of-Fit to the misfit
 
     :return: Single Valued Phase Goodness-of-Fit
     """
-    PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref)
-    return A * (1 - np.abs(PM) ** k)
+    _pm = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref)
+    return a * (1 - np.abs(_pm) ** k)
 
 
 def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
@@ -961,32 +971,32 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     # compute time frequency misfits
-    TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref)
-    TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref)
-    TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref)
-    TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref)
-    PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref)
+    _tfem = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref)
+    _tem = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    _fem = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    _em = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref)
+    _tfpm = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref)
+    _tpm = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    _fpm = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    _pm = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref)
 
     if len(st1.shape) == 1:
-        TFEM = TFEM.reshape((1, nf, npts))
-        TEM = TEM.reshape((1, npts))
-        FEM = FEM.reshape((1, nf))
-        EM = EM.reshape((1, 1))
-        TFPM = TFPM.reshape((1, nf, npts))
-        TPM = TPM.reshape((1, npts))
-        FPM = FPM.reshape((1, nf))
-        PM = PM.reshape((1, 1))
+        _tfem = _tfem.reshape((1, nf, npts))
+        _tem = _tem.reshape((1, npts))
+        _fem = _fem.reshape((1, nf))
+        _em = _em.reshape((1, 1))
+        _tfpm = _tfpm.reshape((1, nf, npts))
+        _tpm = _tpm.reshape((1, npts))
+        _fpm = _fpm.reshape((1, nf))
+        _pm = _pm.reshape((1, 1))
         st1 = st1.reshape((1, npts))
         st2 = st2.reshape((1, npts))
         ntr = 1
@@ -1004,111 +1014,111 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_sig.plot(t, st2[itr], plot_args[1])
 
         # plot TEM
-        ax_TEM = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
-        ax_TEM.plot(t, TEM[itr], plot_args[2])
+        ax_tem = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
+        ax_tem.plot(t, _tem[itr], plot_args[2])
 
         # plot TFEM
-        ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
+        ax_tfem = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
 
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
-                           TFEM[itr].shape[0]))
-        img_TFEM = ax_TFEM.pcolormesh(x, y, TFEM[itr], cmap=cmap)
-        img_TFEM.set_rasterized(True)
-        ax_TFEM.set_yscale("log")
-        ax_TFEM.set_ylim(fmin, fmax)
+                           _tfem[itr].shape[0]))
+        img_tfem = ax_tfem.pcolormesh(x, y, _tfem[itr], cmap=cmap)
+        img_tfem.set_rasterized(True)
+        ax_tfem.set_yscale("log")
+        ax_tfem.set_ylim(fmin, fmax)
 
         # plot FEM
-        ax_FEM = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
-        ax_FEM.semilogy(FEM[itr], f, plot_args[2])
-        ax_FEM.set_ylim(fmin, fmax)
+        ax_fem = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
+        ax_fem.semilogy(_fem[itr], f, plot_args[2])
+        ax_fem.set_ylim(fmin, fmax)
 
         # plot TPM
-        ax_TPM = fig.add_axes([left + w_1, bottom, w_2, h_2])
-        ax_TPM.plot(t, TPM[itr], plot_args[2])
+        ax_tpm = fig.add_axes([left + w_1, bottom, w_2, h_2])
+        ax_tpm.plot(t, _tpm[itr], plot_args[2])
 
         # plot TFPM
-        ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
+        ax_tfpm = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_TFPM = ax_TFPM.pcolormesh(x, y, TFPM[itr], cmap=cmap)
-        img_TFPM.set_rasterized(True)
-        ax_TFPM.set_yscale("log")
-        ax_TFPM.set_ylim(f[0], f[-1])
+        img_tfpm = ax_tfpm.pcolormesh(x, y, _tfpm[itr], cmap=cmap)
+        img_tfpm.set_rasterized(True)
+        ax_tfpm.set_yscale("log")
+        ax_tfpm.set_ylim(f[0], f[-1])
 
         # add colorbars
-        ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
+        ax_cb_tfpm = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
                                    w_cb, h_2 + h_3])
-        fig.colorbar(img_TFPM, cax=ax_cb_TFPM)
+        fig.colorbar(img_tfpm, cax=ax_cb_tfpm)
 
         # plot FPM
-        ax_FPM = fig.add_axes([left, bottom + h_2, w_1, h_3])
-        ax_FPM.semilogy(FPM[itr], f, plot_args[2])
-        ax_FPM.set_ylim(fmin, fmax)
+        ax_fpm = fig.add_axes([left, bottom + h_2, w_1, h_3])
+        ax_fpm.semilogy(_fpm[itr], f, plot_args[2])
+        ax_fpm.set_ylim(fmin, fmax)
 
         # set limits
         ylim_sig = np.max([np.abs(st1).max(), np.abs(st2).max()]) * 1.1
         ax_sig.set_ylim(-ylim_sig, ylim_sig)
 
         if ylim == 0.:
-            ylim = np.max([np.abs(TEM).max(), np.abs(TPM).max(),
-                           np.abs(FEM).max(), np.abs(FPM).max()]) * 1.1
+            ylim = np.max([np.abs(_tem).max(), np.abs(_tpm).max(),
+                           np.abs(_fem).max(), np.abs(_fpm).max()]) * 1.1
 
-        ax_TEM.set_ylim(-ylim, ylim)
-        ax_FEM.set_xlim(-ylim, ylim)
-        ax_TPM.set_ylim(-ylim, ylim)
-        ax_FPM.set_xlim(-ylim, ylim)
+        ax_tem.set_ylim(-ylim, ylim)
+        ax_fem.set_xlim(-ylim, ylim)
+        ax_tpm.set_ylim(-ylim, ylim)
+        ax_fpm.set_xlim(-ylim, ylim)
 
         ax_sig.set_xlim(t[0], t[-1])
-        ax_TEM.set_xlim(t[0], t[-1])
-        ax_TPM.set_xlim(t[0], t[-1])
+        ax_tem.set_xlim(t[0], t[-1])
+        ax_tpm.set_xlim(t[0], t[-1])
 
         if clim == 0.:
-            clim = np.max([np.abs(TFEM).max(), np.abs(TFPM).max()])
+            clim = np.max([np.abs(_tfem).max(), np.abs(_tfpm).max()])
 
-        img_TFPM.set_clim(-clim, clim)
-        img_TFEM.set_clim(-clim, clim)
+        img_tfpm.set_clim(-clim, clim)
+        img_tfem.set_clim(-clim, clim)
 
         # add text box for EM + PM
-        textstr = 'EM = %.2f\nPM = %.2f' % (EM[itr], PM[itr])
+        textstr = 'EM = %.2f\nPM = %.2f' % (_em[itr], _pm[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',
                     bbox=props)
 
-        ax_TPM.set_xlabel('time')
-        ax_FEM.set_ylabel('frequency')
-        ax_FPM.set_ylabel('frequency')
+        ax_tpm.set_xlabel('time')
+        ax_fem.set_ylabel('frequency')
+        ax_fpm.set_ylabel('frequency')
 
         # add text boxes
         props = dict(boxstyle='round', facecolor='white', alpha=0.5)
-        ax_TFEM.text(0.95, 0.85, 'TFEM', transform=ax_TFEM.transAxes,
+        ax_tfem.text(0.95, 0.85, 'TFEM', transform=ax_tfem.transAxes,
                      verticalalignment='top', horizontalalignment='right',
                      bbox=props)
-        ax_TFPM.text(0.95, 0.85, 'TFPM', transform=ax_TFPM.transAxes,
+        ax_tfpm.text(0.95, 0.85, 'TFPM', transform=ax_tfpm.transAxes,
                      verticalalignment='top', horizontalalignment='right',
                      bbox=props)
-        ax_TEM.text(0.95, 0.75, 'TEM', transform=ax_TEM.transAxes,
+        ax_tem.text(0.95, 0.75, 'TEM', transform=ax_tem.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_TPM.text(0.95, 0.75, 'TPM', transform=ax_TPM.transAxes,
+        ax_tpm.text(0.95, 0.75, 'TPM', transform=ax_tpm.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_FEM.text(0.9, 0.85, 'FEM', transform=ax_FEM.transAxes,
+        ax_fem.text(0.9, 0.85, 'FEM', transform=ax_fem.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_FPM.text(0.9, 0.85, 'FPM', transform=ax_FPM.transAxes,
+        ax_fpm.text(0.9, 0.85, 'FPM', transform=ax_fpm.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
 
         # remove axis labels
-        ax_TFPM.xaxis.set_major_formatter(NullFormatter())
-        ax_TFEM.xaxis.set_major_formatter(NullFormatter())
-        ax_TEM.xaxis.set_major_formatter(NullFormatter())
+        ax_tfpm.xaxis.set_major_formatter(NullFormatter())
+        ax_tfem.xaxis.set_major_formatter(NullFormatter())
+        ax_tem.xaxis.set_major_formatter(NullFormatter())
         ax_sig.xaxis.set_major_formatter(NullFormatter())
-        ax_TFPM.yaxis.set_major_formatter(NullFormatter())
-        ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+        ax_tfpm.yaxis.set_major_formatter(NullFormatter())
+        ax_tfem.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
@@ -1122,7 +1132,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
 
 
 def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
-                 norm='global', st2_isref=True, A=10., k=1., left=0.1,
+                 norm='global', st2_isref=True, a=10., k=1., left=0.1,
                  bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
                  w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                  ylim=0., clim=0., cmap=obspy_sequential):
@@ -1221,32 +1231,32 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     # compute time frequency misfits
-    TFEG = tfeg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref, A=A, k=k)
-    TEG = teg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref, A=A, k=k)
-    FEG = feg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref, A=A, k=k)
-    EG = eg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref, A=A, k=k)
-    TFPG = tfpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-                st2_isref=st2_isref, A=A, k=k)
-    TPG = tpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref, A=A, k=k)
-    FPG = fpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-              st2_isref=st2_isref, A=A, k=k)
-    PG = pg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
-            st2_isref=st2_isref, A=A, k=k)
+    _tfeg = tfeg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref, a=a, k=k)
+    _teg = teg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref, a=a, k=k)
+    _feg = feg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref, a=a, k=k)
+    _eg = eg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref, a=a, k=k)
+    _tfpg = tfpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0,
+                 norm=norm, st2_isref=st2_isref, a=a, k=k)
+    _tpg = tpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref, a=a, k=k)
+    _fpg = fpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref, a=a, k=k)
+    _pg = pg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+             st2_isref=st2_isref, a=a, k=k)
 
     if len(st1.shape) == 1:
-        TFEG = TFEG.reshape((1, nf, npts))
-        TEG = TEG.reshape((1, npts))
-        FEG = FEG.reshape((1, nf))
-        EG = EG.reshape((1, 1))
-        TFPG = TFPG.reshape((1, nf, npts))
-        TPG = TPG.reshape((1, npts))
-        FPG = FPG.reshape((1, nf))
-        PG = PG.reshape((1, 1))
+        _tfeg = _tfeg.reshape((1, nf, npts))
+        _teg = _teg.reshape((1, npts))
+        _feg = _feg.reshape((1, nf))
+        _eg = _eg.reshape((1, 1))
+        _tfpg = _tfpg.reshape((1, nf, npts))
+        _tpg = _tpg.reshape((1, npts))
+        _fpg = _fpg.reshape((1, nf))
+        _pg = _pg.reshape((1, 1))
         st1 = st1.reshape((1, npts))
         st2 = st2.reshape((1, npts))
         ntr = 1
@@ -1264,111 +1274,111 @@ def plot_tf_gofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         ax_sig.plot(t, st2[itr], plot_args[1])
 
         # plot TEG
-        ax_TEG = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
-        ax_TEG.plot(t, TEG[itr], plot_args[2])
+        ax_teg = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
+        ax_teg.plot(t, _teg[itr], plot_args[2])
 
         # plot TFEG
-        ax_TFEG = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
+        ax_tfeg = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
 
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
-                           TFEG[itr].shape[0]))
-        img_TFEG = ax_TFEG.pcolormesh(x, y, TFEG[itr], cmap=cmap)
-        img_TFEG.set_rasterized(True)
-        ax_TFEG.set_yscale("log")
-        ax_TFEG.set_ylim(fmin, fmax)
+                           _tfeg[itr].shape[0]))
+        img_tfeg = ax_tfeg.pcolormesh(x, y, _tfeg[itr], cmap=cmap)
+        img_tfeg.set_rasterized(True)
+        ax_tfeg.set_yscale("log")
+        ax_tfeg.set_ylim(fmin, fmax)
 
         # plot FEG
-        ax_FEG = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
-        ax_FEG.semilogy(FEG[itr], f, plot_args[2])
-        ax_FEG.set_ylim(fmin, fmax)
+        ax_feg = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
+        ax_feg.semilogy(_feg[itr], f, plot_args[2])
+        ax_feg.set_ylim(fmin, fmax)
 
         # plot TPG
-        ax_TPG = fig.add_axes([left + w_1, bottom, w_2, h_2])
-        ax_TPG.plot(t, TPG[itr], plot_args[2])
+        ax_tpg = fig.add_axes([left + w_1, bottom, w_2, h_2])
+        ax_tpg.plot(t, _tpg[itr], plot_args[2])
 
         # plot TFPG
-        ax_TFPG = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
+        ax_tfpg = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
 
         x, y = np.meshgrid(t, f)
-        img_TFPG = ax_TFPG.pcolormesh(x, y, TFPG[itr], cmap=cmap)
-        img_TFPG.set_rasterized(True)
-        ax_TFPG.set_yscale("log")
-        ax_TFPG.set_ylim(f[0], f[-1])
+        img_tfpg = ax_tfpg.pcolormesh(x, y, _tfpg[itr], cmap=cmap)
+        img_tfpg.set_rasterized(True)
+        ax_tfpg.set_yscale("log")
+        ax_tfpg.set_ylim(f[0], f[-1])
 
         # add colorbars
-        ax_cb_TFPG = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
+        ax_cb_tfpg = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
                                    w_cb, h_2 + h_3])
-        fig.colorbar(img_TFPG, cax=ax_cb_TFPG)
+        fig.colorbar(img_tfpg, cax=ax_cb_tfpg)
 
         # plot FPG
-        ax_FPG = fig.add_axes([left, bottom + h_2, w_1, h_3])
-        ax_FPG.semilogy(FPG[itr], f, plot_args[2])
-        ax_FPG.set_ylim(fmin, fmax)
+        ax_fpg = fig.add_axes([left, bottom + h_2, w_1, h_3])
+        ax_fpg.semilogy(_fpg[itr], f, plot_args[2])
+        ax_fpg.set_ylim(fmin, fmax)
 
         # set limits
         ylim_sig = np.max([np.abs(st1).max(), np.abs(st2).max()]) * 1.1
         ax_sig.set_ylim(-ylim_sig, ylim_sig)
 
         if ylim == 0.:
-            ylim = np.max([np.abs(TEG).max(), np.abs(TPG).max(),
-                           np.abs(FEG).max(), np.abs(FPG).max()]) * 1.1
+            ylim = np.max([np.abs(_teg).max(), np.abs(_tpg).max(),
+                           np.abs(_feg).max(), np.abs(_fpg).max()]) * 1.1
 
-        ax_TEG.set_ylim(0., ylim)
-        ax_FEG.set_xlim(0., ylim)
-        ax_TPG.set_ylim(0., ylim)
-        ax_FPG.set_xlim(0., ylim)
+        ax_teg.set_ylim(0., ylim)
+        ax_feg.set_xlim(0., ylim)
+        ax_tpg.set_ylim(0., ylim)
+        ax_fpg.set_xlim(0., ylim)
 
         ax_sig.set_xlim(t[0], t[-1])
-        ax_TEG.set_xlim(t[0], t[-1])
-        ax_TPG.set_xlim(t[0], t[-1])
+        ax_teg.set_xlim(t[0], t[-1])
+        ax_tpg.set_xlim(t[0], t[-1])
 
         if clim == 0.:
-            clim = np.max([np.abs(TFEG).max(), np.abs(TFPG).max()])
+            clim = np.max([np.abs(_tfeg).max(), np.abs(_tfpg).max()])
 
-        img_TFPG.set_clim(0., clim)
-        img_TFEG.set_clim(0., clim)
+        img_tfpg.set_clim(0., clim)
+        img_tfeg.set_clim(0., clim)
 
         # add text box for EG + PG
-        textstr = 'EG = %2.2f\nPG = %2.2f' % (EG[itr], PG[itr])
+        textstr = 'EG = %2.2f\nPG = %2.2f' % (_eg[itr], _pg[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
                     verticalalignment='center', horizontalalignment='left',
                     bbox=props)
 
-        ax_TPG.set_xlabel('time')
-        ax_FEG.set_ylabel('frequency')
-        ax_FPG.set_ylabel('frequency')
+        ax_tpg.set_xlabel('time')
+        ax_feg.set_ylabel('frequency')
+        ax_fpg.set_ylabel('frequency')
 
         # add text boxes
         props = dict(boxstyle='round', facecolor='white', alpha=0.5)
-        ax_TFEG.text(0.95, 0.85, 'TFEG', transform=ax_TFEG.transAxes,
+        ax_tfeg.text(0.95, 0.85, 'TFEG', transform=ax_tfeg.transAxes,
                      verticalalignment='top', horizontalalignment='right',
                      bbox=props)
-        ax_TFPG.text(0.95, 0.85, 'TFPG', transform=ax_TFPG.transAxes,
+        ax_tfpg.text(0.95, 0.85, 'TFPG', transform=ax_tfpg.transAxes,
                      verticalalignment='top', horizontalalignment='right',
                      bbox=props)
-        ax_TEG.text(0.95, 0.75, 'TEG', transform=ax_TEG.transAxes,
+        ax_teg.text(0.95, 0.75, 'TEG', transform=ax_teg.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_TPG.text(0.95, 0.75, 'TPG', transform=ax_TPG.transAxes,
+        ax_tpg.text(0.95, 0.75, 'TPG', transform=ax_tpg.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_FEG.text(0.9, 0.85, 'FEG', transform=ax_FEG.transAxes,
+        ax_feg.text(0.9, 0.85, 'FEG', transform=ax_feg.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
-        ax_FPG.text(0.9, 0.85, 'FPG', transform=ax_FPG.transAxes,
+        ax_fpg.text(0.9, 0.85, 'FPG', transform=ax_fpg.transAxes,
                     verticalalignment='top', horizontalalignment='right',
                     bbox=props)
 
         # remove axis labels
-        ax_TFPG.xaxis.set_major_formatter(NullFormatter())
-        ax_TFEG.xaxis.set_major_formatter(NullFormatter())
-        ax_TEG.xaxis.set_major_formatter(NullFormatter())
+        ax_tfpg.xaxis.set_major_formatter(NullFormatter())
+        ax_tfeg.xaxis.set_major_formatter(NullFormatter())
+        ax_teg.xaxis.set_major_formatter(NullFormatter())
         ax_sig.xaxis.set_major_formatter(NullFormatter())
-        ax_TFPG.yaxis.set_major_formatter(NullFormatter())
-        ax_TFEG.yaxis.set_major_formatter(NullFormatter())
+        ax_tfpg.yaxis.set_major_formatter(NullFormatter())
+        ax_tfeg.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
@@ -1451,8 +1461,8 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     f_lin = np.linspace(0, 0.5 / dt, nfft // 2 + 1)
 
     if len(st.shape) == 1:
-        W = np.zeros((1, nf, npts), dtype=np.complex)
-        W[0] = cwt(st, dt, w0, fmin, fmax, nf)
+        _w = np.zeros((1, nf, npts), dtype=np.complex)
+        _w[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
         spec = np.zeros((1, nfft // 2 + 1), dtype=np.complex)
@@ -1460,20 +1470,20 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
         st = st.reshape((1, npts))
     else:
-        W = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
+        _w = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
         spec = np.zeros((st.shape[0], nfft // 2 + 1), dtype=np.complex)
 
         for i in np.arange(st.shape[0]):
-            W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
+            _w[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
             spec[i] = np.fft.rfft(st[i], n=nfft) * dt
 
         ntr = st.shape[0]
 
     if mode == 'absolute':
-        TFR = np.abs(W)
+        _tfr = np.abs(_w)
         spec = np.abs(spec)
     elif mode == 'power':
-        TFR = np.abs(W) ** 2
+        _tfr = np.abs(_w) ** 2
         spec = np.abs(spec) ** 2
     else:
         raise ValueError('mode "' + mode + '" not defined!')
@@ -1488,25 +1498,25 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         ax_sig.plot(t, st[itr], plot_args[0])
 
         # plot TFR
-        ax_TFR = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
+        ax_tfr = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
 
         x, y = np.meshgrid(
             t, np.logspace(np.log10(fmin), np.log10(fmax),
-                           TFR[itr].shape[0]))
-        img_TFR = ax_TFR.pcolormesh(x, y, TFR[itr], cmap=cmap)
-        img_TFR.set_rasterized(True)
-        ax_TFR.set_yscale("log")
-        ax_TFR.set_ylim(fmin, fmax)
-        ax_TFR.set_xlim(t[0], t[-1])
+                           _tfr[itr].shape[0]))
+        img_tfr = ax_tfr.pcolormesh(x, y, _tfr[itr], cmap=cmap)
+        img_tfr.set_rasterized(True)
+        ax_tfr.set_yscale("log")
+        ax_tfr.set_ylim(fmin, fmax)
+        ax_tfr.set_xlim(t[0], t[-1])
 
         # plot spectrum
         ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
         ax_spec.semilogy(spec[itr], f_lin, plot_args[1])
 
         # add colorbars
-        ax_cb_TFR = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom +
+        ax_cb_tfr = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom +
                                   h_1, w_cb, h_2])
-        fig.colorbar(img_TFR, cax=ax_cb_TFR)
+        fig.colorbar(img_tfr, cax=ax_cb_tfr)
 
         # set limits
         ax_sig.set_ylim(st.min() * 1.1, st.max() * 1.1)
@@ -1518,16 +1528,16 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         ax_spec.set_ylim(fmin, fmax)
 
         if clim == 0.:
-            clim = TFR.max()
+            clim = _tfr.max()
 
-        img_TFR.set_clim(0., clim)
+        img_tfr.set_clim(0., clim)
 
         ax_sig.set_xlabel('time')
         ax_spec.set_ylabel('frequency')
 
         # remove axis labels
-        ax_TFR.xaxis.set_major_formatter(NullFormatter())
-        ax_TFR.yaxis.set_major_formatter(NullFormatter())
+        ax_tfr.xaxis.set_major_formatter(NullFormatter())
+        ax_tfr.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
@@ -1541,19 +1551,19 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
 
 @deprecated("'plotTfGofs' has been renamed to 'plot_tf_gofs'. "
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def plotTfGofs(*args, **kwargs):
     return plot_tf_gofs(*args, **kwargs)
 
 
 @deprecated("'plotTfMisfits' has been renamed to 'plot_tf_misfits'. "
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def plotTfMisfits(*args, **kwargs):
     return plot_tf_misfits(*args, **kwargs)
 
 
 @deprecated("'plotTfr' has been renamed to 'plot_tfr'. "
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def plotTfr(*args, **kwargs):
     return plot_tfr(*args, **kwargs)
 

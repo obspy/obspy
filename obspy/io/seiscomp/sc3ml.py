@@ -504,19 +504,16 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
 
 
 def _read_response(root, sen_element, resp_element, cha_element,
-                   data_log_element, _ns, samp_rate, FIR, analogue):
-
+                   data_log_element, _ns, samp_rate, fir, analogue):
     """
     reads response from sc3ml format
 
     :param
     :param _ns: namespace
     """
-
     response = obspy.core.inventory.response.Response()
-    response.instrument_sensitivity = _read_instrument_sensitivity(sen_element,
-                                                                   cha_element,
-                                                                   _ns)
+    response.instrument_sensitivity = _read_instrument_sensitivity(
+        sen_element, cha_element, _ns)
 
     if resp_element is None:
         return response
@@ -529,34 +526,34 @@ def _read_response(root, sen_element, resp_element, cha_element,
         response.resource_id = str(response.resource_id)
     """
 
-    # The sampling rate is not given per FIR filter as in stationXML
+    # The sampling rate is not given per fir filter as in stationXML
     # We are only given a decimation factor per stage, therefore we are
     # required to reconstruct the sampling rates at a given stage from
     # this chain of factors
 
     # start with the final sampling_rate after all stages are applied
-    # invert the FIR stages to reverse engineer (backwards) the sample rate
-    # during any FIR stage
+    # invert the fir stages to reverse engineer (backwards) the sample rate
+    # during any fir stage
 
     samp_rate = float(samp_rate)
-    FIR_stage_rates = []
-    if len(FIR):
-        FIR = FIR[::-1]
-        for FIR_id in FIR:
-            # get the particular FIR stage decimation factor
+    fir_stage_rates = []
+    if len(fir):
+        fir = fir[::-1]
+        for fir_id in fir:
+            # get the particular fir stage decimation factor
             # multiply the decimated sample rate by this factor
-            search = "responseFIR[@publicID='" + FIR_id + "']"
+            search = "responseFIR[@publicID='" + fir_id + "']"
             fir_element = root.find(_ns(search))
             if fir_element is None:
                 continue
             dec_fac = _tag2obj(fir_element, _ns("decimationFactor"), int)
             if dec_fac is not None and int(dec_fac) != 0:
                 samp_rate *= dec_fac
-            FIR_stage_rates.append(float(samp_rate))
+            fir_stage_rates.append(float(samp_rate))
 
     # Return filter chain to original and also revert the rates
-    FIR = FIR[::-1]
-    FIR_stage_rates = FIR_stage_rates[::-1]
+    fir = fir[::-1]
+    fir_stage_rates = fir_stage_rates[::-1]
 
     # Attempt to read stages in the proper order
     # sc3ml does not group stages by an ID
@@ -613,12 +610,12 @@ def _read_response(root, sen_element, resp_element, cha_element,
     # Apply final digital filter stages
     # Input unit: COUNTS
     # Output unit: COUNTS
-    for FIR_id, rate in zip(FIR, FIR_stage_rates):
-        search = "responseFIR[@publicID='" + FIR_id + "']"
+    for fir_id, rate in zip(fir, fir_stage_rates):
+        search = "responseFIR[@publicID='" + fir_id + "']"
         stage_element = root.find(_ns(search))
         if stage_element is None:
-            msg = ("FIR response not in inventory: %s, stopping correction"
-                   "before stage %i") % (FIR_id, stage)
+            msg = ("fir response not in inventory: %s, stopping correction"
+                   "before stage %i") % (fir_id, stage)
             warnings.warn(msg)
             return response
         fir_response = _read_response_stage(stage_element, _ns, rate, stage,

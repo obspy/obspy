@@ -22,7 +22,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
     """
-    def test_calcVincentyInverse(self):
+    def test_calc_vincenty_inverse(self):
         """
         Tests for the Vincenty's Inverse formulae.
         """
@@ -58,7 +58,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
 
     @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
                                             'installed')
-    def test_gps2DistAzimuthWithGeographiclib(self):
+    def test_gps_2_dist_azimuth_with_geographiclib(self):
         """
         Testing gps2dist_azimuth function using the module geographiclib.
         """
@@ -74,7 +74,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, 91, 0)
         self.assertRaises(ValueError, gps2dist_azimuth, 0, 0, -91, 0)
 
-    def test_calcVincentyInverse2(self):
+    def test_calc_vincenty_inverse_2(self):
         """
         Test calc_vincenty_inverse() method with test data from Geocentric
         Datum of Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
@@ -109,7 +109,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
-    def test_calcVincentyInverseTabulated(self):
+    def test_calc_vincenty_inverse_tabulated(self):
         """ Tabulated results for Vincenty Inverse
 
         Table II of Vincenty's paper (T. Vincenty 1975, "Direct and inverse
@@ -175,7 +175,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
 
     @unittest.skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib is installed, '
                                         'not using calc_vincenty_inverse')
-    def test_gps2DistAzimuthBUG150(self):
+    def test_gps_2_dist_azimuth_bug150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is
         not installed.
@@ -213,7 +213,7 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         Test the location 2 degree conversion.
         """
         # Inline method to avoid messy code.
-        def assertLoc(lat1, long1, lat2, long2, approx_distance):
+        def assert_loc(lat1, long1, lat2, long2, approx_distance):
             self.assertTrue(abs(math.radians(locations2degrees(
                 lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
 
@@ -221,27 +221,27 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         #   http://williams.best.vwh.net/gccalc.htm
 
         # Random location.
-        assertLoc(36.12, -86.67, 33.94, -118.40, 2893)
+        assert_loc(36.12, -86.67, 33.94, -118.40, 2893)
         # Test several combinations of quadrants.
-        assertLoc(11.11, 22.22, 33.33, 44.44, 3346)
-        assertLoc(-11.11, -22.22, -33.33, -44.44, 3346)
-        assertLoc(11.11, 22.22, -33.33, -44.44, 8596)
-        assertLoc(-11.11, -22.22, 33.33, 44.44, 8596)
-        assertLoc(11.11, -22.22, 33.33, -44.44, 3346)
-        assertLoc(-11.11, 22.22, 33.33, 44.44, 5454)
-        assertLoc(11.11, -22.22, 33.33, 44.44, 7177)
-        assertLoc(11.11, 22.22, -33.33, 44.44, 5454)
-        assertLoc(11.11, 22.22, 33.33, -44.44, 7177)
+        assert_loc(11.11, 22.22, 33.33, 44.44, 3346)
+        assert_loc(-11.11, -22.22, -33.33, -44.44, 3346)
+        assert_loc(11.11, 22.22, -33.33, -44.44, 8596)
+        assert_loc(-11.11, -22.22, 33.33, 44.44, 8596)
+        assert_loc(11.11, -22.22, 33.33, -44.44, 3346)
+        assert_loc(-11.11, 22.22, 33.33, 44.44, 5454)
+        assert_loc(11.11, -22.22, 33.33, 44.44, 7177)
+        assert_loc(11.11, 22.22, -33.33, 44.44, 5454)
+        assert_loc(11.11, 22.22, 33.33, -44.44, 7177)
         # Test some extreme values.
-        assertLoc(90, 0, 0, 0, 10018)
-        assertLoc(180, 0, 0, 0, 20004)
-        assertLoc(0, 90, 0, 0, 10018)
-        assertLoc(0, 180, 0, 0, 20004)
-        assertLoc(0, 0, 90, 0, 10018)
-        assertLoc(0, 0, 180, 0, 20004)
-        assertLoc(0, 0, 0, 90, 10018)
-        assertLoc(0, 0, 0, 180, 20004)
-        assertLoc(11, 55, 11, 55, 0)
+        assert_loc(90, 0, 0, 0, 10018)
+        assert_loc(180, 0, 0, 0, 20004)
+        assert_loc(0, 90, 0, 0, 10018)
+        assert_loc(0, 180, 0, 0, 20004)
+        assert_loc(0, 0, 90, 0, 10018)
+        assert_loc(0, 0, 180, 0, 20004)
+        assert_loc(0, 0, 0, 90, 10018)
+        assert_loc(0, 0, 0, 180, 20004)
+        assert_loc(11, 55, 11, 55, 0)
 
     @unittest.skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not '
                                             'installed')

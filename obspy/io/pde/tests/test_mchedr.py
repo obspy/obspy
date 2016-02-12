@@ -24,7 +24,7 @@ except:
     pass
 
 
-class mchedrTestCase(unittest.TestCase):
+class MchedrTestCase(unittest.TestCase):
     """
     Test suite for obspy.mchedr
     """
@@ -318,7 +318,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
                 catalog2 = _read_quakeml(tf)
         self.assertTrue(len(catalog2), 1)
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
         Tests reading an mchedr document via read_events.
         """
@@ -331,7 +331,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
 
 
 def suite():
-    return unittest.makeSuite(mchedrTestCase, 'test')
+    return unittest.makeSuite(MchedrTestCase, 'test')
 
 
 if __name__ == '__main__':

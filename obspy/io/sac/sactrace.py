@@ -338,7 +338,7 @@ import numpy as np
 from obspy import Trace, UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
-from . import header as HD
+from . import header as HD  # noqa
 from .util import SacError, SacHeaderError
 from . import util as _ut
 from . import arrayio as _io
@@ -397,8 +397,8 @@ def _intgetter(hdr):
 def _intsetter(hdr):
     def set_int(self, value):
         if not isinstance(value, (np.integer, int)):
-            warnings.warn("Non-integers may be truncated.")
-            print(" {}: {}".format(hdr, value))
+            warnings.warn("Non-integers may be truncated. ({}: {})".format(
+                hdr, value))
         if value is None:
             value = HD.INULL
         self._hi[HD.INTHDRS.index(hdr)] = value
@@ -1079,7 +1079,7 @@ class SACTrace(object):
             self.nzhour = new_reftime.hour
             self.nzmin = new_reftime.minute
             self.nzsec = new_reftime.second
-            self.nzmsec = new_reftime.microsecond / 1000
+            self.nzmsec = int(new_reftime.microsecond / 1000)
 
             # get the float seconds between the old and new reftimes
             shift = old_reftime - new_reftime

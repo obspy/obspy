@@ -45,6 +45,7 @@ from obspy.core.util.version import get_git_version as _get_version_string
 # Remove once 0.11 has been released!
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={"geodetics": "obspy.geodetics"},
     function_map={
         "FlinnEngdahl": "obspy.geodetics.FlinnEngdahl",
@@ -54,4 +55,11 @@ sys.modules[__name__] = DynamicAttributeImportRerouteModule(
         "kilometer2degrees": "obspy.geodetics.kilometer2degrees",
         "locations2degrees": "obspy.geodetics.locations2degrees",
         "getMatplotlibVersion": "obspy.core.util.get_matplotlib_version",
-        })
+        'complexifyString': 'obspy.core.util.complexify_string',
+        'createEmptyDataChunk': 'obspy.core.util.create_empty_data_chunk',
+        'getExampleFile': 'obspy.core.util.get_example_file',
+        'getScriptDirName': 'obspy.core.util.get_script_dir_name',
+        'guessDelta': 'obspy.core.util.guess_delta',
+        'toIntOrZero': 'obspy.core.util.misc.to_int_or_zero',
+        'scoreatpercentile': 'obspy.core.util.score_at_percentile',
+        'uncompressFile': 'obspy.core.util.decorator.uncompress_file'})

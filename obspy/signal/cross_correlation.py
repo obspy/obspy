@@ -22,12 +22,15 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
+import sys
 import warnings
 
 import numpy as np
 import scipy
 
 from obspy import Stream, Trace
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
@@ -117,7 +120,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         return shift.value, coe_p.value
 
 
-def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
+def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
              full_xcorr=False, abs_max=True):
     """
     Calculates the cross correlation on each of the specified components
@@ -431,7 +434,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
     return (pick2_corr, coeff)
 
 
-def templatesMaxSimilarity(st, time, streams_templates):
+def templates_max_similarity(st, time, streams_templates):
     """
     Compares all event templates in the streams_templates list of streams
     against the given stream around the time of the suspected event. The stream
@@ -461,7 +464,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print(templatesMaxSimilarity(st, t, [templ]))
+    >>> print(templates_max_similarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross
@@ -537,6 +540,20 @@ def templatesMaxSimilarity(st, time, streams_templates):
         return max(values)
     else:
         return 0
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "xcorrPickCorrection":
+            "obspy.signal.cross_correlation.xcorr_pick_correction",
+        "xcorr_3C": "obspy.signal.cross_correlation.xcorr_3c",
+        "templatesMaxSimilarity":
+            "obspy.signal.cross_correlation.templates_max_similarity"
+    })
 
 
 if __name__ == '__main__':

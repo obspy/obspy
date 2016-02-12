@@ -32,7 +32,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
-import imp
 import importlib
 import warnings
 import sys
@@ -91,8 +90,12 @@ _import_map = {
     "obspy.station": "obspy.core.inventory",
     # Misc modules originally in core.
     "obspy.core.ascii": "obspy.io.ascii",
-    "obspy.core.quakeml": "obspy.io.quakeml",
+    "obspy.core.quakeml": "obspy.io.quakeml.core",
     "obspy.core.stationxml": "obspy.io.stationxml",
+    # Double renameing here. To make this 'obspy.station.stationxml' work we
+    # first need to route it to obspy.core.inventory and then to
+    # io.stationxml ... wild stuff.
+    "obspy.core.inventory.stationxml": "obspy.io.stationxml",
     "obspy.core.json": "obspy.io.json"
 }
 
@@ -164,6 +167,7 @@ sys.meta_path.append(ObsPyRestructureMetaPathFinderAndLoader())
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={key.split(".")[1]: value for key, value in
                 _import_map.items() if len(key.split(".")) == 2},
     function_map=_function_map)

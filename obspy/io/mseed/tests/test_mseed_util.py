@@ -40,7 +40,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         else:
             self.swap = 0
 
-    def test_convertDatetime(self):
+    def test_convert_date_time(self):
         """
         Tests all time conversion methods.
         """
@@ -60,21 +60,21 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Loop over timesdict.
         for ts, dt in timesdict.items():
             self.assertEqual(
-                dt, util._convert_MSTime_to_datetime(ts * 1000000))
+                dt, util._convert_mstime_to_datetime(ts * 1000000))
             self.assertEqual(
-                ts * 1000000, util._convert_datetime_to_MSTime(dt))
+                ts * 1000000, util._convert_datetime_to_mstime(dt))
         # Additional sanity tests.
         # Today.
         now = UTCDateTime()
-        self.assertEqual(now, util._convert_MSTime_to_datetime(
-            util._convert_datetime_to_MSTime(now)))
+        self.assertEqual(now, util._convert_mstime_to_datetime(
+            util._convert_datetime_to_mstime(now)))
         # Some random date.
         random.seed(815)  # make test reproducible
         timestring = random.randint(0, 2000000) * 1e6
-        self.assertEqual(timestring, util._convert_datetime_to_MSTime(
-            util._convert_MSTime_to_datetime(timestring)))
+        self.assertEqual(timestring, util._convert_datetime_to_mstime(
+            util._convert_mstime_to_datetime(timestring)))
 
-    def test_getRecordInformation(self):
+    def test_get_record_information(self):
         """
         Tests the util._get_ms_file_info method with known values.
         """
@@ -115,7 +115,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(info['number_of_records'], 2)
         self.assertEqual(info['excess_bytes'], 0)
 
-    def test_getDataQuality(self):
+    def test_get_data_quality(self):
         """
         This test reads a self-made Mini-SEED file with set Data Quality Bits.
         A real test file would be better as this test tests a file that was
@@ -137,7 +137,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(result,
                          {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
 
-    def test_getStartAndEndTime(self):
+    def test_get_start_and_end_time(self):
         """
         Tests getting the start- and endtime of a file.
 
@@ -154,7 +154,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(start, stream[0].stats.starttime)
             self.assertEqual(end, stream[0].stats.endtime)
 
-    def test_getTimingQuality(self):
+    def test_get_timing_quality(self):
         """
         This test reads a self-made Mini-SEED file with Timing Quality
         information in Blockette 1001. A real test file would be better.
@@ -187,7 +187,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(result,
                          {'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0]})
 
-    def test_unpackSteim1(self):
+    def test_unpack_steim_1(self):
         """
         Test decompression of Steim1 strings. Remove 64 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
@@ -202,7 +202,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         data_record = _read_mseed(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
-    def test_unpackSteim2(self):
+    def test_unpack_steim_2(self):
         """
         Test decompression of Steim2 strings. Remove 128 Bytes of header
         by hand, see SEEDManual_V2.4.pdf page 100.
@@ -302,7 +302,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             st_before[0].stats.starttime -= 2.2222
             self.assertEqual(st_before, st_after)
 
-    def test_checkFlagValue(self):
+    def test_check_flag_value(self):
         """
         Test case for obspy.io.mseed.util._check_flag_value
         """
@@ -491,7 +491,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                    UTCDateTime("2009-12-25T06:00:00.0")]}
         self.assertRaises(ValueError, util._check_flag_value, flag_value)
 
-    def test_searchFlagInBlockette(self):
+    def test_search_flag_in_blockette(self):
         """
         Test case for obspy.io.mseed.util._search_flag_in_blockette
         """
@@ -550,7 +550,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                                             32, 201, 4, 4)
                 self.assertIs(read_bytes, None)
 
-    def test_convertFlagsToRawByte(self):
+    def test_convert_flags_to_raw_bytes(self):
         """
         Test case for obspy.io.mseed.util._convert_flags_to_raw_byte
         """

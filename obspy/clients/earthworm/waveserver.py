@@ -21,6 +21,8 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 
 RETURNFLAG_KEY = {
@@ -79,7 +81,7 @@ class TraceBuf2(object):
         """
         Parse tracebuf header into class variables
         """
-        packStr = b'2i3d7s9s4s3s2s3s2s2s'
+        pack_str = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
         if dtype[0:1] in b'ts':
             endian = b'>'
@@ -90,7 +92,7 @@ class TraceBuf2(object):
         self.inputType = get_numpy_type(dtype)
         (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
-            struct.unpack(endian + packStr, head)
+            struct.unpack(endian + pack_str, head)
         if not tp.startswith(dtype):
             msg = 'Error parsing header: %s!=%s'
             print(msg % (dtype, tp), file=sys.stderr)
@@ -129,18 +131,18 @@ class TraceBuf2(object):
         return Trace(data=self.data, header=stat)
 
 
-def send_sock_req(server, port, reqStr, timeout=None):
+def send_sock_req(server, port, req_str, timeout=None):
     """
-    Sets up socket to server and port, sends reqStr
+    Sets up socket to server and port, sends req_str
     to socket and returns open socket
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if reqStr[-1:] == b'\n':
-        s.send(reqStr)
+    if req_str[-1:] == b'\n':
+        s.send(req_str)
     else:
-        s.send(reqStr + b'\n')
+        s.send(req_str + b'\n')
     return s
 
 
@@ -284,3 +286,22 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'getMenu': 'obspy.clients.earthworm.waveserver.get_menu',
+        'getNumpyType': 'obspy.clients.earthworm.waveserver.get_numpy_type',
+        'getSockBytes': 'obspy.clients.earthworm.waveserver.get_sock_bytes',
+        'getSockCharLine':
+            'obspy.clients.earthworm.waveserver.get_sock_char_line',
+        'readWaveServerV':
+            'obspy.clients.earthworm.waveserver.read_wave_server_v',
+        'sendSockReq': 'obspy.clients.earthworm.waveserver.send_sock_req',
+        'tracebuf2': 'obspy.clients.earthworm.waveserver.TraceBuf2',
+        'tracebufs2obspyStream':
+            'obspy.clients.earthworm.waveserver.trace_bufs2obspy_stream'})

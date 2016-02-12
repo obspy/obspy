@@ -31,7 +31,7 @@ def simple(data):
     return data - (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
 
 
-def __plotting_helper(data, fit, plot):
+def _plotting_helper(data, fit, plot):
     fig, axes = plt.subplots(2, 1, figsize=(8, 5))
     plt.subplots_adjust(hspace=0)
     axes[0].plot(data, color="k", label="Original Data")
@@ -108,7 +108,7 @@ def polynomial(data, order, plot=False):
     fit = np.polyval(np.polyfit(x, data, deg=order), x)
 
     if plot:
-        __plotting_helper(data, fit, plot)
+        _plotting_helper(data, fit, plot)
 
     data -= fit
     return data
@@ -175,7 +175,7 @@ def spline(data, order, dspline, plot=False):
     fit = spl(x)
 
     if plot:
-        __plotting_helper(data, fit, plot)
+        _plotting_helper(data, fit, plot)
 
     data -= fit
     return data

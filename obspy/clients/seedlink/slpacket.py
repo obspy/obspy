@@ -21,11 +21,10 @@ import numpy as np
 
 from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.mseed.headers import clibmseed
-from obspy.io.mseed.util import (_convert_MSR_to_dict,
+from obspy.io.mseed.util import (_convert_msr_to_dict,
                                  _ctypes_array_2_numpy_array,
-                                 _convert_MSTime_to_datetime)
+                                 _convert_mstime_to_datetime)
 from .seedlinkexception import SeedLinkException
 
 
@@ -73,7 +72,6 @@ class SLPacket(object):
     ERRORSIGNATURE = b"ERROR\r\n"
     ENDSIGNATURE = b"END"
 
-    @deprecated_keywords({'bytes': 'data'})
     def __init__(self, data=None, offset=None):
         if data is None or offset is None:
             return
@@ -137,7 +135,7 @@ class SLPacket(object):
 
         msr, msrecord_py = self.get_ms_record()
         try:
-            header = _convert_MSR_to_dict(msrecord_py)
+            header = _convert_msr_to_dict(msrecord_py)
 
             # XXX Workaround: in Python 3 msrecord_py.sampletype is a byte
             # (e.g. b'i'), while keys of mseed.headers.SAMPLESIZES are
@@ -153,7 +151,7 @@ class SLPacket(object):
             self.free_ms_record(msr, msrecord_py)
 
         # XXX Workaround: the fields in the returned struct of type
-        # obspy.io.mseed.header.MSRecord_s have byte values in Python 3, while
+        # obspy.io.mseed.header.MsrecordS have byte values in Python 3, while
         # the rest of the code still expects them to be string (see #770)
         # -> convert
         convert = ('network', 'station', 'location', 'channel',
@@ -163,7 +161,7 @@ class SLPacket(object):
                 header[key] = value.decode()
 
         # 20111201 AJL - bug fix?
-        header['starttime'] = _convert_MSTime_to_datetime(header['starttime'])
+        header['starttime'] = _convert_mstime_to_datetime(header['starttime'])
         # 20111205 AJL - bug fix?
         if 'samprate' in header:
             header['sampling_rate'] = header['samprate']

@@ -17,10 +17,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+from datetime import timedelta
 import io
 import math
 import string as s
-from datetime import timedelta
+import sys
 
 import numpy as np
 
@@ -33,6 +34,8 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               StationMagnitude, Tensor, WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -172,7 +175,7 @@ class Unpickler(object):
             self._store_uncertainty(getattr(tensor, "m_%s_errors" % code),
                                     error)
 
-    def _decode_FE_region_number(self, number):
+    def _decode_fe_region_number(self, number):
         """
         Converts Flinn-Engdahl region number to string.
         """
@@ -231,7 +234,7 @@ class Unpickler(object):
         else:
             return None
 
-    def _parse_record_HY(self, line):
+    def _parse_record_hy(self, line):
         """
         Parses the 'hypocenter' record HY
         """
@@ -247,8 +250,8 @@ class Unpickler(object):
         standard_dev = self._float(line[44:48])
         station_number = self._int(line[48:51])
         # unused: version_flag = line[51]
-        FE_region_number = line[52:55]
-        FE_region_name = self._decode_FE_region_number(FE_region_number)
+        fe_region_number = line[52:55]
+        fe_region_name = self._decode_fe_region_number(fe_region_number)
         source_code = line[55:60].strip()
 
         event = Event()
@@ -258,11 +261,11 @@ class Unpickler(object):
         event.resource_id = ResourceIdentifier(id=res_id)
         description = EventDescription(
             type='region name',
-            text=FE_region_name)
+            text=fe_region_name)
         event.event_descriptions.append(description)
         description = EventDescription(
             type='Flinn-Engdahl region',
-            text=FE_region_number)
+            text=fe_region_number)
         event.event_descriptions.append(description)
         origin = Origin()
         res_id = '/'.join((res_id_prefix, 'origin', evid))
@@ -287,11 +290,11 @@ class Unpickler(object):
         # depth_phase_count can be incremented in record 'S '
         origin.quality.depth_phase_count = 0
         origin.type = 'hypocenter'
-        origin.region = FE_region_name
+        origin.region = fe_region_name
         event.origins.append(origin)
         return event
 
-    def _parse_record_E(self, line, event):
+    def _parse_record_e(self, line, event):
         """
         Parses the 'error and magnitude' record E
         """
@@ -301,8 +304,8 @@ class Unpickler(object):
         depth_stderr = self._float(line[22:27])
         mb_mag = self._float(line[28:31])
         mb_nsta = self._int(line[32:35])
-        Ms_mag = self._float(line[36:39])
-        Ms_nsta = self._int(line[39:42])
+        ms_mag = self._float(line[36:39])
+        ms_nsta = self._int(line[39:42])
         mag1 = self._float(line[42:45])
         mag1_type = line[45:47]
         mag1_source_code = line[47:51].strip()
@@ -329,14 +332,14 @@ class Unpickler(object):
             mag.station_count = mb_nsta
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if Ms_mag is not None:
+        if ms_mag is not None:
             mag = Magnitude()
             res_id = '/'.join((res_id_prefix, 'magnitude', evid, 'ms'))
             mag.resource_id = ResourceIdentifier(id=res_id)
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
-            mag.mag = Ms_mag
+            mag.mag = ms_mag
             mag.magnitude_type = 'Ms'
-            mag.station_count = Ms_nsta
+            mag.station_count = ms_nsta
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
         if mag1 is not None:
@@ -423,7 +426,7 @@ class Unpickler(object):
             major_axis_rotation + 90
         origin.origin_uncertainty.confidence_ellipsoid = confidence_ellipsoid
 
-    def _parse_record_A(self, line, event):
+    def _parse_record_a(self, line, event):
         """
         Parses the 'additional parameters' record A
         """
@@ -446,7 +449,7 @@ class Unpickler(object):
         origin.quality.used_station_count = station_number
         origin.quality.azimuthal_gap = gap
 
-    def _parse_record_C(self, line, event):
+    def _parse_record_c(self, line, event):
         """
         Parses the 'general comment' record C
         """
@@ -462,7 +465,7 @@ class Unpickler(object):
         comment.text = \
             "".join(x for x in comment.text if x in s.printable)
 
-    def _parse_record_AH(self, line, event):
+    def _parse_record_ah(self, line, event):
         """
         Parses the 'additional hypocenter' record AH
         """
@@ -498,7 +501,7 @@ class Unpickler(object):
         origin.type = 'hypocenter'
         event.origins.append(origin)
 
-    def _parse_record_AE(self, line, event):
+    def _parse_record_ae(self, line, event):
         """
         Parses the 'additional hypocenter error and magnitude record' AE
         """
@@ -705,7 +708,7 @@ class Unpickler(object):
         event.focal_mechanisms.append(focal_mechanism)
         return focal_mechanism
 
-    def _parse_record_Dt(self, line, focal_mechanism):
+    def _parse_record_dt(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - tensor' record Dt
         """
@@ -719,7 +722,7 @@ class Unpickler(object):
             self._tensor_store(tensor, code, value, error)
         focal_mechanism.moment_tensor.tensor = tensor
 
-    def _parse_record_Da(self, line, focal_mechanism):
+    def _parse_record_da(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - principal axes and
         nodal planes' record Da
@@ -778,7 +781,7 @@ class Unpickler(object):
         nodal_planes.nodal_plane_2 = nodal_plane_2
         focal_mechanism.nodal_planes = nodal_planes
 
-    def _parse_record_Dc(self, line, focal_mechanism):
+    def _parse_record_dc(self, line, focal_mechanism):
         """
         Parses the 'source parameter data - comment' record Dc
         """
@@ -791,7 +794,7 @@ class Unpickler(object):
             focal_mechanism.comments.append(comment)
             comment.text = line[2:60]
 
-    def _parse_record_P(self, line, event):
+    def _parse_record_p(self, line, event):
         """
         Parses the 'primary phase record' P
 
@@ -818,7 +821,7 @@ class Unpickler(object):
         # network_code is required for QuakeML validation
         waveform_id.network_code = '  '
         station_string = \
-            waveform_id.getSEEDString()\
+            waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         prefix = '/'.join((res_id_prefix, 'waveformstream',
                            evid, station_string))
@@ -891,50 +894,50 @@ class Unpickler(object):
         origin.quality.associated_phase_count += 1
         return pick, arrival
 
-    def _parse_record_M(self, line, event, pick):
+    def _parse_record_m(self, line, event, pick):
         """
         Parses the 'surface wave record' M
         """
         # unused: Z_comp = line[7]
-        Z_period = self._float(line[9:13])
+        z_period = self._float(line[9:13])
         # note: according to the format documentation,
         # column 20 should be blank. However, it seems that
-        # Z_amplitude includes that column
-        Z_amplitude = self._float(line[13:21])  # micrometers
+        # z_amplitude includes that column
+        z_amplitude = self._float(line[13:21])  # micrometers
         # TODO: N_comp and E_comp seems to be never there
-        MSZ_mag = line[49:52]
-        Ms_mag = self._float(line[53:56])
+        msz_mag = line[49:52]
+        ms_mag = self._float(line[53:56])
         # unused: Ms_usage_flag = line[56]
 
         evid = event.resource_id.id.split('/')[-1]
         station_string = \
-            pick.waveform_id.getSEEDString()\
+            pick.waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         amplitude = None
-        if Z_amplitude is not None:
+        if z_amplitude is not None:
             amplitude = Amplitude()
             prefix = '/'.join((res_id_prefix, 'amp', evid, station_string))
             amplitude.resource_id = ResourceIdentifier(prefix=prefix)
-            amplitude.generic_amplitude = Z_amplitude * 1E-6
+            amplitude.generic_amplitude = z_amplitude * 1E-6
             amplitude.unit = 'm'
-            amplitude.period = Z_period
+            amplitude.period = z_period
             amplitude.type = 'AS'
             amplitude.magnitude_hint = 'Ms'
             amplitude.pick_id = pick.resource_id
             event.amplitudes.append(amplitude)
-        if MSZ_mag is not None:
+        if msz_mag is not None:
             station_magnitude = StationMagnitude()
             prefix = '/'.join((res_id_prefix, 'stationmagntiude',
                                evid, station_string))
             station_magnitude.resource_id = ResourceIdentifier(prefix=prefix)
             station_magnitude.origin_id = event.origins[0].resource_id
-            station_magnitude.mag = Ms_mag
+            station_magnitude.mag = ms_mag
             station_magnitude.station_magnitude_type = 'Ms'
             if amplitude is not None:
                 station_magnitude.amplitude_id = amplitude.resource_id
             event.station_magnitudes.append(station_magnitude)
 
-    def _parse_record_S(self, line, event, p_pick, p_arrival):
+    def _parse_record_s(self, line, event, p_pick, p_arrival):
         """
         Parses the 'secondary phases' record S
 
@@ -957,7 +960,7 @@ class Unpickler(object):
 
         evid = event.resource_id.id.split('/')[-1]
         station_string = \
-            p_pick.waveform_id.getSEEDString()\
+            p_pick.waveform_id.get_seed_string()\
             .replace(' ', '-').replace('.', '_').lower()
         origin = event.origins[0]
         for phase, arrival_time in arrivals:
@@ -1023,34 +1026,34 @@ class Unpickler(object):
             line = line.decode()
             record_id = line[0:2]
             if record_id == 'HY':
-                event = self._parse_record_HY(line)
+                event = self._parse_record_hy(line)
                 catalog.append(event)
             elif record_id == 'P ':
-                pick, arrival = self._parse_record_P(line, event)
+                pick, arrival = self._parse_record_p(line, event)
             elif record_id == 'E ':
-                self._parse_record_E(line, event)
+                self._parse_record_e(line, event)
             elif record_id == 'L ':
                 self._parse_record_l(line, event)
             elif record_id == 'A ':
-                self._parse_record_A(line, event)
+                self._parse_record_a(line, event)
             elif record_id == 'C ':
-                self._parse_record_C(line, event)
+                self._parse_record_c(line, event)
             elif record_id == 'AH':
-                self._parse_record_AH(line, event)
+                self._parse_record_ah(line, event)
             elif record_id == 'AE':
-                self._parse_record_AE(line, event)
+                self._parse_record_ae(line, event)
             elif record_id == 'Dp':
                 focal_mechanism = self._parse_record_dp(line, event)
             elif record_id == 'Dt':
-                self._parse_record_Dt(line, focal_mechanism)
+                self._parse_record_dt(line, focal_mechanism)
             elif record_id == 'Da':
-                self._parse_record_Da(line, focal_mechanism)
+                self._parse_record_da(line, focal_mechanism)
             elif record_id == 'Dc':
-                self._parse_record_Dc(line, focal_mechanism)
+                self._parse_record_dc(line, focal_mechanism)
             elif record_id == 'M ':
-                self._parse_record_M(line, event, pick)
+                self._parse_record_m(line, event, pick)
             elif record_id == 'S ':
-                self._parse_record_S(line, event, pick, arrival)
+                self._parse_record_s(line, event, pick, arrival)
         self.fh.close()
         # strip extra whitespaces from event comments
         for event in catalog:
@@ -1084,6 +1087,16 @@ def _read_mchedr(filename):
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """
     return Unpickler().load(filename)
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'isMchedr': 'obspy.io.pde.mchedr._is_mchedr',
+        'readMchedr': 'obspy.io.pde.mchedr._read_mchedr'})
 
 
 if __name__ == '__main__':

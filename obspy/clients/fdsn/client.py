@@ -20,7 +20,7 @@ import copy
 import gzip
 import io
 import os
-from socket import timeout as SocketTimeout
+from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
@@ -63,9 +63,9 @@ class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
 
         # be conciliant with URIs containing a space
         newurl = newurl.replace(' ', '%20')
-        CONTENT_HEADERS = ("content-length", "content-type")
+        content_headers = ("content-length", "content-type")
         newheaders = dict((k, v) for k, v in req.headers.items()
-                          if k.lower() not in CONTENT_HEADERS)
+                          if k.lower() not in content_headers)
 
         # Also redirect the data of the request which the standard library
         # interestingly enough does not do.
@@ -1172,8 +1172,8 @@ class Client(object):
         for service in services:
             if service not in FDSNWS:
                 continue
-            SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
-            SERVICE_OPTIONAL = OPTIONAL_PARAMETERS[service]
+            service_default = DEFAULT_PARAMETERS[service]
+            service_optional = OPTIONAL_PARAMETERS[service]
 
             msg.append("Parameter description for the "
                        "'%s' service (v%s) of '%s':" % (
@@ -1191,17 +1191,17 @@ class Client(object):
 
             printed_something = False
 
-            for name in SERVICE_DEFAULT:
+            for name in service_default:
                 if name in self.services[service]:
                     available_default_parameters.append(name)
                 else:
                     missing_default_parameters.append(name)
 
-            for name in SERVICE_OPTIONAL:
+            for name in service_optional:
                 if name in self.services[service]:
                     optional_parameters.append(name)
 
-            defined_parameters = SERVICE_DEFAULT + SERVICE_OPTIONAL
+            defined_parameters = service_default + service_optional
             for name in self.services[service].keys():
                 if name not in defined_parameters:
                     additional_parameters.append(name)
@@ -1392,7 +1392,7 @@ class Client(object):
                             raise
                     except urllib.error.URLError as e:
                         wadl_queue.put((url, "timeout"))
-                    except SocketTimeout as e:
+                    except socket_timeout as e:
                         wadl_queue.put((url, "timeout"))
             return ThreadURL()
 

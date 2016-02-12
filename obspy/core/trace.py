@@ -26,8 +26,7 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import (deprecated_keywords, raise_if_masked,
-                                       skip_if_no_data)
+from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
@@ -232,7 +231,7 @@ def _add_processing_info(func, *args, **kwargs):
     result = func(*args, **kwargs)
     # Attach after executing the function to avoid having it attached
     # while the operation failed.
-    self._addProcessingInfo(info)
+    self._internal_add_processing_info(info)
     return result
 
 
@@ -667,7 +666,7 @@ class Trace(object):
             if not isinstance(trace, Trace):
                 raise TypeError
             #  check id
-            if self.getId() != trace.getId():
+            if self.get_id() != trace.get_id():
                 raise TypeError("Trace ID differs")
             #  check sample rate
             if self.stats.sampling_rate != trace.stats.sampling_rate:
@@ -785,7 +784,7 @@ class Trace(object):
         out.data = data
         return out
 
-    def getId(self):
+    def get_id(self):
         """
         Return a SEED compatible identifier of the trace.
 
@@ -799,7 +798,7 @@ class Trace(object):
 
         >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
         >>> tr = Trace(header=meta)
-        >>> print(tr.getId())
+        >>> print(tr.get_id())
         BW.MANZ..EHZ
         >>> print(tr.id)
         BW.MANZ..EHZ
@@ -807,7 +806,7 @@ class Trace(object):
         out = "%(network)s.%(station)s.%(location)s.%(channel)s"
         return out % (self.stats)
 
-    id = property(getId)
+    id = property(get_id)
 
     def plot(self, **kwargs):
         """
@@ -1348,7 +1347,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 resp_key = ".".join(("RESP", self.stats.network,
                                      self.stats.station, self.stats.location,
                                      self.stats.channel))
-                for key, stringio in seedresp['filename'].get_RESP():
+                for key, stringio in seedresp['filename'].get_resp():
                     if key == resp_key:
                         stringio.seek(0, 0)
                         seedresp['filename'] = stringio
@@ -1407,12 +1406,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'lowpass_cheby_2'``
             Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
 
-        ``'lowpassFIR'`` (experimental)
-            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
+        ``'lowpass_fir'`` (experimental)
+            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpass_fir`).
 
-        ``'remezFIR'`` (experimental)
+        ``'remez_fir'`` (experimental)
             Minimax optimal bandpass using Remez algorithm (uses
-            :func:`obspy.signal.filter.remezFIR`).
+            :func:`obspy.signal.filter.remez_fir`).
 
         .. rubric:: Example
 
@@ -1469,23 +1468,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         ``'classicstalta'``
             Computes the classic STA/LTA characteristic function (uses
-            :func:`obspy.signal.trigger.classic_STALTA`).
+            :func:`obspy.signal.trigger.classic_sta_lta`).
 
         ``'recstalta'``
             Recursive STA/LTA
-            (uses :func:`obspy.signal.trigger.recursive_STALTA`).
+            (uses :func:`obspy.signal.trigger.recursive_sta_lta`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
-            :func:`obspy.signal.trigger.recursive_STALTA_py`).
+            :func:`obspy.signal.trigger.recursive_sta_lta_py`).
 
         ``'delayedstalta'``
             Delayed STA/LTA.
-            (uses :func:`obspy.signal.trigger.delayed_STALTA`).
+            (uses :func:`obspy.signal.trigger.delayed_sta_lta`).
 
         ``'carlstatrig'``
-            Computes the carl_STA_trig characteristic function (uses
-            :func:`obspy.signal.trigger.carl_STA_trig`).
+            Computes the carl_sta_trig characteristic function (uses
+            :func:`obspy.signal.trigger.carl_sta_trig`).
 
         ``'zdetect'``
             Z-detector (uses :func:`obspy.signal.trigger.z_detect`).
@@ -1609,43 +1608,43 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
 
         # resample in the frequency domain
-        X = rfft(np.require(self.data, dtype=new_dtype))
-        X = np.insert(X, 1, 0)
+        x = rfft(np.require(self.data, dtype=new_dtype))
+        x = np.insert(x, 1, 0)
         if self.stats.npts % 2 == 0:
-            X = np.append(X, [0])
-        Xr = X[::2]
-        Xi = X[1::2]
+            x = np.append(x, [0])
+        x_r = x[::2]
+        x_i = x[1::2]
 
         if window is not None:
             if callable(window):
-                W = window(np.fft.fftfreq(self.stats.npts))
+                large_w = window(np.fft.fftfreq(self.stats.npts))
             elif isinstance(window, np.ndarray):
                 if window.shape != (self.stats.npts,):
                     msg = "Window has the wrong shape. Window length must " + \
                           "equal the number of points."
                     raise ValueError(msg)
-                W = window
+                large_w = window
             else:
-                W = np.fft.ifftshift(get_window(native_str(window),
-                                                self.stats.npts))
-            Xr *= W[:self.stats.npts//2+1]
-            Xi *= W[:self.stats.npts//2+1]
+                large_w = np.fft.ifftshift(get_window(native_str(window),
+                                                      self.stats.npts))
+            x_r *= large_w[:self.stats.npts//2+1]
+            x_i *= large_w[:self.stats.npts//2+1]
 
         # interpolate
         num = int(self.stats.npts / factor)
         df = 1.0 / (self.stats.npts * self.stats.delta)
-        dF = 1.0 / num * sampling_rate
+        d_large_f = 1.0 / num * sampling_rate
         f = df * np.arange(0, self.stats.npts // 2 + 1, dtype=np.int32)
-        nF = num // 2 + 1
-        F = dF * np.arange(0, nF, dtype=np.int32)
-        Y = np.zeros((2*nF))
-        Y[::2] = np.interp(F, f, Xr)
-        Y[1::2] = np.interp(F, f, Xi)
+        n_large_f = num // 2 + 1
+        large_f = d_large_f * np.arange(0, n_large_f, dtype=np.int32)
+        large_y = np.zeros((2*n_large_f))
+        large_y[::2] = np.interp(large_f, f, x_r)
+        large_y[1::2] = np.interp(large_f, f, x_i)
 
-        Y = np.delete(Y, 1)
+        large_y = np.delete(large_y, 1)
         if num % 2 == 0:
-            Y = np.delete(Y, -1)
-        self.data = irfft(Y) * (float(num) / float(self.stats.npts))
+            large_y = np.delete(large_y, -1)
+        self.data = irfft(large_y) * (float(num) / float(self.stats.npts))
         self.data = np.require(self.data, dtype=orig_dtype)
         self.stats.sampling_rate = sampling_rate
 
@@ -1780,7 +1779,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @skip_if_no_data
-    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def differentiate(self, method='gradient', **options):
         """
@@ -1816,7 +1814,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @skip_if_no_data
-    @deprecated_keywords({'type': 'method'})
     @_add_processing_info
     def integrate(self, method="cumtrapz", **options):
         """
@@ -2133,7 +2130,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return deepcopy(self)
 
-    def _addProcessingInfo(self, info):
+    def _internal_add_processing_info(self, info):
         """
         Add the given informational string to the `processing` field in the
         trace's :class:`~obspy.core.trace.Stats` object.
@@ -2336,12 +2333,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
             otherwise.
         """
-        timeArray = np.arange(self.stats.npts)
-        timeArray = timeArray / self.stats.sampling_rate
+        time_array = np.arange(self.stats.npts)
+        time_array = time_array / self.stats.sampling_rate
         # Check if the data is a ma.maskedarray
         if isinstance(self.data, np.ma.masked_array):
-            timeArray = np.ma.array(timeArray, mask=self.data.mask)
-        return timeArray
+            time_array = np.ma.array(time_array, mask=self.data.mask)
+        return time_array
 
     def attach_response(self, inventories):
         """
@@ -2684,15 +2681,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         data = np.fft.irfft(data)[0:npts]
 
         if plot:
-            ax6.plot(times, data, color="k")
-            plt.subplots_adjust(wspace=0.4)
-            if plot is True and fig is None:
-                plt.show()
-            elif plot is True and fig is not None:
-                pass
-            else:
-                plt.savefig(plot)
-                plt.close(fig)
+            # Oftentimes raises NumPy warnings which we don't want to see.
+            with np.errstate(all="ignore"):
+                ax6.plot(times, data, color="k")
+                plt.subplots_adjust(wspace=0.4)
+                if plot is True and fig is None:
+                    plt.show()
+                elif plot is True and fig is not None:
+                    pass
+                else:
+                    plt.savefig(plot)
+                    plt.close(fig)
 
         # assign processed data and store processing information
         self.data = data
@@ -2700,7 +2699,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         [str(x) for x in (output, water_level, pre_filt,
                                           zero_mean, taper, taper_fraction)] +
                         ["%s=%s" % (k, v) for k, v in kwargs.items()])
-        self._addProcessingInfo(info)
+        self._internal_add_processing_info(info)
         return self
 
 

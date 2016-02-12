@@ -20,15 +20,18 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from operator import itemgetter
+import sys
 
 import numpy as np
 from scipy import fftpack, signal, sparse
 
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.signal import util
 from obspy.signal.invsim import corn_freq_2_paz, simulate_seismometer
 
 
-def spectrum(data, win, Nfft, n1=0, n2=0):
+def spectrum(data, win, nfft, n1=0, n2=0):
     """
     Spectrum of a signal.
 
@@ -41,7 +44,7 @@ def spectrum(data, win, Nfft, n1=0, n2=0):
     :type data: :class:`~numpy.ndarray`
     :param data: Data to make spectrum of.
     :param win: Window to multiply with given signal.
-    :param Nfft: Number of points for FFT.
+    :param nfft: Number of points for FFT.
     :type n1: int, optional
     :param n1: Starting index, defaults to ``0``.
     :type n2: int, optional
@@ -51,14 +54,14 @@ def spectrum(data, win, Nfft, n1=0, n2=0):
     if (n2 == 0):
         n2 = len(data)
     n = n2 - n1
-    U = pow(np.linalg.norm([win]), 2) / n
+    u = pow(np.linalg.norm([win]), 2) / n
     xw = data * win
-    Px = pow(abs(fftpack.fft(xw, Nfft)), 2) / (n * U)
-    Px[0] = Px[1]
-    return Px
+    px = pow(abs(fftpack.fft(xw, nfft)), 2) / (n * u)
+    px[0] = px[1]
+    return px
 
 
-def welch(data, win, Nfft, L=0, over=0):
+def welch(data, win, nfft, l=0, over=0):
     """
     Spectrum of a signal.
 
@@ -71,25 +74,25 @@ def welch(data, win, Nfft, L=0, over=0):
     :type data: :class:`~numpy.ndarray`
     :param data: Data to make spectrum of.
     :param win: Window to multiply with given signal.
-    :param Nfft: Number of points for FFT.
-    :type L: int, optional
-    :param L: Length of windows to be averaged, defaults to ``0``.
+    :param nfft: Number of points for FFT.
+    :type l: int, optional
+    :param l: Length of windows to be averaged, defaults to ``0``.
     :type over: float, optional
     :param over: Overlap of windows to be averaged 0<over<1, defaults to ``0``.
     :return: Spectrum.
     """
-    if (L == 0):
-        L = len(data)
+    if (l == 0):
+        l = len(data)
     n1 = 0
-    n2 = L
-    n0 = (1. - float(over)) * L
-    nsect = 1 + int(np.floor((len(data) - L) / (n0)))
-    Px = 0
+    n2 = l
+    n0 = (1. - float(over)) * l
+    nsect = 1 + int(np.floor((len(data) - l) / (n0)))
+    px = 0
     for _i in range(nsect):
-        Px = Px + spectrum(data, win, Nfft, n1, n2) / nsect
+        px = px + spectrum(data, win, nfft, n1, n2) / nsect
         n1 = n1 + n0
         n2 = n2 + n0
-    return Px
+    return px
 
 
 def central_frequency(data, fs, smoothie, fk):
@@ -158,9 +161,9 @@ def central_frequency_unwindowed(data, fs):
     nfft = util.next_pow_2(len(data))
     freq = np.linspace(0, fs, nfft + 1)
     freqaxis = freq[0:nfft // 2]
-    Px_wm = welch(data, np.hamming(len(data)), nfft)
-    Px = Px_wm[0:len(Px_wm) // 2]
-    cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+    px_wm = welch(data, np.hamming(len(data)), nfft)
+    px = px_wm[0:len(px_wm) // 2]
+    cfreq = np.sqrt(np.sum(freqaxis ** 2 * px) / (sum(px)))
     return cfreq
 
 
@@ -349,9 +352,9 @@ def log_cepstrum(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     new_dtype = np.float32 if data.dtype.itemsize == 4 else np.float64
     data = np.require(data, dtype=new_dtype)
 
-    dataT = np.transpose(data)
-    nfft = util.next_pow_2(dataT.shape[0])
-    fc = fftpack.fft(dataT, nfft, 0)
+    data_t = np.transpose(data)
+    nfft = util.next_pow_2(data_t.shape[0])
+    fc = fftpack.fft(data_t, nfft, 0)
     f = fc[1:len(fc) // 2 + 1, :]
     m, a, b = log_spaced_filterbank_matrix(p, nfft, fs, w)
     pw = np.real(np.multiply(f[a:b, :], np.conj(f[a:b, :])))
@@ -416,11 +419,11 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
         m_acc = abs(min(data))
 
     samp_rate = 1.0 / delta
-    T = freq * 1.0
-    D = damp
-    omega = (2 * 3.14159 * T) ** 2
+    t = freq * 1.0
+    d = damp
+    omega = (2 * 3.14159 * t) ** 2
 
-    paz_sa = corn_freq_2_paz(T, damp=D)
+    paz_sa = corn_freq_2_paz(t, damp=d)
     paz_sa['sensitivity'] = omega
     paz_sa['zeros'] = []
     data = simulate_seismometer(data, samp_rate, paz_remove=None,
@@ -433,3 +436,21 @@ def peak_ground_motion(data, delta, freq, damp=0.1):
         pga = abs(min(data))
 
     return (pga, m_dis, m_vel, m_acc)
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "bwith": "obspy.signal.freqattributes.bandwidth",
+        "cfrequency": "obspy.signal.freqattributes.central_frequency",
+        "cfrequency_unwindowed":
+            "obspy.signal.freqattributes.central_frequency_unwindowed",
+        "domperiod": "obspy.signal.freqattributes.dominant_period",
+        "logbankm":
+            "obspy.signal.freqattributes.log_spaced_filterbank_matrix",
+        "logcep": "obspy.signal.freqattributes.log_cepstrum",
+        "mper": "obspy.signal.freqattributes.spectrum",
+        "pgm": "obspy.signal.freqattributes.peak_ground_motion"})

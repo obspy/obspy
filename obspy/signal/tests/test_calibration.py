@@ -72,7 +72,7 @@ class CalibrationTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(phase[1:], un_resp[1:, 2],
                                              decimal=4)
 
-    def test_relcalUsingTraces(self):
+    def test_relcal_using_traces(self):
         """
         Tests using traces instead of stream objects as input parameters.
         """

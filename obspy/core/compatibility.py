@@ -5,8 +5,12 @@ Py3k compatibility module
 from future.utils import PY2
 
 import io
+import sys
 
 import numpy as np
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 # optional dependencies
 try:
@@ -116,3 +120,12 @@ def round_away(number):
         return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'frombuffer': 'obspy.core.compatibility.from_buffer'})

@@ -35,18 +35,18 @@ from future.builtins import *  # NOQA
 import os
 import sys
 import warnings
-from argparse import SUPPRESS, ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import numpy as np
 
 from obspy import UTCDateTime, __version__, read
-from obspy.core.util.base import ENTRY_POINTS, _get_deprecated_argument_action
+from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
 
-def compressStartend(x, stop_iteration, merge_overlaps=False):
+def compress_start_end(x, stop_iteration, merge_overlaps=False):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
     by merging overlapping and exactly fitting pieces into one.
@@ -101,7 +101,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
             sys.stdout.write("    " + line + "\n")
         sys.stdout.flush()
     for tr in stream:
-        _id = tr.getId()
+        _id = tr.get_id()
         _samp_int_list = samp_int_dict.setdefault(_id, [])
         try:
             _samp_int_list.\
@@ -209,31 +209,6 @@ def main(argv=None):
     parser.add_argument('paths', nargs='*',
                         help='Files or directories to scan.')
 
-    # Deprecated arguments
-    action = _get_deprecated_argument_action('--endtime', '--end-time')
-    parser.add_argument('--endtime', type=UTCDateTime,
-                        action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action('--event-times', '--event-time')
-    parser.add_argument('--event-times', action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action('--ids', '--id')
-    parser.add_argument('--ids', action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action(
-        '--nox', '--no-x', real_action='store_true')
-    parser.add_argument('--nox', dest='no_x', nargs=0,
-                        action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action(
-        '--nogaps', '--no-gaps', real_action='store_true')
-    parser.add_argument('--nogaps', dest='no_gaps', nargs=0,
-                        action=action, help=SUPPRESS)
-
-    action = _get_deprecated_argument_action('--starttime', '--start-time')
-    parser.add_argument('--starttime', type=UTCDateTime,
-                        action=action, help=SUPPRESS)
-
     args = parser.parse_args(argv)
 
     if args.output is not None:
@@ -258,28 +233,16 @@ def main(argv=None):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    # Plot vertical lines if option 'event_times' was specified
+    # Plot vertical lines if option 'event_time' was specified
     if args.event_time:
         times = [date2num(t.datetime) for t in args.event_time]
-        for time in times:
-            ax.axvline(time, color='k')
-    # Deprecated version (don't plot twice)
-    if args.event_times and not args.event_time:
-        times = args.event_times.split(',')
-        times = [date2num(UTCDateTime(t).datetime) for t in times]
         for time in times:
             ax.axvline(time, color='k')
 
     if args.start_time:
         args.start_time = date2num(args.start_time.datetime)
-    elif args.starttime:
-        # Deprecated version
-        args.start_time = date2num(args.starttime.datetime)
     if args.end_time:
         args.end_time = date2num(args.end_time.datetime)
-    elif args.endtime:
-        # Deprecated version
-        args.end_time = date2num(args.endtime.datetime)
 
     # Generate dictionary containing nested lists of start and end times per
     # station
@@ -299,9 +262,6 @@ def main(argv=None):
     if args.write:
         write_npz(args.write, data, samp_int)
 
-    # Handle deprecated argument
-    if args.ids and not args.id:
-        args.id = args.ids.split(',')
     # either use ids specified by user or use ids based on what data we have
     # parsed
     ids = args.id or list(data.keys())
@@ -355,7 +315,7 @@ def main(argv=None):
             warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
 
-        startend_compressed = compressStartend(startend, 1000)
+        startend_compressed = compress_start_end(startend, 1000)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
         if not args.no_x:

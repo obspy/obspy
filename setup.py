@@ -110,7 +110,7 @@ INSTALL_REQUIRES = [
     'decorator',
     'requests']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2', 'pyimgur', 'pyproj'],
+    'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
     'arclink': ['m2crypto'],
     'io.shapefile': ['gdal'],
     }
@@ -213,9 +213,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.sac.core:_write_sac',
         ],
     'obspy.plugin.waveform.SACXY': [
-        'isFormat = obspy.io.sac.core:_is_sacXY',
-        'readFormat = obspy.io.sac.core:_read_sacXY',
-        'writeFormat = obspy.io.sac.core:_write_sacXY',
+        'isFormat = obspy.io.sac.core:_is_sac_xy',
+        'readFormat = obspy.io.sac.core:_read_sac_xy',
+        'writeFormat = obspy.io.sac.core:_write_sac_xy',
         ],
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.io.seg2.seg2:_is_seg2',
@@ -350,9 +350,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
         ],
     'obspy.plugin.inventory.STATIONTXT': [
-        'isFormat = obspy.io.stationtxt.core:is_FDSN_station_text_file',
+        'isFormat = obspy.io.stationtxt.core:is_fdsn_station_text_file',
         'readFormat = '
-        'obspy.io.stationtxt.core:read_FDSN_station_text_file',
+        'obspy.io.stationtxt.core:read_fdsn_station_text_file',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
@@ -380,8 +380,8 @@ ENTRY_POINTS = {
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
         'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
-        'lowpassFIR = obspy.signal.filter:lowpass_FIR',
-        'remezFIR = obspy.signal.filter:remez_FIR',
+        'lowpass_fir = obspy.signal.filter:lowpass_FIR',
+        'remez_fir = obspy.signal.filter:remez_FIR',
         ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
@@ -390,10 +390,10 @@ ENTRY_POINTS = {
         'lanczos = obspy.signal.interpolation:lanczos_interpolation'
         ],
     'obspy.plugin.rotate': [
-        'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
-        'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
+        'rotate_ne_rt = obspy.signal.rotate:rotate_ne_rt',
+        'rotate_rt_ne = obspy.signal.rotate:rotate_rt_ne',
+        'rotate_zne_lqt = obspy.signal.rotate:rotate_zne_lqt',
+        'rotate_lqt_zne = obspy.signal.rotate:rotate_lqt_zne'
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
@@ -416,13 +416,13 @@ ENTRY_POINTS = {
         'triang = scipy.signal:triang',
         ],
     'obspy.plugin.trigger': [
-        'recstalta = obspy.signal.trigger:recursive_STALTA',
-        'carlstatrig = obspy.signal.trigger:carl_STA_trig',
-        'classicstalta = obspy.signal.trigger:classic_STALTA',
-        'delayedstalta = obspy.signal.trigger:delayed_STALTA',
+        'recstalta = obspy.signal.trigger:recursive_sta_lta',
+        'carlstatrig = obspy.signal.trigger:carl_sta_trig',
+        'classicstalta = obspy.signal.trigger:classic_sta_lta',
+        'delayedstalta = obspy.signal.trigger:delayed_sta_lta',
         'zdetect = obspy.signal.trigger:z_detect',
-        'recstaltapy = obspy.signal.trigger:recursive_STALTA_py',
-        'classicstaltapy = obspy.signal.trigger:classic_STALTA_py',
+        'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
+        'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
         ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',

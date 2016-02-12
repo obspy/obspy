@@ -96,12 +96,12 @@ class CpxTraceTestCase(unittest.TestCase):
         """
         """
         # A_cpx,A_real = cpxtrace.envelope(self.data_win)
-        Anorm = cpxtrace.normalized_envelope(self.data_win, self.fs,
+        anorm = cpxtrace.normalized_envelope(self.data_win, self.fs,
                                              self.smoothie, self.fk)
-        rms = np.sqrt(np.sum((Anorm[0] - self.res[:, 1]) ** 2) /
+        rms = np.sqrt(np.sum((anorm[0] - self.res[:, 1]) ** 2) /
                       np.sum(self.res[:, 1] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
-        rms = np.sqrt(np.sum((Anorm[1] - self.res[:, 2]) ** 2) /
+        rms = np.sqrt(np.sum((anorm[1] - self.res[:, 2]) ** 2) /
                       np.sum(self.res[:, 2] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
 
@@ -116,7 +116,7 @@ class CpxTraceTestCase(unittest.TestCase):
                       np.sum(self.res[:, 6] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
 
-    def test_instFreq(self):
+    def test_inst_freq(self):
         """
         """
         omega = cpxtrace.instantaneous_frequency(self.data_win, self.fs,
@@ -128,7 +128,7 @@ class CpxTraceTestCase(unittest.TestCase):
                       np.sum(self.res[:, 8] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
 
-    def test_instBwith(self):
+    def test_inst_bwith(self):
         """
         """
         sigma = cpxtrace.instantaneous_bandwidth(self.data_win, self.fs,

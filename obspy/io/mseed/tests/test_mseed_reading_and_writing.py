@@ -18,7 +18,8 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
 from obspy.io.mseed import util
-from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
+from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed, \
+    InternalMSEEDReadingWarning
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -32,7 +33,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_readHeadFileViaObsPy(self):
+    def test_read_head_file_via_obspy(self):
         """
         Read file test via L{obspy.core.Stream}.
         """
@@ -56,7 +57,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(str(_i.data), '[]')
             self.assertEqual(str(_i.stats.starttime), starttime[_k])
 
-    def test_readGappyFile(self):
+    def test_read_gappy_file(self):
         """
         Compares waveform data read by obspy.io.mseed with an ASCII dump.
 
@@ -83,7 +84,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(200, trace.stats.sampling_rate)
             self.assertEqual(
                 starttime[i],
-                util._convert_datetime_to_MSTime(trace.stats.starttime))
+                util._convert_datetime_to_mstime(trace.stats.starttime))
             self.assertEqual(datalist[i], trace.data[0:9].tolist())
             i += 1
         del stream
@@ -104,7 +105,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(npts[i], len(stream[0].data))
         del stream
 
-    def test_readAndWriteTraces(self):
+    def test_read_and_write_traces(self):
         """
         Writes, reads and compares files created via obspy.io.mseed.
 
@@ -147,7 +148,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     np.testing.assert_array_equal(this_stream[0].data,
                                                   new_stream[0].data)
 
-    def test_getRecordInformation(self):
+    def test_get_record_information(self):
         """
         Tests the reading of Mini-SEED record information.
         """
@@ -195,7 +196,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                                         'steim2.mseed'))
         self.assertEqual(info['record_length'], 4096)
 
-    def test_readAndWriteFileWithGaps(self):
+    def test_read_and_write_file_with_gaps(self):
         """
         Tests reading and writing files with more than one trace.
         """
@@ -242,7 +243,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             is_mseed = _is_mseed(filename)
             self.assertFalse(is_mseed)
 
-    def test_readSingleRecordToMSR(self):
+    def test_read_single_record_to_msr(self):
         """
         Tests readSingleRecordtoMSR against start and end times.
 
@@ -261,7 +262,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
         del ms  # for valgrind
 
-    def test_readFileViaMSEED(self):
+    def test_read_file_via_mseed(self):
         """
         Read file test via L{obspy.io.mseed.mseed._read_mseed}.
         """
@@ -279,7 +280,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for _i in range(5):
             self.assertEqual(stream[0].data[_i], data[_i])
 
-    def test_readPartialTimewindowFromFile(self):
+    def test_read_partial_time_window_from_file(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only read a certain time
         window of a file.
@@ -293,7 +294,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue(starttime < stream[0].stats.starttime)
         self.assertGreater(endtime, stream[0].stats.endtime)
 
-    def test_readPartialWithOnlyStarttimeSet(self):
+    def test_read_partial_with_only_starttime_set(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only the data starting
         with a certain time.
@@ -306,7 +307,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue(starttime < stream[0].stats.starttime)
         self.assertEqual(endtime, stream[0].stats.endtime)
 
-    def test_readPartialWithOnlyEndtimeSet(self):
+    def test__partial_with_only_endtime_set(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only the data ending
         before a certain time.
@@ -319,7 +320,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(starttime, stream[0].stats.starttime)
         self.assertGreater(endtime, stream[0].stats.endtime)
 
-    def test_readPartialFrameWithEmptyTimeRange(self):
+    def test_read_partial_frame_with_empty_time_range(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read a partial file with a
         timewindow outside of the actual data. Should return an empty Stream
@@ -331,7 +332,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                              endtime=starttime - 1E6 + 1)
         self.assertEqual(len(stream), 0)
 
-    def test_readPartialWithSourceName(self):
+    def test_read_partial_with_source_name(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only part of a file that
         matches certain sourcename patterns.
@@ -355,7 +356,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st6 = _read_mseed(testfile, sourcename='*.BLA')
         self.assertEqual(len(st6), 0)
 
-    def test_writeIntegers(self):
+    def test_write_integers(self):
         """
         Write integer array via L{obspy.io.mseed.mseed._write_mseed}.
         """
@@ -373,7 +374,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         stream.verify()
         np.testing.assert_array_equal(stream[0].data, data)
 
-    def test_readMSTracesViaRecords_MultipleIds(self):
+    def test_read_ms_traces_via_records_multiple_ids(self):
         """
         Tests a critical issue when the LibMSEED.readMSTracesViaRecords method
         is used (e.g. on Windows systems) and a start/end time is set and the
@@ -412,14 +413,14 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Should just result in an empty stream.
         self.assertEqual(len(st), 0)
 
-    def test_writeSequenceNumber(self):
+    def test_write_sequence_number(self):
         """
         Tests Mini-SEED writing with an sequence number starting at something
         different than 1.
         """
         npts = 2200  # At least 3 records of 512 bytes
         np.random.seed(815)  # make test reproducible
-        numPyData = np.random.randint(-1000, 1000, npts).astype(np.int32)
+        numpy_data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         starttime = UTCDateTime(2008, 1, 1, 0, 0, 10)
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
@@ -427,11 +428,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                   'mseed': {'dataquality': "D", "sequence_number": "str"}}
 
         # Invalid seq num
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile,
+            self.assertRaises(ValueError, data_stream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
 
         # Seq num out of range #1
@@ -439,22 +440,22 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": -1}}
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile,
+            self.assertRaises(ValueError, data_stream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
         # Seq num out of range #2
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": 1000001}}
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile,
+            self.assertRaises(ValueError, data_stream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
 
         # Seq num missing, defaults to 1
@@ -462,11 +463,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D"}}
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            data_stream.write(tempfile, format="MSEED", encoding=11,
+                              reclen=512)
             tf.seek(0, os.SEEK_SET)
             self.assertEqual(tf.read(6), b"000001")
 
@@ -475,11 +477,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": 999998}}
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
+            data_stream.write(tempfile, format="MSEED", encoding=11,
+                              reclen=512)
             tf.seek(0, os.SEEK_SET)
             seq_counts = [b"999998", b"999999", b"000001"]
             for count in seq_counts:
@@ -491,16 +494,16 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                   'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D"}}
-        dataTrace = Trace(data=numPyData, header=header)
-        dataStream = Stream([dataTrace])
+        data_trace = Trace(data=numpy_data, header=header)
+        data_stream = Stream([data_trace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512,
-                             sequence_number=42)
+            data_stream.write(tempfile, format="MSEED", encoding=11,
+                              reclen=512, sequence_number=42)
             tf.seek(0, os.SEEK_SET)
             self.assertEqual(tf.read(6), b"000042")
 
-    def test_writeAndReadDifferentRecordLengths(self):
+    def test_write_and_read_different_record_lengths(self):
         """
         Tests Mini-SEED writing and record lengths.
         """
@@ -527,7 +530,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Check if filesize is a multiple of the record length.
             self.assertEqual(info['filesize'] % rec_len, 0)
 
-    def test_readFullSEED(self):
+    def test_read_full_seed(self):
         """
         Reads a full SEED volume.
         """
@@ -538,7 +541,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(st[1]), 623)
         self.assertEqual(len(st[2]), 610)
 
-    def test_readWithWildCard(self):
+    def test_read_with_wild_card(self):
         """
         Reads wildcard filenames.
         """
@@ -549,7 +552,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st.merge()
         self.assertEqual(len(st), 1)
 
-    def test_Header(self):
+    def test_header(self):
         """
         Tests whether the header is correctly written and read.
         """
@@ -575,7 +578,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for key in stats.keys():
             self.assertEqual(stats[key], stream[0].stats[key])
 
-    def test_readingAndWritingViaTheStatsAttribute(self):
+    def test_reading_and_writing_via_the_stats_attribute(self):
         """
         Tests the writing with MSEED file attributes set via the attributes in
         trace.stats.mseed.
@@ -627,7 +630,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     del stream
                     del stream2
 
-    def test_readPartsOfFile(self):
+    def test_read_parts_of_file(self):
         """
         Test reading only parts of an Mini-SEED file without unpacking or
         touching the rest.
@@ -644,7 +647,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         tr2 = read(file2)[0]
         np.testing.assert_array_equal(tr1.data, tr2.data)
 
-    def test_readWithGSE2Option(self):
+    def test_read_with_gse2_option(self):
         """
         Test that reading will still work if wrong option (of gse2)
         verify_chksum is given. This is important if the read method is
@@ -659,7 +662,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = np.array([-406, -417, -403, -423, -413])
         np.testing.assert_array_equal(tr.data[-5:], data)
 
-    def test_allDataTypesAndEndiansInMultipleFiles(self):
+    def test_all_data_types_and_endians_in_multiple_files(self):
         """
         Tests writing all different types. This is an test which is independent
         of the read method. Only the data part is verified.
@@ -691,7 +694,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     st2 = read(tempfile)
                 np.testing.assert_array_equal(st2[0].data, st[0].data)
 
-    def test_SavingSmallASCII(self):
+    def test_saving_small_ascii(self):
         """
         Tests writing small ASCII strings.
         """
@@ -701,7 +704,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             tempfile = tf.name
             st.write(tempfile, format="MSEED")
 
-    def test_allDataTypesAndEndiansInSingleFile(self):
+    def test_all_data_types_and_endians_in_single_file(self):
         """
         Tests all data and endian types into a single file.
         """
@@ -729,7 +732,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                         typed_data = data.astype(native_str("=" + dtype))
                         np.testing.assert_array_equal(tr, typed_data)
 
-    def test_enforceSteim2WithSteim1asEncoding(self):
+    def test_enforce_steim2_with_steim1_as_encoding(self):
         """
         This tests whether the encoding kwarg overwrites the encoding in
         trace.stats.mseed.encoding.
@@ -744,7 +747,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             st2 = read(tempfile)
         self.assertEqual(st2[0].stats.mseed.encoding, 'STEIM2')
 
-    def test_filesFromLibmseed(self):
+    def test_files_from_libmseed(self):
         """
         Tests reading of files that are created by libmseed.
 
@@ -811,7 +814,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 # Deallocate for debugging with valgrind
                 del ms
 
-    def test_writingMicroseconds(self):
+    def test_writing_microseconds(self):
         """
         Microseconds should be written.
         """
@@ -833,7 +836,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Should also be true for the stream objects.
             self.assertEqual(st[0].stats, st2[0].stats)
 
-    def test_readingAndWritingDataquality(self):
+    def test_reading_and_writing_dataquality(self):
         """
         Tests if the dataquality is written and read correctly. There is no
         corresponding test in test_libmseed.py as it is just more convenient to
@@ -873,7 +876,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(tr_old.stats.mseed.dataquality,
                              tr_new.stats.mseed.dataquality)
 
-    def test_writingInvalidDataQuality(self):
+    def test_writing_invalid_data_quality(self):
         """
         Trying to write an invalid dataquality results in an error. Only D, R,
         Q and M are allowed.
@@ -890,7 +893,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertRaises(ValueError, st.write, tempfile, format="MSEED")
             # Delete the file if it has been written, i.e. the test failed.
 
-    def test_isInvalidMSEED(self):
+    def test_is_invalid_mseed(self):
         """
         Tests _is_mseed functionality.
         """
@@ -907,7 +910,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'not4.mseed')
         self.assertFalse(_is_mseed(file))
 
-    def test_isValidMSEED(self):
+    def test_is_valid_mseed(self):
         """
         Tests _is_mseed functionality.
         """
@@ -921,7 +924,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(_is_mseed(file))
 
-    def test_bizarreFiles(self):
+    def test_bizarre_files(self):
         """
         Tests reading some bizarre MSEED files.
         """
@@ -946,7 +949,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 self.assertEqual(st[0].stats.npts, 11947)
                 self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
 
-    def test_writeAndReadDifferentEncodings(self):
+    def test_write_and_read_different_encodings(self):
         """
         Writes and read a file with different encoding via the obspy.core
         methods.
@@ -1006,7 +1009,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertEqual(len(st[0]), 2)
 
-    def test_emptyTrace(self):
+    def test_empty_trace(self):
         """
         Tests writing empty Traces should raise an exception.
         """
@@ -1021,7 +1024,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 self.assertRaises(UserWarning, st.write, tempfile,
                                   format="MSEED")
 
-    def test_readTimingqual(self):
+    def test_read_timing_qual(self):
         """
         Read timing quality via L{obspy.core.Stream}.
         """
@@ -1039,7 +1042,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
         self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
 
-    def test_corruptFileLength(self):
+    def test_corrupt_file_length(self):
         """
         Checks that mseed reading utility is explicitly checking
         for file length.
@@ -1066,9 +1069,14 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data',
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
-        # Catch output.
-        with CatchOutput() as out:
-            st = read(filename, verbose=2)
+        # Catch output. Will raise an internal mseed reading warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            with CatchOutput() as out:
+                st = read(filename, verbose=2)
+
+        self.assertEqual(len(w), 1)
+        self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
 
         self.assertIn(b"calling msr_parse with", out.stdout)
         self.assertIn(b"buflen=512, reclen=-1, dataflag=0, verbose=2",
@@ -1136,7 +1144,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                       -1.1171875]),
             rtol=1E-5))
 
-    def test_reading_SRO_format(self):
+    def test_reading_sro_format(self):
         """
         Tests reading miniseed data with the SRO encoding.
         """
@@ -1148,7 +1156,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(
             tr.data[:5], np.array([126, 67, -11, -95, -167]), rtol=1E-5))
 
-    def test_reading_DWWSSN_format(self):
+    def test_reading_dwwssn_format(self):
         """
         Tests reading miniseed data with the DWWSSN encoding.
         """
@@ -1159,7 +1167,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(
             tr.data[:5], np.array([-38, -38, -36, -37, -36]), rtol=1E-5))
 
-    def test_reading_CDSN_format(self):
+    def test_reading_cdsn_format(self):
         """
         Tests reading miniseed data with the CDSN encoding.
         """

@@ -30,6 +30,7 @@ available providers are:
 >>> for key in sorted(URL_MAPPINGS.keys()):
 ...     print("{0:<7} {1}".format(key,  URL_MAPPINGS[key]))
 BGR     http://eida.bgr.de
+EMSC    http://www.seismicportal.eu
 ETH     http://eida.ethz.ch
 GEONET  http://service.geonet.org.nz
 GFZ     http://geofon.gfz-potsdam.de
@@ -40,7 +41,6 @@ ISC     http://isc-mirror.iris.washington.edu
 KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
-NERIES  http://www.seismicportal.eu
 NIEP    http://eida-sc3.infp.ro
 ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org

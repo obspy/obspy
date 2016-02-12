@@ -11,7 +11,7 @@ import unittest
 
 from obspy import UTCDateTime, read_events
 from obspy.core.util import NamedTemporaryFile, get_example_file
-from obspy.core.util.testing import compare_xml_strings, remove_unique_IDs
+from obspy.core.util.testing import compare_xml_strings, remove_unique_ids
 from obspy.io.nlloc.core import is_nlloc_hyp, read_nlloc_hyp, write_nlloc_obs
 
 
@@ -98,9 +98,9 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertEqual(cat[0].origins[0].creation_info.creation_time,
                          creation_time)
 
-        quakeml_expected = remove_unique_IDs(quakeml_expected,
+        quakeml_expected = remove_unique_ids(quakeml_expected,
                                              remove_creation_time=True)
-        quakeml_got = remove_unique_IDs(quakeml_got, remove_creation_time=True)
+        quakeml_got = remove_unique_ids(quakeml_got, remove_creation_time=True)
         # In python 3 float.__str__ outputs 5 decimals of precision more.
         # We use it in writing QuakeML, so files look different on Py2/3.
         # We use regex to cut off floats in the xml such that we only compare

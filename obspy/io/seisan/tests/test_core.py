@@ -24,7 +24,7 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_getVersion(self):
+    def test_get_version(self):
         """
         Tests resulting version strings of SEISAN file.
         """
@@ -83,7 +83,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(st2), 4)
         self.assertEqual(list(st2[0].data[1:4]), [492, 519, 542])
 
-    def test_read_seisanHeadOnly(self):
+    def test_read_seisan_head_only(self):
         """
         Test SEISAN file reader with headonly flag.
         """
@@ -104,7 +104,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
         self.assertEqual(list(st1[0].data), [])  # no data
 
-    def test_read_seisanVsReference(self):
+    def test_read_seisan_vs_reference(self):
         """
         Test for #970
         """

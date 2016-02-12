@@ -152,10 +152,10 @@ master:
       initializing with floating point seconds, i.e. with microseconds,
       that could lead to microseconds being off by 1 microsecond
       (see #1096)
-    * Correct gap/overlap time returned by Stream.getGaps() and printed
-      by Stream.printGaps() which was incorrect by one time the sampling
+    * Correct gap/overlap time returned by Stream.get_gaps() and printed
+      by Stream.print_gaps() which was incorrect by one time the sampling
       interval (see #1151)
-    * Stream.getGaps(): return overlaps specified in units of samples
+    * Stream.get_gaps(): return overlaps specified in units of samples
       as negative integers (see #1151)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
@@ -170,7 +170,7 @@ master:
       (see #1102).
     * Updated to libmseed 2.17.
   - obspy.signal:
-    * Bug fixed within rotate.rotate2ZNE(). Additionally it can now also
+    * Bug fixed within rotate.rotate2zne(). Additionally it can now also
       perform the inverse rotation (see #1061).
     * Bug fixed in triggering. When using option `max_len_delete` and a trigger
       occurred right before the end of data, one trigger was potentially lost

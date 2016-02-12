@@ -155,9 +155,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
     # distribution statistics line
     line = lines["STATISTICS"]
-    covariance_XX = float(line.split()[7])
-    covariance_YY = float(line.split()[13])
-    covariance_ZZ = float(line.split()[17])
+    covariance_xx = float(line.split()[7])
+    covariance_yy = float(line.split()[13])
+    covariance_zz = float(line.split()[17])
     stats_info_string = str(
         "Note: Depth/Latitude/Longitude errors are calculated from covariance "
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
@@ -206,9 +206,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     # large compared to the covariances.
     o.longitude = x
     try:
-        o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_XX))
+        o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_xx))
     except ValueError:
-        if covariance_XX < 0:
+        if covariance_xx < 0:
             msg = ("Negative value in XX value of covariance matrix, not "
                    "setting longitude error (epicentral uncertainties will "
                    "still be set in origin uncertainty).")
@@ -217,9 +217,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
             raise
     o.latitude = y
     try:
-        o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_YY))
+        o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_yy))
     except ValueError:
-        if covariance_YY < 0:
+        if covariance_yy < 0:
             msg = ("Negative value in YY value of covariance matrix, not "
                    "setting longitude error (epicentral uncertainties will "
                    "still be set in origin uncertainty).")
@@ -227,7 +227,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         else:
             raise
     o.depth = z * 1e3  # meters!
-    o.depth_errors.uncertainty = sqrt(covariance_ZZ) * 1e3  # meters!
+    o.depth_errors.uncertainty = sqrt(covariance_zz) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
     o.depth_type = str("from location")
     o.time = time

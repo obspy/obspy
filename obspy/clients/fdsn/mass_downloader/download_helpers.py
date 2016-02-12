@@ -741,7 +741,7 @@ class ClientDownloadHelper(object):
         curr_chunks_mb = 0
 
         # Don't request more than 50 chunks at once to not choke the servers.
-        MAX_CHUNK_LENGTH = 50
+        max_chunk_length = 50
 
         counter = collections.Counter()
 
@@ -773,7 +773,7 @@ class ClientDownloadHelper(object):
                     curr_chunks_mb += \
                         sr * duration * 4.0 / 3.0 / 1024.0 / 1024.0
                     if curr_chunks_mb >= chunk_size_in_mb or \
-                            len(chunks_curr) >= MAX_CHUNK_LENGTH:
+                            len(chunks_curr) >= max_chunk_length:
                         chunks.append(chunks_curr)
                         chunks_curr = []
                         curr_chunks_mb = 0

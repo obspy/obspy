@@ -19,9 +19,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import sys
+
 import numpy as np
 from scipy import signal
 from scipy.integrate import cumtrapz
+
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 
 from . import util
 
@@ -43,18 +48,18 @@ def envelope(data):
         input data.
     """
     nfft = util.next_pow_2(data.shape[-1])
-    A_cpx = np.zeros((data.shape), dtype=np.complex64)
-    A_abs = np.zeros((data.shape), dtype=np.float64)
+    a_cpx = np.zeros((data.shape), dtype=np.complex64)
+    a_abs = np.zeros((data.shape), dtype=np.float64)
     if len(data.shape) > 1:
         i = 0
         for row in data:
-            A_cpx[i, :] = signal.hilbert(row, nfft)
-            A_abs[i, :] = abs(signal.hilbert(row, nfft))
+            a_cpx[i, :] = signal.hilbert(row, nfft)
+            a_abs[i, :] = abs(signal.hilbert(row, nfft))
             i = i + 1
     else:
-        A_cpx = signal.hilbert(data, nfft)
-        A_abs = abs(signal.hilbert(data, nfft))
-    return A_cpx, A_abs
+        a_cpx = signal.hilbert(data, nfft)
+        a_abs = abs(signal.hilbert(data, nfft))
+    return a_cpx, a_abs
 
 
 def normalized_envelope(data, fs, smoothie, fk):
@@ -82,55 +87,55 @@ def normalized_envelope(data, fs, smoothie, fk):
     fs = float(fs)
     if len(x[1].shape) > 1:
         i = 0
-        Anorm = np.zeros(x[1].shape[0], dtype=np.float64)
+        anorm = np.zeros(x[1].shape[0], dtype=np.float64)
         for row in x[1]:
-            A_win_smooth = util.smooth(row, int(np.floor(len(row) / 3)))
+            a_win_smooth = util.smooth(row, int(np.floor(len(row) / 3)))
             # Differentiation of original signal, dA/dt
             # Better, because faster, calculation of A_win_add
-            A_win_add = np.hstack(([A_win_smooth[0]] * (np.size(fk) // 2),
-                                   A_win_smooth,
-                                   [A_win_smooth[np.size(A_win_smooth) - 1]] *
+            a_win_add = np.hstack(([a_win_smooth[0]] * (np.size(fk) // 2),
+                                   a_win_smooth,
+                                   [a_win_smooth[np.size(a_win_smooth) - 1]] *
                                    (np.size(fk) // 2)))
-            t = signal.lfilter(fk, 1, A_win_add)
+            t = signal.lfilter(fk, 1, a_win_add)
             # correct start and end values of time derivative
             t = t[np.size(fk) - 1:np.size(t)]
-            A_win_smooth[A_win_smooth < 1] = 1
+            a_win_smooth[a_win_smooth < 1] = 1
             # (dA/dt) / 2*PI*smooth(A)*fs/2
-            t_ = t / (2. * np.pi * (A_win_smooth) * (fs / 2.0))
+            t_ = t / (2. * np.pi * (a_win_smooth) * (fs / 2.0))
             # Integral within window
             t_ = cumtrapz(t_, dx=(1. / fs))
             t_ = np.concatenate((t_[0:1], t_))
-            Anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
+            anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
         # faster alternative to calculate Anorm_add
-        Anorm_add = np.hstack(
-            ([Anorm[0]] * (np.size(fk) // 2), Anorm,
-             [Anorm[np.size(Anorm) - 1]] * (np.size(fk) // 2)))
-        dAnorm = signal.lfilter(fk, 1, Anorm_add)
+        anorm_add = np.hstack(
+            ([anorm[0]] * (np.size(fk) // 2), anorm,
+             [anorm[np.size(anorm) - 1]] * (np.size(fk) // 2)))
+        danorm = signal.lfilter(fk, 1, anorm_add)
         # correct start and end values of time derivative
-        dAnorm = dAnorm[np.size(fk) - 1:np.size(dAnorm)]
+        danorm = danorm[np.size(fk) - 1:np.size(danorm)]
         # dAnorm = dAnorm[np.size(fk) // 2:
         #                 (np.size(dAnorm) - np.size(fk) // 2)]
-        return Anorm, dAnorm
+        return anorm, danorm
     else:
-        Anorm = np.zeros(1, dtype=np.float64)
-        A_win_smooth = util.smooth(x[1], smoothie)
+        anorm = np.zeros(1, dtype=np.float64)
+        a_win_smooth = util.smooth(x[1], smoothie)
         # Differentiation of original signal, dA/dt
         # Better, because faster, calculation of A_win_add
-        A_win_add = np.hstack(
-            ([A_win_smooth[0]] * (np.size(fk) // 2),
-             A_win_smooth, [A_win_smooth[np.size(A_win_smooth) - 1]] *
+        a_win_add = np.hstack(
+            ([a_win_smooth[0]] * (np.size(fk) // 2),
+             a_win_smooth, [a_win_smooth[np.size(a_win_smooth) - 1]] *
              (np.size(fk) // 2)))
-        t = signal.lfilter(fk, 1, A_win_add)
+        t = signal.lfilter(fk, 1, a_win_add)
         # correct start and end values of time derivative
         t = t[np.size(fk) - 1:np.size(t)]
-        A_win_smooth[A_win_smooth < 1] = 1
-        t_ = t / (2. * np.pi * (A_win_smooth) * (fs / 2.0))
+        a_win_smooth[a_win_smooth < 1] = 1
+        t_ = t / (2. * np.pi * (a_win_smooth) * (fs / 2.0))
         # Integral within window
         t_ = cumtrapz(t_, dx=(1.0 / fs))
         t_ = np.concatenate((t_[0:1], t_))
-        Anorm = ((np.exp(np.mean(t_))) - 1) * 100
-        return Anorm
+        anorm = ((np.exp(np.mean(t_))) - 1) * 100
+        return anorm
 
 
 def centroid(data, fk):
@@ -282,10 +287,10 @@ def instantaneous_bandwidth(data, fs, fk):
         i = 0
         for row in x[1]:
             # faster alternative to calculate A_win_add
-            A_win_add = np.hstack(
+            a_win_add = np.hstack(
                 ([row[0]] * (np.size(fk) // 2), row,
                  [row[np.size(row) - 1]] * (np.size(fk) // 2)))
-            t = signal.lfilter(fk, 1, A_win_add)
+            t = signal.lfilter(fk, 1, a_win_add)
             # t = t[np.size(fk) // 2:(np.size(t) - np.size(fk) // 2)]
             # correct start and end values
             t = t[np.size(fk) - 1:np.size(t)]
@@ -304,13 +309,23 @@ def instantaneous_bandwidth(data, fs, fk):
         return sigma, dsigma
     else:
         row = x[1]
-        sigma = np.zeros(np.size(x[0]), dtype=np.float64)
         # faster alternative to calculate A_win_add
-        A_win_add = np.hstack(
+        a_win_add = np.hstack(
             ([row[0]] * (np.size(fk) // 2), row,
              [row[np.size(row) - 1]] * (np.size(fk) // 2)))
-        t = signal.lfilter(fk, 1, A_win_add)
+        t = signal.lfilter(fk, 1, a_win_add)
         # correct start and end values
         t = t[np.size(fk) - 1:np.size(t)]
         sigma = abs((t * fs) / (x[1] * 2 * np.pi))
         return sigma
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "instBwith": "obspy.signal.cpxtrace.instantaneous_bandwidth",
+        "instFreq": "obspy.signal.cpxtrace.instantaneous_frequency",
+        "normEnvelope": "obspy.signal.cpxtrace.normalized_envelope"})

@@ -8,6 +8,10 @@
 #
 # Copyright (C) 2010 Lars Krieger, Sebastian Heimann
 # --------------------------------------------------------------------
+#
+# Completely skip this file for flake8 testing - it is not our code.
+#
+# flake8: noqa
 """
 USAGE: obspy-mopad [plot,decompose,gmt,convert] SOURCE_MECHANISM [OPTIONS]
 
@@ -4694,7 +4698,6 @@ def main(argv=None):
                               RawDescriptionHelpFormatter,
                               RawTextHelpFormatter,
                               SUPPRESS)
-        from obspy.core.util.base import _get_deprecated_argument_action
 
         parser = ArgumentParser(prog='obspy-mopad',
                                 formatter_class=RawDescriptionHelpFormatter,
@@ -4813,19 +4816,6 @@ The 'source mechanism' as a comma-separated list of length:
             action='store_true',
             help='if isotropic part shall be considered for plotting '
                  '[%(default)s]')
-
-        # Deprecated arguments
-
-        action = _get_deprecated_argument_action('--show_1fp', '--show-1fp')
-        group_show.add_argument(
-            '--show_1fp', dest='GMT_show_1FP', action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show_isotropic_part', '--show-isotropic-part',
-            real_action='store_true')
-        group_show.add_argument(
-            '--show_isotropic_part', dest='GMT_plot_isotropic_part', nargs=0,
-            action=action, help=SUPPRESS)
 
         parser_gmt.set_defaults(call=_call_gmt, build=_build_gmt_dict)
 
@@ -4982,68 +4972,6 @@ The 'source mechanism' as a comma-separated list of length:
             help='if isotropic part shall be considered for plotting '
                  '[%(default)s]')
 
-        # Deprecated arguments
-        action = _get_deprecated_argument_action(
-            '--basis_vectors', '--basis-vectors', real_action='store_true')
-        group_misc.add_argument(
-            '--basis_vectors', dest='plot_show_basis_axes', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--full_sphere', '--full-sphere', real_action='store_true')
-        group_misc.add_argument(
-            '--full_sphere', dest='plot_full_sphere', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--input_system', '--input-system')
-        group_misc.add_argument(
-            '--input_system', dest='plot_input_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--lines_only', '--lines-only', real_action='store_true')
-        group_misc.add_argument(
-            '--lines_only', dest='plot_only_lines', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--output_file',
-                                                 '--output-file')
-        group_misc.add_argument(
-            '--output_file', dest='plot_outfile', action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--pa_system', '--pa-system', real_action='store_true')
-        group_misc.add_argument(
-            '--pa_system', dest='plot_pa_plot', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--pressure_colour', '--pressure-colour')
-        group_misc.add_argument(
-            '--pressure_colour', dest='plot_pressure_colour',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show1fp', '--show-1fp', real_action='store_true')
-        group_misc.add_argument(
-            '--show1fp', dest='plot_show_1faultplane', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action(
-            '--show_isotropic_part', '--show-isotropic-part',
-            real_action='store_true')
-        group_misc.add_argument(
-            '--show_isotropic_part', dest='plot_isotropic_part', nargs=0,
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--tension_colour',
-                                                 '--tension-colour')
-        group_misc.add_argument(
-            '--tension_colour', dest='plot_tension_colour',
-            action=action, help=SUPPRESS)
-
         parser_plot.set_defaults(call=_call_plot, build=_build_plot_dict)
 
         # decompose
@@ -5157,21 +5085,6 @@ The 'source mechanism' as a comma-separated list of length:
             type=int, choices=[20, 21, 31], default=20,
             help='integer key to choose the type of decomposition - 20: '
                  'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs')
-
-        # Deprecated arguments
-        action = _get_deprecated_argument_action('--input_system',
-                                                 '--input-system')
-        group_system.add_argument(
-            '--input_system', dest='decomp_in_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
-
-        action = _get_deprecated_argument_action('--output_system',
-                                                 '--output-system')
-        group_system.add_argument(
-            '--output_system', dest='decomp_out_system',
-            type=caps, choices=ALLOWED_BASES, default='NED',
-            action=action, help=SUPPRESS)
 
         parser_decompose.set_defaults(call=_call_decompose,
                                       build=_build_decompose_dict)

@@ -10,6 +10,7 @@ import os
 import unittest
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.tests.test_spectral_estimation import _get_ppsd
@@ -28,32 +29,48 @@ class PPSDTestCase(unittest.TestCase):
         """
         Test plot of ppsd example data, normal (non-cumulative) style.
         """
-        with ImageComparison(self.path, 'ppsd.png') as ic:
-            self.ppsd.plot(
-                show=False, show_coverage=True, show_histogram=True,
-                show_percentiles=True, percentiles=[75, 90],
-                show_noise_models=True, grid=True, max_percentage=50,
-                period_lim=(0.02, 100), show_mode=True, show_mean=True)
-            fig = plt.gcf()
-            ax = fig.axes[0]
-            ax.set_ylim(-160, -130)
-            plt.draw()
-            fig.savefig(ic.name)
+        # Catch underflow warnings due to plotting on log-scale.
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path, 'ppsd.png') as ic:
+                self.ppsd.plot(
+                    show=False, show_coverage=True, show_histogram=True,
+                    show_percentiles=True, percentiles=[75, 90],
+                    show_noise_models=True, grid=True, max_percentage=50,
+                    period_lim=(0.02, 100), show_mode=True, show_mean=True)
+                fig = plt.gcf()
+                ax = fig.axes[0]
+                ax.set_ylim(-160, -130)
+                plt.draw()
+                fig.savefig(ic.name)
+        finally:
+            np.seterr(**_t)
 
     def test_ppsd_plot_cumulative(self):
         """
         Test plot of ppsd example data, cumulative style.
         """
-        with ImageComparison(self.path, 'ppsd_cumulative.png') as ic:
-            self.ppsd.plot(
-                show=False, show_coverage=True, show_histogram=True,
-                show_noise_models=True, grid=True, period_lim=(0.02, 100),
-                cumulative=True)
-            fig = plt.gcf()
-            ax = fig.axes[0]
-            ax.set_ylim(-160, -130)
-            plt.draw()
-            fig.savefig(ic.name)
+        # Catch underflow warnings due to plotting on log-scale.
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path, 'ppsd_cumulative.png') as ic:
+                self.ppsd.plot(
+                    show=False, show_coverage=True, show_histogram=True,
+                    show_noise_models=True, grid=True, period_lim=(0.02, 100),
+                    cumulative=True,
+                    # This does not do anything but silences a warning that
+                    # the `cumulative` and `max_percentage` arguments cannot
+                    #  be used at the same time.
+                    max_percentage=None)
+                fig = plt.gcf()
+                ax = fig.axes[0]
+                ax.set_ylim(-160, -130)
+                plt.draw()
+                fig.savefig(ic.name)
+        finally:
+            np.seterr(**_t)
 
 
 def suite():

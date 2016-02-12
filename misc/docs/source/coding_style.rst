@@ -7,21 +7,6 @@ Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 here. Be sure to read all documents if you intend to contribute code to ObsPy.
 
-Reference Conventions
----------------------
-
-As with :class:`numpy.ndarrays <numpy.ndarray>` or Python ``lists``, we try to
-reduce the memory consumption by using references where ever possible. In the
-following example ``a`` is appended to ``b`` as reference, that is the reason
-why ``b`` get changed when we change ``a``:
-
->>> a = [1, 2, 3, 4]
->>> b = [5, 6]
->>> b.append(a)
->>> a[0] = -99
->>> print(b)
-[5, 6, [-99, 2, 3, 4]]
-
 Import Conventions
 ------------------
 
@@ -30,7 +15,7 @@ readability of the code by importing the following modules in an unified
 manner:
 
 >>> import numpy as np
->>> import matplotlib.pylab as plt 
+>>> import matplotlib.pylab as plt
 
 .. _NumPy: http://www.numpy.org/
 .. _SciPy: https://scipy.scipy.org/
@@ -47,39 +32,36 @@ Naming
 
 **Naming Convention**
 
-* "Internal" means internal to a module or protected or private within a class.
-* Prepending a single underscore (``_``) has some support for protecting module
-  variables and functions (not included with ``import * from``). Prepending a
-  double underscore (``__``) to an instance variable or method effectively
-  serves to make the variable or method private to its class (using name
-  mangling).
+* Use meaningful variable/function/method names; these will help other people a
+  lot when reading your code.
+* Prepending a single underscore (``_``) means an object is "internal" /
+  "private", which means that it is not supposed to be used by end-users and
+  the API might change internally without notice to users (in contrast to API
+  changes in public objects which get handled with deprecation warnings for one
+  release cycle).
+* Prepending a double underscore (``__``) to an instance variable or method
+  effectively serves to make the variable or method private to its class (using
+  name mangling).
 * Place related classes and top-level functions together in a module. Unlike
   Java, there is no need to limit yourself to one class per module.
-* Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module
-  names.
+* Use ``CamelCase`` for class names, but ``snake_case`` for module
+  names, variables and functions/methods.
 
-==================  ======================  ===================================
-Type                Public                  Internal
-==================  ======================  ===================================
-Packages            ``lower_with_under``      
-Modules             ``lower_with_under``    ``_lower_with_under``
-Classes             ``CamelCase``           ``_CamelCase``
-Exceptions          ``CamelCase``    
-Functions           ``lower_with_under()``  ``_lower_with_under()``
-Constants           ``CAPS_WITH_UNDER``     ``_CAPS_WITH_UNDER``
-Class Variables     ``lower_with_under``    ``_lower_with_under``
-Instance Variables  ``lower_with_under``    ``_lower_with_under`` (protected)
-                                            ``__lower_with_under`` (private)
-Methods             ``lower_with_under()``  ``_lower_with_under()`` (protected)
-                                            ``__lower_with_under()`` (private)
-Attributes          ``lower_with_under``      
-Local Variables     ``lower_with_under``      
-==================  ======================  ===================================
+======================  ===================  ====================
+Type                    Public               Internal / Private
+======================  ===================  ====================
+Packages                ``snake_case``
+Modules                 ``snake_case.py``    ``_snake_case``
+Classes / Exceptions    ``CamelCase``        ``_CamelCase``
+Functions / Methods     ``snake_case()``     ``_snake_case()``
+Variables / Attributes  ``snake_case``       ``_snake_case``
+Constants               ``CAPS_WITH_UNDER``  ``_CAPS_WITH_UNDER``
+======================  ===================  ====================
 
-Doc Strings
------------
+Doc Strings / Comments
+----------------------
 
-* One-liner: both ``"""`` are in new lines
+* One-liner Doc Strings: both ``"""`` are in new lines
 
   .. code-block:: python
 
@@ -89,20 +71,37 @@ Doc Strings
           """
           print("test")
 
-* Multiple lines: both ``"""`` are in new lines - also you should try provide
-  a meaningful one-liner description at the top, followed by two linebreaks
-  with further text.
+* Multiple line Doc Strings: both ``"""`` are in new lines - also you should
+  try provide a meaningful one-liner description at the top, followed by two
+  linebreaks with further text.
 
   .. code-block:: python
 
       def someMethod():
           """
-          This is just the short story. 
+          This is just the short story.
 
           The long story is, this docstring would not have been able to fit in
           one line. Therefore we have to break lines.
           """
           print("test")
+
+* Comments at the end of code lines should come after (at least) two spaces:
+
+  .. code-block:: python
+
+      x = x + 1  # Compensate for border
+
+* Comments start with a single # followed by a single space. The same goes for
+  multi-line block comments:
+
+  .. code-block:: python
+
+      # Compensate for border
+      x = x + 1
+      # The next line needs some more longish explanation which does not fit
+      # on a single line.
+      foobar = (foo + bar) ** 3 - 1
 
 Function/Method Definitions
 ---------------------------
@@ -158,6 +157,21 @@ which renders like this:
 
 .. _reStructuredText: http://docutils.sourceforge.net/rst.html
 
+Reference Conventions
+---------------------
+
+As with :class:`numpy.ndarrays <numpy.ndarray>` or Python ``lists``, we try to
+reduce the memory consumption by using references where ever possible. In the
+following example ``a`` is appended to ``b`` as reference, that is the reason
+why ``b`` get changed when we change ``a``:
+
+>>> a = [1, 2, 3, 4]
+>>> b = [5, 6]
+>>> b.append(a)
+>>> a[0] = -99
+>>> print(b)
+[5, 6, [-99, 2, 3, 4]]
+
 Tests
 -----
 
@@ -168,7 +182,7 @@ Tests
   .. code-block:: python
 
       def test_doSomething():
-          """XXX: This test does something. 
+          """XXX: This test does something.
 
           But fails badly. See ticket #number.
           """
@@ -222,5 +236,4 @@ Miscellaneous
   look nicer on short lines, especially in side-by-side mode.
 * never use multiple statements on the same line, e.g. ``if check: a = 0``.
 * Prefer `list comprehension` to the built-in functions :func:`filter()` and
-  :func:`map()` when appropriate. 
-          
+  :func:`map()` when appropriate.

@@ -21,10 +21,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import sys
+
 import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.io.gse2.paz import read_paz
 from obspy.signal.invsim import paz_to_freq_resp
 from obspy.signal.konnoohmachismoothing import konno_ohmachi_smoothing
@@ -162,7 +166,7 @@ def _calc_resp(calfile, nfft, sampfreq):
 
 # This is a helper function that implements the commonality between the
 # psd, csd, and spectrogram.  It is *NOT* meant to be used outside of mlab
-def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
+def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
                     sides='default', scale_by_freq=None):
     # The checks for if y is x are so that we can use the same function to
     # implement the core of psd(), csd(), and spectrogram() without doing
@@ -195,10 +199,10 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     # For real x, ignore the negative frequencies unless told otherwise
     if (sides == 'default' and np.iscomplexobj(x)) or sides == 'twosided':
-        numFreqs = pad_to
+        num_freqs = pad_to
         scaling_factor = 1.
     elif sides in ('default', 'onesided'):
-        numFreqs = pad_to // 2 + 1
+        num_freqs = pad_to // 2 + 1
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
@@ -210,40 +214,50 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
     if scale_by_freq:
         scaling_factor /= Fs
 
-    windowVals = np.hanning(NFFT)
+    window_vals = np.hanning(NFFT)
 
     step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step, dtype=np.int32)
     n = len(ind)
-    Pxy = np.zeros((numFreqs, n), np.complex_)
+    p_xy = np.zeros((num_freqs, n), np.complex_)
 
     # do the ffts of the slices
     for i in range(n):
-        thisX = x[ind[i]:ind[i] + NFFT]
-        thisX = windowVals * thisX
-        fx = np.fft.fft(thisX, n=pad_to)
+        this_x = x[ind[i]:ind[i] + NFFT]
+        this_x = window_vals * this_x
+        fx = np.fft.fft(this_x, n=pad_to)
 
         if same_data:
             fy = fx
         else:
             th_is_y = y[ind[i]:ind[i] + NFFT]
-            th_is_y = windowVals * th_is_y
+            th_is_y = window_vals * th_is_y
             fy = np.fft.fft(th_is_y, n=pad_to)
-        Pxy[:, i] = np.conjugate(fx[:numFreqs]) * fy[:numFreqs]
+        p_xy[:, i] = np.conjugate(fx[:num_freqs]) * fy[:num_freqs]
 
     # Scale the spectrum by the norm of the window to compensate for
     # windowing loss; see Bendat & Piersol Sec 11.5.2.  Also include
     # scaling factors for one-sided densities and dividing by the sampling
     # frequency, if desired.
-    Pxy *= scaling_factor / (np.abs(windowVals) ** 2).sum()
+    p_xy *= scaling_factor / (np.abs(window_vals) ** 2).sum()
     t = 1. / Fs * (ind + NFFT / 2.)
-    freqs = float(Fs) / pad_to * np.arange(numFreqs)
+    freqs = float(Fs) / pad_to * np.arange(num_freqs)
 
     if (np.iscomplexobj(x) and sides == 'default') or sides == 'twosided':
         # center the frequency range at zero
-        freqs = np.concatenate((freqs[numFreqs // 2:] - Fs,
-                                freqs[:numFreqs // 2]))
-        Pxy = np.concatenate((Pxy[numFreqs // 2:, :],
-                              Pxy[:numFreqs // 2, :]), 0)
+        freqs = np.concatenate((freqs[num_freqs // 2:] - Fs,
+                                freqs[:num_freqs // 2]))
+        p_xy = np.concatenate((p_xy[num_freqs // 2:, :],
+                              p_xy[:num_freqs // 2, :]), 0)
 
-    return Pxy, freqs, t
+    return p_xy, freqs, t
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "relcalstack": "obspy.signal.calibration.rel_calib_stack",
+        "_calcresp": "obspy.signal.calibration._calc_resp"})

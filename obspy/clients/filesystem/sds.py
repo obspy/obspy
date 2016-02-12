@@ -322,7 +322,7 @@ class Client(object):
 
         total_duration = endtime - starttime
         # sum up gaps in the middle
-        gaps = [gap[6] for gap in st.getGaps()]
+        gaps = [gap[6] for gap in st.get_gaps()]
         gap_sum = np.sum(gaps)
         gap_count = len(gaps)
         # check if we have a gap at start or end
@@ -554,11 +554,11 @@ def _wildcarded_except(exclude=[]):
     replacing all format string place holders with ``*`` wildcards, except
     named fields as specified in ``exclude``.
     """
-    def __wildcarded(match):
+    def _wildcarded(match):
         if match.group(1) in exclude:
             return match.group(0)
         return "*"
-    return __wildcarded
+    return _wildcarded
 
 
 def _parse_path_to_dict(path, pattern, group_map):

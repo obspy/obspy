@@ -54,7 +54,7 @@ KWARG_MAP = {
 
 
 @deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):
+def Beach(*args, **kwargs):  # noqa
     return beach(*args, **kwargs)
 
 
@@ -205,7 +205,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
 
 @deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")
+            "instead.")  # noqa
 def Beachball(*args, **kwargs):
     return beachball(*args, **kwargs)
 

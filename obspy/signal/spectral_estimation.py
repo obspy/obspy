@@ -40,7 +40,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
 from obspy.core import Stats
-from obspy.imaging.scripts.scan import compressStartend
+from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version, AttribDict
 from obspy.core.util.decorator import deprecated_keywords, deprecated
@@ -60,7 +60,7 @@ NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 
 
-def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
+def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,  # noqa
         noverlap=0):
     """
     Wrapper for :func:`matplotlib.mlab.psd`.
@@ -137,27 +137,27 @@ def welch_taper(data):
     return data
 
 
-def welch_window(N):
+def welch_window(n):
     """
-    Return a welch window for data of length N.
+    Return a welch window for data of length n.
 
     Routine is checked against PITSA for both even and odd values, but not for
-    strange values like N<5.
+    strange values like n<5.
 
     .. note::
         See e.g.:
         http://www.cescg.org/CESCG99/TTheussl/node7.html
 
-    :type N: int
-    :param N: Length of window function.
+    :type n: int
+    :param n: Length of window function.
     :rtype: :class:`~numpy.ndarray`
     :returns: Window function for tapering data.
     """
-    n = math.ceil(N / 2.0)
+    n = math.ceil(n / 2.0)
     taper_left = np.arange(n, dtype=np.float64)
     taper_left = 1 - np.power(taper_left / n, 2)
     # first/last sample is zero by definition
-    if N % 2 == 0:
+    if n % 2 == 0:
         # even number of samples: two ones in the middle, perfectly symmetric
         taper_right = taper_left
     else:
@@ -720,7 +720,7 @@ class PPSD(object):
         :type stream: :class:`~obspy.core.stream.Stream`
         """
         self._times_gaps += [[gap[4].timestamp, gap[5].timestamp]
-                             for gap in stream.getGaps()]
+                             for gap in stream.get_gaps()]
 
     def __insert_data_times(self, stream):
         """
@@ -1198,7 +1198,7 @@ class PPSD(object):
         elif isinstance(self.metadata, dict):
             return self._get_response_from_paz_dict(tr)
         elif isinstance(self.metadata, (str, native_str)):
-            return self._get_response_from_RESP(tr)
+            return self._get_response_from_resp(tr)
         else:
             msg = "Unexpected type for `metadata`: %s" % type(metadata)
             raise TypeError(msg)
@@ -1213,7 +1213,7 @@ class PPSD(object):
     def _get_response_from_parser(self, tr):
         parser = self.metadata
         resp_key = "RESP." + self.id
-        for key, resp_file in parser.get_RESP():
+        for key, resp_file in parser.get_resp():
             if key == resp_key:
                 break
         else:
@@ -1234,7 +1234,7 @@ class PPSD(object):
                                 self.delta, nfft=self.nfft)
         return resp
 
-    def _get_response_from_RESP(self, tr):
+    def _get_response_from_resp(self, tr):
         resp = evalresp(t_samp=self.delta, nfft=self.nfft,
                         filename=self.metadata, date=tr.stats.starttime,
                         station=self.station, channel=self.channel,
@@ -1572,7 +1572,7 @@ class PPSD(object):
             ax.plot(periods, mean_, color=color, zorder=9)
 
         if show_noise_models:
-            for periods, noise_model in (get_NHNM(), get_NLNM()):
+            for periods, noise_model in (get_nhnm(), get_nlnm()):
                 if xaxis_frequency:
                     periods = 1.0 / periods
                 ax.plot(periods, noise_model, '0.4', linewidth=2, zorder=10)
@@ -1624,15 +1624,21 @@ class PPSD(object):
                 label.set_ha("right")
                 label.set_rotation(30)
 
-        if filename is not None:
-            plt.savefig(filename)
-            plt.close()
-        elif show:
-            plt.draw()
-            plt.show()
-        else:
-            plt.draw()
-            return fig
+        # Catch underflow warnings due to plotting on log-scale.
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            if filename is not None:
+                plt.savefig(filename)
+                plt.close()
+            elif show:
+                plt.draw()
+                plt.show()
+            else:
+                plt.draw()
+                return fig
+        finally:
+            np.seterr(**_t)
 
     def _plot_histogram(self, fig, draw=False, filename=None):
         """
@@ -1746,7 +1752,8 @@ class PPSD(object):
             ends = [date2num((t + self.ppsd_length).datetime)
                     for t in times]
             startends = np.array([starts, ends])
-            startends = compressStartend(startends.T, 20, merge_overlaps=True)
+            startends = compress_start_end(startends.T, 20,
+                                           merge_overlaps=True)
             starts, ends = startends[:, 0], startends[:, 1]
             for start, end in zip(starts, ends):
                 ax.axvspan(start, end, 0, 0.6, fc=color, lw=0)
@@ -1764,7 +1771,12 @@ class PPSD(object):
         ax.autoscale_view()
 
 
-def get_NLNM():
+@deprecated("get_NLNM() has been renamed to get_nlnm().")
+def get_NLNM():  # noqa
+    return get_nlnm()
+
+
+def get_nlnm():
     """
     Returns periods and psd values for the New Low Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.
@@ -1775,7 +1787,12 @@ def get_NLNM():
     return (periods, nlnm)
 
 
-def get_NHNM():
+@deprecated("get_NHNM() has been renamed to get_nhnm().")
+def get_NHNM():  # noqa
+    return get_nhnm()
+
+
+def get_nhnm():
     """
     Returns periods and psd values for the New High Noise Model.
     For information on New High/Low Noise Model see [Peterson1993]_.

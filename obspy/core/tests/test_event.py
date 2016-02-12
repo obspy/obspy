@@ -9,6 +9,8 @@ import sys
 import unittest
 import warnings
 
+from matplotlib import rcParams
+
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
                               read_events)
@@ -17,8 +19,6 @@ from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
 
 BASEMAP_VERSION = get_basemap_version()
-if BASEMAP_VERSION:
-    from matplotlib import rcParams
 
 CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
@@ -143,7 +143,7 @@ class OriginTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    def test_creationInfo(self):
+    def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
         self.assertEqual(orig.creation_info, None)
@@ -163,7 +163,7 @@ class OriginTestCase(unittest.TestCase):
         self.assertEqual(orig.creation_info.agency_id, 'muh')
         self.assertEqual(orig['creation_info']['agency_id'], 'muh')
 
-    def test_multipleOrigins(self):
+    def test_multiple_origins(self):
         """
         Parameters of multiple origins should not interfere with each other.
         """
@@ -207,7 +207,7 @@ class CatalogTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    def test_creationInfo(self):
+    def test_creation_info(self):
         cat = Catalog()
         cat.creation_info = CreationInfo(author='test2')
         self.assertTrue(isinstance(cat.creation_info, CreationInfo))
@@ -325,7 +325,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertRaises(TypeError, catalog.__iadd__, (event1, event2))
         self.assertRaises(TypeError, catalog.__iadd__, [event1, event2])
 
-    def test_countAndLen(self):
+    def test_count_and_len(self):
         """
         Tests the count and __len__ methods of the Catalog object.
         """
@@ -338,7 +338,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog.count(), 3)
 
-    def test_getitem(self):
+    def test_get_item(self):
         """
         Tests the __getitem__ method of the Catalog object.
         """
@@ -363,7 +363,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(isinstance(new_catalog, Catalog))
         self.assertEqual(len(new_catalog), 2)
 
-    def test_slicingWithStep(self):
+    def test_slicing_with_step(self):
         """
         Tests the __getslice__ method of the Catalog object with step.
         """

@@ -16,17 +16,20 @@ from future.utils import native
 
 import ctypes as C
 import math as M
+import sys
 
 import numpy as np
 from scipy import fftpack, fix, signal
 
 from obspy.core.util.decorator import deprecated
+from obspy.core.util.deprecation_helpers import \
+    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
 
 
 @deprecated("'utlGeoKm' has been renamed to 'util_geo_km'. Use that instead.")
-def utlGeoKm(*args, **kwargs):
+def utlGeoKm(*args, **kwargs):  # noqa
     return util_geo_km(*args, **kwargs)
 
 
@@ -58,7 +61,7 @@ def util_geo_km(orig_lon, orig_lat, lon, lat):
 
 
 @deprecated("'utlLonLat' has been renamed to 'util_lon_lat'."
-            "Use that instead.")
+            "Use that instead.")  # noqa
 def utlLonLat(*args, **kwargs):
     return util_lon_lat(*args, **kwargs)
 
@@ -312,6 +315,16 @@ def _npts2nfft(npts, smart=True):
             nfft = next_pow_2(nfft)
 
     return nfft
+
+
+# Remove once 0.11 has been released.
+sys.modules[__name__] = DynamicAttributeImportRerouteModule(
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        "nearestPow2": "obspy.signal.util.nearest_pow_2",
+        "prevpow2": "obspy.signal.util.prev_pow_2"})
 
 
 if __name__ == '__main__':

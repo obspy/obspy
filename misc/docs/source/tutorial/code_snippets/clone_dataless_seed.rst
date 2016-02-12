@@ -11,8 +11,8 @@ DatalessSEED volume (stored on our `examples webserver`_):
 
 .. doctest::
 
-    >>> from obspy.core import UTCDateTime
-    >>> from obspy.xseed import Parser
+    >>> from obspy import UTCDateTime
+    >>> from obspy.io.xseed import Parser
     >>>
     >>> p = Parser("https://examples.obspy.org/dataless.seed.BW_RNON")
     >>> blk = p.blockettes
@@ -72,7 +72,7 @@ involved:
 
 At the end we can write the adapted DatalessSEED volume to a new file:
 
-    >>> p.write_SEED("dataless.seed.BW_RMOA")
+    >>> p.write_seed("dataless.seed.BW_RMOA")
 
 
 .. _`examples webserver`: https://examples.obspy.org

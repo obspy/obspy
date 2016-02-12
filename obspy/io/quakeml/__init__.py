@@ -11,6 +11,7 @@ from obspy.core.util.deprecation_helpers import \
 # Remove once 0.11 has been released!
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
     name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
     import_map={},
     function_map={
         "_validate": "obspy.io.quakeml.core._validate"})

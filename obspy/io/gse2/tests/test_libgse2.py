@@ -17,8 +17,8 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util import CatchOutput, NamedTemporaryFile
 from obspy.io.gse2 import libgse2
-from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_STA2,
-                                   parse_STA2)
+from obspy.io.gse2.libgse2 import (ChksumError, GSEUtiError, compile_sta2,
+                                   parse_sta2)
 
 
 class LibGSE2TestCase(unittest.TestCase):
@@ -54,7 +54,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(data[0:13].tolist(), datalist)
         f.close()
 
-    def test_readWithWrongChecksum(self):
+    def test_read_with_wrong_checksum(self):
         """
         """
         # read original file
@@ -68,7 +68,7 @@ class LibGSE2TestCase(unittest.TestCase):
         libgse2.read(fp, verify_chksum=False)
         fp.close()
 
-    def test_readAndWrite(self):
+    def test_read_and_write(self):
         """
         Writes, reads and compares files created via libgse2.
         """
@@ -83,7 +83,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 
-    def test_bytesIO(self):
+    def test_bytes_io(self):
         """
         Checks that reading and writing works via BytesIO.
         """
@@ -101,7 +101,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 
-    def test_readHeader(self):
+    def test_read_header(self):
         """
         Reads and compares header info from the first record.
 
@@ -118,7 +118,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertEqual(UTCDateTime(2009, 5, 18, 6, 47, 20, 255000),
                          header['starttime'])
 
-    def test_isWidi2(self):
+    def test_is_widi_2(self):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
@@ -131,7 +131,7 @@ class LibGSE2TestCase(unittest.TestCase):
             self.assertRaises(TypeError, libgse2.is_gse2, f)
             self.assertEqual(10, f.tell())
 
-    def test_maxValueExceeded(self):
+    def test_max_value_exceeded(self):
         """
         Test that exception is raised when data values exceed the maximum
         of 2^26
@@ -147,7 +147,7 @@ class LibGSE2TestCase(unittest.TestCase):
                 self.assertRaises(OverflowError, libgse2.write, header, data,
                                   f)
 
-    def test_arrayNotNumPy(self):
+    def test_array_not_numpy(self):
         """
         Test if exception is raised when data are not of type int32 NumPy array
         """
@@ -166,7 +166,7 @@ class LibGSE2TestCase(unittest.TestCase):
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
                                   f)
 
-    def test_CHK2InCM6(self):
+    def test_chk2_in_cm6(self):
         """
         Tests a file which contains the "CHK2" string in the CM6 encoded
         string (line 13 of twiceCHK2.gse2).
@@ -177,7 +177,7 @@ class LibGSE2TestCase(unittest.TestCase):
         np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
 
-    def test_brokenHead(self):
+    def test_broken_head(self):
         """
         Tests that gse2 files with n_samps=0 will not end up with a
         segmentation fault
@@ -185,7 +185,7 @@ class LibGSE2TestCase(unittest.TestCase):
         with open(os.path.join(self.path, 'broken_head.gse2'), 'rb') as f:
             self.assertRaises(ChksumError, libgse2.read, f)
 
-    def test_noDAT2NullPointer(self):
+    def test_no_dat2_null_pointer(self):
         """
         Checks that null pointers are returned correctly by read83 function
         of read. Error "decomp_6b: Neither DAT2 or DAT1 found!" is on
@@ -205,7 +205,7 @@ class LibGSE2TestCase(unittest.TestCase):
         # self.assertEqual(out.stdout,
         #                 "decomp_6b: Neither DAT2 or DAT1 found!\n")
 
-    def test_parse_STA2(self):
+    def test_parse_sta2(self):
         """
         Tests parsing of STA2 lines on a collection of (modified) real world
         examples.
@@ -243,13 +243,13 @@ class LibGSE2TestCase(unittest.TestCase):
             lines2 = fh.readlines()
         for line, line2, expected in zip(lines, lines2, results):
             # test parsing a given STA2 line
-            got = parse_STA2(line)
+            got = parse_sta2(line)
             self.assertEqual(got, expected)
             # test that compiling it again gives expected result
             header = {}
             header['network'] = got.pop("network")
             header['gse2'] = got
-            got = compile_STA2(header)
+            got = compile_sta2(header)
             self.assertEqual(got.decode(), line2)
 
 

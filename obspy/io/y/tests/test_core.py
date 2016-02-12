@@ -17,7 +17,7 @@ class CoreTestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_is_yFile(self):
+    def test_is_y_file(self):
         """
         Testing Y file format.
         """
@@ -26,7 +26,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(_is_y("/path/to/slist.ascii"), False)
         self.assertEqual(_is_y("/path/to/tspair.ascii"), False)
 
-    def test_read_yFile(self):
+    def test_read_y_file(self):
         """
         Testing reading Y file format.
         """
