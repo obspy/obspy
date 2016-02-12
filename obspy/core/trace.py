@@ -2421,9 +2421,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.stats.response = self._get_response(inventories)
 
     @_add_processing_info
-    def remove_response(self, output="VEL", water_level=60, pre_filt=None,
-                        zero_mean=True, taper=True, taper_fraction=0.05,
-                        plot=False, fig=None, inventory=None, **kwargs):
+    def remove_response(self, inventory=None, output="VEL", water_level=60,
+                        pre_filt=None, zero_mean=True, taper=True,
+                        taper_fraction=0.05, plot=False, fig=None, **kwargs):
         """
         Deconvolve instrument response.
 
@@ -2502,6 +2502,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_response(inventory=inv, pre_filt=pre_filt, output=output,
                                water_level=60, plot=True)
 
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+            or None.
+        :param inventory: Station metadata to use in search for adequate
+            response. If inventory parameter is not supplied, the response
+            has to be attached to the trace with :meth:`Trace.attach_response`
+            beforehand.
         :type output: str
         :param output: Output units. One of:
 
@@ -2538,12 +2544,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raw/corrected data in time domain. If a `str` is provided then the
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
-        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
-            or None.
-        :param inventory: Station metadata to use in search for adequate
-            response. If inventory parameter is not supplied, the response
-            has to be attached to the trace with :meth:`Trace.attach_response`
-            beforehand.
         """
         from obspy.core.inventory import Response, PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
