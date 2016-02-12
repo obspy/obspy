@@ -2075,7 +2075,7 @@ class StreamTestCase(unittest.TestCase):
         st = read()
         p = Parser("/path/to/dataless.seed.BW_RJOB")
         kwargs = dict(seedresp={'filename': p, 'units': "DIS"},
-                      pre_filt=(1, 2, 50, 60), waterlevel=60)
+                      pre_filt=(1, 2, 50, 60), water_level=60)
         st.simulate(**kwargs)
         for tr in st:
             tr.stats.processing.pop()
