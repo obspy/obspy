@@ -2977,7 +2977,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> st.attach_response(inv)
         []
         >>> tr = st[0]
@@ -3023,7 +3023,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> st.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
@@ -3032,7 +3032,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             from obspy import read, read_inventory
             st = read()
-            inv = read_inventory("/path/to/BW_RJOB.xml")
+            inv = read_inventory()
             st.remove_response(inventory=inv)
             st.plot()
 
@@ -3057,7 +3057,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> st.remove_sensitivity(inv)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
 

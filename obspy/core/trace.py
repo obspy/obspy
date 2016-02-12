@@ -2398,7 +2398,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> tr = st[0]
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> tr.attach_response(inv)
         >>> print(tr.stats.response)  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
@@ -2463,7 +2463,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> from obspy import read, read_inventory
         >>> st = read()
         >>> tr = st[0].copy()
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> tr.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
@@ -2473,7 +2473,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             from obspy import read, read_inventory
             st = read()
             tr = st[0]
-            inv = read_inventory("/path/to/BW_RJOB.xml")
+            inv = read_inventory()
             tr.remove_response(inventory=inv)
             tr.plot()
 
@@ -2742,7 +2742,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         >>> from obspy import read, read_inventory
         >>> tr = read()[0]
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> tr.remove_sensitivity(inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         """
