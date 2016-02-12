@@ -2347,6 +2347,46 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = np.ma.array(time_array, mask=self.data.mask)
         return time_array
 
+    def _get_response(self, inventories):
+        """
+        Search for and return channel response for the trace.
+
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
+        :param inventories: Station metadata to use in search for response for
+            each trace in the stream.
+        :returns: :class:`obspy.core.inventory.response.Response` object
+        """
+        if inventories is None and 'response' in self.stats:
+            return self.stats.response
+        elif inventories is None:
+            msg = ('No response information found. Use `inventory` '
+                   'parameter to specify an inventory with response '
+                   'information.')
+            raise ValueError(msg)
+        from obspy.core.inventory import Inventory, Network, read_inventory
+        if isinstance(inventories, Inventory) or \
+           isinstance(inventories, Network):
+            inventories = [inventories]
+        elif isinstance(inventories, (str, native_str)):
+            inventories = [read_inventory(inventories)]
+        responses = []
+        for inv in inventories:
+            try:
+                responses.append(inv.get_response(self.id,
+                                                  self.stats.starttime))
+            except:
+                pass
+        if len(responses) > 1:
+            msg = "Found more than one matching response. Using first."
+            warnings.warn(msg)
+        elif len(responses) < 1:
+            msg = "No matching response information found."
+            raise Exception(msg)
+        return responses[0]
+
     def attach_response(self, inventories):
         """
         Search for and attach channel response to the trace as
@@ -2378,26 +2418,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
         """
-        from obspy.core.inventory import Inventory, Network, read_inventory
-        if isinstance(inventories, Inventory) or \
-           isinstance(inventories, Network):
-            inventories = [inventories]
-        elif isinstance(inventories, (str, native_str)):
-            inventories = [read_inventory(inventories)]
-        responses = []
-        for inv in inventories:
-            try:
-                responses.append(inv.get_response(self.id,
-                                                  self.stats.starttime))
-            except:
-                pass
-        if len(responses) > 1:
-            msg = "Found more than one matching response. Attaching first."
-            warnings.warn(msg)
-        elif len(responses) < 1:
-            msg = "No matching response information found."
-            raise Exception(msg)
-        self.stats.response = responses[0]
+        self.stats.response = self._get_response(inventories)
 
     @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
@@ -2707,6 +2728,30 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                                           zero_mean, taper, taper_fraction)] +
                         ["%s=%s" % (k, v) for k, v in kwargs.items()])
         self._internal_add_processing_info(info)
+        return self
+
+    @_add_processing_info
+    def remove_sensitivity(self, inventory=None):
+        """
+        Remove instrument sensitivity.
+
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+            or None.
+        :param inventory: Station metadata to use in search for adequate
+            response. If inventory parameter is not supplied, the response
+            has to be attached to the trace with :meth:`Trace.attach_response`
+            beforehand.
+
+        .. rubric:: Example
+
+        >>> from obspy import read, read_inventory
+        >>> tr = read()[0]
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> tr.remove_sensitivity(inv)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        """
+        response = self._get_response(inventory)
+        self.data = self.data / response.instrument_sensitivity.value
         return self
 
 

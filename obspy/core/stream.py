@@ -3056,6 +3056,31 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.remove_response(*args, **kwargs)
         return self
 
+    def remove_sensitivity(self, *args, **kwargs):
+        """
+        Remove instrument sensitivity for all Traces in Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.remove_sensitivity` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> st.remove_sensitivity(inv)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.remove_sensitivity(*args, **kwargs)
+        return self
+
 
 @deprecated("Renamed to '_is_pickle'. Use that instead.")
 def isPickle(*args, **kwargs):  # noqa
