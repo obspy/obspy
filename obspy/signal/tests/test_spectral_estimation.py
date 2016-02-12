@@ -475,7 +475,8 @@ class PsdTestCase(unittest.TestCase):
         ppsd.calculate_histogram(**stack_criteria_list[3])
         try:
             with ImageComparison(self.path_images,
-                                 'ppsd_restricted_stack.png') as ic:
+                                 'ppsd_restricted_stack.png',
+                                 adjust_tolerance=False) as ic:
                 # rms of the valid comparison above is ~31,
                 # rms of the invalid comparison we test here is ~36
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
