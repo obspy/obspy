@@ -316,7 +316,7 @@ def create_from_vlayer(v_layer, is_p_wave, radius_of_planet,
     wave_type = ('p' if is_p_wave else 's')
     if is_spherical:
         ret['top_p'] = (radius_of_planet - ret['top_depth']) / \
-                      evaluate_velocity_at_top(v_layer, wave_type)
+            evaluate_velocity_at_top(v_layer, wave_type)
 
         bot_depth = ret["bot_depth"]
         bot_vel = evaluate_velocity_at_bottom(v_layer, wave_type)

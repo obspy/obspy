@@ -320,19 +320,15 @@ class ClientTestCase(unittest.TestCase):
         with mock.patch("requests.post") as p:
             p.side_effect = side_effect
             self.c.get_waveforms_bulk(
-                    model="ak135f_5s", bulk=[
-                        {"network": "IU", "station": "ANMO"},
-                        {"latitude": 12, "longitude": 13.1},
-                        {"latitude": 12, "longitude": 13.1,
-                         "networkcode": "IU"},
-                        {"latitude": 12, "longitude": 13.1,
-                         "stationcode": "ANMO"},
-                        {"latitude": 12, "longitude": 13.1,
-                         "locationcode": "00"},
-                        {"latitude": 12, "longitude": 13.1,
-                         "networkcode": "IU", "stationcode": "ANMO",
-                         "locationcode": "00"}],
-                    format="miniseed", eventid="GCMT:C201002270634A")
+                model="ak135f_5s", bulk=[
+                    {"network": "IU", "station": "ANMO"},
+                    {"latitude": 12, "longitude": 13.1},
+                    {"latitude": 12, "longitude": 13.1, "networkcode": "IU"},
+                    {"latitude": 12, "longitude": 13.1, "stationcode": "ANMO"},
+                    {"latitude": 12, "longitude": 13.1, "locationcode": "00"},
+                    {"latitude": 12, "longitude": 13.1, "networkcode": "IU",
+                     "stationcode": "ANMO", "locationcode": "00"}],
+                format="miniseed", eventid="GCMT:C201002270634A")
 
         self.assertEqual(payload[0], "\n".join([
             "model=ak135f_5s",
@@ -360,8 +356,8 @@ class ClientTestCase(unittest.TestCase):
         # Download exactly the same with a bulk request and check the result
         # is the same!
         st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                eventid="GCMT:C201002270634A", components="Z")
+            model="test", bulk=[("IU", "ANMO")],
+            eventid="GCMT:C201002270634A", components="Z")
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
@@ -373,9 +369,9 @@ class ClientTestCase(unittest.TestCase):
                                   components="Z")
         self.assertEqual(len(st), 1)
         st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                starttime="P-10", endtime="P+20",
-                eventid="GCMT:C201002270634A", components="Z")
+            model="test", bulk=[("IU", "ANMO")],
+            starttime="P-10", endtime="P+20",
+            eventid="GCMT:C201002270634A", components="Z")
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
@@ -387,11 +383,11 @@ class ClientTestCase(unittest.TestCase):
                                   components="Z")
         self.assertEqual(len(st), 1)
         st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                sourcemomenttensor=[1, 2, 3, 4, 5, 6],
-                sourcelatitude=10, sourcelongitude=20,
-                sourcedepthinmeters=100,
-                components="Z")
+            model="test", bulk=[("IU", "ANMO")],
+            sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+            sourcelatitude=10, sourcelongitude=20,
+            sourcedepthinmeters=100,
+            components="Z")
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
@@ -407,14 +403,14 @@ class ClientTestCase(unittest.TestCase):
             components="Z")
         self.assertEqual(len(st), 1)
         st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
-                starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
-                endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
-                sourcemomenttensor=[1, 2, 3, 4, 5, 6],
-                sourcelatitude=10, sourcelongitude=20,
-                sourcedepthinmeters=100,
-                components="Z")
+            model="test", bulk=[("IU", "ANMO")],
+            origintime=obspy.UTCDateTime(2015, 1, 2, 3, 0, 5),
+            starttime=obspy.UTCDateTime(2015, 1, 2, 3, 4, 5),
+            endtime=obspy.UTCDateTime(2015, 1, 2, 3, 10, 5),
+            sourcemomenttensor=[1, 2, 3, 4, 5, 6],
+            sourcelatitude=10, sourcelongitude=20,
+            sourcedepthinmeters=100,
+            components="Z")
         self.assertEqual(len(st_bulk), 1)
         self.assertEqual(st, st_bulk)
 
@@ -447,15 +443,15 @@ class ClientTestCase(unittest.TestCase):
 
     def test_reading_saczip_files(self):
         st = self.c.get_waveforms(
-                model="test", network="IU", station="ANMO",
-                eventid="GCMT:C201002270634A", starttime="P-10",
-                endtime="P+10", components="Z", format="saczip")
+            model="test", network="IU", station="ANMO",
+            eventid="GCMT:C201002270634A", starttime="P-10",
+            endtime="P+10", components="Z", format="saczip")
         self.assertEqual(len(st), 1)
         # Same with bulk request.
         st_bulk = self.c.get_waveforms_bulk(
-                model="test", bulk=[("IU", "ANMO")],
-                eventid="GCMT:C201002270634A", starttime="P-10",
-                endtime="P+10", components="Z", format="saczip")
+            model="test", bulk=[("IU", "ANMO")],
+            eventid="GCMT:C201002270634A", starttime="P-10",
+            endtime="P+10", components="Z", format="saczip")
         self.assertEqual(len(st_bulk), 1)
 
         self.assertEqual(st, st_bulk)

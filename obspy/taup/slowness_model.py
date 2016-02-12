@@ -205,10 +205,10 @@ class SlownessModel(object):
             dtype=VelocityLayer)
 
         curr_s_layer = create_from_vlayer(
-                v_layer=curr_v_layer,
-                is_p_wave=self.s_wave,
-                radius_of_planet=self.v_mod.radius_of_planet,
-                is_spherical=self.v_mod.is_spherical)
+            v_layer=curr_v_layer,
+            is_p_wave=self.s_wave,
+            radius_of_planet=self.v_mod.radius_of_planet,
+            is_spherical=self.v_mod.is_spherical)
         curr_p_layer = create_from_vlayer(
             v_layer=curr_v_layer,
             is_p_wave=self.p_wave,
@@ -252,10 +252,10 @@ class SlownessModel(object):
                 self.fluid_layer_depths.append(fluid_zone)
 
             curr_p_layer = create_from_vlayer(
-                    v_layer=curr_v_layer,
-                    is_p_wave=self.p_wave,
-                    radius_of_planet=self.v_mod.radius_of_planet,
-                    is_spherical=self.v_mod.is_spherical)
+                v_layer=curr_v_layer,
+                is_p_wave=self.p_wave,
+                radius_of_planet=self.v_mod.radius_of_planet,
+                is_spherical=self.v_mod.is_spherical)
 
             # If we are in a fluid zone ( S velocity = 0.0 ) or if we are below
             # the outer core and allow_inner_core_s=false then use the P
@@ -265,10 +265,10 @@ class SlownessModel(object):
                 curr_s_layer = curr_p_layer
             else:
                 curr_s_layer = create_from_vlayer(
-                        v_layer=curr_v_layer,
-                        is_p_wave=self.s_wave,
-                        radius_of_planet=self.v_mod.radius_of_planet,
-                        is_spherical=self.v_mod.is_spherical)
+                    v_layer=curr_v_layer,
+                    is_p_wave=self.s_wave,
+                    radius_of_planet=self.v_mod.radius_of_planet,
+                    is_spherical=self.v_mod.is_spherical)
 
             if prev_s_layer['bot_p'] != curr_s_layer['top_p'] \
                     or prev_p_layer['bot_p'] != curr_p_layer['top_p']:
@@ -1445,8 +1445,8 @@ class SlownessModel(object):
         # sphere of constant velocity is just the spherical slowness at the top
         # of the sphere. An amazingly simple result!
         centre_layer = np.logical_and(leftover, np.logical_and(
-                spherical_ray_param == 0,
-                spherical_layer['bot_depth'] == self.radius_of_planet))
+            spherical_ray_param == 0,
+            spherical_layer['bot_depth'] == self.radius_of_planet))
         leftover &= ~centre_layer
         if np.any(layer_num[centre_layer] !=
                   self.get_num_layers(is_p_wave) - 1):

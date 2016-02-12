@@ -456,9 +456,9 @@ def _read_channel(inventory_root, cha_element, _ns):
     if data_log_element is not None:
         # Find the decimation element with a particular num/denom
         decim_element = data_log_element.find(_ns(
-                        "decimation[@sampleRateDenominator='" +
-                        str(int(denominator)) + "'][@sampleRateNumerator='" +
-                        str(int(numerator)) + "']"))
+            "decimation[@sampleRateDenominator='" +
+            str(int(denominator)) + "'][@sampleRateNumerator='" +
+            str(int(numerator)) + "']"))
         analogue_filter_chain = _tag2obj(decim_element,
                                          _ns("analogueFilterChain"), str)
         if analogue_filter_chain is not None:

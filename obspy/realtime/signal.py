@@ -640,9 +640,9 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
 
 # Remove once 0.11 has been released.
 sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-        name=__name__, doc=__doc__, locs=locals(),
-        original_module=sys.modules[__name__],
-        import_map={},
-        function_map={
-            'calculateMwpMag': 'obspy.realtime.signal.calculate_mwp_mag',
-            'mwpIntegral': 'obspy.realtime.signal.mwpintegral'})
+    name=__name__, doc=__doc__, locs=locals(),
+    original_module=sys.modules[__name__],
+    import_map={},
+    function_map={
+        'calculateMwpMag': 'obspy.realtime.signal.calculate_mwp_mag',
+        'mwpIntegral': 'obspy.realtime.signal.mwpintegral'})

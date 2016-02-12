@@ -181,8 +181,7 @@ def _get_suites(verbosity=1, names=[]):
                 stack = traceback.extract_stack()
                 tb = traceback.extract_tb(exc_info[2])
                 full_tb = stack[:-1] + tb
-                exc_line = traceback.format_exception_only(
-                        *exc_info[:2])
+                exc_line = traceback.format_exception_only(*exc_info[:2])
                 tb = "".join(traceback.format_list(full_tb))
                 tb += "\n"
                 tb += "".join(exc_line)

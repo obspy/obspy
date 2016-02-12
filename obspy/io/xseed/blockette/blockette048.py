@@ -61,7 +61,7 @@ class Blockette048(Blockette):
                     'B048F08-09   %2s %13s %13s %s\n' \
                     % (format_resp(self.sensitivity_for_calibration[_i], 6),
                        format_resp(
-                            self.frequency_of_calibration_sensitivity[_i], 6),
+                           self.frequency_of_calibration_sensitivity[_i], 6),
                        self.time_of_above_calibration[_i].format_seed())
         elif self.number_of_history_values == 1:
             string += \
