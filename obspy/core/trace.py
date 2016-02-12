@@ -26,7 +26,8 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
+from obspy.core.util.decorator import (
+    deprecated, raise_if_masked, skip_if_no_data)
 from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
@@ -783,6 +784,12 @@ class Trace(object):
             data = data.compressed()
         out.data = data
         return out
+
+    @deprecated(
+        "'getId' has been renamed to "  # noqa
+        "'get_id'. Use that instead.")
+    def getId(self, *args, **kwargs):
+        return self.get_id(*args, **kwargs)
 
     def get_id(self):
         """

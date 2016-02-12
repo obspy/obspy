@@ -15,6 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+from obspy.core.util.decorator import deprecated
 from ..seedlinkexception import SeedLinkException
 from ..slpacket import SLPacket
 
@@ -90,6 +91,12 @@ class SLState(object):
         self.netdly_time = 0.0
         self.keepalive_time = 0.0
 
+    @deprecated(
+        "'getPacket' has been renamed to "  # noqa
+        "'get_packet'. Use that instead.")
+    def getPacket(self, *args, **kwargs):
+        return self.get_packet(*args, **kwargs)
+
     def get_packet(self):
         """
         Returns last received packet.
@@ -104,6 +111,12 @@ class SLState(object):
             raise SeedLinkException("SLPacket not available to send")
         return SLPacket(self.databuf, self.sendptr)
 
+    @deprecated(
+        "'packetAvailable' has been renamed to "  # noqa
+        "'packet_available'. Use that instead.")
+    def packetAvailable(self, *args, **kwargs):
+        return self.packet_available(*args, **kwargs)
+
     def packet_available(self):
         """
         Check for full packet available to send.
@@ -116,6 +129,12 @@ class SLState(object):
         return self.recptr - self.sendptr >= \
             SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
 
+    @deprecated(
+        "'bytesRemaining' has been renamed to "  # noqa
+        "'bytes_remaining'. Use that instead.")
+    def bytesRemaining(self, *args, **kwargs):
+        return self.bytes_remaining(*args, **kwargs)
+
     def bytes_remaining(self):
         """
         Return number of bytes remaining in receiving buffer.
@@ -124,6 +143,12 @@ class SLState(object):
 
         """
         return self.BUFSIZE - self.recptr
+
+    @deprecated(
+        "'isError' has been renamed to "  # noqa
+        "'is_error'. Use that instead.")
+    def isError(self, *args, **kwargs):
+        return self.is_error(*args, **kwargs)
 
     def is_error(self):
         """
@@ -141,6 +166,12 @@ class SLState(object):
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
             SLPacket.ERRORSIGNATURE.lower()  # @UndefinedVariable
 
+    @deprecated(
+        "'isEnd' has been renamed to "  # noqa
+        "'is_end'. Use that instead.")
+    def isEnd(self, *args, **kwargs):
+        return self.is_end(*args, **kwargs)
+
     def is_end(self):
         """
         Check for SeedLink END packet.
@@ -155,6 +186,12 @@ class SLState(object):
         return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ENDSIGNATURE)].lower() == \
             SLPacket.ENDSIGNATURE.lower()  # @UndefinedVariable
+
+    @deprecated(
+        "'packetIsInfo' has been renamed to "  # noqa
+        "'packet_is_info'. Use that instead.")
+    def packetIsInfo(self, *args, **kwargs):
+        return self.packet_is_info(*args, **kwargs)
 
     def packet_is_info(self):
         """
@@ -172,12 +209,24 @@ class SLState(object):
                             len(SLPacket.INFOSIGNATURE)].lower() == \
             SLPacket.INFOSIGNATURE.lower()  # @UndefinedVariable
 
+    @deprecated(
+        "'incrementSendPointer' has been renamed to "  # noqa
+        "'increment_send_pointer'. Use that instead.")
+    def incrementSendPointer(self, *args, **kwargs):
+        return self.increment_send_pointer(*args, **kwargs)
+
     def increment_send_pointer(self):
         """
         Increments the send pointer by size of one packet.
 
         """
         self.sendptr += SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
+
+    @deprecated(
+        "'packDataBuffer' has been renamed to "  # noqa
+        "'pack_data_buffer'. Use that instead.")
+    def packDataBuffer(self, *args, **kwargs):
+        return self.pack_data_buffer(*args, **kwargs)
 
     def pack_data_buffer(self):
         """
@@ -193,6 +242,12 @@ class SLState(object):
         self.packed_buf = temp_buf
         self.recptr -= self.sendptr
         self.sendptr = 0
+
+    @deprecated(
+        "'appendBytes' has been renamed to "  # noqa
+        "'append_bytes'. Use that instead.")
+    def appendBytes(self, *args, **kwargs):
+        return self.append_bytes(*args, **kwargs)
 
     def append_bytes(self, bytes_):
         """
