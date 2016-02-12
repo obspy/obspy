@@ -2384,7 +2384,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             warnings.warn(msg)
         elif len(responses) < 1:
             msg = "No matching response information found."
-            raise Exception(msg)
+            raise ValueError(msg)
         return responses[0]
 
     def attach_response(self, inventories):
