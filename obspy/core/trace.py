@@ -2464,7 +2464,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st = read()
         >>> tr = st[0].copy()
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
-        >>> tr.remove_response(inv)  # doctest: +ELLIPSIS
+        >>> tr.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
@@ -2474,7 +2474,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st = read()
             tr = st[0]
             inv = read_inventory("/path/to/BW_RJOB.xml")
-            tr.remove_response(inv)
+            tr.remove_response(inventory=inv)
             tr.plot()
 
         Using the `plot` option it is possible to visualize the individual

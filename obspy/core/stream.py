@@ -3030,9 +3030,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. plot::
 
-            from obspy import read
+            from obspy import read, read_inventory
             st = read()
-            st.remove_response()
+            inv = read_inventory("/path/to/BW_RJOB.xml")
+            st.remove_response(inventory=inv)
             st.plot()
 
         .. note::
