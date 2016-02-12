@@ -2662,8 +2662,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # calculate and apply frequency response,
         # optionally prefilter in frequency domain and/or apply water level
         freq_response, freqs = \
-            self.stats.response.get_evalresp_response(self.stats.delta, nfft,
-                                                      output=output, **kwargs)
+            response.get_evalresp_response(self.stats.delta, nfft,
+                                           output=output, **kwargs)
 
         if plot:
             ax1.loglog(freqs, np.abs(data), color=color1, zorder=9)
