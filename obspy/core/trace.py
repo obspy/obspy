@@ -2460,31 +2460,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. rubric:: Example
 
-        >>> from obspy import read
+        >>> from obspy import read, read_inventory
         >>> st = read()
         >>> tr = st[0].copy()
-        >>> tr.plot()  # doctest: +SKIP
-        >>> # Response object is already attached to example data:
-        >>> print(tr.stats.response)  \
-                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-        Channel Response
-            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-            4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
-        >>> tr.remove_response()  # doctest: +ELLIPSIS
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> tr.remove_response(inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy import read
+            from obspy import read, read_inventory
             st = read()
             tr = st[0]
-            tr.remove_response()
+            inv = read_inventory("/path/to/BW_RJOB.xml")
+            tr.remove_response(inv)
             tr.plot()
 
         Using the `plot` option it is possible to visualize the individual
@@ -2496,9 +2486,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")
         >>> tr = st[0]
         >>> inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
-        >>> tr.attach_response(inv)
         >>> pre_filt = [0.001, 0.005, 45, 50]
-        >>> tr.remove_response(pre_filt=pre_filt, output="DISP",
+        >>> tr.remove_response(inventory=inv, pre_filt=pre_filt, output="DISP",
         ...                    water_level=60, plot=True)  # doctest: +SKIP
         <...Trace object at 0x...>
 
@@ -2508,10 +2497,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st = read("https://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
             tr = st[0]
             inv = read_inventory("https://examples.obspy.org/IU_ULN.xml")
-            tr.attach_response(inv)
             pre_filt = [0.001, 0.005, 45, 50]
             output = "DISP"
-            tr.remove_response(pre_filt=pre_filt, output=output,
+            tr.remove_response(inventory=inv, pre_filt=pre_filt, output=output,
                                water_level=60, plot=True)
 
         :type output: str
