@@ -2150,7 +2150,6 @@ class StreamTestCase(unittest.TestCase):
         st2.remove_sensitivity()
         self.assertEqual(st1, st2)
 
-
     def test_interpolate(self):
         """
         Tests that the interpolate command is called for all traces of a
