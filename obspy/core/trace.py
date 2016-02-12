@@ -2423,16 +2423,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def remove_response(self, output="VEL", water_level=60, pre_filt=None,
                         zero_mean=True, taper=True, taper_fraction=0.05,
-                        plot=False, fig=None, **kwargs):
+                        plot=False, fig=None, inventory=None, **kwargs):
         """
         Deconvolve instrument response.
 
-        Uses the :class:`obspy.core.inventory.response.Response` object
-        attached as :class:`Trace`.stats.response to deconvolve the
-        instrument response from the trace's time series data. Raises an
-        exception if the response is not present. Use e.g.
-        :meth:`Trace.attach_response` to attach response to trace providing
-        :class:`obspy.core.inventory.inventory.Inventory` data.
+        Uses the adequate :class:`obspy.core.inventory.response.Response`
+        from the provided
+        :class:`obspy.core.inventory.inventory.Inventory` data. Raises an
+        exception if the response is not present.
 
         Note that there are two ways to prevent overamplification
         while convolving the inverted instrument spectrum: One possibility is
@@ -2552,22 +2550,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raw/corrected data in time domain. If a `str` is provided then the
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+            or None.
+        :param inventory: Station metadata to use in search for adequate
+            response. If inventory parameter is not supplied, the response
+            has to be attached to the trace with :meth:`Trace.attach_response`
+            beforehand.
         """
         from obspy.core.inventory import Response, PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
                                          invert_spectrum)
 
-        if "response" not in self.stats:
-            msg = ("No response information attached to trace "
-                   "(as Trace.stats.response).")
-            raise KeyError(msg)
-        if not isinstance(self.stats.response, Response):
+        response = self._get_response(inventory)
+        if not isinstance(response, Response):
             msg = ("Response must be of type "
                    "obspy.core.inventory.response.Response "
-                   "(but is of type %s).") % type(self.stats.response)
+                   "(but is of type %s).") % type(response)
             raise TypeError(msg)
-
-        response = self.stats.response
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
             coefficients = response.instrument_polynomial.coefficients
