@@ -2984,7 +2984,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> print(tr.stats.response)  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
            4 stages:
               Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
