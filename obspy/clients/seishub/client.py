@@ -135,6 +135,12 @@ class Client(object):
         except:
             pass
 
+    @deprecated(
+        "'testAuth' has been renamed to "  # noqa
+        "'test_auth'. Use that instead.")
+    def testAuth(self, *args, **kwargs):
+        return self.test_auth(*args, **kwargs)
+
     def test_auth(self):
         """
         Test if authentication information is valid. Raises an Exception if

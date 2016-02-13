@@ -19,6 +19,7 @@ import numpy as np
 
 from obspy import Trace
 from obspy.core import Stats
+from obspy.core.util.decorator import deprecated
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
 
@@ -112,6 +113,12 @@ class RtTrace(Trace):
         8.78902911791...
     """
     have_appended_data = False
+
+    @deprecated(
+        "'rtProcessFunctionsToString' has been renamed to "  # noqa
+        "'rt_process_functions_to_string'. Use that instead.")
+    def rtProcessFunctionsToString(self, *args, **kwargs):
+        return self.rt_process_functions_to_string(*args, **kwargs)
 
     @classmethod
     def rt_process_functions_to_string(cls):
@@ -306,6 +313,12 @@ class RtTrace(Trace):
                 self._ltrim(starttime, pad=False, nearest_sample=True,
                             fill_value=None)
         return trace
+
+    @deprecated(
+        "'registerRtProcess' has been renamed to "  # noqa
+        "'register_rt_process'. Use that instead.")
+    def registerRtProcess(self, *args, **kwargs):
+        return self.register_rt_process(*args, **kwargs)
 
     def register_rt_process(self, process, **options):
         """
