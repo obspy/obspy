@@ -2721,8 +2721,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
-                        [str(x) for x in (output, water_level, pre_filt,
-                                          zero_mean, taper, taper_fraction)] +
+                        [str(x) for x in (inventory, output, water_level,
+                                          pre_filt, zero_mean, taper,
+                                          taper_fraction)] +
                         ["%s=%s" % (k, v) for k, v in kwargs.items()])
         self._internal_add_processing_info(info)
         return self
