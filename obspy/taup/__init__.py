@@ -32,15 +32,20 @@ See below for information on how to build a ``.npz`` model file.
 
 ObsPy currently ships with the following 1D velocity models:
 
-* ``ak135``, see [KennetEngdahlBuland1995]_
-* ``iasp91``, see [KennetEngdahl1991]_
-* ``prem``, see [Dziewonski1981]_
-* ``sp6``, see [MorelliDziewonski1993]_
 * ``1066a``, see [GilbertDziewonski1975]_
 * ``1066b``, see [GilbertDziewonski1975]_
+* ``ak135``, see [KennetEngdahlBuland1995]_
+* ``ak135f``, see [KennetEngdahlBuland1995]_, [MontagnerKennett1995]_, and
+  http://rses.anu.edu.au/seismology/ak135/ak135f.html (not supported)
+* ``ak135f_no_mud``, ``ak135f`` with ``ak135`` used above the 120-km
+  discontinuity; see the SPECFEM3D_GLOBE manual at
+  https://geodynamics.org/cig/software/specfem3d_globe/
 * ``herrin``, see [Herrin1968]_
+* ``iasp91``, see [KennetEngdahl1991]_
 * ``jb``, see [JeffreysBullen1940]_
+* ``prem``, see [Dziewonski1981]_
 * ``pwdk``, see [WeberDavis1990]_
+* ``sp6``, see [MorelliDziewonski1993]_
 
 Travel Times
 ^^^^^^^^^^^^

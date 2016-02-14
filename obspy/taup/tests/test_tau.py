@@ -213,6 +213,17 @@ class TauPyModelTestCase(unittest.TestCase):
         self._compare_arrivals_with_file(
             arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
+    def test_p_ak135f_no_mud(self):
+        """
+        Test P phase arrival against TauP output in in model ak135f_no_mud.
+        """
+        m = TauPyModel(model="ak135f_no_mud")
+        arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                      distance_in_degree=35.0,
+                                      phase_list=["P"])
+        self._compare_arrivals_with_file(
+            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_ak135f_no_mud")
+
     def test_p_jb(self):
         """
         Test P phase arrival against TauP output in in model jb.
@@ -826,7 +837,7 @@ class TauPyModelTestCase(unittest.TestCase):
         reasonable travel times.
         """
         models = ["1066a", "1066b", "ak135", "herrin", "iasp91", "prem",
-                  "sp6", "jb", "pwdk"]
+                  "sp6", "jb", "pwdk", "ak135f_no_mud"]
         for model in models:
             m = TauPyModel(model=model)
 
