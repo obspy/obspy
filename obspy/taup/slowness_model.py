@@ -527,16 +527,16 @@ class SlownessModel(object):
         """
         Find depth corresponding to a slowness p between two velocity layers.
 
-        Here, slowness is defined as ``(6731-depth) / velocity``, and sometimes
-        called ray parameter. Both the top and the bottom velocity layers are
-        included. We also check to see if the slowness is less than the bottom
-        slowness of these layers but greater than the top slowness of the next
-        deeper layer. This corresponds to a total reflection. In this case a
-        check needs to be made to see if this is an S wave reflecting off of a
-        fluid layer, use P velocity below in this case. We assume that slowness
-        is monotonic within these layers and therefore there is only one depth
-        with the given slowness. This means we return the first depth that we
-        find.
+        Here, slowness is defined as ``(radius_of_planet-depth) / velocity``,
+        and sometimes called ray parameter. Both the top and the bottom
+        velocity layers are included. We also check to see if the slowness is
+        less than the bottom slowness of these layers but greater than the top
+        slowness of the next deeper layer. This corresponds to a total
+        reflection. In this case a check needs to be made to see if this is an
+        S wave reflecting off of a fluid layer, use P velocity below in this
+        case. We assume that slowness is monotonic within these layers and
+        therefore there is only one depth with the given slowness. This means
+        we return the first depth that we find.
 
         :param p: Slowness (aka ray parameter) to find, in s/km.
         :type p: float
@@ -619,10 +619,9 @@ class SlownessModel(object):
                   "shouldn't be allowed to happen!")
             # noinspection PyUnboundLocalVariable
             return vel_layer.getBotDepth()
-
         raise SlownessModelError(
             "slowness p=" + str(p) +
-            "is not contained within the specified layers." +
+            " is not contained within the specified layers." +
             " top_critical_layer=" + str(top_critical_layer) +
             " bot_critical_layer=" + str(bot_critical_layer))
 
