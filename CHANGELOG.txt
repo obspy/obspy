@@ -32,6 +32,8 @@ master:
    * New method Stream/Trace.remove_sensitivity() to remove instrument
      sensitivity
    * Fix incorrect parsing of some non-ISO8601 date/time strings. (see #1215)
+   * Added plotting method to Event (customizable subplots from a selection
+     of map, beachball and farfield radiation plots, see #1192)
  - obspy.clients.fdsn:
    * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the
      `NERIES` shortcut, will be removed in a future release (see #1146).
@@ -56,6 +58,7 @@ master:
      argument to functions that plot maps to select between Basemap or Cartopy.
    * New default colormap for all plots. A backport of the new viridis colormap
      from matplotlib is available for those using older matplotlib releases.
+   * Added plotting routines for farfield radiation patterns of moment tensors
  - obspy.io.kml:
    * New module for Google KML output of Inventory and Catalog objects
      (e.g. for use in Google Earth)
