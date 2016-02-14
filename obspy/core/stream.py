@@ -2977,14 +2977,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> inv = read_inventory()
         >>> st.attach_response(inv)
         []
         >>> tr = st[0]
         >>> print(tr.stats.response)  \
                 # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
            4 stages:
               Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
@@ -3021,28 +3021,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.remove_response` method of
         :class:`~obspy.core.trace.Trace`.
 
-        >>> from obspy import read
+        >>> from obspy import read, read_inventory
         >>> st = read()
-        >>> # Response object is already attached to example data:
-        >>> resp = st[0].stats.response
-        >>> print(resp)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-        Channel Response
-            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-            4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
-        >>> st.remove_response()  # doctest: +ELLIPSIS
+        >>> inv = read_inventory()
+        >>> st.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy import read
+            from obspy import read, read_inventory
             st = read()
-            st.remove_response()
+            inv = read_inventory()
+            st.remove_response(inventory=inv)
             st.plot()
 
         .. note::
@@ -3054,6 +3045,31 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         for tr in self:
             tr.remove_response(*args, **kwargs)
+        return self
+
+    def remove_sensitivity(self, *args, **kwargs):
+        """
+        Remove instrument sensitivity for all Traces in Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.remove_sensitivity` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> inv = read_inventory()
+        >>> st.remove_sensitivity(inv)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.remove_sensitivity(*args, **kwargs)
         return self
 
 

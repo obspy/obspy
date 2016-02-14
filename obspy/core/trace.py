@@ -2347,29 +2347,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = np.ma.array(time_array, mask=self.data.mask)
         return time_array
 
-    def attach_response(self, inventories):
+    def _get_response(self, inventories):
         """
-        Search for and attach channel response to the trace as
-        :class:`Trace`.stats.response. Raises an exception if no matching
-        response can be found.
-        To subsequently deconvolve the instrument response use
-        :meth:`Trace.remove_response`.
-
-        >>> from obspy import read, read_inventory
-        >>> st = read()
-        >>> tr = st[0]
-        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
-        >>> tr.attach_response(inv)
-        >>> print(tr.stats.response)  \
-                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
+        Search for and return channel response for the trace.
 
         :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
             or :class:`~obspy.core.inventory.network.Network` or a list
@@ -2377,7 +2357,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a StationXML file.
         :param inventories: Station metadata to use in search for response for
             each trace in the stream.
+        :returns: :class:`obspy.core.inventory.response.Response` object
         """
+        from obspy.core.inventory import Response
+        if inventories is None and 'response' in self.stats:
+            if not isinstance(self.stats.response, Response):
+                msg = ("Response attached to Trace.stats must be of type "
+                       "obspy.core.inventory.response.Response "
+                       "(but is of type %s).") % type(response)
+                raise TypeError(msg)
+            return self.stats.response
+        elif inventories is None:
+            msg = ('No response information found. Use `inventory` '
+                   'parameter to specify an inventory with response '
+                   'information.')
+            raise ValueError(msg)
         from obspy.core.inventory import Inventory, Network, read_inventory
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
@@ -2392,26 +2386,57 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             except:
                 pass
         if len(responses) > 1:
-            msg = "Found more than one matching response. Attaching first."
+            msg = "Found more than one matching response. Using first."
             warnings.warn(msg)
         elif len(responses) < 1:
             msg = "No matching response information found."
-            raise Exception(msg)
-        self.stats.response = responses[0]
+            raise ValueError(msg)
+        return responses[0]
+
+    def attach_response(self, inventories):
+        """
+        Search for and attach channel response to the trace as
+        :class:`Trace`.stats.response. Raises an exception if no matching
+        response can be found.
+        To subsequently deconvolve the instrument response use
+        :meth:`Trace.remove_response`.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> tr = st[0]
+        >>> inv = read_inventory()
+        >>> tr.attach_response(inv)
+        >>> print(tr.stats.response)  \
+                # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
+
+        :type inventories: :class:`~obspy.core.inventory.inventory.Inventory`
+            or :class:`~obspy.core.inventory.network.Network` or a list
+            containing objects of these types or a string with a filename of
+            a StationXML file.
+        :param inventories: Station metadata to use in search for response for
+            each trace in the stream.
+        """
+        self.stats.response = self._get_response(inventories)
 
     @_add_processing_info
-    def remove_response(self, output="VEL", water_level=60, pre_filt=None,
-                        zero_mean=True, taper=True, taper_fraction=0.05,
-                        plot=False, fig=None, **kwargs):
+    def remove_response(self, inventory=None, output="VEL", water_level=60,
+                        pre_filt=None, zero_mean=True, taper=True,
+                        taper_fraction=0.05, plot=False, fig=None, **kwargs):
         """
         Deconvolve instrument response.
 
-        Uses the :class:`obspy.core.inventory.response.Response` object
-        attached as :class:`Trace`.stats.response to deconvolve the
-        instrument response from the trace's time series data. Raises an
-        exception if the response is not present. Use e.g.
-        :meth:`Trace.attach_response` to attach response to trace providing
-        :class:`obspy.core.inventory.inventory.Inventory` data.
+        Uses the adequate :class:`obspy.core.inventory.response.Response`
+        from the provided
+        :class:`obspy.core.inventory.inventory.Inventory` data. Raises an
+        exception if the response is not present.
 
         Note that there are two ways to prevent overamplification
         while convolving the inverted instrument spectrum: One possibility is
@@ -2441,31 +2466,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. rubric:: Example
 
-        >>> from obspy import read
+        >>> from obspy import read, read_inventory
         >>> st = read()
         >>> tr = st[0].copy()
-        >>> tr.plot()  # doctest: +SKIP
-        >>> # Response object is already attached to example data:
-        >>> print(tr.stats.response)  \
-                # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-        Channel Response
-            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-            4 stages:
-                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500
-                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1
-                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1
-        >>> tr.remove_response()  # doctest: +ELLIPSIS
+        >>> inv = read_inventory()
+        >>> tr.remove_response(inventory=inv)  # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy import read
+            from obspy import read, read_inventory
             st = read()
             tr = st[0]
-            tr.remove_response()
+            inv = read_inventory()
+            tr.remove_response(inventory=inv)
             tr.plot()
 
         Using the `plot` option it is possible to visualize the individual
@@ -2477,9 +2492,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed")
         >>> tr = st[0]
         >>> inv = read_inventory("/path/to/IU_ULN_00_LH1.xml")
-        >>> tr.attach_response(inv)
         >>> pre_filt = [0.001, 0.005, 45, 50]
-        >>> tr.remove_response(pre_filt=pre_filt, output="DISP",
+        >>> tr.remove_response(inventory=inv, pre_filt=pre_filt, output="DISP",
         ...                    water_level=60, plot=True)  # doctest: +SKIP
         <...Trace object at 0x...>
 
@@ -2489,12 +2503,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st = read("https://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
             tr = st[0]
             inv = read_inventory("https://examples.obspy.org/IU_ULN.xml")
-            tr.attach_response(inv)
             pre_filt = [0.001, 0.005, 45, 50]
             output = "DISP"
-            tr.remove_response(pre_filt=pre_filt, output=output,
+            tr.remove_response(inventory=inv, pre_filt=pre_filt, output=output,
                                water_level=60, plot=True)
 
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+            or None.
+        :param inventory: Station metadata to use in search for adequate
+            response. If inventory parameter is not supplied, the response
+            has to be attached to the trace with :meth:`Trace.attach_response`
+            beforehand.
         :type output: str
         :param output: Output units. One of:
 
@@ -2532,21 +2551,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plot is saved to file (filename must have a valid image suffix
             recognizable by matplotlib e.g. '.png').
         """
-        from obspy.core.inventory import Response, PolynomialResponseStage
+        from obspy.core.inventory import PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
                                          invert_spectrum)
-
-        if "response" not in self.stats:
-            msg = ("No response information attached to trace "
-                   "(as Trace.stats.response).")
-            raise KeyError(msg)
-        if not isinstance(self.stats.response, Response):
-            msg = ("Response must be of type "
-                   "obspy.core.inventory.response.Response "
-                   "(but is of type %s).") % type(self.stats.response)
-            raise TypeError(msg)
-
-        response = self.stats.response
+        if (isinstance(inventory, (str, native_str)) and
+                inventory.upper() in ("DISP", "VEL", "ACC")):
+            from obspy.core.util.deprecation_helpers import \
+                ObsPyDeprecationWarning
+            output = inventory
+            inventory = None
+            msg = ("The order of optional parameters in method "
+                   "remove_response has changed. 'output' is not accepted "
+                   "as first positional argument in the next release.")
+            warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
+        response = self._get_response(inventory)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
             coefficients = response.instrument_polynomial.coefficients
@@ -2645,8 +2663,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # calculate and apply frequency response,
         # optionally prefilter in frequency domain and/or apply water level
         freq_response, freqs = \
-            self.stats.response.get_evalresp_response(self.stats.delta, nfft,
-                                                      output=output, **kwargs)
+            response.get_evalresp_response(self.stats.delta, nfft,
+                                           output=output, **kwargs)
 
         if plot:
             ax1.loglog(freqs, np.abs(data), color=color1, zorder=9)
@@ -2703,9 +2721,36 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # assign processed data and store processing information
         self.data = data
         info = ":".join(["remove_response"] +
-                        [str(x) for x in (output, water_level, pre_filt,
-                                          zero_mean, taper, taper_fraction)] +
+                        [str(x) for x in (inventory, output, water_level,
+                                          pre_filt, zero_mean, taper,
+                                          taper_fraction)] +
                         ["%s=%s" % (k, v) for k, v in kwargs.items()])
+        self._internal_add_processing_info(info)
+        return self
+
+    @_add_processing_info
+    def remove_sensitivity(self, inventory=None):
+        """
+        Remove instrument sensitivity.
+
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+            or None.
+        :param inventory: Station metadata to use in search for adequate
+            response. If inventory parameter is not supplied, the response
+            has to be attached to the trace with :meth:`Trace.attach_response`
+            beforehand.
+
+        .. rubric:: Example
+
+        >>> from obspy import read, read_inventory
+        >>> tr = read()[0]
+        >>> inv = read_inventory()
+        >>> tr.remove_sensitivity(inv)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        """
+        response = self._get_response(inventory)
+        self.data = self.data / response.instrument_sensitivity.value
+        info = 'remove_sensitivity:inventory=%s' % inventory
         self._internal_add_processing_info(info)
         return self
 

@@ -29,6 +29,8 @@ master:
    * Trace.remove_response() now has `plot` option to show/output a plot of all
      individual steps of instrument response removal in frequency domain
      (see #1116).
+   * New method Stream/Trace.remove_sensitivity() to remove instrument
+     sensitivity
    * Fix incorrect parsing of some non-ISO8601 date/time strings. (see #1215)
  - obspy.clients.fdsn:
    * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the

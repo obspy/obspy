@@ -16,6 +16,7 @@ from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
+import os
 import textwrap
 import warnings
 
@@ -39,7 +40,9 @@ def _create_example_inventory():
     """
     Create an example inventory.
     """
-    return read_inventory('/path/to/BW_GR_misc.xml.gz', format="STATIONXML")
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
+    path = os.path.join(data_dir, "BW_GR_misc.xml")
+    return read_inventory(path, format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
