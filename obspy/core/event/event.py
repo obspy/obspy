@@ -211,7 +211,7 @@ class Event(__Event):
             return None
 
     def plot(self, kind=[['ortho', 'beachball'], ['p_sphere', 's_sphere']],
-             show=True, outfile=None, **kwargs):
+             subplot_size=4.0, show=True, outfile=None, **kwargs):
         """
         Plot event location and/or the preferred focal mechanism
         and radiation pattern.
@@ -232,6 +232,8 @@ class Event(__Event):
               's_quiver' (quiver plot of s wave farfield),
               'p_sphere' (surface plot of p wave farfield),
               's_sphere' (surface plot of s wave farfield).
+        :type subplot_size: float
+        :param subplot_size: Width/height of one single subplot cell in inches.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before
@@ -255,7 +257,8 @@ class Event(__Event):
 
         mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
               mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
-        fig, axes, kind_ = _setup_figure_and_axes(kind)
+        fig, axes, kind_ = _setup_figure_and_axes(kind,
+                                                  subplot_size=subplot_size)
         if any([k_ in ("ortho", "global", "local") for k_ in kind_]):
             from .catalog import Catalog
             cat_ = Catalog([self])
@@ -263,8 +266,19 @@ class Event(__Event):
             if kind__ in ("ortho", "global", "local"):
                 cat_.plot(projection=kind__, fig=ax, show=False,
                           **kwargs)
+                # shrink plot a bit to avoid it looking oversized compared to
+                # 3d axes that have some white space around them
+                if kind__ == "ortho":
+                    scale = 0.8
+                    for getter, setter in zip((ax.get_xlim, ax.get_ylim),
+                                              (ax.set_xlim, ax.set_ylim)):
+                        min_, max_ = getter()
+                        margin = (max_ - min_) * (1 - scale) / 2.0
+                        setter(min_ - margin, max_ + margin)
         plot_radiation_pattern(
             mt, kind=kind, coordinate_system='RTP', fig=fig, show=False)
+
+        fig.tight_layout(pad=0.1)
 
         if outfile:
             fig.savefig(outfile)

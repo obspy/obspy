@@ -29,12 +29,14 @@ from obspy.imaging.mopad_wrapper import beach
 MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
-def _setup_figure_and_axes(kind, fig=None):
+def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
     """
     Setup figure for Event plot.
 
     :param kind: A list of strings or nested list of strings, see
         :meth:`obspy.core.event.event.Event.plot`.
+    :type subplot_size: float
+    :param subplot_size: Width/height of one single subplot cell in inches.
     :rtype: tuple
     :returns: A 3-tuple with a :class:`~matplotlib.figure.Figure`, a list of
         :class:`~matplotlib.axes.Axes` and a list of strings with corresponding
@@ -48,7 +50,7 @@ def _setup_figure_and_axes(kind, fig=None):
     else:
         nrows, ncols = 1, len(kind)
         kind = [kind]
-    figsize = ncols * 5., nrows * 5.
+    figsize = (ncols * subplot_size, nrows * subplot_size)
     if not fig:
         fig = plt.figure(figsize=figsize, facecolor='white')
     # get tuple of "kind" options and corresponding axes
@@ -58,7 +60,7 @@ def _setup_figure_and_axes(kind, fig=None):
         ncols_ = len(row)
         for j, kind__ in enumerate(row):
             kind_.append(kind__)
-            kwargs = {"aspect": "equal"}
+            kwargs = {"aspect": "equal", "adjustable": "datalim"}
             if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
                 kwargs["projection"] = "3d"
             axes.append(fig.add_subplot(
