@@ -90,7 +90,6 @@ install:
         requests
   - source activate test-environment
   # install packages not available via conda
-  - pip install cachetools
   - pip install coveralls
   # 2015/02/16 - Temporary workaround. Remove limitation once installing
   # geographiclib works again.

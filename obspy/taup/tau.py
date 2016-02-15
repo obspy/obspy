@@ -309,14 +309,11 @@ class TauPyModel(object):
         :param cache: An object to use to cache models split at source depths.
             Generating results requires splitting a model at the source depth,
             which may be expensive. The cache allows faster calculation when
-            multiple results are requested for the same source depth. If the
-            `cachetools`_ package is available, then you may supply a mutable
-            mapping or one of its cache implementations, otherwise the LRUCache
-            with maximum size of 128 will be used. If the `cachetools`_ package
-            is not available or ``False`` is specified, then no cache will be
+            multiple results are requested for the same source depth. The
+            dictionary must be ordered, otherwise the LRU cache will not
+            behave correctly. If ``False`` is specified, then no cache will be
             used.
-        :type cache: :class:`cachetools.Cache` or
-            :class:`collections.MutableMapping` or `bool`
+        :type cache: :class:`collections.OrderedDict` or bool
 
         Usage:
 
