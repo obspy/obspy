@@ -247,6 +247,35 @@ class Event(__Event):
             support png, pdf, ps, eps and svg. Defaults to ``None``.
             The figure is closed after saving it to file.
         :returns: Figure instance with the plot.
+
+        .. rubric:: Examples
+
+        Default plot includes an orthographic map plot, a beachball plot and
+        plots of P/S farfield radiation patterns (preferred -- or first --
+        focal mechanism has to have a moment tensor set).
+
+        >>> from obspy import read_events
+        >>> cat = read_events("/path/to/CMTSOLUTION")
+        >>> cat.plot()  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_events
+            cat = read_events("/path/to/CMTSOLUTION")
+            cat.plot()
+
+        Individual subplot parts and the setup of the grid of subplots
+        (rows/columns) can be specified by using certain keywords, see `kind`
+        parameter description.
+
+        >>> cat.plot(kind=[['global'],
+        ...                ['p_sphere', 'p_quiver']])  # doctest:+SKIP
+
+        .. plot::
+
+            from obspy import read_events
+            cat = read_events("/path/to/CMTSOLUTION")
+            cat.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
         """
         try:
             fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
