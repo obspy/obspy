@@ -1686,6 +1686,25 @@ class TraceTestCase(unittest.TestCase):
         self.assertIn("remove_sensitivity(inventory=<obspy.core.inventory."
                       "inventory.Inventory object ", tr.stats.processing[0])
 
+        # remove_response()
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_response()
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_response(", tr.stats.processing[0])
+        self.assertIn("inventory=None", tr.stats.processing[0])
+
+        # With passed inventory object.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_response(inventory=read_inventory())
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_response(", tr.stats.processing[0])
+        self.assertIn("inventory=<obspy.core.inventory.inventory.Inventory "
+                      "object", tr.stats.processing[0])
+
     def test_processing_information(self):
         """
         Test case for the automatic processing information.
