@@ -143,13 +143,13 @@ class MSeed:
         # Read the first datarecord to get the basic info
         # Average/largeish block size to start)
         chunk1 = self.filehandle.read(4096)
-        datarecord = self.decodeDataRecord(chunk1)
-        if not self.IsMseed:
+        datarecord = self.decode_datarecord(chunk1)
+        if not self.is_mseed:
             return
         self.fixedheader, self.blockettes = datarecord
         # Set the start time
-        self.starttime = self.getEpoch(self.fixedheader)
-        self.snclFirst = self.getSNCL(self.fixedheader, self.blockettes)
+        self.starttime = self.get_epoch(self.fixedheader)
+        self.snclFirst = self.get_sncl(self.fixedheader, self.blockettes)
 
         # Is file multiple of blocksize
         if self.filesize % self.block_size != 0:
@@ -157,26 +157,26 @@ class MSeed:
             return
         # Read last datarecord
         self.filehandle.seek(-self.block_size, 2)
-        chunkLast = self.filehandle.read(self.block_size)
-        if len(chunkLast) != self.block_size:
+        chunk_last = self.filehandle.read(self.block_size)
+        if len(chunk_last) != self.block_size:
             print("%s Reading last block read smaller than block"
                   % self.filename)
             return
-        datarecord = self.decodeDataRecord(chunkLast)
+        datarecord = self.decode_datarecord(chunk_last)
         if not datarecord:
             print("%s Couldn't read datarecord. Does blocksize change in file?"
                   % self.filename)
             return
         fixedheader, blockettes = datarecord
         # Set endtime
-        self.endtime = self.getLastSampleTime(fixedheader)
-        snclLast = self.getSNCL(fixedheader, blockettes)
+        self.endtime = self.get_last_sample_time(fixedheader)
+        sncl_last = self.get_sncl(fixedheader, blockettes)
         # Do fist and last block match? if not then multiplexed
-        if self.snclFirst != snclLast:
+        if self.snclFirst != sncl_last:
             print("%s Multiplexed!!!!!!!!!!!!!!!!!" % self.filename)
             self.multiplexed = True
             return
-        self.ReadAllDataRecords()
+        self.read_all_data_records()
         self.manifest = Manifest()
         self.manifest[self.snclFirst].append(
             self.TimeSpan(self.starttime, self.endtime))
@@ -188,55 +188,55 @@ class MSeed:
                                  self.blockettes)
 
     @property
-    def IsMseed(self):
+    def is_mseed(self):
         if self.bigendian is not None:
             return True
         return False
 
-    def getSNCL(self, fxhd, blockettes):
+    def get_sncl(self, fxhd, blockettes):
         encoding, word_order = (
             (blk.Encoding_Format, blk.Word_Order) for blk in blockettes
             if blk.Type == 1000).next()
         return self.SNCL(fxhd.Network, fxhd.Station, fxhd.Location,
-                         fxhd.Channel, self.getSampleRate(fxhd),
+                         fxhd.Channel, self.get_sample_rate(fxhd),
                          encoding, word_order)
 
-    def getEpoch(self, fxhd):
+    def get_epoch(self, fxhd):
         return SeisTime.seis2epoch(fxhd.Year, fxhd.Day, fxhd.Hour,
                                    fxhd.Minute, fxhd.Second,
                                    microsecond=fxhd.Microsecond)
 
-    def getLastSampleTime(self, fxhd):
+    def get_last_sample_time(self, fxhd):
         '''returns epochal time of last sample in block
         '''
-        rate = self.getSampleRate(fxhd)
-        blockstart = self.getEpoch(fxhd)
+        rate = self.get_sample_rate(fxhd)
+        blockstart = self.get_epoch(fxhd)
         # LOG channels
         if rate == 0:
             return blockstart
         return blockstart + (fxhd.Number_of_samples - 1) / rate
 
-    def getSampleRate(self, fxhd):
-        sampFact = float(fxhd.Sample_rate_factor)
-        sampMult = float(fxhd.Sample_rate_multiplier)
-        if sampFact > 0 and sampMult > 0:
-            rate = sampFact * sampMult
-        elif sampFact > 0 and sampMult < 0:
-            rate = -1.0 * (sampFact/sampMult)
-        elif sampFact < 0 and sampMult > 0:
-            rate = -1.0 * (sampMult/sampFact)
-        elif sampFact < 0 and sampMult < 0:
-            rate = 1.0/(sampFact * sampMult)
+    def get_sample_rate(self, fxhd):
+        samp_fact = float(fxhd.Sample_rate_factor)
+        samp_mult = float(fxhd.Sample_rate_multiplier)
+        if samp_fact > 0 and samp_mult > 0:
+            rate = samp_fact * samp_mult
+        elif samp_fact > 0 and samp_mult < 0:
+            rate = -1.0 * (samp_fact/samp_mult)
+        elif samp_fact < 0 and samp_mult > 0:
+            rate = -1.0 * (samp_mult/samp_fact)
+        elif samp_fact < 0 and samp_mult < 0:
+            rate = 1.0/(samp_fact * samp_mult)
         else:
-            rate = sampFact
+            rate = samp_fact
         return rate
 
-    def setEndian(self):
+    def set_endian(self):
         '''once we know endian we can setup faster reads for future
         this assumes the entire file is the same endian and block size
         '''
-        self.decodeFixedHeader = self.decodeFixedHeaderEndianEstablished
-        self.decodeDataRecord = self.decodeDataRecordEndianEstablished
+        self.decode_fixed_header = self.decode_fixed_header_endian_established
+        self.decode_datarecord = self.decode_datarecord_endian_established
         if self.bigendian is True:
             endkey = '>'
         else:
@@ -245,43 +245,43 @@ class MSeed:
         self.blockette1000Struct = Struct(endkey + self.Blockette1000FMT)
         self.blockette100Struct = Struct(endkey + self.Blockette100FMT)
 
-    def ReadAllDataRecords(self):
+    def read_all_data_records(self):
         self.filehandle.seek(0)
         chunk = self.filehandle.read(self.block_size)
         while len(chunk) == self.block_size:
             # dr = self.decodeDataRecord(chunk)
             chunk = self.filehandle.read(self.block_size)
 
-    def decodeDataRecord(self, chunk):
+    def decode_datarecord(self, chunk):
         '''Decodes a datarecord or block
         returns ( fixedheader, [ blockette,...] )
         first time run this then EndianEstablished version
         '''
-        fixedheader = self.decodeFixedHeader(chunk)
+        fixedheader = self.decode_fixed_header(chunk)
         if not fixedheader:
             return None
-        self.setEndian()
+        self.set_endian()
         blk_start = fixedheader.First_blockette
         blockettes = []
         while blk_start:
-            blockette = self.decodeBlockette(chunk[blk_start:])
+            blockette = self.decode_blockette(chunk[blk_start:])
             blk_start = blockette.Next_blockette
             blockettes.append(blockette)
         return (fixedheader, blockettes)
 
-    def decodeDataRecordEndianEstablished(self, chunk):
+    def decode_datarecord_endian_established(self, chunk):
         '''After Endian established use this function to decode dr
         '''
-        fixedheader = self.decodeFixedHeader(chunk)
+        fixedheader = self.decode_fixed_header(chunk)
         blk_start = fixedheader.First_blockette
         blockettes = []
         while blk_start:
-            blockette = self.decodeBlockette(chunk[blk_start:])
+            blockette = self.decode_blockette(chunk[blk_start:])
             blk_start = blockette.Next_blockette
             blockettes.append(blockette)
         return (fixedheader, blockettes)
 
-    def decodeFixedHeader(self, chunk):
+    def decode_fixed_header(self, chunk):
         '''fist time run this then: determine endian, set self.compiled
         struct, selfendian, and rebind this method to decode...big or little
         '''
@@ -289,25 +289,25 @@ class MSeed:
             return False
         # Try big
         self.fixedheaderStruct = Struct('>' + self.FixedHeaderFMT)
-        fixheadtry = self.decodeFixedHeaderEndianEstablished(chunk)
-        if self.isValidFixedhdr(fixheadtry):
+        fixheadtry = self.decode_fixed_header_endian_established(chunk)
+        if self.is_valid_fixedhdr(fixheadtry):
             self.bigendian = True
             return fixheadtry
         # Try Little
         self.fixedheaderStruct = Struct('<' + self.FixedHeaderFMT)
-        fixheadtry = self.decodeFixedHeaderEndianEstablished(chunk)
-        if self.isValidFixedhdr(fixheadtry):
+        fixheadtry = self.decode_fixed_header_endian_established(chunk)
+        if self.is_valid_fixedhdr(fixheadtry):
             self.bigendian = False
             return fixheadtry
         else:
             # Not MSEED clean up
             return None
 
-    def decodeFixedHeaderEndianEstablished(self, chunk):
+    def decode_fixed_header_endian_established(self, chunk):
         return self.FixedHeader._make(
             self.fixedheaderStruct.unpack(chunk[:48]))
 
-    def isValidFixedhdr(self, fixedheader):
+    def is_valid_fixedhdr(self, fixedheader):
         if (0 <= fixedheader.Hour < 24 and
                 fixedheader.Data_quality in ['D', 'R', 'Q', 'M'] and
                 fixedheader.Sequence_number.isdigit() and
@@ -315,7 +315,7 @@ class MSeed:
             return True
         return False
 
-    def decodeBlockette(self, chunk):
+    def decode_blockette(self, chunk):
         baseblockette = self.BlocketteCOM._make(
             self.blocketteCOMStruct.unpack(chunk[:4]))
         if baseblockette.Type == 1000:
@@ -336,13 +336,13 @@ class Manifest(defaultdict):
     A sublclass of defaultdict  {SNCL : list of timespantuples}.
     '''
     @staticmethod
-    def SNCL2string(sncl):
+    def sncl2string(sncl):
         s = ('{s.network}:{s.station}:{s.location}:{s.channel}:'
              '{s.sr:>6}:{s.encoding}:{s.endian}')
         return s.format(s=sncl)
 
     @staticmethod
-    def TimeSpan2string(span):
+    def time_span2string(span):
         return "%s -- %s" % (SeisTime.epoch2string(span.start),
                              SeisTime.epoch2string(span.end))
 
@@ -362,9 +362,9 @@ class Manifest(defaultdict):
         self.sort()
         s = ''
         for sncl, spans in ((key, self[key]) for key in sorted(self.keys())):
-            s += self.SNCL2string(sncl) + '\n'
+            s += self.sncl2string(sncl) + '\n'
             for span in spans:
-                s += '\t' + self.TimeSpan2string(span) + '\n'
+                s += '\t' + self.time_span2string(span) + '\n'
             s += '\n'
         return s
 
@@ -382,7 +382,7 @@ class Manifest(defaultdict):
             self[sncl] = [MSeed.TimeSpan(spans[0].start, spans[-1].end)]
         self.inorder = True
 
-    def getSummary(self):
+    def get_summary(self):
         pass
 
     def sort(self):
@@ -395,7 +395,7 @@ class Manifest(defaultdict):
         self.inorder = True
 
 
-def GetManifestOfDIR(dir):
+def get_manifest_of_dir(dir):
     '''
     Driver that searches depths of current dir looking for mseed files
     '''
@@ -413,7 +413,7 @@ def GetManifestOfDIR(dir):
                 if not isfile(fullname):
                     continue
                 mseed = MSeed(fullname)
-                if mseed.IsMseed:
+                if mseed.is_mseed:
                     numseed += 1
                     manifest.merge(mseed.manifest)
                 else:
@@ -429,12 +429,12 @@ def GetManifestOfDIR(dir):
 
 def make_inventory(manifest):
     # Standard orientations
-    AZ = 'az'
-    DIP = 'dip'
-    ORIENT = defaultdict(lambda: {AZ: 0.0, DIP: 0.0},
-                         {'Z': {AZ: 0.0, DIP: -90.0},
-                          'N': {AZ: 0.0, DIP: 0.0},
-                          'E': {AZ: 90.0, DIP: 0.0}
+    az = 'az'
+    dip = 'dip'
+    orient = defaultdict(lambda: {az: 0.0, dip: 0.0},
+                         {'Z': {az: 0.0, dip: -90.0},
+                          'N': {az: 0.0, dip: 0.0},
+                          'E': {az: 90.0, dip: 0.0}
                           })
     # Dummy values for now
     lat = inventory.util.Latitude(0.0)
@@ -473,8 +473,8 @@ def make_inventory(manifest):
                         longitude=lon,
                         elevation=elev,
                         depth=depth,
-                        azimuth=ORIENT[sncl.channel[2]][AZ],
-                        dip=ORIENT[sncl.channel[2]][DIP],
+                        azimuth=orient[sncl.channel[2]][az],
+                        dip=orient[sncl.channel[2]][dip],
                         sample_rate=sncl.sr,
                         start_date=start,
                         end_date=end))
@@ -498,11 +498,11 @@ def make_inventory(manifest):
     return inv
 
 
-def inventory_from_mseed(directory, sensRESP, dlRESP):
-    manifest = GetManifestOfDIR(directory)
+def inventory_from_mseed(directory, sens_resp, dl_resp):
+    manifest = get_manifest_of_dir(directory)
     inv = make_inventory(manifest)
     # Attach response to inventory
-    inv_resp = inventory.response.response_from_resp(sensRESP, dlRESP)
+    inv_resp = inventory.response.response_from_resp(sens_resp, dl_resp)
     inv_of_wf = inv.select(channel='CH*')
     for net in inv_of_wf.networks:
         for sta in net.stations:
@@ -514,9 +514,9 @@ if __name__ == '__main__':
     sensRESP = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
                 'tool/PDCC-3.8/NRL/edu.iris/sensors/guralp'
                 '/RESP.XX.NS007..BHZ.CMG3T.120.1500')
-    dlRESP = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
-              'tool/PDCC-3.8/NRL/edu.iris/dataloggers/reftek'
-              '/RESP.XX.NR012..HHZ.130.1.500')
-    inv = inventory_from_mseed(argv[1], sensRESP, dlRESP)
+    dl_resp = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
+               'tool/PDCC-3.8/NRL/edu.iris/dataloggers/reftek'
+               '/RESP.XX.NR012..HHZ.130.1.500')
+    inv = inventory_from_mseed(argv[1], sensRESP, dl_resp)
     print(inv)
     inv.write('XE.station.xml', format='STATIONXML')
