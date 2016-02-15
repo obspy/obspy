@@ -73,7 +73,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
     will always be of the given type and will attempt to convert any given
     value to the correct type and raise an error otherwise. This happens to
     values given during initialization as well as values set when the object
-    has already been created. A useful type are Enums if you want to restrict
+    has already been created. A useful type is Enum if you want to restrict
     the acceptable values.
 
         >>> from obspy.core.util import Enum

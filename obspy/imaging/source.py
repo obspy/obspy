@@ -72,9 +72,9 @@ def plot_radiation_pattern(
         mt, kind=['p_sphere', 'beachball'], coordinate_system='RTP',
         p_sphere_direction='inwards', fig=None, show=True):
     """
-    Plots the P/S farfield radiation pattern on a unit sphere grid
-    calculations are based on [Aki1980]_ eq. 4.29.
+    Plot the P/S farfield radiation pattern on a unit sphere grid.
 
+    The calculations are based on [Aki1980]_ eq. 4.29.
 
     :param mt: Focal mechanism NM x 6 (M11, M22, M33, M12, M13, M23 - the
         six independent components of the moment tensor, where the coordinate
@@ -86,12 +86,12 @@ def plot_radiation_pattern(
     :param kind: One of the following three options:
         * A list of strings or nested list of strings for a matplotlib plot
           (for details see :meth:`obspy.core.event.event.Event.plot`)
-        * 'mayavi': uses the mayavi library (not yet available under python 3
+        * 'mayavi': uses the mayavi library (not yet available under Python 3
           and problematic with anaconda)
         * 'vtk': This vtk option writes three vtk files to the current working
           directory. rpattern.vtk contains the p and s wave farfield vector
           field beachlines.vtk contains the nodal lines of the radiation
-          pattern rpattern.pvsm is a state file that sets paraview parameters
+          pattern rpattern.pvsm is a state file that sets ParaView parameters
           to plot rpattern.vtk and beachlines.vtk
 
     :param coordinate_system: the only implemented option so far is 'RTP'.
@@ -102,12 +102,7 @@ def plot_radiation_pattern(
     :type show: bool
     :param show: Whether to show the figure after plotting or not. Can be
         used to do further customization of the plot before showing it.
-
-    :return: 3D grid point array with shape [3,npts] that contains
-             the sperical grid points
-
-             3D vector array with shape [3,npts] that contains the
-             displacement vector for each grid point
+    :returns: Matplotlib figure or None (if `kind` is "mayavi" or "vtk")
     """
 
     # reoorder all moment tensors to NED and RTP convention
@@ -181,13 +176,15 @@ def plot_radiation_pattern(
 def _plot_radiation_pattern_sphere(
         ax3d, ned_mt, type, p_sphere_direction='inwards'):
     """
-    private function that plots a radiation pattern sphere into
-    ax3d
-    :param ax3d: matplotlib 3d ax object
+    Private function that plots a radiation pattern sphere into an
+    :class:`~mpl_toolkits.mplot3d.axes3d.Axes3D`.
+
+    :type ax3d: :class:`mpl_toolkits.mplot3d.axes3d.Axes3D`
+    :param ax3d: matplotlib Axes3D object
     :param ned_mt: moment tensor in NED convention
-    :param p_sphere_direction: if this is 'inwards', the tension regions
-                               of the beachball deform the radiation sphere
-                               inwards. If 'outwards' it deforms outwards.
+    :param p_sphere_direction: If this is 'inwards', the tension regions of the
+        beachball deform the radiation sphere inwards. If 'outwards' it deforms
+        outwards.
     :param type: 'P' or 'S' (P or S wave).
     """
     type = type.upper()
@@ -261,10 +258,11 @@ def _plot_radiation_pattern_sphere(
 
 def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     """
-    private routine that plots the wave farfield into the
-    input ax object
+    Private routine that plots the wave farfield into an
+    :class:`~mpl_toolkits.mplot3d.axes3d.Axes3D` object
 
-    :param ax3d: a matplotlib ax with 3d projection activated
+    :type ax3d: :class:`mpl_toolkits.mplot3d.axes3d.Axes3D`
+    :param ax3d: matplotlib Axes3D object
     :param ned_mt: the 6 comp moment tensor in NED orientation
     :type type: str
     :param type: 'P' or 'S' (P or S wave).
@@ -321,9 +319,12 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
 
 def _plot_beachball(ax2d, rtp_mt):
     """
-    private function that plots a beachball into a 2d matplotlib ax
+    Private function that plots a beachball into a 2d matplotlib
+    :class:`~matplotlib.axes.Axes`.
 
-    :param ax2d: 2d matplotlib ax
+    :type ax2d: :class:`matplotlib.axes.Axes`
+    :param ax2d: 2d matplotlib Axes
+    :param ax2d: matplotlib Axes3D object
     :param rtp_mt: moment tensor in RTP convention
     """
     norm = plt.Normalize(-1., 1.)
@@ -341,7 +342,9 @@ def _plot_beachball(ax2d, rtp_mt):
 
 def _plot_radiation_pattern_mayavi(ned_mt):
     """
-    This function uses the mayavi (vtk) library to plot the radiation
+    Plot the radiation pattern using MayaVi.
+
+    This private function uses the mayavi (vtk) library to plot the radiation
     pattern to screen. Note that you might have to set the QT_API environmental
     variable to e.g. export QT_API=pyqt that mayavi works properly.
 
@@ -352,16 +355,16 @@ def _plot_radiation_pattern_mayavi(ned_mt):
         from mayavi import mlab
     except Exception as err:
         print(err)
-        msg = "obspy failed to import mayavi. " +\
-              "You need to install the mayavi module " +\
-              "(e.g. conda install mayavi, pip install mayavi). " +\
-              "If it is installed and still doesn't work, " +\
-              "try setting the environmental variable QT_API to " +\
-              "pyqt (e.g. export QT_API=pyqt) before running the " +\
-              "code. Another option is to avoid mayavi and " +\
-              "directly use kind='vtk' for vtk file output of the " +\
-              "radiation pattern that can be used by external " +\
-              "software like paraview"
+        msg = ("ObsPy failed to import MayaVi. "
+               "You need to install the mayavi module "
+               "(e.g. 'conda install mayavi', 'pip install mayavi'). "
+               "If it is installed and still doesn't work, "
+               "try setting the environmental variable QT_API to "
+               "pyqt (e.g. export QT_API=pyqt) before running the "
+               "code. Another option is to avoid mayavi and "
+               "directly use kind='vtk' for vtk file output of the "
+               "radiation pattern that can be used by external "
+               "software like ParaView")
         raise ImportError(msg)
 
     # get mopad moment tensor
@@ -507,10 +510,9 @@ def _write_radiation_pattern_vtk(
 # ===== SUPPORT FUNCTIONS FOR SPHERICAL MESHES ETC STARTING HERE:
 def _oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
     """
-    returns a uv sphere (equidistant lat/lon grid) with its north-pole
-    rotated to the input axis. It returns the spherical grid points
-    that can be used to generate a QuadMesh on the sphere for surface
-    plotting.
+    Returns a uv sphere (equidistant lat/lon grid) with its north-pole rotated
+    to the input axis. It returns the spherical grid points that can be used to
+    generate a QuadMesh on the sphere for surface plotting.
 
     :param nlat: number of latitudinal grid points (default = 100)
     :param nphi: number of longitudinal grid points (default = 100)
@@ -555,9 +557,9 @@ def _oriented_uv_sphere(ntheta=100, nphi=100, orientation=[0., 0., 1.]):
 
 def _equalarea_spherical_grid(nlat=30):
     """
-    generates a simple spherical equalarea grid that adjust the
-    number of longitude samples to the longitude. This grid is useful
-    to plot vectors on the sphere but not surfaces.
+    Generates a simple spherical equalarea grid that adjust the number of
+    longitude samples to the latitude. This grid is useful to plot vectors on
+    the sphere but not surfaces.
 
     :param nlat: number of nodes in lat direction. The number of
                  nodes in lon direction is 2*nlat+1 at the equator
