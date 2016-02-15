@@ -1661,6 +1661,31 @@ class TraceTestCase(unittest.TestCase):
         tr.attach_response(inv)
         tr.remove_response()
 
+    def test_processing_info_remove_response_and_sensitivity(self):
+        """
+        Tests adding processing info for remove_response() and
+        remove_sensitivity().
+
+        See #1247.
+        """
+        # remove_sensitivity() with response object attached to the trace.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_sensitivity()
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertTrue(tr.stats.processing[0].endswith(
+            "remove_sensitivity(inventory=None)"))
+
+        # With passed inventory object.
+        tr = read()[0]
+        self.assertNotIn("processing", tr.stats)
+        tr.remove_sensitivity(inventory=read_inventory())
+        self.assertIn("processing", tr.stats)
+        self.assertEqual(len(tr.stats.processing), 1)
+        self.assertIn("remove_sensitivity(inventory=<obspy.core.inventory."
+                      "inventory.Inventory object ", tr.stats.processing[0])
+
     def test_processing_information(self):
         """
         Test case for the automatic processing information.
@@ -1690,7 +1715,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(
             "ObsPy %s: trim(endtime=None::fill_value=None::"
             "nearest_sample=True::pad=False::starttime=%s)" % (
-                __version__, str(trimming_starttime)),
+                __version__, repr(trimming_starttime)),
             pr[0])
         self.assertIn("filter", pr[1])
         self.assertIn("simulate", pr[2])

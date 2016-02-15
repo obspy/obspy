@@ -221,10 +221,10 @@ def _add_processing_info(func, *args, **kwargs):
         function=func.__name__)
     arguments = []
     arguments += \
-        ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
          "%s='%s'" % (k, v) for k, v in callargs.items()]
     arguments += \
-        ["%s=%s" % (k, v) if not isinstance(v, native_str) else
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
          "%s='%s'" % (k, v) for k, v in kwargs_.items()]
     arguments.sort()
     info = info % "::".join(arguments)
@@ -2750,8 +2750,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         response = self._get_response(inventory)
         self.data = self.data / response.instrument_sensitivity.value
-        info = 'remove_sensitivity:inventory=%s' % inventory
-        self._internal_add_processing_info(info)
         return self
 
 
