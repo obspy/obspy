@@ -135,15 +135,14 @@ class EventTestCase(unittest.TestCase):
         self.assertIs(ev.resource_id.get_referred_object(),
                       ev3.resource_id.get_referred_object())
 
-    def test_plot_farfield_without_quiver(self):
+    def test_plot_farfield_without_quiver_with_maps(self):
         """
-        Tests to plot P/S wave farfield radiation pattern
+        Tests to plot P/S wave farfield radiation pattern, also with beachball
+        and some map plots.
         """
         ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
-        with ImageComparison(self.image_dir, 'event_radiation_pattern.png') \
-                as ic:
-            ev.plot(kind=['s_sphere', 'p_sphere', 'beachball'],
-                    outfile=ic.name, show=False)
+        with ImageComparison(self.image_dir, 'event.png') as ic:
+            ev.plot(outfile=ic.name)
 
 
 class OriginTestCase(unittest.TestCase):
