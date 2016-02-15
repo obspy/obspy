@@ -39,7 +39,6 @@ if BASEMAP_VERSION:
                       "still work but the maps might be wrong. Please update "
                       "your basemap installation.")
 else:
-    warnings.warn("basemap not installed.")
     HAS_BASEMAP = False
 
 CARTOPY_VERSION = get_cartopy_version()
@@ -48,8 +47,12 @@ if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
     import cartopy.feature as cfeature
     HAS_CARTOPY = True
 else:
-    warnings.warn("Cartopy not installed.")
     HAS_CARTOPY = False
+
+
+if not HAS_BASEMAP and not HAS_CARTOPY:
+    msg = ("Neither basemap nor cartopy installed, map plots will not work.")
+    warnings.warn(msg)
 
 
 _BASEMAP_RESOLUTIONS = {
