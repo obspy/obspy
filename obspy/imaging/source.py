@@ -23,7 +23,7 @@ from mpl_toolkits.mplot3d import Axes3D  # NOQA
 from obspy.core.util.base import get_matplotlib_version
 from obspy.core.event.source import farfield
 from obspy.imaging.scripts.mopad import MomentTensor, BeachBall
-from obspy.imaging.mopad_wrapper import Beach
+from obspy.imaging.mopad_wrapper import beach
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
@@ -304,7 +304,7 @@ def _plot_beachball(ax2d, rtp_mt):
     """
     norm = plt.Normalize(-1., 1.)
     cmap = plt.get_cmap('bwr')
-    bball = Beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
+    bball = beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
                   bgcolor=cmap(norm(-0.7)))
 
     ax2d.add_collection(bball)
