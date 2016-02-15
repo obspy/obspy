@@ -10,7 +10,7 @@ rm -rf $OBSPY_PATH/obspy/station/tests/images/testrun
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
-DATETIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
