@@ -35,7 +35,7 @@ PLOT_ALL = [
 
 
 model = TauPyModel(model='iasp91')
-phase_name_radius = model.model.radiusOfEarth * 1.1
+phase_name_radius = model.model.radius_of_planet * 1.1
 
 # ax_right is used for paths plotted on the right half.
 fig, ax_right = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
@@ -70,12 +70,13 @@ for phase, distance in PHASES:
 ax_right.text(0, 0, 'Solid\ninner\ncore',
               horizontalalignment='center', verticalalignment='center',
               bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
-ocr = (model.model.radiusOfEarth -
-       (model.model.sMod.vMod.iocbDepth + model.model.sMod.vMod.cmbDepth) / 2)
+ocr = (model.model.radius_of_planet -
+       (model.model.s_mod.v_mod.iocb_depth +
+        model.model.s_mod.v_mod.cmb_depth) / 2)
 ax_right.text(np.deg2rad(180), ocr, 'Fluid outer core',
               horizontalalignment='center',
               bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
-mr = model.model.radiusOfEarth - model.model.sMod.vMod.cmbDepth / 2
+mr = model.model.radius_of_planet - model.model.s_mod.v_mod.cmb_depth / 2
 ax_right.text(np.deg2rad(180), mr, 'Solid mantle',
               horizontalalignment='center',
               bbox=dict(facecolor='white', edgecolor='none', alpha=0.7))
