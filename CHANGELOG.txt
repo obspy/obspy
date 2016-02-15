@@ -139,6 +139,8 @@ master:
      surface waves (see #986.)
    * Fix incorrect branch splitting which also caused issues for extremely
      shallow phases (see #1057.)
+   * Proper cache for model splits resulting in much faster calculations if
+     the source depth is repeatedly the same (see #1248).
 
 0.10.x:
   - obspy.core:
