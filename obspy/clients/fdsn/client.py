@@ -46,25 +46,6 @@ from .wadl_parser import WADLParser
 
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
-RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
-RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
-
-RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
-RE_IPv6 = '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
-          '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
-          '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
-          '|\[' + RE_HEX4 + ':' + \
-          '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
-          ':' + RE_HEX4 + '\])'
-
-URL_REGEX = 'https?://' + \
-            '(' + RE_IPv4 + \
-            '|' + RE_IPv6 + \
-            '|localhost' + \
-            '|(?:\w(?:[\w-]{0,61}[\w])?\.){2,}([a-z]{2,6}))' + \
-            '(?::\d{2,5})?' + \
-            '(/[\w\.-]+)*/?$'
-
 
 class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
     """
@@ -121,6 +102,34 @@ class Client(object):
     # Dictionary caching any discovered service. Therefore repeatedly
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
+
+    RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+
+    RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+    RE_IPv6 = \
+        '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
+        '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,3}:' + RE_IPv4 + '\]' + \
+        '|\[' + RE_HEX4 + ':' + \
+        '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
+        ':' + RE_HEX4 + '\])'
+
+    URL_REGEX = 'https?://' + \
+                '(' + RE_IPv4 + \
+                '|' + RE_IPv6 + \
+                '|localhost' + \
+                '|(?:\w(?:[\w-]{0,61}[\w])?\.){2,}([a-z]{2,6}))' + \
+                '(?::\d{2,5})?' + \
+                '(/[\w\.-]+)*/?$'
+
+    @classmethod
+    def _validate_base_url(cls, base_url):
+        if re.match(cls.URL_REGEX, base_url, re.IGNORECASE):
+            return True
+        else:
+            return False
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
@@ -218,13 +227,15 @@ class Client(object):
                 msg = "The FDSN service shortcut `{}` is unknown."\
                       .format(base_url)
                 raise ValueError(msg)
-            elif not re.match(URL_REGEX, base_url, re.IGNORECASE):
-                msg = "The FDSN service base URL `{}` is not a valid URL."\
-                      .format(base_url)
-                raise ValueError(msg)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.strip("/")
+        # Catch invalid URLs to avoid confusing error messages
+        if not self._validate_base_url(base_url):
+            msg = "The FDSN service base URL `{}` is not a valid URL."\
+                  .format(base_url)
+            raise ValueError(msg)
+
         self.base_url = base_url
 
         # Only add the authentication handler if required.
