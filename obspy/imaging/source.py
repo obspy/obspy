@@ -29,6 +29,43 @@ from obspy.imaging.mopad_wrapper import beach
 MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
+def _setup_figure_and_axes(kind, fig=None):
+    """
+    Setup figure for Event plot.
+
+    :param kind: A list of strings or nested list of strings, see
+        :meth:`obspy.core.event.event.Event.plot`.
+    :rtype: tuple
+    :returns: A 3-tuple with a :class:`~matplotlib.figure.Figure`, a list of
+        :class:`~matplotlib.axes.Axes` and a list of strings with corresponding
+        plotting options for each axes (see
+        :meth:`obspy.core.event.event.Event.plot`, parameter `kind`).
+    """
+    # make 2d layout of kind parameter
+    if isinstance(kind[0], (list, tuple)):
+        nrows = len(kind)
+        ncols = max([len(k) for k in kind])
+    else:
+        nrows, ncols = 1, len(kind)
+        kind = [kind]
+    figsize = ncols * 5., nrows * 5.
+    if not fig:
+        fig = plt.figure(figsize=figsize, facecolor='white')
+    # get tuple of "kind" options and corresponding axes
+    kind_ = []
+    axes = []
+    for i, row in enumerate(kind):
+        ncols_ = len(row)
+        for j, kind__ in enumerate(row):
+            kind_.append(kind__)
+            kwargs = {"aspect": "equal"}
+            if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
+                kwargs["projection"] = "3d"
+            axes.append(fig.add_subplot(
+                nrows, ncols_, i * ncols_ + j + 1, **kwargs))
+    return fig, axes, kind_
+
+
 def plot_radiation_pattern(
         mt, kind=['p_sphere', 'beachball'], coordinate_system='RTP',
         p_sphere_direction='inwards', fig=None, show=True):
@@ -44,7 +81,16 @@ def plot_radiation_pattern(
         x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
 
-    :param kind: For details see :meth:`obspy.core.event.event.Event.plot`.
+    :param kind: One of the following three options:
+        * A list of strings or nested list of strings for a matplotlib plot
+          (for details see :meth:`obspy.core.event.event.Event.plot`)
+        * 'mayavi': uses the mayavi library (not yet available under python 3
+          and problematic with anaconda)
+        * 'vtk': This vtk option writes three vtk files to the current working
+          directory. rpattern.vtk contains the p and s wave farfield vector
+          field beachlines.vtk contains the nodal lines of the radiation
+          pattern rpattern.pvsm is a state file that sets paraview parameters
+          to plot rpattern.vtk and beachlines.vtk
 
     :param coordinate_system: the only implemented option so far is 'RTP'.
                               Should be extended to support NED, USE, DSE, NED
@@ -87,31 +133,7 @@ def plot_radiation_pattern(
 
     # matplotlib plotting is triggered when kind is a list of strings
     if isinstance(kind, (list, tuple)):
-        # make 2d layout of kind parameter
-        if isinstance(kind[0], (list, tuple)):
-            nrows = len(kind)
-            ncols = max([len(k) for k in kind])
-        else:
-            nrows, ncols = 1, len(kind)
-            kind = [kind]
-        figsize = ncols * 5., nrows * 5.
-        if not fig:
-            fig = plt.figure(figsize=figsize, facecolor='white')
-        # get tuple of "kind" options and corresponding axes
-        kind_ = []
-        axes = []
-        for i, row in enumerate(kind):
-            ncols_ = len(row)
-            for j, kind__ in enumerate(row):
-                kind_.append(kind__)
-                kwargs = {}
-                if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
-                    kwargs["projection"] = "3d"
-                if kind__ == "beachball":
-                    kwargs["aspect"] = "equal"
-                axes.append(fig.add_subplot(
-                    nrows, ncols_, i * ncols_ + j + 1, **kwargs))
-        kind = kind_
+        fig, axes, kind = _setup_figure_and_axes(kind, fig=fig)
 
         for ax, kind_ in zip(axes, kind):
             if kind_ is None:

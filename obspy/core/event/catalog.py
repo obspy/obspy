@@ -564,7 +564,8 @@ class Catalog(object):
             depth encoding.
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
-            used to do further customization of the plot before showing it.
+            used to do further customization of the plot before
+            showing it. Has no effect if `outfile` is specified.
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
@@ -572,6 +573,7 @@ class Catalog(object):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+            The figure is closed after saving it to file.
         :type method: str
         :param method: Method to use for plotting. Possible values are:
 
@@ -755,6 +757,7 @@ class Catalog(object):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()

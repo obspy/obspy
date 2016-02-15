@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
-from obspy.imaging.source import plot_radiation_pattern
+from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
 
 from .base import (_event_type_class_factory,
                    CreationInfo, ResourceIdentifier)
@@ -210,32 +210,33 @@ class Event(__Event):
         except AttributeError:
             return None
 
-    def plot(self, kind=['beachball', 'p_sphere', 's_sphere'], show=True,
-             outfile=None):
+    def plot(self, kind=[['global'], ['ortho', 'beachball'],
+                         ['p_sphere', 's_sphere']],
+             show=True, outfile=None, **kwargs):
         """
-        plots the preferred focal mechanism and radiation pattern
+        Plot event location and/or the preferred focal mechanism
+        and radiation pattern.
 
-        :type show: bool
-        :param show: Whether to show the figure after plotting or not. Can be
-            used to do further customization of the plot before showing it.
         :type kind: list of str or nested list of str
         :param kind: can be one of the following options:
             * A list of strings (for a 1-row plot) or a nested list
               of strings (one list of strings per row), with the
               following keywords to generate a matplotlib figure:
+              'orth' (Orthographic plot of event location,
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`),
+              'global' (Global plot of event location,
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`),
+              'local' (Local plot of event location,
+              see :meth:`~obspy.core.event.catalog.Catalog.plot`),
               'beachball' (Beachball of preferred focal mechanism),
               'p_quiver' (quiver plot of p wave farfield),
               's_quiver' (quiver plot of s wave farfield),
               'p_sphere' (surface plot of p wave farfield),
               's_sphere' (surface plot of s wave farfield).
-            * 'mayavi': uses the mayavi library (not yet available
-              under python 3 and problematic with anaconda)
-            * 'vtk': This vtk option writes three vtk files to the
-              current working directory. rpattern.vtk contains the
-              p and s wave farfield vector field beachlines.vtk
-              contains the nodal lines of the radiation pattern
-              rpattern.pvsm is a state file that sets paraview
-              parameters to plot rpattern.vtk and beachlines.vtk
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before
+            showing it. Has no effect if `outfile` is specified.
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image
@@ -243,6 +244,7 @@ class Event(__Event):
             also used to automatically determine the output format. Supported
             file formats depend on your matplotlib backend.  Most backends
             support png, pdf, ps, eps and svg. Defaults to ``None``.
+            The figure is closed after saving it to file.
         :returns: Figure instance with the plot.
         """
         try:
@@ -254,13 +256,24 @@ class Event(__Event):
 
         mt = [mtensor.m_rr, mtensor.m_tt, mtensor.m_pp,
               mtensor.m_rt, mtensor.m_rp, mtensor.m_tp]
-        fig = plot_radiation_pattern(
-            mt, kind=kind, coordinate_system='RTP', show=False)
+        fig, axes, kind_ = _setup_figure_and_axes(kind)
+        if any([k_ in ("ortho", "global", "local") for k_ in kind_]):
+            from .catalog import Catalog
+            cat_ = Catalog([self])
+        for ax, kind__ in zip(axes, kind_):
+            if kind__ in ("ortho", "global", "local"):
+                cat_.plot(projection=kind__, fig=ax, show=False,
+                          **kwargs)
+        plot_radiation_pattern(
+            mt, kind=kind, coordinate_system='RTP', fig=fig, show=False)
 
         if outfile:
             fig.savefig(outfile)
-        if show:
-            plt.show()
+            plt.close(fig)
+        else:
+            if show:
+                plt.show()
+
         return fig
 
     def write(self, filename, format, **kwargs):
