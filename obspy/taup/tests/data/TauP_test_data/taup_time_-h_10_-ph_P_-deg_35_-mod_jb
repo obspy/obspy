@@ -1,0 +1,7 @@
+
+Model: jb
+Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident  Purist    Purist
+  (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   Distance   Name
+-----------------------------------------------------------------------------------
+   35.00    10.0   P        414.49     8.574     25.48    25.43    35.00   = P
+
