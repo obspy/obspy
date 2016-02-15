@@ -8,21 +8,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+from collections import OrderedDict
 import os
-import operator
 from copy import deepcopy
 from itertools import count
 from math import pi
-
-try:
-    from cachetools import LRUCache, cachedmethod
-except ImportError:
-    LRUCache = dict
-
-    def cachedmethod(cache, key=None, lock=None, typed=False):
-        def _wrapped(func):
-            return func
-        return _wrapped
 
 import numpy as np
 
@@ -70,7 +60,7 @@ class TauModel(object):
         self.no_discon_depths = []
 
         if cache is None:
-            self._depth_cache = LRUCache(maxsize=128)
+            self._depth_cache = OrderedDict()
         elif cache is not False:
             self._depth_cache = cache
         else:
@@ -243,8 +233,24 @@ class TauModel(object):
     def loadFromDepthCache(self, *args, **kwargs):
         return self.load_from_depth_cache(*args, **kwargs)
 
-    @cachedmethod(operator.attrgetter('_depth_cache'))
     def load_from_depth_cache(self, depth):
+        # Very simple and straightforward LRU cache implementation.
+        if self._depth_cache is not None:
+            # Retrieve and later insert again to get LRU cache behaviour.
+            try:
+                value = self._depth_cache.pop(depth)
+            except KeyError:
+                value = self._load_from_depth_cache(depth)
+            self._depth_cache[depth] = value
+            # Pop first key-value pairs until at most 128 elements are still
+            # in the cache.
+            while len(self._depth_cache) > 128:
+                self._depth_cache.pop(last=False)
+            return value
+        else:
+            return self._load_from_depth_cache()
+
+    def _load_from_depth_cache(self, depth):
         depth_corrected = self.split_branch(depth)
         depth_corrected.source_depth = depth
         depth_corrected.source_branch = depth_corrected.find_branch(depth)
