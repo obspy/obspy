@@ -93,7 +93,7 @@ install:
   - pip install coveralls
   # 2015/02/16 - Temporary workaround. Remove limitation once installing
   # geographiclib works again.
-  - pip install geographiclib<1.46
+  - pip install 'geographiclib<1.46'
   # current pyimgur stable release has a py3 incompatibility
   - pip install https://github.com/megies/PyImgur/archive/py3.zip
   - pip freeze
