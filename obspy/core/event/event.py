@@ -210,8 +210,7 @@ class Event(__Event):
         except AttributeError:
             return None
 
-    def plot(self, kind=[['global'], ['ortho', 'beachball'],
-                         ['p_sphere', 's_sphere']],
+    def plot(self, kind=[['ortho', 'beachball'], ['p_sphere', 's_sphere']],
              show=True, outfile=None, **kwargs):
         """
         Plot event location and/or the preferred focal mechanism

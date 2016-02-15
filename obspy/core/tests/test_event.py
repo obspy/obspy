@@ -142,7 +142,8 @@ class EventTestCase(unittest.TestCase):
         """
         ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
         with ImageComparison(self.image_dir, 'event.png') as ic:
-            ev.plot(outfile=ic.name)
+            ev.plot(kind=[['global'], ['ortho', 'beachball'],
+                          ['p_sphere', 's_sphere']], outfile=ic.name)
 
 
 class OriginTestCase(unittest.TestCase):
