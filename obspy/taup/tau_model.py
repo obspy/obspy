@@ -9,9 +9,20 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import os
+import operator
 from copy import deepcopy
 from itertools import count
 from math import pi
+
+try:
+    from cachetools import LRUCache, cachedmethod
+except ImportError:
+    LRUCache = dict
+
+    def cachedmethod(cache, key=None, lock=None, typed=False):
+        def _wrapped(func):
+            return func
+        return _wrapped
 
 import numpy as np
 
@@ -26,8 +37,8 @@ class TauModel(object):
     """
     Provides storage of all the TauBranches comprising a model.
     """
-    def __init__(self, s_mod, radius_of_planet, is_spherical=True, debug=False,
-                 skip_calc=False):
+    def __init__(self, s_mod, radius_of_planet, is_spherical=True, cache=None,
+                 debug=False, skip_calc=False):
         self.debug = debug
         # Depth for which tau model as constructed.
         self.source_depth = 0.0
@@ -57,6 +68,13 @@ class TauModel(object):
         # conversions are not allowed at this branch boundary. If the source
         # happens to fall on a real discontinuity then it is not included.
         self.no_discon_depths = []
+
+        if cache is None:
+            self._depth_cache = LRUCache(maxsize=128)
+        elif cache is not False:
+            self._depth_cache = cache
+        else:
+            self._depth_cache = None
 
         if not skip_calc:
             self.calc_tau_inc_from()
@@ -217,14 +235,7 @@ class TauModel(object):
         if depth > self.radius_of_planet:
             raise TauModelError("Can't depth correct to a source deeper than "
                                 "the radius of the planet.")
-        depth_corrected = self.load_from_depth_cache(depth)
-        if depth_corrected is None:
-            depth_corrected = self.split_branch(depth)
-            depth_corrected.source_depth = depth
-            depth_corrected.source_branch = depth_corrected.find_branch(depth)
-            depth_corrected.validate()
-            # Put in cache somehow: self.depthCache.put(depthCorrected)
-        return depth_corrected
+        return self.load_from_depth_cache(depth)
 
     @deprecated(
         "'loadFromDepthCache' has been renamed to "  # noqa
@@ -232,10 +243,13 @@ class TauModel(object):
     def loadFromDepthCache(self, *args, **kwargs):
         return self.load_from_depth_cache(*args, **kwargs)
 
+    @cachedmethod(operator.attrgetter('_depth_cache'))
     def load_from_depth_cache(self, depth):
-        # Could speed up by implementing cache.
-        # Must return None if loading fails.
-        return None
+        depth_corrected = self.split_branch(depth)
+        depth_corrected.source_depth = depth
+        depth_corrected.source_branch = depth_corrected.find_branch(depth)
+        depth_corrected.validate()
+        return depth_corrected
 
     @deprecated(
         "'splitBranch' has been renamed to "  # noqa
@@ -355,7 +369,7 @@ class TauModel(object):
         tau_model = TauModel(
             out_s_mod,
             radius_of_planet=out_s_mod.v_mod.radius_of_planet,
-            is_spherical=self.is_spherical,
+            is_spherical=self.is_spherical, cache=False,
             debug=self.debug, skip_calc=True)
         tau_model.source_depth = self.source_depth
         tau_model.source_branch = out_source_branch
@@ -558,7 +572,7 @@ class TauModel(object):
         np.savez_compressed(filename, **arrays)
 
     @staticmethod
-    def deserialize(filename):
+    def deserialize(filename, cache=None):
         """
         Deserialize model from numpy npz binary file.
         """
@@ -567,7 +581,7 @@ class TauModel(object):
         try:
             model = TauModel(s_mod=None,
                              radius_of_planet=float(npz["radius_of_planet"]),
-                             skip_calc=True)
+                             cache=cache, skip_calc=True)
             complex_contents = [
                 'tau_branches', 's_mod', 'v_mod',
                 's_mod.p_layers', 's_mod.s_layers', 's_mod.critical_depths',
@@ -648,10 +662,10 @@ class TauModel(object):
         return model
 
     @staticmethod
-    def from_file(model_name):
+    def from_file(model_name, cache=None):
         if os.path.exists(model_name):
             filename = model_name
         else:
             filename = os.path.join(os.path.dirname(__file__), "data",
                                     model_name.lower() + ".npz")
-        return TauModel.deserialize(filename)
+        return TauModel.deserialize(filename, cache=cache)

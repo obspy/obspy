@@ -291,7 +291,8 @@ class TauPyModel(object):
     Representation of a seismic model and methods for ray paths through it.
     """
 
-    def __init__(self, model="iasp91", verbose=False, planet_flattening=0.0):
+    def __init__(self, model="iasp91", verbose=False, planet_flattening=0.0,
+                 cache=None):
         """
         Loads an already created TauPy model.
 
@@ -305,6 +306,17 @@ class TauPyModel(object):
             longitudes) to epicentral distances - the actual traveltime and
             raypath calculations are performed on a spherical planet.
         :type planet_flattening: float
+        :param cache: An object to use to cache models split at source depths.
+            Generating results requires splitting a model at the source depth,
+            which may be expensive. The cache allows faster calculation when
+            multiple results are requested for the same source depth. If the
+            `cachetools`_ package is available, then you may supply a mutable
+            mapping or one of its cache implementations, otherwise the LRUCache
+            with maximum size of 128 will be used. If the `cachetools`_ package
+            is not available or ``False`` is specified, then no cache will be
+            used.
+        :type cache: :class:`cachetools.Cache` or
+            :class:`collections.MutableMapping` or `bool`
 
         Usage:
 
@@ -318,7 +330,7 @@ class TauPyModel(object):
         2
         """
         self.verbose = verbose
-        self.model = TauModel.from_file(model)
+        self.model = TauModel.from_file(model, cache=cache)
         self.planet_flattening = planet_flattening
 
     def get_travel_times(self, source_depth_in_km, distance_in_degree=None,
