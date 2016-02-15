@@ -218,6 +218,24 @@ class Event(__Event):
         :type show: bool
         :param show: Whether to show the figure after plotting or not. Can be
             used to do further customization of the plot before showing it.
+        :type kind: list of str or nested list of str
+        :param kind: can be one of the following options:
+            * A list of strings (for a 1-row plot) or a nested list
+              of strings (one list of strings per row), with the
+              following keywords to generate a matplotlib figure:
+              'beachball' (Beachball of preferred focal mechanism),
+              'p_quiver' (quiver plot of p wave farfield),
+              's_quiver' (quiver plot of s wave farfield),
+              'p_sphere' (surface plot of p wave farfield),
+              's_sphere' (surface plot of s wave farfield).
+            * 'mayavi': uses the mayavi library (not yet available
+              under python 3 and problematic with anaconda)
+            * 'vtk': This vtk option writes three vtk files to the
+              current working directory. rpattern.vtk contains the
+              p and s wave farfield vector field beachlines.vtk
+              contains the nodal lines of the radiation pattern
+              rpattern.pvsm is a state file that sets paraview
+              parameters to plot rpattern.vtk and beachlines.vtk
         :type outfile: str
         :param outfile: Output file path to directly save the resulting image
             (e.g. ``"/tmp/image.png"``). Overrides the ``show`` option, image

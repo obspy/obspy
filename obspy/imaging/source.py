@@ -44,20 +44,7 @@ def plot_radiation_pattern(
         x,y,z equals North,East,Down convention is as follows: Mrr=Mzz,
         Mtt=Mxx, Mpp=Myy, Mrt=Mxz, Mrp=-Myz, Mtp=-Mxy.
 
-    :param kind: can be one of the following options:
-                 'p_quiver': matplotlib quiver plot of p wave farfield
-                 's_quiver': matplotlib quiver plot of s wave farfield
-                 'both_quiver': matplotlib quiver plot of s and p wave farfield
-                 'p_sphere': matplotlib surface plot of p wave farfield
-                 's_sphere': matplotlib surface plot of s wave farfield
-                 'mayavi': uses the mayavi library (not yet available under
-                           python 3 and problematic with anaconda)
-                 'vtk': This vtk option writes three vtk files to the current
-                        working directory. rpattern.vtk contains the p and s
-                        wave farfield vector field beachlines.vtk contains the
-                        nodal lines of the radiation pattern rpattern.pvsm
-                        is a state file that sets paraview parameters to plot
-                        rpattern.vtk and beachlines.vtk
+    :param kind: For details see :meth:`obspy.core.event.event.Event.plot`.
 
     :param coordinate_system: the only implemented option so far is 'RTP'.
                               Should be extended to support NED, USE, DSE, NED
@@ -99,42 +86,52 @@ def plot_radiation_pattern(
         raise NotImplementedError(msg.format(coordinate_system))
 
     # matplotlib plotting is triggered when kind is a list of strings
-    if isinstance(kind, list):
-        nplots = len(kind)
-        maxcolumns = 3  # the maximum number of plots in one row
-        ncols = min(nplots, maxcolumns)
-        nrows = int(np.ceil(nplots / ncols))
+    if isinstance(kind, (list, tuple)):
+        # make 2d layout of kind parameter
+        if isinstance(kind[0], (list, tuple)):
+            nrows = len(kind)
+            ncols = max([len(k) for k in kind])
+        else:
+            nrows, ncols = 1, len(kind)
+            kind = [kind]
         figsize = ncols * 5., nrows * 5.
         if not fig:
             fig = plt.figure(figsize=figsize, facecolor='white')
+        # get tuple of "kind" options and corresponding axes
+        kind_ = []
+        axes = []
+        for i, row in enumerate(kind):
+            ncols_ = len(row)
+            for j, kind__ in enumerate(row):
+                kind_.append(kind__)
+                kwargs = {}
+                if kind__ in ("p_quiver", "p_sphere", "s_quiver", "s_sphere"):
+                    kwargs["projection"] = "3d"
+                if kind__ == "beachball":
+                    kwargs["aspect"] = "equal"
+                axes.append(fig.add_subplot(
+                    nrows, ncols_, i * ncols_ + j + 1, **kwargs))
+        kind = kind_
 
-        for iplot in range(nplots):
-            iax = iplot + 1
-            if kind[iplot] == 'p_quiver':
-                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_radiation_pattern_quiver(ax3d, ned_mt, type="P")
-
-            elif kind[iplot] == 'p_sphere':
-                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
+        for ax, kind_ in zip(axes, kind):
+            if kind_ is None:
+                continue
+            elif kind_ == 'p_quiver':
+                _plot_radiation_pattern_quiver(ax, ned_mt, type="P")
+            elif kind_ == 'p_sphere':
                 _plot_radiation_pattern_sphere(
-                    ax3d, ned_mt, type="P",
+                    ax, ned_mt, type="P",
                     p_sphere_direction=p_sphere_direction)
-
-            elif kind[iplot] == 's_quiver':
-                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_radiation_pattern_quiver(ax3d, ned_mt, type="S")
-
-            elif kind[iplot] == 's_sphere':
-                ax3d = fig.add_subplot(nrows, ncols, iax, projection='3d')
-                _plot_radiation_pattern_sphere(ax3d, ned_mt, type="S")
-
-            elif kind[iplot] == 'beachball':
-                ax2d = fig.add_subplot(nrows, ncols, iax, aspect='equal')
-                ax2d.spines['left'].set_position('center')
-                ax2d.spines['right'].set_color('none')
-                ax2d.spines['bottom'].set_position('center')
-                ax2d.spines['top'].set_color('none')
-                _plot_beachball(ax2d, rtp_mt)
+            elif kind_ == 's_quiver':
+                _plot_radiation_pattern_quiver(ax, ned_mt, type="S")
+            elif kind_ == 's_sphere':
+                _plot_radiation_pattern_sphere(ax, ned_mt, type="S")
+            elif kind_ == 'beachball':
+                ax.spines['left'].set_position('center')
+                ax.spines['right'].set_color('none')
+                ax.spines['bottom'].set_position('center')
+                ax.spines['top'].set_color('none')
+                _plot_beachball(ax, rtp_mt)
 
         fig.tight_layout(pad=0.1)
         if show:
