@@ -50,20 +50,19 @@ class DynamicAttributeImportRerouteModule(ModuleType):
         if self.__function_map and name in self.__function_map:
             new_name = self.__function_map[name].split(".")
             module = importlib.import_module(".".join(new_name[:-1]))
-            warnings.warn("Function '%s' is deprecated and will stop working "
-                          "with the next ObsPy version. Please use '%s' "
-                          "instead." % (self.__name__ + "." + name,
-                                        self.__function_map[name]),
-                          ObsPyDeprecationWarning)
+            msg = ("Function '%s' is deprecated and will stop working "
+                   "with the next ObsPy version. Please use '%s' "
+                   "instead.") % (self.__name__ + "." + name,
+                                  self.__function_map[name])
+            warnings.warn(msg, ObsPyDeprecationWarning)
             return getattr(module, new_name[-1])
 
         try:
             real_module_name = self.__import_map[name]
         except:
             raise AttributeError
-        warnings.warn("Module '%s' is deprecated and will stop working with "
-                      "the next ObsPy version. Please import module "
-                      "'%s'instead." % (self.__name__ + "." + name,
-                                        self.__import_map[name]),
-                      ObsPyDeprecationWarning)
+        msg = ("Module '%s' is deprecated and will stop working with the "
+               "next ObsPy version. Please import module '%s'instead.") % (
+                   self.__name__ + "." + name, self.__import_map[name])
+        warnings.warn(msg, ObsPyDeprecationWarning)
         return importlib.import_module(real_module_name)
