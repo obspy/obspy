@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for TESTSDIR in `find -type d -wholename 'debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests'`
+for TESTSDIR in `find . -type d -wholename './debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests'`
 do
     for DIRTYPE in data images
     do
