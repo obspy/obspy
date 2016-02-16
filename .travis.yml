@@ -1,5 +1,10 @@
 language: c
 
+branches:
+  only:
+    - "master"
+    - "releases"
+
 matrix:
   include:
     # do one build run with our minimum dependencies
