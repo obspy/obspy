@@ -236,6 +236,12 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         slower.
     """
     if HAS_GEOGRAPHICLIB:
+        if lat1 > 90 or lat1 < -90:
+            msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
+            raise ValueError(msg)
+        if lat2 > 90 or lat2 < -90:
+            msg = "Latitude of Point 2 out of bounds! (-90 <= lat2 <=90)"
+            raise ValueError(msg)
         result = Geodesic(a=a, f=f).Inverse(lat1, lon1, lat2, lon2)
         azim = result['azi1']
         if azim < 0:
