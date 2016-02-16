@@ -13,7 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future import standard_library
-from future.utils import python_2_unicode_compatible
+from future.utils import python_2_unicode_compatible, native_str
 
 import copy
 import fnmatch
@@ -62,7 +62,8 @@ def read_inventory(path_or_file_object=None, format=None):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif "://" in path_or_file_object:
+    elif isinstance(path_or_file_object, (str, native_str)) and \
+            "://" in path_or_file_object:
         # some URL
         # extract extension if any
         suffix = \
