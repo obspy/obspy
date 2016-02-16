@@ -52,7 +52,7 @@ a dictionary as ``'attrib'``.
 If desired for better (human-)readability, namespace abbreviations in the
 output xml can be specified during output as QuakeML by providing a dictionary
 of namespace abbreviation mappings as `nsmap` parameter to
-:meth:`Catalog.write() <obspy.core.event.Catalog.write>`.
+:meth:`Catalog.write() <obspy.core.event.catalog.Catalog.write>`.
 The xml output of the above example looks like:
 
 .. code-block:: xml

@@ -622,7 +622,7 @@ class QuakeMLTestCase(unittest.TestCase):
             xsd_enum_definitions[type_name] = enums
 
         # Now import all enums and check if they are correct.
-        from obspy.core import event_header
+        from obspy.core.event import header as event_header
         from obspy.core.util import Enum
         all_enums = {}
         for module_item_name in dir(event_header):

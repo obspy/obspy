@@ -167,7 +167,7 @@ Gallery
     net.plot(projection="ortho")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.core.event.Catalog.plot.html
+    :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
     from obspy import read_events
@@ -222,6 +222,22 @@ Gallery
         0.00001 * tr.times() ** 5
 
     polynomial(tr.data, order=3, plot=True)
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    cat = read_events("/path/to/CMTSOLUTION")
+    cat.plot()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    cat = read_events("/path/to/CMTSOLUTION")
+    cat.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
 
 .. image:: /_static/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html

@@ -32,6 +32,10 @@ class EventTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Event
     """
     def setUp(self):
+        # directory where the test files are located
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         # Clear the Resource Identifier dict for the tests. NEVER do this
         # otherwise.
         ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
@@ -130,6 +134,17 @@ class EventTestCase(unittest.TestCase):
                       ev2.resource_id.get_referred_object())
         self.assertIs(ev.resource_id.get_referred_object(),
                       ev3.resource_id.get_referred_object())
+
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    def test_plot_farfield_without_quiver_with_maps(self):
+        """
+        Tests to plot P/S wave farfield radiation pattern, also with beachball
+        and some map plots.
+        """
+        ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
+        with ImageComparison(self.image_dir, 'event.png') as ic:
+            ev.plot(kind=[['global'], ['ortho', 'beachball'],
+                          ['p_sphere', 's_sphere']], outfile=ic.name)
 
 
 class OriginTestCase(unittest.TestCase):
