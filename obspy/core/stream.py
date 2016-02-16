@@ -11,7 +11,6 @@ Module for handling ObsPy Stream objects.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 from future.utils import native_str
 
 import copy
@@ -22,9 +21,6 @@ import pickle
 import warnings
 from glob import glob, has_magic
 
-with standard_library.hooks():
-    import urllib.request
-
 from pkg_resources import load_entry_point
 import numpy as np
 
@@ -33,7 +29,7 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
-                                  _read_from_plugin)
+                                  _read_from_plugin, download_to_file)
 from obspy.core.util.decorator import (deprecated, map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times
@@ -177,11 +173,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from future import standard_library
-        >>> with standard_library.hooks(): from urllib import request
+        >>> import requests
         >>> import io
         >>> example_url = "https://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = io.BytesIO(request.urlopen(example_url).read())
+        >>> stringio_obj = io.BytesIO(requests.get(example_url).content)
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -226,7 +221,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib.request.urlopen(pathname_or_url).read())
+            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
         # some file name
