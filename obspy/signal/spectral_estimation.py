@@ -1695,7 +1695,8 @@ class PPSD(object):
         if filename is not None:
             plt.savefig(filename)
         elif draw:
-            plt.draw()
+            with np.errstate(under="ignore"):
+                plt.draw()
         return fig
 
     def _get_plot_title(self):
