@@ -43,4 +43,5 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r -t -s 300"
+  - "python -m obspy.scripts.runtests -n appveyor-ci -r -t -s 300 --profile signal imaging core taup"
+  - "python -c \"import base64; print(base64.b64encode(open('obspy.pstats', 'rb').read()))\""

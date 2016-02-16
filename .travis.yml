@@ -137,8 +137,9 @@ script:
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r -t -s 300
+  - MODULELIST=`python -c "MODULES = ['signal', 'imaging', 'core', 'taup']; print('obspy.' + ',obspy.'.join(MODULES))"`
+  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r -t -s 300 --profile signal imaging core taup
+  - python -c "import base64; print(base64.b64encode(open('obspy.pstats', 'rb').read()))"
 
 after_success:
   - mv .coverage ../.coverage.empty
