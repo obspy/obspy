@@ -8,8 +8,6 @@ import shutil
 import sys
 import tempfile
 from fnmatch import fnmatch
-from os import makedirs, rename, walk
-from os.path import abspath, dirname, exists, join, pardir, sep
 from subprocess import call
 
 from lxml.html import Element, fromstring, tostring
@@ -19,15 +17,18 @@ try:
     target_dir = sys.argv[1]
 except IndexError:
     raise SystemExit(__doc__)
-obspy_dir = abspath(join(dirname(__file__), pardir, pardir))
-build_dir = join(obspy_dir, 'build')
+obspy_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                         os.path.pardir, os.path.pardir))
+build_dir = os.path.join(obspy_dir, 'build')
 kwargs = {'shell': True, 'cwd': obspy_dir}
 
+
 def cleanup(wildcard='*.o'):
-    for root, dirs, files in walk(obspy_dir):
+    for root, dirs, files in os.walk(obspy_dir):
         for f in files:
             if fnmatch(f, wildcard):
-                os.unlink(join(root, f))
+                os.unlink(os.path.join(root, f))
+
 
 # cleanup to force rebuild, python setup.py clean --all develop does not
 # force a rebuild of all files, therefore manually cleaning up here
@@ -38,7 +39,7 @@ cleanup('*.so')
 
 # GENERATE COVERAGE
 os.environ['CFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage"
-os.environ['FFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage -fPIC" 
+os.environ['FFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage -fPIC"
 os.environ['OBSPY_C_COVERAGE'] = "True"
 call('python setup.py -v develop', **kwargs)
 call('obspy-runtests -d', **kwargs)
@@ -46,14 +47,15 @@ call('obspy-runtests -d', **kwargs)
 
 # FIND ALL COVERAGE PROFILE STATISTICS
 profs = []
-for root, dirs, files in walk(build_dir):
-    profs.extend(abspath(join(root, i)) for i in files if fnmatch(i, '*.gcda'))
+for root, dirs, files in os.walk(build_dir):
+    profs.extend(os.path.abspath(os.path.join(root, i))
+                 for i in files if fnmatch(i, '*.gcda'))
 
 # GENERATE REPORTS WITH GCOV
 cov = []
 for gcda in profs:
-    source = gcda[gcda.rfind('obspy' + sep):].replace('gcda', 'c')
-    if not exists(join(obspy_dir, source)):
+    source = gcda[gcda.rfind('obspy' + os.path.sep):].replace('gcda', 'c')
+    if not os.path.exists(os.path.join(obspy_dir, source)):
         source = source.replace('.c', '.f')
     with tempfile.NamedTemporaryFile() as fp:
         cmd = 'gcov --object-file %s %s' % (gcda, source)
@@ -64,13 +66,13 @@ for gcda in profs:
         perc = float(fp.readline().split(':')[1].split('%')[0])
         gcov = fp.readline().strip().split()[1].strip("'")
         # move genereted gcov to coverage folder
-        new_dir = join(target_dir, dirname(source))
+        new_dir = os.path.join(target_dir, os.path.dirname(source))
         try:
-            makedirs(new_dir)
+            os.makedirs(new_dir)
         except OSError:
             pass
-        rename(join(obspy_dir, gcov), join(new_dir, gcov))
-        cov.append((filename, join(new_dir, gcov), perc))
+        os.rename(os.path.join(obspy_dir, gcov), os.path.join(new_dir, gcov))
+        cov.append((filename, os.path.join(new_dir, gcov), perc))
 
 
 # GENERATE HTML
@@ -86,7 +88,7 @@ for name, gcov, perc in cov:
     tr = Element('tr')
     tr.extend([td1, td2])
     table.append(tr)
-with open(join(target_dir, 'index.html'), 'wb') as fp:
+with open(os.path.join(target_dir, 'index.html'), 'wb') as fp:
     fp.write(tostring(page))
 
 cleanup('*.o')
