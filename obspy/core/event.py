@@ -3473,6 +3473,7 @@ class Catalog(object):
 
         if outfile:
             fig.savefig(outfile)
+            plt.close(fig)
         else:
             if show:
                 plt.show()

@@ -1117,7 +1117,7 @@ class WaveformPlotting(object):
                     mlines.Line2D([], [], color=color, alpha=self.alpha,
                                   linewidth=self.linewidth))
                 legend_labels.append(name)
-            plt.legend(legend_lines, legend_labels)
+            ax.legend(legend_lines, legend_labels)
 
         else:
             for line in lines:

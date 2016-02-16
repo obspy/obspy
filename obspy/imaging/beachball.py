@@ -278,9 +278,11 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
             fig.savefig(outfile, dpi=100, transparent=True, format=format)
         else:
             fig.savefig(outfile, dpi=100, transparent=True)
+        plt.close(fig)
     elif format and not outfile:
         imgdata = io.BytesIO()
         fig.savefig(imgdata, format=format, dpi=100, transparent=True)
+        plt.close(fig)
         imgdata.seek(0)
         return imgdata.read()
     else:
