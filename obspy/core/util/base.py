@@ -586,7 +586,12 @@ def download_to_file(url, filename_or_buffer, chunk_size=1024):
     :param chunk_size: The chunk size in bytes.
     :type chunk_size: int
     """
-    r = requests.get(url, stream=True)
+    # Workaround for old request versions.
+    try:
+        r = requests.get(url, stream=True)
+    except TypeError:
+        r = requests.get(url)
+
     r.raise_for_status()
 
     if hasattr(filename_or_buffer, "write"):

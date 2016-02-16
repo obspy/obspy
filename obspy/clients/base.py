@@ -213,11 +213,21 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
             p.prepare(method="GET", **_request_args)
             print("Downloading %s ..." % p.url)
 
-        if data is None:
-            r = requests.get(**_request_args)
-        else:
-            _request_args["data"] = data
-            r = requests.post(**_request_args)
+        # Workaround for old request versions.
+        try:
+            if data is None:
+                r = requests.get(**_request_args)
+            else:
+                _request_args["data"] = data
+                r = requests.post(**_request_args)
+        except TypeError:
+            if "stream" in _request_args:
+                del _request_args["stream"]
+            if data is None:
+                r = requests.get(**_request_args)
+            else:
+                _request_args["data"] = data
+                r = requests.post(**_request_args)
 
         # Only accept code 200.
         if r.status_code != 200:
