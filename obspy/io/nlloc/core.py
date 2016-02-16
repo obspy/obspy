@@ -64,17 +64,17 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
-        If left `None` NonLinLoc (x, y, z) output is left unchanged (e.g. if
+        If left ``None``, NonLinLoc (x, y, z) output is left unchanged (e.g. if
         it is in geographical coordinates already like for NonLinLoc in
         global mode).
         The function should accept three arguments x, y, z (each of type
         :class:`numpy.ndarray`) and return a tuple of three
-        :class:`numpy.ndarray`s (lon, lat, depth in kilometers).
+        :class:`numpy.ndarray` (lon, lat, depth in kilometers).
     :type picks: list of :class:`~obspy.core.event.Pick`
     :param picks: Original picks used to generate the NonLinLoc location.
         If provided, the output event will include the original picks and the
         arrivals in the output origin will link to them correctly (with their
-        `pick_id` attribute). If not provided, the output event will include
+        ``pick_id`` attribute). If not provided, the output event will include
         (the rather basic) pick information that can be reconstructed from the
         NonLinLoc hypocenter-phase file.
     :rtype: :class:`~obspy.core.event.Catalog`

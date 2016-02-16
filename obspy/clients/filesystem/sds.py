@@ -5,11 +5,11 @@ obspy.clients.filesystem.sds - read support for SeisComP Data Structure
 This module provides read support for data stored locally in a SeisComP Data
 Structure (SDS) directory structure.
 
-The directory and file layout of SDS is defined as:
+The directory and file layout of SDS is defined as::
 
     <SDSdir>/YEAR/NET/STA/CHAN.TYPE/NET.STA.LOC.CHAN.TYPE.YEAR.DAY
 
-These fields are defined by SDS as follows:
+These fields are defined by SDS as follows::
 
     SDSdir :  arbitrary base directory
     YEAR   :  4 digit year

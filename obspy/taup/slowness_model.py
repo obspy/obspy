@@ -1476,9 +1476,8 @@ class SlownessModel(object):
         Either ``spherical_ray_param`` or ``layer_num`` must be 0-D, or they
         must have the same shape.
 
-        :param spherical_ray_param: The spherical ray parameter of the ray(
-        s), in
-            s/km.
+        :param spherical_ray_param: The spherical ray parameter of the
+            ray(s), in s/km.
         :type spherical_ray_param: :class:`float` or :class:`~numpy.ndarray`
         :param layer_num: The layer(s) in which the calculation should be done.
         :type layer_num: :class:`float` or :class:`~numpy.ndarray`

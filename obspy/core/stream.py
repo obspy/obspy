@@ -289,12 +289,14 @@ def _create_example_stream(headonly=False):
     fixed values.
 
     PAZ of the used instrument, needed to demonstrate simulate_seismometer()
-    etc.:
-    paz = {'gain': 60077000.0,
-           'poles': [-0.037004+0.037016j, -0.037004-0.037016j, -251.33+0j,
-                     -131.04-467.29j, -131.04+467.29j],
-           'sensitivity': 2516778400.0,
-           'zeros': [0j, 0j]}}
+    etc.::
+
+        paz = {'gain': 60077000.0,
+               'poles': [-0.037004+0.037016j, -0.037004-0.037016j, -251.33+0j,
+                         -131.04-467.29j, -131.04+467.29j],
+               'sensitivity': 2516778400.0,
+               'zeros': [0j, 0j]}}
+
     """
     data_dir = os.path.join(os.path.dirname(__file__), "data")
     if not headonly:

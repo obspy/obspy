@@ -103,19 +103,24 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
-    :param projection: The map projection. Currently supported are
-        * ``"global"`` (Will plot the whole world.)
-        * ``"ortho"`` (Will center around the mean lat/long.)
-        * ``"local"`` (Will plot around local events)
-        Defaults to "global"
+    :param projection: The map projection.
+        Currently supported are:
+
+            * ``"global"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+
+        Defaults to "global".
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
-        based directly to the basemap module. Possible values are
-        * ``"c"`` (crude)
-        * ``"l"`` (low)
-        * ``"i"`` (intermediate)
-        * ``"h"`` (high)
-        * ``"f"`` (full)
+        based directly to the basemap module. Possible values are:
+
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+
         Defaults to ``"l"``. For compatibility, you may also specify any of the
         Cartopy resolutions defined in :func:`plot_cartopy`.
     :type continent_fill_color: Valid matplotlib color, optional
@@ -470,22 +475,27 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     :type labels: list/tuple of str
     :param labels: Annotations for the individual data points.
     :type projection: str, optional
-    :param projection: The map projection. Currently supported are
-        * ``"global"`` (Will plot the whole world using
-            :class:`~cartopy.crs.Mollweide`.)
-        * ``"ortho"`` (Will center around the mean lat/long using
-          :class:`~cartopy.crs.Orthographic`.)
-        * ``"local"`` (Will plot around local events using
-          :class:`~cartopy.crs.AlbersEqualArea`.)
-        * Any other Cartopy :class:`~cartopy.crs.Projection`. An instance of
-          this class will be created using the supplied ``proj_kwargs``.
+    :param projection: The map projection.
+        Currently supported are:
+
+            * ``"global"`` (Will plot the whole world using
+              :class:`~cartopy.crs.Mollweide`.)
+            * ``"ortho"`` (Will center around the mean lat/long using
+              :class:`~cartopy.crs.Orthographic`.)
+            * ``"local"`` (Will plot around local events using
+              :class:`~cartopy.crs.AlbersEqualArea`.)
+            * Any other Cartopy :class:`~cartopy.crs.Projection`. An instance
+              of this class will be created using the supplied ``proj_kwargs``.
+
         Defaults to "global"
     :type resolution: str, optional
     :param resolution: Resolution of the boundary database to use. Will be
-        passed directly to the Cartopy module. Possible values are
-        * ``"110m"``
-        * ``"50m"``
-        * ``"10m"``
+        passed directly to the Cartopy module. Possible values are:
+
+            * ``"110m"``
+            * ``"50m"``
+            * ``"10m"``
+
         Defaults to ``"110m"``. For compatibility, you may also specify any of
         the Basemap resolutions defined in :func:`plot_basemap`.
     :type continent_fill_color: Valid matplotlib color, optional

@@ -2504,9 +2504,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         .. plot::
 
             from obspy import read, read_inventory
-            st = read("https://examples.obspy.org/IU_ULN_2015-07-18T02.mseed")
+            st = read("/path/to/IU_ULN_00_LH1_2015-07-18T02.mseed", "MSEED")
             tr = st[0]
-            inv = read_inventory("https://examples.obspy.org/IU_ULN.xml")
+            inv = read_inventory("/path/to/IU_ULN_00_LH1.xml", "STATIONXML")
             pre_filt = [0.001, 0.005, 45, 50]
             output = "DISP"
             tr.remove_response(inventory=inv, pre_filt=pre_filt, output=output,
