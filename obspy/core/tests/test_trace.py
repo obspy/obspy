@@ -2198,7 +2198,8 @@ class TraceTestCase(unittest.TestCase):
         pre_filt = [0.001, 0.005, 10, 20]
 
         image_dir = os.path.join(os.path.dirname(__file__), 'images')
-        with ImageComparison(image_dir, "trace_remove_response.png") as ic:
+        with ImageComparison(image_dir, "trace_remove_response.png",
+                             reltol=1.5) as ic:
             tr.remove_response(pre_filt=pre_filt, output="DISP",
                                water_level=60, end_stage=None, plot=ic.name)
 

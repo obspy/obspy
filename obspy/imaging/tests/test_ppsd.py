@@ -33,7 +33,7 @@ class PPSDTestCase(unittest.TestCase):
         _t = np.geterr()
         np.seterr(all="ignore")
         try:
-            with ImageComparison(self.path, 'ppsd.png') as ic:
+            with ImageComparison(self.path, 'ppsd.png', reltol=1.5) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=True, show_histogram=True,
                     show_percentiles=True, percentiles=[75, 90],
@@ -55,7 +55,8 @@ class PPSDTestCase(unittest.TestCase):
         _t = np.geterr()
         np.seterr(all="ignore")
         try:
-            with ImageComparison(self.path, 'ppsd_cumulative.png') as ic:
+            with ImageComparison(self.path, 'ppsd_cumulative.png',
+                                 reltol=1.5) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=True, show_histogram=True,
                     show_noise_models=True, grid=True, period_lim=(0.02, 100),
