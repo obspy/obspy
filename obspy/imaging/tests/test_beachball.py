@@ -226,6 +226,10 @@ class BeachballTestCase(unittest.TestCase):
               [150, 87, 1]]
 
         # Initialize figure
+        try:
+            plt.close("all")
+        except:
+            pass
         fig = plt.figure(figsize=(6, 6), dpi=300)
         ax = fig.add_subplot(111, aspect='equal')
 
@@ -245,7 +249,8 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection.png') as ic:
+        with ImageComparison(self.path, 'bb_collection.png',
+                             plt_close_all_enter=False) as ic:
             fig.savefig(ic.name)
 
     def collection_aspect(self, axis, filename_width, filename_width_height):
@@ -256,6 +261,10 @@ class BeachballTestCase(unittest.TestCase):
 
         # Test passing only a width
         # Initialize figure
+        try:
+            plt.close("all")
+        except:
+            pass
         fig = plt.figure()
         ax = fig.add_subplot(111)
         # add the beachball (a collection of two patches) to the axis
@@ -266,7 +275,8 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits
         ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, filename_width) as ic:
+        with ImageComparison(self.path, filename_width,
+                             plt_close_all_enter=False) as ic:
             fig.savefig(ic.name)
 
         # Test passing a width and a height
@@ -281,7 +291,8 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis(axis)
         # create and compare image
-        with ImageComparison(self.path, filename_width_height) as ic:
+        with ImageComparison(self.path, filename_width_height,
+                             plt_close_all_enter=False) as ic:
             fig.savefig(ic.name)
 
     def test_collection_aspect_x(self):
