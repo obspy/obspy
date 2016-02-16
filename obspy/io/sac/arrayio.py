@@ -338,13 +338,13 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
 
     # actually write everything
     try:
-        f.write(hf.data)
-        f.write(hi.data)
-        f.write(hs.data)
+        f.write(memoryview(hf))
+        f.write(memoryview(hi))
+        f.write(memoryview(hs))
         if data is not None:
             # TODO: this long way of writing it is to make sure that
             # 'f8' data, for example, is correctly cast as 'f4'
-            f.write(data.astype(data.dtype.byteorder + 'f4').data)
+            f.write(memoryview(data.astype(data.dtype.byteorder + 'f4')))
     except Exception as e:
         if is_file_name:
             f.close()
