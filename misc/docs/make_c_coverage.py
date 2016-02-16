@@ -5,10 +5,9 @@ USAGE: make_c_coverage.py output_dir
 
 import os
 import shutil
+import subprocess
 import sys
-import tempfile
 from fnmatch import fnmatch
-from subprocess import call
 
 from lxml.html import Element, fromstring, tostring
 
@@ -20,7 +19,6 @@ except IndexError:
 obspy_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          os.path.pardir, os.path.pardir))
 build_dir = os.path.join(obspy_dir, 'build')
-kwargs = {'shell': True, 'cwd': obspy_dir}
 
 
 def cleanup(wildcard='*.o'):
@@ -41,8 +39,8 @@ cleanup('*.so')
 os.environ['CFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage"
 os.environ['FFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage -fPIC"
 os.environ['OBSPY_C_COVERAGE'] = "True"
-call('python setup.py -v develop', **kwargs)
-call('obspy-runtests -d', **kwargs)
+subprocess.call([sys.executable, 'setup.py', '-v', 'develop'], cwd=obspy_dir)
+subprocess.call(['obspy-runtests', '-d'], cwd=obspy_dir)
 
 
 # FIND ALL COVERAGE PROFILE STATISTICS
@@ -57,22 +55,23 @@ for gcda in profs:
     source = gcda[gcda.rfind('obspy' + os.path.sep):].replace('gcda', 'c')
     if not os.path.exists(os.path.join(obspy_dir, source)):
         source = source.replace('.c', '.f')
-    with tempfile.NamedTemporaryFile() as fp:
-        cmd = 'gcov --object-file %s %s' % (gcda, source)
-        call(cmd, stdout=fp, **kwargs)
-        fp.seek(0)
-        # read stdout
-        filename = fp.readline().strip().split()[1].strip("'")
-        perc = float(fp.readline().split(':')[1].split('%')[0])
-        gcov = fp.readline().strip().split()[1].strip("'")
-        # move genereted gcov to coverage folder
-        new_dir = os.path.join(target_dir, os.path.dirname(source))
-        try:
-            os.makedirs(new_dir)
-        except OSError:
-            pass
-        os.rename(os.path.join(obspy_dir, gcov), os.path.join(new_dir, gcov))
-        cov.append((filename, os.path.join(new_dir, gcov), perc))
+
+    output = subprocess.check_output(['gcov', '--object-file', gcda, source],
+                                     cwd=obspy_dir)
+    output = output.decode().splitlines()
+
+    filename = output[0].strip().split()[1].strip("'")
+    perc = float(output[1].split(':')[1].split('%')[0])
+    gcov = output[2].strip().split()[1].strip("'")
+
+    # move generated gcov to coverage folder
+    new_dir = os.path.join(target_dir, os.path.dirname(source))
+    try:
+        os.makedirs(new_dir)
+    except OSError:
+        pass
+    os.rename(os.path.join(obspy_dir, gcov), os.path.join(new_dir, gcov))
+    cov.append((filename, os.path.join(new_dir, gcov), perc))
 
 
 # GENERATE HTML
