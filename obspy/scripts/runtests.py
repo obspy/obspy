@@ -110,8 +110,8 @@ from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
-DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap', 'mock', 'future',
+DEPENDENCIES = ["numpy", "scipy", "matplotlib", "lxml.etree", "sqlalchemy",
+                "mpl_toolkits.basemap", "mock", "future",
                 "flake8", "pyflakes", "pyimgur"]
 
 PSTATS_HELP = """

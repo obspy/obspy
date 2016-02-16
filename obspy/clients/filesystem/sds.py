@@ -55,7 +55,7 @@ from obspy.core.util.misc import BAND_CODE
 SDS_FMTSTR = os.path.join(
     "{year}", "{network}", "{station}", "{channel}.{sds_type}",
     "{network}.{station}.{location}.{channel}.{sds_type}.{year}.{doy:03d}")
-FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w*?)?([!:].*?)?}"
+FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w+?)?([!:].*?)?}"
 
 
 class Client(object):

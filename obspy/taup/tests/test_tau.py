@@ -367,10 +367,10 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check pierce['lat'] and pierce['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
-                                 'lat')
-        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
-                                 'lon')
+        with self.assertRaises(ValueError):
+            p_arr.pierce["lat"]
+        with self.assertRaises(ValueError):
+            p_arr.pierce["lon"]
 
     def test_vs_java_iasp91(self):
         """
@@ -630,10 +630,10 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check path['lat'] and path['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
-                                 'lat')
-        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
-                                 'lon')
+        with self.assertRaises(ValueError):
+            arrivals[0].path["lat"]
+        with self.assertRaises(ValueError):
+            arrivals[0].path["lon"]
 
     def test_single_path_ak135(self):
         """

@@ -27,6 +27,8 @@ with standard_library.hooks():
 from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
 
+import requests
+
 from obspy.core.util.misc import to_int_or_zero
 
 
@@ -570,6 +572,39 @@ def _get_deprecated_argument_action(old_name, new_name, real_action='store'):
                 setattr(namespace, self.dest, False)
 
     return _Action
+
+
+def download_to_file(url, filename_or_buffer, chunk_size=1024):
+    """
+    Helper function to download a potentially large file.
+
+    :param url: The URL to GET the data from.
+    :type url: str
+    :param filename_or_buffer: The filename_or_buffer or file-like object to
+        download to.
+    :type filename_or_buffer: str or file-like object
+    :param chunk_size: The chunk size in bytes.
+    :type chunk_size: int
+    """
+    # Workaround for old request versions.
+    try:
+        r = requests.get(url, stream=True)
+    except TypeError:
+        r = requests.get(url)
+
+    r.raise_for_status()
+
+    if hasattr(filename_or_buffer, "write"):
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            if not chunk:
+                continue
+            filename_or_buffer.write(chunk)
+    else:
+        with io.open(filename_or_buffer, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                if not chunk:
+                    continue
+                fh.write(chunk)
 
 
 if __name__ == '__main__':
