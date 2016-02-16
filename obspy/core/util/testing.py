@@ -252,6 +252,13 @@ class ImageComparison(NamedTemporaryFile):
     :type adjust_tolerance: bool, optional
     :param adjust_tolerance: Adjust the tolerance based on the matplotlib
         version. Can optionally be turned off to simply compare two images.
+    :type plt_close_all_enter: bool
+    :param plt_close_all_enter: Whether to close all open figures when entering
+        context (:func:`matplotlib.pyplot.close` with "all" as first argument.
+    :type plt_close_all_exit: bool
+    :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
+        with "all" as first argument (close all figures) or no arguments (close
+        active figure). Has no effect if ``plt_close=False``.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -284,7 +291,8 @@ class ImageComparison(NamedTemporaryFile):
     ...     # image is compared against baseline image automatically
     """
     def __init__(self, image_path, image_name, reltol=1,
-                 adjust_tolerance=True, *args, **kwargs):
+                 adjust_tolerance=True, plt_close_all_enter=True,
+                 plt_close_all_exit=True, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -295,6 +303,8 @@ class ImageComparison(NamedTemporaryFile):
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = reltol * 3.0
+        self.plt_close_all_enter = plt_close_all_enter
+        self.plt_close_all_exit = plt_close_all_exit
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
@@ -347,6 +357,13 @@ class ImageComparison(NamedTemporaryFile):
             rcParams['text.hinting_factor'] = 8
         except KeyError:
             warnings.warn("could not set rcParams['text.hinting_factor']")
+
+        if self.plt_close_all_enter:
+            import matplotlib.pyplot as plt
+            try:
+                plt.close("all")
+            except:
+                pass
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
@@ -410,10 +427,14 @@ class ImageComparison(NamedTemporaryFile):
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
-            import matplotlib.pyplot as plt
             self.close()  # flush internal buffer
             self._fileobj.close()
-            plt.close()
+            if self.plt_close_all_exit:
+                import matplotlib.pyplot as plt
+                try:
+                    plt.close("all")
+                except:
+                    pass
             if self.keep_output:
                 if failed or not self.keep_only_failed:
                     self._copy_tempfiles()

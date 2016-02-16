@@ -463,6 +463,8 @@ def _sosfilt(sos, x, axis=-1, zi=None):
     >>> x[0] = 1.
     >>> y_tf = signal.lfilter(b, a, x)
     >>> y_sos = _sosfilt(sos, x)
+    >>> plt.figure()  # doctest: +ELLIPSIS
+    <matplotlib.figure.Figure object at 0x...>
     >>> plt.plot(y_tf, 'r', label='TF')  # doctest: +ELLIPSIS
     [<matplotlib.lines.Line2D object at ...>]
     >>> plt.plot(y_sos, 'k', label='SOS')  # doctest: +ELLIPSIS

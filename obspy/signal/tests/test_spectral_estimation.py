@@ -456,7 +456,8 @@ class PsdTestCase(unittest.TestCase):
         #     matches (like above):
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png') as ic:
+                             'ppsd_restricted_stack.png',
+                             plt_close_all_exit=False) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
@@ -476,7 +477,9 @@ class PsdTestCase(unittest.TestCase):
         try:
             with ImageComparison(self.path_images,
                                  'ppsd_restricted_stack.png',
-                                 adjust_tolerance=False) as ic:
+                                 adjust_tolerance=False,
+                                 plt_close_all_enter=False,
+                                 plt_close_all_exit=False) as ic:
                 # rms of the valid comparison above is ~31,
                 # rms of the invalid comparison we test here is ~36
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
@@ -497,7 +500,8 @@ class PsdTestCase(unittest.TestCase):
         #     image test should pass agin:
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png') as ic:
+                             'ppsd_restricted_stack.png',
+                             plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
             _t = np.geterr()
             np.seterr(under="ignore")
