@@ -11,7 +11,6 @@ Main module containing XML-SEED parser.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
-from future import standard_library
 from future.utils import native_str
 
 import copy
@@ -23,9 +22,6 @@ import re
 import warnings
 import zipfile
 
-with standard_library.hooks():
-    import urllib.request  # @UnresolvedImport
-
 from lxml import etree
 from lxml.etree import parse as xmlparse
 from lxml.etree import Element, SubElement, tostring
@@ -33,6 +29,7 @@ import numpy as np
 
 from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import download_to_file
 from obspy.core.util.decorator import map_example_filename, deprecated
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import IGNORE_ATTR, SEEDParserException, to_tag
@@ -161,9 +158,10 @@ class Parser(object):
         # try to transform everything into BytesIO object
         if isinstance(data, (str, native_str)):
             if re.search(r"://", data) is not None:
-                # some URL
-                data = urllib.request.urlopen(data).read()
-                data = io.BytesIO(data)
+                url = data
+                data = io.BytesIO()
+                download_to_file(url=url, filename_or_buffer=data)
+                data.seek(0, 0)
             elif os.path.isfile(data):
                 # looks like a file - read it
                 with open(data, 'rb') as f:
