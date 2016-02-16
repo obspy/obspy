@@ -480,7 +480,7 @@ def farfield(mt, points, type):
         pass
     else:
         raise ValueError('points should have shape 2 x npoints or 3 x npoints')
-    m_pq = fullmt(mt)
+    m_pq = _fullmt(mt)
 
     # precompute directional cosine array
     dists = np.sqrt(points[0] * points[0] + points[1] * points[1] +
@@ -514,7 +514,7 @@ def farfield(mt, points, type):
     return disp
 
 
-def fullmt(mt):
+def _fullmt(mt):
     """takes 6 comp moment tensor and returns full 3x3 moment tensor"""
     mt_full = np.array(([[mt[0], mt[3], mt[4]],
                          [mt[3], mt[1], mt[5]],
