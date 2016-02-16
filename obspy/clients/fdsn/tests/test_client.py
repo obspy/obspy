@@ -26,8 +26,8 @@ from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.client import build_url, parse_simple_xml
-from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, FDSNException,
-                                       FDSNRedirectException)
+from obspy.clients.fdsn.header import (DEFAULT_USER_AGENT, URL_MAPPINGS,
+                                       FDSNException, FDSNRedirectException)
 from obspy.core.inventory import Response
 from obspy.geodetics import locations2degrees
 
@@ -84,6 +84,49 @@ class ClientTestCase(unittest.TestCase):
         cls.client_auth = \
             Client(base_url="IRIS", user_agent=USER_AGENT,
                    user="nobody@iris.edu", password="anonymous")
+
+    def test_validate_base_url(self):
+        """
+        Tests the _validate_base_url() method.
+        """
+
+        test_urls_valid = list(URL_MAPPINGS.values())
+        test_urls_valid += [
+            "http://arclink.ethz.ch",
+            "http://example.org",
+            "https://webservices.rm.ingv.it",
+            "http://localhost:8080/test/",
+            "http://93.63.40.85/",
+            "http://[::1]:80/test/",
+            "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
+            "http://[2001:db8::ff00:42:8329]",
+            "http://[::ffff:192.168.89.9]",
+            ]
+
+        test_urls_fails = [
+            "http://",
+            "http://127.0.1",
+            "http://127.=.0.1",
+            "http://127.0.0.0.1",
+            ]
+        test_urls_fails += [
+            "http://[]",
+            "http://[1]",
+            "http://[1:2]",
+            "http://[1::2::3]",
+            "http://[1::2:3::4]",
+            "http://[1:2:2:4:5:6:7]",
+            ]
+
+        for url in test_urls_valid:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                True)
+
+        for url in test_urls_fails:
+            self.assertEqual(
+                self.client._validate_base_url(url),
+                False)
 
     def test_url_building(self):
         """

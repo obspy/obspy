@@ -40,6 +40,8 @@ master:
      format. This has limited information but is much faster.
    * New mass downloader to assist in downloading data across a large number
      of FDSN web services.
+   * Catch invalid URLs when initialising Client and avoid confusing error
+     messages (see #1162)
  - obspy.clients.filesystem.sds:
    * New client to read data from local SDS directory structure (see #1135).
    * Command line script `obspy-sds-report` to generate html page with
