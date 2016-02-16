@@ -1,19 +1,12 @@
 #!/bin/sh
 
-CODENAME=`lsb_release -cs`
-
-for DIRTYPE in data images
+for TESTSDIR in `find -type d -wholename 'debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests'`
 do
-    for DIR in `ls -d debian/tmp/usr/lib/python2*/*-packages/obspy/*/tests/${DIRTYPE}`
+    for DIRTYPE in data images
     do
-        MOD=`echo $DIR | sed 's#.*obspy/##' | sed 's#/.*##'`
-        if [ "$CODENAME" = "squeeze" ]
-        then
-            TARGET=usr/share/pyshared/obspy/${MOD}/tests/${DIRTYPE}
-        else
-            TARGET=usr/share/obspy/${MOD}/tests/${DIRTYPE}
-        fi
+        SUFFIX=`echo $TESTSDIR | sed 's#.*-packages/##'`
+        TARGET=usr/share/${SUFFIX}/${DIRTYPE}
         dh_installdirs -p python-obspy-dbg ${TARGET}
-        dh_install -p python-obspy-dbg ${DIR}/* ${TARGET}
+        dh_install -p python-obspy-dbg ${TESTSDIR}/${DIRTYPE}/* ${TARGET}
     done
 done
