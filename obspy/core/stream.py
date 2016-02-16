@@ -740,6 +740,16 @@ class Stream(object):
             raise TypeError(msg)
         return self
 
+    @deprecated(
+        "'getGaps' has been renamed to "  # noqa
+        "'get_gaps'. Use that instead.")
+    def getGaps(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getGaps' has been renamed to
+        'get_gaps'. Use that instead.
+        '''
+        return self.get_gaps(*args, **kwargs)
+
     def get_gaps(self, min_gap=None, max_gap=None):
         """
         Determine all trace gaps/overlaps of the Stream object.
@@ -1193,6 +1203,16 @@ class Stream(object):
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         return self.traces.pop(index)
+
+    @deprecated(
+        "'printGaps' has been renamed to "  # noqa
+        "'print_gaps'. Use that instead.")
+    def printGaps(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'printGaps' has been renamed to
+        'print_gaps'. Use that instead.
+        '''
+        return self.print_gaps(*args, **kwargs)
 
     def print_gaps(self, min_gap=None, max_gap=None):
         """

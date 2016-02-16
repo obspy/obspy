@@ -147,6 +147,16 @@ class SeedLinkConnection(object):
         self.state = SLState()
         self.timeout = timeout
 
+    @deprecated(
+        "'isConnected' has been renamed to "  # noqa
+        "'is_connected'. Use that instead.")
+    def isConnected(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'isConnected' has been renamed to
+        'is_connected'. Use that instead.
+        '''
+        return self.is_connected(*args, **kwargs)
+
     def is_connected(self, timeout=1.0):
         """
         Returns connection state of the connection socket.
@@ -157,6 +167,16 @@ class SeedLinkConnection(object):
         return self.socket is not None and \
             self.is_connected_impl(self.socket, timeout)
 
+    @deprecated(
+        "'getState' has been renamed to "  # noqa
+        "'get_state'. Use that instead.")
+    def getState(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getState' has been renamed to
+        'get_state'. Use that instead.
+        '''
+        return self.get_state(*args, **kwargs)
+
     def get_state(self):
         """
         Returns the SLState state object.
@@ -164,6 +184,16 @@ class SeedLinkConnection(object):
         :return: the SLState state object
         """
         return self.state
+
+    @deprecated(
+        "'setNetTimout' has been renamed to "  # noqa
+        "'set_net_timeout'. Use that instead.")
+    def setNetTimout(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setNetTimout' has been renamed to
+        'set_net_timeout'. Use that instead.
+        '''
+        return self.set_net_timeout(*args, **kwargs)
 
     def set_net_timeout(self, netto):
         """
@@ -173,6 +203,16 @@ class SeedLinkConnection(object):
         """
         self.netto = netto
 
+    @deprecated(
+        "'getNetTimout' has been renamed to "  # noqa
+        "'get_net_timeout'. Use that instead.")
+    def getNetTimout(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getNetTimout' has been renamed to
+        'get_net_timeout'. Use that instead.
+        '''
+        return self.get_net_timeout(*args, **kwargs)
+
     def get_net_timeout(self):
         """
         Returns the network timeout (seconds).
@@ -180,6 +220,16 @@ class SeedLinkConnection(object):
         :return: the network timeout in seconds.
         """
         return self.netto
+
+    @deprecated(
+        "'setKeepAlive' has been renamed to "  # noqa
+        "'set_keep_alive'. Use that instead.")
+    def setKeepAlive(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setKeepAlive' has been renamed to
+        'set_keep_alive'. Use that instead.
+        '''
+        return self.set_keep_alive(*args, **kwargs)
 
     def set_keep_alive(self, keepalive):
         """
@@ -189,6 +239,26 @@ class SeedLinkConnection(object):
         """
         self.keepalive = keepalive
 
+    @deprecated(
+        "'getKeepAlive' has been renamed to "  # noqa
+        "'get_keep_alive'. Use that instead.")
+    def getKeepAlive(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getKeepAlive' has been renamed to
+        'get_keep_alive'. Use that instead.
+        '''
+        return self.get_keep_alive(*args, **kwargs)
+
+    @deprecated(
+        "'getNetDelay' has been renamed to "  # noqa
+        "'get_net_delay'. Use that instead.")
+    def getNetDelay(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getNetDelay' has been renamed to
+        'get_net_delay'. Use that instead.
+        '''
+        return self.get_net_delay(*args, **kwargs)
+
     def get_keep_alive(self):
         """
         Returns the interval to send keepalive/heartbeat (seconds).
@@ -196,6 +266,16 @@ class SeedLinkConnection(object):
         :return: the interval to send keepalive/heartbeat in seconds.
         """
         return self.keepalive
+
+    @deprecated(
+        "'setNetDelay' has been renamed to "  # noqa
+        "'set_net_delay'. Use that instead.")
+    def setNetDelay(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setNetDelay' has been renamed to
+        'set_net_delay'. Use that instead.
+        '''
+        return self.set_net_delay(*args, **kwargs)
 
     def set_net_delay(self, netdly):
         """
@@ -213,6 +293,16 @@ class SeedLinkConnection(object):
         """
         return self.netdly
 
+    @deprecated(
+        "'setSLAddress' has been renamed to "  # noqa
+        "'set_sl_address'. Use that instead.")
+    def setSLAddress(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setSLAddress' has been renamed to
+        'set_sl_address'. Use that instead.
+        '''
+        return self.set_sl_address(*args, **kwargs)
+
     def set_sl_address(self, sladdr):
         """
         Sets the host:port of the SeedLink server.
@@ -227,6 +317,16 @@ class SeedLinkConnection(object):
         name = " obspy.clients.seedlink [%s]" % (sladdr)
         logger.name = name
 
+    @deprecated(
+        "'setLastpkttime' has been renamed to "  # noqa
+        "'set_last_pkt_time'. Use that instead.")
+    def setLastpkttime(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setLastpkttime' has been renamed to
+        'set_last_pkt_time'. Use that instead.
+        '''
+        return self.set_last_pkt_time(*args, **kwargs)
+
     def set_last_pkt_time(self, lastpkttime):
         """
          Sets a specified start time for beginning of data transmission .
@@ -235,6 +335,16 @@ class SeedLinkConnection(object):
             for each station is appended to DATA command on resume.
         """
         self.lastpkttime = lastpkttime
+
+    @deprecated(
+        "'setBeginTime' has been renamed to "  # noqa
+        "'set_begin_time'. Use that instead.")
+    def setBeginTime(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setBeginTime' has been renamed to
+        'set_begin_time'. Use that instead.
+        '''
+        return self.set_begin_time(*args, **kwargs)
 
     def set_begin_time(self, start_time_string):
         """
@@ -247,6 +357,16 @@ class SeedLinkConnection(object):
             self.begin_time = UTCDateTime(start_time_string)
         else:
             self.begin_time = None
+
+    @deprecated(
+        "'setEndTime' has been renamed to "  # noqa
+        "'set_end_time'. Use that instead.")
+    def setEndTime(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setEndTime' has been renamed to
+        'set_end_time'. Use that instead.
+        '''
+        return self.set_end_time(*args, **kwargs)
 
     def set_end_time(self, end_time_string):
         """
@@ -266,6 +386,16 @@ class SeedLinkConnection(object):
         """
         self.terminate_flag = True
 
+    @deprecated(
+        "'getSLAddress' has been renamed to "  # noqa
+        "'get_sl_address'. Use that instead.")
+    def getSLAddress(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getSLAddress' has been renamed to
+        'get_sl_address'. Use that instead.
+        '''
+        return self.get_sl_address(*args, **kwargs)
+
     def get_sl_address(self):
         """
         Returns the host:port of the SeedLink server.
@@ -273,6 +403,16 @@ class SeedLinkConnection(object):
         :return: the host:port of the SeedLink server.
         """
         return self.sladdr
+
+    @deprecated(
+        "'getStreams' has been renamed to "  # noqa
+        "'get_streams'. Use that instead.")
+    def getStreams(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getStreams' has been renamed to
+        'get_streams'. Use that instead.
+        '''
+        return self.get_streams(*args, **kwargs)
 
     def get_streams(self):
         """
@@ -282,6 +422,16 @@ class SeedLinkConnection(object):
         """
         return list(self.streams)
 
+    @deprecated(
+        "'getInfoString' has been renamed to "  # noqa
+        "'get_info_string'. Use that instead.")
+    def getInfoString(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getInfoString' has been renamed to
+        'get_info_string'. Use that instead.
+        '''
+        return self.get_info_string(*args, **kwargs)
+
     def get_info_string(self):
         """
         Returns the results of the last INFO request.
@@ -290,6 +440,16 @@ class SeedLinkConnection(object):
            packets
         """
         return self.info_string
+
+    @deprecated(
+        "'checkslcd' has been renamed to "  # noqa
+        "'check_slcd'. Use that instead.")
+    def checkslcd(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'checkslcd' has been renamed to
+        'check_slcd'. Use that instead.
+        '''
+        return self.check_slcd(*args, **kwargs)
 
     def check_slcd(self):
         """
@@ -312,6 +472,16 @@ class SeedLinkConnection(object):
                 logger.error(msg % (self.sladdr))
                 retval = False
         return retval
+
+    @deprecated(
+        "'readStreamList' has been renamed to "  # noqa
+        "'read_stream_list'. Use that instead.")
+    def readStreamList(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'readStreamList' has been renamed to
+        'read_stream_list'. Use that instead.
+        '''
+        return self.read_stream_list(*args, **kwargs)
 
     def read_stream_list(self, streamfile, defselect):
         """
@@ -402,6 +572,16 @@ class SeedLinkConnection(object):
                 pass
         return stacount
 
+    @deprecated(
+        "'parseStreamlist' has been renamed to "  # noqa
+        "'parse_stream_list'. Use that instead.")
+    def parseStreamlist(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'parseStreamlist' has been renamed to
+        'parse_stream_list'. Use that instead.
+        '''
+        return self.parse_stream_list(*args, **kwargs)
+
     def parse_stream_list(self, streamlist, defselect):
         """
         Parse a string of streams and selectors and add them to the stream
@@ -471,6 +651,16 @@ class SeedLinkConnection(object):
             logger.debug(msg)
         return stacount
 
+    @deprecated(
+        "'addStream' has been renamed to "  # noqa
+        "'add_stream'. Use that instead.")
+    def addStream(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'addStream' has been renamed to
+        'add_stream'. Use that instead.
+        '''
+        return self.add_stream(*args, **kwargs)
+
     def add_stream(self, net, station, selectors_str, seqnum, timestamp):
         """
         Add a new stream entry to the stream chain for the given net/station
@@ -518,6 +708,26 @@ class SeedLinkConnection(object):
         self.multistation = True
         return 0
 
+    @deprecated(
+        "'setStateFile' has been renamed to "  # noqa
+        "'set_state_file'. Use that instead.")
+    def setStateFile(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setStateFile' has been renamed to
+        'set_state_file'. Use that instead.
+        '''
+        return self.set_state_file(*args, **kwargs)
+
+    @deprecated(
+        "'setUniParams' has been renamed to "  # noqa
+        "'set_uni_params'. Use that instead.")
+    def setUniParams(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setUniParams' has been renamed to
+        'set_uni_params'. Use that instead.
+        '''
+        return self.set_uni_params(*args, **kwargs)
+
     def set_uni_params(self, selectors_str, seqnum, timestamp):
         """
         Set the parameters for a uni-station mode connection for the
@@ -564,6 +774,16 @@ class SeedLinkConnection(object):
         """
         self.statefile = statefile
         return self.recover_state(self.statefile)
+
+    @deprecated(
+        "'recoverState' has been renamed to "  # noqa
+        "'recover_state'. Use that instead.")
+    def recoverState(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'recoverState' has been renamed to
+        'recover_state'. Use that instead.
+        '''
+        return self.recover_state(*args, **kwargs)
 
     def recover_state(self, statefile):
         """
@@ -657,6 +877,16 @@ class SeedLinkConnection(object):
                 pass
         return stacount
 
+    @deprecated(
+        "'saveState' has been renamed to "  # noqa
+        "'save_state'. Use that instead.")
+    def saveState(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'saveState' has been renamed to
+        'save_state'. Use that instead.
+        '''
+        return self.save_state(*args, **kwargs)
+
     def save_state(self, statefile):
         """
         Save all current sequence numbers and time stamps into the
@@ -700,6 +930,16 @@ class SeedLinkConnection(object):
             except Exception as e:
                 pass
         return stacount
+
+    @deprecated(
+        "'doTerminate' has been renamed to "  # noqa
+        "'do_terminate'. Use that instead.")
+    def doTerminate(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'doTerminate' has been renamed to
+        'do_terminate'. Use that instead.
+        '''
+        return self.do_terminate(*args, **kwargs)
 
     def do_terminate(self):
         """
@@ -1119,6 +1359,16 @@ class SeedLinkConnection(object):
             except SeedLinkException as sle:
                 logger.error(sle.value)
 
+    @deprecated(
+        "'isConnectedImpl' has been renamed to "  # noqa
+        "'is_connected_impl'. Use that instead.")
+    def isConnectedImpl(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'isConnectedImpl' has been renamed to
+        'is_connected_impl'. Use that instead.
+        '''
+        return self.is_connected_impl(*args, **kwargs)
+
     def is_connected_impl(self, sock, timeout):
         """
         Check a socket for write ability using select()
@@ -1142,6 +1392,16 @@ class SeedLinkConnection(object):
         if sock in ready_to_write:
             return True
         return False
+
+    @deprecated(
+        "'sendData' has been renamed to "  # noqa
+        "'send_data'. Use that instead.")
+    def sendData(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'sendData' has been renamed to
+        'send_data'. Use that instead.
+        '''
+        return self.send_data(*args, **kwargs)
 
     def send_data(self, sendbytes, code, resplen):
         """
@@ -1185,6 +1445,26 @@ class SeedLinkConnection(object):
             msg = "[%s] bad response to '%s'"
             raise SeedLinkException(msg % (code, sendbytes))
         return bytesread
+
+    @deprecated(
+        "'receiveData' has been renamed to "  # noqa
+        "'receive_data'. Use that instead.")
+    def receiveData(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'receiveData' has been renamed to
+        'receive_data'. Use that instead.
+        '''
+        return self.receive_data(*args, **kwargs)
+
+    @deprecated(
+        "'sayHello' has been renamed to "  # noqa
+        "'say_hello'. Use that instead.")
+    def sayHello(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'sayHello' has been renamed to
+        'say_hello'. Use that instead.
+        '''
+        return self.say_hello(*args, **kwargs)
 
     def receive_data(self, maxbytes, code):
         """
@@ -1262,6 +1542,16 @@ class SeedLinkConnection(object):
             msg = "ncorrect response to HELLO: '%s'" % (servstr)
             raise SeedLinkException(msg)
 
+    @deprecated(
+        "'requestInfo' has been renamed to "  # noqa
+        "'request_info'. Use that instead.")
+    def requestInfo(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'requestInfo' has been renamed to
+        'request_info'. Use that instead.
+        '''
+        return self.request_info(*args, **kwargs)
+
     def request_info(self, info_level):
         """
         Add an INFO request to the SeedLink Connection Description.
@@ -1276,6 +1566,16 @@ class SeedLinkConnection(object):
             raise SeedLinkException(msg)
         else:
             self.info_request_string = info_level
+
+    @deprecated(
+        "'sendInfoRequest' has been renamed to "  # noqa
+        "'send_info_request'. Use that instead.")
+    def sendInfoRequest(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'sendInfoRequest' has been renamed to
+        'send_info_request'. Use that instead.
+        '''
+        return self.send_info_request(*args, **kwargs)
 
     def send_info_request(self, info_level, verb_level):
         """
@@ -1301,6 +1601,16 @@ class SeedLinkConnection(object):
             msg = "detected SeedLink version %s does not support INFO requests"
             raise SeedLinkException(msg % (self.server_version))
 
+    @deprecated(
+        "'checkVersion' has been renamed to "  # noqa
+        "'check_version'. Use that instead.")
+    def checkVersion(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'checkVersion' has been renamed to
+        'check_version'. Use that instead.
+        '''
+        return self.check_version(*args, **kwargs)
+
     def check_version(self, version):
         """
         Checks server version number against a given specified value.
@@ -1317,6 +1627,16 @@ class SeedLinkConnection(object):
                 return 1
             else:
                 return -1
+
+    @deprecated(
+        "'configLink' has been renamed to "  # noqa
+        "'config_link'. Use that instead.")
+    def configLink(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'configLink' has been renamed to
+        'config_link'. Use that instead.
+        '''
+        return self.config_link(*args, **kwargs)
 
     def config_link(self):
         """
@@ -1337,6 +1657,16 @@ class SeedLinkConnection(object):
                 raise SeedLinkException(msg % (self.server_version))
         else:
             self.negotiate_uni_station()
+
+    @deprecated(
+        "'negotiateStation' has been renamed to "  # noqa
+        "'negotiate_station'. Use that instead.")
+    def negotiateStation(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'negotiateStation' has been renamed to
+        'negotiate_station'. Use that instead.
+        '''
+        return self.negotiate_station(*args, **kwargs)
 
     def negotiate_station(self, curstream):
         """
@@ -1459,6 +1789,16 @@ class SeedLinkConnection(object):
             msg = "response: invalid response to DATA/FETCH/TIME command: %s"
             raise SeedLinkException(msg % (read_str))
 
+    @deprecated(
+        "'negotiateUniStation' has been renamed to "  # noqa
+        "'negotiate_uni_station'. Use that instead.")
+    def negotiateUniStation(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'negotiateUniStation' has been renamed to
+        'negotiate_uni_station'. Use that instead.
+        '''
+        return self.negotiate_uni_station(*args, **kwargs)
+
     def negotiate_uni_station(self):
         """
         Negotiate a SeedLink connection in uni-station mode and issue the
@@ -1487,6 +1827,16 @@ class SeedLinkConnection(object):
             raise SeedLinkException(msg)
         # negotiate the station connection
         self.negotiate_station(curstream)
+
+    @deprecated(
+        "'negotiateMultiStation' has been renamed to "  # noqa
+        "'negotiate_multi_station'. Use that instead.")
+    def negotiateMultiStation(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'negotiateMultiStation' has been renamed to
+        'negotiate_multi_station'. Use that instead.
+        '''
+        return self.negotiate_multi_station(*args, **kwargs)
 
     def negotiate_multi_station(self):
         """
@@ -1553,6 +1903,16 @@ class SeedLinkConnection(object):
         logger.debug("sending: %s" % (send_str.decode()))
         bytes_ = send_str + b"\r"
         self.send_data(bytes_, self.sladdr, 0)
+
+    @deprecated(
+        "'updateStream' has been renamed to "  # noqa
+        "'update_stream'. Use that instead.")
+    def updateStream(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'updateStream' has been renamed to
+        'update_stream'. Use that instead.
+        '''
+        return self.update_stream(*args, **kwargs)
 
     def update_stream(self, slpacket):
         """

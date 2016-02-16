@@ -108,6 +108,16 @@ class Field(object):
             raise SEEDTypeException(msg)
         return sn
 
+    @deprecated(
+        "'parseSEED' has been renamed to "  # noqa
+        "'parse_seed'. Use that instead.")
+    def parseSEED(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'parseSEED' has been renamed to
+        'parse_seed'. Use that instead.
+        '''
+        return self.parse_seed(*args, **kwargs)
+
     def parse_seed(self, blockette, data):
         """
         """
@@ -131,6 +141,16 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, text))
 
+    @deprecated(
+        "'getSEED' has been renamed to "  # noqa
+        "'get_seed'. Use that instead.")
+    def getSEED(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getSEED' has been renamed to
+        'get_seed'. Use that instead.
+        '''
+        return self.get_seed(*args, **kwargs)
+
     def get_seed(self, blockette, pos=0):
         """
         """
@@ -149,6 +169,16 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, result))
         return self.write(result, strict=blockette.strict)
+
+    @deprecated(
+        "'getXML' has been renamed to "  # noqa
+        "'get_xml'. Use that instead.")
+    def getXML(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getXML' has been renamed to
+        'get_xml'. Use that instead.
+        '''
+        return self.get_xml(*args, **kwargs)
 
     def get_xml(self, blockette, pos=0):
         """
@@ -195,6 +225,16 @@ class Field(object):
         if blockette.debug:
             print('  %s: %s' % (self, [node]))
         return [node]
+
+    @deprecated(
+        "'parseXML' has been renamed to "  # noqa
+        "'parse_xml'. Use that instead.")
+    def parseXML(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'parseXML' has been renamed to
+        'parse_xml'. Use that instead.
+        '''
+        return self.parse_xml(*args, **kwargs)
 
     def parse_xml(self, blockette, xml_doc, pos=0):
         """

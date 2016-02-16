@@ -248,6 +248,16 @@ class WaveformPlotting(object):
             ids.add(self.__get_merge_id(tr))
         return sorted(ids, key=_id_key)
 
+    @deprecated(
+        "'plotWaveform' has been renamed to "  # noqa
+        "'plot_waveform'. Use that instead.")
+    def plotWaveform(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'plotWaveform' has been renamed to
+        'plot_waveform'. Use that instead.
+        '''
+        return self.plot_waveform(*args, **kwargs)
+
     def plot_waveform(self, *args, **kwargs):
         """
         Creates a graph of any given ObsPy Stream object. It either saves the
@@ -397,6 +407,16 @@ class WaveformPlotting(object):
         xmax = self._time_to_xvalue(self.endtime)
         ax.set_xlim(xmin, xmax)
         self._draw_overlap_axvspan_legend()
+
+    @deprecated(
+        "'plotDay' has been renamed to "  # noqa
+        "'plot_day'. Use that instead.")
+    def plotDay(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'plotDay' has been renamed to
+        'plot_day'. Use that instead.
+        '''
+        return self.plot_day(*args, **kwargs)
 
     def plot_day(self, *args, **kwargs):
         """
@@ -1063,6 +1083,16 @@ class WaveformPlotting(object):
                                  for _i in tick_steps]
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
+
+    @deprecated(
+        "'plotSection' has been renamed to "  # noqa
+        "'plot_section'. Use that instead.")
+    def plotSection(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'plotSection' has been renamed to
+        'plot_section'. Use that instead.
+        '''
+        return self.plot_section(*args, **kwargs)
 
     def plot_section(self, *args, **kwargs):  # @UnusedVariable
         """

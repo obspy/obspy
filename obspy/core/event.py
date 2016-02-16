@@ -1167,6 +1167,16 @@ class WaveformStreamID(__WaveformStreamID):
                                                channel_code=channel_code,
                                                resource_uri=resource_uri)
 
+    @deprecated(
+        "'getSEEDString' has been renamed to "  # noqa
+        "'get_seed_string'. Use that instead.")
+    def getSEEDString(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getSEEDString' has been renamed to
+        'get_seed_string'. Use that instead.
+        '''
+        return self.get_seed_string(*args, **kwargs)
+
     def get_seed_string(self):
         return "%s.%s.%s.%s" % (
             self.network_code if self.network_code else "",

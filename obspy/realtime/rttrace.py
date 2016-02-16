@@ -114,6 +114,16 @@ class RtTrace(Trace):
     """
     have_appended_data = False
 
+    @deprecated(
+        "'rtProcessFunctionsToString' has been renamed to "  # noqa
+        "'rt_process_functions_to_string'. Use that instead.")
+    def rtProcessFunctionsToString(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'rtProcessFunctionsToString' has been renamed to
+        'rt_process_functions_to_string'. Use that instead.
+        '''
+        return self.rt_process_functions_to_string(*args, **kwargs)
+
     @classmethod
     def rt_process_functions_to_string(cls):
         """
@@ -307,6 +317,16 @@ class RtTrace(Trace):
                 self._ltrim(starttime, pad=False, nearest_sample=True,
                             fill_value=None)
         return trace
+
+    @deprecated(
+        "'registerRtProcess' has been renamed to "  # noqa
+        "'register_rt_process'. Use that instead.")
+    def registerRtProcess(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'registerRtProcess' has been renamed to
+        'register_rt_process'. Use that instead.
+        '''
+        return self.register_rt_process(*args, **kwargs)
 
     def register_rt_process(self, process, **options):
         """

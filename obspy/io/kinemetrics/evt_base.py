@@ -71,6 +71,16 @@ class EvtVirtual(object):
         if key in self.HEADER:
             return self.HEADER[key][2]
 
+    @deprecated(
+        "'unsetdico' has been renamed to "  # noqa
+        "'unset_dict'. Use that instead.")
+    def unsetdico(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'unsetdico' has been renamed to
+        'unset_dict'. Use that instead.
+        '''
+        return self.unset_dict(*args, **kwargs)
+
     def unset_dict(self):
         """
         remove all values from dictionary
@@ -80,6 +90,16 @@ class EvtVirtual(object):
                 self.HEADER[key].pop(2)
             except IndexError:
                 pass
+
+    @deprecated(
+        "'setdico' has been renamed to "  # noqa
+        "'set_dict'. Use that instead.")
+    def setdico(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'setdico' has been renamed to
+        'set_dict'. Use that instead.
+        '''
+        return self.set_dict(*args, **kwargs)
 
     def set_dict(self, val, offset=0):
         """

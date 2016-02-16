@@ -65,6 +65,26 @@ class SEG2(object):
     def __init__(self):
         pass
 
+    @deprecated(
+        "'readFile' has been renamed to "  # noqa
+        "'read_file'. Use that instead.")
+    def readFile(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'readFile' has been renamed to
+        'read_file'. Use that instead.
+        '''
+        return self.read_file(*args, **kwargs)
+
+    @deprecated(
+        "'readFileDescriptorBlock' has been renamed to "  # noqa
+        "'read_file_descriptor_block'. Use that instead.")
+    def readFileDescriptorBlock(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'readFileDescriptorBlock' has been renamed to
+        'read_file_descriptor_block'. Use that instead.
+        '''
+        return self.read_file_descriptor_block(*args, **kwargs)
+
     def read_file(self, file_object):
         """
         Reads the following file and will return a Stream object. If
@@ -191,6 +211,16 @@ class SEG2(object):
         else:
             self.starttime = UTCDateTime(0)
 
+    @deprecated(
+        "'parseNextTrace' has been renamed to "  # noqa
+        "'parse_next_trace'. Use that instead.")
+    def parseNextTrace(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'parseNextTrace' has been renamed to
+        'parse_next_trace'. Use that instead.
+        '''
+        return self.parse_next_trace(*args, **kwargs)
+
     def parse_next_trace(self):
         """
         Parse the next trace in the trace pointer list and return a Trace
@@ -259,6 +289,16 @@ class SEG2(object):
         tmp.update(header['seg2'])
         header['seg2'] = tmp
         return Trace(data=data, header=header)
+
+    @deprecated(
+        "'parseFreeForm' has been renamed to "  # noqa
+        "'parse_free_form'. Use that instead.")
+    def parseFreeForm(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'parseFreeForm' has been renamed to
+        'parse_free_form'. Use that instead.
+        '''
+        return self.parse_free_form(*args, **kwargs)
 
     def parse_free_form(self, free_form_str, attrib_dict):
         """

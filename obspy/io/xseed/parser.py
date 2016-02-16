@@ -1219,6 +1219,16 @@ class Parser(object):
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
 
+    @deprecated(
+        "'rotateToZNE' has been renamed to "  # noqa
+        "'rotate_to_zne'. Use that instead.")
+    def rotateToZNE(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'rotateToZNE' has been renamed to
+        'rotate_to_zne'. Use that instead.
+        '''
+        return self.rotate_to_zne(*args, **kwargs)
+
     def rotate_to_zne(self, stream):
         """
         Rotates the three components of a Stream to ZNE.

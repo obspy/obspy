@@ -63,6 +63,16 @@ class SLNetStation(object):
         else:
             self.btime = None
 
+    @deprecated(
+        "'appendSelectors' has been renamed to "  # noqa
+        "'append_selectors'. Use that instead.")
+    def appendSelectors(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'appendSelectors' has been renamed to
+        'append_selectors'. Use that instead.
+        '''
+        return self.append_selectors(*args, **kwargs)
+
     def append_selectors(self, new_selectors):
         """
         Appends a selectors String to the current selectors for this
@@ -73,6 +83,16 @@ class SLNetStation(object):
         self.selectors.append(new_selectors)
         return 1
 
+    @deprecated(
+        "'getSelectors' has been renamed to "  # noqa
+        "'get_selectors'. Use that instead.")
+    def getSelectors(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getSelectors' has been renamed to
+        'get_selectors'. Use that instead.
+        '''
+        return self.get_selectors(*args, **kwargs)
+
     def get_selectors(self):
         """
         Returns the selectors as an array of Strings
@@ -80,6 +100,16 @@ class SLNetStation(object):
         :return: array of selector Strings
         """
         return self.selectors
+
+    @deprecated(
+        "'getSLTimeStamp' has been renamed to "  # noqa
+        "'get_sl_time_stamp'. Use that instead.")
+    def getSLTimeStamp(self, *args, **kwargs):
+        '''
+        DEPRECATED: 'getSLTimeStamp' has been renamed to
+        'get_sl_time_stamp'. Use that instead.
+        '''
+        return self.get_sl_time_stamp(*args, **kwargs)
 
     def get_sl_time_stamp(self):
         """
