@@ -135,6 +135,7 @@ class EventTestCase(unittest.TestCase):
         self.assertIs(ev.resource_id.get_referred_object(),
                       ev3.resource_id.get_referred_object())
 
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
     def test_plot_farfield_without_quiver_with_maps(self):
         """
         Tests to plot P/S wave farfield radiation pattern, also with beachball
