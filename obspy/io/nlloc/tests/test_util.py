@@ -56,7 +56,8 @@ class NLLOCTestCase(unittest.TestCase):
             filename, coordinate_converter=_coordinate_conversion)
         filename = os.path.join(self.datapath, "nlloc_scat_converted.npy")
         expected = np.load(filename)
-        np.testing.assert_array_equal(got, expected)
+        for field in expected.dtype.fields:
+            np.testing.assert_allclose(got[field], expected[field], rtol=1e-5)
 
 
 def suite():
