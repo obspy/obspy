@@ -74,12 +74,6 @@ class RtMemory:
             memory_array = np.concatenate((memory_array, data))
         return memory_array
 
-    @deprecated(
-        "'updateOutput' has been renamed to "  # noqa
-        "'update_output'. Use that instead.")
-    def updateOutput(self, *args, **kwargs):
-        return self.update_output(*args, **kwargs)
-
     def update_output(self, data):
         """
         Update output memory using specified number of points from end of
@@ -89,12 +83,6 @@ class RtMemory:
         :param data:  Data array to use for update.
         """
         self.output = self._update(self.output, data)
-
-    @deprecated(
-        "'updateInput' has been renamed to "  # noqa
-        "'update_input'. Use that instead.")
-    def updateInput(self, *args, **kwargs):
-        return self.update_input(*args, **kwargs)
 
     def update_input(self, data):
         """

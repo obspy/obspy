@@ -162,33 +162,15 @@ class WaveformFileCrawler(object):
         session.close()
         return result
 
-    @deprecated(
-        "'getFeatures' has been renamed to "  # noqa
-        "'get_features'. Use that instead.")
-    def getFeatures(self, *args, **kwargs):
-        return self.get_features(*args, **kwargs)
-
     def get_features(self):
         return self.paths[self._root][1]
 
     features = property(get_features)
 
-    @deprecated(
-        "'getPatterns' has been renamed to "  # noqa
-        "'get_patterns'. Use that instead.")
-    def getPatterns(self, *args, **kwargs):
-        return self.get_patterns(*args, **kwargs)
-
     def get_patterns(self):
         return self.paths[self._root][0]
 
     patterns = property(get_patterns)
-
-    @deprecated(
-        "'hasPattern' has been renamed to "  # noqa
-        "'has_pattern'. Use that instead.")
-    def hasPattern(self, *args, **kwargs):
-        return self.has_pattern(*args, **kwargs)
 
     def has_pattern(self, file):
         """

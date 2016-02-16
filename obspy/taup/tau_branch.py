@@ -41,12 +41,6 @@ class TauBranch(object):
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
-    @deprecated(
-        "'createBranch' has been renamed to "  # noqa
-        "'create_branch'. Use that instead.")
-    def createBranch(self, *args, **kwargs):
-        return self.create_branch(*args, **kwargs)
-
     def create_branch(self, s_mod, min_p_so_far, ray_params):
         """
         Calculates tau for this branch, between slowness layers top_layer_num
@@ -93,12 +87,6 @@ class TauBranch(object):
         self.time = time_dist['time']
         self.dist = time_dist['dist']
         self.tau = self.time - ray_params * self.dist
-
-    @deprecated(
-        "'calcTimeDist' has been renamed to "  # noqa
-        "'calc_time_dist'. Use that instead.")
-    def calcTimeDist(self, *args, **kwargs):
-        return self.calc_time_dist(*args, **kwargs)
 
     def calc_time_dist(self, s_mod, top_layer_num, bot_layer_num, ray_params,
                        allow_turn_in_layer=False):
@@ -162,12 +150,6 @@ class TauBranch(object):
         self.time[index] = new_time
         self.dist[index] = new_dist
         self.tau[index] = new_time - ray_param * new_dist
-
-    @deprecated(
-        "'shiftBranch' has been renamed to "  # noqa
-        "'shift_branch'. Use that instead.")
-    def shiftBranch(self, *args, **kwargs):
-        return self.shift_branch(*args, **kwargs)
 
     def shift_branch(self, index):
         new_size = len(self.dist) + 1

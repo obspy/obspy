@@ -255,12 +255,6 @@ class EvtHeader(EvtVirtual):
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
         # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
 
-    @deprecated(
-        "'makeobspydico' has been renamed to "  # noqa
-        "'make_obspy_dict'. Use that instead.")
-    def makeobspydico(self, *args, **kwargs):
-        return self.make_obspy_dict(*args, **kwargs)
-
     def make_obspy_dict(self, numchan):
         """
         Make an ObsPy dictionary from header dictionary for 1 channel

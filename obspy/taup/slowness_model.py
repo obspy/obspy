@@ -115,12 +115,6 @@ class SlownessModel(object):
             desc += str(l) + "\n"
         return desc
 
-    @deprecated(
-        "'createSample' has been renamed to "  # noqa
-        "'create_sample'. Use that instead.")
-    def createSample(self, *args, **kwargs):
-        return self.create_sample(*args, **kwargs)
-
     def create_sample(self):
         """
         Create slowness-depth layers from a velocity model.
@@ -168,12 +162,6 @@ class SlownessModel(object):
         self.validate()
         if self.debug:
             print("create_sample seems to be done successfully.")
-
-    @deprecated(
-        "'findCriticalPoints' has been renamed to "  # noqa
-        "'find_critical_points'. Use that instead.")
-    def findCriticalPoints(self, *args, **kwargs):
-        return self.find_critical_points(*args, **kwargs)
 
     def find_critical_points(self):
         """
@@ -453,12 +441,6 @@ class SlownessModel(object):
 
         self.validate()
 
-    @deprecated(
-        "'getNumLayers' has been renamed to "  # noqa
-        "'get_num_layers'. Use that instead.")
-    def getNumLayers(self, *args, **kwargs):
-        return self.get_num_layers(*args, **kwargs)
-
     def get_num_layers(self, is_p_wave):
         """
         Number of slowness layers.
@@ -475,18 +457,6 @@ class SlownessModel(object):
             return len(self.p_layers)
         else:
             return len(self.s_layers)
-
-    @deprecated(
-        "'findDepth_from_depths' has been renamed to "  # noqa
-        "'find_depth_from_depths'. Use that instead.")
-    def findDepth_from_depths(self, *args, **kwargs):
-        return self.find_depth_from_depths(*args, **kwargs)
-
-    @deprecated(
-        "'findDepth_from_layers' has been renamed to "  # noqa
-        "'find_depth_from_layers'. Use that instead.")
-    def findDepth_from_layers(self, *args, **kwargs):
-        return self.find_depth_from_layers(*args, **kwargs)
 
     def find_depth_from_depths(self, ray_param, top_depth, bot_depth,
                                is_p_wave):
@@ -625,12 +595,6 @@ class SlownessModel(object):
             " top_critical_layer=" + str(top_critical_layer) +
             " bot_critical_layer=" + str(bot_critical_layer))
 
-    @deprecated(
-        "'toSlowness' has been renamed to "  # noqa
-        "'to_slowness'. Use that instead.")
-    def toSlowness(self, *args, **kwargs):
-        return self.to_slowness(*args, **kwargs)
-
     def to_slowness(self, velocity, depth):
         """
         Convert velocity at some depth to slowness.
@@ -684,12 +648,6 @@ class SlownessModel(object):
                      p * (top_depth * slope - top_velocity)) / denominator
             return depth
 
-    @deprecated(
-        "'depthInFluid' has been renamed to "  # noqa
-        "'depth_in_fluid'. Use that instead.")
-    def depthInFluid(self, *args, **kwargs):
-        return self.depth_in_fluid(*args, **kwargs)
-
     def depth_in_fluid(self, depth):
         """
         Determine if the given depth is contained within a fluid zone.
@@ -709,12 +667,6 @@ class SlownessModel(object):
         for elem in self.fluid_layer_depths:
             ret |= (elem.top_depth <= depth) & (depth < elem.bot_depth)
         return ret
-
-    @deprecated(
-        "'coarseSample' has been renamed to "  # noqa
-        "'coarse_sample'. Use that instead.")
-    def coarseSample(self, *args, **kwargs):
-        return self.coarse_sample(*args, **kwargs)
 
     def coarse_sample(self):
         """
@@ -847,18 +799,6 @@ class SlownessModel(object):
         for p in uniq:
             self.add_slowness(p, self.p_wave)
 
-    @deprecated(
-        "'layerNumberAbove' has been renamed to "  # noqa
-        "'layer_number_above'. Use that instead.")
-    def layerNumberAbove(self, *args, **kwargs):
-        return self.layer_number_above(*args, **kwargs)
-
-    @deprecated(
-        "'layerNumberBelow' has been renamed to "  # noqa
-        "'layer_number_below'. Use that instead.")
-    def layerNumberBelow(self, *args, **kwargs):
-        return self.layer_number_below(*args, **kwargs)
-
     def layer_number_above(self, depth, is_p_wave):
         """
         Find the index of the slowness layer that contains the given depth.
@@ -948,12 +888,6 @@ class SlownessModel(object):
 
         return found_layer_num
 
-    @deprecated(
-        "'getSlownessLayer' has been renamed to "  # noqa
-        "'get_slowness_layer'. Use that instead.")
-    def getSlownessLayer(self, *args, **kwargs):
-        return self.get_slowness_layer(*args, **kwargs)
-
     def get_slowness_layer(self, layer, is_p_wave):
         """
         Return the Slowness_layer of the requested wave type.
@@ -975,12 +909,6 @@ class SlownessModel(object):
             return self.p_layers[layer]
         else:
             return self.s_layers[layer]
-
-    @deprecated(
-        "'addSlowness' has been renamed to "  # noqa
-        "'add_slowness'. Use that instead.")
-    def addSlowness(self, *args, **kwargs):
-        return self.add_slowness(*args, **kwargs)
 
     def add_slowness(self, p, is_p_wave):
         """
@@ -1064,12 +992,6 @@ class SlownessModel(object):
             self.s_layers = layers
             self.p_layers = other_layers
 
-    @deprecated(
-        "'ray_paramIncCheck' has been renamed to "  # noqa
-        "'ray_param_inc_check'. Use that instead.")
-    def ray_paramIncCheck(self, *args, **kwargs):
-        return self.ray_param_inc_check(*args, **kwargs)
-
     def ray_param_inc_check(self):
         """
         Check that no slowness layer's ray parameter interval is too large.
@@ -1100,12 +1022,6 @@ class SlownessModel(object):
                     newp = start + j * delta
                     self.add_slowness(newp, self.p_wave)
                     self.add_slowness(newp, self.s_wave)
-
-    @deprecated(
-        "'depthIncCheck' has been renamed to "  # noqa
-        "'depth_inc_check'. Use that instead.")
-    def depthIncCheck(self, *args, **kwargs):
-        return self.depth_inc_check(*args, **kwargs)
 
     def depth_inc_check(self):
         """
@@ -1150,12 +1066,6 @@ class SlownessModel(object):
                 for p in slowness:
                     self.add_slowness(p, self.p_wave)
                     self.add_slowness(p, self.s_wave)
-
-    @deprecated(
-        "'distanceCheck' has been renamed to "  # noqa
-        "'distance_check'. Use that instead.")
-    def distanceCheck(self, *args, **kwargs):
-        return self.distance_check(*args, **kwargs)
 
     def distance_check(self):
         """
@@ -1290,12 +1200,6 @@ class SlownessModel(object):
                 print("Number of " + ("P" if curr_wave_type else "S") +
                       " slowness layers: " + str(j))
 
-    @deprecated(
-        "'depthInHighSlowness' has been renamed to "  # noqa
-        "'depth_in_high_slowness'. Use that instead.")
-    def depthInHighSlowness(self, *args, **kwargs):
-        return self.depth_in_high_slowness(*args, **kwargs)
-
     def depth_in_high_slowness(self, depth, ray_param, is_p_wave):
         """
         Determine if depth and slowness are within a high slowness zone.
@@ -1336,12 +1240,6 @@ class SlownessModel(object):
                     return True
         return False
 
-    @deprecated(
-        "'approxDistance' has been renamed to "  # noqa
-        "'approx_distance'. Use that instead.")
-    def approxDistance(self, *args, **kwargs):
-        return self.approx_distance(*args, **kwargs)
-
     def approx_distance(self, slowness_turn_layer, p, is_p_wave):
         """
         Approximate distance for ray turning at the bottom of a layer.
@@ -1381,12 +1279,6 @@ class SlownessModel(object):
             td['time'] = 2 * np.sum(time)
             td['dist'] = 2 * np.sum(dist)
         return td
-
-    @deprecated(
-        "'layerTimeDist' has been renamed to "  # noqa
-        "'layer_time_dist'. Use that instead.")
-    def layerTimeDist(self, *args, **kwargs):
-        return self.layer_time_dist(*args, **kwargs)
 
     def layer_time_dist(self, spherical_ray_param, layer_num, is_p_wave,
                         check=True, allow_turn=False):
@@ -1631,12 +1523,6 @@ class SlownessModel(object):
 
         return time, dist
 
-    @deprecated(
-        "'fixCriticalPoints' has been renamed to "  # noqa
-        "'fix_critical_points'. Use that instead.")
-    def fixCriticalPoints(self, *args, **kwargs):
-        return self.fix_critical_points(*args, **kwargs)
-
     def fix_critical_points(self):
         """
         Reset the slowness layers that correspond to critical points.
@@ -1749,12 +1635,6 @@ class SlownessModel(object):
         # Everything seems OK.
         return True
 
-    @deprecated(
-        "'getMinTurnRayParam' has been renamed to "  # noqa
-        "'get_min_turn_ray_param'. Use that instead.")
-    def getMinTurnRayParam(self, *args, **kwargs):
-        return self.get_min_turn_ray_param(*args, **kwargs)
-
     def get_min_turn_ray_param(self, depth, is_p_wave):
         """
         Find minimum slowness, turning but not reflected, at or above a depth.
@@ -1795,12 +1675,6 @@ class SlownessModel(object):
                                                   self.radius_of_planet)
         return min_p_so_far
 
-    @deprecated(
-        "'getMinRayParam' has been renamed to "  # noqa
-        "'get_min_ray_param'. Use that instead.")
-    def getMinRayParam(self, *args, **kwargs):
-        return self.get_min_ray_param(*args, **kwargs)
-
     def get_min_ray_param(self, depth, is_p_wave):
         """
         Find minimum slowness, turning or reflected, at or above a depth.
@@ -1828,12 +1702,6 @@ class SlownessModel(object):
             min_p_so_far = min(min_p_so_far, s_layer_above['bot_p'],
                                s_layer_below['top_p'])
         return min_p_so_far
-
-    @deprecated(
-        "'splitLayer' has been renamed to "  # noqa
-        "'split_layer'. Use that instead.")
-    def splitLayer(self, *args, **kwargs):
-        return self.split_layer(*args, **kwargs)
 
     def split_layer(self, depth, is_p_wave):
         """

@@ -130,12 +130,6 @@ class SLClient(object):
         self.timeout = timeout
         self.slconn = SeedLinkConnection(timeout=timeout)
 
-    @deprecated(
-        "'parseCmdLineArgs' has been renamed to "  # noqa
-        "'parse_cmd_line_args'. Use that instead.")
-    def parseCmdLineArgs(self, *args, **kwargs):
-        return self.parse_cmd_line_args(*args, **kwargs)
-
     def parse_cmd_line_args(self, args):
         """
         Parses the command line arguments.
@@ -269,12 +263,6 @@ class SLClient(object):
         # Close the SeedLinkConnection
         self.slconn.close()
 
-    @deprecated(
-        "'packetHandler' has been renamed to "  # noqa
-        "'packet_handler'. Use that instead.")
-    def packetHandler(self, *args, **kwargs):
-        return self.packet_handler(*args, **kwargs)
-
     def packet_handler(self, count, slpack):
         """
         Processes each packet received from the SeedLinkConnection.
@@ -339,12 +327,6 @@ class SLClient(object):
         else:
             print(self.__class__.__name__ + ": blockette contains no trace")
         return False
-
-    @deprecated(
-        "'printUsage' has been renamed to "  # noqa
-        "'print_usage'. Use that instead.")
-    def printUsage(self, *args, **kwargs):
-        return self.print_usage(*args, **kwargs)
 
     def print_usage(self, concise=True):
         """

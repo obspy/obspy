@@ -69,12 +69,6 @@ class TauModel(object):
         if not skip_calc:
             self.calc_tau_inc_from()
 
-    @deprecated(
-        "'calcTauIncFrom' has been renamed to "  # noqa
-        "'calc_tau_inc_from'. Use that instead.")
-    def calcTauIncFrom(self, *args, **kwargs):
-        return self.calc_tau_inc_from(*args, **kwargs)
-
     def calc_tau_inc_from(self):
         """
         Calculates tau for each branch within a slowness model.
@@ -227,12 +221,6 @@ class TauModel(object):
                                 "the radius of the planet.")
         return self.load_from_depth_cache(depth)
 
-    @deprecated(
-        "'loadFromDepthCache' has been renamed to "  # noqa
-        "'load_from_depth_cache'. Use that instead.")
-    def loadFromDepthCache(self, *args, **kwargs):
-        return self.load_from_depth_cache(*args, **kwargs)
-
     def load_from_depth_cache(self, depth):
         # Very simple and straightforward LRU cache implementation.
         if self._depth_cache is not None:
@@ -256,12 +244,6 @@ class TauModel(object):
         depth_corrected.source_branch = depth_corrected.find_branch(depth)
         depth_corrected.validate()
         return depth_corrected
-
-    @deprecated(
-        "'splitBranch' has been renamed to "  # noqa
-        "'split_branch'. Use that instead.")
-    def splitBranch(self, *args, **kwargs):
-        return self.split_branch(*args, **kwargs)
 
     def split_branch(self, depth):
         """
@@ -391,12 +373,6 @@ class TauModel(object):
         tau_model.validate()
         return tau_model
 
-    @deprecated(
-        "'findBranch' has been renamed to "  # noqa
-        "'find_branch'. Use that instead.")
-    def findBranch(self, *args, **kwargs):
-        return self.find_branch(*args, **kwargs)
-
     def find_branch(self, depth):
         """Finds the branch that either has the depth as its top boundary, or
         strictly contains the depth. Also, we allow the bottom-most branch to
@@ -410,18 +386,6 @@ class TauModel(object):
             return len(self.tau_branches) - 1
         else:
             raise TauModelError("No TauBranch contains this depth.")
-
-    @deprecated(
-        "'getBranchDepths' has been renamed to "  # noqa
-        "'get_branch_depths'. Use that instead.")
-    def getBranchDepths(self, *args, **kwargs):
-        return self.get_branch_depths(*args, **kwargs)
-
-    @deprecated(
-        "'getTauBranch' has been renamed to "  # noqa
-        "'get_tau_branch'. Use that instead.")
-    def getTauBranch(self, *args, **kwargs):
-        return self.get_tau_branch(*args, **kwargs)
 
     def get_tau_branch(self, branch_nu, is_p_wave):
         if is_p_wave:

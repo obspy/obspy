@@ -785,12 +785,6 @@ class Trace(object):
         out.data = data
         return out
 
-    @deprecated(
-        "'getId' has been renamed to "  # noqa
-        "'get_id'. Use that instead.")
-    def getId(self, *args, **kwargs):
-        return self.get_id(*args, **kwargs)
-
     def get_id(self):
         """
         Return a SEED compatible identifier of the trace.
