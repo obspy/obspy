@@ -9,7 +9,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import io
 import operator
 import unittest
-import warnings
 
 import numpy as np
 
@@ -18,7 +17,6 @@ from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 class ClientTestCase(unittest.TestCase):
@@ -403,8 +401,8 @@ class ClientTestCase(unittest.TestCase):
         Default behavior is requesting data compressed and unpack on the fly.
         """
         # initialize client
-        client = Client("erde.geophysik.uni-muenchen.de", 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host="erde.geophysik.uni-muenchen.de", port=18001)
         start = UTCDateTime(2008, 1, 1)
         end = start + 10
         # MiniSEED
@@ -537,8 +535,8 @@ class ClientTestCase(unittest.TestCase):
         normalization_factor = 6.0077e+07
         sensitivity = 2.5168e+09
         # initialize client
-        client = Client('erde.geophysik.uni-muenchen.de', 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host='erde.geophysik.uni-muenchen.de', port=18001)
         # fetch poles and zeros
         dt = UTCDateTime(2009, 1, 1)
         paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
@@ -558,8 +556,8 @@ class ClientTestCase(unittest.TestCase):
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         dt = UTCDateTime(2009, 1, 1)
-        client = Client("erde.geophysik.uni-muenchen.de", 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host='erde.geophysik.uni-muenchen.de', port=18001)
         # fetch poles and zeros
         paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
         self.assertEqual(len(poles), 2)
@@ -606,7 +604,7 @@ class ClientTestCase(unittest.TestCase):
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
         # Retrieve data via ArcLink
-        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
+        client = Client('test@obspy.org', host='webdc.eu', port=18001)
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.get_waveforms("BW", "RJOB", "", "EHZ", t, t + 30)
         # original but deprecated call
@@ -630,7 +628,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Testing issue #311.
         """
-        client = Client("webdc.eu", 18001, user='test@obspy.org')
+        client = Client('test@obspy.org', host='webdc.eu', port=18001)
         t = UTCDateTime("2009-08-20 04:03:12")
         # 1
         st = client.get_waveforms("BW", "MANZ", "", "EH*", t - 3, t + 15,
@@ -712,15 +710,6 @@ class ClientTestCase(unittest.TestCase):
                                   metadata=True)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.paz.sensitivity, 588000000.0)
-
-    def test_init(self):
-        """
-        Testing client initialization.
-        """
-        # user is a required keyword - raises now a deprecation warning
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', ObsPyDeprecationWarning)
-            self.assertRaises(ObsPyDeprecationWarning, Client)
 
 
 def suite():

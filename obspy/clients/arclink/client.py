@@ -49,6 +49,11 @@ class Client(object):
     """
     The ArcLink/WebDC client.
 
+    :type user: str
+    :param user: The user name is used for identification with the ArcLink
+        server. This entry is also used for usage statistics within the data
+        centers, so please provide a meaningful user id such as your email
+        address.
     :type host: str, optional
     :param host: Host name of the remote ArcLink server (default host is
         ``'webdc.eu'``).
@@ -57,11 +62,6 @@ class Client(object):
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
         ``20`` seconds).
-    :type user: str
-    :param user: The user name is used for identification with the ArcLink
-        server. This entry is also used for usage statistics within the data
-        centers, so please provide a meaningful user id such as your email
-        address.
     :type password: str, optional
     :param password: A password used for authentication with the ArcLink server
         (default is an empty string).
@@ -420,7 +420,7 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime("2009-08-20 04:03:12")
         >>> st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
         >>> st.plot() #doctest: +SKIP
@@ -429,7 +429,7 @@ class Client(object):
 
             from obspy import UTCDateTime
             from obspy.clients.arclink.client import Client
-            client = Client("webdc.eu", 18001, 'test@obspy.org')
+            client = Client('test@obspy.org', 'webdc.eu', 18001)
             t = UTCDateTime("2009-08-20 04:03:12")
             st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
@@ -536,7 +536,7 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
         >>> client.save_waveforms('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
@@ -787,7 +787,7 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
         >>> data = client.get_metadata('BW', 'MANZ', '', 'EHZ', t)
         >>> data  # doctest: +NORMALIZE_WHITESPACE +SKIP
@@ -935,7 +935,7 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
         >>> paz = client.get_paz('BW', 'MANZ', '', 'EHZ', t)
         >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
@@ -1014,7 +1014,7 @@ class Client(object):
 
         >>> from obspy.clients.arclink import Client
         >>> from obspy import UTCDateTime
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> t = UTCDateTime(2009, 1, 1)
         >>> client.save_response('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '',
         ...                      '*', t, t + 1, format="SEED") # doctest: +SKIP
@@ -1098,7 +1098,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.clients.arclink import Client
-        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> client = Client('test@obspy.org', 'webdc.eu', 18001)
         >>> inv = client.get_inventory('BW', 'M*', '*', 'EHZ',
         ...                            restricted=False,
         ...                            permanent=True, min_longitude=12,
