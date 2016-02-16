@@ -404,7 +404,7 @@ class ImageComparison(NamedTemporaryFile):
                 failed = False
             if failed:
                 # base message on deviation of baseline and actual image
-                msg = ("Image comparision failed.\n"
+                msg = ("Image comparison failed.\n"
                        "\tRMS:       {rms}\n"
                        "\tTolerance: {tol}\n").format(**msg)
                 # optionally, copy failed images from /tmp and append
