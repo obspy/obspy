@@ -491,7 +491,7 @@ class MatplotlibBackend(object):
             # show a warning if not
             if matplotlib.get_backend().upper() != backend.upper():
                 msg = "Unable to change matplotlib backend to '%s'" % backend
-                warnings.warn(msg)
+                raise Exception(msg)
 
 
 if __name__ == '__main__':
