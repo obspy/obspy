@@ -93,6 +93,7 @@ class ClientTestCase(unittest.TestCase):
         test_urls_valid = list(URL_MAPPINGS.values())
         test_urls_valid += [
             "http://arclink.ethz.ch",
+            "http://example.org",
             "https://webservices.rm.ingv.it",
             "http://localhost:8080/test/",
             "http://93.63.40.85/",
@@ -104,7 +105,6 @@ class ClientTestCase(unittest.TestCase):
 
         test_urls_fails = [
             "http://",
-            "http://example.org",
             "http://127.0.1",
             "http://127.=.0.1",
             "http://127.0.0.0.1",
