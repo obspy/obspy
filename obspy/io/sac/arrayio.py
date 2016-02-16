@@ -349,7 +349,11 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         if is_file_name:
             f.close()
         msg = "Cannot write SAC-buffer to file: "
-        raise SacIOError(msg, f.name, e)
+        if hasattr(f, "name"):
+            name = f.name
+        else:
+            name = "Unknown file name (file-like object?)"
+        raise SacIOError(msg, name, e)
 
     if is_file_name:
         f.close()
