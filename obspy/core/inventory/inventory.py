@@ -12,19 +12,22 @@ Provides the Inventory class.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
 from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
 import os
+from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
-from pkg_resources import load_entry_point
+with standard_library.hooks():
+    import urllib.request
 
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin)
+                                  _read_from_plugin, NamedTemporaryFile)
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
@@ -59,6 +62,14 @@ def read_inventory(path_or_file_object=None, format=None):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
+    elif "://" in path_or_file_object:
+        # some URL
+        # extract extension if any
+        suffix = \
+            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=suffix) as fh:
+            fh.write(urllib.request.urlopen(path_or_file_object).read())
+            return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format)[0]
 
