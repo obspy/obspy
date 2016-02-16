@@ -1481,7 +1481,7 @@ class PPSD(object):
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
              show_noise_models=True, grid=True, show=True,
-             max_percentage=30, period_lim=(0.01, 179), show_mode=False,
+             max_percentage=None, period_lim=(0.01, 179), show_mode=False,
              show_mean=False, cmap=obspy_sequential, cumulative=False,
              cumulative_number_of_colors=20, xaxis_frequency=False):
         """
@@ -1512,7 +1512,9 @@ class PPSD(object):
         :type show: bool, optional
         :param show: Enable/disable immediately showing the plot.
         :type max_percentage: float, optional
-        :param max_percentage: Maximum percentage to adjust the colormap.
+        :param max_percentage: Maximum percentage to adjust the colormap. The
+            default is 30% unless ``cumulative=True``, in which case this value
+            is ignored.
         :type period_lim: tuple of 2 floats, optional
         :param period_lim: Period limits to show in histogram. When setting
             ``xaxis_frequency=True``, this is expected to be frequency range in
@@ -1590,6 +1592,9 @@ class PPSD(object):
                     cmap = LinearSegmentedColormap(
                         name=cmap.name, segmentdata=cmap._segmentdata,
                         N=cumulative_number_of_colors)
+            elif max_percentage is None:
+                # Set default only if cumulative is not True.
+                max_percentage = 30
 
             fig.ppsd.cumulative = cumulative
             fig.ppsd.cmap = cmap
