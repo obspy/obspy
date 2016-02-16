@@ -59,7 +59,7 @@ git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
 # (newer Debuntu releases)
-if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
+if [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
 then
     # old build style, python2 only
     cp -a debian/python_distutils/* debian/
