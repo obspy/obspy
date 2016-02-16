@@ -8,3 +8,5 @@ RUN yum -y upgrade || true
 RUN yum install -y gcc numpy scipy python-matplotlib python-sqlalchemy python-lxml python-mock python-basemap python-basemap-data python-pip python-requests python-decorator
 RUN easy_install -U setuptools pip
 RUN pip install flake8 future
+# Force agg.
+RUN mkdir -p /root/.matplotlib && echo "backend: agg" > /root/.matplotlib/matplotlibrc
