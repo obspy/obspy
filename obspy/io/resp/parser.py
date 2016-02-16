@@ -22,7 +22,7 @@ from obspy.io.xseed import (parser, blockette, fields)
 DEBUG = True
 
 
-def read_RESP(filename):
+def read_resp(filename):
     with open(filename) as respfile:
         # List of blockettes which is a list of fields
         blockettelist = list()
@@ -77,7 +77,7 @@ def record_type_from_blocketteid(bid):
             return voltype
 
 
-def make_xseed(RESPblockettelist):
+def make_xseed(resp_blockettelist):
     seedparser = parser.Parser()
     seedparser.temp = {'volume': [], 'abbreviations': [], 'stations': []}
     # Make an empty blockette10
@@ -99,9 +99,9 @@ def make_xseed(RESPblockettelist):
     seedparser.temp['stations'].append([])
     root_attribute = seedparser.temp['stations'][-1]
 
-    for RESPblockettefieldlist in RESPblockettelist:
+    for RESPblockettefieldlist in resp_blockettelist:
         # Create a new blockette using the first field
-        RESPblockette_id, RESPfield, RESPvalue = RESPblockettefieldlist[0]
+        RESPblockette_id, RESPfield, resp_value = RESPblockettefieldlist[0]
         class_name = 'Blockette%03d' % int(RESPblockette_id)
         blockette_class = getattr(blockette, class_name)
         record_type = record_type_from_blocketteid(blockette_class.id)
@@ -123,22 +123,22 @@ def make_xseed(RESPblockettelist):
         # so unused can be set to default after
         unused_fields = blockette_fields[:]
 
-        for RESPblockette_id, RESPfield, RESPvalue in RESPblockettefieldlist:
+        for RESPblockette_id, RESPfield, resp_value in RESPblockettefieldlist:
             for bfield in blockette_fields:
                 if bfield.id == int(RESPfield):
                     if isinstance(bfield, fields.VariableString):
                         # Variable string needs terminator '~'
-                        RESPvalue += '~'
+                        resp_value += '~'
                     # print(RESPvalue)
                     # Lookup if abbv
-                    RESPvalue = abbv_lookup.get(RESPvalue, RESPvalue)
-                    dataRESPvalue = io.BytesIO(RESPvalue.encode('utf-8'))
+                    resp_value = abbv_lookup.get(resp_value, resp_value)
+                    data_resp_value = io.BytesIO(resp_value.encode('utf-8'))
                     if (hasattr(bfield, 'length') and
-                            bfield.length < len(RESPvalue)):
+                            bfield.length < len(resp_value)):
                         # RESP does not use the same length for floats
                         # as SEED does
-                        bfield.length = len(RESPvalue)
-                    bfield.parse_SEED(blockette_obj, dataRESPvalue)
+                        bfield.length = len(resp_value)
+                    bfield.parse_SEED(blockette_obj, data_resp_value)
                     if bfield in unused_fields:
                         unused_fields.remove(bfield)
                     break

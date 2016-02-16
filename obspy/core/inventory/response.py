@@ -1731,11 +1731,11 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
                        : b54, b57, b58  -> CoefficientsTypeResponseStage
 
     """
-    TRANSFORM_MAP = {'A': 'LAPLACE (RADIANS/SECOND)',
+    transform_map = {'A': 'LAPLACE (RADIANS/SECOND)',
                      'B': 'LAPLACE (HERTZ)',
                      'D': 'DIGITAL (Z-TRANSFORM)'
                      }
-    TRANSFER_MAP = {'A': 'ANALOG (RADIANS/SECOND',
+    transfer_map = {'A': 'ANALOG (RADIANS/SECOND',
                     'B': 'ANALOG (HERTZ)',
                     'D': 'DIGITAL'
                     }
@@ -1743,9 +1743,9 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
     def lookup_unit(abbr, lookup):
         return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
 
-    sensor_blockettelist = parser.read_RESP(sensor_resp_file)
+    sensor_blockettelist = parser.read_resp(sensor_resp_file)
     sensor_xseedparser = parser.make_xseed(sensor_blockettelist)
-    dl_blockettelist = parser.read_RESP(datalogger_resp_file)
+    dl_blockettelist = parser.read_resp(datalogger_resp_file)
     dl_xseedparser = parser.make_xseed(dl_blockettelist)
 
     resp_stages = list()
@@ -1763,7 +1763,7 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
                                 b53.stage_signal_input_units),
         output_units=lookup_unit(sensor_xseedparser.abbreviations,
                                  b53.stage_signal_output_units),
-        pz_transfer_function_type=TRANSFORM_MAP[b53.transfer_function_types],
+        pz_transfer_function_type=transform_map[b53.transfer_function_types],
         normalization_frequency=FloatWithUncertainties(
             b53.normalization_frequency),
         zeros=list(map(ComplexWithUncertainties,
@@ -1811,7 +1811,7 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
                                         b54.signal_input_units),
                 output_units=lookup_unit(dl_xseedparser.abbreviations,
                                          b54.signal_output_units),
-                cf_transfer_function_type=TRANSFER_MAP[b54.response_type],
+                cf_transfer_function_type=transfer_map[b54.response_type],
                 numerator=list(map(FloatWithUncertaintiesAndUnit,
                                    b54.numerator_coefficient)),
                 denominator=denominator,
