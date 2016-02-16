@@ -20,7 +20,6 @@ This class hierarchy is closely modelled after the de-facto standard format
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
 from future.utils import native_str
 
 import glob
@@ -32,12 +31,9 @@ import warnings
 import numpy as np
 from pkg_resources import load_entry_point
 
-with standard_library.hooks():
-    import urllib.request
-
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
-from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.base import ENTRY_POINTS, download_to_file
 from obspy.core.util.decorator import (map_example_filename,
                                        uncompress_file)
 from obspy.imaging.cm import obspy_sequential
@@ -825,7 +821,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib.request.urlopen(pathname_or_url).read())
+            download_to_file(url=pathname_or_url, filename_or_buffer=fh)
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
