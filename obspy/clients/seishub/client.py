@@ -881,7 +881,7 @@ master/seishub/plugins/seismology/waveform.py
         if res not in reslist:
             reslist.append(res)
         parser = Parser(res)
-        paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
+        paz = parser.get_paz(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
 
 
