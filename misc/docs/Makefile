@@ -55,12 +55,12 @@ clean:
 	@python make_assets.py -c -f
 
 coverage:
-	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -q --all
+	@coverage run --rcfile=.coveragerc -m obspy.scripts.runtests -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 coverager:
-	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r -q --all
+	@coverage run --rcfile=.coveragerc -m obspy.scripts.runtests -r -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
