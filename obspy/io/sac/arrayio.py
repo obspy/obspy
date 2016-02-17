@@ -267,7 +267,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     Write the header and (optionally) data arrays to a SAC binary file.
 
     :param dest: Full path or File-like object to SAC binary file on disk.
-        If data is None, file mode should be 'wb+'.
     :type dest: str or file
     :param hf: SAC float header array
     :type hf: :class:`numpy.ndarray` of floats
@@ -293,9 +292,8 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     existing binary file with data in it.
 
     """
-    # this function is a hot mess.  clean up the logic.
-
     # deal with file name versus File-like object, and file mode
+    # file open modes in Python: http://stackoverflow.com/a/23566951/745557
     if data is None:
         # file exists, just modify it (don't start from scratch)
         fmode = 'rb+'
@@ -327,12 +325,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
         is_file_name = False
     except IOError:
         raise SacIOError("Cannot open file: " + dest)
-
-    if data is None and f.mode != 'rb+':
-        # msg = "File mode must be 'wb+' for data=None."
-        # raise ValueError(msg)
-        msg = "Writing header-only file. Use 'wb+' file mode to update header."
-        warnings.warn(msg)
 
     # TODO: make sure all data have the same/desired byte order
 
@@ -380,6 +372,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     """
     # TODO: fix prodigious use of file open/close for "with" statements.
 
+    # file open modes in Python: http://stackoverflow.com/a/23566951/745557
     if data is None:
         # file exists, just modify it (don't start from scratch)
         fmode = 'r+'
@@ -395,10 +388,6 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     except TypeError:
         f = dest
         is_file_name = False
-
-    if data is None and f.mode != 'r+':
-        msg = "Writing header-only file. Use 'wb+' file mode to update header."
-        warnings.warn(msg)
 
     try:
         np.savetxt(f, np.reshape(hf, (14, 5)), fmt=native_str("%#15.7g"),
