@@ -500,7 +500,7 @@ class WaveformPlotting(object):
         if "min_magnitude" in events:
             try:
                 from obspy.clients.fdsn import Client
-                c = Client("NERIES")
+                c = Client("EMSC")
                 events = c.get_events(starttime=self.starttime,
                                       endtime=self.endtime,
                                       minmagnitude=events["min_magnitude"])
