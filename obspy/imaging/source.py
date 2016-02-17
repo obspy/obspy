@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------
-# Filename: radpattern.py
+# Filename: source.py
 #  Purpose: Computes and plots radiation patterns
 # ---------------------------------------------------------------------
 """
@@ -12,6 +12,7 @@ Functions to compute and plot radiation patterns
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
@@ -89,15 +90,15 @@ def plot_radiation_pattern(
           (for details see :meth:`obspy.core.event.event.Event.plot`)
         * 'mayavi': uses the mayavi library (not yet available under Python 3
           and problematic with anaconda)
-        * 'vtk': This vtk option writes three vtk files to the current working
+        * 'vtk': This vtk option writes two vtk files to the current working
           directory. rpattern.vtk contains the p and s wave farfield vector
-          field beachlines.vtk contains the nodal lines of the radiation
-          pattern rpattern.pvsm is a state file that sets ParaView parameters
-          to plot rpattern.vtk and beachlines.vtk
+          field. beachlines.vtk contains the nodal lines of the radiation
+          pattern. A vtk glyph filter should be applied to the vector field
+          (e.g. in ParaView) to visualize it.
 
-    :param coordinate_system: the only implemented option so far is 'RTP'.
-                              Should be extended to support NED, USE, DSE, NED
-                              in the future
+    :param coordinate_system: the only implemented option so far is 'RTP' (also
+        called 'USE'). Should be extended to support NED, DSE, NED in the
+        future.
     :type fig: :class:`matplotlib.figure.Figure`
     :param fig: Figure instance to use.
     :type show: bool
@@ -118,8 +119,9 @@ def plot_radiation_pattern(
         indices = [1, 2, 0, 5, 3, 4]
         ned_mt = [sign * mt[ind] for sign, ind in zip(signs, indices)]
         rtp_mt = mt
-    # for the following option, the moment tensor has to be converted to
-    # RTP coordinates as well
+    # the moment tensor has to be converted to
+    # RTP/USE coordinates as well because the beachball routine relies
+    # on it.
     # elif coordinate_system == 'DSE':
     #     signs = [1, 1, 1, -1, -1, 1]
     #     indices = [1, 2, 0, 5, 3, 4]
@@ -204,7 +206,7 @@ def _plot_radiation_pattern_sphere(
     # use the most isolated eigenvector as axis of symmetry
     evecs = mtensor.get_eigvecs()
     evals = np.abs(mtensor.get_eigvals())**2
-    evals_dev = np.abs(evals-np.mean(evals))
+    evals_dev = np.abs(evals - np.mean(evals))
     if is_p_wave:
         if p_sphere_direction == 'outwards':
             evec_max = evecs[np.argmax(evals_dev)]
@@ -248,7 +250,7 @@ def _plot_radiation_pattern_sphere(
     y = points[1].reshape(sshape)
     z = points[2].reshape(sshape)
 
-    # plot 3d radiation pattern and beachball
+    # plot 3d radiation pattern
     ax3d.plot_surface(x, y, z, rstride=4, cstride=4, facecolors=colors)
     ax3d.set(xlim=(-1.5, 1.5), ylim=(-1.5, 1.5), zlim=(-1.5, 1.5),
              xticks=[-1, 1], yticks=[-1, 1], zticks=[-1, 1],
@@ -434,7 +436,7 @@ def _plot_radiation_pattern_mayavi(ned_mt):
 def _write_radiation_pattern_vtk(
         ned_mt, fname_rpattern='rpattern.vtk',
         fname_beachlines='beachlines.vtk'):
-    # output a vtkfile that can for exampled be displayed by paraview
+    # output a vtkfile that can for exampled be displayed by ParaView
     mtensor = MomentTensor(ned_mt, system='NED')
     bb = BeachBall(mtensor, npoints=200)
     bb._setup_BB(unit_circle=False)
