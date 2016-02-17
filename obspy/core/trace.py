@@ -19,7 +19,6 @@ import warnings
 from copy import copy, deepcopy
 
 import numpy as np
-import matplotlib.pyplot as plt
 from decorator import decorator
 
 from obspy.core import compatibility
@@ -2558,6 +2557,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         from obspy.core.inventory import PolynomialResponseStage
         from obspy.signal.invsim import (cosine_taper, cosine_sac_taper,
                                          invert_spectrum)
+        if plot:
+            import matplotlib.pyplot as plt
+
         if (isinstance(inventory, (str, native_str)) and
                 inventory.upper() in ("DISP", "VEL", "ACC")):
             from obspy.core.util.deprecation_helpers import \

@@ -29,10 +29,10 @@ from datetime import datetime
 from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from matplotlib.dates import AutoDateLocator, date2num
 import matplotlib.lines as mlines
+import matplotlib.patches as patches
+from matplotlib.cm import get_cmap
+from matplotlib.dates import AutoDateLocator, date2num
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
@@ -222,6 +222,7 @@ class WaveformPlotting(object):
         Destructor closes the figure instance if it has been created by the
         class.
         """
+        import matplotlib.pyplot as plt
         if self.kwargs.get('fig', None) is None and \
                 not self.kwargs.get('handle'):
             plt.close()
@@ -270,6 +271,7 @@ class WaveformPlotting(object):
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
         """
+        import matplotlib.pyplot as plt
         # Setup the figure if not passed explicitly.
         if not self.fig_obj:
             self.__setup_figure()
@@ -805,6 +807,7 @@ class WaveformPlotting(object):
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
+        import matplotlib.pyplot as plt
         self.fig.subplots_adjust(hspace=0)
         # Loop over all but last axes.
         for ax in self.axis[:-1]:
@@ -826,6 +829,7 @@ class WaveformPlotting(object):
     def __plot_set_y_ticks(self, *args, **kwargs):  # @UnusedVariable
         """
         """
+        import matplotlib.pyplot as plt
         if self.equal_scale:
             ylims = np.vstack([ax.get_ylim() for ax in self.axis])
             yranges = np.diff(ylims).flatten()
@@ -1098,6 +1102,7 @@ class WaveformPlotting(object):
         """
         Plots multiple waveforms as a record section on a single plot.
         """
+        import matplotlib.pyplot as plt
         # Initialise data and plot
         self.__sect_init_traces()
         ax, lines = self.__sect_init_plot()
@@ -1287,7 +1292,7 @@ class WaveformPlotting(object):
             self.sect_color = self.color
             return
 
-        cmap = plt.get_cmap('Paired', lut=len(colors))
+        cmap = get_cmap('Paired', lut=len(colors))
         self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
 
     def __sect_offset_to_fraction(self, offset):
@@ -1384,6 +1389,7 @@ class WaveformPlotting(object):
         """
         The design and look of the whole plot to be produced.
         """
+        import matplotlib.pyplot as plt
         # Setup figure and axes
         self.fig = plt.figure(num=None, dpi=self.dpi,
                               figsize=(float(self.width) / self.dpi,

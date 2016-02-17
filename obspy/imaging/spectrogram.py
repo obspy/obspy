@@ -23,7 +23,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import math as M
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import Normalize
 
@@ -103,6 +102,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         percentages of the amplitude range (linear or logarithmic depending
         on option `dbscale`) are clipped.
     """
+    import matplotlib.pyplot as plt
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 

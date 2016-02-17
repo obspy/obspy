@@ -11,7 +11,7 @@ import copy
 import warnings
 
 import matplotlib.cbook
-import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
 import matplotlib.text
 import numpy as np
 
@@ -26,7 +26,7 @@ import obspy.geodetics.base as geodetics
 
 # Pretty paired colors. Reorder to have saturated colors first and remove
 # some colors at the end.
-cmap = plt.get_cmap('Paired', lut=12)
+cmap = get_cmap('Paired', lut=12)
 COLORS = ['#%02x%02x%02x' % tuple(int(col * 255) for col in cmap(i)[:3])
           for i in range(12)]
 COLORS = COLORS[1:][::2][:-1] + COLORS[::2][:-1]
@@ -128,6 +128,7 @@ class Arrivals(list):
         :returns: The (possibly created) axes instance.
         :rtype: :class:`matplotlib.axes.Axes`
         """
+        import matplotlib.pyplot as plt
         arrivals = []
         for _i in self:
             if _i.path is None:

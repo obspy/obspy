@@ -21,8 +21,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import matplotlib.pyplot as plt
-
 from obspy.core.event.header import (
     EventType, EventTypeCertainty, EventDescriptionType)
 from obspy.imaging.source import plot_radiation_pattern, _setup_figure_and_axes
@@ -276,6 +274,7 @@ class Event(__Event):
             cat = read_events("/path/to/CMTSOLUTION")
             cat.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
         """
+        import matplotlib.pyplot as plt
         try:
             fm = self.preferred_focal_mechanism() or self.focal_mechanisms[0]
             mtensor = fm.moment_tensor.tensor

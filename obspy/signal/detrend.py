@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 from scipy.interpolate import LSQUnivariateSpline
-import matplotlib.pyplot as plt
 
 
 def simple(data):
@@ -32,6 +31,7 @@ def simple(data):
 
 
 def _plotting_helper(data, fit, plot):
+    import matplotlib.pyplot as plt
     fig, axes = plt.subplots(2, 1, figsize=(8, 5))
     plt.subplots_adjust(hspace=0)
     axes[0].plot(data, color="k", label="Original Data")

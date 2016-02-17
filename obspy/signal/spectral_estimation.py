@@ -31,7 +31,6 @@ import pickle
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import date2num
@@ -1540,6 +1539,7 @@ class PPSD(object):
         :param xaxis_frequency: If set to `True`, the x axis will be frequency
             in Hertz as opposed to the default of period in seconds.
         """
+        import matplotlib.pyplot as plt
         self.__check_histogram()
         fig = plt.figure()
         fig.ppsd = AttribDict()
@@ -1655,6 +1655,7 @@ class PPSD(object):
         :meth:`plot()` call, so this routine can only be used to update with
         data from a new stack.
         """
+        import matplotlib.pyplot as plt
         ax = fig.axes[0]
         xlim = ax.get_xlim()
         if "quadmesh" in fig.ppsd:
@@ -1722,6 +1723,7 @@ class PPSD(object):
         :type filename: str, optional
         :param filename: Name of output file
         """
+        import matplotlib.pyplot as plt
         fig = plt.figure()
         ax = fig.add_subplot(111)
 

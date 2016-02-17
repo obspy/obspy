@@ -17,7 +17,6 @@ import datetime
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 from matplotlib.colorbar import Colorbar
 from matplotlib.colors import Normalize
@@ -162,6 +161,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
         are problematic, but e.g. one station plot (without colorbar) and one
         event plot (with colorbar) together should work well.
     """
+    import matplotlib.pyplot as plt
     min_color = min(color)
     max_color = max(color)
 
@@ -536,6 +536,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         projections. Some arguments may be ignored if you choose one of the
         built-in ``projection`` choices.
     """
+    import matplotlib.pyplot as plt
     min_color = min(color)
     max_color = max(color)
 

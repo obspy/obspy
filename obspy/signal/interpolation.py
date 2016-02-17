@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 import scipy.interpolate
-import matplotlib.pyplot as plt
 
 from obspy.signal.headers import clibsignal
 
@@ -380,6 +379,7 @@ def plot_lanczos_windows(a, filename=None):
         from obspy.signal.interpolation import plot_lanczos_windows
         plot_lanczos_windows(a=20)
     """
+    import matplotlib.pyplot as plt
     x_max = 1024.0 - 0.5
     n = 2 ** 15
     x = np.linspace(-x_max, x_max, n)
