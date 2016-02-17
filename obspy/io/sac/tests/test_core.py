@@ -10,6 +10,7 @@ import copy
 import io
 import os
 import unittest
+import warnings
 
 import numpy as np
 
@@ -78,7 +79,11 @@ class CoreTestCase(unittest.TestCase):
         tr = read(self.filexy, format='SACXY')[0]
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            tr.write(tempfile, format='SACXY')
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                tr.write(tempfile, format='SACXY')
+                self.assertEqual(len(w), 1)
+                self.assertIn('reftime', str(w[-1].message))
             tr1 = read(tempfile)[0]
         self.assertEqual(tr, tr1)
 
@@ -615,7 +620,11 @@ class CoreTestCase(unittest.TestCase):
         st = _read_sac_xy(self.filexy)
 
         with io.BytesIO() as fh:
-            _write_sac_xy(st, fh)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                _write_sac_xy(st, fh)
+                self.assertEqual(len(w), 1)
+                self.assertIn('reftime', str(w[-1].message))
             fh.seek(0, 0)
             st2 = _read_sac_xy(fh)
 
@@ -629,7 +638,11 @@ class CoreTestCase(unittest.TestCase):
         st = _read_sac_xy(self.filexy)
 
         with NamedTemporaryFile() as tf:
-            _write_sac_xy(st, tf)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                _write_sac_xy(st, tf)
+                self.assertEqual(len(w), 1)
+                self.assertIn('reftime', str(w[-1].message))
             tf.seek(0, 0)
             st2 = _read_sac_xy(tf)
 
@@ -764,7 +777,11 @@ class CoreTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            tr.write(tempfile, format='SAC')
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                tr.write(tempfile, format='SAC')
+                self.assertEqual(len(w), 1)
+                self.assertIn('reftime', str(w[-1].message))
             tr1 = read(tempfile)[0]
 
         # starttime made its way to SAC file
