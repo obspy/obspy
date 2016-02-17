@@ -92,8 +92,8 @@ def plot_radiation_pattern(
         * 'vtk': This vtk option writes two vtk files to the current working
           directory. rpattern.vtk contains the p and s wave farfield vector
           field. beachlines.vtk contains the nodal lines of the radiation
-          pattern. A glyph filter should be applied to the vector field in
-          paraview to visualize it.
+          pattern. A vtk glyph filter should be applied to the vector field
+          (e.g. in ParaView) to visualize it.
 
     :param coordinate_system: the only implemented option so far is 'RTP' (also
         called 'USE'). Should be extended to support NED, DSE, NED in the
@@ -431,7 +431,7 @@ def _plot_radiation_pattern_mayavi(ned_mt):
 def _write_radiation_pattern_vtk(
         ned_mt, fname_rpattern='rpattern.vtk',
         fname_beachlines='beachlines.vtk'):
-    # output a vtkfile that can for exampled be displayed by paraview
+    # output a vtkfile that can for exampled be displayed by ParaView
     mtensor = MomentTensor(ned_mt, system='NED')
     bb = BeachBall(mtensor, npoints=200)
     bb._setup_BB(unit_circle=False)
