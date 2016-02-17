@@ -1,4 +1,4 @@
-0.10.x:
+0.10.3: (doi: 10.5281/zenodo.46150)
   - obspy.core:
     * Fix reading of multiple catalog files using globs (see #1065).
     * Fixed a bug when using
