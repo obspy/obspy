@@ -79,8 +79,8 @@ extern "C" {
   #include <windows.h>
   #include <sys/types.h>
 
-  /* For pre-MSVC 2010 define standard int types, otherwise use inttypes.h */
-  #if defined(_MSC_VER) && _MSC_VER < 1600
+  /* MSVC does not support inttypes.h */
+  #if defined(_MSC_VER)
     typedef signed char int8_t;
     typedef unsigned char uint8_t;
     typedef signed short int int16_t;
