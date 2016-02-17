@@ -34,7 +34,6 @@ import sys
 import warnings
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import path as mplpath
 from matplotlib import collections, patches, transforms
 from decorator import decorator
@@ -251,6 +250,7 @@ def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param fig: Give an existing figure instance to plot into. New Figure if
         set to ``None``.
     """
+    import matplotlib.pyplot as plt
     plot_width = width * 0.95
 
     # plot the figure

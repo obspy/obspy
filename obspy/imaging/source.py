@@ -17,8 +17,8 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import numpy as np
-import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # NOQA
+from matplotlib.cm import get_cmap
 
 from obspy.core.util.base import get_matplotlib_version
 from obspy.core.event.source import farfield
@@ -43,6 +43,7 @@ def _setup_figure_and_axes(kind, fig=None, subplot_size=4.0):
         plotting options for each axes (see
         :meth:`obspy.core.event.event.Event.plot`, parameter `kind`).
     """
+    import matplotlib.pyplot as plt
     # make 2d layout of kind parameter
     if isinstance(kind[0], (list, tuple)):
         nrows = len(kind)
@@ -104,6 +105,7 @@ def plot_radiation_pattern(
         used to do further customization of the plot before showing it.
     :returns: Matplotlib figure or None (if `kind` is "mayavi" or "vtk")
     """
+    import matplotlib.pyplot as plt
 
     # reoorder all moment tensors to NED and RTP convention
     # name : COMPONENT              : NED sign and index
@@ -187,6 +189,7 @@ def _plot_radiation_pattern_sphere(
         outwards.
     :param type: 'P' or 'S' (P or S wave).
     """
+    import matplotlib.pyplot as plt
     type = type.upper()
     if type not in ("P", "S"):
         msg = ("type must be 'P' or 'S'")
@@ -221,12 +224,12 @@ def _plot_radiation_pattern_sphere(
     if is_p_wave:
         disp = farfield(ned_mt, points, type="P")
         magn = np.sum(disp * points, axis=0)
-        cmap = plt.get_cmap('bwr')
+        cmap = get_cmap('bwr')
         norm = plt.Normalize(-1, 1)
     else:
         disp = farfield(ned_mt, points, type="S")
         magn = np.sqrt(np.sum(disp * disp, axis=0))
-        cmap = plt.get_cmap('Greens')
+        cmap = get_cmap('Greens')
         norm = plt.Normalize(0, 1)
     magn /= np.max(np.abs(magn))
 
@@ -267,6 +270,7 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
     :type type: str
     :param type: 'P' or 'S' (P or S wave).
     """
+    import matplotlib.pyplot as plt
     if MATPLOTLIB_VERSION < [1, 4]:
         msg = ("Matplotlib 3D quiver plot needs matplotlib version >= 1.4.")
         raise ImportError(msg)
@@ -286,14 +290,14 @@ def _plot_radiation_pattern_quiver(ax3d, ned_mt, type):
         # normalized magnitude:
         magn = np.sum(disp * points, axis=0)
         magn /= np.max(np.abs(magn))
-        cmap = plt.get_cmap('bwr')
+        cmap = get_cmap('bwr')
     else:
         # get radiation pattern
         disp = farfield(ned_mt, points, type="S")
         # normalized magnitude (positive only):
         magn = np.sqrt(np.sum(disp * disp, axis=0))
         magn /= np.max(np.abs(magn))
-        cmap = plt.get_cmap('Greens')
+        cmap = get_cmap('Greens')
 
     # plot
     # there is a mlab3d bug that quiver vector colors and lengths
@@ -327,8 +331,9 @@ def _plot_beachball(ax2d, rtp_mt):
     :param ax2d: matplotlib Axes3D object
     :param rtp_mt: moment tensor in RTP convention
     """
+    import matplotlib.pyplot as plt
     norm = plt.Normalize(-1., 1.)
-    cmap = plt.get_cmap('bwr')
+    cmap = get_cmap('bwr')
     bball = beach(rtp_mt, xy=(0, 0), width=50, facecolor=cmap(norm(0.7)),
                   bgcolor=cmap(norm(-0.7)))
 
