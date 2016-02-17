@@ -1,4 +1,4 @@
-master:
+1.0.0: (doi: 10.5281/zenodo.46151)
  - General:
    * Requirements have been increased to reflect latest distributions:
      * Removed support for Python 2.6.
@@ -147,7 +147,7 @@ master:
    * Proper cache for model splits resulting in much faster calculations if
      the source depth is repeatedly the same (see #1248).
 
-0.10.x:
+0.10.3: (doi: 10.5281/zenodo.46150)
   - obspy.core:
     * Fix reading of multiple catalog files using globs (see #1065).
     * Fixed a bug when using
