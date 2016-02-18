@@ -396,7 +396,7 @@ def _intgetter(hdr):
 
 def _intsetter(hdr):
     def set_int(self, value):
-        if not isinstance(value, (np.integer, int)):
+        if value % 1:
             warnings.warn("Non-integers may be truncated. ({}: {})".format(
                 hdr, value))
         if value is None:
@@ -1079,7 +1079,7 @@ class SACTrace(object):
             self.nzhour = new_reftime.hour
             self.nzmin = new_reftime.minute
             self.nzsec = new_reftime.second
-            self.nzmsec = int(new_reftime.microsecond / 1000)
+            self.nzmsec = new_reftime.microsecond / 1000
 
             # get the float seconds between the old and new reftimes
             shift = old_reftime - new_reftime
