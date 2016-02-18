@@ -18,6 +18,7 @@ import warnings
 import numpy as np
 
 from obspy.core.util.decorator import deprecated
+from obspy.core.util.misc import to_int_or_zero
 
 
 # checking for geographiclib
@@ -25,8 +26,14 @@ try:
     import geographiclib  # @UnusedImport # NOQA
     from geographiclib.geodesic import Geodesic
     HAS_GEOGRAPHICLIB = True
+    try:
+        GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = [1, 34] <= list(map(
+            to_int_or_zero, geographiclib.__version__.split(".")))
+    except AttributeError:
+        GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = False
 except ImportError:
     HAS_GEOGRAPHICLIB = False
+    GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = False
 
 
 WGS84_A = 6378137.0
