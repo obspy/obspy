@@ -196,7 +196,7 @@ def _get_suites(verbosity=1, names=[]):
 
 
 def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
-                   ci_url=None):
+                   ci_url=None, pr_url=None):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -308,6 +308,8 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     result['skipped'] = skipped
     if ci_url is not None:
         result['ciurl'] = ci_url
+    if pr_url is not None:
+        result['prurl'] = pr_url
 
     # generate XML document
     def _dict2xml(doc, result):
@@ -501,7 +503,7 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=[], report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME, ci_url=None):
+              hostname=HOSTNAME, ci_url=None, pr_url=None):
     """
     This function executes ObsPy test suites.
 
@@ -574,7 +576,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
             report = True
     if report:
         _create_report(ttr, total_time, log, server, hostname, sorted_tests,
-                       ci_url)
+                       ci_url, pr_url)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -632,6 +634,8 @@ def run(argv=None, interactive=True):
                         help='append log file to test report')
     report.add_argument('--ci-url', default=None, dest="ci_url",
                         help='URL to Continuous Integration job page.')
+    report.add_argument('--pr-url', default=None,
+                        dest="pr_url", help='Github (Pull Request) URL.')
 
     # other options
     others = parser.add_argument_group('Additional Options')
@@ -688,7 +692,8 @@ def run(argv=None, interactive=True):
     return run_tests(verbosity, args.tests, report, args.log, args.server,
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
-                     hostname=args.hostname, ci_url=args.ci_url)
+                     hostname=args.hostname, ci_url=args.ci_url,
+                     pr_url=args.pr_url)
 
 
 def main(argv=None, interactive=True):
