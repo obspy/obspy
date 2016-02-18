@@ -302,12 +302,14 @@ class TauPyModelTestCase(unittest.TestCase):
         This version of the test is used when geographiclib is installed
         """
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
-                                           source_latitude_in_deg=-45.0,
-                                           source_longitude_in_deg=-50.0,
-                                           receiver_latitude_in_deg=-80.0,
-                                           receiver_longitude_in_deg=-50.0,
-                                           phase_list=["P"])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            arrivals = m.get_pierce_points_geo(
+                source_depth_in_km=10.0,
+                source_latitude_in_deg=-45.0,
+                source_longitude_in_deg=-50.0,
+                receiver_latitude_in_deg=-80.0,
+                receiver_longitude_in_deg=-50.0, phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
 
@@ -535,12 +537,14 @@ class TauPyModelTestCase(unittest.TestCase):
         expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
-                                       source_latitude_in_deg=-80.0,
-                                       source_longitude_in_deg=-60.0,
-                                       receiver_latitude_in_deg=-45.0,
-                                       receiver_longitude_in_deg=-60.0,
-                                       phase_list=["P"])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            arrivals = m.get_ray_paths_geo(
+                source_depth_in_km=10.0,
+                source_latitude_in_deg=-80.0,
+                source_longitude_in_deg=-60.0,
+                receiver_latitude_in_deg=-45.0,
+                receiver_longitude_in_deg=-60.0, phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
 
         # Interpolate both paths to 100 samples and make sure they are

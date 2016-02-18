@@ -19,6 +19,7 @@ import warnings
 
 import numpy as np
 
+from obspy.core.util.misc import to_int_or_zero
 from .helper_classes import TimeDistGeo
 from ..geodetics import gps2dist_azimuth, kilometer2degrees
 import obspy.geodetics.base as geodetics
@@ -26,6 +27,9 @@ import obspy.geodetics.base as geodetics
 
 if geodetics.HAS_GEOGRAPHICLIB:
     from geographiclib.geodesic import Geodesic
+    import geographiclib
+    GEOGRAPHICLIB_VERSION = list(map(
+        to_int_or_zero, geographiclib.__version__.split(".")))
 
 
 def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
@@ -107,6 +111,13 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     :rtype: :class:`Arrivals`
     """
     if geodetics.HAS_GEOGRAPHICLIB:
+        if GEOGRAPHICLIB_VERSION < [1, 34]:
+            # geographiclib is not installed ...
+            # and  obspy/geodetics does not help much
+            msg = ("This functionality needs the Python module "
+                   "'geographiclib' in version 1.34 or higher (your version "
+                   "is {}).").format(geographiclib.__version__)
+            raise ImportError(msg)
         ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
                              f=flattening_of_planet)
         g = ellipsoid.Inverse(source_latitude_in_deg, source_longitude_in_deg,
