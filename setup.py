@@ -523,9 +523,6 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
-        # workaround Win32 and MSVC - see issue #64
-        if '32' in platform.architecture()[0]:
-            kwargs['extra_compile_args'] = ["/fp:strict"]
     if EXTERNAL_LIBS:
         kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
