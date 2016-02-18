@@ -111,12 +111,15 @@ class NamedTemporaryFile(io.BufferedIOBase):
     def tell(self, *args, **kwargs):
         return self._fileobj.tell(*args, **kwargs)
 
+    def close(self, *args, **kwargs):
+        super(NamedTemporaryFile, self).close(*args, **kwargs)
+        self._fileobj.close()
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        self.close()  # flush internal buffer
-        self._fileobj.close()
+        self.close()
         os.remove(self.name)
 
 
