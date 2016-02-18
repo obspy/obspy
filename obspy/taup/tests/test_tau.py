@@ -326,10 +326,11 @@ class TauPyModelTestCase(unittest.TestCase):
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
-        np.testing.assert_almost_equal(expected[:, 3],
-                                       p_arr.pierce['lat'], 1)
-        np.testing.assert_almost_equal(expected[:, 4],
-                                       p_arr.pierce['lon'], 1)
+        if geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34:
+            np.testing.assert_almost_equal(expected[:, 3],
+                                           p_arr.pierce['lat'], 1)
+            np.testing.assert_almost_equal(expected[:, 4],
+                                           p_arr.pierce['lon'], 1)
 
     def test_pierce_p_iasp91_fallback_geo(self):
         """
@@ -568,24 +569,25 @@ class TauPyModelTestCase(unittest.TestCase):
             sample_points,
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
-        interpolated_actual_lat = np.interp(
-            sample_points,
-            np.round(np.degrees(arrivals[0].path['dist']), 2),
-            np.round(arrivals[0].path['lat'], 2))
-        interpolated_actual_lon = np.interp(
-            sample_points,
-            np.round(np.degrees(arrivals[0].path['dist']), 2),
-            np.round(arrivals[0].path['lon'], 2))
-
         np.testing.assert_allclose(interpolated_actual_depth,
                                    interpolated_expected_depth,
                                    rtol=1E-4, atol=0)
-        np.testing.assert_allclose(interpolated_actual_lat,
-                                   interpolated_expected_lat,
-                                   rtol=1E-4, atol=0)
-        np.testing.assert_allclose(interpolated_actual_lon,
-                                   interpolated_expected_lon,
-                                   rtol=1E-4, atol=0)
+
+        if geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34:
+            interpolated_actual_lat = np.interp(
+                sample_points,
+                np.round(np.degrees(arrivals[0].path['dist']), 2),
+                np.round(arrivals[0].path['lat'], 2))
+            interpolated_actual_lon = np.interp(
+                sample_points,
+                np.round(np.degrees(arrivals[0].path['dist']), 2),
+                np.round(arrivals[0].path['lon'], 2))
+            np.testing.assert_allclose(interpolated_actual_lat,
+                                       interpolated_expected_lat,
+                                       rtol=1E-4, atol=0)
+            np.testing.assert_allclose(interpolated_actual_lon,
+                                       interpolated_expected_lon,
+                                       rtol=1E-4, atol=0)
 
     def test_single_path_geo_fallback_iasp91(self):
         """
