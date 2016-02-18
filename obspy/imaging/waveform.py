@@ -21,7 +21,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
-import collections
 import io
 import warnings
 from copy import copy
@@ -1102,13 +1101,19 @@ class WaveformPlotting(object):
         """
         Plots multiple waveforms as a record section on a single plot.
         """
-        import matplotlib.pyplot as plt
         # Initialise data and plot
         self.__sect_init_traces()
         ax, lines = self.__sect_init_plot()
 
         # Setting up line properties
-        if isinstance(self.sect_color, collections.Mapping):
+        try:
+            names_colors = self.sect_color.items()
+        except AttributeError:
+            for line in lines:
+                line.set_alpha(self.alpha)
+                line.set_linewidth(self.linewidth)
+                line.set_color(self.sect_color)
+        else:
             for line, tr in zip(lines, self.stream):
                 line.set_alpha(self.alpha)
                 line.set_linewidth(self.linewidth)
@@ -1117,18 +1122,12 @@ class WaveformPlotting(object):
 
             legend_lines = []
             legend_labels = []
-            for name, color in sorted(self.sect_color.items()):
+            for name, color in sorted(names_colors):
                 legend_lines.append(
                     mlines.Line2D([], [], color=color, alpha=self.alpha,
                                   linewidth=self.linewidth))
                 legend_labels.append(name)
-            plt.legend(legend_lines, legend_labels)
-
-        else:
-            for line in lines:
-                line.set_alpha(self.alpha)
-                line.set_linewidth(self.linewidth)
-                line.set_color(self.sect_color)
+            ax.legend(legend_lines, legend_labels)
 
         # Setting up plot axes
         if self.sect_offset_min is not None:
