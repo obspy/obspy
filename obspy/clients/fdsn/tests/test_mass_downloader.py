@@ -2097,6 +2097,7 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
 
         with NamedTemporaryFile() as tf:
             tf.close()
+            tf._fileobj.close()
             filename = tf.name
             tr = obspy.read()[0]
             tr.write(filename, format="mseed")
