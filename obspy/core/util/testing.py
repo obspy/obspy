@@ -34,6 +34,27 @@ from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'clients.seishub':
+        'obspy.clients.seishub.tests.test_client._check_server_availability',
+    }
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+    ]
+FLAKE8_EXCLUDE_FILES = [
+    "*/__init__.py",
+    ]
 
 
 def add_unittests(testsuite, module_name):
@@ -528,11 +549,6 @@ class ImageComparison(NamedTemporaryFile):
             return msg % (e.__class__.__name__, str(e))
         return links
 
-
-FLAKE8_EXCLUDE_FILES = [
-    "*/__init__.py",
-    ]
-
 try:
     import flake8
 except ImportError:
@@ -540,15 +556,6 @@ except ImportError:
 else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
-
-# List of flake8 error codes to ignore. Keep it as small as possible - there
-# usually is little reason to fight flake8.
-FLAKE8_IGNORE_CODES = [
-    # E402 module level import not at top of file
-    # This is really annoying when using the standard library import hooks
-    # from the future package.
-    "E402"
-]
 
 
 def check_flake8():
@@ -602,18 +609,6 @@ def check_flake8():
         report = flake8_style.check_files(files)
 
     return report, out.stdout
-
-
-# this dictionary contains the locations of checker routines that determine
-# whether the module's tests can be executed or not (e.g. because test server
-# is unreachable, necessary ports are blocked, etc.).
-# A checker routine should return either an empty string (tests can and will
-# be executed) or a message explaining why tests can not be executed (all
-# tests of corresponding module will be skipped).
-MODULE_TEST_SKIP_CHECKS = {
-    'seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability',
-    }
 
 
 def compare_xml_strings(doc1, doc2):
