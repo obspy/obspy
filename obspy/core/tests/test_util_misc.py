@@ -19,9 +19,10 @@ class UtilMiscTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.misc
     """
-    @unittest.skipIf(sys.platform == "darwin" and
+    @unittest.skipIf(sys.platform in ("darwin", "win32") and
                      platform.python_version_tuple()[0] == "3",
-                     "Does not work on OSX and Python 3 for some reason.")
+                     "Does not work with Python 3 for some Windows and OSX "
+                     "versions")
     def test_catch_output(self):
         """
         Tests for CatchOutput context manager.
