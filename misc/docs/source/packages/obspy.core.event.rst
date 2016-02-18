@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.core.inventory
-.. automodule:: obspy.core.inventory
+.. currentmodule:: obspy.core.event
+.. automodule:: obspy.core.event
 
     .. comment to end block
 
