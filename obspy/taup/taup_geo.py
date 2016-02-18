@@ -26,7 +26,6 @@ import obspy.geodetics.base as geodetics
 
 if geodetics.HAS_GEOGRAPHICLIB:
     from geographiclib.geodesic import Geodesic
-    import geographiclib
 
 
 def calc_dist(source_latitude_in_deg, source_longitude_in_deg,
@@ -112,8 +111,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
             # geographiclib is not installed ...
             # and  obspy/geodetics does not help much
             msg = ("This functionality needs the Python module "
-                   "'geographiclib' in version 1.34 or higher (your version "
-                   "is {}).").format(geographiclib.__version__)
+                   "'geographiclib' in version 1.34 or higher.")
             raise ImportError(msg)
         ellipsoid = Geodesic(a=radius_of_planet_in_km * 1000.0,
                              f=flattening_of_planet)
