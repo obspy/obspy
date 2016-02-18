@@ -110,9 +110,13 @@ from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
-DEPENDENCIES = ["numpy", "scipy", "matplotlib", "lxml.etree", "sqlalchemy",
-                "mpl_toolkits.basemap", "mock", "future",
-                "flake8", "pyflakes", "pyimgur"]
+HARD_DEPENDENCIES = [
+    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "sqlalchemy", "decorator", "requests"]
+OPTIONAL_DEPENDENCIES = [
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
+    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
+DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -261,16 +265,22 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
-        temp = module.split('.')
+        if module == "pep8-naming":
+            module_ = "pep8ext_naming"
+        else:
+            module_ = module
+        temp = module_.split('.')
         try:
-            mod = __import__(module,
+            mod = __import__(module_,
                              fromlist=[native_str(temp[1:])])
-            if module == '_omnipy':
-                result['dependencies'][module] = mod.coreVersion()
-            else:
-                result['dependencies'][module] = mod.__version__
         except ImportError:
-            result['dependencies'][module] = ''
+            version_ = '---'
+        else:
+            try:
+                version_ = mod.__version__
+            except AttributeError:
+                version_ = '???'
+        result['dependencies'][module] = version_
     # get system / environment settings
     result['platform'] = {}
     for func in ['system', 'release', 'version', 'machine',
