@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.io.seiscomp.sc3ml
-.. automodule:: obspy.io.seiscomp.sc3ml
+.. currentmodule:: obspy.io.seiscomp
+.. automodule:: obspy.io.seiscomp
 
     .. comment to end block
 
@@ -9,6 +9,6 @@
        :toctree: autogen
        :nosignatures:
 
-       core
+       sc3ml
 
     .. comment to end block
