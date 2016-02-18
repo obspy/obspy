@@ -110,9 +110,13 @@ from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
 
 
-DEPENDENCIES = ["numpy", "scipy", "matplotlib", "lxml.etree", "sqlalchemy",
-                "mpl_toolkits.basemap", "mock", "future",
-                "flake8", "pyflakes", "pyimgur"]
+HARD_DEPENDENCIES = [
+    "future", "numpy", "scipy", "matplotlib", "lxml.etree", "setuptools",
+    "sqlalchemy", "decorator", "requests"]
+OPTIONAL_DEPENDENCIES = [
+    "flake8", "pyimgur", "pyproj", "pep8-naming", "m2crypto", "osgeo.gdal",
+    "mpl_toolkits.basemap", "mock", "pyflakes", "geographiclib", "cartopy"]
+DEPENDENCIES = HARD_DEPENDENCIES + OPTIONAL_DEPENDENCIES
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -191,7 +195,8 @@ def _get_suites(verbosity=1, names=[]):
     return suites, status
 
 
-def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
+def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
+                   ci_url=None, pr_url=None):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -261,16 +266,22 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
-        temp = module.split('.')
+        if module == "pep8-naming":
+            module_ = "pep8ext_naming"
+        else:
+            module_ = module
+        temp = module_.split('.')
         try:
-            mod = __import__(module,
+            mod = __import__(module_,
                              fromlist=[native_str(temp[1:])])
-            if module == '_omnipy':
-                result['dependencies'][module] = mod.coreVersion()
-            else:
-                result['dependencies'][module] = mod.__version__
         except ImportError:
-            result['dependencies'][module] = ''
+            version_ = '---'
+        else:
+            try:
+                version_ = mod.__version__
+            except AttributeError:
+                version_ = '???'
+        result['dependencies'][module] = version_
     # get system / environment settings
     result['platform'] = {}
     for func in ['system', 'release', 'version', 'machine',
@@ -295,6 +306,10 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests):
     result['errors'] = errors
     result['failures'] = failures
     result['skipped'] = skipped
+    if ci_url is not None:
+        result['ciurl'] = ci_url
+    if pr_url is not None:
+        result['prurl'] = pr_url
 
     # generate XML document
     def _dict2xml(doc, result):
@@ -488,7 +503,7 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=[], report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME):
+              hostname=HOSTNAME, ci_url=None, pr_url=None):
     """
     This function executes ObsPy test suites.
 
@@ -560,7 +575,8 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _create_report(ttr, total_time, log, server, hostname, sorted_tests)
+        _create_report(ttr, total_time, log, server, hostname, sorted_tests,
+                       ci_url, pr_url)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:
@@ -616,6 +632,10 @@ def run(argv=None, interactive=True):
                         help='nodename visible at the report server')
     report.add_argument('-l', '--log', default=None,
                         help='append log file to test report')
+    report.add_argument('--ci-url', default=None, dest="ci_url",
+                        help='URL to Continuous Integration job page.')
+    report.add_argument('--pr-url', default=None,
+                        dest="pr_url", help='Github (Pull Request) URL.')
 
     # other options
     others = parser.add_argument_group('Additional Options')
@@ -672,7 +692,8 @@ def run(argv=None, interactive=True):
     return run_tests(verbosity, args.tests, report, args.log, args.server,
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
-                     hostname=args.hostname)
+                     hostname=args.hostname, ci_url=args.ci_url,
+                     pr_url=args.pr_url)
 
 
 def main(argv=None, interactive=True):

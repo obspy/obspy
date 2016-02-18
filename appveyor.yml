@@ -8,6 +8,8 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\misc\\appveyor\\run_with_env.cmd"
     PYTHON: "C:\\conda"
     MINICONDA_VERSION: "3.7.0"
+    CI_URL: "--ci-url https://ci.appveyor.com/project/%APPVEYOR_REPO_NAME%/build/1.0.%APPVEYOR_BUILD_NUMBER%-%APPVEYOR_REPO_BRANCH%"
+    PR_URL: "--pr-url https://github.com/%APPVEYOR_REPO_NAME%/pull/%APPVEYOR_PULL_REQUEST_NUMBER%"
 
   matrix:
     - PYTHON_VERSION: "2.7"
@@ -42,4 +44,4 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r"
+  - "python -m obspy.scripts.runtests -n appveyor-ci -r %CI_URL% %PR_URL%"
