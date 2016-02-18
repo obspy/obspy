@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import collections
 import copy
+import logging
 import os
 import shutil
 from socket import timeout as socket_timeout
@@ -2175,7 +2176,16 @@ class DownloadHelperTestCase(unittest.TestCase):
 
         patch.side_effect = side_effect
 
-        d = MassDownloader()
+        logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
+        _l = logger.level
+        logger.setLevel(logging.CRITICAL)
+
+        try:
+            d = MassDownloader()
+        finally:
+            # Make sure to not change the log-level.
+            logger.setLevel(_l)
+
         self.assertTrue(len(d._initialized_clients) > 10)
         self.assertFalse("IRIS" in d._initialized_clients)
         self.assertFalse("RESIF" in d._initialized_clients)
