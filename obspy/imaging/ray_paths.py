@@ -19,6 +19,7 @@ from colorsys import hls_to_rgb, rgb_to_hls
 
 import numpy as np
 from matplotlib.colors import hex2color
+from obspy.core.event.source import farfield_p
 
 import ipdb
 
@@ -504,6 +505,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
 
-                greatcircles.append((gcircle, arr.name, stlabel, evlabel))
+                greatcircles.append((gcircle, arr.name, value, stlabel,
+                                     evlabel))
 
     return greatcircles
