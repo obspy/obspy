@@ -502,12 +502,13 @@ class TauPyModel(object):
                                           phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-                                           source_longitude_in_deg,
-                                           receiver_latitude_in_deg,
-                                           receiver_longitude_in_deg,
-                                           self.model.radius_of_planet,
-                                           self.planet_flattening)
+            try:
+                arrivals = add_geo_to_arrivals(
+                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
+                    receiver_latitude_in_deg, receiver_longitude_in_deg,
+                    self.model.radius_of_planet, self.planet_flattening)
+            except ImportError as e:
+                warnings.warn("ImportError: " + str(e))
         else:
             msg = "Not able to evaluate positions of pierce points. " + \
                   "Arrivals object will not be modified. " + \
@@ -561,12 +562,13 @@ class TauPyModel(object):
                                       phase_list)
 
         if geodetics.HAS_GEOGRAPHICLIB:
-            arrivals = add_geo_to_arrivals(arrivals, source_latitude_in_deg,
-                                           source_longitude_in_deg,
-                                           receiver_latitude_in_deg,
-                                           receiver_longitude_in_deg,
-                                           self.model.radius_of_planet,
-                                           self.planet_flattening)
+            try:
+                arrivals = add_geo_to_arrivals(
+                    arrivals, source_latitude_in_deg, source_longitude_in_deg,
+                    receiver_latitude_in_deg, receiver_longitude_in_deg,
+                    self.model.radius_of_planet, self.planet_flattening)
+            except ImportError as e:
+                warnings.warn("ImportError: " + str(e))
         else:
             msg = "Not able to evaluate positions of points on path. " + \
                   "Arrivals object will not be modified. " + \
