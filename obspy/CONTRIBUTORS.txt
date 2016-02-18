@@ -8,6 +8,7 @@ Fabrizio Bernardi
 Felix Bernauer
 Moritz Beyreuther
 Sébastien Bonaimé
+Lloyd Carothers
 Peter Danecek
 Martin van Driel
 Fabian Engels
