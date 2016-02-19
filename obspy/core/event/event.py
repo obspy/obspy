@@ -252,27 +252,27 @@ class Event(__Event):
         focal mechanism has to have a moment tensor set).
 
         >>> from obspy import read_events
-        >>> cat = read_events("/path/to/CMTSOLUTION")
-        >>> cat.plot()  # doctest:+SKIP
+        >>> event = read_events("/path/to/CMTSOLUTION")[0]
+        >>> event.plot()  # doctest:+SKIP
 
         .. plot::
 
             from obspy import read_events
-            cat = read_events("/path/to/CMTSOLUTION")
-            cat.plot()
+            event = read_events("/path/to/CMTSOLUTION")[0]
+            event.plot()
 
         Individual subplot parts and the setup of the grid of subplots
         (rows/columns) can be specified by using certain keywords, see `kind`
         parameter description.
 
-        >>> cat.plot(kind=[['global'],
-        ...                ['p_sphere', 'p_quiver']])  # doctest:+SKIP
+        >>> event.plot(kind=[['global'],
+        ...                  ['p_sphere', 'p_quiver']])  # doctest:+SKIP
 
         .. plot::
 
             from obspy import read_events
-            cat = read_events("/path/to/CMTSOLUTION")
-            cat.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+            event = read_events("/path/to/CMTSOLUTION")[0]
+            event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
         """
         import matplotlib.pyplot as plt
         try:

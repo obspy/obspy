@@ -228,16 +228,16 @@ Gallery
     :alt: Event plot
 
     from obspy import read_events
-    cat = read_events("/path/to/CMTSOLUTION")
-    cat.plot()
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot()
 
 .. gallery-plot::
     :target: packages/autogen/obspy.core.event.event.Event.plot.html
     :alt: Event plot
 
     from obspy import read_events
-    cat = read_events("/path/to/CMTSOLUTION")
-    cat.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
 
 .. image:: /_static/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html
