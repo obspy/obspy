@@ -1,24 +1,23 @@
-FROM toopher/centos-i386:centos6
+FROM castis/centos5-i386
 
 MAINTAINER Lion Krischer
 
-# Can fail on occasion.
-RUN linux32 yum install -y gcc tar bzip2
+RUN yum -y update || true
+RUN yum install curl gcc bzip2 tar
 
+RUN curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
 
-RUN linux32 curl https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86.sh -o miniconda.sh
-RUN linux32 chmod +x miniconda.sh
+# Force installation.
+RUN yes yes | bash miniconda.sh -b -p /miniconda
 
-RUN linux32 ./miniconda.sh -b -p /miniconda
+RUN /miniconda/bin/conda update --yes conda
+RUN /miniconda/bin/conda install --yes conda-build anaconda-client jinja2
 
-RUN linux32 /miniconda/bin/conda update --yes conda
-RUN linux32 /miniconda/bin/conda install --yes conda-build binstar jinja2
-
-RUN linux32 mkdir -p /temporary/obspy
+RUN mkdir -p /temporary/obspy
 COPY meta.yaml /temporary/obspy/meta.yaml
 
 # Tests can fail on occasion. We still want the image to be created.
-RUN linux32 /miniconda/bin/conda build --py 26 /temporary/obspy || true
-RUN linux32 /miniconda/bin/conda build --py 27 /temporary/obspy || true
-RUN linux32 /miniconda/bin/conda build --py 33 /temporary/obspy || true
-RUN linux32 /miniconda/bin/conda build --py 34 /temporary/obspy || true
+RUN /miniconda/bin/conda build --py 27 /temporary/obspy
+RUN /miniconda/bin/conda build --py 33 /temporary/obspy
+RUN /miniconda/bin/conda build --py 34 /temporary/obspy
+RUN /miniconda/bin/conda build --py 35 /temporary/obspy

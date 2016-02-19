@@ -3,13 +3,19 @@
 Install the necessary tools with
 
 ```bash
-$ conda install binstar conda-build
+$ conda install anaconda-client conda-build
 ```
 
-You also need to login to binstar once thus you need an account and you have to be part of the ObsPy organization on binstar.
+Turn off automatic uploading to anaconda.org:
 
 ```bash
-$ binstar login
+conda config --set anaconda_upload no
+```
+
+You also need to login to anaconda once thus you need an account and you have to be part of the ObsPy organization on anaconda.
+
+```bash
+$ anaconda login
 ```
 
 Once in a while its also a good idea to clean the `conda-bld` directory in the root conda path. `$ conda info` shows the location of that paths. Lots of things are cached there and if the version number of the conda package does not change it will reuse previously downloaded files.
@@ -29,8 +35,8 @@ This will take a while but it will build packages for all Python versions on 64 
 
 ```bash
 $ cd conda_builds
-$ binstar upload -u obspy linux-32/obspy*
-$ binstar upload -u obspy linux-64/obspy*
+$ anaconda upload -u obspy linux-32/obspy*
+$ anaconda upload -u obspy linux-64/obspy*
 ```
 
 ## For OSX
@@ -45,7 +51,7 @@ Afterwards check (on of the last lines in the output) where the packages are sto
 
 ```bash
 $ cd /path/to/packages
-$ binstar upload -u obspy --channel docker --channel main obspy*
+$ anaconda upload -u obspy --channel docker --channel main obspy*
 ```
 
 ## For Windows

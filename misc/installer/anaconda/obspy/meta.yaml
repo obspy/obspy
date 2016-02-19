@@ -4,11 +4,11 @@
 
 package:
   name: obspy
-  version: "0.10.2"
+  version: "1.0.0rc8"
 
 source:
   fn: obspy-master.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-0.10.2.zip#md5=7a77c6b96143e6758c38fed0775d2b16
+  url: https://www.geophysik.uni-muenchen.de/%7Emegies/obspy-1.0.0rc8.zip
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
   # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
@@ -17,46 +17,35 @@ source:
 
 build:
   number: 0
-  script: python setup.py install
+  # Weird command line options but they somehow make sure that the
+  # dependencies are not needed for the building phase.
+  script: python setup.py install --single-version-externally-managed --record=/tmp/record.txt
   # Needed as obspy uses entry points.
   preserve_egg_dir: yes
 
 requirements:
   build:
     - python
-    - setuptools
-    - argparse # [py26]
-    - future
     - numpy
-    - mock  # [py2k]
-    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
-    - scipy ==0.14.0 # [py26 and osx]
-    - scipy # [not py26 or not osx]
-    - matplotlib
-    - lxml
-    - sqlalchemy
-    - flake8
   run:
     - python
-    - setuptools
-    - argparse # [py26]
-    - future
     - numpy
-    - mock  # [py2k]
-    # SciPy 0.15.0 on OSX and Python 2.6 right now is faulty.
-    - scipy ==0.14.0 # [py26 and osx]
-    - scipy # [not py26 or not osx]
+    - scipy
     - matplotlib
+    - future
+    - mock  # [py2k]
     - lxml
     - sqlalchemy
     - flake8
-
+    - decorator
+    - requests
+    - pyproj
+    - nose
 test:
   imports:
     - obspy
-    - obspy.mseed
   commands:
-    - obspy-runtests -r
+    - obspy-runtests -r --node=conda-builder
 
 about:
   home: https://obspy.org

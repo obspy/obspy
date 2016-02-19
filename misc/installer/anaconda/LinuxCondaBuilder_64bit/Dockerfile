@@ -1,4 +1,4 @@
-FROM centos:centos6
+FROM quay.io/pypa/manylinux1_x86_64
 
 MAINTAINER Lion Krischer
 
@@ -12,13 +12,13 @@ RUN chmod +x miniconda.sh
 RUN ./miniconda.sh -b -p /miniconda
 
 RUN /miniconda/bin/conda update --yes conda
-RUN /miniconda/bin/conda install --yes conda-build binstar jinja2
+RUN /miniconda/bin/conda install --yes conda-build anaconda-client jinja2
 
 RUN mkdir -p /temporary/obspy
 COPY meta.yaml /temporary/obspy/meta.yaml
 
 # Tests can fail on occasion. We still want the image to be created.
-RUN /miniconda/bin/conda build --py 26 /temporary/obspy || true
-RUN /miniconda/bin/conda build --py 27 /temporary/obspy || true
-RUN /miniconda/bin/conda build --py 33 /temporary/obspy || true
-RUN /miniconda/bin/conda build --py 34 /temporary/obspy || true
+RUN /miniconda/bin/conda build --py 27 /temporary/obspy
+RUN /miniconda/bin/conda build --py 33 /temporary/obspy
+RUN /miniconda/bin/conda build --py 34 /temporary/obspy
+RUN /miniconda/bin/conda build --py 35 /temporary/obspy
