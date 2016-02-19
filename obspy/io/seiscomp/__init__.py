@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 obspy.io.seiscomp - SeisComP3 Inventory Files
-==========================================
+=============================================
 
 This module provides read support for SeisComP3 inventory files.
 
