@@ -7,17 +7,25 @@ from future.utils import native_str
 from obspy import Catalog
 from obspy.core.event import Origin, Magnitude
 from obspy.core.inventory import Inventory
+from obspy.core.util import to_int_or_zero
 
 try:
     import gdal
     from osgeo import ogr, osr
+    from osgeo.gdal import __version__ as __gdal_version__
 except ImportError as e:
-    has_GDAL = False
+    HAS_GDAL = False
+    GDAL_VERSION_SUFFICIENT = False
     IMPORTERROR_MSG = str(e) + (
         ". ObsPy's write support for shapefiles requires the 'gdal' module "
         "to be installed in addition to the general ObsPy dependencies.")
+    GDAL_TOO_OLD_MSG = str(e) + (
+        ". ObsPy's write support for shapefiles requires the 'gdal' module "
+        "to be installed in a more recent version.")
 else:
-    has_GDAL = True
+    HAS_GDAL = True
+    GDAL_VERSION_SUFFICIENT = [1, 7, 3] < list(map(
+        to_int_or_zero, __gdal_version__.split(".")))
     gdal.UseExceptions()
 
 
@@ -36,8 +44,10 @@ def _write_shapefile(obj, filename, **kwargs):
         it will be appended. Other files will be created with respective
         suffixes accordingly.
     """
-    if not has_GDAL:
+    if not HAS_GDAL:
         raise ImportError(IMPORTERROR_MSG)
+    if not GDAL_VERSION_SUFFICIENT:
+        raise ImportError(GDAL_TOO_OLD_MSG)
     if not filename.endswith(".shp"):
         filename += ".shp"
 
@@ -68,8 +78,10 @@ def _add_catalog_layer(data_source, catalog):
     :type catalog: :class:`~obspy.core.event.Catalog`
     :param catalog: Event data to add as a new layer.
     """
-    if not has_GDAL:
+    if not HAS_GDAL:
         raise ImportError(IMPORTERROR_MSG)
+    if not GDAL_VERSION_SUFFICIENT:
+        raise ImportError(GDAL_TOO_OLD_MSG)
 
     # [name, type, width, precision]
     # field name is 10 chars max
@@ -165,8 +177,10 @@ def _add_inventory_layer(data_source, inventory):
     :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: Inventory data to add as a new layer.
     """
-    if not has_GDAL:
+    if not HAS_GDAL:
         raise ImportError(IMPORTERROR_MSG)
+    if not GDAL_VERSION_SUFFICIENT:
+        raise ImportError(GDAL_TOO_OLD_MSG)
 
     # [name, type, width, precision]
     # field name is 10 chars max
