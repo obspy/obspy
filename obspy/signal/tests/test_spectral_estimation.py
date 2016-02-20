@@ -185,7 +185,7 @@ class PsdTestCase(unittest.TestCase):
         ppsd = _get_ppsd()
         # read results and compare
         result_hist = np.load(file_histogram)
-        self.assertEqual(len(ppsd.times), 4)
+        self.assertEqual(len(ppsd.times_processed), 4)
         self.assertEqual(ppsd.nfft, 65536)
         self.assertEqual(ppsd.nlap, 49152)
         np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
@@ -217,14 +217,14 @@ class PsdTestCase(unittest.TestCase):
             ppsd.save_npz(filename)
             ppsd_loaded = PPSD.load_npz(filename)
             ppsd_loaded.calculate_histogram()
-            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(len(ppsd_loaded.times_processed), 4)
             self.assertEqual(ppsd_loaded.nfft, 65536)
             self.assertEqual(ppsd_loaded.nlap, 49152)
             np.testing.assert_array_equal(ppsd_loaded.current_histogram,
                                           result_hist)
-            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+            np.testing.assert_array_equal(ppsd_loaded.db_bin_edges,
                                           binning['spec_bins'])
-            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+            np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
 
     def test_ppsd_w_iris(self):
