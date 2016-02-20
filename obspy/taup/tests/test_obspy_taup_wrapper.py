@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+import warnings
 
 from obspy.taup.taup import getTravelTimes
 
@@ -30,7 +31,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
             data = fp.readlines()
 
         # 1
-        tt = getTravelTimes(delta=52.474, depth=611.0, model='ak135')[:16]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            tt = getTravelTimes(delta=52.474, depth=611.0, model='ak135')[:16]
         lines = data[5:21]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
@@ -46,7 +49,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dD'], float(parts[3]), 1)
 
         # 2
-        tt = getTravelTimes(delta=50.0, depth=300.0, model='ak135')[:17]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            tt = getTravelTimes(delta=50.0, depth=300.0, model='ak135')[:17]
         lines = data[26:43]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
@@ -69,7 +74,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
             data = fp.readlines()
 
         # 1
-        tt = getTravelTimes(delta=52.474, depth=611.0, model='iasp91')[:16]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            tt = getTravelTimes(delta=52.474, depth=611.0, model='iasp91')[:16]
         lines = data[5:21]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
@@ -83,7 +90,9 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
             self.assertAlmostEqual(item['dT/dD'], float(parts[3]), 1)
 
         # 2
-        tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')[:19]
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')[:19]
         lines = data[26:45]
         self.assertEqual(len(tt), len(lines))
         # check calculated tt against original
@@ -104,12 +113,14 @@ class ObsPyTauPWrapperTestCase(unittest.TestCase):
 
         See #728 for more details.
         """
-        tt_1 = getTravelTimes(delta=100, depth=0, model="ak135")
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            tt_1 = getTravelTimes(delta=100, depth=0, model="ak135")
 
-        # Some other calculation in between.
-        getTravelTimes(delta=100, depth=200, model="ak135")
+            # Some other calculation in between.
+            getTravelTimes(delta=100, depth=200, model="ak135")
 
-        tt_2 = getTravelTimes(delta=100, depth=0, model="ak135")
+            tt_2 = getTravelTimes(delta=100, depth=0, model="ak135")
 
         # Both should be equal if everything is alright.
         self.assertEqual(tt_1, tt_2)
