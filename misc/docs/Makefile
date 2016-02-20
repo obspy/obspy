@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
+PYTHON        = python
 
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
@@ -52,7 +53,7 @@ clean:
 	@rm -rf $(BUILDDIR)/*
 	@rm -rf source/packages/autogen/obspy.*
 	@rm -rf source/pep8/*
-	@python make_assets.py -c -f
+	@$(PYTHON) make_assets.py -c -f
 
 coverage:
 	@coverage run --rcfile=.coveragerc -m obspy.scripts.runtests -q --all
@@ -65,20 +66,20 @@ coverager:
 	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 c_coverage:
-	@python make_c_coverage.py $(BUILDDIR)/html/c_coverage
+	@$(PYTHON) make_c_coverage.py $(BUILDDIR)/html/c_coverage
 
 pep8:
-	@python make_pep8.py 1
+	@$(PYTHON) make_pep8.py 1
 	@pep8 --show-source source/tutorial; echo
 
 citations:
-	@python make_citations.py
+	@$(PYTHON) make_citations.py
 
 credits:
-	@python make_credits.py
+	@$(PYTHON) make_credits.py
 
 assets:
-	@python make_assets.py
+	@$(PYTHON) make_assets.py
 
 html: assets credits citations
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
