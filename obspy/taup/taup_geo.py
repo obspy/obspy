@@ -129,12 +129,12 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                 sign = 1
                 az_arr = azimuth
             arrival.azimuth = az_arr
-            dir_degrees = np.degrees(sign * path_point['dist'])
 
             if arrival.pierce is not None:
                 geo_pierce = np.empty(arrival.pierce.shape, dtype=TimeDistGeo)
 
                 for i, pierce_point in enumerate(arrival.pierce):
+                    dir_degrees = np.degrees(sign * path_point['dist'])
                     pos = line.ArcPosition(dir_degrees)
                     geo_pierce[i] = (pierce_point['p'], pierce_point['time'],
                                      pierce_point['dist'],
@@ -145,6 +145,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
             if arrival.path is not None:
                 geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
                 for i, path_point in enumerate(arrival.path):
+                    dir_degrees = np.degrees(sign * path_point['dist'])
                     pos = line.ArcPosition(dir_degrees)
                     geo_path[i] = (path_point['p'], path_point['time'],
                                    path_point['dist'], path_point['depth'],
