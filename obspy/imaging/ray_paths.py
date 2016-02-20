@@ -404,7 +404,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                   evlat=None, evlon=None, evdepth_km=None, phase_list=['P'],
-                  coordinate_system='XYZ', taup_model='iasp91'):
+                  coordinate_system='XYZ', taup_model='iasp91',
+                  value='radpattern'):
     """
     This function returns lat, lon, depth coordinates from an event
     location to all stations in the inventory object
@@ -433,10 +434,15 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
         raise ValueError("either inventory or stlat and stlon have to be set")
 
     # make a big list of event coordinates and names
+    # this part should be included as a subroutine of catalog that extracts
+    # a list of event properties. E.g. catalog.extract(['latitiude', 
+    # 'longitude', 'depth', 'mag', 'focal_mechanism') The same should be done
+    # for an inventory with stations
     evlats = []
     evlons = []
     evdepths = []
     evlabels = []
+    evmoment_tensors = []
     if catalog is not None:
         for event in catalog:
             if not event.origins:
@@ -504,6 +510,8 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                     gcircle = np.array([radii * np.sin(thetas) * np.cos(phis),
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
+
+                value = radpattern()
 
                 greatcircles.append((gcircle, arr.name, value, stlabel,
                                      evlabel))
