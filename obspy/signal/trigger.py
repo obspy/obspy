@@ -37,16 +37,10 @@ import warnings
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 from obspy.signal.cross_correlation import templates_max_similarity
 from obspy.signal.headers import clibsignal, head_stalta_t
-
-
-@deprecated("'recursive_STALTA' has been renamed to 'recursive_sta_lta'.")
-def recursive_STALTA(a, nsta, nlta):  # noqa
-    return recursive_sta_lta(nsta=nsta, nlta=nlta)
 
 
 def recursive_sta_lta(a, nsta, nlta):
@@ -74,12 +68,6 @@ def recursive_sta_lta(a, nsta, nlta):
     # do not use pointer here:
     clibsignal.recstalta(a, charfct, ndat, nsta, nlta)
     return charfct
-
-
-@deprecated("'recursive_stalta_py' has been renamed to "
-            "'recursive_sta_lta_py'.")  # noqa
-def recursive_STALTA_py(a, nsta, nlta):
-    return recursive_sta_lta_py(nsta=nsta, nlta=nlta)
 
 
 def recursive_sta_lta_py(a, nsta, nlta):
@@ -124,12 +112,6 @@ def recursive_sta_lta_py(a, nsta, nlta):
         if i < nlta:
             charfct[i] = 0.
     return np.array(charfct)
-
-
-@deprecated("'carl_STA_trig' has been renamed to "
-            "'carl_sta_trig'.")  # noqa
-def carl_STA_trig(a, nsta, nlta, ratio, quiet):
-    return carl_sta_trig(nsta=nsta, nlta=nlta, ratio=ratio, quiet=quiet)
 
 
 def carl_sta_trig(a, nsta, nlta, ratio, quiet):
@@ -187,11 +169,6 @@ def carl_sta_trig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
-@deprecated("'classic_STALTA' has been renamed to 'classic_sta_lta'.")
-def classic_STALTA(a, nsta, nlta):  # noqa
-    return classic_sta_lta(nsta=nsta, nlta=nlta)
-
-
 def classic_sta_lta(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
@@ -222,11 +199,6 @@ def classic_sta_lta(a, nsta, nlta):
     if errcode != 0:
         raise Exception('ERROR %d stalta: len(data) < nlta' % errcode)
     return charfct
-
-
-@deprecated("'classic_STALTA_py' has been renamed to 'classic_sta_lta_py'.")
-def classic_STALTA_py(a, nsta, nlta):  # noqa
-    return classic_sta_lta_py(nsta=nsta, nlta=nlta)
 
 
 def classic_sta_lta_py(a, nsta, nlta):
@@ -274,11 +246,6 @@ def classic_sta_lta_py(a, nsta, nlta):
     lta[idx] = dtiny
 
     return sta / lta
-
-
-@deprecated("'delayed_STALTA' has been renamed to 'delayed_sta_lta'.")
-def delayed_STALTA(a, nsta, nlta):  # noqa
-    return delayed_sta_lta(nsta=nsta, nlta=nlta)
 
 
 def delayed_sta_lta(a, nsta, nlta):

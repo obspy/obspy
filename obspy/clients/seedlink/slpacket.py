@@ -21,7 +21,6 @@ import numpy as np
 
 from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
-from obspy.core.util.decorator import deprecated
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.util import (_convert_msr_to_dict,
                                  _ctypes_array_2_numpy_array,
@@ -84,16 +83,6 @@ class SLPacket(object):
                              offset + self.SLHEADSIZE + self.SLRECSIZE]
         self.trace = None
 
-    @deprecated(
-        "'getSequenceNumber' has been renamed to "  # noqa
-        "'get_sequence_number'. Use that instead.")
-    def getSequenceNumber(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getSequenceNumber' has been renamed to
-        'get_sequence_number'. Use that instead.
-        '''
-        return self.get_sequence_number(*args, **kwargs)
-
     def get_sequence_number(self):
         # print "DEBUG: repr(self.slhead):", repr(self.slhead)
         # print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():",
@@ -121,16 +110,6 @@ class SLPacket(object):
             return -1
         return seqnum
 
-    @deprecated(
-        "'getMSRecord' has been renamed to "  # noqa
-        "'get_ms_record'. Use that instead.")
-    def getMSRecord(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getMSRecord' has been renamed to
-        'get_ms_record'. Use that instead.
-        '''
-        return self.get_ms_record(*args, **kwargs)
-
     def get_ms_record(self):
         # following from obspy.io.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(None)
@@ -146,28 +125,8 @@ class SLPacket(object):
         # print "DEBUG: msrecord_py:", msrecord_py
         return msr, msrecord_py
 
-    @deprecated(
-        "'freeMSRecord' has been renamed to "  # noqa
-        "'free_ms_record'. Use that instead.")
-    def freeMSRecord(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'freeMSRecord' has been renamed to
-        'free_ms_record'. Use that instead.
-        '''
-        return self.free_ms_record(*args, **kwargs)
-
     def free_ms_record(self, msr, msrecord_py):
         clibmseed.msr_free(msr)
-
-    @deprecated(
-        "'getTrace' has been renamed to "  # noqa
-        "'get_trace'. Use that instead.")
-    def getTrace(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getTrace' has been renamed to
-        'get_trace'. Use that instead.
-        '''
-        return self.get_trace(*args, **kwargs)
 
     def get_trace(self):
 
@@ -212,16 +171,6 @@ class SLPacket(object):
         self.trace = Trace(data, header)
         return self.trace
 
-    @deprecated(
-        "'getStringPayload' has been renamed to "  # noqa
-        "'get_string_payload'. Use that instead.")
-    def getStringPayload(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getStringPayload' has been renamed to
-        'get_string_payload'. Use that instead.
-        '''
-        return self.get_string_payload(*args, **kwargs)
-
     def get_string_payload(self):
         """
         Get the MiniSEED payload, parsed as string.
@@ -237,16 +186,6 @@ class SLPacket(object):
             self.free_ms_record(msr, msrecord_py)
 
         return payload
-
-    @deprecated(
-        "'getType' has been renamed to "  # noqa
-        "'get_type'. Use that instead.")
-    def getType(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getType' has been renamed to
-        'get_type'. Use that instead.
-        '''
-        return self.get_type(*args, **kwargs)
 
     def get_type(self):
         # print "DEBUG: self.slhead:", repr(self.slhead)

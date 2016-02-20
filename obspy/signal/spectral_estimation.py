@@ -23,11 +23,9 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import bisect
-import bz2
 import glob
 import math
 import os
-import pickle
 import warnings
 
 import numpy as np
@@ -42,7 +40,7 @@ from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version, AttribDict
-from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.util.decorator import deprecated_keywords
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
@@ -68,7 +66,7 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,  # noqa
     this fact by scaling with a factor of 2. Also, always normalizes to 1/Hz
     by dividing with sampling rate.
 
-    .. deprecated:: 0.11.0
+    .. deprecated:: 1.0.0
 
         This wrapper is no longer necessary. Please use the
         :func:`matplotlib.mlab.psd` function directly, specifying
@@ -366,13 +364,6 @@ class PPSD(object):
             the bin whose center frequency exceeds the given upper end for the
             first time.
         """
-        # remove after release of 0.11.0
-        if kwargs.pop("is_rotational_data", None) is True:
-            msg = ("Keyword 'is_rotational_data' is deprecated. Please use "
-                   "'special_handling=\"ringlaser\"' instead.")
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            special_handling = "ringlaser"
-
         # save things related to args
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.sampling_rate = stats.sampling_rate
@@ -484,12 +475,6 @@ class PPSD(object):
             return 0
 
     @property
-    @deprecated("PPSD attribute 'spec_bins' is deprecated, please use "
-                "'db_bin_edges' instead.")
-    def spec_bins(self):
-        return self.db_bin_edges
-
-    @property
     def db_bin_edges(self):
         return self._db_bin_edges
 
@@ -504,42 +489,6 @@ class PPSD(object):
     @property
     def psd_periods(self):
         return self._psd_periods
-
-    @property
-    @deprecated("PPSD attribute 'per' is deprecated, please use "
-                "'psd_periods' instead.")
-    def per(self):
-        return self.psd_periods
-
-    @property
-    @deprecated("PPSD attribute 'freq' is deprecated, please use "
-                "'psd_frequencies' instead.")
-    def freq(self):
-        return self.psd_frequencies
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves_left' is deprecated, please use "
-                "'period_bin_left_edges' instead.")
-    def per_octaves_left(self):
-        return self.period_bin_left_edges
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves_right' is deprecated, please use "
-                "'period_bin_right_edges' instead.")
-    def per_octaves_right(self):
-        return self.period_bin_right_edges
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves' is deprecated, please use "
-                "'period_bin_centers' instead.")
-    def per_octaves(self):
-        return self.period_bin_centers
-
-    @property
-    @deprecated("PPSD attribute 'period_bins' is deprecated, please use "
-                "'period_bin_centers' instead.")
-    def period_bins(self):
-        return self.period_bin_centers
 
     @property
     def period_bin_centers(self):
@@ -581,20 +530,8 @@ class PPSD(object):
         return self._period_binning[4, :]
 
     @property
-    @deprecated("PPSD attribute 'times' is deprecated, please use "
-                "'times_processed', 'times_data' and 'times_gaps' instead.")
-    def times(self):
-        return list(map(UTCDateTime, self._times_processed))
-
-    @property
     def times_processed(self):
         return list(map(UTCDateTime, self._times_processed))
-
-    @property
-    @deprecated("PPSD attribute 'times_used' is deprecated, please use "
-                "'current_times_used' or 'times_processed' instead.")
-    def times_used(self):
-        return self.current_times_used
 
     @property
     def times_data(self):
@@ -929,16 +866,6 @@ class PPSD(object):
         smoothed_psd = np.array(smoothed_psd, dtype=np.float32)
         self.__insert_processed_data(tr.stats.starttime, smoothed_psd)
         return True
-
-    @property
-    @deprecated("PPSD attribute 'hist_stack' is deprecated, please use new "
-                "'calculate_histogram()' method with improved functionality "
-                "instead to compute a histogram stack dynamically and then "
-                "'current_histogram' attribute to access the current "
-                "histogram stack.")
-    def hist_stack(self):
-        self.calculate_histogram()
-        return self.current_histogram
 
     def _get_times_all_details(self):
         # check if we can reuse a previously cached array of all times as
@@ -1293,73 +1220,6 @@ class PPSD(object):
         hist_count = self.current_histogram_count
         mean = (hist * self.db_bin_centers / hist_count).sum(axis=1)
         return (self.period_bin_centers, mean)
-
-    @deprecated("Old save/load mechanism based on pickle module is not "
-                "working well across versions, so please use new "
-                "'save_npz'/'load_npz' mechanism.")
-    def save(self, filename, compress=False):
-        """
-        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
-        instead!
-        """
-        if compress:
-            # due to an bug in older python version we can't use with
-            # https://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'wb')
-            pickle.dump(self, file_)
-            file_.close()
-        else:
-            with open(filename, 'wb') as file_:
-                pickle.dump(self, file_)
-
-    @staticmethod
-    @deprecated("Old save/load mechanism based on pickle module is not "
-                "working well across versions, so please use new "
-                "'save_npz'/'load_npz' mechanism.")
-    def load(filename):
-        """
-        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
-        instead!
-        """
-        # identify bzip2 compressed file using bzip2's magic number
-        bz2_magic = b'\x42\x5a\x68'
-        with open(filename, 'rb') as file_:
-            file_start = file_.read(len(bz2_magic))
-
-        if file_start == bz2_magic:
-            # In theory a file containing random data could also start with the
-            # bzip2 magic number. However, since save() (implicitly) uses
-            # version "0" of the pickle protocol, the pickled data is
-            # guaranteed to be ASCII encoded and hence cannot start with this
-            # magic number.
-            # cf. https://docs.python.org/3/library/pickle.html
-            #
-            # due to an bug in older python version we can't use with
-            # https://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'rb')
-            ppsd = pickle.load(file_)
-            file_.close()
-        else:
-            with open(filename, 'rb') as file_:
-                ppsd = pickle.load(file_)
-
-        # some workarounds for older PPSD pickle files
-        if hasattr(ppsd, "is_rotational_data"):
-            if ppsd.is_rotational_data is True:
-                ppsd.special_handling = "ringlaser"
-            delattr(ppsd, "is_rotational_data")
-        if not hasattr(ppsd, "special_handling"):
-            ppsd.special_handling = None
-        # Adds ppsd_length and overlap attributes if not existing. This
-        # ensures compatibility with pickled objects without these attributes.
-        try:
-            ppsd.ppsd_length
-            ppsd.overlap
-        except AttributeError:
-            ppsd.ppsd_length = 3600.
-            ppsd.overlap = 0.5
-
-        return ppsd
 
     def save_npz(self, filename):
         """
@@ -1779,11 +1639,6 @@ class PPSD(object):
         ax.autoscale_view()
 
 
-@deprecated("get_NLNM() has been renamed to get_nlnm().")
-def get_NLNM():  # noqa
-    return get_nlnm()
-
-
 def get_nlnm():
     """
     Returns periods and psd values for the New Low Noise Model.
@@ -1793,11 +1648,6 @@ def get_nlnm():
     periods = data['model_periods']
     nlnm = data['low_noise']
     return (periods, nlnm)
-
-
-@deprecated("get_NHNM() has been renamed to get_nhnm().")
-def get_NHNM():  # noqa
-    return get_nhnm()
 
 
 def get_nhnm():

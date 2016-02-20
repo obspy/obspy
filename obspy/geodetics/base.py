@@ -17,7 +17,6 @@ import warnings
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.misc import to_int_or_zero
 
 
@@ -38,12 +37,6 @@ except ImportError:
 
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
-
-
-@deprecated("'calcVincentyInverse' has been renamed to "
-            "'calc_vincenty_inverse'. Use that instead.")  # noqa
-def calcVincentyInverse(lat1, lon1, lat2, lon2):
-    return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
@@ -206,12 +199,6 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     alpha21 = alpha21 * 360 / (2.0 * math.pi)
 
     return dist, alpha12, alpha21
-
-
-@deprecated("'gps2DistAzimuth' has been renamed to "
-            "'gps2dist_azimuth'. Use that instead.")  # noqa
-def gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    return gps2dist_azimuth(lat1, lon1, lat2, lon2)
 
 
 def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):

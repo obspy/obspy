@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 
 from obspy import Stream
-from obspy.core.util.decorator import deprecated
 from .slclient import SLClient, SLPacket
 from .client.seedlinkconnection import SeedLinkConnection
 
@@ -58,11 +57,6 @@ class Client(object):
         self._slclient.slconn = SeedLinkConnection(timeout=self.timeout)
         self._slclient.slconn.set_sl_address(self._server_url)
         self._slclient.slconn.netto = self.timeout
-
-    @deprecated("'get_waveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
-    def get_waveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):

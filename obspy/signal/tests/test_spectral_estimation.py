@@ -334,21 +334,7 @@ class PsdTestCase(unittest.TestCase):
                 continue
             self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
-        # (also test various means of initialization, basically testing the
-        #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, paz=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, parser=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:

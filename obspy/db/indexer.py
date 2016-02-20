@@ -21,7 +21,6 @@ import time
 from obspy import read
 from obspy.core.preview import create_preview
 from obspy.core.util.base import _get_entry_points
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 from obspy.db.db import (WaveformChannel, WaveformFeatures, WaveformFile,
@@ -162,45 +161,15 @@ class WaveformFileCrawler(object):
         session.close()
         return result
 
-    @deprecated(
-        "'getFeatures' has been renamed to "  # noqa
-        "'get_features'. Use that instead.")
-    def getFeatures(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getFeatures' has been renamed to
-        'get_features'. Use that instead.
-        '''
-        return self.get_features(*args, **kwargs)
-
     def get_features(self):
         return self.paths[self._root][1]
 
     features = property(get_features)
 
-    @deprecated(
-        "'getPatterns' has been renamed to "  # noqa
-        "'get_patterns'. Use that instead.")
-    def getPatterns(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getPatterns' has been renamed to
-        'get_patterns'. Use that instead.
-        '''
-        return self.get_patterns(*args, **kwargs)
-
     def get_patterns(self):
         return self.paths[self._root][0]
 
     patterns = property(get_patterns)
-
-    @deprecated(
-        "'hasPattern' has been renamed to "  # noqa
-        "'has_pattern'. Use that instead.")
-    def hasPattern(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'hasPattern' has been renamed to
-        'has_pattern'. Use that instead.
-        '''
-        return self.has_pattern(*args, **kwargs)
 
     def has_pattern(self, file):
         """

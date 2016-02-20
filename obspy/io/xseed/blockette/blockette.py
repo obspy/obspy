@@ -10,7 +10,6 @@ import warnings
 
 from lxml.etree import Element
 
-from obspy.core.util.decorator import deprecated
 from .. import DEFAULT_XSEED_VERSION, utils
 from ..fields import Integer, Loop
 
@@ -75,16 +74,6 @@ class Blockette(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    @deprecated(
-        "'getFields' has been renamed to "  # noqa
-        "'get_fields'. Use that instead.")
-    def getFields(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getFields' has been renamed to
-        'get_fields'. Use that instead.
-        '''
-        return self.get_fields(*args, **kwargs)
-
     def get_fields(self, xseed_version=DEFAULT_XSEED_VERSION):
         fields = []
         for field in self.fields:
@@ -97,16 +86,6 @@ class Blockette(object):
                 continue
             fields.append(field)
         return fields
-
-    @deprecated(
-        "'parseSEED' has been renamed to "  # noqa
-        "'parse_seed'. Use that instead.")
-    def parseSEED(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseSEED' has been renamed to
-        'parse_seed'. Use that instead.
-        '''
-        return self.parse_seed(*args, **kwargs)
 
     def parse_seed(self, data, expected_length=0):
         """
@@ -160,16 +139,6 @@ class Blockette(object):
         else:
             warnings.warn(msg, category=Warning)
 
-    @deprecated(
-        "'getSEED' has been renamed to "  # noqa
-        "'get_seed'. Use that instead.")
-    def getSEED(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getSEED' has been renamed to
-        'get_seed'. Use that instead.
-        '''
-        return self.get_seed(*args, **kwargs)
-
     def get_seed(self):
         """
         Converts the blockette to a valid SEED string and returns it.
@@ -182,32 +151,12 @@ class Blockette(object):
         _head = '%03d%04d' % (self.id, len(data) + 7)
         return _head.encode('ascii', 'strict') + data
 
-    @deprecated(
-        "'parseXML' has been renamed to "  # noqa
-        "'parse_xml'. Use that instead.")
-    def parseXML(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseXML' has been renamed to
-        'parse_xml'. Use that instead.
-        '''
-        return self.parse_xml(*args, **kwargs)
-
     def parse_xml(self, xml_doc):
         """
         Reads lxml etree and fills the blockette with the values of it.
         """
         for field in self.get_fields(self.xseed_version):
             field.parse_xml(self, xml_doc)
-
-    @deprecated(
-        "'getXML' has been renamed to "  # noqa
-        "'get_xml'. Use that instead.")
-    def getXML(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getXML' has been renamed to
-        'get_xml'. Use that instead.
-        '''
-        return self.get_xml(*args, **kwargs)
 
     def get_xml(self, show_optional=False,
                 xseed_version=DEFAULT_XSEED_VERSION):

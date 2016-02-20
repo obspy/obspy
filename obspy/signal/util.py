@@ -21,16 +21,10 @@ import sys
 import numpy as np
 from scipy import fftpack, fix, signal
 
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import factorize_int
 from obspy.signal.headers import clibsignal
-
-
-@deprecated("'utlGeoKm' has been renamed to 'util_geo_km'. Use that instead.")
-def utlGeoKm(*args, **kwargs):  # noqa
-    return util_geo_km(*args, **kwargs)
 
 
 def util_geo_km(orig_lon, orig_lat, lon, lat):
@@ -58,12 +52,6 @@ def util_geo_km(orig_lon, orig_lat, lon, lat):
 
     clibsignal.utl_geo_km(orig_lon, orig_lat, 0.0, C.byref(x), C.byref(y))
     return x.value, y.value
-
-
-@deprecated("'utlLonLat' has been renamed to 'util_lon_lat'."
-            "Use that instead.")  # noqa
-def utlLonLat(*args, **kwargs):
-    return util_lon_lat(*args, **kwargs)
 
 
 def util_lon_lat(orig_lon, orig_lat, x, y):
@@ -94,11 +82,6 @@ def util_lon_lat(orig_lon, orig_lat, x, y):
 
     clibsignal.utl_lonlat(orig_lon, orig_lat, x, y, C.byref(lon), C.byref(lat))
     return lon.value, lat.value
-
-
-@deprecated("'nextpow2' has been renamed to 'next_pow_2'. Use that instead.")
-def nextpow2(i):
-    return next_pow_2(i)
 
 
 def next_pow_2(i):

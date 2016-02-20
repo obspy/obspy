@@ -11,7 +11,6 @@ import os
 import sys
 
 from obspy import UTCDateTime
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 from .headers import HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord, clibmseed
@@ -73,16 +72,6 @@ class _MSStruct(object):
             self.read(-1, 0, 1, 0)
             self.offset = 0
 
-    @deprecated(
-        "'getEnd' has been renamed to "  # noqa
-        "'get_end'. Use that instead.")
-    def getEnd(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getEnd' has been renamed to
-        'get_end'. Use that instead.
-        '''
-        return self.get_end(*args, **kwargs)
-
     def get_end(self):
         """
         Return endtime
@@ -90,16 +79,6 @@ class _MSStruct(object):
         self.read(-1, 0, 1, 0)
         dtime = clibmseed.msr_endtime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
-
-    @deprecated(
-        "'getStart' has been renamed to "  # noqa
-        "'get_start'. Use that instead.")
-    def getStart(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getStart' has been renamed to
-        'get_start'. Use that instead.
-        '''
-        return self.get_start(*args, **kwargs)
 
     def get_start(self):
         """
@@ -109,16 +88,6 @@ class _MSStruct(object):
         dtime = clibmseed.msr_starttime(self.msr)
         return UTCDateTime(dtime / HPTMODULUS)
 
-    @deprecated(
-        "'fileinfo' has been renamed to "  # noqa
-        "'file_info'. Use that instead.")
-    def fileinfo(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'fileinfo' has been renamed to
-        'file_info'. Use that instead.
-        '''
-        return self.file_info(*args, **kwargs)
-
     def file_info(self):
         """
         For details see util._get_ms_file_info
@@ -127,16 +96,6 @@ class _MSStruct(object):
         self.info = _get_ms_file_info(fp, self.file)
         fp.close()
         return self.info
-
-    @deprecated(
-        "'filePosFromRecNum' has been renamed to "  # noqa
-        "'file_pos_from_rec_num'. Use that instead.")
-    def filePosFromRecNum(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'filePosFromRecNum' has been renamed to
-        'file_pos_from_rec_num'. Use that instead.
-        '''
-        return self.file_pos_from_rec_num(*args, **kwargs)
 
     def file_pos_from_rec_num(self, record_number=0):
         """
@@ -197,28 +156,8 @@ class _MSStruct(object):
         if errcode != MS_NOERROR:
             raise Exception("Error %d in ms_readmsr_r" % errcode)
 
-    @deprecated(
-        "'setOffset' has been renamed to "  # noqa
-        "'set_offset'. Use that instead.")
-    def setOffset(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'setOffset' has been renamed to
-        'set_offset'. Use that instead.
-        '''
-        return self.set_offset(*args, **kwargs)
-
     def set_offset(self, value):
         self.msf.contents.readoffset = C.c_int(value)
-
-    @deprecated(
-        "'getOffset' has been renamed to "  # noqa
-        "'get_offset'. Use that instead.")
-    def getOffset(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getOffset' has been renamed to
-        'get_offset'. Use that instead.
-        '''
-        return self.get_offset(*args, **kwargs)
 
     def get_offset(self):
         return int(self.msf.contents.readoffset)

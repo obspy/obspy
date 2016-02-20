@@ -38,7 +38,6 @@ from matplotlib import path as mplpath
 from matplotlib import collections, patches, transforms
 from decorator import decorator
 
-from obspy.core.util.decorator import deprecated
 from obspy.core.util.deprecation_helpers import \
     DynamicAttributeImportRerouteModule
 
@@ -75,11 +74,6 @@ def mopad_fallback(func, *args, **kwargs):
         result = _mopad_beach(**final_kwargs)
 
     return result
-
-
-@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):  # noqa
-    return beach(*args, **kwargs)
 
 
 @mopad_fallback
@@ -193,12 +187,6 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     col.set_linewidth(linewidth)
     col.set_zorder(zorder)
     return col
-
-
-@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")  # noqa
-def Beachball(*args, **kwargs):
-    return beachball(*args, **kwargs)
 
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
