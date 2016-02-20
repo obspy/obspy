@@ -3,7 +3,7 @@ language: c
 branches:
   only:
     - "master"
-    - "releases"
+    - "maintenance_1.0.x"
 
 env:
   global:
