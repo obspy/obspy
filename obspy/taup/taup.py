@@ -133,6 +133,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,  # noqa
     # Loop over all degrees.
     for degree in degrees:
         with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
             tt = getTravelTimes(degree, depth, model, phase_list=phases)
         # Mirror if necessary.
         if degree > 180:
