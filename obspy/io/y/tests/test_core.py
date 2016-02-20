@@ -5,6 +5,7 @@ from future.builtins import *  # NOQA
 
 import os
 import unittest
+import warnings
 
 from obspy.io.y.core import _is_y, _read_y
 
@@ -50,7 +51,11 @@ class CoreTestCase(unittest.TestCase):
         Test faulty Y file containing non ASCII chars in TAG_STATION_INFO.
         """
         testfile = os.path.join(self.path, 'data', 'YAZRSPE.20100119.060433')
-        st = _read_y(testfile)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always')
+            st = _read_y(testfile)
+        self.assertEqual(len(w), 1)
+        self.assertIn('Invalid', str(w[0]))
         self.assertEqual(len(st), 1)
         tr = st[0]
         self.assertEqual(len(tr), 16976)

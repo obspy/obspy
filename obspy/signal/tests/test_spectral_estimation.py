@@ -19,6 +19,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
@@ -336,8 +337,18 @@ class PsdTestCase(unittest.TestCase):
         # (also test various means of initialization, basically testing the
         #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            ppsd = PPSD(st[0].stats, paz=metadata)
-            ppsd = PPSD(st[0].stats, parser=metadata)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd = PPSD(st[0].stats, paz=metadata)
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[0].category, ObsPyDeprecationWarning)
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd = PPSD(st[0].stats, parser=metadata)
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[0].category, ObsPyDeprecationWarning)
+
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:
