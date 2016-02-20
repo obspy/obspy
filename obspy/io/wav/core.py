@@ -22,14 +22,11 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import os
-import sys
 import wave
 
 import numpy as np
 
 from obspy import Stream, Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 # WAVE data format is unsigned char up to 8bit, and signed int
@@ -173,17 +170,6 @@ def _write_wav(stream, filename, framerate=7000, rescale=False, width=None,
         finally:
             w.close()
         i += 1
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isWAV': 'obspy.io.wav.core._is_wav',
-        'readWAV': 'obspy.io.wav.core._read_wav',
-        'writeWAV': 'obspy.io.wav.core._write_wav'})
 
 
 if __name__ == '__main__':

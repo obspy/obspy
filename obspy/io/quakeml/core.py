@@ -27,7 +27,6 @@ from future.builtins import *  # NOQA
 import inspect
 import io
 import os
-import sys
 import warnings
 
 from lxml import etree
@@ -44,8 +43,6 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 NSMAP_QUAKEML = {None: "http://quakeml.org/xmlns/bed/1.2",
@@ -1874,18 +1871,6 @@ def _validate(xml_file, verbose=False):
         for entry in relaxng.error_log:
             print("\t%s" % entry)
     return valid
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isQuakeML': 'obspy.io.quakeml.core._is_quakeml',
-        'readQuakeML': 'obspy.io.quakeml.core._read_quakeml',
-        'readSeisHubEventXML': 'obspy.io.quakeml.core._read_seishub_event_xml',
-        'writeQuakeML': 'obspy.io.quakeml.core._write_quakeml'})
 
 
 if __name__ == '__main__':

@@ -31,14 +31,11 @@ from future.builtins import *  # NOQA
 
 from collections import deque
 import ctypes as C
-import sys
 import warnings
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.signal.cross_correlation import templates_max_similarity
 from obspy.signal.headers import clibsignal, head_stalta_t
 
@@ -724,26 +721,6 @@ def coincidence_trigger(trigger_type, thr_on, thr_off, stream,
         coincidence_triggers.append(event)
         last_off_time = off
     return coincidence_triggers
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "arPick": "obspy.signal.trigger.ar_pick",
-        "carlSTATrig": "obspy.signal.trigger.carl_sta_trig",
-        "classicSTALTA": "obspy.signal.trigger.classic_sta_lta",
-        "classicSTALTAPy": "obspy.signal.trigger.classic_sta_lta_py",
-        "coincidenceTrigger": "obspy.signal.trigger.coincidence_trigger",
-        "delayedSTALTA": "obspy.signal.trigger.delayed_sta_lta",
-        "pkBaer": "obspy.signal.trigger.pk_baer",
-        "plotTrigger": "obspy.signal.trigger.plot_trigger",
-        "recSTALTA": "obspy.signal.trigger.recursive_sta_lta",
-        "recSTALTAPy": "obspy.signal.trigger.recursive_sta_lta_py",
-        "triggerOnset": "obspy.signal.trigger.trigger_onset",
-        "zDetect": "obspy.signal.trigger.z_detect"})
 
 
 if __name__ == '__main__':

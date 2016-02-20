@@ -21,8 +21,6 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 RETURNFLAG_KEY = {
@@ -286,22 +284,3 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'getMenu': 'obspy.clients.earthworm.waveserver.get_menu',
-        'getNumpyType': 'obspy.clients.earthworm.waveserver.get_numpy_type',
-        'getSockBytes': 'obspy.clients.earthworm.waveserver.get_sock_bytes',
-        'getSockCharLine':
-            'obspy.clients.earthworm.waveserver.get_sock_char_line',
-        'readWaveServerV':
-            'obspy.clients.earthworm.waveserver.read_wave_server_v',
-        'sendSockReq': 'obspy.clients.earthworm.waveserver.send_sock_req',
-        'tracebuf2': 'obspy.clients.earthworm.waveserver.TraceBuf2',
-        'tracebufs2obspyStream':
-            'obspy.clients.earthworm.waveserver.trace_bufs2obspy_stream'})

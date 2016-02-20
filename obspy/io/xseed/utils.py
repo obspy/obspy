@@ -17,8 +17,6 @@ import re
 import sys
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 # Ignore Attributes of Blockettes
@@ -257,21 +255,3 @@ def is_resp(filename):
                 return False
     except IOError:
         return False
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'Blockette34Lookup': 'obspy.io.xseed.utils.blockette_34_lookup',
-        'DateTime2String': 'obspy.io.xseed.utils.datetime_2_string',
-        'LookupCode': 'obspy.io.xseed.utils.lookup_code',
-        'compareSEED': 'obspy.io.xseed.utils.compare_seed',
-        'formatRESP': 'obspy.io.xseed.utils.format_resp',
-        'getXPath': 'obspy.io.xseed.utils.get_xpath',
-        'setXPath': 'obspy.io.xseed.utils.set_xpath',
-        'toString': 'obspy.io.xseed.utils.to_string',
-        'toTag': 'obspy.io.xseed.utils.to_tag',
-        'uniqueList': 'obspy.io.xseed.utils.unique_list'})

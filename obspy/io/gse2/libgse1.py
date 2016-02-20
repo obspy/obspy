@@ -21,13 +21,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import doctest
-import sys
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 from .libgse2 import uncompress_cm6, verify_checksum
 
@@ -141,16 +138,6 @@ def read_header(fh):
                           for k, v in header['gse1'].items())
     return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                 for k, v in header.items())
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'readHeader': 'obspy.io.gse2.libgse1.read_header',
-        'readIntegerData': 'obspy.io.gse2.libgse1.read_integer_data'})
 
 
 if __name__ == '__main__':

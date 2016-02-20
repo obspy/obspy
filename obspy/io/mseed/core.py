@@ -11,14 +11,12 @@ import ctypes as C
 import os
 import warnings
 from struct import pack
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from obspy.core.util.deprecation_helpers import (
-    DynamicAttributeImportRerouteModule, ObsPyDeprecationWarning)
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from . import util
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
@@ -927,17 +925,6 @@ class MST(object):
         # This also frees the data of the associated datasamples pointer.
         clibmseed.mst_free(C.pointer(self.mst))
         del self.mst
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isMSEED': 'obspy.io.mseed.core._is_mseed',
-        'readMSEED': 'obspy.io.mseed.core._read_mseed',
-        'writeMSEED': 'obspy.io.mseed.core._write_mseed'})
 
 
 if __name__ == '__main__':

@@ -8,11 +8,8 @@ from future.builtins import *  # NOQA
 
 import ctypes as C
 import os
-import sys
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from .headers import HPTMODULUS, MS_NOERROR, MSFileParam, MSRecord, clibmseed
 
 
@@ -163,11 +160,3 @@ class _MSStruct(object):
         return int(self.msf.contents.readoffset)
 
     offset = property(get_offset, set_offset)
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        '_getMSFileInfo': 'obspy.io.mseed.msstruct._get_ms_file_info'})

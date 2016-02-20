@@ -12,15 +12,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
-
 import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core import AttribDict
 from obspy.core.inventory.response import paz_to_sacpz_string
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _write_sacpz(inventory, file_or_file_object):
@@ -397,15 +393,6 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant
     tr.stats.paz.t_shift = t_shift
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'write_SACPZ': 'obspy.io.sac.sacpz._write_sacpz'})
 
 
 if __name__ == "__main__":

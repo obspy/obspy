@@ -18,14 +18,11 @@ import io
 import math
 import os
 import re
-import sys
 import warnings
 
 from lxml import etree
 
 import obspy
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.core.util.obspy_types import (ComplexWithUncertainties,
                                          FloatWithUncertaintiesAndUnit)
 from obspy.core.inventory import (CoefficientsTypeResponseStage,
@@ -1309,18 +1306,6 @@ def _obj2tag(parent, tag_name, tag_value):
 
 def _format_time(value):
     return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'is_StationXML': 'obspy.io.stationxml.core._is_stationxml',
-        'read_StationXML': 'obspy.io.stationxml.core._read_stationxml',
-        'validate_StationXML': 'obspy.io.stationxml.core.validate_stationxml',
-        'write_StationXML': 'obspy.io.stationxml.core._write_stationxml'})
 
 
 if __name__ == '__main__':

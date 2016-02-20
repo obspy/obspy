@@ -7,14 +7,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
 import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _is_datamark(filename, century="20"):  # @UnusedVariable
@@ -181,13 +178,3 @@ def _read_datamark(filename, century="20", **kwargs):  # @UnusedVariable
         t.stats.starttime = start
         traces.append(t)
     return Stream(traces=traces)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isDATAMARK': 'obspy.io.datamark.core._is_datamark',
-        'readDATAMARK': 'obspy.io.datamark.core._read_datamark'})
