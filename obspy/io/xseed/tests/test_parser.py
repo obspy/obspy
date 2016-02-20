@@ -349,7 +349,7 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp = Parser(filename)
-        paz = sp.getPAZ('BHE')
+        paz = sp.get_paz('BHE')
         self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
         self.assertEqual(
@@ -360,13 +360,13 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['sensitivity'], +7.86576e+08)
         self.assertEqual(paz['seismometer_gain'], +1.50000E+03)
         # Raise exception for undefined channels
-        self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
+        self.assertRaises(SEEDParserException, sp.get_paz, 'EHE')
         #
         # Do the same for another dataless file
         #
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp = Parser(filename)
-        paz = sp.getPAZ('EHE')
+        paz = sp.get_paz('EHE')
         self.assertEqual(paz['gain'], +1.00000e+00)
         self.assertEqual(paz['zeros'], [0j, 0j, 0j])
         self.assertEqual(paz['poles'], [(-4.44400e+00 + 4.44400e+00j),
@@ -375,14 +375,14 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['sensitivity'], +6.71140E+08)
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefined channels
-        self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
+        self.assertRaises(SEEDParserException, sp.get_paz, 'BHE')
         # Raise UserWarning if not a Laplacian transfer function ('A').
         # Modify transfer_fuction_type on the fly
         for blk in sp.blockettes[53]:
             blk.transfer_function_types = 'X'
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error", UserWarning)
-            self.assertRaises(UserWarning, sp.getPAZ, 'EHE')
+            self.assertRaises(UserWarning, sp.get_paz, 'EHE')
         #
         # And the same for yet another dataless file
         #
@@ -404,14 +404,14 @@ class ParserTestCase(unittest.TestCase):
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
         seismometer_gain = [+2.29145E+03, +1.02583E+01, +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
-            paz = sp.getPAZ(channel)
+            paz = sp.get_paz(channel)
             self.assertEqual(paz['gain'], gain[i])
             self.assertEqual(paz['zeros'], zeros[i])
             self.assertEqual(paz['poles'], poles[i])
             self.assertEqual(paz['sensitivity'], sensitivity[i])
             self.assertEqual(paz['seismometer_gain'], seismometer_gain[i])
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
-        paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
+        paz = sp.get_paz("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'gain': 1.0,
                   'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j),
                             (-1.083 + 0j)],
@@ -420,7 +420,7 @@ class ParserTestCase(unittest.TestCase):
                   'zeros': [0j, 0j, 0j],
                   'digitizer_gain': 1677850.0}
         self.assertEqual(paz, result)
-        paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
+        paz = sp.get_paz("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         result = {'gain': 60077000.0,
                   'poles': [(-0.037004000000000002 + 0.037016j),
                             (-0.037004000000000002 - 0.037016j),
@@ -443,8 +443,8 @@ class ParserTestCase(unittest.TestCase):
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
                   'digitizer_gain': 1677850.0}
-        paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
-                        datetime=UTCDateTime("2010-01-01"))
+        paz = sp.get_paz(seed_id="BW.RJOB..EHZ",
+                         datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_get_paz_from_xseed(self):
@@ -454,7 +454,7 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
         sp2 = Parser(sp1.get_xseed())
-        paz = sp2.getPAZ('EHE')
+        paz = sp2.get_paz('EHE')
         result = {'gain': 1.00000e+00,
                   'zeros': [0j, 0j, 0j],
                   'poles': [(-4.44400e+00 + 4.44400e+00j),
@@ -631,7 +631,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser()
         parser.read(filename)
         dt = UTCDateTime('2012-01-01')
-        parser.getPAZ('CL.AIO.00.EHZ', dt)
+        parser.get_paz('CL.AIO.00.EHZ', dt)
 
     def test_issue_361(self):
         """
@@ -641,15 +641,15 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser()
         parser.read(filename)
         # 1 - G.SPB..BHZ - no Laplace transform - works
-        parser.getPAZ('G.SPB..BHZ')
+        parser.get_paz('G.SPB..BHZ')
         # 2 - G.SPB.00.BHZ - raises exception because of multiple results
-        self.assertRaises(SEEDParserException, parser.getPAZ, 'G.SPB.00.BHZ')
+        self.assertRaises(SEEDParserException, parser.get_paz, 'G.SPB.00.BHZ')
         # 3 - G.SPB.00.BHZ with datetime - no Laplace transform - works
         dt = UTCDateTime('2007-01-01')
-        parser.getPAZ('G.SPB.00.BHZ', dt)
+        parser.get_paz('G.SPB.00.BHZ', dt)
         # 4 - G.SPB.00.BHZ with later datetime works
         dt = UTCDateTime('2012-01-01')
-        parser.getPAZ('G.SPB.00.BHZ', dt)
+        parser.get_paz('G.SPB.00.BHZ', dt)
 
     def test_split_stations_dataless_to_xseed(self):
         """
