@@ -197,7 +197,7 @@ class PPSD(object):
     >>> ppsd = PPSD(tr.stats, paz)
     >>> print(ppsd.id)
     BW.RJOB..EHZ
-    >>> print(ppsd.times)
+    >>> print(ppsd.times_processed)
     []
 
     Now we could add data to the probabilistic psd (all processing like
