@@ -134,7 +134,7 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                 geo_pierce = np.empty(arrival.pierce.shape, dtype=TimeDistGeo)
 
                 for i, pierce_point in enumerate(arrival.pierce):
-                    dir_degrees = np.degrees(sign * path_point['dist'])
+                    dir_degrees = np.degrees(sign * pierce_point['dist'])
                     pos = line.ArcPosition(dir_degrees)
                     geo_pierce[i] = (pierce_point['p'], pierce_point['time'],
                                      pierce_point['dist'],
