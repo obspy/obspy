@@ -150,7 +150,7 @@ class MSEEDMetadata(object):
         m['sta'] = stats.station
         m['loc'] = stats.location
         m['cha'] = stats.channel
-        m['mseed_id'] = '.'.join([m['net'], m['sta'], m['loc'], m['cha']])
+        m['mseed_id'] = self.data[0].id
         m['quality'] = stats.mseed.dataquality
         m['files'] = self.files
 
