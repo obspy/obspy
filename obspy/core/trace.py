@@ -2549,16 +2549,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if plot:
             import matplotlib.pyplot as plt
 
-        if (isinstance(inventory, (str, native_str)) and
-                inventory.upper() in ("DISP", "VEL", "ACC")):
-            from obspy.core.util.deprecation_helpers import \
-                ObsPyDeprecationWarning
-            output = inventory
-            inventory = None
-            msg = ("The order of optional parameters in method "
-                   "remove_response has changed. 'output' is not accepted "
-                   "as first positional argument in the next release.")
-            warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         response = self._get_response(inventory)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:
