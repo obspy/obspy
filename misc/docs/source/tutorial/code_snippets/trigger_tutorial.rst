@@ -96,15 +96,13 @@ The triggering itself mainly consists of the following two steps:
 * Calculating the characteristic function
 * Setting picks based on values of the characteristic function
 
-
-
-    ~obspy.signal.trigger.recursive_sta_lta
-    ~obspy.signal.trigger.carl_sta_trig
-    ~obspy.signal.trigger.classic_STALTA
-    ~obspy.signal.trigger.delayed_sta_lta
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
+   * ~obspy.signal.trigger.recursive_sta_lta
+   * ~obspy.signal.trigger.carl_sta_trig
+   * ~obspy.signal.trigger.classic_STALTA
+   * ~obspy.signal.trigger.delayed_sta_lta
+   * ~obspy.signal.trigger.z_detect
+   * ~obspy.signal.trigger.pk_baer
+   * ~obspy.signal.trigger.ar_pick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
@@ -117,15 +115,13 @@ The triggering itself mainly consists of the following two steps:
 * Calculating the characteristic function
 * Setting picks based on values of the characteristic function
 
-
-
-    ~obspy.signal.trigger.recursive_sta_lta
-    ~obspy.signal.trigger.carl_sta_trig
-    ~obspy.signal.trigger.classic_STALTA
-    ~obspy.signal.trigger.delayed_sta_lta
-    ~obspy.signal.trigger.z_detect
-    ~obspy.signal.trigger.pk_baer
-    ~obspy.signal.trigger.ar_pick
+   * ~obspy.signal.trigger.recursive_sta_lta
+   * ~obspy.signal.trigger.carl_sta_trig
+   * ~obspy.signal.trigger.classic_STALTA
+   * ~obspy.signal.trigger.delayed_sta_lta
+   * ~obspy.signal.trigger.z_detect
+   * ~obspy.signal.trigger.pk_baer
+   * ~obspy.signal.trigger.ar_pick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
@@ -154,8 +150,8 @@ Classic Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import classic_sta_lta
-        >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 1.5, 0.5)
+    >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 1.5, 0.5)
 
 
     >>> cft = classic_STALTA(trace.data, int(5 * df), int(10 * df))
@@ -176,8 +172,8 @@ Recursive Sta Lta
 =================
 
     >>> from obspy.signal.trigger import recursive_STALTA
-        >>> cft = recursive_sta_lta(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 1.2, 0.5)
+    >>> cft = recursive_sta_lta(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 1.2, 0.5)
 
 
     >>> cft = recursive_STALTA(trace.data, int(5 * df), int(10 * df))
@@ -189,8 +185,8 @@ Carl-Sta-Trig
 =============
 
     >>> from obspy.signal.trigger import carl_STA_trig
-        >>> cft = carl_sta_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
-        >>> plot_trigger(trace, cft, 20.0, -20.0)
+    >>> cft = carl_sta_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
+    >>> plot_trigger(trace, cft, 20.0, -20.0)
 
 
     >>> cft = carl_STA_trig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
@@ -202,8 +198,8 @@ Delayed Sta Lta
 ===============
 
     >>> from obspy.signal.trigger import delayed_STALTA
-        >>> cft = delayed_sta_lta(trace.data, int(5 * df), int(10 * df))
-        >>> plot_trigger(trace, cft, 5, 10)
+    >>> cft = delayed_sta_lta(trace.data, int(5 * df), int(10 * df))
+    >>> plot_trigger(trace, cft, 5, 10)
 
 
     >>> cft = delayed_STALTA(trace.data, int(5 * df), int(10 * df))
