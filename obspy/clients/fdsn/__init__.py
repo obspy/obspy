@@ -42,6 +42,7 @@ KOERI   http://eida.koeri.boun.edu.tr
 LMU     http://erde.geophysik.uni-muenchen.de
 NCEDC   http://service.ncedc.org
 NIEP    http://eida-sc3.infp.ro
+NOA     http://eida.gein.noa.gr
 ODC     http://www.orfeus-eu.org
 ORFEUS  http://www.orfeus-eu.org
 RESIF   http://ws.resif.fr
