@@ -11,6 +11,7 @@ import unittest
 
 from obspy.taup.tau import TauPyModel
 
+
 class TaupGeoTestCase(unittest.TestCase):
     """
     Test suite for the SeismicPhase class.
