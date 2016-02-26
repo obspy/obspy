@@ -274,7 +274,8 @@ class MSEEDMetadata(object):
         # Might overflow np.int64 so make Python obj. This allows
         # conversion to long int when required
         self.meta['sample_rms'] = \
-            np.sqrt(sum((tr.data.astype(object) ** 2).sum() for tr in self.data) / npts)
+            np.sqrt(sum((tr.data.astype(object) ** 2).sum() \
+                        for tr in self.data) / npts)
 
         self.meta['sample_stdev'] = np.sqrt(sum(
             ((tr.data - self.meta["sample_mean"]) ** 2).sum()
@@ -338,7 +339,8 @@ class MSEEDMetadata(object):
             seg['sample_min'] = tr.data.min()
             seg['sample_max'] = tr.data.max()
             seg['sample_mean'] = tr.data.mean()
-            seg['sample_rms'] = np.sqrt((tr.data.astype(object) ** 2).sum() / tr.stats.npts)
+            seg['sample_rms'] = np.sqrt((tr.data.astype(object) ** 2).sum()
+                                        /tr.stats.npts)
             seg['sample_stdev'] = tr.data.std()
             seg['num_samples'] = tr.stats.npts
             seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
