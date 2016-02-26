@@ -319,7 +319,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         # stats.starttime (in the case of Trace merging or trimming). If the
         # old iztype was 9, knowing this shift is required in order to keep SAC
         # relative time headers valid.
-        # XXX: what about synthetic data, sac funcgen files?
         try:
             reftime = get_sac_reftime(header)
             # reftime + b is the old first sample time
@@ -329,22 +328,23 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             header['e'] = b + (stats['endtime'] - stats['starttime'])
         except SacHeaderTimeError:
             # can't determine reftime or absolute time shift.
-            msg = "Old header has invalid reftime."
-            warnings.warn(msg)
 
-            # If no relative headers are set and the iztype was 9, we're OK to
-            # use stats.starttime as the reftime, and set b, e
+            # If no relative time headers are set and iztype is 'ib'/9 or
+            # unset, we're OK to use starttime as the reftime and set b, e
             # ObsPy issue 1204
-            # TODO: consolidate relative-time header list in header.py
             relhdrs = ['t' + str(i) for i in range(10)] + ['a', 'f']
             nr = all([header.get(hdr) in (None, HD.SNULL) for hdr in relhdrs])
-            if header.get('iztype') == 9 and nr:
+            if header.get('iztype') in (9, 'ib', None, HD.INULL) and nr:
                 reftime = stats['starttime']
                 nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
                 header.update(nztimes)
                 header['b'] = microsecond * 1e-6
                 header['e'] = header['b'] +\
                     (header['npts'] - 1) * header['delta']
+            else:
+                msg = "Invalid combination of iztype and relative time headers"
+                raise SacHeaderError(msg)
+
         except (KeyError, TypeError):
             # b isn't present or is -12345.0
             # TODO: is this needed anymore?
