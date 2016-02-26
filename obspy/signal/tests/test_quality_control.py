@@ -286,7 +286,7 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(md.meta["sample_max"], 9)
         self.assertEqual(md.meta["sample_mean"], 4.5)
         self.assertTrue(md.meta["sample_stdev"] - 2.8722813232 < 1E-6)
-        self.assertTrue(md.meta["sample_rms"] - 5.3385391260156556 < 1E-6)
+        self.assertTrue(md.meta["sample_rms"] - 5.33853912602 < 1E-6)
 
         # Make sure they also work if split up across two arrays.
         d = np.arange(10, dtype=np.int32)
@@ -304,7 +304,37 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(md.meta["sample_max"], 9)
         self.assertEqual(md.meta["sample_mean"], 4.5)
         self.assertTrue(md.meta["sample_stdev"] - 2.8722813232 < 1E-6)
-        self.assertTrue(md.meta["sample_rms"] - 5.3385391260156556 < 1E-6)
+        self.assertTrue(md.meta["sample_rms"] - 7.14142842854 < 1E-6)
+
+    def test_root_mean_square(self):
+        """
+        Test the RMS calculation on a sine wave with amplitude sqrt(2)
+        For this discrete sine wave RMS should be sqrt(2)/sqrt(2) = 1
+        Within a certain precision
+        """
+        d = np.sqrt(2) * np.sin(np.linspace(-np.pi, np.pi, 10000))
+        with NamedTemporaryFile() as tf1:
+            obspy.Trace(data=d,
+                        header={"starttime": obspy.UTCDateTime(10)}).write(
+                    tf1.name, format="mseed")
+            md = MSEEDMetadata([tf1.name])
+        self.assertTrue(np.fabs(md.meta["sample_rms"] - 1) < 1E-3)
+        for c_segment in md.meta["c_segments"]:
+            self.assertTrue(np.fabs(c_segment["sample_rms"] - 1) < 1E-3)
+
+    def test_int_overflow(self):
+        """
+        Tests calculations for an array of big numbers that will
+        implicitly cause an int32 overflow in the RMS calculation
+        For an array of y = a, RMS should a
+        """
+        d = np.full((10000), np.iinfo(np.int32).max, dtype=np.int32)
+        with NamedTemporaryFile() as tf1:
+            obspy.Trace(data=d,
+                        header={"starttime": obspy.UTCDateTime(10)}).write(
+                    tf1.name, format="mseed")
+            md = MSEEDMetadata([tf1.name])
+            self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
 
     def test_continuous_segments_sample_metrics(self):
         """

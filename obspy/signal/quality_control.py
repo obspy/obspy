@@ -83,7 +83,11 @@ class MSEEDMetadata(object):
             # requested time span.
             if not st:
                 continue
-            self.data.extend(st.traces)
+
+            for tr in st:
+                if(tr.stats.npts != 0):
+                    self.data.extend([tr])
+
             self.files.append(file)
 
         if not self.data:
@@ -146,6 +150,7 @@ class MSEEDMetadata(object):
         m['sta'] = stats.station
         m['loc'] = stats.location
         m['cha'] = stats.channel
+        m['mseed_id'] = self.data[0].id
         m['quality'] = stats.mseed.dataquality
         m['files'] = self.files
 
@@ -266,8 +271,11 @@ class MSEEDMetadata(object):
         self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
 
+        # Might overflow np.int64 so make Python obj. This allows
+        # conversion to long int when required
+        data_long = tr.data.astype(object)
         self.meta['sample_rms'] = \
-            np.sqrt(sum((tr.data ** 2).sum() for tr in self.data)) / npts
+            np.sqrt(sum((data_long ** 2).sum() for tr in self.data) / npts)
 
         self.meta['sample_stdev'] = np.sqrt(sum(
             ((tr.data - self.meta["sample_mean"]) ** 2).sum()
@@ -325,13 +333,17 @@ class MSEEDMetadata(object):
         c_segments = []
 
         for tr in self.data:
+
+            # Set tr.data to Python obj (allows for long int)
+            data_long = tr.data.astype(object)
+
             seg = {}
             seg['start_time'] = tr.stats.starttime
             seg['end_time'] = tr.stats.endtime
             seg['sample_min'] = tr.data.min()
             seg['sample_max'] = tr.data.max()
             seg['sample_mean'] = tr.data.mean()
-            seg['sample_rms'] = np.sqrt((tr.data ** 2).sum() / tr.stats.npts)
+            seg['sample_rms'] = np.sqrt((data_long ** 2).sum() / tr.stats.npts)
             seg['sample_stdev'] = tr.data.std()
             seg['num_samples'] = tr.stats.npts
             seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
