@@ -328,7 +328,8 @@ class QualityControlTestCase(unittest.TestCase):
         implicitly cause an int32 overflow in the RMS calculation
         For an array of y = a, RMS should a
         """
-        d = np.full((10000), np.iinfo(np.int32).max, dtype=np.int32)
+        d = np.empty(10000, dtype=np.int32)
+        d.fill(np.iinfo(np.int32).max)
         with NamedTemporaryFile() as tf1:
             obspy.Trace(data=d,
                         header={"starttime": obspy.UTCDateTime(10)}).write(
