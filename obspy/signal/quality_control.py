@@ -302,7 +302,7 @@ class MSEEDMetadata(object):
             tail_gap_count = 0.0
             tail_gap_length = 0.0
 
-        gaps = self.data.getGaps()
+        gaps = self.data.get_gaps()
 
         self.meta["num_gaps"] = \
             len([_i for _i in gaps if _i[-1] > 0]) + head_gap_count + \
