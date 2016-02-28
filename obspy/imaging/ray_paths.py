@@ -361,7 +361,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     r_earth = model.model.radius_of_planet
     r_cmb = r_earth - model.model.cmb_depth
     rad = r_cmb / r_earth
-    phi, theta = np.mgrid[0: np.pi: 101j, 0: 2 * np.pi: 101j]
+    phi, theta = np.mgrid[0: np.pi: 201j, 0: 2 * np.pi: 201j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
@@ -373,7 +373,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     # make ICB sphere
     r_iocb = r_earth - model.model.iocb_depth
     rad = r_iocb / r_earth
-    phi, theta = np.mgrid[0:np.pi:31j, 0:2 * np.pi:31j]
+    phi, theta = np.mgrid[0:np.pi:101j, 0:2 * np.pi:101j]
 
     x = rad * np.sin(phi) * np.cos(theta)
     y = rad * np.sin(phi) * np.sin(theta)
@@ -488,6 +488,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     r_earth = model.model.radius_of_planet
     # now loop through all stations and source combinations
     greatcircles = []
+    ipath = 0
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
         for evlat, evlon, evdepth_km, evlabel in zip(evlats, evlons, evdepths,
                                                      evlabels):

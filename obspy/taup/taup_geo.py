@@ -215,7 +215,6 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
 
                 # now loop through path, adding extra points
                 i_new = 0
-                print(npts_old, npts_new)
                 for i_old, path_point in enumerate(arrival.path):
                     # first add the original point at the new index
                     dist = np.degrees(sign * path_point['dist'])
