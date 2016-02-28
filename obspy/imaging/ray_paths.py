@@ -19,7 +19,6 @@ from colorsys import hls_to_rgb, rgb_to_hls
 
 import numpy as np
 from matplotlib.colors import hex2color
-from obspy.core.event.source import farfield_p
 
 import ipdb
 
@@ -258,7 +257,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     events_loc = []
     events_lab = []
     phases = [[] for iphase in range(nphases)]
-    for gcircle, name, stlabel, evlabel in greatcircles:
+    for gcircle, name, value, stlabel, evlabel in greatcircles:
         iphase = phase_list.index(name)
         phases[iphase].append(gcircle)
 
@@ -359,8 +358,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     blocksphere.actor.property.frontface_culling = True  # front not rendered
 
     # make CMB sphere
-    r_earth = model.model.radiusOfEarth
-    r_cmb = r_earth - model.model.cmbDepth
+    r_earth = model.model.radius_of_planet
+    r_cmb = r_earth - model.model.cmb_depth
     rad = r_cmb / r_earth
     phi, theta = np.mgrid[0: np.pi: 101j, 0: 2 * np.pi: 101j]
 
@@ -372,7 +371,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     #cmb.actor.property.interpolation = 'flat'
 
     # make ICB sphere
-    r_iocb = r_earth - model.model.iocbDepth
+    r_iocb = r_earth - model.model.iocb_depth
     rad = r_iocb / r_earth
     phi, theta = np.mgrid[0:np.pi:31j, 0:2 * np.pi:31j]
 
@@ -486,7 +485,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     else:
         model = taup_model
 
-    r_earth = model.model.radiusOfEarth
+    r_earth = model.model.radius_of_planet
     # now loop through all stations and source combinations
     greatcircles = []
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
@@ -494,7 +493,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                                                      evlabels):
             arrivals = model.get_ray_paths_geo(
                     evdepth_km, evlat, evlon, stlat, stlon,
-                    phase_list=phase_list)
+                    phase_list=phase_list, resample=True)
             if len(arrivals) == 0:
                 continue
 
@@ -511,8 +510,7 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                                         radii * np.sin(thetas) * np.sin(phis),
                                         radii * np.cos(thetas)])
 
-                value = radpattern()
-
+                value = 0.
                 greatcircles.append((gcircle, arr.name, value, stlabel,
                                      evlabel))
 

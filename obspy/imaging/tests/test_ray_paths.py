@@ -18,12 +18,13 @@ class PathPlottingTestCase(unittest.TestCase):
         cat = read_events()
         #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
         #          kind='mayavi', colorscheme='dark')
-        plot_rays(inventory=inv, catalog=cat,
-                  phase_list=['PKP'], animate=False, savemovie=False,
-                  kind='mayavi', figsize=(1920, 1080),
-                  coastlines='data/coastlines.vtk')
-        #plot_rays(stlat=0.,stlon=30, evlat=0., evlon=70, evdepth_km=200.,
-        #          phase_list=['P'], colorscheme='dark', kind='mayavi')
+        #plot_rays(inventory=inv, catalog=cat,
+        #          phase_list=['PKP'], animate=False, savemovie=False,
+        #          kind='mayavi', figsize=(1920, 1080),
+        #          coastlines='data/coastlines.vtk')
+        plot_rays(station_latitude=0.,station_longitude=30, event_latitude=0.,
+                  event_longitude=170, event_depth_in_km=200.,
+                  phase_list=['Pdiff'], colorscheme='dark', kind='mayavi')
 
 
 def suite():

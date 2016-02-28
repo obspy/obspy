@@ -117,7 +117,7 @@ def calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
 def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                         source_longitude_in_deg, receiver_latitude_in_deg,
                         receiver_longitude_in_deg, radius_of_planet_in_km,
-                        flattening_of_planet):
+                        flattening_of_planet, resample=False):
     """
     Add geographical information to arrivals.
 
@@ -135,6 +135,11 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
     :type radius_of_planet_in_km: float
     :param flattening_of_planet: Flattening of planet (0 for a sphere)
     :type receiver_longitude_in_deg: float
+    :param resample: adds sample points to allow for easy cartesian
+                     interpolation. This is especially useful for phases
+                     like Pdiff.
+    :type resample: boolean
+
 
     :return: List of ``Arrival`` objects, each of which has the time,
         corresponding phase name, ray parameter, takeoff angle, etc. as
@@ -183,7 +188,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                                      pos['lat2'], pos['lon2'])
                 arrival.pierce = geo_pierce
 
-            if arrival.path is not None:
+            # choose whether we need to resample the trace
+            if arrival.path is not None and not resample:
                 geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
                 for i, path_point in enumerate(arrival.path):
                     dir_degrees = np.degrees(sign * path_point['dist'])
@@ -191,6 +197,70 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                     geo_path[i] = (path_point['p'], path_point['time'],
                                    path_point['dist'], path_point['depth'],
                                    pos['lat2'], pos['lon2'])
+                arrival.path = geo_path
+
+            elif arrival.path is not None and resample:
+                rplanet = radius_of_planet_in_km
+                # compute approximate distance between sampling points
+                mindist = 200  # km
+                radii = rplanet - arrival.path['depth']
+                rmean = np.sqrt(radii[1:] * radii[:-1])
+                diff_dists = rmean * np.diff(arrival.path['dist'])
+                npts_extra = np.floor(diff_dists / mindist)
+
+                # count number of extra points and initialize array
+                npts_old = len(arrival.path)
+                npts_new = int(npts_old + np.sum(npts_extra))
+                geo_path = np.empty(npts_new, dtype=TimeDistGeo)
+
+                # now loop through path, adding extra points
+                i_new = 0
+                print(npts_old, npts_new)
+                for i_old, path_point in enumerate(arrival.path):
+                    # first add the original point at the new index
+                    dist = np.degrees(sign * path_point['dist'])
+                    pos = line.ArcPosition(dist)
+                    geo_path[i_new] = (path_point['p'], path_point['time'],
+                                       path_point['dist'], path_point['depth'],
+                                       pos['lat2'], pos['lon2'])
+                    i_new += 1
+
+                    if i_old > npts_old - 2:
+                        continue
+
+                    # now check if we need to add new points
+                    npts_new = npts_extra[i_old]
+                    if npts_new > 0:
+                        # if yes, distribute them linearly between the old and
+                        # the next point
+                        next_point = arrival.path[i_old + 1]
+                        dist_next = np.degrees(sign * next_point['dist'])
+                        dists_new = np.linspace(dist, dist_next,
+                                                npts_new + 2)[1: -1]
+
+                        # now get all interpolated parameters
+                        xs = [dist, dist_next]
+                        ys = [path_point['p'], next_point['p']]
+                        p_interp = np.interp(dists_new, xs, ys)
+                        ys = [path_point['time'], next_point['time']]
+                        time_interp = np.interp(dists_new, xs, ys)
+                        ys = [path_point['depth'], next_point['depth']]
+                        depth_interp = np.interp(dists_new, xs, ys)
+                        pos_interp = [line.ArcPosition(dist_new) for dist_new
+                                      in dists_new]
+                        lat_interp = [pos['lat2'] for pos in pos_interp]
+                        lon_interp = [pos['lon2'] for pos in pos_interp]
+
+                        # add them to geo_path
+                        for i_extra in range(npts_new):
+                            geo_path[i_new] = (p_interp[i_extra],
+                                               time_interp[i_extra],
+                                               dists_new[i_extra],
+                                               depth_interp[i_extra],
+                                               lat_interp[i_extra],
+                                               lon_interp[i_extra])
+                            i_new += 1
+
                 arrival.path = geo_path
 
     else:
