@@ -349,9 +349,8 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 warnings.warn(msg)
             else:
                 msg = ("Invalid reference time, unrecoverable relative time"
-                      " headers.")
+                       " headers.")
                 raise SacHeaderError(msg)
-
 
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issue 1204
