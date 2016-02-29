@@ -344,7 +344,7 @@ def _internal_write_single_cmtsolution(buf, event, **kwargs):
     """
     if not event.focal_mechanisms:
         raise ValueError("Event must contain a focal mechanism.")
-    foc_mec = event.preferred_focal_mechanism() or event.focal_mechansisms[0]
+    foc_mec = event.preferred_focal_mechanism() or event.focal_mechanisms[0]
     if not foc_mec.moment_tensor:
         raise ValueError("The preferred or first focal mechanism must "
                          "contain a moment tensor.")
