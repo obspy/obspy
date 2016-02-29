@@ -821,8 +821,7 @@ class CoreTestCase(unittest.TestCase):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter('always')
                 tr.write(tempfile, format='SAC')
-                # should have no warnings about reftime
-                self.assertEqual(len(w), 0)
+                self.assertEqual(len(w), 1)
             tr1 = read(tempfile)[0]
 
         self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
