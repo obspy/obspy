@@ -276,12 +276,14 @@ class MSEEDMetadata(object):
         m['miniseed_header_flag_percentages']['data_quality_flags'] = data_quality_flags_percentages
         m['miniseed_header_flag_percentages']['io_and_clock_flags'] = io_and_clock_flags_percentages
 
-        # Set miniseed header counts
         m['miniseed_header_flag_counts'] = {}
         m['miniseed_header_flag_counts']['activity_flags'] = activity_flags
         m['miniseed_header_flag_counts']['data_quality_flags'] = data_quality_flags
         m['miniseed_header_flag_counts']['io_and_clock_flags'] = io_and_clock_flags
+        
+        self._fix_flag_names()
 
+        # Set miniseed header counts
         m['timing_quality'] = {}
         m['timing_quality']['mean'] = timing_quality_mean
         m['timing_quality']['min'] = timing_quality_min
@@ -289,6 +291,32 @@ class MSEEDMetadata(object):
         m['timing_quality']['median'] = timing_quality_median
         m['timing_quality']['lower_quartile'] = timing_quality_lower_quartile
         m['timing_quality']['upper_quartile'] = timing_quality_upper_quartile
+
+    def _fix_flag_names(self):
+        """
+        Supplementary function to fix flag parameter names
+        Parameters with a key in the name_ref will be changed to its value
+        """
+        name_ref = {
+            "amplifier_saturation_detected": "amplifier_saturation",
+            "digitizer_clipping_detected": "digitizer_clipping",
+            "spikes_detected": "spikes",
+            "glitches_detected": "glitches",
+            "missing_data_present": "missing_padded_data",
+            "time_tag_uncertain": "suspect_time_tag",
+            "calibration_signals_present": "calibration_signal",
+            "time_correction_applied": "timing_correction",
+            "beginning_event": "event_begin",
+            "end_event": "event_end",
+            "station_volume_parity_error": "station_volume",
+        }
+
+        # Loop over all keys and replace where required according to name_ref
+        for flag_type in ["_percentages", "_counts"]:
+            for _, flags in self.meta['miniseed_header_flag' + flag_type].iteritems():
+                for param in flags:
+                    if(param in name_ref):
+                        flags[name_ref[param]] = flags.pop(param)
 
     def _compute_sample_metrics(self):
         """

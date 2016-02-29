@@ -140,11 +140,11 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(0)}).write(
                     tf1.name, format="mseed")
             mseed_metadata = MSEEDMetadata([tf1.name])
-            self.assertEqual(mseed_metadata.meta['timing_quality_max'],
+            self.assertEqual(mseed_metadata.meta['timing_quality']['max'],
                              None)
-            self.assertEqual(mseed_metadata.meta['timing_quality_min'],
+            self.assertEqual(mseed_metadata.meta['timing_quality']['min'],
                              None)
-            self.assertEqual(mseed_metadata.meta['timing_quality_mean'],
+            self.assertEqual(mseed_metadata.meta['timing_quality']['mean'],
                              None)
 
     def test_extraction_of_basic_mseed_headers(self):
@@ -165,10 +165,10 @@ class QualityControlTestCase(unittest.TestCase):
                                 "channel": "EHE"}).write(
                     tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
             md = MSEEDMetadata([tf1.name, tf2.name])
-            self.assertEqual(md.meta["net"], "BW")
-            self.assertEqual(md.meta["sta"], "ALTM")
-            self.assertEqual(md.meta["loc"], "00")
-            self.assertEqual(md.meta["cha"], "EHE")
+            self.assertEqual(md.meta['stats']["network"], "BW")
+            self.assertEqual(md.meta['stats']["station"], "ALTM")
+            self.assertEqual(md.meta['stats']["location"], "00")
+            self.assertEqual(md.meta['stats']["channel"], "EHE")
             self.assertEqual(md.meta["quality"], "D")
             self.assertEqual(md.meta["start_time"], obspy.UTCDateTime(0))
             self.assertEqual(md.meta["end_time"],
@@ -238,23 +238,23 @@ class QualityControlTestCase(unittest.TestCase):
 
             md = MSEEDMetadata([tf1.name, tf2.name])
             # Sum up contributions from both files.
-            self.assertEqual(md.meta["glitches"], 9)
-            self.assertEqual(md.meta['amplifier_saturation'], 30)
-            self.assertEqual(md.meta['digital_filter_charging'], 8)
-            self.assertEqual(md.meta['digitizer_clipping'], 19)
-            self.assertEqual(md.meta['missing_padded_data'], 20)
-            self.assertEqual(md.meta['spikes'], 35)
-            self.assertEqual(md.meta['suspect_time_tag'], 10)
-            self.assertEqual(md.meta['telemetry_sync_error'], 19)
-            self.assertEqual(md.meta['calibration_signal'], 11)
-            self.assertEqual(md.meta['event_begin'], 36)
-            self.assertEqual(md.meta['event_end'], 36)
-            self.assertEqual(md.meta['event_in_progress'], 20)
-            self.assertEqual(md.meta['timing_correction'], 20)
-            self.assertEqual(md.meta['clock_locked'], 34)
-            self.assertEqual(md.meta['timing_quality_mean'], None)
-            self.assertEqual(md.meta['timing_quality_min'], None)
-            self.assertEqual(md.meta['timing_quality_max'], None)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']["glitches"], 9)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['amplifier_saturation'], 30)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['digital_filter_charging'], 8)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['digitizer_clipping'], 19)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['missing_padded_data'], 20)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['spikes'], 35)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['suspect_time_tag'], 10)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['telemetry_sync_error'], 19)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['calibration_signal'], 11)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_begin'], 36)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_end'], 36)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_in_progress'], 20)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['timing_correction'], 20)
+            self.assertEqual(md.meta['miniseed_header_flag_counts']['io_and_clock_flags']['clock_locked'], 34)
+            self.assertEqual(md.meta['timing_quality']['mean'], None)
+            self.assertEqual(md.meta['timing_quality']['min'], None)
+            self.assertEqual(md.meta['timing_quality']['max'], None)
 
     def test_timing_quality(self):
         """
@@ -264,12 +264,12 @@ class QualityControlTestCase(unittest.TestCase):
         # test suite.
         md = MSEEDMetadata(files=[os.path.join(self.path,
                                                "timingquality.mseed")])
-        self.assertEqual(md.meta['timing_quality_mean'], 50.0)
-        self.assertEqual(md.meta['timing_quality_min'], 0.0)
-        self.assertEqual(md.meta['timing_quality_max'], 100.0)
-        self.assertEqual(md.meta['timing_quality_median'], 50.0)
-        self.assertEqual(md.meta['timing_quality_lower_quartile'], 25.0)
-        self.assertEqual(md.meta['timing_quality_upper_quartile'], 75.0)
+        self.assertEqual(md.meta['timing_quality']['mean'], 50.0)
+        self.assertEqual(md.meta['timing_quality']['min'], 0.0)
+        self.assertEqual(md.meta['timing_quality']['max'], 100.0)
+        self.assertEqual(md.meta['timing_quality']['median'], 50.0)
+        self.assertEqual(md.meta['timing_quality']['lower_quartile'], 25.0)
+        self.assertEqual(md.meta['timing_quality']['upper_quartile'], 75.0)
 
     def test_overall_sample_metrics(self):
         """
