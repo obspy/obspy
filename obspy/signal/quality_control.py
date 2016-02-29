@@ -146,11 +146,12 @@ class MSEEDMetadata(object):
         m = self.meta
 
         stats = self.data[0].stats
-        m['net'] = stats.network
-        m['sta'] = stats.station
-        m['loc'] = stats.location
-        m['cha'] = stats.channel
-        m['mseed_id'] = self.data[0].id
+        m['stats'] = {}
+        m['stats']['network'] = stats.network
+        m['stats']['station'] = stats.station
+        m['stats']['location'] = stats.location
+        m['stats']['channel'] = stats.channel
+        m['stats']['mseed_id'] = self.data[0].id
         m['quality'] = stats.mseed.dataquality
         m['files'] = self.files
 
@@ -198,15 +199,55 @@ class MSEEDMetadata(object):
                 clock_locked=0)
         timing_quality = []
 
+        # Setup counters for the MiniSEED header flags percentages.
+        data_quality_flags_percentages = collections.Counter(
+                amplifier_saturation_detected=0,
+                digitizer_clipping_detected=0,
+                spikes_detected=0,
+                glitches_detected=0,
+                missing_data_present=0,
+                telemetry_sync_error=0,
+                digital_filter_charging=0,
+                time_tag_uncertain=0)
+        activity_flags_percentages = collections.Counter(
+                calibration_signals_present=0,
+                time_correction_applied=0,
+                beginning_event=0,
+                end_event=0,
+                positive_leap=0,
+                negative_leap=0,
+                clock_locked=0)
+        io_and_clock_flags_percentages = collections.Counter(
+                station_volume_parity_error=0,
+                long_record_read=0,
+                short_record_read=0,
+                start_time_series=0,
+                end_time_series=0,
+                clock_locked=0)
+
+        total_time = 0
         for file in self.files:
             flags = get_flags(
                 file, starttime=self.starttime, endtime=self.endtime)
 
+            total_time += (self.endtime - self.starttime)
+
             data_quality_flags.update(flags["data_quality_flags"])
+            data_quality_flags_percentages.update(flags["data_quality_flags_percentages"])
             activity_flags.update(flags["activity_flags"])
+            activity_flags_percentages.update(flags["activity_flags_percentages"])
             io_and_clock_flags.update(flags["io_and_clock_flags"])
+            io_and_clock_flags_percentages.update(flags["io_and_clock_flags_percentages"])
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
+
+        # Set to percentages
+        for _i, key in enumerate(data_quality_flags_percentages.keys()):
+            data_quality_flags_percentages[key] /= total_time * 1e-2
+        for _i, key in enumerate(activity_flags_percentages.keys()):
+            activity_flags_percentages[key] /= total_time * 1e-2
+        for _i, key in enumerate(io_and_clock_flags_percentages.keys()):
+            io_and_clock_flags_percentages[key] /= total_time * 1e-2
 
         # Only calculate the timing quality statistics if each files has the
         # timing quality set. This should usually be the case. Otherwise we
@@ -229,29 +270,25 @@ class MSEEDMetadata(object):
             timing_quality_lower_quartile = None
             timing_quality_upper_quartile = None
 
-        m['glitches'] = data_quality_flags["glitches_detected"]
-        m['amplifier_saturation'] = \
-            data_quality_flags["amplifier_saturation_detected"]
-        m['digital_filter_charging'] = \
-            data_quality_flags["digital_filter_charging"]
-        m['digitizer_clipping'] = \
-            data_quality_flags["digitizer_clipping_detected"]
-        m['missing_padded_data'] = data_quality_flags["missing_data_present"]
-        m['spikes'] = data_quality_flags["spikes_detected"]
-        m['suspect_time_tag'] = data_quality_flags["time_tag_uncertain"]
-        m['telemetry_sync_error'] = data_quality_flags["telemetry_sync_error"]
-        m['calibration_signal'] = activity_flags["calibration_signals_present"]
-        m['event_begin'] = activity_flags["beginning_event"]
-        m['event_end'] = activity_flags["end_event"]
-        m['event_in_progress'] = activity_flags["event_in_progress"]
-        m['timing_correction'] = activity_flags["time_correction_applied"]
-        m['clock_locked'] = io_and_clock_flags["clock_locked"]
-        m['timing_quality_mean'] = timing_quality_mean
-        m['timing_quality_min'] = timing_quality_min
-        m['timing_quality_max'] = timing_quality_max
-        m['timing_quality_median'] = timing_quality_median
-        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
-        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
+        # Set miniseed header flag percentages
+        m['miniseed_header_flag_percentages'] = {}
+        m['miniseed_header_flag_percentages']['activity_flags'] = activity_flags_percentages
+        m['miniseed_header_flag_percentages']['data_quality_flags'] = data_quality_flags_percentages
+        m['miniseed_header_flag_percentages']['io_and_clock_flags'] = io_and_clock_flags_percentages
+
+        # Set miniseed header counts
+        m['miniseed_header_flag_counts'] = {}
+        m['miniseed_header_flag_counts']['activity_flags'] = activity_flags
+        m['miniseed_header_flag_counts']['data_quality_flags'] = data_quality_flags
+        m['miniseed_header_flag_counts']['io_and_clock_flags'] = io_and_clock_flags
+
+        m['timing_quality'] = {}
+        m['timing_quality']['mean'] = timing_quality_mean
+        m['timing_quality']['min'] = timing_quality_min
+        m['timing_quality']['max'] = timing_quality_max
+        m['timing_quality']['median'] = timing_quality_median
+        m['timing_quality']['lower_quartile'] = timing_quality_lower_quartile
+        m['timing_quality']['upper_quartile'] = timing_quality_upper_quartile
 
     def _compute_sample_metrics(self):
         """
