@@ -242,11 +242,11 @@ class MSEEDMetadata(object):
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
         # Set to percentages
-        for _i, key in enumerate(data_quality_flags_percentages.keys()):
+        for key in data_quality_flags_percentages:
             data_quality_flags_percentages[key] /= total_time * 1e-2
-        for _i, key in enumerate(activity_flags_percentages.keys()):
+        for key in activity_flags_percentages:
             activity_flags_percentages[key] /= total_time * 1e-2
-        for _i, key in enumerate(io_and_clock_flags_percentages.keys()):
+        for key in io_and_clock_flags_percentages:
             io_and_clock_flags_percentages[key] /= total_time * 1e-2
 
         # Only calculate the timing quality statistics if each files has the
@@ -276,6 +276,7 @@ class MSEEDMetadata(object):
         m['miniseed_header_flag_percentages']['data_quality_flags'] = data_quality_flags_percentages
         m['miniseed_header_flag_percentages']['io_and_clock_flags'] = io_and_clock_flags_percentages
 
+        # Set miniseed header flag counts
         m['miniseed_header_flag_counts'] = {}
         m['miniseed_header_flag_counts']['activity_flags'] = activity_flags
         m['miniseed_header_flag_counts']['data_quality_flags'] = data_quality_flags
