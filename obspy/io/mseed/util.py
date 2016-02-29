@@ -300,7 +300,7 @@ def get_timing_and_data_quality(file_or_file_object):
             for _i, key in enumerate(quality_count.keys()):
                 if (rec_info["data_quality_flags"] & (1 << _i)) != 0:
                     quality_count[key] += 1
-                    quality_count_percentages += record_length_seconds
+                    quality_count_percentages[key] += record_length_seconds
 
         if timing_quality and "timing_quality" in rec_info:
             tq.append(float(rec_info["timing_quality"]))
