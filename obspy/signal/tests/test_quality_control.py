@@ -147,6 +147,11 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(mseed_metadata.meta['timing_quality']['mean'],
                              None)
 
+    def test_head_and_tail_gaps(self):
+        """
+        To be added
+        """
+
     def test_extraction_of_basic_mseed_headers(self):
         """
         Tests extraction of basic features.

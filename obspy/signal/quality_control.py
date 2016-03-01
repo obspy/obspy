@@ -65,61 +65,89 @@ class MSEEDMetadata(object):
         :param c_seg: Calculate metrics for each continuous segment.
         :type c_seg: bool
         """
-        self.meta = {}
+
         self.data = obspy.Stream()
-        self.files = []
 
         # Allow anything UTCDateTime can parse.
-        starttime = obspy.UTCDateTime(starttime) \
-            if starttime is not None else None
-        endtime = obspy.UTCDateTime(endtime) \
-            if endtime is not None else None
+        # Metrics are defined for [T1, T2) thus we
+        # subtract 1μs from the endtime to exclude samples at T2
+        # by using nearest_sample = False during Stream.read()
+        # ObsPy is not allowed to look ahead for samples
+        # This is ONLY for READING! The "lost" microsecond is included
+        # during other calculations
+        if(starttime is not None):
+            starttime = obspy.UTCDateTime(starttime)
+        if(endtime is not None):
+            endtime = obspy.UTCDateTime(endtime)
 
+        if(endtime is not None):
+            read_endtime = obspy.UTCDateTime(endtime) - 1e-6
+        else:
+            read_endtime = None
+
+        self.files = []
+
+        # Will raise if not a MiniSEED files.
         for file in files:
-            # Will raise if not a MiniSEED files.
-            st = obspy.read(file, starttime=starttime, endtime=endtime,
-                            format="mseed")
+            st = obspy.read(file, starttime=starttime, endtime=read_endtime,
+                            format="mseed", nearest_sample=False)
+
             # Empty stream or maybe there is no data in the stream for the
             # requested time span.
             if not st:
                 continue
 
+            self.files.append(file)
+
+            # Only extend traces with data
             for tr in st:
                 if(tr.stats.npts != 0):
                     self.data.extend([tr])
 
-            self.files.append(file)
-
         if not self.data:
-            raise ValueError("Nothing added - no data within the given "
-                             "temporal constraints found.")
+            raise ValueError("No data within the temporal constraints.")
 
         # Do some sanity checks. The class only works with data from a
         # single location so we have to make sure that the existing data on
         # this object and the newly added all have the same identifier.
-        ids = set(tr.id + "." + tr.stats.mseed.dataquality
-                  for tr in self.data)
+        ids = set(tr.id + tr.stats.mseed.dataquality for tr in self.data)
 
         if len(ids) != 1:
-            raise ValueError("All traces in all files must have the same SEED "
-                             "id.")
+            raise ValueError("All traces must have the same SEED id.")
 
         # Sort so that gaps and what not work in an ok fashion.
         self.data.sort()
 
-        if starttime is None:
-            self.starttime = self.data[0].stats.starttime
-        else:
-            self.starttime = starttime
-        if endtime is None:
-            self.endtime = self.data[-1].stats.endtime
-        else:
-            self.endtime = endtime
+        # Set the start/end to user specified or take from ObsPy
+        self.starttime = starttime or self.data[0].stats.starttime
+        self.endtime = endtime or self.data[-1].stats.endtime
 
+        self._find_time_tolerance()
+        print(self.fo_real)
+        # Calculation of all the metrics begins here
+        self.meta = {}
         self._extract_mseed_stream_metadata()
         self._compute_sample_metrics()
+
         if c_seg:
             self._compute_continuous_seg_sample_metrics()
+
+    def _find_time_tolerance(self):
+        """
+        Calculates total time accounting for time tolerance ε
+        This tolerance is set at 1/2 of the sampling rate
+        """
+        tolerated_start = self.starttime
+        tolerated_end = self.endtime
+
+        self.tolerance_begin = 0.5*(1/self.data[0].stats.delta)
+        self.tolerance_end = 0.5*(1/self.data[-1].stats.delta)
+
+        if(self.data[0].stats.starttime - self.starttime <= self.tolerance_begin):
+            tolerated_start = self.data[0].stats.starttime
+        if(self.endtime - self.data[-1].stats.endtime <= self.tolerance_end):
+            tolerated_end = self.data[-1].stats.endtime
+        self.fo_real = tolerated_end - tolerated_start
 
     @property
     def number_of_records(self):
@@ -135,41 +163,44 @@ class MSEEDMetadata(object):
         """
         return sum(tr.stats.npts for tr in self.data)
 
+    def _extract_mseed_stream_stats(self):
+        """
+        Collects the stats
+        """
+        stats = self.data[0].stats
+        self.meta['network'] = stats.network
+        self.meta['station'] = stats.station
+        self.meta['location'] = stats.location
+        self.meta['channel'] = stats.channel
+        self.meta['quality'] = stats.mseed.dataquality
+        self.meta['mseed_id'] = self.data[0].id
+
+    def _get_unique_list(self, parameter):
+        if(parameter == 'sampling_rate'):
+            return sorted(list(set([tr.stats[parameter] for tr in self.data])))
+        else:
+            return sorted(list(set([tr.stats.mseed[parameter] for tr in self.data])))
+
     def _extract_mseed_stream_metadata(self):
         """
         Collect information from the MiniSEED headers.
         """
-        if not self.data:
-            raise ValueError("Object contains no waveform data.")
 
-        self.data.sort()
+        self._extract_mseed_stream_stats()
+        meta = self.meta
         m = self.meta
 
-        stats = self.data[0].stats
-        m['network'] = stats.network
-        m['station'] = stats.station
-        m['location'] = stats.location
-        m['channel'] = stats.channel
-        m['mseed_id'] = self.data[0].id
-        m['quality'] = stats.mseed.dataquality
-        m['files'] = self.files
-
-        # start time of the requested available stream
-        m['start_time'] = self.data[0].stats.starttime
-        # end time of the requested available stream
-        m['end_time'] = self.data[-1].stats.endtime
-
-        m['num_records'] = self.number_of_records
-        m['num_samples'] = self.number_of_samples
+        # Add other parameters to the metadata object
+        meta['files'] = self.files
+        meta['start_time'] = self.starttime
+        meta['end_time'] = self.endtime
+        meta['num_records'] = self.number_of_records
+        meta['num_samples'] = self.number_of_samples
 
         # The following are lists as it might contain multiple entries.
-        m['sample_rate'] = \
-            sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
-        m['record_len'] = \
-            sorted(list(set([tr.stats.mseed.record_length
-                             for tr in self.data])))
-        m['encoding'] = \
-            sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
+        meta['sample_rate'] = self._get_unique_list('sampling_rate')
+        meta['record_len'] = self._get_unique_list('record_length')
+        meta['encoding'] = self._get_unique_list('encoding')
 
         # Setup counters for the MiniSEED header flags.
         data_quality_flags = collections.Counter(
@@ -224,32 +255,35 @@ class MSEEDMetadata(object):
                 end_time_series=0,
                 clock_locked=0)
 
-        total_time = 0
+        self.total_time = 0
         for file in self.files:
             flags = get_flags(
                 file, starttime=self.starttime, endtime=self.endtime)
 
-            total_time += (self.endtime - self.starttime)
+            self.total_time += flags["total_time"]
 
+            # Update the flag counters
             data_quality_flags.update(flags["data_quality_flags"])
             data_quality_flags_percentages.update(flags["data_quality_flags_percentages"])
             activity_flags.update(flags["activity_flags"])
             activity_flags_percentages.update(flags["activity_flags_percentages"])
             io_and_clock_flags.update(flags["io_and_clock_flags"])
             io_and_clock_flags_percentages.update(flags["io_and_clock_flags_percentages"])
+
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
         #[T1 - T2) - do not include last sample so substract sampling freq from endtime
-        total_time -= (1/self.data[len(self.data) - 1].stats.sampling_rate)
+        self.total_time -= (1/self.data[-1].stats.sampling_rate)
+        print(self.total_time)
 
         # Set to percentages
         for key in data_quality_flags_percentages:
-            data_quality_flags_percentages[key] /= total_time * 1e-2
+            data_quality_flags_percentages[key] /= self.total_time * 1e-2
         for key in activity_flags_percentages:
-            activity_flags_percentages[key] /= total_time * 1e-2
+            activity_flags_percentages[key] /= self.total_time * 1e-2
         for key in io_and_clock_flags_percentages:
-            io_and_clock_flags_percentages[key] /= total_time * 1e-2
+            io_and_clock_flags_percentages[key] /= self.total_time * 1e-2
 
         # Only calculate the timing quality statistics if each files has the
         # timing quality set. This should usually be the case. Otherwise we
@@ -271,6 +305,7 @@ class MSEEDMetadata(object):
             timing_quality_median = None
             timing_quality_lower_quartile = None
             timing_quality_upper_quartile = None
+
 
         # Set miniseed header flag percentages
         m['miniseed_header_flag_percentages'] = {}
@@ -349,37 +384,39 @@ class MSEEDMetadata(object):
             ((tr.data - self.meta["sample_mean"]) ** 2).sum()
             for tr in self.data) / npts)
 
-        # Get gaps at beginning and end.
-        if self.data[0].stats.starttime > self.starttime:
-            head_gap_count = 1
-            head_gap_length = self.data[0].stats.starttime - self.starttime
-        else:
-            head_gap_count = 0
-            head_gap_length = 0.0
+        # Get gaps at beginning and end and the stream
+        gap_count = 0
+        gap_length = 0.0
+
+        # Account for the time tolerance (here defined at 1/2 of Δt)
+        # Start of stream
+        stats = self.data[0].stats
+        time_tolerance = 0.5*stats.delta
+        if(stats.starttime - self.starttime > time_tolerance):
+            gap_count += 1
+            gap_length += stats.starttime - self.starttime - time_tolerance
+
+        # End of stream
         # We define the endtime as the time of the last sample but the next
         # sample would only start at endtime + delta. Thus the following
         # scenario would not count as a gap at the end:
-        #     x -- x -- x -- x -- x -- x
-        #                                   | <- self.endtime
-        if (self.data[-1].stats.endtime + self.data[-1].stats.delta) < \
-                self.endtime:
-            tail_gap_count = 1
-            tail_gap_length = self.endtime - (
-                self.data[-1].stats.endtime + self.data[-1].stats.delta)
-        else:
-            tail_gap_count = 0.0
-            tail_gap_length = 0.0
+        # x -- x -- x -- x -- x -- x -- 
+        #                               | <= self.endtime
+        stats = self.data[-1].stats
+        time_tolerance = 0.5*stats.delta
+        projected_sample = stats.endtime + stats.delta
+        if(self.endtime - projected_sample > time_tolerance):
+            gap_count += 1
+            gap_length += self.endtime - projected_sample - time_tolerance
 
+        # Get the other gaps
         gaps = self.data.get_gaps()
-
         self.meta["num_gaps"] = \
-            len([_i for _i in gaps if _i[-1] > 0]) + head_gap_count + \
-            tail_gap_count
+            len([_i for _i in gaps if _i[-1] > 0]) + gap_count
         self.meta["num_overlaps"] = \
             len([_i for _i in gaps if _i[-1] < 0])
         self.meta["gaps_len"] = \
-            sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + head_gap_length \
-            + tail_gap_length
+            sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + gap_length
         self.meta["overlaps_len"] = \
             sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0)
 
