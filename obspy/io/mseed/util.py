@@ -269,20 +269,33 @@ def get_timing_and_data_quality(file_or_file_object):
 
     offset = 0
     record_count = 0
-    record_length_seconds = 0
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
     while offset <= (info["filesize"] - 256):
         rec_info = get_record_information(file_or_file_object, offset)
         record_count += 1
-        record_length_seconds = rec_info["endtime"] - rec_info["starttime"]
+        offset += rec_info["record_length"]
 
         # Filter records based on times if applicable.
         if starttime is not None and rec_info["endtime"] < starttime:
-            break
+            continue
         if endtime is not None and rec_info["starttime"] > endtime:
-            break
+            continue
+
+        # Cut off times
+        sample_offset = (1/rec_info["samp_rate"])
+        if(rec_info["starttime"] <= starttime):
+            record_first_sample = starttime
+        else:
+            record_first_sample = rec_info["starttime"]
+        if(rec_info["endtime"] >= endtime):
+            record_last_sample = endtime - 2 * sample_offset
+        else:
+            record_last_sample = rec_info["endtime"]
+
+        # R_end - R_start + sampling interval
+        record_length_seconds = sample_offset + (record_last_sample - record_first_sample)
 
         if io_flags:
             for _i, key in enumerate(io_count.keys()):
@@ -304,8 +317,6 @@ def get_timing_and_data_quality(file_or_file_object):
 
         if timing_quality and "timing_quality" in rec_info:
             tq.append(float(rec_info["timing_quality"]))
-
-        offset += rec_info["record_length"]
 
     results = {
         "record_count": record_count

@@ -240,6 +240,9 @@ class MSEEDMetadata(object):
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
+        #[T1 - T2) - do not include last sample so substract sampling freq from endtime
+        total_time -= (1/self.data[len(self.data) - 1].stats.sampling_rate)
+
         # Set to percentages
         for key in data_quality_flags_percentages:
             data_quality_flags_percentages[key] /= total_time * 1e-2
