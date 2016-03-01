@@ -165,10 +165,10 @@ class QualityControlTestCase(unittest.TestCase):
                                 "channel": "EHE"}).write(
                     tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
             md = MSEEDMetadata([tf1.name, tf2.name])
-            self.assertEqual(md.meta['stats']["network"], "BW")
-            self.assertEqual(md.meta['stats']["station"], "ALTM")
-            self.assertEqual(md.meta['stats']["location"], "00")
-            self.assertEqual(md.meta['stats']["channel"], "EHE")
+            self.assertEqual(md.meta["network"], "BW")
+            self.assertEqual(md.meta["station"], "ALTM")
+            self.assertEqual(md.meta["location"], "00")
+            self.assertEqual(md.meta["channel"], "EHE")
             self.assertEqual(md.meta["quality"], "D")
             self.assertEqual(md.meta["start_time"], obspy.UTCDateTime(0))
             self.assertEqual(md.meta["end_time"],

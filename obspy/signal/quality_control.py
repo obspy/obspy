@@ -146,12 +146,11 @@ class MSEEDMetadata(object):
         m = self.meta
 
         stats = self.data[0].stats
-        m['stats'] = {}
-        m['stats']['network'] = stats.network
-        m['stats']['station'] = stats.station
-        m['stats']['location'] = stats.location
-        m['stats']['channel'] = stats.channel
-        m['stats']['mseed_id'] = self.data[0].id
+        m['network'] = stats.network
+        m['station'] = stats.station
+        m['location'] = stats.location
+        m['channel'] = stats.channel
+        m['mseed_id'] = self.data[0].id
         m['quality'] = stats.mseed.dataquality
         m['files'] = self.files
 
