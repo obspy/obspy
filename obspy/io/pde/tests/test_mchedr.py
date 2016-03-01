@@ -326,6 +326,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
         with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
             catalog = read_events(filename)
             self.assertTrue(len(catalog), 1)
 

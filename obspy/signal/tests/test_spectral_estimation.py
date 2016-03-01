@@ -19,6 +19,7 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
@@ -184,7 +185,7 @@ class PsdTestCase(unittest.TestCase):
         ppsd = _get_ppsd()
         # read results and compare
         result_hist = np.load(file_histogram)
-        self.assertEqual(len(ppsd.times), 4)
+        self.assertEqual(len(ppsd.times_processed), 4)
         self.assertEqual(ppsd.nfft, 65536)
         self.assertEqual(ppsd.nlap, 49152)
         np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
@@ -216,14 +217,14 @@ class PsdTestCase(unittest.TestCase):
             ppsd.save_npz(filename)
             ppsd_loaded = PPSD.load_npz(filename)
             ppsd_loaded.calculate_histogram()
-            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(len(ppsd_loaded.times_processed), 4)
             self.assertEqual(ppsd_loaded.nfft, 65536)
             self.assertEqual(ppsd_loaded.nlap, 49152)
             np.testing.assert_array_equal(ppsd_loaded.current_histogram,
                                           result_hist)
-            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+            np.testing.assert_array_equal(ppsd_loaded.db_bin_edges,
                                           binning['spec_bins'])
-            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+            np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
 
     def test_ppsd_w_iris(self):
@@ -336,8 +337,18 @@ class PsdTestCase(unittest.TestCase):
         # (also test various means of initialization, basically testing the
         #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            ppsd = PPSD(st[0].stats, paz=metadata)
-            ppsd = PPSD(st[0].stats, parser=metadata)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd = PPSD(st[0].stats, paz=metadata)
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[0].category, ObsPyDeprecationWarning)
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                ppsd = PPSD(st[0].stats, parser=metadata)
+            self.assertEqual(len(w), 1)
+            self.assertIs(w[0].category, ObsPyDeprecationWarning)
+
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:

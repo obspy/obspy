@@ -596,9 +596,6 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         """
         Test initialization with an invalid seed string. Should raise a
         warning.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
         # An invalid SEED string will issue a warning and fill the object with
         # the default values.
