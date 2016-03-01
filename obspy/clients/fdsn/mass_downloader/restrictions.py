@@ -75,6 +75,32 @@ class Restrictions(object):
     ...     # Guard against the same station having different names.
     ...     minimum_interstation_distance_in_m=100.0)
 
+    The ``network``, ``station``, ``location``, and ``channel`` codes are
+    directly passed to the `station` service of each fdsn-ws implementation
+    and can thus take comma separated string lists as arguments, i.e.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="BW,G?", station="A*,B*",
+            ...
+            )
+
+    Not all fdsn-ws implementations support the direct exclusion of network
+    or station codes. The ``exclude_networks`` and ``exclude_stations``
+    arguments should thus be used for that purpose to ensure compatibility
+    across all data providers, e.g.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            network="B*,G*", station="A*, B*",
+            exclude_networks=["BW", "GR"],
+            exclude_stations=["AL??", "*O"],
+            ...
+            )
 
     :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -103,6 +129,12 @@ class Restrictions(object):
     :type location: str
     :param channel: The channel code. Can contain wildcards.
     :type channel: str
+    :param exclude_network: A list of potentially wildcarded networks that
+        should not be downloaded.
+    :type exclude_network: list of str
+    :param exclude_stations: A list of potentially wildcarded stations that
+        should not be downloaded.
+    :type exclude_stations: list of str
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
         gaps and/or overlaps will be rejected.
     :type reject_channels_with_gaps: bool
@@ -134,6 +166,7 @@ class Restrictions(object):
                  station_starttime=None, station_endtime=None,
                  chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
+                 exclude_networks=tuple(), exclude_stations=tuple(),
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[ZNE]", "BH[ZNE]",
@@ -157,6 +190,8 @@ class Restrictions(object):
         self.station = station
         self.location = location
         self.channel = channel
+        self.exclude_networks = exclude_networks
+        self.exclude_stations = exclude_stations
         self.reject_channels_with_gaps = reject_channels_with_gaps
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
