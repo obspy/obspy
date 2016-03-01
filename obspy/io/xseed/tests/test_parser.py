@@ -432,7 +432,7 @@ class ParserTestCase(unittest.TestCase):
                   'zeros': [0j, 0j],
                   'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
-        # last test again, check arg name changed in [3722]
+        # check arg name changed in [3722]
         result = {'gain': 60077000.0,
                   'poles': [(-0.037004000000000002 + 0.037016j),
                             (-0.037004000000000002 - 0.037016j),
@@ -445,6 +445,19 @@ class ParserTestCase(unittest.TestCase):
                   'digitizer_gain': 1677850.0}
         paz = sp.getPAZ(seed_id="BW.RJOB..EHZ",
                         datetime=UTCDateTime("2010-01-01"))
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        # test for multiple blockette 53s using II dataless
+        sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
+        paz = sp.getPAZ("II.COCO.00.BHZ", UTCDateTime("2013-01-01"))
+        result = {'gain': 1057.5083723679224,
+                  'poles': [(-0.004799989149937387 + 0j),
+                            (-0.07341022385496342 + 0j),
+                            (-21.852101684280665 + 23.497667916231002j),
+                            (-21.852101684280665 - 23.497667916231002j)],
+                  'seismometer_gain': 2164.8,
+                  'sensitivity': 3598470000.0,
+                  'zeros': [0j, 0j],
+                  'digitizer_gain': 1662150.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_get_paz_from_xseed(self):
