@@ -33,10 +33,8 @@ class QualityControlTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             MSEEDMetadata(files=[])
 
-        self.assertEqual(
-            e.exception.args[0],
-            "Nothing added - no data within the given temporal constraints "
-            "found.")
+        self.assertEqual(e.exception.args[0],
+                         "No data within the temporal constraints.")
 
     def test_gaps_and_overlaps(self):
         """
@@ -140,17 +138,12 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(0)}).write(
                     tf1.name, format="mseed")
             mseed_metadata = MSEEDMetadata([tf1.name])
-            self.assertEqual(mseed_metadata.meta['timing_quality']['max'],
+            self.assertEqual(mseed_metadata.meta['timing_quality_max'],
                              None)
-            self.assertEqual(mseed_metadata.meta['timing_quality']['min'],
+            self.assertEqual(mseed_metadata.meta['timing_quality_min'],
                              None)
-            self.assertEqual(mseed_metadata.meta['timing_quality']['mean'],
+            self.assertEqual(mseed_metadata.meta['timing_quality_mean'],
                              None)
-
-    def test_head_and_tail_gaps(self):
-        """
-        To be added
-        """
 
     def test_extraction_of_basic_mseed_headers(self):
         """
@@ -243,23 +236,23 @@ class QualityControlTestCase(unittest.TestCase):
 
             md = MSEEDMetadata([tf1.name, tf2.name])
             # Sum up contributions from both files.
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']["glitches"], 9)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['amplifier_saturation'], 30)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['digital_filter_charging'], 8)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['digitizer_clipping'], 19)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['missing_padded_data'], 20)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['spikes'], 35)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['suspect_time_tag'], 10)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['data_quality_flags']['telemetry_sync_error'], 19)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['calibration_signal'], 11)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_begin'], 36)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_end'], 36)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['event_in_progress'], 20)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['activity_flags']['timing_correction'], 20)
-            self.assertEqual(md.meta['miniseed_header_flag_counts']['io_and_clock_flags']['clock_locked'], 34)
-            self.assertEqual(md.meta['timing_quality']['mean'], None)
-            self.assertEqual(md.meta['timing_quality']['min'], None)
-            self.assertEqual(md.meta['timing_quality']['max'], None)
+            self.assertEqual(md.meta["glitches"], 9)
+            self.assertEqual(md.meta['amplifier_saturation'], 30)
+            self.assertEqual(md.meta['digital_filter_charging'], 8)
+            self.assertEqual(md.meta['digitizer_clipping'], 19)
+            self.assertEqual(md.meta['missing_padded_data'], 20)
+            self.assertEqual(md.meta['spikes'], 35)
+            self.assertEqual(md.meta['suspect_time_tag'], 10)
+            self.assertEqual(md.meta['telemetry_sync_error'], 19)
+            self.assertEqual(md.meta['calibration_signal'], 11)
+            self.assertEqual(md.meta['event_begin'], 36)
+            self.assertEqual(md.meta['event_end'], 36)
+            self.assertEqual(md.meta['event_in_progress'], 20)
+            self.assertEqual(md.meta['timing_correction'], 20)
+            self.assertEqual(md.meta['clock_locked'], 34)
+            self.assertEqual(md.meta['timing_quality_mean'], None)
+            self.assertEqual(md.meta['timing_quality_min'], None)
+            self.assertEqual(md.meta['timing_quality_max'], None)
 
     def test_timing_quality(self):
         """
@@ -269,12 +262,12 @@ class QualityControlTestCase(unittest.TestCase):
         # test suite.
         md = MSEEDMetadata(files=[os.path.join(self.path,
                                                "timingquality.mseed")])
-        self.assertEqual(md.meta['timing_quality']['mean'], 50.0)
-        self.assertEqual(md.meta['timing_quality']['min'], 0.0)
-        self.assertEqual(md.meta['timing_quality']['max'], 100.0)
-        self.assertEqual(md.meta['timing_quality']['median'], 50.0)
-        self.assertEqual(md.meta['timing_quality']['lower_quartile'], 25.0)
-        self.assertEqual(md.meta['timing_quality']['upper_quartile'], 75.0)
+        self.assertEqual(md.meta['timing_quality_mean'], 50.0)
+        self.assertEqual(md.meta['timing_quality_min'], 0.0)
+        self.assertEqual(md.meta['timing_quality_max'], 100.0)
+        self.assertEqual(md.meta['timing_quality_median'], 50.0)
+        self.assertEqual(md.meta['timing_quality_lower_quartile'], 25.0)
+        self.assertEqual(md.meta['timing_quality_upper_quartile'], 75.0)
 
     def test_overall_sample_metrics(self):
         """
@@ -341,6 +334,85 @@ class QualityControlTestCase(unittest.TestCase):
                     tf1.name, format="mseed")
             md = MSEEDMetadata([tf1.name])
             self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
+
+    def test_start_gap(self):
+        """
+        Tests whether a gap in the beginning of the file is interpreted
+        A gap at the beginning of the stream will be ignored when
+        continuous is set to True
+        Trace in file runs from [00:01.625000Z to 01:50.275000Z]
+        """
+        file = '/usr/people/koymans/seed'
+
+        # first sample is 625000, so we introduce a gap of 0.025 - 1μs
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600001)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 275000)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_gaps"] == 1)
+        self.assertTrue(md.meta["gaps_len"] == 0.024999)
+
+        # We tell ObsPy this piece of trace is continuous with
+        # whatever came before it and should return no gaps
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime, continuous=True)
+        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["gaps_len"] == 0.0)
+
+    def test_end_gap(self):
+        """
+        Test for the end gap. A gap should be found if the
+        endtime exceeds the last sample + delta + time tolerance
+        Trace in file runs from [00:01.625000Z to 01:50.275000Z]
+        """
+        file = '/usr/people/koymans/seed'
+
+        # Last sample is at 275000, but this sample covers the trace
+        # up to 275000 + delta (0.025) => 300000 - no gaps
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 300000)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["gaps_len"] == 0.0)
+
+        # Add time tolerance (1/2 sampling_rate) - no gaps
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 312500)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["gaps_len"] == 0.0)
+
+        # Exceed projected sample plus time tolerance - GAP!
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 312501)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_gaps"] == 1)
+        self.assertTrue(md.meta["gaps_len"] == 0.012501)
+
+    def test_endtime_on_sample(self):
+        """
+        Test to see whether points on starttime are included, and
+        samples on the endtime are excluded.
+        [T0, T1), T0 should be included; T1 excluded
+        Total number of points for this test = 4347
+        Trace in file runs from [00:01.625000Z to 01:50.275000Z]
+        """
+        file = '/usr/people/koymans/seed'
+
+        # Set T0 and T1 on sample (N-1)
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)        
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 275000)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_samples"] == 4346)
+        self.assertTrue(md.meta["end_time"] == endtime)
+
+        # Set T0 on sample and T1 1μ after sample (N)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 275001)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_samples"] == 4347)
+        self.assertTrue(md.meta["end_time"] == endtime)
+
+        # Set T0 and T1 1μ after sample (N-1)
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625001)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_samples"] == 4346)
+        self.assertTrue(md.meta["start_time"] == starttime)
 
     def test_continuous_segments_sample_metrics(self):
         """
