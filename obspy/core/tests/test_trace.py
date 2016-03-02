@@ -2298,6 +2298,93 @@ class TraceTestCase(unittest.TestCase):
 
         np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
 
+    def test_dtype_is_not_unnecessarily_changed(self):
+        """
+        The dtype of the data should not change if not necessary. In general
+        this means that a float32 array should not become a float64 array
+        and vice-versa. Integer arrays will always be upcasted to float64
+        arrays when integer output makes no sense.
+
+        Exceptions are custom coded C routines where we usually opt to only
+        include either a single or a double precision version.
+        """
+        tr = read()[0]
+
+        # One for each common input dtype.
+        tr_int32 = tr.copy()
+        tr_int32.data = np.require(tr_int32.data, dtype=np.int32)
+        tr_int64 = tr.copy()
+        tr_int64.data = np.require(tr_int64.data, dtype=np.int64)
+        tr_float32 = tr.copy()
+        tr_float32.data = np.require(tr_float32.data, dtype=np.float32)
+        tr_float64 = tr.copy()
+        tr_float64.data = np.require(tr_float64.data, dtype=np.float64)
+
+        # Trimming.
+        self.assertEqual(tr_int32.copy().trim(1, 2).data.dtype, np.int32)
+        self.assertEqual(tr_int64.copy().trim(1, 2).data.dtype, np.int64)
+        self.assertEqual(tr_float32.copy().trim(1, 2).data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().trim(1, 2).data.dtype, np.float64)
+
+        # Filtering. SciPy converts data to 64bit floats. Filters are
+        # numerically tricky so a higher accuracy is justified here.
+        self.assertEqual(
+            tr_int32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+
+        # Decimation should not change the dtype.
+        self.assertEqual(
+            tr_int32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int32)
+        self.assertEqual(
+            tr_int64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int64)
+        self.assertEqual(
+            tr_float32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float64)
+
+        # Detrending will upcast integers but should not touch floats.
+        self.assertEqual(tr_int32.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("linear").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int32.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("constant").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
