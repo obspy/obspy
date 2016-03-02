@@ -1982,10 +1982,11 @@ class Stream(object):
             ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
             new instrument (seismometer/digitizer) during instrument
             simulation.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         This function corrects for the original instrument response given by
@@ -2061,7 +2062,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in kwargs:
             nthreads = kwargs.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         kwargs["paz_remove"] = paz_remove
         kwargs["paz_simulate"] = paz_simulate
@@ -2082,10 +2083,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the options.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
         :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
@@ -2144,7 +2146,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in options:
             nthreads = options.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
         options["type"] = type
         _parallel_loop_over_traces(
             stream_object=self,
@@ -2159,10 +2161,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
             further details.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
         :param options: Necessary keyword arguments for the respective
             trigger that will be passed on. (e.g. ``sta=3``, ``lta=10``)
@@ -2230,7 +2233,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in options:
             nthreads = options.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         options["type"] = type
 
@@ -2241,7 +2244,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
-                 strict_length=False, nthreads=None):
+                 strict_length=False, nthreads=1):
         """
         Resample data in all traces of stream using Fourier method.
 
@@ -2257,9 +2260,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which end time of
             trace would change. Defaults to ``False``.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         .. note::
@@ -2310,7 +2315,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     def decimate(self, factor, no_filter=False, strict_length=False,
-                 nthreads=None):
+                 nthreads=1):
         """
         Downsample data in all traces of stream by an integer factor.
 
@@ -2323,9 +2328,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which end time of
             trace would change. Defaults to ``False``.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         Currently a simple integer decimation is implemented.
@@ -2385,14 +2392,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, kwargs=kwargs)
         return self
 
-    def max(self, nthreads=None):
+    def max(self, nthreads=1):
         """
         Get the values of the absolute maximum amplitudes of all traces in the
         stream. See :meth:`~obspy.core.trace.Trace.max`.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         :return: List of values of absolute maxima of all traces
@@ -2412,7 +2421,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_method_name="max",
             nthreads=nthreads)
 
-    def differentiate(self, method='gradient', nthreads=None):
+    def differentiate(self, method='gradient', nthreads=1):
         """
         Differentiate all traces with respect to time.
 
@@ -2420,9 +2429,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param method: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         .. note::
@@ -2460,10 +2471,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
             further details.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         .. note::
@@ -2480,7 +2492,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in options:
             nthreads = options.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         options["method"] = method
         _parallel_loop_over_traces(
@@ -2490,16 +2502,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @raise_if_masked
-    def detrend(self, type='simple', nthreads=None):
+    def detrend(self, type='simple', nthreads=1):
         """
         Remove a linear trend from all traces.
 
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         .. note::
@@ -2537,10 +2551,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding :meth:`~obspy.core.trace.Trace.taper`
         method of :class:`~obspy.core.trace.Trace`.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         .. note::
@@ -2555,7 +2570,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in kwargs:
             nthreads = kwargs.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         _parallel_loop_over_traces(
             stream_object=self,
@@ -2571,10 +2586,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.interpolate` method of
         :class:`~obspy.core.trace.Trace`.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         .. note::
@@ -2613,7 +2629,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in kwargs:
             nthreads = kwargs.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         _parallel_loop_over_traces(
             stream_object=self,
@@ -2621,7 +2637,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, args=args, kwargs=kwargs)
         return self
 
-    def std(self, nthreads=None):
+    def std(self, nthreads=1):
         """
         Calculate standard deviations of all Traces in the Stream.
 
@@ -2629,9 +2645,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~numpy.ndarray.std` on ``trace.data`` for every trace in the
         stream.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         :return: List of standard deviations of all traces.
@@ -2650,7 +2668,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             trace_method_name="std",
             nthreads=nthreads)
 
-    def normalize(self, global_max=False, nthreads=None):
+    def normalize(self, global_max=False, nthreads=1):
         """
         Normalize all Traces in the Stream.
 
@@ -2661,9 +2679,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param global_max: If set to ``True``, all traces are normalized with
                 respect to the global maximum of all traces in the stream
                 instead of normalizing every trace separately.
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
         :type nthreads: int
 
         .. note::
@@ -3167,10 +3187,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Deconvolve instrument response for all Traces in Stream.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         For details see the corresponding
@@ -3204,7 +3225,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in kwargs:
             nthreads = kwargs.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         _parallel_loop_over_traces(
             stream_object=self,
@@ -3221,10 +3242,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :meth:`~obspy.core.trace.Trace.remove_sensitivity` method of
         :class:`~obspy.core.trace.Trace`.
 
-        :param nthreads: Maximum number of threads to use. Defaults to the
-            minimum between the number of available CPUs and 16. This is to
-            not launch like a hundred threads on big shared memory clusters.
-            This must be passed as part of the kwargs.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
         :type nthreads: int
 
         >>> from obspy import read, read_inventory
@@ -3245,7 +3267,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if "nthreads" in kwargs:
             nthreads = kwargs.pop("nthreads")
         else:
-            nthreads = None
+            nthreads = 1
 
         _parallel_loop_over_traces(
             stream_object=self,
@@ -3269,7 +3291,7 @@ def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
 
 
-def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
+def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=1,
                                args=(), kwargs=None):
     """
     Run a method over all Traces of a Stream in parallel.
@@ -3283,9 +3305,11 @@ def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
 
     :param stream_object: The stream object.
     :param trace_method_name: The name of the method to be run on each trace.
-    :param nthreads: Maximum number of threads to use. Defaults to the
-        minimum between the number of available CPUs and 16. This is to
-        not launch like a hundred threads on big shared memory clusters.
+    :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+        would be calculated to the minimum between the number of available
+        CPUs and 16. This is to not launch like a hundred threads on big
+        shared memory clusters. It is oftentimes not worth it - benchmark your
+        workflow!
     :type nthreads: int
     """
     # Guard against empty Stream object.
