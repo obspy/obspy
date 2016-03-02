@@ -2203,6 +2203,96 @@ class ClientDownloadHelperTestCase(unittest.TestCase):
         self.assertEqual([("AK", "BAGL")],
                          sorted(c.stations.keys()))
 
+    def test_excluding_networks_and_stations_with_an_inventory_object(self):
+        """
+        Tests the excluding of networks and stations with the help of an
+        inventory object.
+        """
+        full_inv = obspy.read_inventory(os.path.join(
+            self.data, "channel_level_fdsn.txt"))
+
+        # Default
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Keep everything.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            limit_stations_to_inventory=full_inv
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")],
+                         sorted(c.stations.keys()))
+
+        # Exclude one station.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            # Keep all AK stations.
+            limit_stations_to_inventory=full_inv.select(network="AK")
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AK", "BAGL"), ("AK", "BWN")],
+                         sorted(c.stations.keys()))
+
+        # Keep only one station.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            # Keep only the AZ station.
+            limit_stations_to_inventory=full_inv.select(network="AZ")
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AZ", "BZN")], sorted(c.stations.keys()))
+
+        # Keep only one station.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            limit_stations_to_inventory=full_inv.select(station="BZN")
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([("AZ", "BZN")], sorted(c.stations.keys()))
+
+        # Keep nothing.
+        self.restrictions = Restrictions(
+            starttime=obspy.UTCDateTime(2001, 1, 1),
+            endtime=obspy.UTCDateTime(2015, 1, 1),
+            station_starttime=obspy.UTCDateTime(2000, 1, 1),
+            station_endtime=obspy.UTCDateTime(2015, 1, 1),
+            limit_stations_to_inventory=obspy.Inventory(networks=[], source="")
+        )
+        c = self._init_client()
+        c.client.get_stations.return_value = obspy.read_inventory(
+            os.path.join(self.data, "channel_level_fdsn.txt"))
+        c.get_availability()
+        self.assertEqual([], sorted(c.stations.keys()))
+
     def test_parse_miniseed_filenames(self):
         """
         Tests the MiniSEED filename parsing of the helper objects.
