@@ -1614,8 +1614,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
-        orig_dtype = self.data.dtype
-
         # resample in the frequency domain
         x = rfft(self.data)
         x = np.insert(x, 1, 0)
