@@ -2110,7 +2110,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             warnings.warn(msg)
             return self
 
-        self.data = self.data.astype(np.float64)
+        # Convert data if it's not a floating point type.
+        if not np.issubdtype(self.data.dtype, float):
+            self.data = np.require(self.data, dtype=np.float64)
+
         self.data /= abs(norm)
 
         return self
