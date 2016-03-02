@@ -385,6 +385,30 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["gaps_len"] == 0.012501)
 
+    def test_availability_window(self):
+        """
+        Test data availability for particular windows that do not fall
+        on start and endtime of samples
+        """
+        file = './data/tiny_quality_file.mseed'
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000) 
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 275000)
+
+        # Say that there is no gap at the start by setting continuous=True
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime, continuous=True)
+        self.assertTrue(md.meta["percent_availability"] == 100.0)
+
+        # Exceed end delta + time tolerance
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 312501)
+        total_time = endtime - starttime
+
+        # Start gap of 0.025 and end gap of 0.012501
+        expected_gap = 0.025 + 0.012501
+        # Default that there is a gap at the start
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        expected_availability =  100 * (total_time - expected_gap) / total_time
+        self.assertTrue(abs(md.meta["percent_availability"] - expected_availability) < 1e-6)
+
     def test_endtime_on_sample(self):
         """
         Test to see whether points on starttime are included, and
