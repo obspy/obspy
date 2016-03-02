@@ -11,8 +11,10 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 from ..sactrace import SACTrace
+from ..util import SacHeaderError
 
 
 class SACTraceTestCase(unittest.TestCase):
@@ -174,6 +176,41 @@ class SACTraceTestCase(unittest.TestCase):
         self.assertEqual(sac.nzmsec, nzmsec + 1)
         self.assertAlmostEqual(sac.b, b - 1.0e-3, 6)
         self.assertAlmostEqual(sac.t1, t1 - 1.0e-3, 5)
+
+    def test_lcalda(self):
+        """
+        Test that distances are set when geographic information is present and
+        lcalda is True, and that they're not set when geographic information
+        is missing or lcalca is false.
+        """
+        stla, stlo, evla, evlo = -35.0, 100, 42.5, -37.5
+        meters, az, baz = gps2dist_azimuth(evla, evlo, stla, stlo)
+        km = meters / 1000.0
+        gcarc = kilometer2degrees(km)
+
+        # distances are set when lcalda True and all distance values set
+        sac = SACTrace(lcalda=True, stla=stla, stlo=stlo, evla=evla, evlo=evlo)
+        self.assertAlmostEqual(sac.az, az, places=4)
+        self.assertAlmostEqual(sac.baz, baz, places=4)
+        self.assertAlmostEqual(sac.dist, km, places=4)
+        self.assertAlmostEqual(sac.gcarc, gcarc, places=4)
+        # distances are not set when lcalda False and all distance values set
+        sac = SACTrace(lcalda=False, stla=stla, stlo=stlo, evla=evla,
+                       evlo=evlo)
+        self.assertIs(sac.az, None)
+        self.assertIs(sac.baz, None)
+        self.assertIs(sac.dist, None)
+        self.assertIs(sac.gcarc, None)
+        # distances are not set when lcalda True, not all distance values set
+        sac = SACTrace(lcalda=True, stla=stla)
+        self.assertIs(sac.az, None)
+        self.assertIs(sac.baz, None)
+        self.assertIs(sac.dist, None)
+        self.assertIs(sac.gcarc, None)
+        # exception raised when set_distances is forced but not all distances
+        # values are set. NOTE: still have a problem when others are "None".
+        sac = SACTrace(lcalda=True, stla=stla)
+        self.assertRaises(SacHeaderError, sac._set_distances, force=True)
 
 
 def suite():
