@@ -1861,7 +1861,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @_add_processing_info
     def detrend(self, type='simple', **options):
         """
-        Remove a linear trend from the trace.
+        Remove a trend from the trace.
 
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
