@@ -64,7 +64,7 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(mseed_metadata.meta['overlaps_len'], 5.0)
             self.assertEqual(mseed_metadata.meta['gaps_len'], 20.0)
             self.assertEqual(mseed_metadata.meta['percent_availability'],
-                             44.0 / 64.0 * 100.0)
+                             45.0 / 65.0 * 100.0)
 
             # Same again but this time with start-and end time settings.
             mseed_metadata = MSEEDMetadata(
@@ -170,7 +170,7 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(md.meta["quality"], "D")
             self.assertEqual(md.meta["start_time"], obspy.UTCDateTime(0))
             self.assertEqual(md.meta["end_time"],
-                             obspy.UTCDateTime(104.5))
+                             obspy.UTCDateTime(105))
             self.assertEqual(md.meta["num_records"], 2)
             self.assertEqual(md.meta["num_samples"], 20)
             self.assertEqual(md.meta["sample_rate"], [1.0, 2.0])
