@@ -810,11 +810,9 @@ class CoreTestCase(unittest.TestCase):
         to validity or reference time on Trace.stats.sac is properly merged
         with the Trace.stats header. Issue 1285.
         """
-        tr = read()[0]
-        o = 0.0
-        stlo = -100.4
-        stla = 35.4
-        tr.stats.sac = {'o': o, 'stla': stla, 'stlo': stlo}
+        tr = Trace(data=np.arange(30))
+        o = 10.0
+        tr.stats.sac = {'o': o}
 
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -826,8 +824,6 @@ class CoreTestCase(unittest.TestCase):
 
         self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
         self.assertEqual(tr1.stats.sac.o, o)
-        self.assertEqual(tr1.stats.sac.stla, stla)
-        self.assertEqual(tr1.stats.sac.stlo, stlo)
 
 
 def suite():
