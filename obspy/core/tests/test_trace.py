@@ -2303,7 +2303,9 @@ class TraceTestCase(unittest.TestCase):
         The dtype of the data should not change if not necessary. In general
         this means that a float32 array should not become a float64 array
         and vice-versa. Integer arrays will always be upcasted to float64
-        arrays when integer output makes no sense.
+        arrays when integer output makes no sense. Not all int32 numbers can be
+        accurately represented by float32 arrays so double precision is
+        required in order to not lose accuracy.
 
         Exceptions are custom coded C routines where we usually opt to only
         include either a single or a double precision version.
@@ -2356,6 +2358,14 @@ class TraceTestCase(unittest.TestCase):
             np.float64)
 
         # Detrending will upcast integers but should not touch floats.
+        self.assertEqual(tr_int32.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("simple").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("simple").data.dtype,
+                         np.float64)
         self.assertEqual(tr_int32.copy().detrend("linear").data.dtype,
                          np.float64)
         self.assertEqual(tr_int64.copy().detrend("linear").data.dtype,
@@ -2384,7 +2394,38 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(
             tr_float64.copy().detrend("polynomial", order=3).data.dtype,
             np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float64)
 
+        # temp_tr = tr.trim(tr.stats.starttime + 1) \
+        #     .verify() \
+        #     .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+        #                                     -0.037004 - 0.037016j,
+        #                                     -251.33 + 0j],
+        #                           'zeros': [0j, 0j],
+        #                           'gain': 60077000.0,
+        #                           'sensitivity': 2516778400.0}) \
+        #     .resample(tr.stats.sampling_rate / 2.0) \
+        #     .differentiate() \
+        #     .integrate() \
+        #     .detrend() \
+        #     .taper(max_percentage=0.05, type='cosine') \
+        #     .normalize()
+        # self.assertIs(temp_tr, tr)
+        # self.assertTrue(isinstance(tr, Trace))
+        # self.assertGreater(tr.stats.npts, 0)
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
