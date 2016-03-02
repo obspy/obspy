@@ -48,7 +48,7 @@ class MSEEDMetadata(object):
     """
     A container for MSEED specific metadata including QC.
     """
-    def __init__(self, files, starttime=None, endtime=None, c_seg=True):
+    def __init__(self, files, starttime=None, endtime=None, c_seg=True, continuous=False):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
 
@@ -64,22 +64,25 @@ class MSEEDMetadata(object):
         :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
         :param c_seg: Calculate metrics for each continuous segment.
         :type c_seg: bool
+        :param continuous: Specifies whether start is continuous
+            set to True and the class will ignore apparent gaps
+            between starttime - startdata
+        :type continuous: bool
         """
 
         self.data = obspy.Stream()
+        self.continuous = continuous
 
         # Allow anything UTCDateTime can parse.
-        # Metrics are defined for [T1, T2) thus we
-        # subtract 1μs from the endtime to exclude samples at T2
-        # by using nearest_sample = False during Stream.read()
-        # ObsPy is not allowed to look ahead for samples
-        # This is ONLY for READING! The "lost" microsecond is included
-        # during other calculations
         if(starttime is not None):
             starttime = obspy.UTCDateTime(starttime)
         if(endtime is not None):
             endtime = obspy.UTCDateTime(endtime)
 
+        # Metrics are defined for [T1, T2) thus we
+        # subtract 1μs from the endtime to exclude samples at T2
+        # by using nearest_sample = False during Stream.read()
+        # ObsPy is not allowed to look ahead for samples
         if(endtime is not None):
             read_endtime = obspy.UTCDateTime(endtime) - 1e-6
         else:
@@ -119,11 +122,12 @@ class MSEEDMetadata(object):
         self.data.sort()
 
         # Set the start/end to user specified or take from ObsPy
+        # When ObsPy reads without a given start/end we add delta
+        # to the final sample, to get an endtime that is consitent
+        # with the QC definitions
         self.starttime = starttime or self.data[0].stats.starttime
-        self.endtime = endtime or self.data[-1].stats.endtime
+        self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
 
-        self._find_time_tolerance()
-        print(self.fo_real)
         # Calculation of all the metrics begins here
         self.meta = {}
         self._extract_mseed_stream_metadata()
@@ -131,23 +135,6 @@ class MSEEDMetadata(object):
 
         if c_seg:
             self._compute_continuous_seg_sample_metrics()
-
-    def _find_time_tolerance(self):
-        """
-        Calculates total time accounting for time tolerance ε
-        This tolerance is set at 1/2 of the sampling rate
-        """
-        tolerated_start = self.starttime
-        tolerated_end = self.endtime
-
-        self.tolerance_begin = 0.5*(1/self.data[0].stats.delta)
-        self.tolerance_end = 0.5*(1/self.data[-1].stats.delta)
-
-        if(self.data[0].stats.starttime - self.starttime <= self.tolerance_begin):
-            tolerated_start = self.data[0].stats.starttime
-        if(self.endtime - self.data[-1].stats.endtime <= self.tolerance_end):
-            tolerated_end = self.data[-1].stats.endtime
-        self.fo_real = tolerated_end - tolerated_start
 
     @property
     def number_of_records(self):
@@ -275,7 +262,6 @@ class MSEEDMetadata(object):
 
         #[T1 - T2) - do not include last sample so substract sampling freq from endtime
         self.total_time -= (1/self.data[-1].stats.sampling_rate)
-        print(self.total_time)
 
         # Set to percentages
         for key in data_quality_flags_percentages:
@@ -323,12 +309,12 @@ class MSEEDMetadata(object):
 
         # Set miniseed header counts
         m['timing_quality'] = {}
-        m['timing_quality']['mean'] = timing_quality_mean
-        m['timing_quality']['min'] = timing_quality_min
-        m['timing_quality']['max'] = timing_quality_max
-        m['timing_quality']['median'] = timing_quality_median
-        m['timing_quality']['lower_quartile'] = timing_quality_lower_quartile
-        m['timing_quality']['upper_quartile'] = timing_quality_upper_quartile
+        m['timing_quality_mean'] = timing_quality_mean
+        m['timing_quality_min'] = timing_quality_min
+        m['timing_quality_max'] = timing_quality_max
+        m['timing_quality_median'] = timing_quality_median
+        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
+        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
     def _fix_flag_names(self):
         """
@@ -388,18 +374,21 @@ class MSEEDMetadata(object):
         gap_count = 0
         gap_length = 0.0
 
-        # Account for the time tolerance (here defined at 1/2 of Δt)
-        # Start of stream
-        stats = self.data[0].stats
-        time_tolerance = 0.5*stats.delta
-        if(stats.starttime - self.starttime > time_tolerance):
-            gap_count += 1
-            gap_length += stats.starttime - self.starttime - time_tolerance
+        # A start gap will be ignored if the user specifies
+        # that the trace is continuous (defaults to False)
+        #  - x -- x -- x -- x -- x --
+        # | <= self.starttime
+        if not self.continuous:
+            time_difference = self.data[0].stats.starttime - self.starttime
+            if(time_difference > 0):
+                gap_count += 1
+                gap_length += time_difference
 
         # End of stream
         # We define the endtime as the time of the last sample but the next
         # sample would only start at endtime + delta. Thus the following
         # scenario would not count as a gap at the end:
+        # also account for the time tolerance
         # x -- x -- x -- x -- x -- x -- 
         #                               | <= self.endtime
         stats = self.data[-1].stats
@@ -407,7 +396,7 @@ class MSEEDMetadata(object):
         projected_sample = stats.endtime + stats.delta
         if(self.endtime - projected_sample > time_tolerance):
             gap_count += 1
-            gap_length += self.endtime - projected_sample - time_tolerance
+            gap_length += self.endtime - projected_sample
 
         # Get the other gaps
         gaps = self.data.get_gaps()
