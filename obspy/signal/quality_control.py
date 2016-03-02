@@ -242,12 +242,9 @@ class MSEEDMetadata(object):
                 end_time_series=0,
                 clock_locked=0)
 
-        self.total_time = 0
         for file in self.files:
             flags = get_flags(
                 file, starttime=self.starttime, endtime=self.endtime)
-
-            self.total_time += flags["total_time"]
 
             # Update the flag counters
             data_quality_flags.update(flags["data_quality_flags"])
@@ -261,7 +258,7 @@ class MSEEDMetadata(object):
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
         #[T1 - T2) - do not include last sample so substract sampling freq from endtime
-        self.total_time -= (1/self.data[-1].stats.sampling_rate)
+        self.total_time = self.endtime - self.starttime
 
         # Set to percentages
         for key in data_quality_flags_percentages:

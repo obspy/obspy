@@ -269,8 +269,7 @@ def get_timing_and_data_quality(file_or_file_object):
 
     offset = 0
     record_count = 0
-    total_start = starttime
-    total_end = endtime
+    print(starttime, endtime)
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
@@ -278,7 +277,8 @@ def get_timing_and_data_quality(file_or_file_object):
         rec_info = get_record_information(file_or_file_object, offset)
         record_count += 1
         offset += rec_info["record_length"]
-        sample_offset = (1/rec_info["samp_rate"])
+        # Extend the record endtime with delta
+        rec_info["endtime"] += (1/rec_info["samp_rate"])
 
         # Filter records based on times if applicable.
         if starttime is not None and rec_info["endtime"] < starttime:
@@ -288,23 +288,18 @@ def get_timing_and_data_quality(file_or_file_object):
 
         # If the record starts before the start time, count from starttime
         # Otherwise, count from the record starttime
-        if(rec_info["starttime"] <= starttime):
+        if(rec_info["starttime"] < starttime):
             record_first_sample = starttime
         else:
             record_first_sample = rec_info["starttime"]
-            # Check if the time allowance not exceeded (0.5 * sampling rate)
-            if(record_first_sample - starttime <= 0.5*sample_offset):
-                total_start = record_first_sample
 
-        if(rec_info["endtime"] >= endtime):
-            record_last_sample = endtime - 2 * sample_offset
+        if(rec_info["endtime"] > endtime):
+            record_last_sample = endtime
         else:
             record_last_sample = rec_info["endtime"]
-            if(endtime - record_last_sample <= 0.5*sample_offset):
-                total_end = record_last_sample
 
         # Length of a record is R_end - R_start + sampling interval
-        record_length_seconds = sample_offset + (record_last_sample - record_first_sample)
+        record_length_seconds = (record_last_sample - record_first_sample)
 
         if io_flags:
             for _i, key in enumerate(io_count.keys()):
@@ -329,7 +324,6 @@ def get_timing_and_data_quality(file_or_file_object):
 
     results = {
         "record_count": record_count,
-        "total_time": total_end - total_start
     }
 
     if io_flags:
