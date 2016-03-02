@@ -3304,17 +3304,21 @@ def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
     def apply(trace):
         return getattr(trace, trace_method_name)(*args, **kwargs)
 
-    # Its the multiprocessing.dummy Pool which uses threading with a nice
-    # API. Python's GIL means we don't have to worry about most race
-    # conditions.
-    pool = Pool(processes=nthreads_clip)
-    # the following is a hack because pool.map doesn't recognize
-    # KeyboardInterrupts and hangs. For more info see:
-    # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
-    # with-pythons-multiprocessing-pool'
-    return_values = pool.map_async(apply, stream_object).get(9999999)
-    pool.close()
-    pool.join()
+    # Threading is not free - thus don't create one when only one is required.
+    if nthreads_clip == 1:
+        return_values = [apply(tr) for tr in stream_object]
+    else:
+        # Its the multiprocessing.dummy Pool which uses threading with a nice
+        # API. Python's GIL means we don't have to worry about most race
+        # conditions.
+        pool = Pool(processes=nthreads_clip)
+        # the following is a hack because pool.map doesn't recognize
+        # KeyboardInterrupts and hangs. For more info see:
+        # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
+        # with-pythons-multiprocessing-pool'
+        return_values = pool.map_async(apply, stream_object).get(9999999)
+        pool.close()
+        pool.join()
     return return_values
 
 
