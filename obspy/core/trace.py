@@ -2044,7 +2044,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
                                taper_sides[len(taper_sides) - wlen:]))
-        self.data = self.data * taper
+
+        # Convert data if it's not a floating point type.
+        if not np.issubdtype(self.data.dtype, float):
+            self.data = np.require(self.data, dtype=np.float64)
+
+        self.data *= taper
         return self
 
     @_add_processing_info
