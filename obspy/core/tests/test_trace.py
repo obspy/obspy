@@ -2409,23 +2409,157 @@ class TraceTestCase(unittest.TestCase):
                                       dspline=100).data.dtype,
             np.float64)
 
-        # temp_tr = tr.trim(tr.stats.starttime + 1) \
-        #     .verify() \
-        #     .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-        #                                     -0.037004 - 0.037016j,
-        #                                     -251.33 + 0j],
-        #                           'zeros': [0j, 0j],
-        #                           'gain': 60077000.0,
-        #                           'sensitivity': 2516778400.0}) \
-        #     .resample(tr.stats.sampling_rate / 2.0) \
-        #     .differentiate() \
-        #     .integrate() \
-        #     .detrend() \
-        #     .taper(max_percentage=0.05, type='cosine') \
-        #     .normalize()
-        # self.assertIs(temp_tr, tr)
-        # self.assertTrue(isinstance(tr, Trace))
-        # self.assertGreater(tr.stats.npts, 0)
+        # Tapering.
+        self.assertEqual(tr_int32.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().taper(0.05, "hann").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+
+        # Normalizing.
+        self.assertEqual(tr_int32.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().normalize().data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().normalize().data.dtype, np.float64)
+
+        # Differentiate
+        self.assertEqual(tr_int32.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().differentiate().data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().differentiate().data.dtype,
+                         np.float64)
+
+        # Integrate
+        self.assertEqual(
+            tr_int32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        # The spline antiderivate always returns float64.
+        self.assertEqual(
+            tr_int32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+
+        # Simulation is an operation in the spectral domain so double
+        # precision is a lot more accurate so its fine here.
+        paz_remove = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                                -251.33 + 0j],
+                      'zeros': [0j, 0j], 'gain': 60077000.0,
+                      'sensitivity': 2516778400.0}
+        self.assertEqual(
+            tr_int32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+
+        # Same with the fourier domain resampling.
+        self.assertEqual(tr_int32.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().resample(2.0).data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float64.copy().resample(2.0).data.dtype,
+                         np.float64)
+
+        # Same with remove_response()
+        inv = read_inventory()
+        self.assertEqual(
+            tr_int32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+
+        # Remove sensitivity does not have to change the dtype for float32.
+        self.assertEqual(
+            tr_int32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+
+        # Various interpolation routines.
+        # Weighted average slopes is a custom C routine that only works with
+        # double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        # Scipy treats splines as double precision. No need to convert them.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        # Lanczos is a custom C routine that only works with double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
