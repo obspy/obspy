@@ -30,7 +30,7 @@ def integrate_cumtrapz(data, dx, **kwargs):
     # (manually adding the zero and not using `cumtrapz(..., initial=0)` is a
     # backwards compatibility fix for scipy versions < 0.11.
     ret = scipy.integrate.cumtrapz(data, dx=dx)
-    return np.concatenate([[0], ret])
+    return np.concatenate([np.array([0], dtype=ret.dtype), ret])
 
 
 def integrate_spline(data, dx, k=3, **kwargs):
