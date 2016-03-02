@@ -2360,10 +2360,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, kwargs=kwargs)
         return self
 
-    def max(self):
+    def max(self, nthreads=None):
         """
         Get the values of the absolute maximum amplitudes of all traces in the
         stream. See :meth:`~obspy.core.trace.Trace.max`.
+
+        :param nthreads: Maximum number of threads to use. Defaults to the
+            minimum between the number of available CPUs and 16. This is to
+            not launch like a hundred threads on big shared memory clusters.
+        :type nthreads: int
 
         :return: List of values of absolute maxima of all traces
 
@@ -2377,7 +2382,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.max()
         [9, -9, 9.0]
         """
-        return [tr.max() for tr in self]
+        return _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="max",
+            nthreads=nthreads)
 
     def differentiate(self, method='gradient', nthreads=None):
         """
@@ -2580,13 +2588,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, args=args, kwargs=kwargs)
         return self
 
-    def std(self):
+    def std(self, nthreads=None):
         """
         Calculate standard deviations of all Traces in the Stream.
 
         Standard deviations are calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data`` for every trace in the
         stream.
+
+        :param nthreads: Maximum number of threads to use. Defaults to the
+            minimum between the number of available CPUs and 16. This is to
+            not launch like a hundred threads on big shared memory clusters.
+        :type nthreads: int
 
         :return: List of standard deviations of all traces.
 
@@ -2599,7 +2612,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.std()
         [4.2614551505325036, 4.4348618918744247]
         """
-        return [tr.std() for tr in self]
+        return _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="std",
+            nthreads=nthreads)
 
     def normalize(self, global_max=False, nthreads=None):
         """
@@ -3245,7 +3261,7 @@ def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
 
     # The created closure will take care of the variables.
     def apply(trace):
-        getattr(trace, trace_method_name)(*args, **kwargs)
+        return getattr(trace, trace_method_name)(*args, **kwargs)
 
     # Its the multiprocessing.dummy Pool which uses threading with a nice
     # API. Python's GIL means we don't have to worry about most race
@@ -3255,9 +3271,10 @@ def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
     # KeyboardInterrupts and hangs. For more info see:
     # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
     # with-pythons-multiprocessing-pool'
-    pool.map_async(apply, stream_object).get(9999999)
+    return_values = pool.map_async(apply, stream_object).get(9999999)
     pool.close()
     pool.join()
+    return return_values
 
 
 def _is_pickle(filename):  # @UnusedVariable
