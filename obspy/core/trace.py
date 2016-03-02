@@ -1614,8 +1614,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
-        # resample in the frequency domain
-        x = rfft(self.data)
+        # resample in the frequency domain. Make sure the byteorder is native.
+        x = rfft(self.data.newbyteorder("="))
         x = np.insert(x, 1, 0)
         if self.stats.npts % 2 == 0:
             x = np.append(x, [0])
