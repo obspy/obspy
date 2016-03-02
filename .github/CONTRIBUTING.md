@@ -1,13 +1,17 @@
-# How to contribute (wip)
+# Contributing to ObsPy
 
-This document aims to give an overview of how to contribute to ObsPy. It tries to answer commonly asked questions, and provide some insight into how the community process works in practice.
+This document aims to give an overview of how to contribute to ObsPy. It tries
+to answer commonly asked questions, and to provide some insight into how the
+community process works in practice.
+
+* If you plan on submitting an issue, please follow this [template](https://github.com/obspy/obspy/blob/master/.github/ISSUE_TEMPLATE.md).
+* If you want to open a pull request make sure to read the information on this page but also have a look at our [pull request template](https://github.com/obspy/obspy/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
 
 ## Getting Started
 
  * Make sure you have a GitHub account
  * [Download](https://git-scm.com/downloads) and install git
  * Read the [git documentation](https://git-scm.com/book/en/Git-Basics)
-
 
 ## Git workflow
 
