@@ -17,11 +17,9 @@ import copy
 import fnmatch
 from glob import glob, has_magic
 import math
+from multiprocessing.dummy import Pool
 import os
 import pickle
-import warnings
-from glob import glob, has_magic
-from multiprocessing.dummy import Pool
 import warnings
 
 from pkg_resources import load_entry_point
