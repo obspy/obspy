@@ -1,3 +1,7 @@
+1.0.x:
+ - obspy.clients.fdsn:
+    * Local URLs are now recognized as valid URLs.
+
 1.0.0: (doi: 10.5281/zenodo.46151)
  - General:
    * Requirements have been increased to reflect latest distributions:
