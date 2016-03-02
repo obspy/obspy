@@ -335,9 +335,24 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
             # that user intends use the Trace.stats starttime as the reftime.
             # ObsPy issue 1204
 
+            # If there are relative times, even if there's a "b", throw an
+            #   error/warning
+            # If there's a "b" and no relative times, use it and proceed
+            # If there's no "b" and no relative times, write it like it's an
+            #   "ib" type file and back away slowly
+
             relhdrs = ['t' + str(i) for i in range(10)] + ['a', 'f']
-            nr = all([header.get(hdr) in (None, HD.SNULL) for hdr in relhdrs])
-            if header.get('iztype') in (9, 'ib', None, HD.INULL) and nr:
+            has_relhdrs = any([header.get(hdr) not in (None, HD.SNULL)
+                               for hdr in relhdrs])
+            has_b = header.get('b') not in (None, HD.FNULL)
+            if has_relhdrs:
+                msg = ("Invalid reference time, unrecoverable relative time"
+                       " headers.")
+                raise SacHeaderError(msg)
+            elif has_b:
+                header['e'] = header['b'] + (stats['endtime'] -
+                                             stats['starttime'])
+            else:
                 reftime = stats['starttime']
                 nztimes, microsecond = utcdatetime_to_sac_nztimes(reftime)
                 header.update(nztimes)
@@ -345,12 +360,8 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 header['e'] = header['b'] +\
                     (header['npts'] - 1) * header['delta']
 
-                msg = "Old header has invalid reftime."
-                warnings.warn(msg)
-            else:
-                msg = ("Invalid reference time, unrecoverable relative time"
-                       " headers.")
-                raise SacHeaderError(msg)
+            msg = "Old header has invalid reftime."
+            warnings.warn(msg)
 
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issue 1204

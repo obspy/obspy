@@ -812,8 +812,8 @@ class CoreTestCase(unittest.TestCase):
         """
         tr = read()[0]
         o = 0.0
-        stla = 35.4
         stlo = -100.4
+        stla = 35.4
         tr.stats.sac = {'o': o, 'stla': stla, 'stlo': stlo}
 
         with NamedTemporaryFile() as tf:
