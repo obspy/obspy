@@ -2311,6 +2311,7 @@ class TraceTestCase(unittest.TestCase):
         include either a single or a double precision version.
         """
         tr = read()[0]
+        tr.data = tr.data[:100]
 
         # One for each common input dtype.
         tr_int32 = tr.copy()
