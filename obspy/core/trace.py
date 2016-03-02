@@ -1615,10 +1615,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
         orig_dtype = self.data.dtype
-        new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
 
         # resample in the frequency domain
-        x = rfft(np.require(self.data, dtype=new_dtype))
+        x = rfft(self.data)
         x = np.insert(x, 1, 0)
         if self.stats.npts % 2 == 0:
             x = np.append(x, [0])
@@ -1655,7 +1654,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if num % 2 == 0:
             large_y = np.delete(large_y, -1)
         self.data = irfft(large_y) * (float(num) / float(self.stats.npts))
-        self.data = np.require(self.data, dtype=orig_dtype)
         self.stats.sampling_rate = sampling_rate
 
         return self
