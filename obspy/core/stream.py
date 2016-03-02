@@ -1955,7 +1955,7 @@ class Stream(object):
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True,
-                 nthreads=None, **kwargs):
+                 **kwargs):
         """
         Correct for instrument response / Simulate new instrument response.
 
@@ -1985,6 +1985,7 @@ class Stream(object):
         :param nthreads: Maximum number of threads to use. Defaults to the
             minimum between the number of available CPUs and 16. This is to
             not launch like a hundred threads on big shared memory clusters.
+            This must be passed as part of the kwargs.
         :type nthreads: int
 
         This function corrects for the original instrument response given by
@@ -2055,17 +2056,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
         """
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = None
+
         kwargs["paz_remove"] = paz_remove
         kwargs["paz_simulate"] = paz_simulate
         kwargs["remove_sensitivity"] = remove_sensitivity
         kwargs["simulate_sensitivity"] = simulate_sensitivity
+
         _parallel_loop_over_traces(
             stream_object=self,
             trace_method_name="simulate",
             nthreads=nthreads, kwargs=kwargs)
         return self
 
-    def filter(self, type, nthreads=None, **options):
+    def filter(self, type, **options):
         """
         Filter the data of all traces in the Stream.
 
@@ -2076,6 +2085,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param nthreads: Maximum number of threads to use. Defaults to the
             minimum between the number of available CPUs and 16. This is to
             not launch like a hundred threads on big shared memory clusters.
+            This must be passed as part of the options.
         :type nthreads: int
         :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
@@ -2129,6 +2139,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.filter("highpass", freq=1.0)
             st.plot()
         """
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = None
         options["type"] = type
         _parallel_loop_over_traces(
             stream_object=self,
@@ -2136,7 +2152,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, kwargs=options)
         return self
 
-    def trigger(self, type, nthreads=None, **options):
+    def trigger(self, type, **options):
         """
         Run a triggering algorithm on all traces in the stream.
 
@@ -2146,6 +2162,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param nthreads: Maximum number of threads to use. Defaults to the
             minimum between the number of available CPUs and 16. This is to
             not launch like a hundred threads on big shared memory clusters.
+            This must be passed as part of the kwargs.
         :type nthreads: int
         :param options: Necessary keyword arguments for the respective
             trigger that will be passed on. (e.g. ``sta=3``, ``lta=10``)
@@ -2208,7 +2225,15 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.trigger('recstalta', sta=1, lta=4)
             st.plot()
         """
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = None
+
         options["type"] = type
+
         _parallel_loop_over_traces(
             stream_object=self,
             trace_method_name="trigger",
@@ -2423,7 +2448,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             nthreads=nthreads, kwargs={"method": method})
         return self
 
-    def integrate(self, method='cumtrapz', nthreads=None, **options):
+    def integrate(self, method='cumtrapz', **options):
         """
         Integrate all traces with respect to time.
 
@@ -2438,6 +2463,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param nthreads: Maximum number of threads to use. Defaults to the
             minimum between the number of available CPUs and 16. This is to
             not launch like a hundred threads on big shared memory clusters.
+            This must be passed as part of the kwargs.
         :type nthreads: int
 
         .. note::
@@ -2449,6 +2475,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
         """
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = None
+
         options["method"] = method
         _parallel_loop_over_traces(
             stream_object=self,
@@ -3130,13 +3163,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise
         return skipped_traces
 
-    def remove_response(self, nthreads=None, *args, **kwargs):
+    def remove_response(self, *args, **kwargs):
         """
         Deconvolve instrument response for all Traces in Stream.
 
         :param nthreads: Maximum number of threads to use. Defaults to the
             minimum between the number of available CPUs and 16. This is to
             not launch like a hundred threads on big shared memory clusters.
+            This must be passed as part of the kwargs.
         :type nthreads: int
 
         For details see the corresponding
@@ -3165,6 +3199,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = None
+
         _parallel_loop_over_traces(
             stream_object=self,
             trace_method_name="remove_response",
