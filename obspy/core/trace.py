@@ -2353,18 +2353,51 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         return self
 
-    def times(self):
+    def times(self, type="relative"):
         """
-        For convenient plotting compute a NumPy array of seconds since
-        starttime corresponding to the samples in Trace.
+        For convenient plotting compute a NumPy array with timing information
+        of all samples in the Trace.
 
+        Time can be either:
+
+          * seconds relative to ``trace.stats.starttime``
+            (``type="relative"``)
+          * absolute time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` objects
+            (``type="utcdatetime"``)
+          * absolute time as POSIX timestamps (
+            :class:`UTCDateTime.timestamp <obspy.core.utcdatetime.UTCDateTime>`
+            ``type="timestamp"``)
+          * absolute time as matplotlib numeric datetime (for matplotlib
+            plotting with absolute time on axes, see :mod:`matplotlib.dates`
+            and :func:`matplotlib.dates.date2num`, ``type="matplotlib"``)
+
+        :type type: str
+        :param type: Determines type of returned time array, see above for
+            valid values.
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
         :returns: An array of time samples in an :class:`~numpy.ndarray` if
             the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
-            otherwise.
+            otherwise (``dtype`` of array is either ``float`` or
+            :class:`~obspy.core.utcdatetime.UTCDateTime`).
         """
+        type = type.lower()
         time_array = np.arange(self.stats.npts)
         time_array = time_array / self.stats.sampling_rate
+        if type == "relative":
+            pass
+        elif type == "timestamp":
+            time_array = time_array + self.stats.starttime.timestamp
+        elif type == "utcdatetime":
+            time_array = np.array(
+                [self.stats.starttime + t_ for t_ in time_array])
+        elif type == "matplotlib":
+            from matplotlib.dates import date2num
+            time_array = date2num([(self.stats.starttime + t_).datetime
+                                   for t_ in time_array])
+        else:
+            msg = "Invalid `type`: {}".format(type)
+            raise ValueError(msg)
         # Check if the data is a ma.maskedarray
         if isinstance(self.data, np.ma.masked_array):
             time_array = np.ma.array(time_array, mask=self.data.mask)
