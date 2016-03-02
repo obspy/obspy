@@ -385,6 +385,52 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["gaps_len"] == 0.012501)
 
+    def test_clock_locked_percentage(self):
+        """
+        19 records with io_flag clock_locked set to 1
+        Compute the percentage
+        """
+        file = './data/tiny_quality_file.mseed'
+
+        # From T0 to T1 (start & end on sample)
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 275000)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] == 100.0)
+
+        # Check if time tolerance is implemented correctly
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 312500)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] == 100.0)
+
+        # Create a gap in the beginning, no longer 100%
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(abs(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] - md.meta["percent_availability"]) < 1e-6)
+
+        # Exceed time tolerance in the end, no longer 100%
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 1, 50, 312501)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(abs(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] - md.meta["percent_availability"]) < 1e-6)
+
+        file = './data/tiny_clock_flag.mseed'
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300001)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+
+        # These are the segment lengths
+        # Bit 5 is flagged for for these records [0, 2, 3, 4, 5, 8, 9]
+        # The final record is extrapolated to the endtime
+        record_lengths = [5.7, 6.05, 5.9, 5.55, 5.475, 5.725, 6.025, 5.775, 5.7, 5.775001]
+        record_lengths_flagged = [5.7, 5.9, 5.55, 5.475, 5.725, 5.7, 5.775001]
+
+        print(md.meta["end_time"] - md.meta["start_time"])
+        # Check if the record lenghts matches the total length
+        self.assertTrue(abs(sum(record_lengths) - (md.meta["end_time"] - md.meta["start_time"])) < 1e-6)
+        
+        percentage = 100*sum(record_lengths_flagged)/sum(record_lengths)
+        self.assertTrue(abs(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] - percentage) < 1e-6)
+
     def test_availability_window(self):
         """
         Test data availability for particular windows that do not fall

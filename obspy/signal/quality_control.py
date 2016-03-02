@@ -127,6 +127,7 @@ class MSEEDMetadata(object):
         # with the QC definitions
         self.starttime = starttime or self.data[0].stats.starttime
         self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
+        self.total_time = self.endtime - self.starttime
 
         # Calculation of all the metrics begins here
         self.meta = {}
@@ -257,9 +258,6 @@ class MSEEDMetadata(object):
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
-        #[T1 - T2) - do not include last sample so substract sampling freq from endtime
-        self.total_time = self.endtime - self.starttime
-
         # Set to percentages
         for key in data_quality_flags_percentages:
             data_quality_flags_percentages[key] /= self.total_time * 1e-2
@@ -305,7 +303,6 @@ class MSEEDMetadata(object):
         self._fix_flag_names()
 
         # Set miniseed header counts
-        m['timing_quality'] = {}
         m['timing_quality_mean'] = timing_quality_mean
         m['timing_quality_min'] = timing_quality_min
         m['timing_quality_max'] = timing_quality_max
@@ -411,8 +408,8 @@ class MSEEDMetadata(object):
         # the time of the last sample but the last simple still "accounts"
         # for one more sample. This could well be defined differently.
         self.meta['percent_availability'] = 100.0 * (
-            (self.endtime - self.starttime - self.meta['gaps_len']) /
-            (self.endtime - self.starttime))
+            (self.total_time - self.meta['gaps_len']) /
+            self.total_time)
 
     def _compute_continuous_seg_sample_metrics(self):
         """

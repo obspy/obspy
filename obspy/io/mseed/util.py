@@ -269,7 +269,6 @@ def get_timing_and_data_quality(file_or_file_object):
 
     offset = 0
     record_count = 0
-    print(starttime, endtime)
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
@@ -277,6 +276,7 @@ def get_timing_and_data_quality(file_or_file_object):
         rec_info = get_record_information(file_or_file_object, offset)
         record_count += 1
         offset += rec_info["record_length"]
+        time_tolerance = 0.5*(1/rec_info["samp_rate"])
         # Extend the record endtime with delta
         rec_info["endtime"] += (1/rec_info["samp_rate"])
 
@@ -293,7 +293,7 @@ def get_timing_and_data_quality(file_or_file_object):
         else:
             record_first_sample = rec_info["starttime"]
 
-        if(rec_info["endtime"] > endtime):
+        if(rec_info["endtime"] + time_tolerance >= endtime):
             record_last_sample = endtime
         else:
             record_last_sample = rec_info["endtime"]
