@@ -8,6 +8,7 @@
 *.pyc
 *.pyd.manifest
 *.pyo
+.cache
 .DS_Store
 /.project
 /.pydevproject
