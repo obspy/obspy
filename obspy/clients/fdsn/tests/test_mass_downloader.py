@@ -174,6 +174,24 @@ class RestrictionsTestCase(unittest.TestCase):
         Restrictions(starttime=start, endtime=start + 10,
                      station_starttime=start, station_endtime=start + 10)
 
+    def test_inventory_parsing(self):
+        """
+        Test the inventory parsing if an inventory is given.
+        """
+        # Nothing is given.
+        r = Restrictions(starttime=obspy.UTCDateTime(2011, 1, 1),
+                         endtime=obspy.UTCDateTime(2011, 2, 1))
+        self.assertIs(r.limit_stations_to_inventory, None)
+
+        # An inventory object is given.
+        inv = obspy.read_inventory(os.path.join(
+            self.data, "channel_level_fdsn.txt"))
+        r = Restrictions(starttime=obspy.UTCDateTime(2011, 1, 1),
+                         endtime=obspy.UTCDateTime(2011, 2, 1),
+                         limit_stations_to_inventory=inv)
+        self.assertEqual({("AK", "BAGL"), ("AK", "BWN"), ("AZ", "BZN")},
+                         r.limit_stations_to_inventory)
+
 
 class DownloadHelpersUtilTestCase(unittest.TestCase):
     """
