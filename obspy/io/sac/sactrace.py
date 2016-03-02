@@ -557,7 +557,7 @@ def _set_lcalda(self, value):
     # make and use a bool setter for lcalda
     lcalda_setter = _boolsetter('lcalda')
     lcalda_setter(self, value)
-    # try to set set distances if value evaluates to True
+    # try to set set distances if "value" evaluates to True
     if value:
         try:
             self._set_distances()
@@ -803,6 +803,8 @@ class SACTrace(object):
         self._hi = hi
         self._hs = hs
         self.data = data
+
+        self._set_distances()
 
     # ---------------------------- SET UP HEADERS -----------------------------
     # SAC header values are set up as attributes, with getters and setters
@@ -1539,6 +1541,7 @@ class SACTrace(object):
     def _set_distances(self, force=False):
         """
         Calculate dist, az, baz, gcarc.  If force=True, ignore lcalda.
+        Raises SacHeaderError if force=True and geographic headers are unset.
 
         """
         if self.lcalda or force:
@@ -1547,14 +1550,13 @@ class SACTrace(object):
                                               self.stlo)
                 dist = m / 1000.0
                 gcarc = kilometer2degrees(dist)
-                self.az = az
-                self.baz = baz
-                self.dist = dist
-                self.gcarc = gcarc
-            except TypeError:
-                # one of the geographic values is None
-                msg = "Not enough information to calculate distance, azimuth."
-                raise SacHeaderError(msg)
-        else:
-            msg = "lcalda is False or unset. To set distances, set it to True."
-            raise SacError(msg)
+                self._hf[HD.FLOATHDRS.index('az')] = az
+                self._hf[HD.FLOATHDRS.index('baz')] = baz
+                self._hf[HD.FLOATHDRS.index('dist')] = dist
+                self._hf[HD.FLOATHDRS.index('gcarc')] = gcarc
+            except (ValueError, TypeError) as e:
+                # one or more of the geographic values is None
+                if force:
+                    msg = ("Not enough information to calculate distance, "
+                           "azimuth.")
+                    raise SacHeaderError(msg)
