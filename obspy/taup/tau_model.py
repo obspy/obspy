@@ -253,7 +253,7 @@ class TauModel(object):
             # Pop first key-value pairs until at most 128 elements are still
             # in the cache.
             while len(self._depth_cache) > 128:
-                self._depth_cache.pop(last=False)
+                self._depth_cache.popitem(last=False)
             return value
         else:
             return self._load_from_depth_cache()
