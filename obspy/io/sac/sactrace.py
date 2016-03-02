@@ -1554,7 +1554,7 @@ class SACTrace(object):
                 self._hf[HD.FLOATHDRS.index('baz')] = baz
                 self._hf[HD.FLOATHDRS.index('dist')] = dist
                 self._hf[HD.FLOATHDRS.index('gcarc')] = gcarc
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError):
                 # one or more of the geographic values is None
                 if force:
                     msg = ("Not enough information to calculate distance, "
