@@ -102,6 +102,22 @@ class Restrictions(object):
             ...
             )
 
+    It is also possible to restrict the downloaded stations to stations part of
+    an existing inventory object which can originate from a StationXML file or
+    from other sources. It will only keep stations that are part of the
+    inventory object. Channels are still selected dynamically based on the
+    other restrictions. Keep in mind that all other restrictions still apply -
+    passing an inventory will just further restrict the possibly downloaded
+    data.
+
+    .. code-block:: python
+
+        restrictions = Restrictions(
+            ...
+            limit_stations_to_inventory=inv,
+            ...
+            )
+
     :param starttime: The start time of the data to be downloaded.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param endtime: The end time of the data.
@@ -135,6 +151,12 @@ class Restrictions(object):
     :param exclude_stations: A list of potentially wildcarded stations that
         should not be downloaded.
     :type exclude_stations: list of str
+    :param limit_stations_to_inventory: If given, only stations part of the
+        this inventory object will be downloaded. All other restrictions
+        still apply - this just serves to further limit the set of stations
+        to download.
+    :type limit_stations_to_inventory:
+        :class:`~obspy.core.inventory.inventory.Inventory`
     :param reject_channels_with_gaps: If True (default), MiniSEED files with
         gaps and/or overlaps will be rejected.
     :type reject_channels_with_gaps: bool
@@ -167,6 +189,7 @@ class Restrictions(object):
                  chunklength_in_sec=None,
                  network=None, station=None, location=None, channel=None,
                  exclude_networks=tuple(), exclude_stations=tuple(),
+                 limit_stations_to_inventory=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
                  channel_priorities=("HH[ZNE]", "BH[ZNE]",
@@ -199,6 +222,16 @@ class Restrictions(object):
         self.location_priorities = location_priorities
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
+
+        # Further restrict the possibly downloaded networks and station to
+        # the one in the given inventory.
+        if limit_stations_to_inventory is not None:
+            self.limit_stations_to_inventory = set()
+            for net in limit_stations_to_inventory:
+                for sta in net:
+                    self.limit_stations_to_inventory.add((net.code, sta.code))
+        else:
+            self.limit_stations_to_inventory = None
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
