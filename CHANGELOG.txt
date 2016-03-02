@@ -2,6 +2,8 @@ master:
  - obspy.clients.fdsn
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
+   * The mass downloader can now download station that are part of a given
+     inventory object.
 
 1.0.0: (doi: 10.5281/zenodo.46151)
  - General:
