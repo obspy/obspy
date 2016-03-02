@@ -342,7 +342,7 @@ class QualityControlTestCase(unittest.TestCase):
         continuous is set to True
         Trace in file runs from [00:01.625000Z to 01:50.275000Z]
         """
-        file = '/usr/people/koymans/seed'
+        file = './data/tiny_quality_file.mseed'
 
         # first sample is 625000, so we introduce a gap of 0.025 - 1μs
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600001)
@@ -363,7 +363,7 @@ class QualityControlTestCase(unittest.TestCase):
         endtime exceeds the last sample + delta + time tolerance
         Trace in file runs from [00:01.625000Z to 01:50.275000Z]
         """
-        file = '/usr/people/koymans/seed'
+        file = './data/tiny_quality_file.mseed'
 
         # Last sample is at 275000, but this sample covers the trace
         # up to 275000 + delta (0.025) => 300000 - no gaps
@@ -393,7 +393,7 @@ class QualityControlTestCase(unittest.TestCase):
         Total number of points for this test = 4347
         Trace in file runs from [00:01.625000Z to 01:50.275000Z]
         """
-        file = '/usr/people/koymans/seed'
+        file = './data/tiny_quality_file.mseed'
 
         # Set T0 and T1 on sample (N-1)
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)        
