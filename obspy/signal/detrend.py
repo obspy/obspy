@@ -102,7 +102,7 @@ def polynomial(data, order, plot=False):
     """
     # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     fit = np.polyval(np.polyfit(x, data, deg=order), x)
@@ -165,7 +165,7 @@ def spline(data, order, dspline, plot=False):
     """
     # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     splknots = np.arange(dspline / 2.0, len(data) - dspline / 2.0 + 2,
