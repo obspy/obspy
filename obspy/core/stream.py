@@ -3019,13 +3019,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                     raise
         return skipped_traces
 
-    def remove_response(self, nthreads=-1, *args, **kwargs):
+    def remove_response(self, nthreads=None, *args, **kwargs):
         """
         Deconvolve instrument response for all Traces in Stream.
 
-        :param nthreads: specifies the number of threads used. This can speed
-            up instrument removal due to parallel execution on a multicore
-            machine
+        :param nthreads: Maximum number of threads to use. Defaults to the
+            minimum between the number of available CPUs and 16. This is to
+            not launch like a hundred threads on big shared memory clusters.
+        :type nthreads: int
 
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.remove_response` method of
@@ -3053,22 +3054,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        # Guard against empty Stream objects:
-        if not len(self):
-            return self
-
-        # multi-threaded instrument response removal. multiprocessing.dummy
-        # uses threads with the Pool API of multiprocessing
-        nthreads_clip = max(1, min(int(nthreads), len(self.traces)))
-        pool = Pool(processes=nthreads_clip)
-        args = zip(self.traces, [kwargs for i in range(len(self))])
-        # the following is a hack because pool.map doesn't recognize
-        # KeyboardInterrupts and hangs. For more info see:
-        # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
-        # with-pythons-multiprocessing-pool'
-        pool.map_async(_remove_response_parallel, args).get(9999999)
-        pool.close()
-        pool.join()
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="remove_response",
+            nthreads=nthreads, *args, **kwargs)
 
         return self
 
@@ -3113,9 +3102,49 @@ def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
 
 
-def _remove_response_parallel(tr_params):
-    """inplace instrument removal"""
-    tr_params[0].remove_response(**tr_params[1])
+def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=None,
+                               *args, **kwargs):
+    """
+    Run a method over all Traces of a Stream in parallel.
+
+    It uses threads which due to Python's GIL is usually not really parallel
+    but most if not all expensive methods are internally implemented in
+    C/Fortran which commonly release the GIL thus it actually does run in
+    parallel.
+
+    args and kwargs are passed to the trace method.
+
+    :param stream_object: The stream object.
+    :param trace_method_name: The name of the method to be run on each trace.
+    :param nthreads: Maximum number of threads to use. Defaults to the
+        minimum between the number of available CPUs and 16. This is to
+        not launch like a hundred threads on big shared memory clusters.
+    :type nthreads: int
+    """
+    # Guard against empty Stream object.
+    if not stream_object:
+        return
+
+    # Determine the number of threads.
+    if nthreads is None:
+        nthreads = min(os.cpu_count(), 16)
+    nthreads_clip = max(1, min(int(nthreads), len(stream_object)))
+
+    # The created closure will take care of the variables.
+    def apply(trace):
+        getattr(trace, trace_method_name)(*args, **kwargs)
+
+    # Its the multiprocessing.dummy Pool which uses threading with a nice
+    # API. Python's GIL means we don't have to worry about most race
+    # conditions.
+    pool = Pool(processes=nthreads_clip)
+    # the following is a hack because pool.map doesn't recognize
+    # KeyboardInterrupts and hangs. For more info see:
+    # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
+    # with-pythons-multiprocessing-pool'
+    pool.map_async(apply, stream_object).get(9999999)
+    pool.close()
+    pool.join()
 
 
 def _is_pickle(filename):  # @UnusedVariable
