@@ -32,7 +32,6 @@ import numpy as np
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import date2num
-from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
@@ -40,8 +39,6 @@ from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version, AttribDict
-from obspy.core.util.decorator import deprecated_keywords
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
@@ -55,55 +52,6 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-
-
-def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,  # noqa
-        noverlap=0):
-    """
-    Wrapper for :func:`matplotlib.mlab.psd`.
-
-    Always returns a onesided psd (positive frequencies only), corrects for
-    this fact by scaling with a factor of 2. Also, always normalizes to 1/Hz
-    by dividing with sampling rate.
-
-    .. deprecated:: 1.0.0
-
-        This wrapper is no longer necessary. Please use the
-        :func:`matplotlib.mlab.psd` function directly, specifying
-        `sides="onesided"` and `scale_by_freq=True`.
-
-    .. note::
-        For details on all arguments see :func:`matplotlib.mlab.psd`.
-
-    .. note::
-        When using `window=welch_taper`
-        (:func:`obspy.signal.spectral_estimation.welch_taper`)
-        and `detrend=detrend_linear` (:func:`matplotlib.mlab.detrend_linear`)
-        the psd function delivers practically the same results as PITSA.
-        Only DC and the first 3-4 lowest non-DC frequencies deviate very
-        slightly. In contrast to PITSA, this routine also returns the psd value
-        at the Nyquist frequency and therefore is one frequency sample longer.
-    """
-    msg = ('This wrapper is no longer necessary. Please use the '
-           'matplotlib.mlab.psd function directly, specifying '
-           '`sides="onesided"` and `scale_by_freq=True`.')
-    warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
-
-    # build up kwargs
-    kwargs = {}
-    kwargs['NFFT'] = NFFT
-    kwargs['Fs'] = Fs
-    kwargs['detrend'] = detrend
-    kwargs['window'] = window
-    kwargs['noverlap'] = noverlap
-    # These settings make sure that the scaling is already done during the
-    # following psd call for matplotlib versions newer than 0.98.4.
-    kwargs['pad_to'] = None
-    kwargs['sides'] = 'onesided'
-    kwargs['scale_by_freq'] = True
-    # do the actual call to mlab.psd
-    Pxx, freqs = mlab.psd(x, **kwargs)
-    return Pxx, freqs
 
 
 def fft_taper(data):
@@ -276,8 +224,6 @@ class PPSD(object):
         NPZ_STORE_KEYS_SIMPLE_TYPES +
         NPZ_STORE_KEYS_VERSION_NUMBERS)
 
-    @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
-                          'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,

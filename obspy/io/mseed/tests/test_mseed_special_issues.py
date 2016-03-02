@@ -21,7 +21,6 @@ from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed, \
     InternalMSEEDReadingError, InternalMSEEDReadingWarning
@@ -271,22 +270,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'libmseed',
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
-
-    def test_read_quality_information_warns(self):
-        """
-        Reading the quality information while reading the data files is no more
-        supported in newer obspy.io.mseed versions. Check that a warning is
-        raised.
-        Similar functionality is included in obspy.io.mseed.util.
-        """
-        timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', ObsPyDeprecationWarning)
-            # This should not raise a warning.
-            read(timingqual)
-            # This should warn.
-            self.assertRaises(ObsPyDeprecationWarning, read, timingqual,
-                              quality=True)
 
     def test_read_with_missing_blockette010(self):
         """
