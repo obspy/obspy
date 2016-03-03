@@ -494,7 +494,7 @@ def _sosfilt(sos, x, axis=-1, zi=None):
                              'shape %r, and an sos array with %d sections, zi '
                              'must have shape %r.' %
                              (axis, x.shape, n_sections, x_zi_shape))
-        zf = zeros_like(zi)
+        zf = np.zeros_like(zi)
 
     for section in range(n_sections):
         if use_zi:

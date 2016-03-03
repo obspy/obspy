@@ -2367,7 +2367,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             if not isinstance(self.stats.response, Response):
                 msg = ("Response attached to Trace.stats must be of type "
                        "obspy.core.inventory.response.Response "
-                       "(but is of type %s).") % type(response)
+                       "(but is of type %s).") % type(self.stats.response)
                 raise TypeError(msg)
             return self.stats.response
         elif inventories is None:

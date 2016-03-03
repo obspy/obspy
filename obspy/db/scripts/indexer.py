@@ -254,7 +254,7 @@ Default path option is 'data=*.*'.""")
         logging.basicConfig(stream=sys.stdout, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
     else:
-        logging.basicConfig(filename=options.log, level=level,
+        logging.basicConfig(filename=args.log, level=level,
                             format="%(asctime)s [%(levelname)s] %(message)s")
     _run_indexer(args)
 

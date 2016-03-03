@@ -303,8 +303,8 @@ class SeismicPhase(object):
 
             if current_leg in ('Ped', 'Sed'):
                 if next_leg == "END":
-                    if receiverDepth > 0:
-                        end_action = REFLECT_TOPSIDE
+                    if self.receiver_depth > 0:
+                        end_action = _ACTIONS["reflect_underside"]
                         self.add_to_branch(tau_model, self.current_branch,
                                            downgoing_rec_branch, is_p_wave,
                                            end_action)
