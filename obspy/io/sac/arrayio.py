@@ -623,7 +623,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
                 hdr = 'o'
             elif iztype_val == 12:
                 hdr = 'a'
-            elif val in range(13, 23):
+            elif iztype_val in range(13, 23):
                 hdr = 'it'+str(iztype_val-13)
 
             if hi[HD.FLOATHDRS.index(hdr)] == HD.INULL:
