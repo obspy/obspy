@@ -9,13 +9,19 @@ import os
 import re
 import unittest
 
+import obspy
 from obspy.core.util.testing import check_flake8, get_all_py_files
+
+_pattern = re.compile(r"^\d+\.\d+\.\d+$")
+CLEAN_VERSION_NUMBER = bool(_pattern.match(obspy.__version__))
 
 
 class CodeFormattingTestCase(unittest.TestCase):
     """
     Test codebase for compliance with the flake8 tool.
     """
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
@@ -27,6 +33,8 @@ class CodeFormattingTestCase(unittest.TestCase):
         self.assertGreater(file_count, 10)
         self.assertEqual(error_count, 0, "\n" + message.decode())
 
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     def test_use_obspy_deprecation_warning(self):
         """
         Tests that ObsPyDeprecationWarning is used rather than the usual
@@ -51,6 +59,8 @@ class CodeFormattingTestCase(unittest.TestCase):
 
 
 class FutureUsageTestCase(unittest.TestCase):
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     def test_future_imports_in_every_file(self):
         """
         Tests that every single Python file includes the appropriate future
@@ -106,7 +116,6 @@ class FutureUsageTestCase(unittest.TestCase):
 
 
 def suite():
-
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CodeFormattingTestCase, 'test'))
     suite.addTest(unittest.makeSuite(FutureUsageTestCase, 'test'))
