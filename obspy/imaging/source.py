@@ -446,7 +446,7 @@ def _write_radiation_pattern_vtk(
     pos_nodalline = bb._nodalline_positive
 
     # plot radiation pattern and nodal lines
-    points = spherical_grid()
+    points = _equalarea_spherical_grid()
     ndim, npoints = points.shape
     dispp = farfield(ned_mt, points, type="P")
     disps = farfield(ned_mt, points, type="S")

@@ -855,8 +855,8 @@ master/seishub/plugins/seismology/waveform.py
         for res in self.client.xml_seeds.get(seed_id, []):
             parser = Parser(res)
             try:
-                paz = parser.getPAZ(seed_id=seed_id,
-                                    datetime=UTCDateTime(datetime))
+                paz = parser.get_paz(seed_id=seed_id,
+                                     datetime=UTCDateTime(datetime))
                 return paz
             except:
                 continue

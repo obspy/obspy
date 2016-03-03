@@ -80,7 +80,7 @@ def _is_cmtsolution(filename_or_buf):
                              reset_fp=True)
     # Happens for example when passing the data as a string which would be
     # interpreted as a filename.
-    except (OSError, FileNotFoundError):
+    except OSError:
         return False
 
 
