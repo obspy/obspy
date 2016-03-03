@@ -2353,7 +2353,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         return self
 
-    def times(self, type="relative"):
+    def times(self, type="relative", reftime=None):
         """
         For convenient plotting compute a NumPy array with timing information
         of all samples in the Trace.
@@ -2361,7 +2361,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         Time can be either:
 
           * seconds relative to ``trace.stats.starttime``
-            (``type="relative"``)
+            (``type="relative"``) or to ``reftime``
           * absolute time as
             :class:`~obspy.core.utcdatetime.UTCDateTime` objects
             (``type="utcdatetime"``)
@@ -2375,6 +2375,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type type: str
         :param type: Determines type of returned time array, see above for
             valid values.
+        :type reftime: obspy.core.utcdatetime.UTCDateTime
+        :param reftime: When using a relative timing, the time used as the
+            reference for the zero point, i.e., the first sample will be at
+            ``trace.stats.starttime - reftime`` (in seconds).
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
         :returns: An array of time samples in an :class:`~numpy.ndarray` if
             the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
@@ -2385,7 +2389,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         time_array = np.arange(self.stats.npts)
         time_array = time_array / self.stats.sampling_rate
         if type == "relative":
-            pass
+            if reftime is not None:
+                time_array += (self.stats.starttime - reftime)
         elif type == "timestamp":
             time_array = time_array + self.stats.starttime.timestamp
         elif type == "utcdatetime":
