@@ -288,11 +288,18 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header values are kept, and a minimal set of values are updated from
         the stats dictionary according to these guidelines:
         * npts, delta always come from stats
-        * If an old reftime is found and valid, the new b and e will be made
-          and properly referenced to it. If the SAC reftime is invalid, the
-          reftime will be set from stats.starttime (with micro/milliseconds
-          precision adjustments) only if an existing SAC iztype is 9 and no
-          other relative time headers are set.
+        * If a valid old reftime is found, the new b and e will be made
+          and properly referenced to it. All other old SAC headers are simply
+          carried along.
+        * If the old SAC reftime is invalid and relative time headers are set,
+          a SacHeaderError exception will be raised.
+        * If the old SAC reftime is invalid, no relative time headers are set,
+          and "b" is set, "e" is updated from stats and other old SAC headers
+          are carried along.
+        * If the old SAC reftime is invalid, no relative time headers are set,
+          and "b" is not set, the reftime will be set from stats.starttime
+          (with micro/milliseconds precision adjustments) and "b" and "e" are
+          set accordingly.
         * If 'kstnm', 'knetwk', 'kcmpnm', or 'khole' are not set, they are
           taken from 'station', 'network', 'channel', and 'location' in stats.
         If keep_sac_header is False, a new SAC header is constructed from only
