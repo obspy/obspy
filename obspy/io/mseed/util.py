@@ -223,7 +223,8 @@ def get_timing_and_data_quality(file_or_file_object):
         ("end_event", 0),
         ("positive_leap", 0),
         ("negative_leap", 0),
-        ("event_in_progress", 0)])
+        ("event_in_progress", 0),
+        ("time_correction_required", 0)])
     io_count = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
@@ -244,6 +245,7 @@ def get_timing_and_data_quality(file_or_file_object):
     activity_count_percentages = collections.OrderedDict([
         ("calibration_signals_present", 0),
         ("time_correction_applied", 0),
+        ("time_correction_required", 0),
         ("beginning_event", 0),
         ("end_event", 0), 
         ("positive_leap", 0),
@@ -273,18 +275,19 @@ def get_timing_and_data_quality(file_or_file_object):
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
     while offset <= (info["filesize"] - 256):
-        rec_info = get_record_information(file_or_file_object, offset)
-        record_count += 1
-        offset += rec_info["record_length"]
-        time_tolerance = 0.5*(1/rec_info["samp_rate"])
         # Extend the record endtime with delta
+        rec_info = get_record_information(file_or_file_object, offset)
         rec_info["endtime"] += (1/rec_info["samp_rate"])
 
+        offset += rec_info["record_length"]
+
         # Filter records based on times if applicable.
-        if starttime is not None and rec_info["endtime"] < starttime:
+        if starttime is not None and rec_info["endtime"] <= starttime:
             continue
         if endtime is not None and rec_info["starttime"] >= endtime:
             continue
+
+        record_count += 1
 
         # If the record starts before the start time, count from starttime
         # Otherwise, count from the record starttime
@@ -292,8 +295,7 @@ def get_timing_and_data_quality(file_or_file_object):
             record_first_sample = starttime
         else:
             record_first_sample = rec_info["starttime"]
-
-        if(rec_info["endtime"] + time_tolerance >= endtime):
+        if(rec_info["endtime"] > endtime):
             record_last_sample = endtime
         else:
             record_last_sample = rec_info["endtime"]
@@ -321,6 +323,12 @@ def get_timing_and_data_quality(file_or_file_object):
 
         if timing_quality and "timing_quality" in rec_info:
             tq.append(float(rec_info["timing_quality"]))
+
+        # Add a new quality metric that says whether a correction is required
+        # in addition to whether this correction has been applied
+        if rec_info["time_correction"]:
+            activity_count["time_correction_required"] += 1
+            activity_count_percentages["time_correction_required"] += record_length_seconds
 
     results = {
         "record_count": record_count,
@@ -480,13 +488,13 @@ def _get_record_information(file_object, offset=0, endian=None):
     info["channel"] = data[7:10].strip().decode()
     info["network"] = data[10:12].strip().decode()
 
+    def fmt(s):
+        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
-
-    def fmt(s):
-        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
     if endian is None:
         try:
@@ -523,6 +531,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     time_correction_applied = bool(info['activity_flags'] & 2)
     info['io_and_clock_flags'] = values[10]
     info['data_quality_flags'] = values[11]
+    info['time_correction'] = values[12]
     time_correction = values[12]
     blkt_offset = values[13]
 
