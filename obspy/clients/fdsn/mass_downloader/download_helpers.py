@@ -21,11 +21,13 @@ with standard_library.hooks():
 
 import collections
 import copy
+import fnmatch
 from multiprocessing.pool import ThreadPool
-import numpy as np
 import os
 import time
 import timeit
+
+import numpy as np
 
 import obspy
 from obspy.core.util import Enum
@@ -1082,7 +1084,32 @@ class ClientDownloadHelper(object):
                      for _i in self.restrictions]
 
         for network in inv:
+            # Skip network if so desired.
+            skip_network = False
+            for pattern in self.restrictions.exclude_networks:
+                if fnmatch.fnmatch(network.code, pattern):
+                    skip_network = True
+                    break
+            if skip_network:
+                continue
+
             for station in network:
+                # Skip station if so desired.
+                skip_station = False
+                for pattern in self.restrictions.exclude_stations:
+                    if fnmatch.fnmatch(station.code, pattern):
+                        skip_station = True
+                        break
+                if skip_station:
+                    continue
+
+                # If an inventory is given, only keep stations part of the
+                # inventory.
+                if self.restrictions.limit_stations_to_inventory is not None \
+                        and (network.code, station.code) not in \
+                        self.restrictions.limit_stations_to_inventory:
+                    continue
+
                 # Skip the station if it is not in the desired domain.
                 if needs_filtering is True and \
                         not self.domain.is_in_domain(station.latitude,
