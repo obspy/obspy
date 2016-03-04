@@ -212,6 +212,11 @@ class MassDownloader(object):
             if restrictions.sanitize:
                 helper.sanitize_downloads()
 
+            if not helper:
+                logger.info("Client '%s' - No data could be downloaded." %
+                            client_name)
+                continue
+
             # Filter afterwards if availability information is not reliable.
             # This unfortunately results in already downloaded data being
             # discarded but it is the only currently feasible way.
