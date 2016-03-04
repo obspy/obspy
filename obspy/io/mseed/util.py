@@ -489,13 +489,13 @@ def _get_record_information(file_object, offset=0, endian=None):
     info["channel"] = data[7:10].strip().decode()
     info["network"] = data[10:12].strip().decode()
 
-    def fmt(s):
-        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
-
     # Use the date to figure out the byte order.
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
+
+    def fmt(s):
+        return native_str('%sHHBBBxHHhhBBBxlxxH' % s
 
     if endian is None:
         try:

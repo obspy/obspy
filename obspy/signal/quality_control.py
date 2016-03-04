@@ -93,8 +93,7 @@ class MSEEDMetadata(object):
         else:
             endtime_left = None
 
-        # Will raise if not a MiniSEED files. Only cut off the end of the
-        # files, we will narrow our window later.
+        # Will raise if not a MiniSEED files.
         for file in files:
 
             st = obspy.read(file, starttime=starttime, endtime=endtime_left,
@@ -125,9 +124,9 @@ class MSEEDMetadata(object):
 
         self.data.sort()
 
-        # Set the metric start and endtime. If no start and endtime are given,
-        # we pick our own and the window will start on the first sample,
-        # and end on the last sample + Δt (exclusively).
+        # Set the metric start and endtime specified by the user.
+        # If no start and endtime are given, we pick our own and the window
+        # will start on the first sample and end on the last sample + Δa.
         self.starttime = starttime or self.data[0].stats.starttime
         self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
         self.total_time = self.endtime - self.starttime
@@ -270,6 +269,9 @@ class MSEEDMetadata(object):
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
         # Set to percentages
+        # The total time is the difference between start & end in seconds
+        # The percentage fields are the sum of record lengths for which
+        # the respective bits are set
         for key in data_quality_flags_percentages:
             data_quality_flags_percentages[key] /= self.total_time * 1e-2
         for key in activity_flags_percentages:
@@ -298,7 +300,15 @@ class MSEEDMetadata(object):
             timing_quality_lower_quartile = None
             timing_quality_upper_quartile = None
 
+        # Set miniseed header counts
+        m['timing_quality_mean'] = timing_quality_mean
+        m['timing_quality_min'] = timing_quality_min
+        m['timing_quality_max'] = timing_quality_max
+        m['timing_quality_median'] = timing_quality_median
+        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
+        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
+        # According to schema @ maybe refactor this to less verbose names
         # Set miniseed header flag percentages
         m['miniseed_header_flag_percentages'] = {}
         m['miniseed_header_flag_percentages']['activity_flags'] = activity_flags_percentages
@@ -311,15 +321,10 @@ class MSEEDMetadata(object):
         m['miniseed_header_flag_counts']['data_quality_flags'] = data_quality_flags
         m['miniseed_header_flag_counts']['io_and_clock_flags'] = io_and_clock_flags
         
+        # Small function to change flag names from the get_flags routine
+        # to match the schema
         self._fix_flag_names()
 
-        # Set miniseed header counts
-        m['timing_quality_mean'] = timing_quality_mean
-        m['timing_quality_min'] = timing_quality_min
-        m['timing_quality_max'] = timing_quality_max
-        m['timing_quality_median'] = timing_quality_median
-        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
-        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
     def _fix_flag_names(self):
         """
@@ -384,30 +389,28 @@ class MSEEDMetadata(object):
         # Start of stream
         stats = self.data[0].stats
         if self.start_offset is not None:
+            # Start gap
             if stats.starttime > self.start_offset  + self.start_time_tolerance:
                 gap_count += 1
                 gap_length += stats.starttime - self.start_offset
+            # We can now have overlaps at the start
             if stats.starttime < self.start_offset - self.start_time_tolerance:
                 overlap_count += 1
                 overlap_length += self.start_offset - stats.starttime
         else:
+            # Assume that missing data from starttime to first sample is a gap
             if stats.starttime > self.starttime:
                 gap_count += 1
                 gap_length += stats.starttime - self.starttime
 
-        # End of stream
         # We define the endtime as the time of the last sample but the next
         # sample would only start at endtime + delta. Thus the following
         # scenario would not count as a gap at the end:
-        # also account for the time tolerance
         # x -- x -- x -- x -- x -- x -- 
         #                               | <= self.endtime
-        stats = self.data[-1].stats
-        time_tolerance = 0.5*stats.delta
-        projected_sample = stats.endtime + stats.delta
-        if(self.endtime - projected_sample > time_tolerance):
+        if(self.next_offset + self.next_tolerance < self.endtime):
             gap_count += 1
-            gap_length += self.endtime - projected_sample
+            gap_length += self.endtime - self.next_offset
 
         # Get the other gaps
         gaps = self.data.get_gaps()
@@ -420,10 +423,8 @@ class MSEEDMetadata(object):
         self.meta["overlaps_len"] = \
             sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0) + overlap_length
 
-        # Percentage based availability as total gap length over trace
-        # duration. The trace duration is end - start + dt as the endtime is
-        # the time of the last sample but the last simple still "accounts"
-        # for one more sample. This could well be defined differently.
+        # Percentage based availability as total gap length over the trace
+        # duration
         self.meta['percent_availability'] = 100.0 * (
             (self.total_time - self.meta['gaps_len']) /
             self.total_time)
