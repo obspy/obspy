@@ -275,11 +275,11 @@ acquire the final filename. The start and end times will be formatted with
 avoid colons which are troublesome in file names on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
-...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
+...                  "{channel}.{location}.{starttime}.{endtime}.mseed")
 
 results in
 
-``some_folder/BW/FURT/.BHZ.20141027T163723Z.20141027T163733Z.mseed``.
+``some_folder/BW/FURT/BHZ..20141027T163723Z.20141027T163733Z.mseed``.
 
 The download helpers will create any non-existing folders along the path.
 
