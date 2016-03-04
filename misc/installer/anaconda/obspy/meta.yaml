@@ -4,11 +4,12 @@
 
 package:
   name: obspy
-  version: "1.0.0rc8"
+  version: "1.0.0"
 
 source:
   fn: obspy-master.zip
-  url: https://www.geophysik.uni-muenchen.de/%7Emegies/obspy-1.0.0rc8.zip
+  url: https://pypi.python.org/packages/source/o/obspy/obspy-1.0.0.zip
+  md5: 40925691d3b0eaeac39b0513c46cf306
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
   # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
