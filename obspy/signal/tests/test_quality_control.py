@@ -342,7 +342,7 @@ class QualityControlTestCase(unittest.TestCase):
         continuous is set to True
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = './data/tiny_quality_file.mseed'
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
 
         # first sample is 625000, so we introduce a gap of 0.025
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000)
@@ -357,7 +357,7 @@ class QualityControlTestCase(unittest.TestCase):
         endtime exceeds the last sample + delta + time tolerance
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = './data/tiny_quality_file.mseed'
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
 
         # Last sample is at 300000, but this sample covers the trace
         # up to 300000 + delta (0.025) => 325000 - no gaps
@@ -384,7 +384,8 @@ class QualityControlTestCase(unittest.TestCase):
         7/10 records with io_flag clock_locked set to 1 for which we
         count the percentage of record time of total time
         """
-        file = './data/tiny_quality_file.mseed'
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
+
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300001)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
@@ -404,7 +405,8 @@ class QualityControlTestCase(unittest.TestCase):
         """
         Test to see if given a start_offset works
         """
-        file = './data/tiny_quality_file.mseed'
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
+
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         start_offset = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650000)
         endtime = None
@@ -460,7 +462,7 @@ class QualityControlTestCase(unittest.TestCase):
         Total number of points for this test = 4347
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
-        file = './data/tiny_quality_file.mseed'
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
 
         # Set T0 and T1 on sample (N-1)
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)        

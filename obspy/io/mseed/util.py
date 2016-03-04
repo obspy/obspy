@@ -393,6 +393,7 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     samp_rate 40.0
     starttime 2003-05-29T02:13:22.043400Z
     station HGN
+    time_correction 0
     """
     if isinstance(file_or_file_object, (str, native_str)):
         with open(file_or_file_object, 'rb') as f:

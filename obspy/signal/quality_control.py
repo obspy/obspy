@@ -132,6 +132,9 @@ class MSEEDMetadata(object):
         self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
         self.total_time = self.endtime - self.starttime
 
+        self.next_offset = self.data[-1].stats.endtime + self.data[-1].stats.delta
+        self.next_tolerance = 0.5*self.data[-1].stats.delta
+
         # Calculation of all the metrics begins here
         self.meta = {}
         self._extract_mseed_stream_metadata()

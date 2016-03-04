@@ -274,7 +274,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "end_event": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
-                "event_in_progress": 5})
+                "event_in_progress": 5,
+                "time_correction_required": 0})
 
             self.assertEqual(result['io_and_clock_flags'], {
                 "station_volume_parity_error": 1,
@@ -401,7 +402,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "end_event": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
-                "event_in_progress": 5})
+                "event_in_progress": 5,
+                "time_correction_required": 0})
 
             self.assertEqual(result['io_and_clock_flags'], {
                 "station_volume_parity_error": 1,
@@ -435,7 +437,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
                     "end_event": 53,
                     "positive_leap": 4,
                     "negative_leap": 11,
-                    "event_in_progress": 5})
+                    "event_in_progress": 5,
+                    "time_correction_required": 0})
 
                 self.assertEqual(result['io_and_clock_flags'], {
                     "station_volume_parity_error": 1,
