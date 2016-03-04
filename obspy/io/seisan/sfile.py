@@ -13,19 +13,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import math
-import uuid
-import warnings
+import re
 
-from obspy import UTCDateTime
-from obspy.core.event import (Catalog, Comment, Event, EventDescription,
-                              Origin, Magnitude, FocalMechanism, MomentTensor,
-                              Tensor, SourceTimeFunction)
 from obspy.geodetics import FlinnEngdahl
 
-
 from obspy import UTCDateTime
-from obspy.core.event import Catalog, Event, Origin, Magnitude, Pick, WaveformStreamID, QuantityError
+from obspy.core.event import (Catalog, Event, Origin, Magnitude, Pick,
+                              WaveformStreamID, QuantityError)
 
 _fe = FlinnEngdahl()
 
@@ -34,7 +28,7 @@ def _get_resource_id(cmtname, res_type, tag=None):
     """
     Helper function to create consistent resource ids.
     """
-    res_id = "smi:local/cmtsolution/%s/%s" % (cmtname, res_type)
+    res_id = "smi:local/seisan_sfile/%s/%s" % (cmtname, res_type)
     if tag is not None:
         res_id += "#" + tag
     return res_id
@@ -73,7 +67,7 @@ def _buffer_proxy(filename_or_buf, function, reset_fp=True,
 
 def _is_seisan_sfile(filename_or_buf):
     """
-    Checks if the file is a CMTSOLUTION file.
+    Checks if the file is a SEISAN SFILE file.
 
     :param filename_or_buf: File to test.
     :type filename_or_buf: str or file-like object.
@@ -89,7 +83,7 @@ def _is_seisan_sfile(filename_or_buf):
 
 def _internal_is_seisan_sfile(buf):
     """
-    Checks if the file is a CMTSOLUTION file.
+    Checks if the file is a SEISAN SFILE file.
 
     :param buf: File to check.
     :type buf: Open file or open file like object.
@@ -98,25 +92,103 @@ def _internal_is_seisan_sfile(buf):
     # it passes it will be read again but that has really no
     # significant performance impact.
     try:
-        _internal_read_seisan_sfile(buf)
+        _internal_read_seisan_sfile(buf, limit=1)
         return True
     except:
         return False
 
 
-def _read_seisan_sfile(filename_or_buf, **kwargs):
+def _read_seisan_sfile(filename_or_buf, limit=None, **kwargs):
     """
-    Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
+    Reads a SEISAN SFILE file to a :class:`~obspy.core.event.Catalog` object.
 
     :param filename_or_buf: File to read.
     :type filename_or_buf: str or file-like object.
     """
     return _buffer_proxy(filename_or_buf,
                          _internal_read_seisan_sfile,
+                         limit=limit,
                          **kwargs)
 
 
-def _internal_read_seisan_sfile(buf):
+pattern = re.compile(r"^\s*"          # Might start with whitespaces
+                     r"\d{4}"           # 4 digits for the year
+                     r"\s+"           # One or more whitespaces
+                     r"\d{1,2}"       # 1-2 digits for month
+                     r"\s*"           # Might be one or more spaces
+                     r"\d{1,2}"       # 1-2 digits for the day
+                     r"\s*"           # Might be one or more spaces
+                     r"\d{1,2}"       # 1-2 digits for hours
+                     r"\s*"           # Might be one or more spaces
+                     r"\d{1,2}"       # 1-2 digits for the minutes
+                     r"\s*"           # Might be one or more spaces
+                     r"[\d\.]{1,4}"   # The seconds
+                     r".*$"
+                     )
+
+
+def parse_pick(line, yr, mo, dy, ev_time):
+    if not line[10:13] == 'AML':
+        sta = line[0:5]
+        cha = str(line[5:6]) + 'H' + str(line[7:8])
+        net = 'CM'
+        wfid = WaveformStreamID()
+        wfid.station_code = sta
+        wfid.channel_code = cha
+        wfid.network_code = net
+        pha = line[9:10]
+        hr_pick = int(line[17:19])
+        mn_pick = int(line[19:21])
+        sc_pick = float(line[22:28])
+        if not sc_pick == 60.0:
+            if not hr_pick == 24:
+                pick_time = UTCDateTime(
+                    yr, mo, dy, hr_pick, mn_pick, sc_pick)
+            else:
+                hr_pick = 23
+                pick_time = UTCDateTime(
+                    yr, mo, dy, hr_pick, mn_pick, sc_pick) + 3600
+        else:
+            sc_pick = 59.9
+            if not hr_pick == 24:
+                pick_time = UTCDateTime(
+                    yr, mo, dy, hr_pick, mn_pick, sc_pick) + 0.1
+            else:
+                hr_pick = 23
+                pick_time = UTCDateTime(
+                    yr, mo, dy, hr_pick, mn_pick, sc_pick) + 3600.1
+        if pick_time < ev_time:
+            pick_time = pick_time + 86400
+        pick = Pick()
+        pick.time = pick_time
+        pick.phase_hint = pha
+        pick.waveform_id = wfid
+        return pick
+    else:
+        return 1
+
+
+def _new_events_start_with_line(line):
+    return bool(pattern.match(line))
+
+
+def yield_events(buf):
+    lines_for_event = []
+
+    for line in buf:
+        line = line.decode().strip()
+        if not line:
+            continue
+        if _new_events_start_with_line(line):
+            if lines_for_event:
+                yield lines_for_event
+                lines_for_event = []
+
+        lines_for_event.append(line)
+    yield lines_for_event
+
+
+def _internal_read_seisan_sfile(buf, limit=None):
     """
     Reads a CMTSOLUTION file to a :class:`~obspy.core.event.Catalog` object.
 
@@ -124,96 +196,49 @@ def _internal_read_seisan_sfile(buf):
     :type buf: Open file or open file like object.
     """
     cat = Catalog()
-    lines = buf.readlines()
-    n_lines = []
-    for line in lines:
-        line = line.decode()
-        ls = line.split('\n')[0].split()
-        if not ls == []:
-            n_lines.append(line.split('\n')[0])
-    indexes = []
-    for i in range(len(n_lines)):
-        if n_lines[i][79:80] == '1':
-            indexes.append(i)
-    ls_evs_grp = []
-    prev = 0
-    for index in indexes:
-        ls_evs_grp.append(n_lines[prev:int(index)])
-        prev = index
-    ls_evs_grp.append(n_lines[indexes[-1]:])
-    ls_evs_grp = [x for x in ls_evs_grp if len(x) != 0]
-    for ev in ls_evs_grp:
-        yr = int(ev[0][1:5])
-        mo = int(ev[0][6:8])
-        dy = int(ev[0][8:10])
-        hr = int(ev[0][11:13])
-        mn = int(ev[0][13:15])
-        sc = float(ev[0][16:20])
+
+    for _i, lines in enumerate(yield_events(buf)):
+        if limit and _i >= limit:
+            return cat
+        # We already know the first line is valid.
+        yr = int(lines[0][0:4])
+        mo = int(lines[0][5:7])
+        dy = int(lines[0][7:9])
+        hr = int(lines[0][10:12])
+        mn = int(lines[0][12:14])
+        sc = float(lines[0][15:19])
         if not sc == 60.0:
             ev_time = UTCDateTime(yr, mo, dy, hr, mn, sc)
         else:
             ev_time = UTCDateTime(yr, mo, dy, hr, mn, 59.9) + 0.1
-        la = float(ev[0][23:30])
-        lo = float(ev[0][30:38])
-        dp = float(ev[0][38:43]) * 1e3
-        ml = float(ev[0][56:59])
-    #       print(ev[0])
+        la = float(lines[0][22:29])
+        lo = float(lines[0][29:37])
+        dp = float(lines[0][37:42]) * 1e3
+        ml = float(lines[0][55:58])
+
         event = Event()
         origin = Origin()
 
         cont_mag_stas = 0
-        for ev2 in ev:
-            if ev2[79:80] == 'E':
-                #                       print(ev2)
-                er_la = float(ev2[23:30])
-                er_lo = float(ev2[30:38])
-                er_dp = float(ev2[38:43])
-                er_tm = float(ev2[16:20])
-            # PICKS
-            elif ev2[79:80] == ' ':
-                if not ev2[11:14] == 'AML':
-                    #                               print(ev2)
-                    sta = ev2[0:6]
-                    cha = str(ev2[6:7]) + 'H' + str(ev2[7:8])
-                    net = 'CM'
-                    wfid = WaveformStreamID()
-                    wfid.station_code = sta
-                    wfid.channel_code = cha
-                    wfid.network_code = net
-                    pha = ev2[10:11]
-                    hr_pick = int(ev2[18:20])
-                    mn_pick = int(ev2[20:22])
-                    sc_pick = float(ev2[23:29])
-                #       uncert = float(ev2[64:68])
-                    if not sc_pick == 60.0:
-                        if not hr_pick == 24:
-                            pick_time = UTCDateTime(
-                                yr, mo, dy, hr_pick, mn_pick, sc_pick)
-                        else:
-                            hr_pick = 23
-                            pick_time = UTCDateTime(
-                                yr, mo, dy, hr_pick, mn_pick, sc_pick) + 3600
-                    else:
-                        sc_pick = 59.9
-                        if not hr_pick == 24:
-                            pick_time = UTCDateTime(
-                                yr, mo, dy, hr_pick, mn_pick, sc_pick) + 0.1
-                        else:
-                            hr_pick = 23
-                            pick_time = UTCDateTime(
-                                yr, mo, dy, hr_pick, mn_pick, sc_pick) + 3600.1
-                    if pick_time < ev_time:
-                        pick_time = pick_time + 86400
-                #       qe = QuantityError()
-                #       qe.uncertainty = uncert
-                    pick = Pick()
-                    pick.time = pick_time
-                #       pick.time_errors = qe
-                    pick.phase_hint = pha
-                    pick.waveform_id = wfid
-                    event.picks.append(pick)
-                else:
+        for line in lines[1:]:
+            # Error line.
+            if line[-1] == 'E':
+                er_la = float(line[24:29])
+                er_lo = float(line[29:37])
+                er_dp = float(line[37:42])
+                er_tm = float(line[15:19])
+            # Check for pick.
+            elif len(line) == 78:
+                pick = parse_pick(line=line, yr=yr, mo=mo, dy=dy,
+                                  ev_time=ev_time)
+                if pick == 1:
                     cont_mag_stas += 1
+                else:
+                    event.picks.append(pick)
+            # Ignore line.
+            else:
+                continue
+
         # ERRORS
         lat_er_qe = QuantityError()
         lon_er_qe = QuantityError()
@@ -242,4 +267,3 @@ def _internal_read_seisan_sfile(buf):
         event.magnitudes.append(magnitude)
         cat.events.append(event)
     return cat
-
