@@ -272,6 +272,7 @@ ENTRY_POINTS = {
         'NLLOC_OBS = obspy.io.nlloc.core',
         'CNV = obspy.io.cnv.core',
         'CMTSOLUTION = obspy.io.cmtsolution.core',
+        'SEISAN_SFILE = obspy.io.seisan.sfile',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
         'FNETMT = obspy.io.nied.fnetmt'
@@ -312,6 +313,10 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.cmtsolution.core:_read_cmtsolution',
         'writeFormat = obspy.io.cmtsolution.core:_write_cmtsolution'
         ],
+    'obspy.plugin.event.SEISAN_SFILE': [
+        'isFormat = obspy.io.seisan.sfile:_is_seisan_sfile',
+        'readFormat = obspy.io.seisan.sfile:_read_seisan_sfile'
+    ],
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
