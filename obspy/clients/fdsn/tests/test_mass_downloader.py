@@ -12,6 +12,7 @@ The obspy.clients.fdsn.download_helpers test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import collections
 import copy
@@ -107,6 +108,112 @@ class RestrictionsTestCase(unittest.TestCase):
         super(RestrictionsTestCase, self).__init__(*args, **kwargs)
         self.path = os.path.dirname(__file__)
         self.data = os.path.join(self.path, "data")
+
+    def test_passing_string_as_priority_list_raises(self):
+        """
+        Users reported errors as they used "tuples" with single items as
+        priority lists. Python semantics mean that a "tuple" without a comma
+        is not tuple. Thus '("HH[NEZ")' is actually just a string which is
+        not what the users expected. Thus this should raise an exception.
+        """
+        start = obspy.UTCDateTime(2014, 1, 1)
+        end = start + 10
+
+        # Test for the channel_priorities key.
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         channel_priorities="HHE")
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         channel_priorities=("HHE"))
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         channel_priorities=native_str("HHE"))
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         channel_priorities=(native_str("HHE")))
+        self.assertEqual(e.exception.args[0],
+                         "'channel_priorities' must be a list or other "
+                         "iterable container.")
+
+        # And for the location priorities key.
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         location_priorities="00")
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         location_priorities=("00"))
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         location_priorities=native_str("00"))
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
+
+        with self.assertRaises(TypeError) as e:
+            Restrictions(starttime=start, endtime=end,
+                         location_priorities=(native_str("00")))
+        self.assertEqual(e.exception.args[0],
+                         "'location_priorities' must be a list or other "
+                         "iterable container.")
+
+        # All other valid things should of course still work.
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=("HHE",))
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=["HHE"])
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=("HHE", "BHE"))
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=["HHE", "BHE"])
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=(native_str("HHE"),))
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=[native_str("HHE")])
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=(native_str("HHE"),
+                                         native_str("BHE")))
+        Restrictions(starttime=start, endtime=end,
+                     channel_priorities=[native_str("HHE"),
+                                         native_str("BHE")])
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=("00",))
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=["00"])
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=("00", "10"))
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=["00", "10"])
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=(native_str("00"),))
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=[native_str("00")])
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=(native_str("00"),
+                                          native_str("10")))
+        Restrictions(starttime=start, endtime=end,
+                     location_priorities=[native_str("00"),
+                                          native_str("10")])
 
     def test_restrictions_object(self):
         """
