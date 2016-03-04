@@ -145,9 +145,9 @@ class Restrictions(object):
     :type location: str
     :param channel: The channel code. Can contain wildcards.
     :type channel: str
-    :param exclude_network: A list of potentially wildcarded networks that
+    :param exclude_networks: A list of potentially wildcarded networks that
         should not be downloaded.
-    :type exclude_network: list of str
+    :type exclude_networks: list of str
     :param exclude_stations: A list of potentially wildcarded stations that
         should not be downloaded.
     :type exclude_stations: list of str
