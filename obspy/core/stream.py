@@ -3100,6 +3100,71 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st += tr
         return st
 
+    def _get_common_channels_info(self):
+        """
+        Returns a dictionary with information on common channels.
+        """
+        # get all ids down to location code
+        ids_ = set([tr.id.rsplit(".", 1)[0] for tr in self])
+        all_channels = {}
+        # work can be separated by net.sta.loc, so iterate over each
+        for id_ in ids_:
+            net, sta, loc = id_.split(".")
+            channels = {}
+            st_ = self.select(network=net, station=sta, location=loc)
+            # for each individual channel collect earliest start time and
+            # latest endtime
+            for tr in st_:
+                cha = tr.stats.channel
+                cha_common = cha and cha[:-1] or None
+                cha_common_dict = channels.setdefault(cha_common, {})
+                cha_dict = cha_common_dict.setdefault(cha, {})
+                cha_dict["start"] = min(tr.stats.starttime.timestamp,
+                                        cha_dict.get("start", np.inf))
+                cha_dict["end"] = max(tr.stats.endtime.timestamp,
+                                      cha_dict.get("end", -np.inf))
+            # convert all timestamp objects back to UTCDateTime
+            for cha_common_dict in channels.values():
+                for cha_dict in cha_common_dict.values():
+                    cha_dict["start"] = UTCDateTime(cha_dict["start"])
+                    cha_dict["end"] = UTCDateTime(cha_dict["end"])
+            # now for every combination of common channels determine earliest
+            # common start time and latest common end time, as well as gap
+            # information in between
+            for cha_common, channels_ in channels.items():
+                if cha_common is None:
+                    cha_pattern = ""
+                else:
+                    cha_pattern = cha_common + "?"
+                st__ = self.select(network=net, station=sta, location=loc,
+                                   channel=cha_pattern)
+                start = max(
+                    [cha_dict_["start"] for cha_dict_ in channels_.values()])
+                end = min(
+                    [cha_dict_["end"] for cha_dict_ in channels_.values()])
+                gaps = st__.get_gaps()
+                all_channels[(net, sta, loc, cha_pattern)] = {
+                    "start": start, "end": end, "gaps": gaps,
+                    "channels": channels_}
+        return all_channels
+
+    def _trim_common_channels(self):
+        """
+        Trim all channels that have the same ID down to the component character
+        to the earliest common start time and latest common end time. Works in
+        place.
+        """
+        channel_infos = self._get_common_channels_info()
+        new_traces = []
+        for (net, sta, loc, cha_pattern), infos in channel_infos.items():
+            st = self.select(network=net, station=sta, location=loc,
+                             channel=cha_pattern)
+            st.trim(infos["start"], infos["end"])
+            for _, _, _, _, start_, end_, _, _ in infos["gaps"]:
+                st = st.cutout(start_, end_)
+            new_traces += st.traces
+        self.traces = new_traces
+
 
 def _is_pickle(filename):  # @UnusedVariable
     """
