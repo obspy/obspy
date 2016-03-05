@@ -27,6 +27,7 @@ from future.utils import native_str
 import ctypes as C
 import math as M
 import os
+import threading
 import warnings
 
 import numpy as np
@@ -46,6 +47,9 @@ from obspy.signal.util import _npts2nfft
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
+
+# Mutex as evalresp is not thread-safe.
+_evalresp_lock = threading.Lock()
 
 
 @deprecated("'cosTaper' has been renamed to 'cosine_taper'. Use that instead.")
@@ -286,23 +290,25 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
             date.format_seed().encode('ascii', 'strict'))
         fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
         nfreqs = C.c_int(freqs.shape[0])
-        res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
-                                freqs, nfreqs, rtyp, vbs, start_stage,
-                                stop_stage, stdio_flag, C.c_int(0))
-        # optimizing performance, see
-        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
-        try:
-            nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
-        except ValueError:
-            msg = "evalresp failed to calculate a response."
-            raise ValueError(msg)
-        h = np.empty(nfreqs, dtype=np.complex128)
-        f = np.empty(nfreqs, dtype=np.float64)
-        for i in range(nfreqs):
-            h[i] = rvec[i].real + rvec[i].imag * 1j
-            f[i] = rfreqs[i]
-        clibevresp.free_response(res)
-        del nfreqs, rfreqs, rvec, res
+        # NOT thread-safe - thus a lock is used here.
+        with _evalresp_lock:
+            res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
+                                    freqs, nfreqs, rtyp, vbs, start_stage,
+                                    stop_stage, stdio_flag, C.c_int(0))
+            # optimizing performance, see
+            # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
+            try:
+                nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+            except ValueError:
+                msg = "evalresp failed to calculate a response."
+                raise ValueError(msg)
+            h = np.empty(nfreqs, dtype=np.complex128)
+            f = np.empty(nfreqs, dtype=np.float64)
+            for i in range(nfreqs):
+                h[i] = rvec[i].real + rvec[i].imag * 1j
+                f[i] = rfreqs[i]
+            clibevresp.free_response(res)
+            del nfreqs, rfreqs, rvec, res
     if freq:
         return h, f
     return h

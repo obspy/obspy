@@ -15,11 +15,12 @@ from future.utils import native_str
 
 import copy
 import fnmatch
+from glob import glob, has_magic
 import math
+from multiprocessing.dummy import Pool
 import os
 import pickle
 import warnings
-from glob import glob, has_magic
 
 from pkg_resources import load_entry_point
 import numpy as np
@@ -1953,7 +1954,8 @@ class Stream(object):
         return self
 
     def simulate(self, paz_remove=None, paz_simulate=None,
-                 remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
+                 remove_sensitivity=True, simulate_sensitivity=True,
+                 **kwargs):
         """
         Correct for instrument response / Simulate new instrument response.
 
@@ -1980,6 +1982,12 @@ class Stream(object):
             ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
             new instrument (seismometer/digitizer) during instrument
             simulation.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
 
         This function corrects for the original instrument response given by
         ``paz_remove`` and/or simulates a new instrument response given by
@@ -2049,10 +2057,22 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
         """
-        for tr in self:
-            tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
-                        remove_sensitivity=remove_sensitivity,
-                        simulate_sensitivity=simulate_sensitivity, **kwargs)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = 1
+
+        kwargs["paz_remove"] = paz_remove
+        kwargs["paz_simulate"] = paz_simulate
+        kwargs["remove_sensitivity"] = remove_sensitivity
+        kwargs["simulate_sensitivity"] = simulate_sensitivity
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="simulate",
+            nthreads=nthreads, kwargs=kwargs)
         return self
 
     def filter(self, type, **options):
@@ -2063,6 +2083,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
         :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
@@ -2115,8 +2141,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.filter("highpass", freq=1.0)
             st.plot()
         """
-        for tr in self:
-            tr.filter(type, **options)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = 1
+        options["type"] = type
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="filter",
+            nthreads=nthreads, kwargs=options)
         return self
 
     def trigger(self, type, **options):
@@ -2126,6 +2161,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
             further details.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
         :param options: Necessary keyword arguments for the respective
             trigger that will be passed on. (e.g. ``sta=3``, ``lta=10``)
             Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
@@ -2187,12 +2228,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             st.trigger('recstalta', sta=1, lta=4)
             st.plot()
         """
-        for tr in self:
-            tr.trigger(type, **options)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = 1
+
+        options["type"] = type
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="trigger",
+            nthreads=nthreads, kwargs=options)
         return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
-                 strict_length=False):
+                 strict_length=False, nthreads=1):
         """
         Resample data in all traces of stream using Fourier method.
 
@@ -2208,6 +2260,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which end time of
             trace would change. Defaults to ``False``.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         .. note::
 
@@ -2246,12 +2304,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         """
-        for tr in self:
-            tr.resample(sampling_rate, window=native_str(window),
-                        no_filter=no_filter, strict_length=strict_length)
+        kwargs = {"sampling_rate": sampling_rate,
+                  "window": native_str(window),
+                  "no_filter": no_filter,
+                  "strict_length": strict_length}
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="resample",
+            nthreads=nthreads, kwargs=kwargs)
         return self
 
-    def decimate(self, factor, no_filter=False, strict_length=False):
+    def decimate(self, factor, no_filter=False, strict_length=False,
+                 nthreads=1):
         """
         Downsample data in all traces of stream by an integer factor.
 
@@ -2264,6 +2328,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which end time of
             trace would change. Defaults to ``False``.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         Currently a simple integer decimation is implemented.
         Only every decimation_factor-th sample remains in the trace, all other
@@ -2314,15 +2384,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> tr.data
         array([0, 4, 8])
         """
-        for tr in self:
-            tr.decimate(factor, no_filter=no_filter,
-                        strict_length=strict_length)
+        kwargs = {"factor": factor, "no_filter": no_filter,
+                  "strict_length": strict_length}
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="decimate",
+            nthreads=nthreads, kwargs=kwargs)
         return self
 
-    def max(self):
+    def max(self, nthreads=1):
         """
         Get the values of the absolute maximum amplitudes of all traces in the
         stream. See :meth:`~obspy.core.trace.Trace.max`.
+
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         :return: List of values of absolute maxima of all traces
 
@@ -2336,9 +2416,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.max()
         [9, -9, 9.0]
         """
-        return [tr.max() for tr in self]
+        return _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="max",
+            nthreads=nthreads)
 
-    def differentiate(self, method='gradient'):
+    def differentiate(self, method='gradient', nthreads=1):
         """
         Differentiate all traces with respect to time.
 
@@ -2346,6 +2429,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param method: Method to use for differentiation. Defaults to
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         .. note::
 
@@ -2364,8 +2453,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             hence has the same shape as the input array. (uses
             :func:`numpy.gradient`)
         """
-        for tr in self:
-            tr.differentiate(method=method)
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="differentiate",
+            nthreads=nthreads, kwargs={"method": method})
         return self
 
     def integrate(self, method='cumtrapz', **options):
@@ -2380,6 +2471,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
             further details.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
 
         .. note::
 
@@ -2390,18 +2487,34 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
         """
-        for tr in self:
-            tr.integrate(method=method, **options)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in options:
+            nthreads = options.pop("nthreads")
+        else:
+            nthreads = 1
+
+        options["method"] = method
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="integrate",
+            nthreads=nthreads, kwargs=options)
         return self
 
     @raise_if_masked
-    def detrend(self, type='simple'):
+    def detrend(self, type='simple', nthreads=1):
         """
         Remove a linear trend from all traces.
 
         :type type: str, optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         .. note::
 
@@ -2425,8 +2538,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'constant'`` or ``'demean'``
             Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
         """
-        for tr in self:
-            tr.detrend(type=type)
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="detrend",
+            nthreads=nthreads, kwargs={"type": type})
         return self
 
     def taper(self, *args, **kwargs):
@@ -2436,6 +2551,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding :meth:`~obspy.core.trace.Trace.taper`
         method of :class:`~obspy.core.trace.Trace`.
 
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
+
         .. note::
 
             This operation is performed in place on the actual data arrays. The
@@ -2443,8 +2565,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        for tr in self:
-            tr.taper(*args, **kwargs)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = 1
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="taper",
+            nthreads=nthreads, args=args, kwargs=kwargs)
         return self
 
     def interpolate(self, *args, **kwargs):
@@ -2454,6 +2585,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.interpolate` method of
         :class:`~obspy.core.trace.Trace`.
+
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
 
         .. note::
 
@@ -2486,17 +2624,33 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         BW.RJOB..EHN | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03... - ... | 111.1 Hz, 3332 samples
         """
-        for tr in self:
-            tr.interpolate(*args, **kwargs)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = 1
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="interpolate",
+            nthreads=nthreads, args=args, kwargs=kwargs)
         return self
 
-    def std(self):
+    def std(self, nthreads=1):
         """
         Calculate standard deviations of all Traces in the Stream.
 
         Standard deviations are calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data`` for every trace in the
         stream.
+
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         :return: List of standard deviations of all traces.
 
@@ -2509,9 +2663,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st.std()
         [4.2614551505325036, 4.4348618918744247]
         """
-        return [tr.std() for tr in self]
+        return _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="std",
+            nthreads=nthreads)
 
-    def normalize(self, global_max=False):
+    def normalize(self, global_max=False, nthreads=1):
         """
         Normalize all Traces in the Stream.
 
@@ -2522,6 +2679,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param global_max: If set to ``True``, all traces are normalized with
                 respect to the global maximum of all traces in the stream
                 instead of normalizing every trace separately.
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. It is oftentimes not worth it - benchmark
+            your workflow!
+        :type nthreads: int
 
         .. note::
             If ``data.dtype`` of a trace was integer it is changing to float.
@@ -2582,8 +2745,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = None
         # normalize all traces
-        for tr in self:
-            tr.normalize(norm=norm)
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="normalize",
+            nthreads=nthreads, kwargs={"norm": norm})
         return self
 
     def rotate(self, method, back_azimuth=None, inclination=None):
@@ -3022,6 +3187,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Deconvolve instrument response for all Traces in Stream.
 
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
+
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.remove_response` method of
         :class:`~obspy.core.trace.Trace`.
@@ -3048,8 +3220,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        for tr in self:
-            tr.remove_response(*args, **kwargs)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = 1
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="remove_response",
+            nthreads=nthreads, args=args, kwargs=kwargs)
+
         return self
 
     def remove_sensitivity(self, *args, **kwargs):
@@ -3059,6 +3241,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.remove_sensitivity` method of
         :class:`~obspy.core.trace.Trace`.
+
+        :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+            would be calculated to the minimum between the number of available
+            CPUs and 16. This is to not launch like a hundred threads on big
+            shared memory clusters. This must be passed as part of the
+            kwargs. It is oftentimes not worth it - benchmark your workflow!
+        :type nthreads: int
 
         >>> from obspy import read, read_inventory
         >>> st = read()
@@ -3073,8 +3262,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             original data, use :meth:`~obspy.core.stream.Stream.copy` to create
             a copy of your stream object.
         """
-        for tr in self:
-            tr.remove_sensitivity(*args, **kwargs)
+        # Must be passed as part of the kwargs as otherwise the historically
+        # Grown interface would have to change.
+        if "nthreads" in kwargs:
+            nthreads = kwargs.pop("nthreads")
+        else:
+            nthreads = 1
+
+        _parallel_loop_over_traces(
+            stream_object=self,
+            trace_method_name="remove_sensitivity",
+            nthreads=nthreads, args=args, kwargs=kwargs)
         return self
 
 
@@ -3091,6 +3289,61 @@ def readPickle(*args, **kwargs):  # noqa
 @deprecated("Renamed to '_write_pickle'. Use that instead.")
 def writePickle(*args, **kwargs):  # noqa
     return _write_pickle(*args, **kwargs)
+
+
+def _parallel_loop_over_traces(stream_object, trace_method_name, nthreads=1,
+                               args=(), kwargs=None):
+    """
+    Run a method over all Traces of a Stream in parallel.
+
+    It uses threads which due to Python's GIL is usually not really parallel
+    but most if not all expensive methods are internally implemented in
+    C/Fortran which commonly release the GIL thus it actually does run in
+    parallel.
+
+    args and kwargs are passed to the trace method.
+
+    :param stream_object: The stream object.
+    :param trace_method_name: The name of the method to be run on each trace.
+    :param nthreads: Maximum number of threads to use. Defaults 1. ``None``
+        would be calculated to the minimum between the number of available
+        CPUs and 16. This is to not launch like a hundred threads on big
+        shared memory clusters. It is oftentimes not worth it - benchmark your
+        workflow!
+    :type nthreads: int
+    """
+    # Guard against empty Stream object.
+    if not stream_object:
+        return
+
+    if kwargs is None:
+        kwargs = {}
+
+    # Determine the number of threads.
+    if nthreads is None:
+        nthreads = min(os.cpu_count(), 16)
+    nthreads_clip = max(1, min(int(nthreads), len(stream_object)))
+
+    # The created closure will take care of the variables.
+    def apply(trace):
+        return getattr(trace, trace_method_name)(*args, **kwargs)
+
+    # Threading is not free - thus don't create one when only one is required.
+    if nthreads_clip == 1:
+        return_values = [apply(tr) for tr in stream_object]
+    else:
+        # Its the multiprocessing.dummy Pool which uses threading with a nice
+        # API. Python's GIL means we don't have to worry about most race
+        # conditions.
+        pool = Pool(processes=nthreads_clip)
+        # the following is a hack because pool.map doesn't recognize
+        # KeyboardInterrupts and hangs. For more info see:
+        # 'http://stackoverflow.com/questions/1408356/keyboard-interrupts-
+        # with-pythons-multiprocessing-pool'
+        return_values = pool.map_async(apply, stream_object).get(9999999)
+        pool.close()
+        pool.join()
+    return return_values
 
 
 def _is_pickle(filename):  # @UnusedVariable
