@@ -22,7 +22,6 @@ import collections
 import json
 
 import numpy as np
-import timeit
 import obspy
 from obspy.io.mseed.util import get_flags
 
@@ -64,17 +63,9 @@ class MSEEDMetadata(object):
         :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
         :param c_seg: Calculate metrics for each continuous segment.
         :type c_seg: bool
-        :param start_offset: Give the time of the first expected sample
-            we use this to determine whether a start gap or overlap should
-            exist. None means there will always be a gap at the start.
-        :type start_offset :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param start_time_tolerance: time tolerance associated with the
-            expected first sample (see: start_offset).
-        :type start_time_tolerance: float
         """
 
         self.data = obspy.Stream()
-        self.end_data = obspy.Stream()
         self.files = []
 
         # Allow anything UTCDateTime can parse.
@@ -86,7 +77,7 @@ class MSEEDMetadata(object):
         self.window_start = starttime
         self.window_end = endtime
 
-        # We are required to exclude samples at T1. Therefore, shift the 
+        # We are required to exclude samples at T1. Therefore, shift the
         # time window to the left by 1μs and set nearest_sample to False.
         # This will force ObsPy to fall back to the sample left of the endtime
         if endtime is not None:
@@ -107,8 +98,7 @@ class MSEEDMetadata(object):
 
             self.files.append(file)
 
-            # Only extend traces with data
-            # Trim the traces from one sample before the starttime
+            # Only extend traces with data (npts > 0)
             for tr in st:
                 if(tr.stats.npts != 0):
                     self.data.extend([tr])
@@ -119,21 +109,23 @@ class MSEEDMetadata(object):
         # Do some sanity checks. The class only works with data from a
         # single location so we have to make sure that the existing data on
         # this object and the newly added all have the same identifier.
-        ids = set(tr.id + tr.stats.mseed.dataquality for tr in self.data)
+        ids = set(tr.id + "." + tr.stats.mseed.dataquality for tr in self.data)
         if len(ids) != 1:
-            raise ValueError("All traces must have the same SEED id.")
+            raise ValueError("All traces must have the same SEED id and "
+                             "quality")
 
         self.data.sort()
 
         # Set the metric start and endtime specified by the user.
         # If no start and endtime are given, we pick our own and the window
-        # will start on the first sample and end on the last sample + Δa.
+        # will start on the first sample and end on the last sample + Δt.
+        end_stats = self.data[-1].stats
         self.starttime = starttime or self.data[0].stats.starttime
-        self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
+        self.endtime = endtime or end_stats.endtime + end_stats.delta
         self.total_time = self.endtime - self.starttime
 
         # Get sample left of the user specified starttime
-        # This will allow us to determine continuity in our window
+        # This will allow us to determine start continuity in our window
         if self.window_start is not None:
             self._get_left_sample()
 
@@ -150,18 +142,21 @@ class MSEEDMetadata(object):
         Finds the most first sample BEFORE the user specified starttime
         The most reliable way to do this is to set the starttime as the
         endtime, and using nearest_sample=False to fall back to the
-        previous sample using . Reading takes only a few 0.01s so it is not
-        a bottleneck in the procedure.
+        previous sample. A little bit hacky, but reading takes only a few
+        0.01s so it is not a bottleneck in the procedure.
         """
         self.end_data = obspy.Stream()
         self.start_offset = None
         for file in self.files:
             self.end_data.extend(obspy.read(file, endtime=self.starttime-1e-6,
                                  nearest_sample=False, format="mseed"))
+        # Determine the expected first sample AFTER the starttime
+        # Which is equivalent to the first sample BEFORE the starttime,
+        # in addition to delta (include the time tolerance).
         if self.end_data:
             end_stats = self.end_data[-1].stats
             self.start_offset = end_stats.endtime + end_stats.delta
-            self.start_time_tolerance = 0.5*end_stats.delta
+            self.start_tolerance = 0.5*end_stats.delta
 
     @property
     def number_of_records(self):
@@ -179,7 +174,7 @@ class MSEEDMetadata(object):
 
     def _extract_mseed_stream_stats(self):
         """
-        Collects the stats
+        Collects the mSEED stats
         """
         stats = self.data[0].stats
         self.meta['network'] = stats.network
@@ -187,13 +182,6 @@ class MSEEDMetadata(object):
         self.meta['location'] = stats.location
         self.meta['channel'] = stats.channel
         self.meta['quality'] = stats.mseed.dataquality
-        self.meta['mseed_id'] = self.data[0].id
-
-    def _get_unique_list(self, parameter):
-        if(parameter == 'sampling_rate'):
-            return sorted(list(set([tr.stats[parameter] for tr in self.data])))
-        else:
-            return sorted(list(set([tr.stats.mseed[parameter] for tr in self.data])))
 
     def _extract_mseed_stream_metadata(self):
         """
@@ -201,10 +189,11 @@ class MSEEDMetadata(object):
         """
 
         self._extract_mseed_stream_stats()
+
         meta = self.meta
-        m = self.meta
 
         # Add other parameters to the metadata object
+        meta['mseed_id'] = self.data[0].id
         meta['files'] = self.files
         meta['start_time'] = self.starttime
         meta['end_time'] = self.endtime
@@ -212,9 +201,13 @@ class MSEEDMetadata(object):
         meta['num_samples'] = self.number_of_samples
 
         # The following are lists as it might contain multiple entries.
-        meta['sample_rate'] = self._get_unique_list('sampling_rate')
-        meta['record_len'] = self._get_unique_list('record_length')
-        meta['encoding'] = self._get_unique_list('encoding')
+        meta['sample_rate'] = \
+            sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
+        meta['record_length'] = \
+            sorted(list(set([tr.stats.mseed.record_length
+                             for tr in self.data])))
+        meta['encoding'] = \
+            sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
 
         # Setup counters for the MiniSEED header flags.
         data_quality_flags = collections.Counter(
@@ -247,31 +240,31 @@ class MSEEDMetadata(object):
         # Setup counters for the MiniSEED header flags percentages.
         # Counters are supposed to work for integers, but
         # it also appears to work for floats too
-        data_quality_flags_percentages = collections.Counter(
-                amplifier_saturation_detected=0,
-                digitizer_clipping_detected=0,
-                spikes_detected=0,
-                glitches_detected=0,
-                missing_data_present=0,
-                telemetry_sync_error=0,
-                digital_filter_charging=0,
-                time_tag_uncertain=0)
-        activity_flags_percentages = collections.Counter(
-                calibration_signals_present=0,
-                time_correction_applied=0,
-                beginning_event=0,
-                end_event=0,
-                positive_leap=0,
-                negative_leap=0,
-                clock_locked=0,
-                time_correction_required=0)
-        io_and_clock_flags_percentages = collections.Counter(
-                station_volume_parity_error=0,
-                long_record_read=0,
-                short_record_read=0,
-                start_time_series=0,
-                end_time_series=0,
-                clock_locked=0)
+        data_quality_flags_seconds = collections.Counter(
+                amplifier_saturation_detected=0.0,
+                digitizer_clipping_detected=0.0,
+                spikes_detected=0.0,
+                glitches_detected=0.0,
+                missing_data_present=0.0,
+                telemetry_sync_error=0.0,
+                digital_filter_charging=0.0,
+                time_tag_uncertain=0.0)
+        activity_flags_seconds = collections.Counter(
+                calibration_signals_present=0.0,
+                time_correction_applied=0.0,
+                beginning_event=0.0,
+                end_event=0.0,
+                positive_leap=0.0,
+                negative_leap=0.0,
+                clock_locked=0.0,
+                time_correction_required=0.0)
+        io_and_clock_flags_seconds = collections.Counter(
+                station_volume_parity_error=0.0,
+                long_record_read=0.0,
+                short_record_read=0.0,
+                start_time_series=0.0,
+                end_time_series=0.0,
+                clock_locked=0.0)
 
         for file in self.files:
             flags = get_flags(
@@ -282,23 +275,27 @@ class MSEEDMetadata(object):
             activity_flags.update(flags["activity_flags"])
             io_and_clock_flags.update(flags["io_and_clock_flags"])
 
-            data_quality_flags_percentages.update(flags["data_quality_flags_percentages"])
-            activity_flags_percentages.update(flags["activity_flags_percentages"])
-            io_and_clock_flags_percentages.update(flags["io_and_clock_flags_percentages"])
+            # Update the percentage counters
+            data_quality_flags_seconds.update(
+                flags["data_quality_flags_seconds"])
+            activity_flags_seconds.update(
+                flags["activity_flags_seconds"])
+            io_and_clock_flags_seconds.update(
+                flags["io_and_clock_flags_seconds"])
 
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
 
-        # Set to percentages
-        # The total time is the difference between start & end in seconds
-        # The percentage fields are the sum of record lengths for which
-        # the respective bits are set
-        for key in data_quality_flags_percentages:
-            data_quality_flags_percentages[key] /= self.total_time * 1e-2
-        for key in activity_flags_percentages:
-            activity_flags_percentages[key] /= self.total_time * 1e-2
-        for key in io_and_clock_flags_percentages:
-            io_and_clock_flags_percentages[key] /= self.total_time * 1e-2
+        # Convert second counts to percentages. The total time is the
+        # difference between start & end in seconds. The percentage fields
+        # are the sum of record lengths for which the respective bits are
+        # set in seconds
+        for key in data_quality_flags_seconds:
+            data_quality_flags_seconds[key] /= self.total_time * 1e-2
+        for key in activity_flags_seconds:
+            activity_flags_seconds[key] /= self.total_time * 1e-2
+        for key in io_and_clock_flags_seconds:
+            io_and_clock_flags_seconds[key] /= self.total_time * 1e-2
 
         # Only calculate the timing quality statistics if each files has the
         # timing quality set. This should usually be the case. Otherwise we
@@ -322,56 +319,59 @@ class MSEEDMetadata(object):
             timing_quality_upper_quartile = None
 
         # Set miniseed header counts
-        m['timing_quality_mean'] = timing_quality_mean
-        m['timing_quality_min'] = timing_quality_min
-        m['timing_quality_max'] = timing_quality_max
-        m['timing_quality_median'] = timing_quality_median
-        m['timing_quality_lower_quartile'] = timing_quality_lower_quartile
-        m['timing_quality_upper_quartile'] = timing_quality_upper_quartile
+        meta['timing_quality_mean'] = timing_quality_mean
+        meta['timing_quality_min'] = timing_quality_min
+        meta['timing_quality_max'] = timing_quality_max
+        meta['timing_quality_median'] = timing_quality_median
+        meta['timing_quality_lower_quartile'] = timing_quality_lower_quartile
+        meta['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
         # According to schema @ maybe refactor this to less verbose names
         # Set miniseed header flag percentages
-        m['miniseed_header_flag_percentages'] = {}
-        m['miniseed_header_flag_percentages']['activity_flags'] = activity_flags_percentages
-        m['miniseed_header_flag_percentages']['data_quality_flags'] = data_quality_flags_percentages
-        m['miniseed_header_flag_percentages']['io_and_clock_flags'] = io_and_clock_flags_percentages
+        meta['miniseed_header_flag_percentages'] = {}
+        pointer = meta['miniseed_header_flag_percentages']
+        pointer['activity_flags'] = activity_flags_seconds
+        pointer['data_quality_flags'] = data_quality_flags_seconds
+        pointer['io_and_clock_flags'] = io_and_clock_flags_seconds
 
         # Set miniseed header flag counts
-        m['miniseed_header_flag_counts'] = {}
-        m['miniseed_header_flag_counts']['activity_flags'] = activity_flags
-        m['miniseed_header_flag_counts']['data_quality_flags'] = data_quality_flags
-        m['miniseed_header_flag_counts']['io_and_clock_flags'] = io_and_clock_flags
-        
+        meta['miniseed_header_flag_counts'] = {}
+        pointer = meta['miniseed_header_flag_counts']
+        pointer['activity_flags'] = activity_flags
+        pointer['data_quality_flags'] = data_quality_flags
+        pointer['io_and_clock_flags'] = io_and_clock_flags
+
         # Small function to change flag names from the get_flags routine
         # to match the schema
         self._fix_flag_names()
-
 
     def _fix_flag_names(self):
         """
         Supplementary function to fix flag parameter names
         Parameters with a key in the name_ref will be changed to its value
         """
-        name_ref = {
-            "amplifier_saturation_detected": "amplifier_saturation",
-            "digitizer_clipping_detected": "digitizer_clipping",
-            "spikes_detected": "spikes",
-            "glitches_detected": "glitches",
-            "missing_data_present": "missing_padded_data",
-            "time_tag_uncertain": "suspect_time_tag",
-            "calibration_signals_present": "calibration_signal",
-            "time_correction_applied": "timing_correction",
-            "beginning_event": "event_begin",
-            "end_event": "event_end",
-            "station_volume_parity_error": "station_volume",
+        name_reference = {
+            'amplifier_saturation_detected': 'amplifier_saturation',
+            'digitizer_clipping_detected': 'digitizer_clipping',
+            'spikes_detected': 'spikes',
+            'glitches_detected': 'glitches',
+            'missing_data_present': 'missing_padded_data',
+            'time_tag_uncertain': 'suspect_time_tag',
+            'calibration_signals_present': 'calibration_signal',
+            'time_correction_applied': 'timing_correction',
+            'beginning_event': 'event_begin',
+            'end_event': 'event_end',
+            'station_volume_parity_error': 'station_volume',
         }
 
-        # Loop over all keys and replace where required according to name_ref
-        for flag_type in ["_percentages", "_counts"]:
-            for _, flags in self.meta['miniseed_header_flag' + flag_type].iteritems():
+        # Loop over all keys and replace where required according to
+        # the name_reference
+        prefix = 'miniseed_header_flag'
+        for flag_type in ['_percentages', '_counts']:
+            for _, flags in self.meta[prefix + flag_type].iteritems():
                 for param in flags:
-                    if(param in name_ref):
-                        flags[name_ref[param]] = flags.pop(param)
+                    if param in name_reference:
+                        flags[name_reference[param]] = flags.pop(param)
 
     def _check_start_continuity(self):
         """
@@ -385,15 +385,15 @@ class MSEEDMetadata(object):
         stats = self.data[0].stats
         if self.start_offset is not None:
             # Is there a gap at the start
-            if stats.starttime > self.start_offset  + self.start_time_tolerance:
+            if stats.starttime > self.start_offset + self.start_tolerance:
                 self.gap_count += 1
                 self.gap_length += stats.starttime - self.starttime
             # Maybe an overlap
-            if stats.starttime < self.start_offset - self.start_time_tolerance:
+            if stats.starttime < self.start_offset - self.start_tolerance:
                 self.overlap_count += 1
                 self.overlap_length += self.start_offset - stats.starttime
         else:
-            # Implicitly assume a gap
+            # Implicitly assume a gap at the start
             if stats.starttime > self.starttime:
                 self.gap_count += 1
                 self.gap_length += stats.starttime - self.starttime
@@ -403,8 +403,7 @@ class MSEEDMetadata(object):
         We define the endtime as the time of the last sample but the next
         sample would only start at endtime + delta. Thus the following
         scenario would not count as a gap at the end:
-        x -- x -- x -- x -- x -- x -- 
-                                      | <= self.endtime
+        x -- x -- x -- x -- x -- x -- <= self.endtime
         """
         end_stats = self.data[-1].stats
         next_offset = end_stats.endtime + end_stats.delta
@@ -431,8 +430,8 @@ class MSEEDMetadata(object):
         self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
 
-        # Might overflow np.int64 so make Python obj. This allows
-        # conversion to long int when required
+        # Might overflow np.int64 so make Python obj. (.astype(object))
+        # allows conversion to long int when required
         self.meta['sample_rms'] = \
             np.sqrt(sum((tr.data.astype(object) ** 2).sum()
                         for tr in self.data) / npts)
@@ -466,7 +465,7 @@ class MSEEDMetadata(object):
 
         # Percentage based availability as total gap length over the trace
         # duration
-        self.meta['percent_availability'] = 100.0 * (
+        self.meta['percent_availability'] = 100 * (
             (self.total_time - self.meta['gaps_len']) /
             self.total_time)
 

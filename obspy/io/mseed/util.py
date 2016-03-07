@@ -233,7 +233,7 @@ def get_timing_and_data_quality(file_or_file_object):
         ("end_time_series", 0),
         ("clock_locked", 0)])
     # For percentages
-    quality_count_percentages = collections.OrderedDict([
+    quality_count_seconds = collections.OrderedDict([
         ("amplifier_saturation_detected", 0),
         ("digitizer_clipping_detected", 0),
         ("spikes_detected", 0),
@@ -242,16 +242,16 @@ def get_timing_and_data_quality(file_or_file_object):
         ("telemetry_sync_error", 0),
         ("digital_filter_charging", 0),
         ("time_tag_uncertain", 0)])
-    activity_count_percentages = collections.OrderedDict([
+    activity_count_seconds = collections.OrderedDict([
         ("calibration_signals_present", 0),
         ("time_correction_applied", 0),
         ("time_correction_required", 0),
         ("beginning_event", 0),
-        ("end_event", 0), 
+        ("end_event", 0),
         ("positive_leap", 0),
-        ("negative_leap", 0), 
+        ("negative_leap", 0),
         ("event_in_progress", 0)])
-    io_count_percentages = collections.OrderedDict([
+    io_count_seconds = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
         ("short_record_read", 0),
@@ -291,14 +291,8 @@ def get_timing_and_data_quality(file_or_file_object):
 
         # If the record starts before the start time, count from starttime
         # Otherwise, count from the record starttime
-        if(rec_info["starttime"] < starttime):
-            record_first_sample = starttime
-        else:
-            record_first_sample = rec_info["starttime"]
-        if(rec_info["endtime"] > endtime):
-            record_last_sample = endtime
-        else:
-            record_last_sample = rec_info["endtime"]
+        record_first_sample = max(rec_info["starttime"], starttime)
+        record_last_sample = min(rec_info["endtime"], endtime)
 
         # Length of a record is R_end - R_start + sampling interval
         record_length_seconds = (record_last_sample - record_first_sample)
@@ -307,19 +301,19 @@ def get_timing_and_data_quality(file_or_file_object):
             for _i, key in enumerate(io_count.keys()):
                 if (rec_info["io_and_clock_flags"] & (1 << _i)) != 0:
                     io_count[key] += 1
-                    io_count_percentages[key] += record_length_seconds
+                    io_count_seconds[key] += record_length_seconds
 
         if activity_flags:
             for _i, key in enumerate(activity_count.keys()):
                 if (rec_info["activity_flags"] & (1 << _i)) != 0:
                     activity_count[key] += 1
-                    activity_count_percentages[key] += record_length_seconds
+                    activity_count_seconds[key] += record_length_seconds
 
         if data_quality_flags:
             for _i, key in enumerate(quality_count.keys()):
                 if (rec_info["data_quality_flags"] & (1 << _i)) != 0:
                     quality_count[key] += 1
-                    quality_count_percentages[key] += record_length_seconds
+                    quality_count_seconds[key] += record_length_seconds
 
         if timing_quality and "timing_quality" in rec_info:
             tq.append(float(rec_info["timing_quality"]))
@@ -328,7 +322,8 @@ def get_timing_and_data_quality(file_or_file_object):
         # in addition to whether this correction has been applied
         if rec_info["time_correction"]:
             activity_count["time_correction_required"] += 1
-            activity_count_percentages["time_correction_required"] += record_length_seconds
+            activity_count_seconds["time_correction_required"] += \
+                record_length_seconds
 
     results = {
         "record_count": record_count,
@@ -336,13 +331,13 @@ def get_timing_and_data_quality(file_or_file_object):
 
     if io_flags:
         results["io_and_clock_flags"] = io_count
-        results["io_and_clock_flags_percentages"] = io_count_percentages
+        results["io_and_clock_flags_seconds"] = io_count_seconds
     if activity_flags:
         results["activity_flags"] = activity_count
-        results["activity_flags_percentages"] = activity_count_percentages
+        results["activity_flags_seconds"] = activity_count_seconds
     if data_quality_flags:
         results["data_quality_flags"] = quality_count
-        results["data_quality_flags_percentages"] = quality_count_percentages
+        results["data_quality_flags_seconds"] = quality_count_seconds
     if timing_quality:
         tq = np.array(tq, dtype=np.float64)
         if len(tq):
@@ -495,7 +490,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     data = file_object.read(28)
 
     def fmt(s):
-        return native_str('%sHHBBBxHHhhBBBxlxxH' % s
+        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
     if endian is None:
         try:
