@@ -22,7 +22,7 @@ import collections
 import json
 
 import numpy as np
-
+import timeit
 import obspy
 from obspy.io.mseed.util import get_flags
 
@@ -48,8 +48,7 @@ class MSEEDMetadata(object):
     """
     A container for MSEED specific metadata including QC.
     """
-    def __init__(self, files, starttime=None, endtime=None, c_seg=True,
-                 start_offset=None, start_time_tolerance=None):
+    def __init__(self, files, starttime=None, endtime=None, c_seg=True):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
 
@@ -75,9 +74,8 @@ class MSEEDMetadata(object):
         """
 
         self.data = obspy.Stream()
+        self.end_data = obspy.Stream()
         self.files = []
-        self.start_offset = start_offset
-        self.start_time_tolerance = start_time_tolerance
 
         # Allow anything UTCDateTime can parse.
         if starttime is not None:
@@ -85,9 +83,12 @@ class MSEEDMetadata(object):
         if endtime is not None:
             endtime = obspy.UTCDateTime(endtime)
 
+        self.window_start = starttime
+        self.window_end = endtime
+
         # We are required to exclude samples at T1. Therefore, shift the 
-        # time window by 1μs and set nearest_sample to False. This will force
-        # ObsPy to fall back to the previous sample left of the endtime
+        # time window to the left by 1μs and set nearest_sample to False.
+        # This will force ObsPy to fall back to the sample left of the endtime
         if endtime is not None:
             endtime_left = endtime - 1e-6
         else:
@@ -131,16 +132,36 @@ class MSEEDMetadata(object):
         self.endtime = endtime or self.data[-1].stats.endtime + self.data[-1].stats.delta
         self.total_time = self.endtime - self.starttime
 
-        self.next_offset = self.data[-1].stats.endtime + self.data[-1].stats.delta
-        self.next_tolerance = 0.5*self.data[-1].stats.delta
+        # Get sample left of the user specified starttime
+        # This will allow us to determine continuity in our window
+        if self.window_start is not None:
+            self._get_left_sample()
 
-        # Calculation of all the metrics begins here
+        # The calculation of all the metrics begins here
         self.meta = {}
         self._extract_mseed_stream_metadata()
         self._compute_sample_metrics()
 
         if c_seg:
             self._compute_continuous_seg_sample_metrics()
+
+    def _get_left_sample(self):
+        """
+        Finds the most first sample BEFORE the user specified starttime
+        The most reliable way to do this is to set the starttime as the
+        endtime, and using nearest_sample=False to fall back to the
+        previous sample using . Reading takes only a few 0.01s so it is not
+        a bottleneck in the procedure.
+        """
+        self.end_data = obspy.Stream()
+        self.start_offset = None
+        for file in self.files:
+            self.end_data.extend(obspy.read(file, endtime=self.starttime-1e-6,
+                                 nearest_sample=False, format="mseed"))
+        if self.end_data:
+            end_stats = self.end_data[-1].stats
+            self.start_offset = end_stats.endtime + end_stats.delta
+            self.start_time_tolerance = 0.5*end_stats.delta
 
     @property
     def number_of_records(self):
@@ -352,6 +373,46 @@ class MSEEDMetadata(object):
                     if(param in name_ref):
                         flags[name_ref[param]] = flags.pop(param)
 
+    def _check_start_continuity(self):
+        """
+        Supplementary function to check whether a gap exists at the start
+        of the stream in a user specified time-window. The parameter
+        self.start_offset is equal to the first sample BEFORE the starttime
+        plus delta. Account for time tolerance. If start_offset is None,
+        implicitly assume there is a gap between starttime and first sample
+        in the time-window.
+        """
+        stats = self.data[0].stats
+        if self.start_offset is not None:
+            # Is there a gap at the start
+            if stats.starttime > self.start_offset  + self.start_time_tolerance:
+                self.gap_count += 1
+                self.gap_length += stats.starttime - self.starttime
+            # Maybe an overlap
+            if stats.starttime < self.start_offset - self.start_time_tolerance:
+                self.overlap_count += 1
+                self.overlap_length += self.start_offset - stats.starttime
+        else:
+            # Implicitly assume a gap
+            if stats.starttime > self.starttime:
+                self.gap_count += 1
+                self.gap_length += stats.starttime - self.starttime
+
+    def _check_end_continuity(self):
+        """
+        We define the endtime as the time of the last sample but the next
+        sample would only start at endtime + delta. Thus the following
+        scenario would not count as a gap at the end:
+        x -- x -- x -- x -- x -- x -- 
+                                      | <= self.endtime
+        """
+        end_stats = self.data[-1].stats
+        next_offset = end_stats.endtime + end_stats.delta
+        next_tolerance = 0.5*end_stats.delta
+        if(next_offset + next_tolerance < self.endtime):
+            self.gap_count += 1
+            self.gap_length += self.endtime - next_offset
+
     def _compute_sample_metrics(self):
         """
         Computes metrics on samples contained in the specified time window
@@ -381,47 +442,27 @@ class MSEEDMetadata(object):
             for tr in self.data) / npts)
 
         # Get gaps at beginning and end and the stream
-        gap_count = 0
-        overlap_count = 0
-        gap_length = 0.0
-        overlap_length = 0.0
+        self.gap_count = 0
+        self.overlap_count = 0
+        self.gap_length = 0.0
+        self.overlap_length = 0.0
 
-        # Start of stream
-        stats = self.data[0].stats
-        if self.start_offset is not None:
-            # Start gap
-            if stats.starttime > self.start_offset  + self.start_time_tolerance:
-                gap_count += 1
-                gap_length += stats.starttime - self.start_offset
-            # We can now have overlaps at the start
-            if stats.starttime < self.start_offset - self.start_time_tolerance:
-                overlap_count += 1
-                overlap_length += self.start_offset - stats.starttime
-        else:
-            # Assume that missing data from starttime to first sample is a gap
-            if stats.starttime > self.starttime:
-                gap_count += 1
-                gap_length += stats.starttime - self.starttime
-
-        # We define the endtime as the time of the last sample but the next
-        # sample would only start at endtime + delta. Thus the following
-        # scenario would not count as a gap at the end:
-        # x -- x -- x -- x -- x -- x -- 
-        #                               | <= self.endtime
-        if(self.next_offset + self.next_tolerance < self.endtime):
-            gap_count += 1
-            gap_length += self.endtime - self.next_offset
+        # Check continuity at the start and end of the stream for user window
+        if self.window_start is not None:
+            self._check_start_continuity()
+        if self.window_end is not None:
+            self._check_end_continuity()
 
         # Get the other gaps
         gaps = self.data.get_gaps()
         self.meta["num_gaps"] = \
-            len([_i for _i in gaps if _i[-1] > 0]) + gap_count
+            len([_i for _i in gaps if _i[-1] > 0]) + self.gap_count
         self.meta["num_overlaps"] = \
-            len([_i for _i in gaps if _i[-1] < 0]) + overlap_count
+            len([_i for _i in gaps if _i[-1] < 0]) + self.overlap_count
         self.meta["gaps_len"] = \
-            sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + gap_length
+            sum(abs(_i[-2]) for _i in gaps if _i[-1] > 0) + self.gap_length
         self.meta["overlaps_len"] = \
-            sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0) + overlap_length
+            sum(abs(_i[-2]) for _i in gaps if _i[-1] < 0) + self.overlap_length
 
         # Percentage based availability as total gap length over the trace
         # duration

@@ -338,8 +338,8 @@ class QualityControlTestCase(unittest.TestCase):
     def test_start_gap(self):
         """
         Tests whether a gap in the beginning of the file is interpreted
-        A gap at the beginning of the stream will be ignored when
-        continuous is set to True
+        A gap at the beginning of the window is ignored if a sample can be
+        found before the starttime, and is continuous
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
         file = os.path.join(self.path, "tiny_quality_file.mseed")
@@ -350,6 +350,21 @@ class QualityControlTestCase(unittest.TestCase):
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["gaps_len"] == 0.025)
+
+    def test_random_window(self):
+        """
+        Tests a random window within a continuous trace, expect no gaps
+        Continuous trace in file runs from [00:01.625000Z to 00:59.300000Z]
+        """
+        file = os.path.join(self.path, "tiny_quality_file.mseed")
+
+        # Go randomly somewhere between two samples, find no gaps because
+        # the trace is continuous everywhere
+        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 22, 646572)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 38, 265749)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["num_overlaps"] == 0)
 
     def test_end_gap(self):
         """
@@ -401,65 +416,12 @@ class QualityControlTestCase(unittest.TestCase):
         percentage = 100*sum(record_lengths_flagged)/sum(record_lengths)
         self.assertTrue(abs(md.meta["miniseed_header_flag_percentages"]["io_and_clock_flags"]["clock_locked"] - percentage) < 1e-6)
 
-    def test_start_offset(self):
-        """
-        Test to see if given a start_offset works
-        """
-        file = os.path.join(self.path, "tiny_quality_file.mseed")
-
-        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
-        start_offset = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650000)
-        endtime = None
-
-        # Expected first sample is past the start sample, overlap
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
-                           start_offset=start_offset, start_time_tolerance=0.0125)
-        self.assertTrue(md.meta["num_overlaps"] == 1)
-        self.assertTrue(md.meta["overlaps_len"] == 0.025)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-
-        # Sample is actually on the expected point
-        # Pass
-        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
-                           start_offset=start_offset, start_time_tolerance=0.0125)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-        self.assertTrue(md.meta["num_overlaps"] == 0)
-
-        # Expected sample is at 650000, but next sample is found at 675000
-        # which exceeds the time tolerance
-        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650001)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
-                           start_offset=start_offset, start_time_tolerance=0.0125)
-        self.assertTrue(md.meta["num_gaps"] == 1)
-        self.assertTrue(md.meta["gaps_len"] == 0.025)
-        self.assertTrue(md.meta["num_overlaps"] == 0)
-
-        # Put the first sample ε away from the first sample
-        # Within time tolerance, so pass without overlaps
-        start_offset = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 662500)
-        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
-                           start_offset=start_offset, start_time_tolerance=0.0125)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-        self.assertTrue(md.meta["num_overlaps"] == 0)
-
-        # Put expected first sample ε + 1μs away from the first sample
-        # Introduce an overlap
-        start_offset = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 662501)
-        starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 650000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
-                           start_offset=start_offset, start_time_tolerance=0.0125)
-        self.assertTrue(md.meta["num_gaps"] == 0)
-        self.assertTrue(md.meta["num_overlaps"] == 1)
-        self.assertTrue(md.meta["overlaps_len"] == 0.012501)
-
     def test_endtime_on_sample(self):
         """
         Test to see whether points on starttime are included, and
         samples on the endtime are excluded.
         [T0, T1), T0 should be included; T1 excluded
-        Total number of points for this test = 4347
+        Total number of samples for this test = 2308
         Trace in file runs from [00:01.625000Z to 00:59.300000Z]
         """
         file = os.path.join(self.path, "tiny_quality_file.mseed")
