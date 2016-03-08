@@ -107,10 +107,10 @@ ObsPy knows of and combine it into one data set.
         # Only HH or BH channels. If a station has HH channels, those will be
         # downloaded, otherwise the BH. Nothing will be downloaded if it has
         # neither. You can add more/less patterns if you like.
-        channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+        channel_priorities=["HH[ZNE]", "BH[ZNE]"],
         # Location codes are arbitrary and there is no rule as to which
         # location is best. Same logic as for the previous setting.
-        location_priorities=("", "00", "10"))
+        location_priorities=["", "00", "10"])
 
     # No specified providers will result in all known ones being queried.
     mdl = MassDownloader()
@@ -275,11 +275,11 @@ acquire the final filename. The start and end times will be formatted with
 avoid colons which are troublesome in file names on many systems.
 
 >>> mseed_storage = ("some_folder/{network}/{station}/"
-...                  "{location}.{channel}.{starttime}.{endtime}.mseed")
+...                  "{channel}.{location}.{starttime}.{endtime}.mseed")
 
 results in
 
-``some_folder/BW/FURT/.BHZ.20141027T163723Z.20141027T163733Z.mseed``.
+``some_folder/BW/FURT/BHZ..20141027T163723Z.20141027T163733Z.mseed``.
 
 The download helpers will create any non-existing folders along the path.
 

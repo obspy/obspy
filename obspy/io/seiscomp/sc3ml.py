@@ -890,14 +890,15 @@ def _read_float_var(elem, cls, unit=False, datum=False, additional_mapping={}):
         convert = float(elem)
     except:
         warnings.warn(
-            "'%s' could not be converted to a float. Will be skipped. Please "
-            "contact to report this issue." % etree.tostring(elem),
+            "Encountered a value '%s' which could not be converted to a "
+            "float. Will be skipped. Please contact to report this "
+            "issue." % elem,
             UserWarning)
         return None
 
     if math.isnan(convert):
-        warnings.warn("Tag '%s' has a value of NaN. It will be skipped." %
-                      tag, UserWarning)
+        warnings.warn("'%s' has a value of NaN. It will be skipped." %
+                      elem, UserWarning)
         return None
 
     obj = cls(convert)

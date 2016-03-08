@@ -101,6 +101,8 @@ class ClientTestCase(unittest.TestCase):
             "http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]",
             "http://[2001:db8::ff00:42:8329]",
             "http://[::ffff:192.168.89.9]",
+            "http://jane",
+            "http://localhost"
             ]
 
         test_urls_fails = [

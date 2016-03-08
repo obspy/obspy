@@ -197,7 +197,7 @@ class PPSD(object):
     >>> ppsd = PPSD(tr.stats, paz)
     >>> print(ppsd.id)
     BW.RJOB..EHZ
-    >>> print(ppsd.times)
+    >>> print(ppsd.times_processed)
     []
 
     Now we could add data to the probabilistic psd (all processing like
@@ -1199,7 +1199,7 @@ class PPSD(object):
         elif isinstance(self.metadata, (str, native_str)):
             return self._get_response_from_resp(tr)
         else:
-            msg = "Unexpected type for `metadata`: %s" % type(metadata)
+            msg = "Unexpected type for `metadata`: %s" % type(self.metadata)
             raise TypeError(msg)
 
     def _get_response_from_inventory(self, tr):
@@ -1353,11 +1353,11 @@ class PPSD(object):
         # Adds ppsd_length and overlap attributes if not existing. This
         # ensures compatibility with pickled objects without these attributes.
         try:
-            self.ppsd_length
-            self.overlap
+            ppsd.ppsd_length
+            ppsd.overlap
         except AttributeError:
-            self.ppsd_length = 3600.
-            self.overlap = 0.5
+            ppsd.ppsd_length = 3600.
+            ppsd.overlap = 0.5
 
         return ppsd
 

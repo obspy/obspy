@@ -12,6 +12,9 @@ Non-geographical restrictions and constraints for the mass downloader.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
+
+import collections
 
 import obspy
 
@@ -39,10 +42,10 @@ class Restrictions(object):
     ...     # Only HH or BH channels. If a station has HH channels,
     ...     # those will be downloaded, otherwise the BH. Nothing will be
     ...     # downloaded if it has neither.
-    ...     channel_priorities=("HH[ZNE]", "BH[ZNE]"),
+    ...     channel_priorities=["HH[ZNE]", "BH[ZNE]"],
     ...     # Location codes are arbitrary and there is no rule as to which
     ...     # location is best.
-    ...     location_priorities=("", "00", "10"))
+    ...     location_priorities=["", "00", "10"])
 
 
     And the restrictions for downloading a noise data set might look similar to
@@ -218,8 +221,23 @@ class Restrictions(object):
         self.reject_channels_with_gaps = reject_channels_with_gaps
         self.minimum_length = minimum_length
         self.sanitize = bool(sanitize)
+
+        # These must be iterables, but not strings.
+        if not isinstance(channel_priorities, collections.Iterable) \
+                or isinstance(channel_priorities, (str, native_str)):
+            msg = "'channel_priorities' must be a list or other iterable " \
+                  "container."
+            raise TypeError(msg)
+
+        if not isinstance(location_priorities, collections.Iterable) \
+                or isinstance(location_priorities, (str, native_str)):
+            msg = "'location_priorities' must be a list or other iterable " \
+                  "container."
+            raise TypeError(msg)
+
         self.channel_priorities = channel_priorities
         self.location_priorities = location_priorities
+
         self.minimum_interstation_distance_in_m = \
             float(minimum_interstation_distance_in_m)
 

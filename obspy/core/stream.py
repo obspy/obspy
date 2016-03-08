@@ -2397,33 +2397,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     @raise_if_masked
     def detrend(self, type='simple'):
         """
-        Remove a linear trend from all traces.
+        Remove a trend from all traces.
 
-        :type type: str, optional
-        :param type: Method to use for detrending. Defaults to ``'simple'``.
-            See the `Supported Methods`_ section below for further details.
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
-            a copy of your stream object.
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of every trace.
-
-        .. rubric:: _`Supported Methods`
-
-        ``'simple'``
-            Subtracts a linear function defined by first/last sample of the
-            trace (uses :func:`obspy.signal.detrend.simple`).
-
-        ``'linear'``
-            Fitting a linear function to the trace with least squares and
-            subtracting it (uses :func:`scipy.signal.detrend`).
-
-        ``'constant'`` or ``'demean'``
-            Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.detrend` method of
+        :class:`~obspy.core.trace.Trace`.
         """
         for tr in self:
             tr.detrend(type=type)
