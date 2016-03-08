@@ -621,10 +621,10 @@ def validate_sac_content(hf, hi, hs, data, *tests):
                 hdr = 'b'
             elif iztype_val == 11:
                 hdr = 'o'
-            elif val == 12:
+            elif iztype_val == 12:
                 hdr = 'a'
-            elif val in range(13, 23):
-                hdr = 'it'+str(val-13)
+            elif iztype_val in range(13, 23):
+                hdr = 'it' + str(iztype_val - 13)
 
             if hi[HD.FLOATHDRS.index(hdr)] == HD.INULL:
                 msg = "Reference header '{}' for iztype '{}' not set."
