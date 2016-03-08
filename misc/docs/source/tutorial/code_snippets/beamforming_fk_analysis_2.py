@@ -69,7 +69,7 @@ st[4].stats.coordinates = AttribDict({
 paz1hz = corn_freq_2_paz(1.0, damp=0.707)
 st.simulate(paz_remove='self', paz_simulate=paz1hz)
 
-# Execute sonic
+# Execute array_processing
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
     sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
