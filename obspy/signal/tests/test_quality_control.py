@@ -342,6 +342,67 @@ class QualityControlTestCase(unittest.TestCase):
             md = MSEEDMetadata([tf1.name])
             self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
 
+    def test_start_overlap(self):
+        """
+        Test to check overlap at window edge
+        """
+        # Create a file. No gap between 1 and 2, 10 second gap between 2 and
+        # 3, 5 second overlap between 3 and 4, and another 10 second gap
+        # between 4 and 5.
+        tr_1 = obspy.Trace(data=np.arange(5, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(0)})
+        tr_2 = obspy.Trace(data=np.arange(5, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(7)})
+        st = obspy.Stream(traces=[tr_1, tr_2])
+        with NamedTemporaryFile() as tf:
+            st.write(tf.name, format="mseed")
+
+            mseed_metadata = MSEEDMetadata(files=[tf.name], starttime=obspy.UTCDateTime(4), endtime=obspy.UTCDateTime(6.25))
+
+    def test_gap_fire_cannon(self):
+        """
+        Fire tests at a rapid rate to test the gap function
+        Rapid gap testing. Create the following stream:
+        0 -- 1 -- x -- x -- 4 -- x -- x -- 7 -- 8 -- x -- 10 -- 11 --
+        And shoot as many strange windows, check if gaps are calculated
+        correctly. Add your own!
+        """
+
+        # Ready
+        tr_1 = obspy.Trace(data=np.arange(2, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(0)})
+        tr_2 = obspy.Trace(data=np.arange(1, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(4)})
+        tr_3 = obspy.Trace(data=np.arange(2, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(7)})
+        tr_4 = obspy.Trace(data=np.arange(2, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(10)})
+        st = obspy.Stream(traces=[tr_1, tr_2, tr_3, tr_4])
+        with NamedTemporaryFile() as tf:
+
+            st.write(tf.name, format="mseed")
+
+            # Aim
+            def __rapid_gap_cannon(start, end):
+                md = MSEEDMetadata(files=[tf.name],
+                                   starttime=obspy.UTCDateTime(start),
+                                   endtime=obspy.UTCDateTime(end))
+                print(md.get_json_meta())
+                return md.meta['gaps_len']
+
+            # Fire
+            self.assertTrue(__rapid_gap_cannon(0, 12) == 5)
+            self.assertTrue(__rapid_gap_cannon(0, 5) == 2)
+            self.assertTrue(__rapid_gap_cannon(3.30, 4.5) == 0.70)
+            self.assertTrue(__rapid_gap_cannon(4, 7) == 2)
+            self.assertTrue(__rapid_gap_cannon(7, 12) == 1)
+            self.assertTrue(__rapid_gap_cannon(5, 8) == 2)
+            self.assertTrue(__rapid_gap_cannon(5.25, 8) == 1.75)
+            self.assertTrue(__rapid_gap_cannon(6.75, 12) == 1.25)
+            self.assertTrue(__rapid_gap_cannon(1, 5.5) == 2.5)
+            self.assertTrue(__rapid_gap_cannon(6.99, 7.01) == 0.01)
+            self.assertTrue(__rapid_gap_cannon(5.1, 7.01) == 1.9)
+
     def test_start_gap(self):
         """
         Tests whether a gap in the beginning of the file is interpreted
@@ -355,6 +416,7 @@ class QualityControlTestCase(unittest.TestCase):
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["gaps_len"] == 0.025)
 
@@ -499,7 +561,7 @@ class QualityControlTestCase(unittest.TestCase):
 
         c = c_seg[0]
         self.assertEqual(c["start_time"], obspy.UTCDateTime(0))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(4))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(5))
         self.assertEqual(c["sample_min"], 0)
         self.assertEqual(c["sample_max"], 4)
         self.assertEqual(c["sample_mean"], 2.0)
@@ -510,7 +572,7 @@ class QualityControlTestCase(unittest.TestCase):
 
         c = c_seg[1]
         self.assertEqual(c["start_time"], obspy.UTCDateTime(10))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(14))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(15))
         self.assertEqual(c["sample_min"], 5)
         self.assertEqual(c["sample_max"], 9)
         self.assertEqual(c["sample_mean"], 7.0)
@@ -520,7 +582,7 @@ class QualityControlTestCase(unittest.TestCase):
 
         c = c_seg[2]
         self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(29))
+        self.assertEqual(c["end_time"], obspy.UTCDateTime(30))
         self.assertEqual(c["num_samples"], 10)
         self.assertEqual(c["seg_len"], 9.0)
         self.assertEqual(c["sample_min"], 0)
