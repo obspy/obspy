@@ -342,23 +342,6 @@ class QualityControlTestCase(unittest.TestCase):
             md = MSEEDMetadata([tf1.name])
             self.assertTrue(md.meta["sample_rms"] == np.iinfo(np.int32).max)
 
-    def test_start_overlap(self):
-        """
-        Test to check overlap at window edge
-        """
-        # Create a file. No gap between 1 and 2, 10 second gap between 2 and
-        # 3, 5 second overlap between 3 and 4, and another 10 second gap
-        # between 4 and 5.
-        tr_1 = obspy.Trace(data=np.arange(5, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(0)})
-        tr_2 = obspy.Trace(data=np.arange(5, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(7)})
-        st = obspy.Stream(traces=[tr_1, tr_2])
-        with NamedTemporaryFile() as tf:
-            st.write(tf.name, format="mseed")
-
-            mseed_metadata = MSEEDMetadata(files=[tf.name], starttime=obspy.UTCDateTime(4), endtime=obspy.UTCDateTime(6.25))
-
     def test_overlap_fire_testing(self):
         """
         Fire tests at a rapid rate to test the overlap function
