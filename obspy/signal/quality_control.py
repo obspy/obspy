@@ -504,6 +504,7 @@ class MSEEDMetadata(object):
             seg['sample_min'] = tr.data.min()
             seg['sample_max'] = tr.data.max()
             seg['sample_mean'] = tr.data.mean()
+            seg['sample_median'] = np.median(tr.data)
             seg['sample_rms'] = np.sqrt((tr.data.astype(object) ** 2).sum() /
                                         tr.stats.npts)
             seg['sample_stdev'] = tr.data.std()

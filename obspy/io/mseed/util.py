@@ -270,6 +270,7 @@ def get_timing_and_data_quality(file_or_file_object):
     offset = 0
     record_count = 0
     timing_correction = 0.0
+    previous_re = None
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
@@ -278,9 +279,19 @@ def get_timing_and_data_quality(file_or_file_object):
         rec_info = get_record_information(file_or_file_object, offset)
         rec_info["endtime"] += (1/rec_info["samp_rate"])
 
+        new_rs = rec_info["starttime"]
+
+        if previous_re is not None:
+            if previous_re - new_rs < 0:
+                rec_info["starttime"] = previous_re
+
+        previous_re = rec_info["endtime"]
+
         offset += rec_info["record_length"]
 
         # Filter records based on times if applicable.
+        if rec_info["endtime"] <= rec_info["starttime"]:
+            continue 
         if starttime is not None and rec_info["endtime"] <= starttime:
             continue
         if endtime is not None and rec_info["starttime"] >= endtime:
