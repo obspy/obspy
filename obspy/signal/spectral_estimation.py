@@ -42,6 +42,7 @@ from obspy.core.inventory import Inventory
 from obspy.core.util import AttribDict
 from obspy.core.util.base import MATPLOTLIB_VERSION
 from obspy.imaging.cm import obspy_sequential
+from obspy.imaging.util import ObsPyAutoDateFormatter
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
 from obspy.signal.util import prev_pow_2
@@ -1292,6 +1293,80 @@ class PPSD(object):
             msg = msg % (duplicates, len(_times_processed), filename)
             warnings.warn(msg)
 
+    def plot_spectrogram(self, cmap=None, clim=None, grid=True, filename=None,
+                         show=True):
+        """
+        Plot the temporal evolution of the PSD in a spectrogram-like plot.
+
+        :type cmap: :class:`matplotlib.colors.Colormap`
+        :param cmap: Specify a custom colormap instance. If not specified, then
+            the default ObsPy sequential colormap is used.
+        :type clim: list
+        :param clim: Minimum/maximum dB values for lower/upper end of colormap.
+            Specified as type ``float`` or ``None`` for no clipping on one end
+            of the scale (e.g. ``clim=[-150, None]`` for a lower limit of
+            ``-150`` dB and no clipping on upper end).
+        :type grid: bool
+        :param grid: Enable/disable grid in histogram plot.
+        :type filename: str
+        :param filename: Name of output file
+        :type show: bool
+        :param show: Enable/disable immediately showing the plot.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.dates import AutoDateLocator, date2num
+
+        if cmap is None:
+            cmap = obspy_sequential
+
+        xedges = date2num(
+            [t.datetime for t in self.times_processed] +
+            [(self.times_processed[-1] + self.ppsd_length).datetime])
+        yedges = self.period_xedges
+        meshgrid_x, meshgrid_y = np.meshgrid(xedges, yedges)
+        data = np.array(self.psd_values).T
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        quadmesh = ax.pcolormesh(meshgrid_x, meshgrid_y, data, cmap=cmap,
+                                 zorder=-1)
+        if clim is not None:
+            quadmesh.set_clim(*clim)
+        cb = plt.colorbar(quadmesh, ax=ax)
+
+        if grid:
+            ax.grid()
+
+        if self.special_handling is None:
+            cb.ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        else:
+            cb.ax.set_ylabel('Amplitude [dB]')
+        ax.set_ylabel('Period [s]')
+
+        fig.autofmt_xdate()
+        ax.xaxis_date()
+        ax.set_yscale("log")
+        locator = AutoDateLocator(minticks=3, maxticks=6)
+        locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+        locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+        ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+        ax.xaxis.set_major_locator(locator)
+        plt.setp(ax.get_xticklabels(), fontsize='small')
+
+        ax.set_xlim(xedges[0], xedges[-1])
+        ax.set_ylim(yedges[0], yedges[-1])
+
+        if filename is not None:
+            plt.savefig(filename)
+            plt.close()
+        elif show:
+            plt.draw()
+            plt.show()
+        else:
+            plt.draw()
+            return fig
+
     def plot_temporal(self, period, color=None, legend=True, grid=True,
                       linestyle="-", marker=None, filename=None, show=True,
                       **temporal_restrictions):
@@ -1331,7 +1406,6 @@ class PPSD(object):
         """
         import matplotlib.pyplot as plt
         from matplotlib.dates import AutoDateLocator, date2num
-        from obspy.imaging.util import ObsPyAutoDateFormatter
 
         try:
             len(period)
