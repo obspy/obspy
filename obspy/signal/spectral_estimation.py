@@ -1293,7 +1293,8 @@ class PPSD(object):
             warnings.warn(msg)
 
     def plot_temporal(self, period, color=None, legend=True, grid=True,
-                      filename=None, show=True, **temporal_restrictions):
+                      linestyle="-", marker=None, filename=None, show=True,
+                      **temporal_restrictions):
         """
         Plot the evolution of PSD value of one (or more) period bins over time.
 
@@ -1317,6 +1318,12 @@ class PPSD(object):
         :param grid: Enable/disable grid in histogram plot.
         :type legend: bool
         :param legend: Enable/disable grid in histogram plot.
+        :type linestyle: str
+        :param linestyle: Linestyle for lines in the plot (see
+            :func:`matplotlib.pyplot.plot`).
+        :type marker: str
+        :param marker: Marker for lines in the plot (see
+            :func:`matplotlib.pyplot.plot`).
         :type filename: str
         :param filename: Name of output file
         :type show: bool
@@ -1373,7 +1380,8 @@ class PPSD(object):
             psd_values = [psd[index] for psd in self.psd_values]
             if mask is not None:
                 psd_values = np.ma.masked_array(psd_values, mask=mask)
-            ax.plot(times, psd_values, color=color, label=label)
+            ax.plot(times, psd_values, color=color, label=label, ls=linestyle,
+                    marker=marker)
 
         if legend:
             ax.legend()
