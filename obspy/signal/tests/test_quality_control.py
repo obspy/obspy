@@ -366,23 +366,23 @@ class QualityControlTestCase(unittest.TestCase):
 
             # Supplementary function to test overlaps rapidly with varying
             # start and endtimes
-            def __rapid_overlap_testing(start, end):
+            def _rapid_overlap_testing(start, end):
                 md = MSEEDMetadata(files=[tf.name],
                                    starttime=obspy.UTCDateTime(start),
                                    endtime=obspy.UTCDateTime(end))
                 return md.meta['overlaps_len']
 
-            self.assertTrue(__rapid_overlap_testing(0, 12) == 7.0)
-            self.assertTrue(__rapid_overlap_testing(3, 7) == 4.0)
-            self.assertTrue(__rapid_overlap_testing(3, 5.5) == 2.5)
-            self.assertTrue(__rapid_overlap_testing(4.5, 5.5) == 1.0)
-            self.assertTrue(__rapid_overlap_testing(2, 5.25) == 2.25)
-            self.assertTrue(__rapid_overlap_testing(2, 3) == 0.0)
-            self.assertTrue(__rapid_overlap_testing(2, 3.1) == 0.1)
-            self.assertTrue(__rapid_overlap_testing(7, 9) == 1.5)
-            self.assertTrue(__rapid_overlap_testing(6.9, 9) == 1.6)
-            self.assertTrue(__rapid_overlap_testing(4.30, 9) == 4.2)
-            self.assertTrue(__rapid_overlap_testing(5.20, 9000) == 4.8)
+            self.assertTrue(_rapid_overlap_testing(0, 12) == 7.0)
+            self.assertTrue(_rapid_overlap_testing(3, 7) == 4.0)
+            self.assertTrue(_rapid_overlap_testing(3, 5.5) == 2.5)
+            self.assertTrue(_rapid_overlap_testing(4.5, 5.5) == 1.0)
+            self.assertTrue(_rapid_overlap_testing(2, 5.25) == 2.25)
+            self.assertTrue(_rapid_overlap_testing(2, 3) == 0.0)
+            self.assertTrue(_rapid_overlap_testing(2, 3.1) == 0.1)
+            self.assertTrue(_rapid_overlap_testing(7, 9) == 1.5)
+            self.assertTrue(_rapid_overlap_testing(6.9, 9) == 1.6)
+            self.assertTrue(_rapid_overlap_testing(4.30, 9) == 4.2)
+            self.assertTrue(_rapid_overlap_testing(5.20, 9000) == 4.8)
 
     def test_gap_fire_testing(self):
         """
@@ -405,29 +405,29 @@ class QualityControlTestCase(unittest.TestCase):
 
             st.write(tf.name, format="mseed")
 
-            def __rapid_gap_testing(start, end):
+            def _rapid_gap_testing(start, end):
                 md = MSEEDMetadata(files=[tf.name],
                                    starttime=obspy.UTCDateTime(start),
                                    endtime=obspy.UTCDateTime(end))
                 return md.meta['gaps_len']
 
-            self.assertTrue(__rapid_gap_testing(5, 17) == 5)
-            self.assertTrue(__rapid_gap_testing(5, 10) == 2)
-            self.assertTrue(__rapid_gap_testing(8.30, 9.5) == 0.70)
-            self.assertTrue(__rapid_gap_testing(9, 12) == 2)
-            self.assertTrue(__rapid_gap_testing(12, 17) == 1)
-            self.assertTrue(__rapid_gap_testing(10, 13) == 2)
-            self.assertTrue(__rapid_gap_testing(10.25, 13) == 1.75)
-            self.assertTrue(__rapid_gap_testing(11.75, 17) == 1.25)
-            self.assertTrue(__rapid_gap_testing(6, 10.5) == 2.5)
-            self.assertTrue(__rapid_gap_testing(11.99, 12.01) == 0.01)
-            self.assertTrue(__rapid_gap_testing(10.1, 12.01) == 1.9)
-            self.assertTrue(__rapid_gap_testing(7.5, 14.25) == 3.75)
-            self.assertTrue(__rapid_gap_testing(5, 17.5) == 5)
-            self.assertTrue(__rapid_gap_testing(5, 17.6) == 5.6)
-            self.assertTrue(__rapid_gap_testing(5, 18) == 6)
-            self.assertTrue(__rapid_gap_testing(0, 5.01) == 5)
-            self.assertTrue(__rapid_gap_testing(0, 20) == 13)
+            self.assertTrue(_rapid_gap_testing(5, 17) == 5)
+            self.assertTrue(_rapid_gap_testing(5, 10) == 2)
+            self.assertTrue(_rapid_gap_testing(8.30, 9.5) == 0.70)
+            self.assertTrue(_rapid_gap_testing(9, 12) == 2)
+            self.assertTrue(_rapid_gap_testing(12, 17) == 1)
+            self.assertTrue(_rapid_gap_testing(10, 13) == 2)
+            self.assertTrue(_rapid_gap_testing(10.25, 13) == 1.75)
+            self.assertTrue(_rapid_gap_testing(11.75, 17) == 1.25)
+            self.assertTrue(_rapid_gap_testing(6, 10.5) == 2.5)
+            self.assertTrue(_rapid_gap_testing(11.99, 12.01) == 0.01)
+            self.assertTrue(_rapid_gap_testing(10.1, 12.01) == 1.9)
+            self.assertTrue(_rapid_gap_testing(7.5, 14.25) == 3.75)
+            self.assertTrue(_rapid_gap_testing(5, 17.5) == 5)
+            self.assertTrue(_rapid_gap_testing(5, 17.6) == 5.6)
+            self.assertTrue(_rapid_gap_testing(5, 18) == 6)
+            self.assertTrue(_rapid_gap_testing(0, 5.01) == 5)
+            self.assertTrue(_rapid_gap_testing(0, 20) == 13)
 
     def test_start_gap(self):
         """
