@@ -48,7 +48,8 @@ class MSEEDMetadata(object):
     """
     A container for MSEED specific metadata including QC.
     """
-    def __init__(self, files, starttime=None, endtime=None, c_seg=True):
+    def __init__(self, files, starttime=None, endtime=None, c_seg=True,
+                 add_flags=False):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
 
@@ -135,6 +136,9 @@ class MSEEDMetadata(object):
         # The calculation of all the metrics begins here
         self._extract_mseed_stream_metadata()
         self._compute_sample_metrics()
+
+        if add_flags:
+            self._extract_mseed_flags()
 
         if c_seg:
             self._compute_continuous_seg_sample_metrics()
@@ -266,6 +270,8 @@ class MSEEDMetadata(object):
         meta['encoding'] = \
             sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
 
+    def _extract_mseed_flags(self):
+
         # Setup counters for the MiniSEED header flags.
         data_quality_flags = collections.Counter(
                 amplifier_saturation_detected=0,
@@ -374,6 +380,8 @@ class MSEEDMetadata(object):
             timing_quality_median = None
             timing_quality_lower_quartile = None
             timing_quality_upper_quartile = None
+
+        meta = self.meta
 
         # Set miniseed header counts
         meta['timing_quality_mean'] = timing_quality_mean

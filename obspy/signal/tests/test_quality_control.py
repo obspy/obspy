@@ -137,7 +137,7 @@ class QualityControlTestCase(unittest.TestCase):
             obspy.Trace(data=np.arange(10, dtype=np.int32),
                         header={"starttime": obspy.UTCDateTime(0)}).write(
                     tf1.name, format="mseed")
-            mseed_metadata = MSEEDMetadata([tf1.name])
+            mseed_metadata = MSEEDMetadata([tf1.name], add_flags=True)
             self.assertEqual(mseed_metadata.meta['timing_quality_max'],
                              None)
             self.assertEqual(mseed_metadata.meta['timing_quality_min'],
@@ -234,7 +234,7 @@ class QualityControlTestCase(unittest.TestCase):
                                     "end_time_series": 4,
                                     "clock_locked": 2}})
 
-            md = MSEEDMetadata([tf1.name, tf2.name])
+            md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
             # Sum up contributions from both files.
             meta = md.meta['miniseed_header_flag_counts']
 
@@ -268,7 +268,8 @@ class QualityControlTestCase(unittest.TestCase):
         # Test file is constructed and orignally from the obspy.io.mseed
         # test suite.
         md = MSEEDMetadata(files=[os.path.join(self.path,
-                                               "timingquality.mseed")])
+                                               "timingquality.mseed")],
+                           add_flags=True)
         self.assertEqual(md.meta['timing_quality_mean'], 50.0)
         self.assertEqual(md.meta['timing_quality_min'], 0.0)
         self.assertEqual(md.meta['timing_quality_max'], 100.0)
@@ -506,7 +507,8 @@ class QualityControlTestCase(unittest.TestCase):
 
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
-        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
+        md = MSEEDMetadata([file], starttime=starttime, endtime=endtime,
+                           add_flags=True)
 
         # These are the record lengths
         # The final record is cut off by the endtime
