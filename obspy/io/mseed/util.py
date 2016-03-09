@@ -223,8 +223,7 @@ def get_timing_and_data_quality(file_or_file_object):
         ("end_event", 0),
         ("positive_leap", 0),
         ("negative_leap", 0),
-        ("event_in_progress", 0),
-        ("time_correction_required", 0)])
+        ("event_in_progress", 0)])
     io_count = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
@@ -245,7 +244,6 @@ def get_timing_and_data_quality(file_or_file_object):
     activity_count_seconds = collections.OrderedDict([
         ("calibration_signals_present", 0),
         ("time_correction_applied", 0),
-        ("time_correction_required", 0),
         ("beginning_event", 0),
         ("end_event", 0),
         ("positive_leap", 0),
@@ -271,6 +269,7 @@ def get_timing_and_data_quality(file_or_file_object):
 
     offset = 0
     record_count = 0
+    timing_correction = 0.0
 
     # Loop over each record. A valid record needs to have a record
     # length of at least 256 bytes.
@@ -321,12 +320,11 @@ def get_timing_and_data_quality(file_or_file_object):
         # Add a new quality metric that says whether a correction is required
         # in addition to whether this correction has been applied
         if rec_info["time_correction"]:
-            activity_count["time_correction_required"] += 1
-            activity_count_seconds["time_correction_required"] += \
-                record_length_seconds
+            timing_correction += record_length_seconds
 
     results = {
         "record_count": record_count,
+        "timing_correction": timing_correction
     }
 
     if io_flags:

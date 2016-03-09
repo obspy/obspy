@@ -211,9 +211,18 @@ class MSEEDMetadata(object):
 
         # Set the meta
         self.meta['num_gaps'] = len(body_gap)
+        self.meta['sum_gaps'] = sum(body_gap)
+        if len(body_gap) != 0:
+            self.meta['max_gap'] = max(body_gap)
+        else:
+            self.meta['max_gap'] = None
+
         self.meta['num_overlaps'] = len(body_overlap)
-        self.meta['gaps_len'] = sum(body_gap)
-        self.meta['overlaps_len'] = sum(body_overlap)
+        self.meta['sum_overlaps'] = sum(body_overlap)
+        if len(body_overlap) != 0:
+            self.meta['max_overlap'] = max(body_overlap)
+        else:
+            self.meta['max_overlap'] = None
 
     @property
     def number_of_records(self):
@@ -254,7 +263,7 @@ class MSEEDMetadata(object):
         meta['last_sample'] = self.data[-1].stats.endtime
 
         # Add some other parameters to the metadata object
-        meta['mseed_id'] = self.data[0].id
+        meta['seed_id'] = self.data[0].id
         meta['files'] = self.files
         meta['start_time'] = self.starttime
         meta['end_time'] = self.endtime
@@ -289,8 +298,7 @@ class MSEEDMetadata(object):
                 end_event=0,
                 positive_leap=0,
                 negative_leap=0,
-                clock_locked=0,
-                time_correction_required=0)
+                clock_locked=0)
         io_and_clock_flags = collections.Counter(
                 station_volume_parity_error=0,
                 long_record_read=0,
@@ -319,8 +327,7 @@ class MSEEDMetadata(object):
                 end_event=0.0,
                 positive_leap=0.0,
                 negative_leap=0.0,
-                clock_locked=0.0,
-                time_correction_required=0.0)
+                clock_locked=0.0)
         io_and_clock_flags_seconds = collections.Counter(
                 station_volume_parity_error=0.0,
                 long_record_read=0.0,
@@ -328,6 +335,8 @@ class MSEEDMetadata(object):
                 start_time_series=0.0,
                 end_time_series=0.0,
                 clock_locked=0.0)
+
+        timing_correction = 0.0
 
         for file in self.files:
             flags = get_flags(
@@ -348,6 +357,8 @@ class MSEEDMetadata(object):
 
             if flags["timing_quality"]:
                 timing_quality.append(flags["timing_quality"]["all_values"])
+
+            timing_correction += flags["timing_correction"]
 
         # Convert second counts to percentages. The total time is the
         # difference between start & end in seconds. The percentage fields
@@ -384,27 +395,28 @@ class MSEEDMetadata(object):
         meta = self.meta
 
         # Set miniseed header counts
-        meta['timing_quality_mean'] = timing_quality_mean
-        meta['timing_quality_min'] = timing_quality_min
-        meta['timing_quality_max'] = timing_quality_max
-        meta['timing_quality_median'] = timing_quality_median
-        meta['timing_quality_lower_quartile'] = timing_quality_lower_quartile
-        meta['timing_quality_upper_quartile'] = timing_quality_upper_quartile
+        meta['miniseed_header_percentages'] = {}
+        ref = meta['miniseed_header_percentages']
+        ref['timing_correction'] = timing_correction
+        ref['timing_quality_mean'] = timing_quality_mean
+        ref['timing_quality_min'] = timing_quality_min
+        ref['timing_quality_max'] = timing_quality_max
+        ref['timing_quality_median'] = timing_quality_median
+        ref['timing_quality_lower_quartile'] = timing_quality_lower_quartile
+        ref['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
         # According to schema @ maybe refactor this to less verbose flag
         # names. Sets miniseed header flag percentages
-        meta['miniseed_header_flag_percentages'] = {}
-        pointer = meta['miniseed_header_flag_percentages']
-        pointer['activity_flags'] = activity_flags_seconds
-        pointer['data_quality_flags'] = data_quality_flags_seconds
-        pointer['io_and_clock_flags'] = io_and_clock_flags_seconds
+        ref['activity_flags'] = activity_flags_seconds
+        ref['data_quality_flags'] = data_quality_flags_seconds
+        ref['io_and_clock_flags'] = io_and_clock_flags_seconds
 
         # Similarly, set miniseed header flag counts
-        meta['miniseed_header_flag_counts'] = {}
-        pointer = meta['miniseed_header_flag_counts']
-        pointer['activity_flags'] = activity_flags
-        pointer['data_quality_flags'] = data_quality_flags
-        pointer['io_and_clock_flags'] = io_and_clock_flags
+        meta['miniseed_header_counts'] = {}
+        ref = meta['miniseed_header_counts']
+        ref['activity_flags'] = activity_flags
+        ref['data_quality_flags'] = data_quality_flags
+        ref['io_and_clock_flags'] = io_and_clock_flags
 
         # Small function to change flag names from the get_flags routine
         # to match the schema
@@ -423,7 +435,6 @@ class MSEEDMetadata(object):
             'missing_data_present': 'missing_padded_data',
             'time_tag_uncertain': 'suspect_time_tag',
             'calibration_signals_present': 'calibration_signal',
-            'time_correction_applied': 'timing_correction',
             'beginning_event': 'event_begin',
             'end_event': 'event_end',
             'station_volume_parity_error': 'station_volume',
@@ -431,9 +442,12 @@ class MSEEDMetadata(object):
 
         # Loop over all keys and replace where required according to
         # the name_reference
-        prefix = 'miniseed_header_flag'
+        prefix = 'miniseed_header'
         for flag_type in ['_percentages', '_counts']:
             for _, flags in self.meta[prefix + flag_type].iteritems():
+                if _ not in ["activity_flags", "data_quality_flags",
+                             "io_and_clock_flags"]:
+                    continue
                 for param in flags:
                     if param in name_reference:
                         flags[name_reference[param]] = flags.pop(param)
@@ -453,6 +467,8 @@ class MSEEDMetadata(object):
         # arrays.
         self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
+        self.meta['sample_median'] = \
+            np.median([n for n in tr.data for tr in self.data])
 
         # Might overflow np.int64 so make Python obj. (.astype(object))
         # allows conversion to long int when required (see tests)
@@ -467,7 +483,7 @@ class MSEEDMetadata(object):
         # Percentage based availability as a function of total gap length
         # over the full trace duration
         self.meta['percent_availability'] = 100 * (
-            (self.total_time - self.meta['gaps_len']) /
+            (self.total_time - self.meta['sum_gaps']) /
             self.total_time)
 
     def _compute_continuous_seg_sample_metrics(self):
