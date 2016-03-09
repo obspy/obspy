@@ -359,7 +359,48 @@ class QualityControlTestCase(unittest.TestCase):
 
             mseed_metadata = MSEEDMetadata(files=[tf.name], starttime=obspy.UTCDateTime(4), endtime=obspy.UTCDateTime(6.25))
 
-    def test_gap_fire_cannon(self):
+    def test_overlap_fire_testing(self):
+        """
+        Fire tests at a rapid rate to test the overlap function
+        Rapid overlap testing. Create the following stream:
+        0 -- 1 -- 2 -- 3 -- 4 -- 5 -- 6 --
+                       3 -- 4 -- 5 -- 6 -- 7 -- 8 -- 9 -- 10 --
+                                              8 -- 9 -- 10 -- 11 --
+        And shoot as many strange windows, check if gaps are calculated
+        correctly. Add your own!
+        """
+        tr_1 = obspy.Trace(data=np.arange(7, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(0)})
+        tr_2 = obspy.Trace(data=np.arange(8, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(3)})
+        tr_3 = obspy.Trace(data=np.arange(4, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(7.5)})
+        st = obspy.Stream(traces=[tr_1, tr_2, tr_3])
+        with NamedTemporaryFile() as tf:
+
+            st.write(tf.name, format="mseed")
+
+            # Supplementary function to test overlaps rapidly with varying
+            # start and endtimes
+            def __rapid_overlap_testing(start, end):
+                md = MSEEDMetadata(files=[tf.name],
+                                   starttime=obspy.UTCDateTime(start),
+                                   endtime=obspy.UTCDateTime(end))
+                return md.meta['overlaps_len']
+
+            self.assertTrue(__rapid_overlap_testing(0, 12) == 7.0)
+            self.assertTrue(__rapid_overlap_testing(3, 7) == 4.0)
+            self.assertTrue(__rapid_overlap_testing(3, 5.5) == 2.5)
+            self.assertTrue(__rapid_overlap_testing(4.5, 5.5) == 1.0)
+            self.assertTrue(__rapid_overlap_testing(2, 5.25) == 2.25)
+            self.assertTrue(__rapid_overlap_testing(2, 3) == 0.0)
+            self.assertTrue(__rapid_overlap_testing(2, 3.1) == 0.1)
+            self.assertTrue(__rapid_overlap_testing(7, 9) == 1.5)
+            self.assertTrue(__rapid_overlap_testing(6.9, 9) == 1.6)
+            self.assertTrue(__rapid_overlap_testing(4.30, 9) == 4.2)
+            self.assertTrue(__rapid_overlap_testing(5.20, 9000) == 4.8)
+
+    def test_gap_fire_testing(self):
         """
         Fire tests at a rapid rate to test the gap function
         Rapid gap testing. Create the following stream:
@@ -367,41 +408,42 @@ class QualityControlTestCase(unittest.TestCase):
         And shoot as many strange windows, check if gaps are calculated
         correctly. Add your own!
         """
-
-        # Ready
         tr_1 = obspy.Trace(data=np.arange(2, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(0)})
+                           header={"starttime": obspy.UTCDateTime(5)})
         tr_2 = obspy.Trace(data=np.arange(1, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(4)})
+                           header={"starttime": obspy.UTCDateTime(9)})
         tr_3 = obspy.Trace(data=np.arange(2, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(7)})
+                           header={"starttime": obspy.UTCDateTime(12)})
         tr_4 = obspy.Trace(data=np.arange(2, dtype=np.int32),
-                           header={"starttime": obspy.UTCDateTime(10)})
+                           header={"starttime": obspy.UTCDateTime(15)})
         st = obspy.Stream(traces=[tr_1, tr_2, tr_3, tr_4])
         with NamedTemporaryFile() as tf:
 
             st.write(tf.name, format="mseed")
 
-            # Aim
-            def __rapid_gap_cannon(start, end):
+            def __rapid_gap_testing(start, end):
                 md = MSEEDMetadata(files=[tf.name],
                                    starttime=obspy.UTCDateTime(start),
                                    endtime=obspy.UTCDateTime(end))
-                print(md.get_json_meta())
                 return md.meta['gaps_len']
 
-            # Fire
-            self.assertTrue(__rapid_gap_cannon(0, 12) == 5)
-            self.assertTrue(__rapid_gap_cannon(0, 5) == 2)
-            self.assertTrue(__rapid_gap_cannon(3.30, 4.5) == 0.70)
-            self.assertTrue(__rapid_gap_cannon(4, 7) == 2)
-            self.assertTrue(__rapid_gap_cannon(7, 12) == 1)
-            self.assertTrue(__rapid_gap_cannon(5, 8) == 2)
-            self.assertTrue(__rapid_gap_cannon(5.25, 8) == 1.75)
-            self.assertTrue(__rapid_gap_cannon(6.75, 12) == 1.25)
-            self.assertTrue(__rapid_gap_cannon(1, 5.5) == 2.5)
-            self.assertTrue(__rapid_gap_cannon(6.99, 7.01) == 0.01)
-            self.assertTrue(__rapid_gap_cannon(5.1, 7.01) == 1.9)
+            self.assertTrue(__rapid_gap_testing(5, 17) == 5)
+            self.assertTrue(__rapid_gap_testing(5, 10) == 2)
+            self.assertTrue(__rapid_gap_testing(8.30, 9.5) == 0.70)
+            self.assertTrue(__rapid_gap_testing(9, 12) == 2)
+            self.assertTrue(__rapid_gap_testing(12, 17) == 1)
+            self.assertTrue(__rapid_gap_testing(10, 13) == 2)
+            self.assertTrue(__rapid_gap_testing(10.25, 13) == 1.75)
+            self.assertTrue(__rapid_gap_testing(11.75, 17) == 1.25)
+            self.assertTrue(__rapid_gap_testing(6, 10.5) == 2.5)
+            self.assertTrue(__rapid_gap_testing(11.99, 12.01) == 0.01)
+            self.assertTrue(__rapid_gap_testing(10.1, 12.01) == 1.9)
+            self.assertTrue(__rapid_gap_testing(7.5, 14.25) == 3.75)
+            self.assertTrue(__rapid_gap_testing(5, 17.5) == 5)
+            self.assertTrue(__rapid_gap_testing(5, 17.6) == 5.6)
+            self.assertTrue(__rapid_gap_testing(5, 18) == 6)
+            self.assertTrue(__rapid_gap_testing(0, 5.01) == 5)
+            self.assertTrue(__rapid_gap_testing(0, 20) == 13)
 
     def test_start_gap(self):
         """

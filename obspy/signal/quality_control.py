@@ -166,35 +166,38 @@ class MSEEDMetadata(object):
 
         # Let ObsPy determine all the other gaps
         gaps = self.all_data.get_gaps()
-        print(gaps)
 
         # Handle the logical to determine the actual gaps and overlaps in
         # the user specified window.. this gets pretty tricky because gaps
         # and overlaps may in theory cross the start/end boundaries.
-        for _i in gaps:
+        for _i in (_ for _ in gaps if _[-1] > 0):
 
-            # Handle gaps
-            if _i[-1] > 0:
+           # Only check if the gap is within our window
+           if (_i[5] - _i[-2]) >= self.endtime or _i[5] <= self.starttime:  
+               continue
 
-               print(_i[5] - _i[-2], _i[4], _i[5], self.endtime, self.starttime)
-               # Only check if the gap is within our window
-               if (_i[5] - _i[-2]) < self.endtime and _i[5] > self.starttime:  
-                   if self.starttime <= (_i[5] - _i[-2]) and self.endtime >= _i[5]:
-                       body_gap.append(_i[-2])
-                   elif self.starttime >= (_i[5] - _i[-2]):
-                       body_gap.append(min(_i[5], self.endtime) - self.starttime)
-                   elif self.endtime <= _i[5]:
-                       body_gap.append(self.endtime - max(_i[5] - _i[-2], self.starttime))
-               print(body_gap)
+           # Full gap
+           if self.starttime <= (_i[5] - _i[-2]) and self.endtime >= _i[5]:
+               body_gap.append(_i[-2])
+           elif self.starttime >= (_i[5] - _i[-2]):
+               body_gap.append(min(_i[5], self.endtime) - self.starttime)
+           elif self.endtime <= _i[5]:
+               body_gap.append(self.endtime - max(_i[5] - _i[-2], self.starttime))
 
-            # Handle overlaps (negative gaps)
-            if _i[-1] < 0:
-                if self.starttime <= _i[5] and self.endtime >= (_i[5] - _i[-2]):
-                   body_overlap.append(abs(_i[-2]))
-                elif self.starttime >= _i[5]:
-                   body_overlap.append(abs(self.starttime - min(_i[5] - _i[-2], self.endtime)))
-                elif self.endtime <= (_i[5] - _i[-2]):
-                   body_overlap.append(abs(max(_i[5], self.starttime) - self.endtime))
+        # Handle overlaps (negative gaps)
+        for _i in (_ for _ in gaps if _[-1] < 0):
+
+            # Only check if the overlap is within our window
+            if _i[5] >= self.endtime or (_i[5] - _i[-2]) <= self.starttime:    
+                continue
+
+            # Full overlap
+            if self.starttime <= _i[5] and self.endtime >= (_i[5] - _i[-2]):
+                body_overlap.append(abs(_i[-2]))
+            elif self.starttime >= _i[5]:
+                body_overlap.append(abs(self.starttime - min(_i[5] - _i[-2], self.endtime)))
+            elif self.endtime <= (_i[5] - _i[-2]):
+                body_overlap.append(abs(max(_i[5], self.starttime) - self.endtime))
 
         # Set the meta
         self.meta['num_gaps'] = len(body_gap)
