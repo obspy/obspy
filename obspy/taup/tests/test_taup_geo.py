@@ -10,6 +10,7 @@ from future.builtins import *  # NOQA
 import unittest
 
 from obspy.taup.tau import TauPyModel
+import obspy.geodetics.base as geodetics
 
 
 class TaupGeoTestCase(unittest.TestCase):
@@ -19,6 +20,8 @@ class TaupGeoTestCase(unittest.TestCase):
     def setUp(self):
         self.model = TauPyModel('iasp91')
 
+    @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
+                     'Module geographiclib is not installed')
     def test_path_geo(self):
         evlat, evlon = 0., 20.
         evdepth = 10.
