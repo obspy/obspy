@@ -27,6 +27,7 @@ import glob
 import math
 import os
 import warnings
+from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
 from matplotlib import mlab
@@ -1290,6 +1291,108 @@ class PPSD(object):
                    "(time ranges already covered).")
             msg = msg % (duplicates, len(_times_processed), filename)
             warnings.warn(msg)
+
+    def plot_temporal(self, period, color=None, legend=True, grid=True,
+                      filename=None, show=True):
+        """
+        Plot the evolution of PSD value of one (or more) period bins over time.
+
+        If a filename is specified the plot is saved to this file, otherwise
+        a matplotlib figure is returned or shown.
+
+        :type period: float (or list thereof)
+        :param period: Period of PSD values to plot. The period bin with the
+            central period that is closest to the specified value is selected.
+            Multiple values can be specified in a list (``color`` option should
+            then also be a list of color specifications, or left ``None``).
+        :type color: matplotlib color specification (or list thereof)
+        :param color: Color specification understood by :mod:`matplotlib` (or a
+            list thereof in case of multiple periods to plot). ``None`` for
+            default colors.
+        :type grid: bool
+        :param grid: Enable/disable grid in histogram plot.
+        :type legend: bool
+        :param legend: Enable/disable grid in histogram plot.
+        :type filename: str
+        :param filename: Name of output file
+        :type show: bool
+        :param show: Enable/disable immediately showing the plot.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.dates import AutoDateLocator, date2num
+        from obspy.imaging.util import ObsPyAutoDateFormatter
+
+        try:
+            len(period)
+        except TypeError:
+            periods = [period]
+        else:
+            periods = period
+
+        if color is None:
+            if len(periods) == 1:
+                colors = ["b"]
+            else:
+                from matplotlib.cm import get_cmap
+                cmap_ = get_cmap(name="Paired", lut=len(periods))
+                colors = [cmap_(i) for i in range(len(periods))]
+        else:
+            if len(periods) == 1:
+                colors = [color]
+            else:
+                colors = color
+
+        period_bin_centers = self.period_bin_centers
+        times = date2num([t.datetime for t in self.times_processed])
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+
+        for period, color in zip(periods, colors):
+            # evaluate which period bin to extract
+            period_diff = np.abs(period_bin_centers - period)
+            index = np.argmin(period_diff)
+            period_min = self.period_bin_left_edges[index]
+            period_max = self.period_bin_right_edges[index]
+            # if right edge of period range is less than one second we label
+            # the line in Hertz
+            if period_max < 1:
+                label = "{:.2g}-{:.2g} [Hz]".format(
+                    1.0 / period_max, 1.0 / period_min)
+            else:
+                label = "{:.2g}-{:.2g} [s]".format(period_min, period_max)
+            psd_values = [psd[index] for psd in self.psd_values]
+            ax.plot(times, psd_values, color=color, label=label)
+
+        if legend:
+            ax.legend()
+
+        if grid:
+            ax.grid()
+
+        if self.special_handling is None:
+            ax.set_ylabel('Amplitude [$m^2/s^4/Hz$] [dB]')
+        else:
+            ax.set_ylabel('Amplitude [dB]')
+
+        fig.autofmt_xdate()
+        ax.xaxis_date()
+        locator = AutoDateLocator(minticks=3, maxticks=6)
+        locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
+        locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
+        ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
+        ax.xaxis.set_major_locator(locator)
+        plt.setp(ax.get_xticklabels(), fontsize='small')
+
+        if filename is not None:
+            plt.savefig(filename)
+            plt.close()
+        elif show:
+            plt.draw()
+            plt.show()
+        else:
+            plt.draw()
+            return fig
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
