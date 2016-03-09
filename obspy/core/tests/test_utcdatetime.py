@@ -12,15 +12,6 @@ import numpy as np
 from obspy import UTCDateTime
 
 
-# some Python version don't support negative timestamps
-NO_NEGATIVE_TIMESTAMPS = False
-try:  # pragma: no cover
-    # this will fail at Win OS
-    UTCDateTime(-44000).datetime
-except:  # pragma: no cover
-    NO_NEGATIVE_TIMESTAMPS = True
-
-
 class UTCDateTimeTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
@@ -319,15 +310,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
         self.assertAlmostEqual(end - start, 0.000002, 6)
 
-    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not '
-                                             'supported')
     def test_negative_timestamp(self):
         dt = UTCDateTime(-1000.1)
         self.assertEqual(str(dt), "1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
 
-    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not '
-                                             'supported')
     def test_sub_with_negative_time_stamp(self):
         start = UTCDateTime(0)
         end = UTCDateTime(-1000.5)
@@ -365,10 +352,10 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(-0.000001)
         self.assertAlmostEqual(dt.timestamp, -0.000001, 6)
         self.assertEqual(str(dt), "1969-12-31T23:59:59.999999Z")
-        # -0.00000000001
-        dt = UTCDateTime(-0.00000000001)
-        self.assertEqual(dt.timestamp, -0.00000000001)
-        self.assertEqual(str(dt), "1970-01-01T00:00:00.000000Z")
+        # -0.000000001 - max precision is nanosecond!
+        dt = UTCDateTime(-0.000000001)
+        self.assertEqual(dt.timestamp, -0.000000001)
+        self.assertEqual(str(dt), "1969-12-31T23:59:59.000000Z")
         # -1000.1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEqual(dt.timestamp, -1000.1)
@@ -378,8 +365,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEqual(dt.timestamp, -43199.123456, 6)
         self.assertEqual(str(dt), "1969-12-31T12:00:00.876544Z")
 
-    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not '
-                                             'supported')
     def test_big_negative_utc_date_time(self):
         # 1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
@@ -494,8 +479,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, UTCDateTime, "2010-02-13T99999")
         self.assertRaises(TypeError, UTCDateTime, "2010-02-13T02:09:09.XXXXX")
 
-    @unittest.skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not '
-                                             'supported')
     def test_issue_168(self):
         """
         Couldn't calculate julday before 1900.
@@ -1025,6 +1008,87 @@ class UTCDateTimeTestCase(unittest.TestCase):
             str(context.exception),
             "unsupported operand type(s) for +: 'UTCDateTime' and "
             "'UTCDateTime'")
+
+    def test_nanoseconds(self):
+        """
+        Various nanosecond tests.
+
+        Also tests #1318.
+        """
+        # 1
+        dt = UTCDateTime(1, 1, 1, 0, 0, 0, 0)
+        self.assertEqual(dt._ns, -62135596800000000000)
+        self.assertEqual(dt.timestamp, -62135596800.0)
+        self.assertEqual(dt.microsecond, 0)
+        self.assertEqual(dt.datetime, datetime.datetime(1, 1, 1, 0, 0, 0, 0))
+        self.assertEqual(str(dt), '0001-01-01T00:00:00.000000Z')
+        # 2
+        dt = UTCDateTime(1, 1, 1, 0, 0, 0, 1)
+        self.assertEqual(dt._ns, -62135596799999999000)
+        self.assertEqual(dt.microsecond, 1)
+        self.assertEqual(dt.datetime, datetime.datetime(1, 1, 1, 0, 0, 0, 1))
+        self.assertEqual(str(dt), '0001-01-01T00:00:00.000001Z')
+        self.assertEqual(dt.timestamp, -62135596800.000001)
+        # 3
+        dt = UTCDateTime(1, 1, 1, 0, 0, 0, 999999)
+        self.assertEqual(dt._ns, -62135596799000001000)
+        # dt.timestamp should be -62135596799.000001 - not possible to display
+        # correctly using python floats
+        self.assertEqual(dt.timestamp, -62135596799.0)
+        self.assertEqual(dt.microsecond, 999999)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(1, 1, 1, 0, 0, 0, 999999))
+        self.assertEqual(str(dt), '0001-01-01T00:00:00.999999Z')
+        # 4
+        dt = UTCDateTime(1, 1, 1, 0, 0, 1, 0)
+        self.assertEqual(dt._ns, -62135596799000000000)
+        self.assertEqual(dt.timestamp, -62135596799.0)
+        self.assertEqual(dt.microsecond, 0)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(1, 1, 1, 0, 0, 1, 0))
+        self.assertEqual(str(dt), '0001-01-01T00:00:01.000000Z')
+        # 5
+        dt = UTCDateTime(1, 1, 1, 0, 0, 1, 1)
+        self.assertEqual(dt._ns, -62135596798999999000)
+        # dt.timestamp should be -62135596799.000001 - not possible to display
+        # correctly using python floats
+        self.assertEqual(dt.timestamp, -62135596799.0)
+        self.assertEqual(dt.microsecond, 1)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(1, 1, 1, 0, 0, 1, 1))
+        self.assertEqual(str(dt), '0001-01-01T00:00:01.000001Z')
+        # 6
+        dt = UTCDateTime(1970, 1, 1, 0, 0, 0, 1)
+        self.assertEqual(dt._ns, 1000)
+        self.assertEqual(dt.timestamp, 0.000001)
+        self.assertEqual(dt.microsecond, 1)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(1970, 1, 1, 0, 0, 0, 1))
+        self.assertEqual(str(dt), '1970-01-01T00:00:00.000001Z')
+        # 7
+        dt = UTCDateTime(1970, 1, 1, 0, 0, 0, 999999)
+        self.assertEqual(dt._ns, 999999000)
+        self.assertEqual(dt.timestamp, 0.999999)
+        self.assertEqual(dt.microsecond, 999999)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(1970, 1, 1, 0, 0, 0, 999999))
+        self.assertEqual(str(dt), '1970-01-01T00:00:00.999999Z')
+        # 8
+        dt = UTCDateTime(3000, 1, 1, 0, 0, 0, 500000)
+        self.assertEqual(dt._ns, 32503680000500000000)
+        self.assertEqual(dt.timestamp, 32503680000.5)
+        self.assertEqual(dt.microsecond, 500000)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(3000, 1, 1, 0, 0, 0, 500000))
+        self.assertEqual(str(dt), '3000-01-01T00:00:00.500000Z')
+        # 9
+        dt = UTCDateTime(9999, 1, 1, 0, 0, 0, 500000)
+        self.assertEqual(dt._ns, 253370764800500000000)
+        self.assertEqual(dt.timestamp, 253370764800.5)
+        self.assertEqual(dt.microsecond, 500000)
+        self.assertEqual(dt.datetime,
+                         datetime.datetime(9999, 1, 1, 0, 0, 0, 500000))
+        self.assertEqual(str(dt), '9999-01-01T00:00:00.500000Z')
 
 
 def suite():
