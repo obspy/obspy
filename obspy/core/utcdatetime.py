@@ -376,8 +376,7 @@ class UTCDateTime(object):
         except TypeError:
             td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
         self._ns = \
-            (td.days * 60 * 60 * 24 + td.seconds) * 1000000000 + \
-            td.microseconds * 1000
+            (td.days * 86400 + td.seconds) * 10**9 + td.microseconds * 1000
 
     def _from_timestamp(self, value):
         """
@@ -386,7 +385,7 @@ class UTCDateTime(object):
         :type value: int, float
         :param value: Timestamp in seconds.
         """
-        self._ns = int(round(value * 1000000000))
+        self._ns = int(round(value * 10**9))
 
     def _from_iso8601_string(self, value):
         """
@@ -519,8 +518,8 @@ class UTCDateTime(object):
         """
         # datetime.utcfromtimestamp will cut off but not round
         # avoid through adding timedelta - also avoids the year 2038 problem
-        dt = datetime.timedelta(seconds=self._ns // 1000000000,
-                                microseconds=self._ns % 1000000000 // 1000)
+        dt = datetime.timedelta(seconds=self._ns // 10**9,
+                                microseconds=self._ns % 10**9 // 1000)
         return TIMESTAMP0 + dt
 
     datetime = property(_get_datetime)
@@ -789,7 +788,7 @@ class UTCDateTime(object):
         >>> dt.microsecond
         345234
         """
-        return int(self._ns % 1000000000 // 1000)
+        return int(self._ns % 10**9 // 1000)
 
     def _set_microsecond(self, value):
         """
@@ -879,8 +878,7 @@ class UTCDateTime(object):
         if isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
-                     86400) * 1000000) / 1000000.0
-
+                     86400) * 10**6) / 1e6
         elif isinstance(value, UTCDateTime):
             msg = ("unsupported operand type(s) for +: 'UTCDateTime' and "
                    "'UTCDateTime'")
@@ -914,7 +912,7 @@ class UTCDateTime(object):
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days *
-                     86400) * 1000000) / 1000000.0
+                     86400) * 10**6) / 1e6
         return UTCDateTime(ns=self._ns - int(round(value * 1e9)))
 
     def __str__(self):
@@ -931,7 +929,7 @@ class UTCDateTime(object):
         """
         dt = self.datetime
         pattern = "%%.%dlf" % (self.precision)
-        ns = pattern % ((self._ns % 1000000000) / 1e9)
+        ns = pattern % ((self._ns % 10**9) / 1e9)
         return "%04d-%02d-%02dT%02d:%02d:%02d.%sZ" % (
             dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second,
             ns[2:self.precision + 2])
