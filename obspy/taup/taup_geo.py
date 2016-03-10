@@ -126,11 +126,22 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
         # and each could have pierce points and a
         # path
         for arrival in arrivals:
+            # check if we go in minor or major arc direction
+            distance = arrival.purist_distance % 360.
+            if distance > 180.:
+                sign = -1
+                az_arr = (azimuth + 180.) % 360.
+            else:
+                sign = 1
+                az_arr = azimuth
+            arrival.azimuth = az_arr
 
             if arrival.pierce is not None:
                 geo_pierce = np.empty(arrival.pierce.shape, dtype=TimeDistGeo)
+
                 for i, pierce_point in enumerate(arrival.pierce):
-                    pos = line.ArcPosition(np.degrees(pierce_point['dist']))
+                    dir_degrees = np.degrees(sign * pierce_point['dist'])
+                    pos = line.ArcPosition(dir_degrees)
                     geo_pierce[i] = (pierce_point['p'], pierce_point['time'],
                                      pierce_point['dist'],
                                      pierce_point['depth'],
@@ -140,7 +151,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
             if arrival.path is not None:
                 geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
                 for i, path_point in enumerate(arrival.path):
-                    pos = line.ArcPosition(np.degrees(path_point['dist']))
+                    dir_degrees = np.degrees(sign * path_point['dist'])
+                    pos = line.ArcPosition(dir_degrees)
                     geo_path[i] = (path_point['p'], path_point['time'],
                                    path_point['dist'], path_point['depth'],
                                    pos['lat2'], pos['lon2'])
