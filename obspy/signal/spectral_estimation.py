@@ -1415,12 +1415,7 @@ class PPSD(object):
             periods = period
 
         if color is None:
-            if len(periods) == 1:
-                colors = ["b"]
-            else:
-                from matplotlib.cm import get_cmap
-                cmap_ = get_cmap(name="Paired", lut=len(periods))
-                colors = [cmap_(i) for i in range(len(periods))]
+            colors = [None] * len(periods)
         else:
             if len(periods) == 1:
                 colors = [color]
