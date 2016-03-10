@@ -22,7 +22,7 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   when read into sac. [required]''',
        'b': 'F    Beginning value of the independent variable. [required]',
        'e': 'F    Ending value of the independent variable. [required]',
-       'iftype': '''I    Type of file [required]:
+       'iftype': '''I    Type of file [required]:\n
                   * ITIME {Time series file}
                   * IRLIM {Spectral file---real and imaginary}
                   * IAMPH {Spectral file---amplitude and phase}
@@ -32,7 +32,7 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'delta': 'F    Increment between evenly spaced samples (nominal value).'
                 ' [required]',
        'odelta': 'F    Observed increment if different from nominal value.',
-       'idep': '''I    Type of dependent variable:
+       'idep': '''I    Type of dependent variable:\n
                   * IUNKN (Unknown)
                   * IDISP (Displacement in nm)
                   * IVEL (Velocity in nm/sec)
@@ -49,7 +49,7 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'nzmin': 'N    GMT minute.',
        'nzsec': 'N    GMT second.',
        'nzmsec': 'N    GMT millisecond.',
-       'iztype': '''I    Reference time equivalence:
+       'iztype': '''I    Reference time equivalence:\n
                   * IUNKN (5): Unknown
                   * IB (9): Begin time
                   * IDAY (10): Midnight of reference GMT day
@@ -115,14 +115,14 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'evel': 'F    Event elevation (meters). [not currently used]',
        'evdp': 'F    Event depth below surface (meters). [not currently used]',
        'mag': 'F    Event magnitude.',
-       'imagtyp': '''I    Magnitude type:
+       'imagtyp': '''I    Magnitude type:\n
                   * IMB (52): Bodywave Magnitude
                   * IMS (53): Surfacewave Magnitude
                   * IML (54): Local Magnitude
                   * IMW (55): Moment Magnitude
                   * IMD (56): Duration Magnitude
                   * IMX (57): User Defined Magnitude''',
-       'imagsrc': '''I    Source of magnitude information:
+       'imagsrc': '''I    Source of magnitude information:\n
                   * INEIC (National Earthquake Information Center)
                   * IPDE (Preliminary Determination of Epicenter)
                   * IISC (International Seismological Centre)
@@ -135,7 +135,7 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
                   * IJSOP (Joint Seismic Observation Program)
                   * IUSER (The individual using SAC2000)
                   * IUNKNOWN (unknown)''',
-       'ievtyp': '''I    Type of event:
+       'ievtyp': '''I    Type of event:\n
                   * IUNKN (Unknown)
                   * INUCL (Nuclear event)
                   * IPREN (Nuclear pre-shot event)
@@ -174,13 +174,13 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'gcarc': 'F    Station to event great circle arc length (degrees).',
        'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated '
                  'from st event coordinates.',
-       'iqual': '''I    Quality of data [not currently used]:
+       'iqual': '''I    Quality of data [not currently used]:\n
                   * IGOOD (Good data)
                   * IGLCH (Glitches)
                   * IDROP (Dropouts)
                   * ILOWSN (Low signal to noise ratio)
                   * IOTHER (Other)''',
-       'isynth': '''I    Synthetic data flag [not currently used]:
+       'isynth': '''I    Synthetic data flag [not currently used]:\n
                   * IRLDTA (Real data)
                   * ????? (Flags for various synthetic seismogram codes)''',
        'user0': 'F    User defined variable storage area 0.',
