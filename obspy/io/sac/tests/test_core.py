@@ -842,8 +842,6 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.sac.delta, tr.stats.sac.delta * 2)
 
 
-
-
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
