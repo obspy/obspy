@@ -26,13 +26,12 @@ import warnings
 import functools
 from copy import copy
 from datetime import datetime
-from dateutil.rrule import MINUTELY, SECONDLY
 
 import numpy as np
 import matplotlib.lines as mlines
 import matplotlib.patches as patches
 from matplotlib.cm import get_cmap
-from matplotlib.dates import AutoDateLocator, date2num
+from matplotlib.dates import date2num
 from matplotlib.path import Path
 from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
@@ -40,7 +39,7 @@ import scipy.signal as signal
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import create_empty_data_chunk, MATPLOTLIB_VERSION
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
-from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
+from obspy.imaging.util import (_set_xaxis_obspy_dates, _id_key, _timestring)
 
 
 MINMAX_ZOOMLEVEL_WARNING_TEXT = "Warning: Zooming into MinMax Plot!"
@@ -801,13 +800,9 @@ class WaveformPlotting(object):
         ax = self.axis[-1]
         if self.type == "relative":
             locator = MaxNLocator(5)
+            ax.xaxis.set_major_locator(locator)
         else:
-            ax.xaxis_date()
-            locator = AutoDateLocator(minticks=3, maxticks=6)
-            locator.intervald[MINUTELY] = [1, 2, 5, 10, 15, 30]
-            locator.intervald[SECONDLY] = [1, 2, 5, 10, 15, 30]
-            ax.xaxis.set_major_formatter(ObsPyAutoDateFormatter(locator))
-        ax.xaxis.set_major_locator(locator)
+            _set_xaxis_obspy_dates(ax)
         plt.setp(ax.get_xticklabels(), fontsize='small',
                  rotation=self.tick_rotation)
 
