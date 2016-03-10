@@ -65,6 +65,8 @@ class MSEEDMetadata(object):
         :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
         :param c_seg: Calculate metrics for each continuous segment.
         :type c_seg: bool
+        :param add_flags: Include miniSEED header statistics in result.
+        :type add_flags: bool
         """
 
         self.data = obspy.Stream()
@@ -335,10 +337,13 @@ class MSEEDMetadata(object):
                 clock_locked=0.0)
 
         timing_correction = 0.0
+        used_segments = []
 
         for file in self.files:
-            flags = get_flags(
-                file, starttime=self.starttime, endtime=self.endtime)
+            flags = get_flags(file, starttime=self.starttime,
+                              endtime=self.endtime, used_segments=used_segments)
+
+            used_segments = flags["used_segments"]
 
             # Update the flag counters
             data_quality_flags.update(flags["data_quality_flags"])

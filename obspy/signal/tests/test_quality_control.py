@@ -236,6 +236,7 @@ class QualityControlTestCase(unittest.TestCase):
                                     "clock_locked": 2}})
 
             md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
+            print(md.get_json_meta())
             # Sum up contributions from both files.
             meta = md.meta['miniseed_header_counts']
 
