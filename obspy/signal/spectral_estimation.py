@@ -1057,7 +1057,7 @@ class PPSD(object):
         :param starttime: If set, data before the specified time is excluded
             from the returned stack.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: If set, data after the specified time is excluded
+        :param endtime: If set, data after the specified time is excluded
             from the returned stack.
         :type time_of_weekday: list of (int, float, float) 3-tuples
         :param time_of_weekday: If set, restricts the data that is included

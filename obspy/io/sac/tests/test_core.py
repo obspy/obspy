@@ -804,6 +804,27 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.sac.stla, 1.0)
         self.assertEqual(tr1.stats.sac.stlo, 2.0)
 
+    def test_merge_sac_obspy_headers(self):
+        """
+        Test that manually setting a set of SAC headers not related
+        to validity or reference time on Trace.stats.sac is properly merged
+        with the Trace.stats header. Issue 1285.
+        """
+        tr = Trace(data=np.arange(30))
+        o = 10.0
+        tr.stats.sac = {'o': o}
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                tr.write(tempfile, format='SAC')
+                self.assertEqual(len(w), 1)
+            tr1 = read(tempfile)[0]
+
+        self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
+        self.assertEqual(tr1.stats.sac.o, o)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
