@@ -297,8 +297,7 @@ class MSEEDMetadata(object):
                 beginning_event=0,
                 end_event=0,
                 positive_leap=0,
-                negative_leap=0,
-                clock_locked=0)
+                negative_leap=0)
         io_and_clock_flags = collections.Counter(
                 station_volume_parity_error=0,
                 long_record_read=0,
@@ -326,8 +325,7 @@ class MSEEDMetadata(object):
                 beginning_event=0.0,
                 end_event=0.0,
                 positive_leap=0.0,
-                negative_leap=0.0,
-                clock_locked=0.0)
+                negative_leap=0.0)
         io_and_clock_flags_seconds = collections.Counter(
                 station_volume_parity_error=0.0,
                 long_record_read=0.0,
