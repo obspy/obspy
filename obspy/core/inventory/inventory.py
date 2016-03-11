@@ -337,15 +337,16 @@ class Inventory(ComparingObject):
 
     def get_coordinates(self, seed_id, datetime=None):
         """
-        Return coordinates for a given channel.
+        Return coordinates and orientation for a given channel.
 
         :type seed_id: str
-        :param seed_id: SEED ID string of channel to get coordinates for.
+        :param seed_id: SEED ID string of channel to get coordinates and
+            orientation for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Time to get coordinates for.
         :rtype: dict
         :return: Dictionary containing coordinates (latitude, longitude,
-            elevation)
+            elevation, azimuth, dip)
         """
         network, _, _, _ = seed_id.split(".")
 

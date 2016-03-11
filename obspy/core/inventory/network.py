@@ -224,15 +224,16 @@ class Network(BaseNode):
 
     def get_coordinates(self, seed_id, datetime=None):
         """
-        Return coordinates for a given channel.
+        Return coordinates and orientation for a given channel.
 
         :type seed_id: str
-        :param seed_id: SEED ID string of channel to get coordinates for.
+        :param seed_id: SEED ID string of channel to get coordinates and
+            orientation for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Time to get coordinates for.
         :rtype: dict
         :return: Dictionary containing coordinates (latitude, longitude,
-            elevation)
+            elevation, azimuth, dip)
         """
         network, station, location, channel = seed_id.split(".")
         coordinates = []
@@ -275,8 +276,10 @@ class Network(BaseNode):
                     # if channel latitude or longitude is not given use station
                     data['latitude'] = cha.latitude or sta.latitude
                     data['longitude'] = cha.longitude or sta.longitude
-                    data['elevation'] = cha.elevation
+                    data['elevation'] = cha.elevation or sta.elevation
                     data['local_depth'] = cha.depth
+                    data['azimuth'] = cha.azimuth
+                    data['dip'] = cha.dip
                     coordinates.append(data)
         if len(coordinates) > 1:
             msg = "Found more than one matching coordinates. Returning first."
