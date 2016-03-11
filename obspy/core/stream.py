@@ -3154,6 +3154,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         to the earliest common start time and latest common end time. Works in
         place.
         """
+        self._cleanup()
         channel_infos = self._get_common_channels_info()
         new_traces = []
         for (net, sta, loc, cha_pattern), infos in channel_infos.items():
@@ -3164,6 +3165,111 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 st = st.cutout(start_, end_)
             new_traces += st.traces
         self.traces = new_traces
+
+    def rotate_to_zne(self, inventory, component_pairs=("Z12", "123")):
+        """
+        Rotate traces to ZNE.
+
+        >>> st.rotate_to_zne(inventory)  # doctest: +SKIP
+
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+        :param inventory: Inventory with metadata of channels.
+        :type component_pairs: list or tuple
+        :param component_pairs: List of combinations of three (case sensitive)
+            component characters. Rotations are executed in this order, so
+            order might matter in very strange cases (e.g. if traces with more
+            than three component codes are present for the same SEED ID down to
+            the component code).
+        """
+        for component_pair in component_pairs:
+            st = self.select(component="[{}]".format(component_pair))
+            netstaloc = set(
+                [(tr.stats.network, tr.stats.station, tr.stats.location)
+                 for tr in st])
+            for net, sta, loc in netstaloc:
+                channels = set(
+                    [tr.stats.channel
+                     for tr in st.select(network=net, station=sta,
+                                         location=loc)])
+                common_channels = {}
+                for channel in channels:
+                    if channel == "":
+                        continue
+                    cha_without_comp = channel[:-1]
+                    component = channel[-1]
+                    common_channels.setdefault(
+                        cha_without_comp, set()).add(component)
+                for cha_without_comp, components in common_channels.items():
+                    if components == set(component_pair):
+                        channels_ = [cha_without_comp + comp
+                                     for comp in component_pair]
+                        self._rotate_to_zne(net, sta, loc, channels_,
+                                            inventory)
+        return self
+
+    def _rotate_to_zne(self, network, station, location, channels, inventory):
+        """
+        Rotate three channels to ZNE.
+
+        >>> st._rotate_to_zne(
+        ...     "BW", "FFB1", "", ["HHZ", "HH1", "HH2"],
+        ...     inventory)  # doctest: +SKIP
+
+        :type network: str
+        :param network: Network code of channels that should be rotated.
+        :type station: str
+        :param station: Station code of channels that should be rotated.
+        :type location: str
+        :param location: Location code of channels that should be rotated.
+        :type channels: list
+        :param channels: The three channel codes of channels that should be
+            rotated.
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
+        :param inventory: Inventory with metadata of channels.
+        """
+        from obspy.signal.rotate import rotate2zne
+        # build temporary stream that has only those traces that are supposed
+        # to be used in rotation
+        st = self.select(network=network, station=station, location=location)
+        st = (st.select(channel=channels[0]) + st.select(channel=channels[1]) +
+              st.select(channel=channels[2]))
+        # remove the original unrotated traces from the stream
+        for tr in st.traces:
+            self.remove(tr)
+        # cut data so that we end up with a set of matching pieces for the tree
+        # components (i.e. cut away any parts where one of the three components
+        # has no data)
+        st._trim_common_channels()
+        # sort by start time, so each three consecutive traces can then be used
+        # in one rotation run
+        st.sort(keys=["starttime"])
+        # woooops, that's unexpected. must be a bug in the trimming helper
+        # routine
+        if len(st) % 3 != 0:
+            msg = ("Unexpected behavior in rotation. Please file a bug "
+                   "report on github.")
+            raise NotImplementedError(msg)
+        num_pieces = len(st) / 3
+        for i in range(num_pieces):
+            # three consecutive traces are always the ones that combine for one
+            # rotation run
+            traces = [st.pop() for i in range(3)]
+            # paranoid.. do a quick check of the channels again.
+            if set([tr.stats.channel for tr in traces]) != set(channels):
+                msg = ("Unexpected behavior in rotation. Please file a bug "
+                       "report on github.")
+                raise NotImplementedError(msg)
+            coordinates = [inventory.get_coordinates(tr.id, tr.stats.starttime)
+                           for tr in traces]
+            zne = rotate2zne(
+                traces[0], coordinates[0]["azimuth"], coordinates[0]["dip"],
+                traces[1], coordinates[1]["azimuth"], coordinates[1]["dip"],
+                traces[2], coordinates[2]["azimuth"], coordinates[2]["dip"])
+            for tr, new_data, component in zip(traces, zne, "ZNE"):
+                tr.data = new_data
+                tr.stats.channel = tr.stats.channel[:-1] + component
+            self.traces += traces
+        return self
 
 
 def _is_pickle(filename):  # @UnusedVariable
