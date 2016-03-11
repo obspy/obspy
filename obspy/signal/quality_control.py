@@ -337,13 +337,14 @@ class MSEEDMetadata(object):
                 clock_locked=0.0)
 
         timing_correction = 0.0
-        used_segments = []
+        used_times = []
 
         for file in self.files:
             flags = get_flags(file, starttime=self.starttime,
-                              endtime=self.endtime, used_segments=used_segments)
+                              endtime=self.endtime,
+                              used_times=used_times)
 
-            used_segments = flags["used_segments"]
+            used_times = flags["used_times"]
 
             # Update the flag counters
             data_quality_flags.update(flags["data_quality_flags"])
@@ -447,7 +448,7 @@ class MSEEDMetadata(object):
         # the name_reference
         prefix = 'miniseed_header'
         for flag_type in ['_percentages', '_counts']:
-            for _, flags in self.meta[prefix + flag_type].iteritems():
+            for _, flags in self.meta[prefix + flag_type].items():
                 if _ not in ["activity_flags", "data_quality_flags",
                              "io_and_clock_flags"]:
                     continue
@@ -471,7 +472,7 @@ class MSEEDMetadata(object):
         self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
         self.meta['sample_median'] = \
-            np.median([n for n in tr.data for tr in self.data])
+            np.median(np.concatenate([tr.data for tr in self.data]))
 
         # Might overflow np.int64 so make Python obj. (.astype(object))
         # allows conversion to long int when required (see tests)

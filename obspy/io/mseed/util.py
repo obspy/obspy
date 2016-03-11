@@ -116,9 +116,9 @@ def get_timing_and_data_quality(file_or_file_object):
     :type data_quality_flags: bool
     :param timing_quality: Extract timing quality and corresponding statistics.
     :type timing_quality: bool
-    :param used_segments: Records that fall (partially) within these ranges
+    :param used_times: Records that fall (partially) within these ranges
         are excluded.
-    : type used_segments: array of [start, end] times
+    : type used_times: array of [start, end] times
     :return: Dictionary with information about the timing quality and the data
         quality, I/O, and activity flags. It has the following keys:
         ``"record_count"``, ``"data_quality_flags"``, ``"activity_flags"``,
@@ -283,50 +283,66 @@ def get_timing_and_data_quality(file_or_file_object):
 
         # We do not want to count overlapping records double..
         # First record is always new
-        if used_segments is not None:
-            if len(used_segments) == 0:
-                used_segments = [[rec_info["starttime"], rec_info["endtime"]]]
+        if used_times is not None:
+            if len(used_times) == 0:
+                used_times = [[rec_info["starttime"], rec_info["endtime"]]]
             else:
                 # If we have one record coverage, try extending it
-                if len(used_segments) == 1:
+                if len(used_times) == 1:
                     # Extend the endtime with the new endtime
-                    if rec_info["starttime"] == used_segments[0][1]:
-                        used_segments[0][1] = rec_info["endtime"]
+                    if rec_info["starttime"] == used_times[0][1]:
+                        used_times[0][1] = rec_info["endtime"]
                     # A gap, add a new segment
-                    elif rec_info["starttime"] > used_segments[0][1]:
-                        used_segments.append([rec_info["starttime"], rec_info["endtime"]])
-                    # Overlap, reduce the starttime to the endtime of the segment
-                    # Extend segment with new endtime is necessary
-                    elif rec_info["starttime"] < used_segments[0][1]:
-                        rec_info["starttime"] = used_segments[0][1]
-                        used_segments[0][1] = max(used_segments[0][1], rec_info["endtime"])
+                    elif rec_info["starttime"] > used_times[0][1]:
+                        used_times.append([rec_info["starttime"],
+                                           rec_info["endtime"]])
+                    # Overlap, reduce the starttime to the endtime of the
+                    # segment. Extend segment with new endtime is necessary
+                    elif rec_info["starttime"] < used_times[0][1]:
+                        rec_info["starttime"] = used_times[0][1]
+                        used_times[0][1] = max(used_times[0][1],
+                                               rec_info["endtime"])
                 # If we have multiple used segments things get tricky,
                 # because now also ends can overlap..
                 else:
                     # Go over all segments
-                    for _i in range(len(used_segments) - 1):
+                    for _i in range(len(used_times) - 1):
                         # Starttime falls on the end of a used segment
-                        # Extend the endtime, but not past the start of the next
-                        if rec_info["starttime"] == used_segments[_i][1]:
-                            rec_info["endtime"] = min(used_segments[_i + 1][0], rec_info["endtime"])
-                            used_segments[_i][1] == max(used_segments[_i][1], rec_info["endtime"])
+                        # Extend the endtime, but not past the start of next
+                        if rec_info["starttime"] == used_times[_i][1]:
+                            rec_info["endtime"] = min(used_times[_i + 1][0],
+                                                      rec_info["endtime"])
+                            used_times[_i][1] == max(used_times[_i][1],
+                                                     rec_info["endtime"])
                         # A gap.. add new segment
-                        elif rec_info["starttime"] > used_segments[_i][1] and rec_info["starttime"] < used_segments[_i + 1][0]:
-                            rec_info["endtime"] = min(used_segments[_i + 1][0], rec_info["endtime"])
-                            used_segments.append([rec_info["starttime"], rec_info["endtime"]])
-                            # Make sure we sort by the starttime after each new segment
-                            used_segments = sorted(used_segments, key=lambda x: x[0])
+                        elif (rec_info["starttime"] > used_times[_i][1] and
+                              rec_info["starttime"] < used_times[_i + 1][0]):
+                            rec_info["endtime"] = min(used_times[_i + 1][0],
+                                                      rec_info["endtime"])
+                            used_times.append([rec_info["starttime"],
+                                               rec_info["endtime"]])
+                            # Make sure we sort by the starttime after each
+                            # new segment
+                            used_times = sorted(used_times,
+                                                key=lambda x: x[0])
                         # Starttime of a segment falls within an occupied range
-                        elif rec_info["starttime"] < used_segments[_i][1] and rec_info["starttime"] > used_segments[_i][0]:
+                        elif (rec_info["starttime"] < used_times[_i][1] and
+                              rec_info["starttime"] > used_times[_i][0]):
                             # Set the starttime to the END of this segment
-                            rec_info["starttime"] = used_segments[_i][1]
-                            # End time is minimum of the end of the record, or next segment
-                            rec_info["endtime"] = min(used_segments[_i + 1][0], rec_info["endtime"])
-                            # Fix this continuous segment by extending the endtime
-                            used_segments[_i][1] == max(used_segments[_i][1], rec_info["endtime"])
+                            rec_info["starttime"] = used_times[_i][1]
+                            # End time is minimum of the end of the record or
+                            # next segment
+                            rec_info["endtime"] = min(used_times[_i + 1][0],
+                                                      rec_info["endtime"])
+                            # Fix this segment by extending the endtime
+                            used_times[_i][1] == max(used_times[_i][1],
+                                                     rec_info["endtime"])
 
         offset += rec_info["record_length"]
 
+        # Skip if the record endtime is before or after starttime
+        if rec_info["endtime"] <= rec_info["starttime"]:
+            continue
         if starttime is not None and rec_info["endtime"] <= starttime:
             continue
         if endtime is not None and rec_info["starttime"] >= endtime:
@@ -369,7 +385,7 @@ def get_timing_and_data_quality(file_or_file_object):
             timing_correction += record_length_seconds
 
     results = {
-        "used_segments": used_segments,
+        "used_times": used_times,
         "record_count": record_count,
         "timing_correction": timing_correction
     }
