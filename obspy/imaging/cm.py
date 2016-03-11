@@ -100,6 +100,84 @@ Reversed version of viridis.
     from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
     plot([cmap])
 
+viridis_white
+-------------
+
+"viridis_white" is a modified version of "viridis" that goes to white instead
+of yellow in the end. Although it remains perceptually uniform, the light
+colors are a bit more difficult to distinguish than yellow in the original
+viridis. It is useful for printing because it can merge with a white
+background (by M Meschede).
+
+    >>> from obspy.imaging.cm import viridis_white
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_cwt as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_array_response as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_ppsd as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_similarity as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
+    plot([cmap])
+
+viridis_white_r
+---------------
+
+Reversed version of viridis_white.
+
+    >>> from obspy.imaging.cm import viridis_white_r
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_cwt as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_array_response as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_ppsd as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_similarity as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
+    plot([cmap])
+
 pqlx
 ----
 
