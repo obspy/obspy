@@ -139,9 +139,16 @@ def _get_cmap(name, kind='segmented', lut=None, reverse=False):
 
     :type name: str
     :param name: Name of colormap to load, same as filename in
-        `obspy/imaging/data` without `.npz` file suffix.
+        `obspy/imaging/data` without `.npz or .npy` file suffix.
+    :type kind: str
+    :param kind: the type of colormap data. 'segmented' looks for
+                 a name.npz file that contains colorbar segments.
+                 'listed' looks for a name.npy file that contains a simple
+                 array of RGB values with size [ncolors, 3] that defines
+                 the colormap.
     :type lut: int
-    :param lut: Specifies the number of discrete color values in the colormap.
+    :param lut: Specifies the number of discrete color values in the
+                segmented colormap.
         `None` to use matplotlib default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
