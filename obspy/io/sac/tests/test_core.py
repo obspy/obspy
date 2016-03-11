@@ -831,8 +831,6 @@ class CoreTestCase(unittest.TestCase):
         in the SAC file.
         """
         tr = read(self.file, format='SAC')[0]
-        npts = tr.stats.sac.npts
-        delta = tr.stats.sac.delta
         tr.decimate(2)
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
