@@ -608,7 +608,7 @@ class Parser(object):
 
     def get_coordinates(self, seed_id, datetime=None):
         """
-        Return Coordinates (from blockette 52)
+        Return Coordinates and orientation (from blockette 52)
 
         :type seed_id: str
         :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
@@ -616,7 +616,7 @@ class Parser(object):
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Timestamp of requested PAZ values
         :return: Dictionary containing Coordinates (latitude, longitude,
-            elevation, dip, azimuth)
+            elevation, azimuth, dip)
         """
         blockettes = self._select(seed_id, datetime)
         data = {}

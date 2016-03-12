@@ -2521,16 +2521,10 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests rotating all traces in stream to ZNE given an inventory object.
         """
-        st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
         inv = read_inventory("/path/to/ffbx.stationxml", format="STATIONXML")
-        st.rotate_to_zne(inv)
-        # do some checks on results
-        self.assertEqual(len(st), 30)
-        # compare data
+        parser = Parser("/path/to/ffbx.dataless")
         expected_data = np.load(
             os.path.join(self.data_path, "ffbx_rotated.npz")).items()[0][1]
-        for tr, expected_data_ in zip(st, expected_data):
-            np.testing.assert_allclose(tr.data, expected_data_, rtol=1e-7)
         # compare stats
         expected_stats = [
             {'channel': 'HHZ', 'location': '', 'network': 'BW', 'npts': 401,
@@ -2623,11 +2617,21 @@ class StreamTestCase(unittest.TestCase):
             {'channel': 'BHE', 'location': '', 'network': 'BW', 'npts': 17,
              'sampling_rate': 40.0, 'starttime':
              "2016-03-11T11:34:44.025000Z", 'station': 'FFB3'}]
-        for expected, tr in zip(expected_stats, st):
-            for k, v in expected.items():
-                if k == "starttime":
-                    v = UTCDateTime(v)
-                self.assertEqual(tr.stats[k], v)
+        # check rotation using both Inventory and Parser as metadata input
+        for metadata in (inv, parser):
+            st = read("/path/to/ffbx_unrotated_gaps.mseed", format="MSEED")
+            st.rotate_to_zne(metadata)
+            # do some checks on results
+            self.assertEqual(len(st), 30)
+            # compare data
+            for tr, expected_data_ in zip(st, expected_data):
+                np.testing.assert_allclose(tr.data, expected_data_, rtol=1e-7)
+            # compare stats
+            for expected, tr in zip(expected_stats, st):
+                for k, v in expected.items():
+                    if k == "starttime":
+                        v = UTCDateTime(v)
+                    self.assertEqual(tr.stats[k], v)
 
 
 def suite():
