@@ -3170,7 +3170,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Rotate traces to ZNE.
 
-        >>> st.rotate_to_zne(inventory)  # doctest: +SKIP
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
+        >>> st.rotate_to_zne(inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
 
         :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
@@ -3212,9 +3216,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         Rotate three channels to ZNE.
 
+        >>> from obspy import read, read_inventory
+        >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
+        >>> inv = read_inventory("/path/to/ffbx.stationxml")
         >>> st._rotate_to_zne(
         ...     "BW", "FFB1", "", ["HHZ", "HH1", "HH2"],
-        ...     inventory)  # doctest: +SKIP
+        ...     inv)  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
 
         :type network: str
         :param network: Network code of channels that should be rotated.
