@@ -825,6 +825,20 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.starttime, tr.stats.starttime)
         self.assertEqual(tr1.stats.sac.o, o)
 
+    def test_decimate_resample(self):
+        """
+        Test that ObsPy Trace resampling and decimation is properly reflected
+        in the SAC file.
+        """
+        tr = read(self.file, format='SAC')[0]
+        tr.decimate(2)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+        self.assertEqual(tr1.stats.sac.npts, tr.stats.sac.npts / 2)
+        self.assertEqual(tr1.stats.sac.delta, tr.stats.sac.delta * 2)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

@@ -365,7 +365,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
                 header.update(nztimes)
                 header['b'] = microsecond * 1e-6
                 header['e'] = header['b'] +\
-                    (header['npts'] - 1) * header['delta']
+                    (stats['npts'] - 1) * stats['delta']
 
             msg = "Old header has invalid reftime."
             warnings.warn(msg)
@@ -396,7 +396,7 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header['b'] = microsecond * 1e-6
 
         # we now have correct b, npts, delta, and nz times
-        header['e'] = header['b'] + (header['npts'] - 1) * header['delta']
+        header['e'] = header['b'] + (stats['npts'] - 1) * stats['delta']
 
         header['scale'] = stats.get('calib', HD.FNULL)
 
@@ -412,6 +412,10 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     header['leven'] = 1
     header['lovrok'] = 1
     header['iftype'] = 1
+
+    # ObsPy issue #1317
+    header['npts'] = stats['npts']
+    header['delta'] = stats['delta']
 
     return header
 
