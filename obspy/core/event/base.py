@@ -36,7 +36,6 @@ from uuid import uuid4
 from obspy.core.event.header import DataUsedWaveType, ATTRIBUTE_HAS_ERRORS
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.decorator import deprecated
 
 
 class QuantityError(AttribDict):
@@ -533,11 +532,6 @@ class ResourceIdentifier(object):
             except KeyError:
                 pass
 
-    @deprecated("Method 'getReferredObject' was renamed to "
-                "'get_referred_object'. Use that instead.")  # noqa
-    def getReferredObject(self):
-        return self.get_referred_object()
-
     def get_referred_object(self):
         """
         Returns the object associated with the resource identifier.
@@ -551,11 +545,6 @@ class ResourceIdentifier(object):
             return ResourceIdentifier.__resource_id_weak_dict[self.id]
         except KeyError:
             return None
-
-    @deprecated("Method 'setReferredObject' was renamed to "
-                "'set_referred_object'. Use that instead.")  # noqa
-    def setReferredObject(self, referred_object):
-        return self.set_referred_object(referred_object)
 
     def set_referred_object(self, referred_object):
         """
@@ -591,11 +580,6 @@ class ResourceIdentifier(object):
         ResourceIdentifier.__resource_id_weak_dict[self.id] = \
             referred_object
 
-    @deprecated("Method 'convertIDToQuakeMLURI' was renamed to "
-                "'convert_id_to_quakeml_uri'. Use that instead.")  # noqa
-    def convertIDToQuakeMLURI(self, authority_id="local"):
-        return self.convert_id_to_quakeml_uri(authority_id=authority_id)
-
     def convert_id_to_quakeml_uri(self, authority_id="local"):
         """
         Converts the current ID to a valid QuakeML URI.
@@ -612,11 +596,6 @@ class ResourceIdentifier(object):
             ``"local"``.
         """
         self.id = self.get_quakeml_uri(authority_id=authority_id)
-
-    @deprecated("Method 'getQuakeMLURI' was renamed to "
-                "'get_quakeml_uri'. Use that instead.")  # noqa
-    def getQuakeMLURI(self, authority_id="local"):
-        return self.get_quakeml_uri(authority_id=authority_id)
 
     def get_quakeml_uri(self, authority_id="local"):
         """
@@ -1039,16 +1018,6 @@ class WaveformStreamID(__WaveformStreamID):
                                                location_code=location_code,
                                                channel_code=channel_code,
                                                resource_uri=resource_uri)
-
-    @deprecated(
-        "'getSEEDString' has been renamed to "  # noqa
-        "'get_seed_string'. Use that instead.")
-    def getSEEDString(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getSEEDString' has been renamed to
-        'get_seed_string'. Use that instead.
-        '''
-        return self.get_seed_string(*args, **kwargs)
 
     def get_seed_string(self):
         return "%s.%s.%s.%s" % (

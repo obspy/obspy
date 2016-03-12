@@ -11,7 +11,6 @@ import os
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
 from .velocity_layer import VelocityLayer, evaluate_velocity_at
 from . import _DEFAULT_VALUES
 
@@ -67,16 +66,6 @@ class VelocityModel(object):
     def is_discontinuity(self, depth):
         return np.any(self.get_discontinuity_depths() == depth)
 
-    @deprecated(
-        "'getDisconDepths' has been renamed to "  # noqa
-        "'get_discontinuity_depths'. Use that instead.")
-    def getDisconDepths(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getDisconDepths' has been renamed to
-        'get_discontinuity_depths'. Use that instead.
-        '''
-        return self.get_discontinuity_depths(*args, **kwargs)
-
     def get_discontinuity_depths(self):
         """
         Return the depths of discontinuities within the velocity model.
@@ -95,16 +84,6 @@ class VelocityModel(object):
         discontinuities[-1] = self.layers[-1]['bot_depth']
 
         return discontinuities
-
-    @deprecated(
-        "'layerNumberAbove' has been renamed to "  # noqa
-        "'layer_number_above'. Use that instead.")
-    def layerNumberAbove(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'layerNumberAbove' has been renamed to
-        'layer_number_above'. Use that instead.
-        '''
-        return self.layer_number_above(*args, **kwargs)
 
     def layer_number_above(self, depth):
         """
@@ -132,16 +111,6 @@ class VelocityModel(object):
         else:
             raise LookupError("No such layer.")
 
-    @deprecated(
-        "'layerNumberBelow' has been renamed to "  # noqa
-        "'layer_number_below'. Use that instead.")
-    def layerNumberBelow(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'layerNumberBelow' has been renamed to
-        'layer_number_below'. Use that instead.
-        '''
-        return self.layer_number_below(*args, **kwargs)
-
     def layer_number_below(self, depth):
         """
         Find the layer containing the given depth(s).
@@ -167,26 +136,6 @@ class VelocityModel(object):
             return layer
         else:
             raise LookupError("No such layer.")
-
-    @deprecated(
-        "'evaluateAbove' has been renamed to "  # noqa
-        "'evaluate_above'. Use that instead.")
-    def evaluateAbove(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'evaluateAbove' has been renamed to
-        'evaluate_above'. Use that instead.
-        '''
-        return self.evaluate_above(*args, **kwargs)
-
-    @deprecated(
-        "'evaluateBelow' has been renamed to "  # noqa
-        "'evaluate_below'. Use that instead.")
-    def evaluateBelow(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'evaluateBelow' has been renamed to
-        'evaluate_below'. Use that instead.
-        '''
-        return self.evaluate_below(*args, **kwargs)
 
     def evaluate_above(self, depth, prop):
         """
@@ -244,16 +193,6 @@ class VelocityModel(object):
         layer = self.layers[self.layer_number_below(depth)]
         return evaluate_velocity_at(layer, depth, prop)
 
-    @deprecated(
-        "'depthAtTop' has been renamed to "  # noqa
-        "'depth_at_top'. Use that instead.")
-    def depthAtTop(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'depthAtTop' has been renamed to
-        'depth_at_top'. Use that instead.
-        '''
-        return self.depth_at_top(*args, **kwargs)
-
     def depth_at_top(self, layer):
         """
         Return the depth at the top of the given layer.
@@ -269,16 +208,6 @@ class VelocityModel(object):
         """
         layer = self.layers[layer]
         return layer['top_depth']
-
-    @deprecated(
-        "'depthAtBottom' has been renamed to "  # noqa
-        "'depth_at_bottom'. Use that instead.")
-    def depthAtBottom(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'depthAtBottom' has been renamed to
-        'depth_at_bottom'. Use that instead.
-        '''
-        return self.depth_at_bottom(*args, **kwargs)
 
     def depth_at_bottom(self, layer):
         """
@@ -431,16 +360,6 @@ class VelocityModel(object):
             "\n spherical=" + str(self.is_spherical)
         return desc
 
-    @deprecated(
-        "'readVelocityFile' has been renamed to "  # noqa
-        "'read_velocity_file'. Use that instead.")
-    def readVelocityFile(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readVelocityFile' has been renamed to
-        'read_velocity_file'. Use that instead.
-        '''
-        return self.read_velocity_file(*args, **kwargs)
-
     @classmethod
     def read_velocity_file(cls, filename):
         """
@@ -465,16 +384,6 @@ class VelocityModel(object):
 
         v_mod.fix_discontinuity_depths()
         return v_mod
-
-    @deprecated(
-        "'readTVelFile' has been renamed to "  # noqa
-        "'read_tvel_file'. Use that instead.")
-    def readTVelFile(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readTVelFile' has been renamed to
-        'read_tvel_file'. Use that instead.
-        '''
-        return self.read_tvel_file(*args, **kwargs)
 
     @classmethod
     def read_tvel_file(cls, filename):
@@ -699,16 +608,6 @@ class VelocityModel(object):
             min_radius=0, max_radius=max_radius,
             moho_depth=moho_depth, cmb_depth=cmb_depth, iocb_depth=iocb_depth,
             is_spherical=True, layers=layers)
-
-    @deprecated(
-        "'fixDisconDepths' has been renamed to "  # noqa
-        "'fix_discontinuity_depths'. Use that instead.")
-    def fixDisconDepths(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'fixDisconDepths' has been renamed to
-        'fix_discontinuity_depths'. Use that instead.
-        '''
-        return self.fix_discontinuity_depths(*args, **kwargs)
 
     def fix_discontinuity_depths(self):
         """

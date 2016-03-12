@@ -21,14 +21,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import sys
-
 import numpy as np
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.io.gse2.paz import read_paz
 from obspy.signal.invsim import paz_to_freq_resp
 from obspy.signal.konnoohmachismoothing import konno_ohmachi_smoothing
@@ -251,13 +247,3 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,  # noqa
                               p_xy[:num_freqs // 2, :]), 0)
 
     return p_xy, freqs, t
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "relcalstack": "obspy.signal.calibration.rel_calib_stack",
-        "_calcresp": "obspy.signal.calibration._calc_resp"})

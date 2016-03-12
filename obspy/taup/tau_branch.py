@@ -10,7 +10,6 @@ from future.utils import native_str
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
 from .c_wrappers import clibtau
 from .helper_classes import (SlownessLayer, SlownessModelError,
                              TauModelError, TimeDist)
@@ -40,16 +39,6 @@ class TauBranch(object):
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
-
-    @deprecated(
-        "'createBranch' has been renamed to "  # noqa
-        "'create_branch'. Use that instead.")
-    def createBranch(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'createBranch' has been renamed to
-        'create_branch'. Use that instead.
-        '''
-        return self.create_branch(*args, **kwargs)
 
     def create_branch(self, s_mod, min_p_so_far, ray_params):
         """
@@ -97,16 +86,6 @@ class TauBranch(object):
         self.time = time_dist['time']
         self.dist = time_dist['dist']
         self.tau = self.time - ray_params * self.dist
-
-    @deprecated(
-        "'calcTimeDist' has been renamed to "  # noqa
-        "'calc_time_dist'. Use that instead.")
-    def calcTimeDist(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'calcTimeDist' has been renamed to
-        'calc_time_dist'. Use that instead.
-        '''
-        return self.calc_time_dist(*args, **kwargs)
 
     def calc_time_dist(self, s_mod, top_layer_num, bot_layer_num, ray_params,
                        allow_turn_in_layer=False):
@@ -170,16 +149,6 @@ class TauBranch(object):
         self.time[index] = new_time
         self.dist[index] = new_dist
         self.tau[index] = new_time - ray_param * new_dist
-
-    @deprecated(
-        "'shiftBranch' has been renamed to "  # noqa
-        "'shift_branch'. Use that instead.")
-    def shiftBranch(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'shiftBranch' has been renamed to
-        'shift_branch'. Use that instead.
-        '''
-        return self.shift_branch(*args, **kwargs)
 
     def shift_branch(self, index):
         new_size = len(self.dist) + 1

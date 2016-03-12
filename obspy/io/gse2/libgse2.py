@@ -30,14 +30,11 @@ from future.utils import native_str
 
 import ctypes as C
 import doctest
-import sys
 import warnings
 
 import numpy as np
 
 from obspy import UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.core.util.libnames import _load_cdll
 
 
@@ -513,23 +510,6 @@ def compile_sta2(stats):
                    "represented as '%%f5.3' properly).") % key
             warnings.warn(msg)
     return line.encode('ascii', 'strict')
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isGse2': 'obspy.io.gse2.libgse2.is_gse2',
-        'readHeader': 'obspy.io.gse2.libgse2.read_header',
-        'verifyChecksum': 'obspy.io.gse2.libgse2.verify_checksum',
-        'writeHeader': 'obspy.io.gse2.libgse2.write_header',
-        'compile_STA2': 'obspy.io.gse2.libgse2.compile_sta2',
-        'compress_CM6': 'obspy.io.gse2.libgse2.compress_cm6',
-        'parse_STA2': 'obspy.io.gse2.libgse2.parse_sta2',
-        'uncompress_CM6': 'obspy.io.gse2.libgse2.uncompress_cm6'
-    })
 
 
 if __name__ == '__main__':

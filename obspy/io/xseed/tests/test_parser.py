@@ -57,7 +57,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertTrue('date' and 'required' in
                             str(w[-1].message).lower())
             # Triggers a warning.
-            paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
+            paz = parser.get_paz("NZ.DCZ.20.HNZ", t)
             result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
                       'poles': [(-981 + 1009j), (-981 - 1009j),
                                 (-3290 + 1263j), (-3290 - 1263j)],

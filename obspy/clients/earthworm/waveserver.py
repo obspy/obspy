@@ -21,9 +21,6 @@ import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 RETURNFLAG_KEY = {
@@ -62,16 +59,6 @@ class TraceBuf2(object):
     ndata = 0           # number of samples in instance
     inputType = None    # NumPy data type
 
-    @deprecated(
-        "'readTB2' has been renamed to "  # noqa
-        "'read_tb2'. Use that instead.")
-    def readTB2(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readTB2' has been renamed to
-        'read_tb2'. Use that instead.
-        '''
-        return self.read_tb2(*args, **kwargs)
-
     def read_tb2(self, tb2):
         """
         Reads single TraceBuf2 packet from beginning of input byte array tb.
@@ -87,16 +74,6 @@ class TraceBuf2(object):
         dat = tb2[64:nbytes]
         self.parse_data(dat)
         return nbytes
-
-    @deprecated(
-        "'parseHeader' has been renamed to "  # noqa
-        "'parse_header'. Use that instead.")
-    def parseHeader(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseHeader' has been renamed to
-        'parse_header'. Use that instead.
-        '''
-        return self.parse_header(*args, **kwargs)
 
     def parse_header(self, head):
         """
@@ -121,16 +98,6 @@ class TraceBuf2(object):
         self.end = UTCDateTime(te)
         return
 
-    @deprecated(
-        "'parseData' has been renamed to "  # noqa
-        "'parse_data'. Use that instead.")
-    def parseData(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseData' has been renamed to
-        'parse_data'. Use that instead.
-        '''
-        return self.parse_data(*args, **kwargs)
-
     def parse_data(self, dat):
         """
         Parse tracebuf char array data into self.data
@@ -142,16 +109,6 @@ class TraceBuf2(object):
             print(msg % (self.nsamp, ndat), file=sys.stderr)
             self.ndata = ndat
         return
-
-    @deprecated(
-        "'getObspyTrace' has been renamed to "  # noqa
-        "'get_obspy_trace'. Use that instead.")
-    def getObspyTrace(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getObspyTrace' has been renamed to
-        'get_obspy_trace'. Use that instead.
-        '''
-        return self.get_obspy_trace(*args, **kwargs)
 
     def get_obspy_trace(self):
         """
@@ -327,22 +284,3 @@ def trace_bufs2obspy_stream(tbuflist):
         tlist.append(tb.get_obspy_trace())
     strm = Stream(tlist)
     return strm
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'getMenu': 'obspy.clients.earthworm.waveserver.get_menu',
-        'getNumpyType': 'obspy.clients.earthworm.waveserver.get_numpy_type',
-        'getSockBytes': 'obspy.clients.earthworm.waveserver.get_sock_bytes',
-        'getSockCharLine':
-            'obspy.clients.earthworm.waveserver.get_sock_char_line',
-        'readWaveServerV':
-            'obspy.clients.earthworm.waveserver.read_wave_server_v',
-        'sendSockReq': 'obspy.clients.earthworm.waveserver.send_sock_req',
-        'tracebuf2': 'obspy.clients.earthworm.waveserver.TraceBuf2',
-        'tracebufs2obspyStream':
-            'obspy.clients.earthworm.waveserver.trace_bufs2obspy_stream'})

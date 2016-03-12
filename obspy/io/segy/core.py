@@ -15,14 +15,11 @@ from future.builtins import *  # NOQA
 import warnings
 from copy import deepcopy
 from struct import unpack
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
@@ -757,19 +754,3 @@ if __name__ == '__main__':
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
 setattr(Trace, '__str__', _segy_trace_str_)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isSEGY': 'obspy.io.segy.core._is_segy',
-        'isSU': 'obspy.io.segy.core._is_su',
-        'readSEGY': 'obspy.io.segy.core._read_segy',
-        'readSEGYrev1': 'obspy.io.segy.segy._read_segy',
-        'readSU': 'obspy.io.segy.core._read_su',
-        'readSUFile': 'obspy.io.segy.core._read_su',
-        'writeSEGY': 'obspy.io.segy.core._write_segy',
-        'writeSU': 'obspy.io.segy.core._write_su'})

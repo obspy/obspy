@@ -30,17 +30,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA @UnusedWildImport
 
 import io
-import sys
 import warnings
 
 import numpy as np
 from matplotlib import path as mplpath
 from matplotlib import collections, patches, transforms
 from decorator import decorator
-
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 D2R = np.pi / 180
@@ -75,11 +70,6 @@ def mopad_fallback(func, *args, **kwargs):
         result = _mopad_beach(**final_kwargs)
 
     return result
-
-
-@deprecated("Function 'Beach' has been renamed to 'beach'. Use that instead.")
-def Beach(*args, **kwargs):  # noqa
-    return beach(*args, **kwargs)
 
 
 @mopad_fallback
@@ -193,12 +183,6 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     col.set_linewidth(linewidth)
     col.set_zorder(zorder)
     return col
-
-
-@deprecated("Function 'Beachball' has been renamed to 'beachball'. Use that "
-            "instead.")  # noqa
-def Beachball(*args, **kwargs):
-    return beachball(*args, **kwargs)
 
 
 def beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
@@ -1045,21 +1029,6 @@ class MomentTensor(object):
     @property
     def zz(self):
         return self.mt[2][2]
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'MT2Axes': 'obspy.imaging.beachball.mt2axes',
-        'MT2Plane': 'obspy.imaging.beachball.mt2plane',
-        'Pol2Cart': 'obspy.imaging.beachball.pol2cart',
-        'StrikeDip': 'obspy.imaging.beachball.strike_dip',
-        'TDL': 'obspy.imaging.beachball.tdl',
-        'plotDC': 'obspy.imaging.beachball.plot_dc',
-        'plotMT': 'obspy.imaging.beachball.plot_mt'})
 
 
 if __name__ == '__main__':

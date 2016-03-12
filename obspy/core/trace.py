@@ -25,8 +25,7 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import (
-    deprecated, raise_if_masked, skip_if_no_data)
+from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
@@ -783,16 +782,6 @@ class Trace(object):
             data = data.compressed()
         out.data = data
         return out
-
-    @deprecated(
-        "'getId' has been renamed to "  # noqa
-        "'get_id'. Use that instead.")
-    def getId(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getId' has been renamed to
-        'get_id'. Use that instead.
-        '''
-        return self.get_id(*args, **kwargs)
 
     def get_id(self):
         """
@@ -2560,16 +2549,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if plot:
             import matplotlib.pyplot as plt
 
-        if (isinstance(inventory, (str, native_str)) and
-                inventory.upper() in ("DISP", "VEL", "ACC")):
-            from obspy.core.util.deprecation_helpers import \
-                ObsPyDeprecationWarning
-            output = inventory
-            inventory = None
-            msg = ("The order of optional parameters in method "
-                   "remove_response has changed. 'output' is not accepted "
-                   "as first positional argument in the next release.")
-            warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         response = self._get_response(inventory)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:

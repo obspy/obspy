@@ -11,14 +11,11 @@ import ctypes as C
 import os
 import warnings
 from struct import pack
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from obspy.core.util.deprecation_helpers import (
-    DynamicAttributeImportRerouteModule, ObsPyDeprecationWarning)
 from . import util
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
@@ -212,13 +209,6 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         header_byteorder = 0
     elif header_byteorder in [1, "1", ">"]:
         header_byteorder = 1
-
-    # The quality flag is no more supported. Raise a warning.
-    if 'quality' in kwargs:
-        msg = 'The quality flag is no longer supported in this version of ' + \
-            'obspy.io.mseed. obspy.io.mseed.util has some functions with ' \
-            'similar behavior.'
-        warnings.warn(msg, category=ObsPyDeprecationWarning)
 
     # Parse some information about the file.
     if header_byteorder == 0:
@@ -927,17 +917,6 @@ class MST(object):
         # This also frees the data of the associated datasamples pointer.
         clibmseed.mst_free(C.pointer(self.mst))
         del self.mst
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isMSEED': 'obspy.io.mseed.core._is_mseed',
-        'readMSEED': 'obspy.io.mseed.core._read_mseed',
-        'writeMSEED': 'obspy.io.mseed.core._write_mseed'})
 
 
 if __name__ == '__main__':

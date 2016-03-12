@@ -30,7 +30,7 @@ import numpy as np
 from obspy import Stream, Trace, __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import download_to_file
-from obspy.core.util.decorator import map_example_filename, deprecated
+from obspy.core.util.decorator import map_example_filename
 from . import DEFAULT_XSEED_VERSION, blockette
 from .utils import IGNORE_ATTR, SEEDParserException, to_tag
 
@@ -205,11 +205,6 @@ class Parser(object):
         else:
             raise IOError("First byte of data must be in [0-9<]")
 
-    @deprecated("'getXSEED' has been renamed to 'get_xseed'. "
-                "Use that instead.")  # noqa
-    def getXSEED(self, *args, **kwargs):
-        return self.get_xseed(*args, **kwargs)
-
     def get_xseed(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
         Returns a XSEED representation of the current Parser object.
@@ -288,11 +283,6 @@ class Parser(object):
                                       xml_declaration=True, encoding='UTF-8')
             return result
 
-    @deprecated("'writeXSEED' has been renamed to 'write_xseed'. "
-                "Use that instead.")  # noqa
-    def writeXSEED(self, *args, **kwargs):
-        return self.write_xseed(*args, **kwargs)
-
     def write_xseed(self, filename, *args, **kwargs):
         """
         Writes a XML-SEED file with given name.
@@ -316,11 +306,6 @@ class Parser(object):
             return
         else:
             raise TypeError
-
-    @deprecated("'get_seed' has been renamed to 'get_seed'. "
-                "Use that instead.")  # noqa
-    def getSEED(self, *args, **kwargs):
-        return self.get_seed(*args, **kwargs)
 
     def get_seed(self, compact=False):
         """
@@ -360,11 +345,6 @@ class Parser(object):
                 cur_count += 1
         return seed_string
 
-    @deprecated("'writeSEED' has been renamed to 'write_seed'. "
-                "Use that instead.")  # noqa
-    def writeSEED(self, *args, **kwargs):
-        return self.write_seed(*args, **kwargs)
-
     def write_seed(self, filename, *args, **kwargs):
         """
         Writes a dataless SEED file with given name.
@@ -372,11 +352,6 @@ class Parser(object):
         fh = open(filename, 'wb')
         fh.write(self.get_seed(*args, **kwargs))
         fh.close()
-
-    @deprecated("'getRESP' has been renamed to 'get_resp'. "
-                "Use that instead.")  # noqa
-    def getRESP(self, *args, **kwargs):
-        return self.get_resp(*args, **kwargs)
 
     def get_resp(self):
         """
@@ -511,11 +486,6 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
-    @deprecated("'getPAZ' has been renamed to 'get_paz'. "
-                "Use that instead.")  # noqa
-    def getPAZ(self, *args, **kwargs):
-        return self.get_paz(*args, **kwargs)
-
     def get_paz(self, seed_id, datetime=None):
         """
         Return PAZ.
@@ -597,11 +567,6 @@ class Parser(object):
                         (len(data['poles']) - len(data['zeros']))
         return data
 
-    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. "
-                "Use that instead.")  # noqa
-    def getCoordinates(self, *args, **kwargs):
-        return self.get_coordinates(*args, **kwargs)
-
     def get_coordinates(self, seed_id, datetime=None):
         """
         Return Coordinates (from blockette 52)
@@ -624,11 +589,6 @@ class Parser(object):
                 data['local_depth'] = blkt.local_depth
                 break
         return data
-
-    @deprecated("'writeRESP' has been renamed to 'write_resp'. "
-                "Use that instead.")  # noqa
-    def writeRESP(self, *args, **kwargs):
-        return self.write_resp(*args, **kwargs)
 
     def write_resp(self, folder, zipped=False):
         """
@@ -734,11 +694,6 @@ class Parser(object):
         self._parse_merged_data(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
         self._update_internal_seed_structure()
-
-    @deprecated("'getInventory' has been renamed to 'get_inventory'. "
-                "Use that instead.")  # noqa
-    def getInventory(self, *args, **kwargs):
-        return self.get_inventory(*args, **kwargs)
 
     def get_inventory(self):
         """
@@ -1216,16 +1171,6 @@ class Parser(object):
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
-
-    @deprecated(
-        "'rotateToZNE' has been renamed to "  # noqa
-        "'rotate_to_zne'. Use that instead.")
-    def rotateToZNE(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'rotateToZNE' has been renamed to
-        'rotate_to_zne'. Use that instead.
-        '''
-        return self.rotate_to_zne(*args, **kwargs)
 
     def rotate_to_zne(self, stream):
         """

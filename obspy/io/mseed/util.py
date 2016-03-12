@@ -20,17 +20,10 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import score_at_percentile
-from obspy.core.util.decorator import deprecated
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
                       SAMPLESIZES, UNSUPPORTED_ENCODINGS, clibmseed)
-
-
-@deprecated("'getStartAndEndTime' has been renamed to "
-            "'get_start_and_end_time'. Use that instead.")  # noqa
-def getStartAndEndTime(*args, **kwargs):
-    return get_start_and_end_time(*args, **kwargs)
 
 
 def get_start_and_end_time(file_or_file_object):
@@ -100,12 +93,6 @@ def get_start_and_end_time(file_or_file_object):
         (info['number_of_records'] - 1) * info['record_length'])
     endtime = info['endtime']
     return starttime, endtime
-
-
-@deprecated("'getTimingAndDataQuality' has been renamed to "
-            "'get_timing_and_data_quality'. Use that instead.")  # noqa
-def getTimingAndDataQuality(*args, **kwargs):
-    return get_timing_and_data_quality(*args, **kwargs)
 
 
 def get_timing_and_data_quality(file_or_file_object):
@@ -274,12 +261,6 @@ def get_timing_and_data_quality(file_or_file_object):
     result['timing_quality_upper_quantile'] = \
         score_at_percentile(timing_quality, 75, issorted=False)
     return result
-
-
-@deprecated("'getRecordInformation' has been renamed to "
-            "'get_record_information'. Use that instead.")  # noqa
-def getRecordInformation(*args, **kwargs):
-    return get_record_information(*args, **kwargs)
 
 
 def get_record_information(file_or_file_object, offset=0, endian=None):
@@ -1204,12 +1185,6 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
             flag_byte += 2**bit
 
     return flag_byte
-
-
-@deprecated("'shiftTimeOfFile' has been renamed to "
-            "'shift_time_of_file'. Use that instead.")  # noqa
-def shiftTimeOfFile(*args, **kwargs):
-    return shift_time_of_file(*args, **kwargs)
 
 
 def shift_time_of_file(input_file, output_file, timeshift):

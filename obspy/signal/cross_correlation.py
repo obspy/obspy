@@ -22,15 +22,12 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
-import sys
 import warnings
 
 import numpy as np
 import scipy
 
 from obspy import Stream, Trace
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
@@ -540,20 +537,6 @@ def templates_max_similarity(st, time, streams_templates):
         return max(values)
     else:
         return 0
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "xcorrPickCorrection":
-            "obspy.signal.cross_correlation.xcorr_pick_correction",
-        "xcorr_3C": "obspy.signal.cross_correlation.xcorr_3c",
-        "templatesMaxSimilarity":
-            "obspy.signal.cross_correlation.templates_max_similarity"
-    })
 
 
 if __name__ == '__main__':

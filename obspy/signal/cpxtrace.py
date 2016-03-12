@@ -19,14 +19,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
-
 import numpy as np
 from scipy import signal
 from scipy.integrate import cumtrapz
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 from . import util
 
@@ -318,14 +313,3 @@ def instantaneous_bandwidth(data, fs, fk):
         t = t[np.size(fk) - 1:np.size(t)]
         sigma = abs((t * fs) / (x[1] * 2 * np.pi))
         return sigma
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "instBwith": "obspy.signal.cpxtrace.instantaneous_bandwidth",
-        "instFreq": "obspy.signal.cpxtrace.instantaneous_frequency",
-        "normEnvelope": "obspy.signal.cpxtrace.normalized_envelope"})

@@ -23,18 +23,15 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import bisect
-import bz2
 import glob
 import math
 import os
-import pickle
 import warnings
 
 import numpy as np
 from matplotlib import mlab
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.dates import date2num
-from matplotlib.mlab import detrend_none, window_hanning
 from matplotlib.ticker import FormatStrFormatter
 
 from obspy import Stream, Trace, UTCDateTime, __version__
@@ -42,8 +39,6 @@ from obspy.core import Stats
 from obspy.imaging.scripts.scan import compress_start_end
 from obspy.core.inventory import Inventory
 from obspy.core.util import get_matplotlib_version, AttribDict
-from obspy.core.util.decorator import deprecated_keywords, deprecated
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.imaging.cm import obspy_sequential
 from obspy.io.xseed import Parser
 from obspy.signal.invsim import cosine_taper
@@ -57,55 +52,6 @@ dtiny = np.finfo(0.0).tiny
 
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-
-
-def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,  # noqa
-        noverlap=0):
-    """
-    Wrapper for :func:`matplotlib.mlab.psd`.
-
-    Always returns a onesided psd (positive frequencies only), corrects for
-    this fact by scaling with a factor of 2. Also, always normalizes to 1/Hz
-    by dividing with sampling rate.
-
-    .. deprecated:: 0.11.0
-
-        This wrapper is no longer necessary. Please use the
-        :func:`matplotlib.mlab.psd` function directly, specifying
-        `sides="onesided"` and `scale_by_freq=True`.
-
-    .. note::
-        For details on all arguments see :func:`matplotlib.mlab.psd`.
-
-    .. note::
-        When using `window=welch_taper`
-        (:func:`obspy.signal.spectral_estimation.welch_taper`)
-        and `detrend=detrend_linear` (:func:`matplotlib.mlab.detrend_linear`)
-        the psd function delivers practically the same results as PITSA.
-        Only DC and the first 3-4 lowest non-DC frequencies deviate very
-        slightly. In contrast to PITSA, this routine also returns the psd value
-        at the Nyquist frequency and therefore is one frequency sample longer.
-    """
-    msg = ('This wrapper is no longer necessary. Please use the '
-           'matplotlib.mlab.psd function directly, specifying '
-           '`sides="onesided"` and `scale_by_freq=True`.')
-    warnings.warn(msg, ObsPyDeprecationWarning, stacklevel=2)
-
-    # build up kwargs
-    kwargs = {}
-    kwargs['NFFT'] = NFFT
-    kwargs['Fs'] = Fs
-    kwargs['detrend'] = detrend
-    kwargs['window'] = window
-    kwargs['noverlap'] = noverlap
-    # These settings make sure that the scaling is already done during the
-    # following psd call for matplotlib versions newer than 0.98.4.
-    kwargs['pad_to'] = None
-    kwargs['sides'] = 'onesided'
-    kwargs['scale_by_freq'] = True
-    # do the actual call to mlab.psd
-    Pxx, freqs = mlab.psd(x, **kwargs)
-    return Pxx, freqs
 
 
 def fft_taper(data):
@@ -278,8 +224,6 @@ class PPSD(object):
         NPZ_STORE_KEYS_SIMPLE_TYPES +
         NPZ_STORE_KEYS_VERSION_NUMBERS)
 
-    @deprecated_keywords({'paz': 'metadata', 'parser': 'metadata',
-                          'water_level': None})
     def __init__(self, stats, metadata, skip_on_gaps=False,
                  db_bins=(-200, -50, 1.), ppsd_length=3600.0, overlap=0.5,
                  special_handling=None, period_smoothing_width_octaves=1.0,
@@ -366,13 +310,6 @@ class PPSD(object):
             the bin whose center frequency exceeds the given upper end for the
             first time.
         """
-        # remove after release of 0.11.0
-        if kwargs.pop("is_rotational_data", None) is True:
-            msg = ("Keyword 'is_rotational_data' is deprecated. Please use "
-                   "'special_handling=\"ringlaser\"' instead.")
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            special_handling = "ringlaser"
-
         # save things related to args
         self.id = "%(network)s.%(station)s.%(location)s.%(channel)s" % stats
         self.sampling_rate = stats.sampling_rate
@@ -484,12 +421,6 @@ class PPSD(object):
             return 0
 
     @property
-    @deprecated("PPSD attribute 'spec_bins' is deprecated, please use "
-                "'db_bin_edges' instead.")
-    def spec_bins(self):
-        return self.db_bin_edges
-
-    @property
     def db_bin_edges(self):
         return self._db_bin_edges
 
@@ -504,42 +435,6 @@ class PPSD(object):
     @property
     def psd_periods(self):
         return self._psd_periods
-
-    @property
-    @deprecated("PPSD attribute 'per' is deprecated, please use "
-                "'psd_periods' instead.")
-    def per(self):
-        return self.psd_periods
-
-    @property
-    @deprecated("PPSD attribute 'freq' is deprecated, please use "
-                "'psd_frequencies' instead.")
-    def freq(self):
-        return self.psd_frequencies
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves_left' is deprecated, please use "
-                "'period_bin_left_edges' instead.")
-    def per_octaves_left(self):
-        return self.period_bin_left_edges
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves_right' is deprecated, please use "
-                "'period_bin_right_edges' instead.")
-    def per_octaves_right(self):
-        return self.period_bin_right_edges
-
-    @property
-    @deprecated("PPSD attribute 'per_octaves' is deprecated, please use "
-                "'period_bin_centers' instead.")
-    def per_octaves(self):
-        return self.period_bin_centers
-
-    @property
-    @deprecated("PPSD attribute 'period_bins' is deprecated, please use "
-                "'period_bin_centers' instead.")
-    def period_bins(self):
-        return self.period_bin_centers
 
     @property
     def period_bin_centers(self):
@@ -581,20 +476,8 @@ class PPSD(object):
         return self._period_binning[4, :]
 
     @property
-    @deprecated("PPSD attribute 'times' is deprecated, please use "
-                "'times_processed', 'times_data' and 'times_gaps' instead.")
-    def times(self):
-        return list(map(UTCDateTime, self._times_processed))
-
-    @property
     def times_processed(self):
         return list(map(UTCDateTime, self._times_processed))
-
-    @property
-    @deprecated("PPSD attribute 'times_used' is deprecated, please use "
-                "'current_times_used' or 'times_processed' instead.")
-    def times_used(self):
-        return self.current_times_used
 
     @property
     def times_data(self):
@@ -929,16 +812,6 @@ class PPSD(object):
         smoothed_psd = np.array(smoothed_psd, dtype=np.float32)
         self.__insert_processed_data(tr.stats.starttime, smoothed_psd)
         return True
-
-    @property
-    @deprecated("PPSD attribute 'hist_stack' is deprecated, please use new "
-                "'calculate_histogram()' method with improved functionality "
-                "instead to compute a histogram stack dynamically and then "
-                "'current_histogram' attribute to access the current "
-                "histogram stack.")
-    def hist_stack(self):
-        self.calculate_histogram()
-        return self.current_histogram
 
     def _get_times_all_details(self):
         # check if we can reuse a previously cached array of all times as
@@ -1293,73 +1166,6 @@ class PPSD(object):
         hist_count = self.current_histogram_count
         mean = (hist * self.db_bin_centers / hist_count).sum(axis=1)
         return (self.period_bin_centers, mean)
-
-    @deprecated("Old save/load mechanism based on pickle module is not "
-                "working well across versions, so please use new "
-                "'save_npz'/'load_npz' mechanism.")
-    def save(self, filename, compress=False):
-        """
-        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
-        instead!
-        """
-        if compress:
-            # due to an bug in older python version we can't use with
-            # https://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'wb')
-            pickle.dump(self, file_)
-            file_.close()
-        else:
-            with open(filename, 'wb') as file_:
-                pickle.dump(self, file_)
-
-    @staticmethod
-    @deprecated("Old save/load mechanism based on pickle module is not "
-                "working well across versions, so please use new "
-                "'save_npz'/'load_npz' mechanism.")
-    def load(filename):
-        """
-        DEPRECATED! Use :meth:`~PPSD.save_npz` and :meth:`~PPSD.load_npz`
-        instead!
-        """
-        # identify bzip2 compressed file using bzip2's magic number
-        bz2_magic = b'\x42\x5a\x68'
-        with open(filename, 'rb') as file_:
-            file_start = file_.read(len(bz2_magic))
-
-        if file_start == bz2_magic:
-            # In theory a file containing random data could also start with the
-            # bzip2 magic number. However, since save() (implicitly) uses
-            # version "0" of the pickle protocol, the pickled data is
-            # guaranteed to be ASCII encoded and hence cannot start with this
-            # magic number.
-            # cf. https://docs.python.org/3/library/pickle.html
-            #
-            # due to an bug in older python version we can't use with
-            # https://bugs.python.org/issue8601
-            file_ = bz2.BZ2File(filename, 'rb')
-            ppsd = pickle.load(file_)
-            file_.close()
-        else:
-            with open(filename, 'rb') as file_:
-                ppsd = pickle.load(file_)
-
-        # some workarounds for older PPSD pickle files
-        if hasattr(ppsd, "is_rotational_data"):
-            if ppsd.is_rotational_data is True:
-                ppsd.special_handling = "ringlaser"
-            delattr(ppsd, "is_rotational_data")
-        if not hasattr(ppsd, "special_handling"):
-            ppsd.special_handling = None
-        # Adds ppsd_length and overlap attributes if not existing. This
-        # ensures compatibility with pickled objects without these attributes.
-        try:
-            ppsd.ppsd_length
-            ppsd.overlap
-        except AttributeError:
-            ppsd.ppsd_length = 3600.
-            ppsd.overlap = 0.5
-
-        return ppsd
 
     def save_npz(self, filename):
         """
@@ -1779,11 +1585,6 @@ class PPSD(object):
         ax.autoscale_view()
 
 
-@deprecated("get_NLNM() has been renamed to get_nlnm().")
-def get_NLNM():  # noqa
-    return get_nlnm()
-
-
 def get_nlnm():
     """
     Returns periods and psd values for the New Low Noise Model.
@@ -1793,11 +1594,6 @@ def get_nlnm():
     periods = data['model_periods']
     nlnm = data['low_noise']
     return (periods, nlnm)
-
-
-@deprecated("get_NHNM() has been renamed to get_nhnm().")
-def get_NHNM():  # noqa
-    return get_nhnm()
 
 
 def get_nhnm():

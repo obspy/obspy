@@ -24,7 +24,6 @@ from future.builtins import *  # NOQA
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
 from obspy.imaging.cm import obspy_sequential, obspy_divergent
 from obspy.signal import util
 
@@ -1548,24 +1547,6 @@ def plot_tfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             return figs[0]
         else:
             return figs
-
-
-@deprecated("'plotTfGofs' has been renamed to 'plot_tf_gofs'. "
-            "Use that instead.")  # noqa
-def plotTfGofs(*args, **kwargs):
-    return plot_tf_gofs(*args, **kwargs)
-
-
-@deprecated("'plotTfMisfits' has been renamed to 'plot_tf_misfits'. "
-            "Use that instead.")  # noqa
-def plotTfMisfits(*args, **kwargs):
-    return plot_tf_misfits(*args, **kwargs)
-
-
-@deprecated("'plotTfr' has been renamed to 'plot_tfr'. "
-            "Use that instead.")  # noqa
-def plotTfr(*args, **kwargs):
-    return plot_tfr(*args, **kwargs)
 
 
 if __name__ == '__main__':

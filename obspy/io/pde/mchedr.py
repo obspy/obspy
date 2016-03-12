@@ -21,7 +21,6 @@ from datetime import timedelta
 import io
 import math
 import string as s
-import sys
 
 import numpy as np
 
@@ -34,8 +33,6 @@ from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
                               StationMagnitude, Tensor, WaveformStreamID)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import map_example_filename
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.geodetics import FlinnEngdahl
 
 
@@ -1087,16 +1084,6 @@ def _read_mchedr(filename):
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """
     return Unpickler().load(filename)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isMchedr': 'obspy.io.pde.mchedr._is_mchedr',
-        'readMchedr': 'obspy.io.pde.mchedr._read_mchedr'})
 
 
 if __name__ == '__main__':

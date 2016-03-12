@@ -14,15 +14,12 @@ from future.builtins import *  # NOQA @UnusedWildImport
 from future.utils import native_str
 
 import re
-import sys
 
 from matplotlib.dates import AutoDateFormatter, DateFormatter, num2date
 from matplotlib.ticker import FuncFormatter
 
 from obspy import UTCDateTime
 from obspy.core.util.base import get_matplotlib_version
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _seconds_to_days(sec):
@@ -242,15 +239,6 @@ def _timestring(t):
     2012-04-05T12:12:00.12
     """
     return str(t).rstrip("Z0").rstrip(".")
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        '_ID_key': 'obspy.imaging.util._id_key'})
 
 
 if __name__ == '__main__':

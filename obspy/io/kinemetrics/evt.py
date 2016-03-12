@@ -18,7 +18,6 @@ import numpy as np
 
 from obspy import Stream, Trace
 from obspy.core.compatibility import from_buffer
-from obspy.core.util.decorator import deprecated
 from .evt_base import (EvtBadDataError, EvtBadHeaderError, EvtEOFError,
                        EvtVirtual)
 
@@ -254,16 +253,6 @@ class EvtHeader(EvtVirtual):
         # val = unpack(self.endian+HEADER_STRUCT5, head_buff[0x658:0x688])
         # val = unpack(self.endian+HEADER_STRUCT6, head_buff[0x688:0x6c4])
         # val = unpack(self.endian+HEADER_STRUCT7, head_buff[0x6c4:0x7f8])
-
-    @deprecated(
-        "'makeobspydico' has been renamed to "  # noqa
-        "'make_obspy_dict'. Use that instead.")
-    def makeobspydico(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'makeobspydico' has been renamed to
-        'make_obspy_dict'. Use that instead.
-        '''
-        return self.make_obspy_dict(*args, **kwargs)
 
     def make_obspy_dict(self, numchan):
         """
