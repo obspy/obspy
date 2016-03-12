@@ -19,7 +19,6 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
