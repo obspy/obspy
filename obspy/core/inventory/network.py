@@ -222,21 +222,20 @@ class Network(BaseNode):
             raise Exception(msg)
         return responses[0]
 
-    def get_coordinates(self, seed_id, datetime=None):
+    def _get_channel_metadata(self, seed_id, datetime=None):
         """
-        Return coordinates and orientation for a given channel.
+        Return basic metadata for a given channel.
 
         :type seed_id: str
-        :param seed_id: SEED ID string of channel to get coordinates and
-            orientation for.
+        :param seed_id: SEED ID string of channel to get metadata for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param datetime: Time to get coordinates for.
+        :param datetime: Time to get metadata for.
         :rtype: dict
-        :return: Dictionary containing coordinates (latitude, longitude,
-            elevation, azimuth, dip)
+        :return: Dictionary containing coordinates and orientation (latitude,
+            longitude, elevation, azimuth, dip)
         """
         network, station, location, channel = seed_id.split(".")
-        coordinates = []
+        metadata = []
         if self.code != network:
             pass
         elif self.start_date and self.start_date > datetime:
@@ -280,14 +279,51 @@ class Network(BaseNode):
                     data['local_depth'] = cha.depth
                     data['azimuth'] = cha.azimuth
                     data['dip'] = cha.dip
-                    coordinates.append(data)
-        if len(coordinates) > 1:
-            msg = "Found more than one matching coordinates. Returning first."
+                    metadata.append(data)
+        if len(metadata) > 1:
+            msg = ("Found more than one matching channel metadata. "
+                   "Returning first.")
             warnings.warn(msg)
-        elif len(coordinates) < 1:
-            msg = "No matching coordinates found."
+        elif len(metadata) < 1:
+            msg = "No matching channel metadata found."
             raise Exception(msg)
-        return coordinates[0]
+        return metadata[0]
+
+    def get_coordinates(self, seed_id, datetime=None):
+        """
+        Return coordinates and orientation for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get coordinates and
+            orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get coordinates for.
+        :rtype: dict
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation, local_depth)
+        """
+        metadata = self._get_channel_metadata(seed_id, datetime)
+        coordinates = {}
+        for key in ['latitude', 'longitude', 'elevation', 'local_depth']:
+            coordinates[key] = metadata[key]
+        return coordinates
+
+    def get_orientation(self, seed_id, datetime=None):
+        """
+        Return orientation for a given channel.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get orientation for.
+        :rtype: dict
+        :return: Dictionary containing orientation (azimuth, dip).
+        """
+        metadata = self._get_channel_metadata(seed_id, datetime)
+        orientation = {}
+        for key in ['azimuth', 'dip']:
+            orientation[key] = metadata[key]
+        return orientation
 
     def select(self, station=None, location=None, channel=None, time=None,
                starttime=None, endtime=None, sampling_rate=None,

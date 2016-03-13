@@ -608,15 +608,15 @@ class Parser(object):
 
     def get_coordinates(self, seed_id, datetime=None):
         """
-        Return Coordinates and orientation (from blockette 52)
+        Return coordinates (from blockette 52) of a channel.
 
         :type seed_id: str
         :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
             ``"EHE"``.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param datetime: Timestamp of requested PAZ values
-        :return: Dictionary containing Coordinates (latitude, longitude,
-            elevation, azimuth, dip)
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation, local_depth)
         """
         blockettes = self._select(seed_id, datetime)
         data = {}
@@ -626,6 +626,25 @@ class Parser(object):
                 data['longitude'] = blkt.longitude
                 data['elevation'] = blkt.elevation
                 data['local_depth'] = blkt.local_depth
+                break
+        return data
+
+    def get_orientation(self, seed_id, datetime=None):
+        """
+        Return orientation (from blockette 52) of a channel.
+
+        :type seed_id: str
+        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
+            ``"EHE"``.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Timestamp of requested PAZ values
+        :return: Dictionary containing orientation (azimuth, dip)
+        """
+        blockettes = self._select(seed_id, datetime)
+        data = {}
+        for blkt in blockettes:
+            if blkt.id == 52:
+                data['azimuth'] = blkt.azimuth
                 data['dip'] = blkt.dip
                 data['azimuth'] = blkt.azimuth
                 break

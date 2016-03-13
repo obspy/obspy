@@ -140,6 +140,38 @@ class InventoryTestCase(unittest.TestCase):
         # 3 - unknown SEED ID should raise exception
         self.assertRaises(Exception, inv.get_coordinates, 'BW.RJOB..XXX')
 
+    def test_get_orientation(self):
+        """
+        Test extracting orientation
+        """
+        expected = {u'azimuth': 90.0,
+                    u'dip': 0.0}
+        channels = [Channel(code='EHZ',
+                            location_code='',
+                            start_date=UTCDateTime('2007-01-01'),
+                            latitude=47.737166999999999,
+                            longitude=12.795714,
+                            elevation=860.0,
+                            depth=0.0,
+                            azimuth=90.0,
+                            dip=0.0)]
+        stations = [Station(code='RJOB',
+                            latitude=0.0,
+                            longitude=0.0,
+                            elevation=0.0,
+                            channels=channels)]
+        networks = [Network('BW', stations=stations)]
+        inv = Inventory(networks=networks, source='TEST')
+        # 1
+        orientation = inv.get_orientation('BW.RJOB..EHZ',
+                                          UTCDateTime('2010-01-01T12:00'))
+        self.assertEqual(sorted(orientation.items()), sorted(expected.items()))
+        # 2 - without datetime
+        orientation = inv.get_orientation('BW.RJOB..EHZ')
+        self.assertEqual(sorted(orientation.items()), sorted(expected.items()))
+        # 3 - unknown SEED ID should raise exception
+        self.assertRaises(Exception, inv.get_orientation, 'BW.RJOB..XXX')
+
     def test_response_plot(self):
         """
         Tests the response plot.

@@ -335,36 +335,87 @@ class Inventory(ComparingObject):
             raise Exception(msg)
         return responses[0]
 
-    def get_coordinates(self, seed_id, datetime=None):
+    def _get_channel_metadata(self, seed_id, datetime=None):
         """
-        Return coordinates and orientation for a given channel.
+        Return basic metadata for a given channel.
 
         :type seed_id: str
-        :param seed_id: SEED ID string of channel to get coordinates and
-            orientation for.
+        :param seed_id: SEED ID string of channel to get metadata for.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param datetime: Time to get coordinates for.
+        :param datetime: Time to get metadata for.
         :rtype: dict
-        :return: Dictionary containing coordinates (latitude, longitude,
-            elevation, azimuth, dip)
+        :return: Dictionary containing coordinates and orientation (latitude,
+            longitude, elevation, azimuth, dip)
         """
         network, _, _, _ = seed_id.split(".")
 
-        coordinates = []
+        metadata = []
         for net in self.networks:
             if net.code != network:
                 continue
             try:
-                coordinates.append(net.get_coordinates(seed_id, datetime))
-            except Exception:
+                metadata.append(net._get_channel_metadata(seed_id, datetime))
+            except:
                 pass
-        if len(coordinates) > 1:
-            msg = "Found more than one matching coordinates. Returning first."
+        if len(metadata) > 1:
+            msg = ("Found more than one matching channel metadata. "
+                   "Returning first.")
             warnings.warn(msg)
-        elif len(coordinates) < 1:
-            msg = "No matching coordinates found."
+        elif len(metadata) < 1:
+            msg = "No matching channel metadata found."
             raise Exception(msg)
-        return coordinates[0]
+        return metadata[0]
+
+    def get_coordinates(self, seed_id, datetime=None):
+        """
+        Return coordinates for a given channel.
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> t = UTCDateTime("2015-01-01")
+        >>> inv.get_coordinates("GR.FUR..LHE", t)  # doctest: +SKIP
+        {'elevation': 565.0,
+         'latitude': 48.162899,
+         'local_depth': 0.0,
+         'longitude': 11.2752}
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get coordinates for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get coordinates for.
+        :rtype: dict
+        :return: Dictionary containing coordinates (latitude, longitude,
+            elevation, local_depth)
+        """
+        metadata = self._get_channel_metadata(seed_id, datetime)
+        coordinates = {}
+        for key in ['latitude', 'longitude', 'elevation', 'local_depth']:
+            coordinates[key] = metadata[key]
+        return coordinates
+
+    def get_orientation(self, seed_id, datetime=None):
+        """
+        Return orientation for a given channel.
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inv = read_inventory()
+        >>> t = UTCDateTime("2015-01-01")
+        >>> inv.get_orientation("GR.FUR..LHE", t)  # doctest: +SKIP
+        {'azimuth': 90.0,
+         'dip': 0.0}
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get orientation for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Time to get orientation for.
+        :rtype: dict
+        :return: Dictionary containing orientation (azimuth, dip).
+        """
+        metadata = self._get_channel_metadata(seed_id, datetime)
+        orientation = {}
+        for key in ['azimuth', 'dip']:
+            orientation[key] = metadata[key]
+        return orientation
 
     def select(self, network=None, station=None, location=None, channel=None,
                time=None, starttime=None, endtime=None, sampling_rate=None,

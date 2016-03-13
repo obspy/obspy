@@ -3269,12 +3269,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 msg = ("Unexpected behavior in rotation. Please file a bug "
                        "report on github.")
                 raise NotImplementedError(msg)
-            coordinates = [metadata.get_coordinates(tr.id, tr.stats.starttime)
+            orientation = [metadata.get_orientation(tr.id, tr.stats.starttime)
                            for tr in traces]
             zne = rotate2zne(
-                traces[0], coordinates[0]["azimuth"], coordinates[0]["dip"],
-                traces[1], coordinates[1]["azimuth"], coordinates[1]["dip"],
-                traces[2], coordinates[2]["azimuth"], coordinates[2]["dip"])
+                traces[0], orientation[0]["azimuth"], orientation[0]["dip"],
+                traces[1], orientation[1]["azimuth"], orientation[1]["dip"],
+                traces[2], orientation[2]["azimuth"], orientation[2]["dip"])
             for tr, new_data, component in zip(traces, zne, "ZNE"):
                 tr.data = new_data
                 tr.stats.channel = tr.stats.channel[:-1] + component
