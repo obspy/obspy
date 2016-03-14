@@ -15,6 +15,7 @@ from pkg_resources import load_entry_point
 import numpy as np
 
 from obspy import Trace, read
+from obspy.core.compatibility import mock
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import (NamedTemporaryFile, _get_entry_points,
                                   DEFAULT_MODULES, WAVEFORM_ACCEPT_BYTEORDER)
@@ -424,6 +425,47 @@ class WaveformPluginsTestCase(unittest.TestCase):
             st_deepcopy.sort()
             msg = "Error in wavform format=%s" % format
             self.assertEqual(str(st), str(st_deepcopy), msg=msg)
+
+    def test_auto_file_format_during_writing(self):
+        """
+        The file format is either determined by directly specifying the
+        format or deduced from the filename. The former overwrites the latter.
+        """
+        # Get format name and name of the write function.
+        formats = [(key, value.module_name) for key, value in
+                   _get_default_eps('obspy.plugin.waveform',
+                                    'writeFormat').items()
+                   # Only test plugins that are actually part of ObsPy.
+                   if value.dist.key == "obspy"]
+
+        # Test for stream as well as for trace.
+        stream_trace = [read(), read()[0]]
+
+        for suffix, module_name in formats:
+            # A bit of magic to get the fully qualified function name...
+            fct_name = module_name + "." + load_entry_point(
+                "obspy",
+                "obspy.plugin.waveform.%s" % suffix,
+                "writeFormat").__name__
+            # For stream and trace.
+            for obj in stream_trace:
+                # Various versions of the suffix.
+                for s in [suffix.capitalize(), suffix.lower(), suffix.upper()]:
+                    with mock.patch(fct_name) as p:
+                        obj.write("temp." + s)
+                    # Make sure the fct has actually been called.
+                    self.assertEqual(p.call_count, 1)
+
+                    # Manually specifying the format name should overwrite
+                    # this.
+                    with mock.patch("obspy.io.mseed.core._write_mseed") as p:
+                        obj.write("temp." + s, format="mseed")
+                    self.assertEqual(p.call_count, 1)
+
+        # An unknown suffix should raise.
+        with self.assertRaises(TypeError):
+            for obj in stream_trace:
+                obj.write("temp.random_suffix")
 
 
 def suite():
