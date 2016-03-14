@@ -399,6 +399,8 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md.meta["sample_stdev"] - 2.8722813232 < 1E-6)
         self.assertTrue(md.meta["sample_rms"] - 5.33853912602 < 1E-6)
         self.assertTrue(md.meta["sample_median"], 4.5)
+        self.assertTrue(md.meta["sample_lower_quartile"], 2.25)
+        self.assertTrue(md.meta["sample_upper_quartile"], 6.75)
 
         # Make sure they also work if split up across two arrays.
         d = np.arange(10, dtype=np.int32)
@@ -418,6 +420,8 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md.meta["sample_stdev"] - 2.8722813232 < 1E-6)
         self.assertTrue(md.meta["sample_rms"] - 7.14142842854 < 1E-6)
         self.assertEqual(md.meta["sample_median"], 4.5)
+        self.assertTrue(md.meta["sample_lower_quartile"], 2.25)
+        self.assertTrue(md.meta["sample_upper_quartile"], 6.75)
 
     def test_root_mean_square(self):
         """
@@ -704,6 +708,8 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(c["num_samples"], 5)
         self.assertEqual(c["seg_len"], 4.0)
         self.assertEqual(c["sample_median"], 2)
+        self.assertTrue(c["sample_lower_quartile"], 1.0)
+        self.assertTrue(c["sample_upper_quartile"], 3.0)
 
         c = c_seg[1]
         self.assertEqual(c["start_time"], obspy.UTCDateTime(10))
@@ -715,6 +721,8 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(c["sample_stdev"] - 1.4142135623730951 < 1E-6)
         self.assertEqual(c["num_samples"], 5)
         self.assertEqual(c["sample_median"], 7)
+        self.assertTrue(c["sample_lower_quartile"], 6.0)
+        self.assertTrue(c["sample_upper_quartile"], 8.0)
 
         c = c_seg[2]
         self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
@@ -727,6 +735,8 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(c["sample_stdev"] - 2.8722813232 < 1E-6)
         self.assertTrue(c["sample_rms"] - 5.3385391260156556 < 1E-6)
         self.assertEqual(c["sample_median"], 4.5)
+        self.assertTrue(c["sample_lower_quartile"], 2.25)
+        self.assertTrue(c["sample_upper_quartile"], 6.25)
 
     def test_json_serialization(self):
         """

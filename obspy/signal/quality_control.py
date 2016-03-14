@@ -471,8 +471,11 @@ class MSEEDMetadata(object):
         # arrays.
         self.meta['sample_mean'] = \
             sum(tr.data.sum() for tr in self.data) / npts
-        self.meta['sample_median'] = \
-            np.median(np.concatenate([tr.data for tr in self.data]))
+
+        full_samples = np.concatenate([tr.data for tr in self.data])
+        self.meta['sample_median'] = np.median(full_samples)
+        self.meta['sample_lower_quartile'] = np.percentile(full_samples, 25)
+        self.meta['sample_upper_quartile'] = np.percentile(full_samples, 75)
 
         # Might overflow np.int64 so make Python obj. (.astype(object))
         # allows conversion to long int when required (see tests)
@@ -511,6 +514,8 @@ class MSEEDMetadata(object):
             seg['sample_median'] = np.median(tr.data)
             seg['sample_rms'] = np.sqrt((tr.data.astype(object) ** 2).sum() /
                                         tr.stats.npts)
+            seg['sample_lower_quartile'] = np.percentile(tr.data, 25)
+            seg['sample_upper_quartile'] = np.percentile(tr.data, 75)
             seg['sample_stdev'] = tr.data.std()
             seg['num_samples'] = tr.stats.npts
             seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
