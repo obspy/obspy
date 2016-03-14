@@ -148,6 +148,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
         'MSEED = obspy.io.mseed.core',
+        'NNSA_KB_CORE = obspy.io.css.core',
         'PDAS = obspy.io.pdas.core',
         'SAC = obspy.io.sac.core',
         'SACXY = obspy.io.sac.core',
@@ -180,6 +181,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.CSS': [
         'isFormat = obspy.io.css.core:_is_css',
         'readFormat = obspy.io.css.core:_read_css',
+        ],
+    'obspy.plugin.waveform.NNSA_KB_CORE': [
+        'isFormat = obspy.io.css.core:_is_nnsa_kb_core',
+        'readFormat = obspy.io.css.core:_read_nnsa_kb_core',
         ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.io.datamark.core:_is_datamark',
