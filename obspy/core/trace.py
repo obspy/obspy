@@ -891,6 +891,11 @@ class Trace(object):
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
+
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> tr.write("out.mseed")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes

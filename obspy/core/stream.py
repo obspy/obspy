@@ -1406,6 +1406,11 @@ class Stream(object):
         >>> st = read()  # doctest: +SKIP
         >>> st.write("example.mseed", format="MSEED")  # doctest: +SKIP
 
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> st.write("example.mseed")  # doctest: +SKIP
+
         Writing single traces into files with meaningful filenames can be done
         e.g. using trace.id
 
