@@ -2,10 +2,7 @@
 """
 MiniSEED specific utilities.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import collections
 import ctypes as C
@@ -19,6 +16,8 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util.decorator import ObsPyDeprecationWarning
+from obspy.core.compatibility import string_types
+from obspy.core.util import score_at_percentile
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, HPTMODULUS,
@@ -537,7 +536,7 @@ def get_record_information(file_or_file_object, offset=0, endian=None):
     station HGN
     time_correction 0
     """
-    if isinstance(file_or_file_object, (str, native_str)):
+    if isinstance(file_or_file_object, string_types):
         with open(file_or_file_object, 'rb') as f:
             info = _get_record_information(f, offset=offset, endian=endian)
     else:
@@ -637,7 +636,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     data = file_object.read(28)
 
     def fmt(s):
-        return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
+        return '%sHHBBBxHHhhBBBxlxxH' % s
 
     def _parse_time(values):
         # The spec says values[5] (.0001 seconds) must be between 0-9999 but
@@ -696,7 +695,7 @@ def _get_record_information(file_object, offset=0, endian=None):
     # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
-        blkt_type, next_blkt = unpack(native_str('%sHH' % endian),
+        blkt_type, next_blkt = unpack('%sHH' % endian,
                                       file_object.read(4))
         if next_blkt != 0 and (next_blkt < 4 or next_blkt - 4 <= blkt_offset):
             msg = ('Invalid blockette offset (%d) less than or equal to '
@@ -707,8 +706,7 @@ def _get_record_information(file_object, offset=0, endian=None):
         # Parse in order of likeliness.
         if blkt_type == 1000:
             encoding, word_order, record_length = \
-                unpack(native_str('%sBBB' % endian),
-                       file_object.read(3))
+                unpack('%sBBB' % endian, file_object.read(3))
             if ENDIAN[word_order] != endian:
                 msg = 'Inconsistent word order.'
                 warnings.warn(msg, UserWarning)
@@ -716,17 +714,14 @@ def _get_record_information(file_object, offset=0, endian=None):
             info['record_length'] = 2 ** record_length
         elif blkt_type == 1001:
             info['timing_quality'], mu_sec = \
-                unpack(native_str('%sBb' % endian),
-                       file_object.read(2))
+                unpack('%sBb' % endian, file_object.read(2))
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 500:
             file_object.seek(14, 1)
-            mu_sec = unpack(native_str('%sb' % endian),
-                            file_object.read(1))[0]
+            mu_sec = unpack('%sb' % endian, file_object.read(1))[0]
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 100:
-            samp_rate = unpack(native_str('%sf' % endian),
-                               file_object.read(4))[0]
+            samp_rate = unpack('%sf' % endian, file_object.read(4))[0]
 
     # No blockette 1000 found.
     if "record_length" not in info:
@@ -1063,19 +1058,17 @@ def set_flags_in_fixed_headers(filename, flags):
             if flags_value is not None:
                 # Calculate the real start and end of the record
                 recstart = mseed_file.read(10)
-                (yr, doy, hr, mn, sec, _, mil) = unpack(native_str(">HHBBBBH"),
-                                                        recstart)
+                (yr, doy, hr, mn, sec, _, mil) = unpack(">HHBBBBH", recstart)
                 # Transformation to UTCDatetime()
                 recstart = UTCDateTime(year=yr, julday=doy, hour=hr, minute=mn,
                                        second=sec, microsecond=mil * 100)
                 # Read data to date begin and end of record
-                (nb_samples, fact, mult) = unpack(native_str(">Hhh"),
-                                                  mseed_file.read(6))
+                (nb_samples, fact, mult) = unpack(">Hhh", mseed_file.read(6))
 
                 # Manage time correction
-                act_flags = unpack(native_str(">B"), mseed_file.read(1))[0]
+                act_flags = unpack(">B", mseed_file.read(1))[0]
                 time_correction_applied = bool(act_flags & 2)
-                (_, _, _, time_correction) = unpack(native_str(">BBBl"),
+                (_, _, _, time_correction) = unpack(">BBBl",
                                                     mseed_file.read(7))
                 if (time_correction_applied is False) and time_correction:
                     # Time correction is in units of 0.0001 seconds.
@@ -1085,11 +1078,11 @@ def set_flags_in_fixed_headers(filename, flags):
                 # Search for blockette 100's "Actual sample rate" field
                 samp_rate = _search_flag_in_blockette(mseed_file, 4, 100, 4, 1)
                 if samp_rate is not None:
-                    samp_rate = unpack(native_str(">b"), samp_rate)[0]
+                    samp_rate = unpack(">b", samp_rate)[0]
                 # Search for blockette 1001's "microsec" field
                 microsec = _search_flag_in_blockette(mseed_file, 4, 1001, 5, 1)
                 if microsec is not None:
-                    microsec = unpack(native_str(">b"), microsec)[0]
+                    microsec = unpack(">b", microsec)[0]
                 else:
                     microsec = 0
 
@@ -1161,7 +1154,7 @@ def set_flags_in_fixed_headers(filename, flags):
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
                 raise IOError(msg)
             else:
-                reclen_pow = unpack(native_str("B"), reclen_pow)[0]
+                reclen_pow = unpack("B", reclen_pow)[0]
                 reclen = 2**reclen_pow
                 mseed_file.seek(record_start + reclen, os.SEEK_SET)
 
@@ -1384,8 +1377,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
         mseed_record_start = mseed_file_desc.tell() - 48
         read_data = mseed_file_desc.read(4)
         # Read info in the first blockette
-        [cur_blkt_number, next_blkt_offset] = unpack(native_str(">HH"),
-                                                     read_data)
+        [cur_blkt_number, next_blkt_offset] = unpack(">HH", read_data)
 
         while cur_blkt_number != blockette_number \
                 and next_blkt_offset != 0:
@@ -1393,8 +1385,7 @@ def _search_flag_in_blockette(mseed_file_desc, first_blockette_offset,
             mseed_file_desc.seek(mseed_record_start + next_blkt_offset,
                                  os.SEEK_SET)
             read_data = mseed_file_desc.read(4)
-            [cur_blkt_number, next_blkt_offset] = unpack(native_str(">HH"),
-                                                         read_data)
+            [cur_blkt_number, next_blkt_offset] = unpack(">HH", read_data)
 
         if cur_blkt_number == blockette_number:
             # Blockette found: we want to skip ``field_offset`` bytes but we

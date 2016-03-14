@@ -2,10 +2,7 @@
 """
 Defines the libmseed structures and blockettes.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import ctypes as C
 import warnings
@@ -55,7 +52,7 @@ VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
 
 # allowed encodings:
 # id: (name, sampletype a/i/f/d, default NumPy type, write support)
-ENCODINGS = {0: ("ASCII", "a", np.dtype(native_str("|S1")).type, True),
+ENCODINGS = {0: ("ASCII", "a", np.dtype("|S1").type, True),
              1: ("INT16", "i", np.dtype(np.int16), True),
              3: ("INT32", "i", np.dtype(np.int32), True),
              4: ("FLOAT32", "f", np.dtype(np.float32), True),
@@ -117,7 +114,7 @@ SAMPLETYPE = {"|S1": "a",
               "int32": "i",
               "float32": "f",
               "float64": "d",
-              np.dtype(native_str("|S1")).type: "a",
+              np.dtype("|S1").type: "a",
               np.dtype(np.int16).type: "i",
               np.dtype(np.int32).type: "i",
               np.dtype(np.float32).type: "f",
@@ -706,9 +703,8 @@ __clibmseed.msr_parse.restype = C.c_int
 
 
 # Set the necessary arg- and restypes.
-__clibmseed.readMSEEDBuffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
-                           flags=native_str('C_CONTIGUOUS')),
+_clibmseed.readMSEEDBuffer.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.POINTER(Selections),
     C.c_int8,

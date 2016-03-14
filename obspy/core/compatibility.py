@@ -2,11 +2,12 @@
 """
 Py3k compatibility module
 """
-from future.utils import PY2
-
 import io
 
 import numpy as np
+
+PY2 = sys.version_info.major == 2
+
 
 # optional dependencies
 try:
@@ -21,6 +22,14 @@ if PY2:
     from string import maketrans
 else:
     maketrans = bytes.maketrans
+
+
+if PY2:
+    string_types = (bytes, str, unicode)  # NOQA
+    unicode_type = unicode  # NOQA
+else:
+    string_types = (bytes, str)  # NOQA
+    unicode_type = str  # NOQA
 
 
 # NumPy does not offer the from_buffer method under Python 3 and instead
