@@ -1897,14 +1897,24 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         type = type.lower()
         # retrieve function call from entry points
         func = _get_function_from_entry_point('detrend', type)
+
         # handle function specific settings
         if func.__module__.startswith('scipy'):
             # SciPy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
             options['type'] = type
+            original_dtype = self.data.dtype
+
         # detrending
         self.data = func(self.data, **options)
+
+        # Ugly workaround for old scipy versions that might unnecessarily
+        # change the dtype of the data.
+        if func.__module__.startswith('scipy'):
+            if original_dtype == np.float32 and self.data.dtype != np.float32:
+                self.data = np.require(self.data, dtype=np.float32)
+
         return self
 
     @skip_if_no_data
