@@ -2410,7 +2410,7 @@ class TraceTestCase(unittest.TestCase):
                                       dspline=100).data.dtype,
             np.float64)
 
-        # Tapering.
+        # Tapering. Upcast to float64 but don't change float32.
         self.assertEqual(tr_int32.copy().taper(0.05, "hann").data.dtype,
                          np.float64)
         self.assertEqual(tr_int64.copy().taper(0.05, "hann").data.dtype,
@@ -2420,13 +2420,13 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_float64.copy().taper(0.05, "hann").data.dtype,
                          np.float64)
 
-        # Normalizing.
+        # Normalizing. Upcast to float64 but don't change float32.
         self.assertEqual(tr_int32.copy().normalize().data.dtype, np.float64)
         self.assertEqual(tr_int64.copy().normalize().data.dtype, np.float64)
         self.assertEqual(tr_float32.copy().normalize().data.dtype, np.float32)
         self.assertEqual(tr_float64.copy().normalize().data.dtype, np.float64)
 
-        # Differentiate
+        # Differentiate. Upcast to float64 but don't change float32.
         self.assertEqual(tr_int32.copy().differentiate().data.dtype,
                          np.float64)
         self.assertEqual(tr_int64.copy().differentiate().data.dtype,
@@ -2436,7 +2436,7 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr_float64.copy().differentiate().data.dtype,
                          np.float64)
 
-        # Integrate
+        # Integrate. Upcast to float64 but don't change float32.
         self.assertEqual(
             tr_int32.copy().integrate(method="cumtrapz").data.dtype,
             np.float64)
@@ -2464,7 +2464,7 @@ class TraceTestCase(unittest.TestCase):
             np.float64)
 
         # Simulation is an operation in the spectral domain so double
-        # precision is a lot more accurate so its fine here.
+        # precision is a lot more accurate so it's fine here.
         paz_remove = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
                                 -251.33 + 0j],
                       'zeros': [0j, 0j], 'gain': 60077000.0,

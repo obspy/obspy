@@ -24,7 +24,8 @@ def simple(data):
 
     :param data: Data to detrend, type numpy.ndarray.
     :return: Detrended data. Returns the original array which has been
-        modified in-place.
+        modified in-place if possible but it might have to return a copy in
+        case the dtype has to be changed.
     """
     # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
