@@ -2564,17 +2564,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     def rotate(self, method, back_azimuth=None, inclination=None,
-               metadata=None, **kwargs):
+               inventory=None, **kwargs):
         """
         Rotate stream objects.
 
         Example to rotate unaligned borehole instrument data based on station
-        metadata:
+        inventory (a dataless SEED :class:`~obspy.io.xseed.parser.Parser` can
+        also be provided, see details for option ``inventory``):
 
         >>> from obspy import read, read_inventory
         >>> st = read("/path/to/ffbx_unrotated_gaps.mseed")
         >>> inv = read_inventory("/path/to/ffbx.stationxml")
-        >>> st.rotate(method="->ZNE", metadata=inv)  # doctest: +ELLIPSIS
+        >>> st.rotate(method="->ZNE", inventory=inv)  # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at 0x...>
 
         :type method: str
@@ -2582,10 +2583,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             ``'->ZNE'``: Rotates data from three components into Z, North- and
                 East-components based on the station metadata (e.g. borehole
-                stations). Uses mandatory ``metadata`` parameter and ignores
+                stations). Uses mandatory ``inventory`` parameter (provide
+                either an :class:`~obspy.core.inventory.inventory.Inventory` or
+                :class:`~obspy.io.xseed.parser.Parser` object) and ignores
                 ``back_azimuth`` and ``inclination`` parameters. Additional
-                kwargs will be passed on to :meth:`_rotate_to_zne` (use if
-                other component pairs than "Z12" and "123" need to be rotated).
+                kwargs will be passed on to :meth:`_rotate_to_zne()` (use if
+                other component pairs than ``["Z", "1", "2"]`` and
+                ``["1", "2", "3"]`` need to be rotated).
                 Trims common channels used in rotation to time spans that are
                 available for all three channels (i.e. cuts away parts for
                 which one or two channels used in rotation do not have data).
@@ -2608,16 +2612,16 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             Only necessary for three component rotations. If not given,
             ``stats.inclination`` will be used. It will also be written after
             the rotation is done.
-        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
-        :param metadata: Inventory or Parser with metadata of channels.
+        :param inventory: Inventory or SEED Parser with metadata of channels.
         """
         if method == "->ZNE":
-            if metadata is None:
+            if inventory is None:
                 msg = ("With method '->ZNE' station metadata has to be "
-                       "provided as 'metadata' parameter.")
+                       "provided as 'inventory' parameter.")
                 raise ValueError(msg)
-            return self._rotate_to_zne(metadata, **kwargs)
+            return self._rotate_to_zne(inventory, **kwargs)
         elif method == "NE->RT":
             func = "rotate_ne_rt"
         elif method == "RT->NE":
@@ -3196,7 +3200,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.traces = new_traces
 
     def _rotate_to_zne(
-            self, metadata, component_pairs=("Z12", "123")):
+            self, inventory, component_pairs=("Z12", "123")):
         """
         Rotate all matching traces to ZNE, specifying sets of component codes.
 
@@ -3206,15 +3210,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> st._rotate_to_zne(inv)  # doctest: +ELLIPSIS
         <obspy.core.stream.Stream object at 0x...>
 
-        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
-        :param metadata: Inventory or Parser with metadata of channels.
+        :param inventory: Inventory or Parser with metadata of channels.
         :type component_pairs: list or tuple
         :param component_pairs: List of combinations of three (case sensitive)
             component characters. Rotations are executed in this order, so
             order might matter in very strange cases (e.g. if traces with more
             than three component codes are present for the same SEED ID down to
-            the component code).
+            the component code). For example, a component_pair ``"Z12"`` would
+            rotate sets of "BHZ", "BH1", "BH2" (and "HHZ", "HH1", "HH2", etc.)
+            channels at the same station.
         """
         for component_pair in component_pairs:
             st = self.select(component="[{}]".format(component_pair))
@@ -3239,11 +3245,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         channels_ = [cha_without_comp + comp
                                      for comp in component_pair]
                         self._rotate_specific_channels_to_zne(
-                            net, sta, loc, channels_, metadata)
+                            net, sta, loc, channels_, inventory)
         return self
 
     def _rotate_specific_channels_to_zne(
-            self, network, station, location, channels, metadata):
+            self, network, station, location, channels, inventory):
         """
         Rotate three explicitly specified channels to ZNE.
 
@@ -3264,9 +3270,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type channels: list
         :param channels: The three channel codes of channels that should be
             rotated.
-        :type metadata: :class:`~obspy.core.inventory.inventory.Inventory` or
+        :type inventory: :class:`~obspy.core.inventory.inventory.Inventory` or
             :class:`~obspy.io.xseed.parser.Parser`
-        :param metadata: Inventory or Parser with metadata of channels.
+        :param inventory: Inventory or Parser with metadata of channels.
         """
         from obspy.signal.rotate import rotate2zne
         # build temporary stream that has only those traces that are supposed
@@ -3300,7 +3306,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 msg = ("Unexpected behavior in rotation. Please file a bug "
                        "report on github.")
                 raise NotImplementedError(msg)
-            orientation = [metadata.get_orientation(tr.id, tr.stats.starttime)
+            # `.get_orientation()` works the same for Inventory and Parser
+            orientation = [inventory.get_orientation(tr.id, tr.stats.starttime)
                            for tr in traces]
             zne = rotate2zne(
                 traces[0], orientation[0]["azimuth"], orientation[0]["dip"],
