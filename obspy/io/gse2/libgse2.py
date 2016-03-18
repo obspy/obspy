@@ -334,6 +334,13 @@ def verify_checksum(fh, data, version=2):
 def read_integer_data(fh, npts):
     """
     Reads npts points of uncompressed integers from given file handler.
+
+    :type fh: file
+    :param fh: File Pointer
+    :type npts: int
+    :param npts: Number of samples to read
+    :rtype: :class:`numpy.ndarray`, dtype=int32
+    :return: Data as numpy.ndarray of type int32.
     """
     # find next DAT2 section within file
     data = []
@@ -341,7 +348,10 @@ def read_integer_data(fh, npts):
 
     while len(data) < npts:
         buf = fh.readline()
-        if buf.startswith(b"DAT2"):
+        if not buf:
+            # break loop if no data is given
+            break
+        if buf.strip() in (b"DAT1", b"DAT2"):
             in_data_section = True
             continue
         if not in_data_section:
@@ -376,7 +386,7 @@ def read(f, verify_chksum=True):
     elif dtype == 'INT':
         data = read_integer_data(f, headdict['npts'])
     else:
-        msg = 'Unsupported GSE2 datatype: %s' % (dtype)
+        msg = "Unsupported data type %s in GSE2 file" % (dtype)
         raise NotImplementedError(msg)
     # test checksum only if enabled
     if verify_chksum:
