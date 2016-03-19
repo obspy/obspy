@@ -541,7 +541,7 @@ class Trace(object):
         return st
 
     def __add__(self, trace, method=0, interpolation_samples=0,
-                fill_value=None, sanity_checks=True, crossfade='sum'):
+                fill_value=None, sanity_checks=True, crossfade='linear'):
         """
         Add another Trace object to current trace.
 

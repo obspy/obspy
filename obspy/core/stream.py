@@ -1844,6 +1844,7 @@ class Stream(object):
                 raise Exception(msg)
 
     def merge(self, method=0, fill_value=None, interpolation_samples=0,
+              crossfade='linear',
               **kwargs):
         """
         Merge ObsPy Trace objects with same IDs.
@@ -1924,7 +1925,8 @@ class Stream(object):
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(
                     trace, method, fill_value=fill_value, sanity_checks=False,
-                    interpolation_samples=interpolation_samples)
+                    interpolation_samples=interpolation_samples,
+                    crossfade=crossfade)
             self.traces.append(cur_trace)
 
         # trying to restore order, newly created traces are placed at
