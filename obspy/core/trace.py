@@ -733,11 +733,17 @@ class Trace(object):
                 rdelta = delta - ldelta
                 data = [lt.data[:-ldelta], rt.data[rdelta:]]
             elif method == 3: # sum both traces
-                if crossfade == 'box':
+                if crossfade == 'sum':
                     overlap_samples = lt[-delta:] + rt[:delta]
                 elif crossfade == 'linear':
                     fadein = np.linspace(0., 1., delta)
                     fadeout = fadein[::-1]
+                    overlap_samples = lt[-delta:] * fadeout +\
+                                      rt[:delta] * fadein
+                elif crossfade == 'sinus':
+                    fraction = np.linspace(0., np.pi / 2., delta)
+                    fadein = np.sin(fraction)**2
+                    fadeout = np.cos(fraction)**2
                     overlap_samples = lt[-delta:] * fadeout +\
                                       rt[:delta] * fadein
                 data = [lt.data[:-delta], overlap_samples,
