@@ -728,26 +728,23 @@ class Trace(object):
                                                lt.data.dtype)
                     data = [lt.data[:-delta], interpolation,
                             rt.data[interpolation_samples:]]
-            elif method == 2: # cut in the middle
+            elif method == 2:  # cut in the middle
                 ldelta = delta//2
                 rdelta = delta - ldelta
                 data = [lt.data[:-ldelta], rt.data[rdelta:]]
-            elif method == 3: # sum both traces
+            elif method == 3:  # sum both traces
                 if crossfade == 'sum':
-                    overlap_samples = lt[-delta:] + rt[:delta]
+                    new_samples = lt[-delta:] + rt[:delta]
                 elif crossfade == 'linear':
                     fadein = np.linspace(0., 1., delta)
                     fadeout = fadein[::-1]
-                    overlap_samples = lt[-delta:] * fadeout +\
-                                      rt[:delta] * fadein
+                    new_samples = lt[-delta:] * fadeout + rt[:delta] * fadein
                 elif crossfade == 'sinus':
                     fraction = np.linspace(0., np.pi / 2., delta)
                     fadein = np.sin(fraction)**2
                     fadeout = np.cos(fraction)**2
-                    overlap_samples = lt[-delta:] * fadeout +\
-                                      rt[:delta] * fadein
-                data = [lt.data[:-delta], overlap_samples,
-                        rt.data[delta:]]
+                    new_samples = lt[-delta:] * fadeout + rt[:delta] * fadein
+                data = [lt.data[:-delta], new_samples, rt.data[delta:]]
             else:
                 raise NotImplementedError
         elif delta < 0 and delta_endtime >= 0:
