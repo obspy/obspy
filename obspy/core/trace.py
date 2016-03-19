@@ -541,7 +541,7 @@ class Trace(object):
         return st
 
     def __add__(self, trace, method=0, interpolation_samples=0,
-                fill_value=None, sanity_checks=True):
+                fill_value=None, sanity_checks=True, crossfade='sum'):
         """
         Add another Trace object to current trace.
 
@@ -728,6 +728,20 @@ class Trace(object):
                                                lt.data.dtype)
                     data = [lt.data[:-delta], interpolation,
                             rt.data[interpolation_samples:]]
+            elif method == 2: # cut in the middle
+                ldelta = delta//2
+                rdelta = delta - ldelta
+                data = [lt.data[:-ldelta], rt.data[rdelta:]]
+            elif method == 3: # sum both traces
+                if crossfade == 'box':
+                    overlap_samples = lt[-delta:] + rt[:delta]
+                elif crossfade == 'linear':
+                    fadein = np.linspace(0., 1., delta)
+                    fadeout = fadein[::-1]
+                    overlap_samples = lt[-delta:] * fadeout +\
+                                      rt[:delta] * fadein
+                data = [lt.data[:-delta], overlap_samples,
+                        rt.data[delta:]]
             else:
                 raise NotImplementedError
         elif delta < 0 and delta_endtime >= 0:
