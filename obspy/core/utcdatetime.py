@@ -1455,6 +1455,23 @@ class UTCDateTime(object):
             self.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
         return timedelta.total_seconds() / 3600.0
 
+    @property
+    def matplotlib_date(self):
+        """
+        Maplotlib date number representation.
+
+        Useful for plotting on matplotlib time-based axes, like created by e.g.
+        :meth:`obspy.core.stream.Stream.plot()`.
+
+        >>> t = UTCDateTime("2009-08-24T00:20:07.700000Z")
+        >>> t.matplotlib_date
+        733643.0139780092
+
+        :rtype: float
+        """
+        from matplotlib.dates import date2num
+        return date2num(self.datetime)
+
 
 if __name__ == '__main__':
     import doctest
