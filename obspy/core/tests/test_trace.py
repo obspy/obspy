@@ -450,7 +450,7 @@ class TraceTestCase(unittest.TestCase):
         trace.verify()
 
         # don't test sum method because it doesn't yield the original trace
-        #trace = tr1.__add__(tr2, method=2, crossfade='sum')
+        # trace = tr1.__add__(tr2, method=2, crossfade='sum')
 
         # linear transition of the two traces
         trace = tr1.__add__(tr2, method=2, crossfade='linear')
