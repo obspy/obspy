@@ -862,16 +862,17 @@ class Trace(object):
         from obspy.imaging.spectrogram import spectrogram
         return spectrogram(data=self.data, **kwargs)
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format=None, **kwargs):
         """
         Save current trace into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
-        :type format: str
-        :param format: The format to write must be specified. See
+        :type format: str, optional
+        :param format: The format of the file to write. See
             :meth:`obspy.core.stream.Stream.write` method for possible
-            formats.
+            formats. If format is set to ``None`` it will be deduced
+            from file extension, whenever possible.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -879,6 +880,11 @@ class Trace(object):
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
+
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> tr.write("out.mseed")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
