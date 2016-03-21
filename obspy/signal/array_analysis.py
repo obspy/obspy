@@ -1191,8 +1191,7 @@ class SeismicArray(object):
             offset += nstep
 
             newstart += nstep / fs
-        res = np.array(res)
-        return np.array(res)
+        return np.array(res, dtype=float)
 
     @staticmethod
     def _three_c_dowhiten(fcoeffZ, fcoeffN, fcoeffE, deltaf):
@@ -2354,25 +2353,7 @@ class SeismicArray(object):
             differences or the tuple (kxmin, kxmax, kymin, kymax).
         :param kstep: Step in wavenumber.
         """
-        try:
-            if isinstance(klim, float) or isinstance(klim, int):
-                kxmin = -klim
-                kxmax = klim
-                kymin = -klim
-                kymax = klim
-            elif len(klim) == 4:
-                kxmin = klim[0]
-                kxmax = klim[1]
-                kymin = klim[2]
-                kymax = klim[3]
-            else:
-                raise TypeError
-        except TypeError:
-            raise TypeError('Parameter klim must either be a float '
-                            'or a tuple of length 4.')
-
-        return self._array_transff_helper(kxmin, kxmax, kymin, kymax, kstep,
-                                          'wavenumber')
+        return self._array_transff_helper(klim, kstep, 'wavenumber')
 
     def array_transff_freqslowness(self, slim, sstep, fmin, fmax,
                                    fstep):
@@ -2387,42 +2368,37 @@ class SeismicArray(object):
         :param fmax: Maximum frequency in signal.
         :param fstep: Frequency sample distance.
         """
-        try:
-            if isinstance(slim, float) or isinstance(slim, int):
-                sxmin = -slim
-                sxmax = slim
-                symin = -slim
-                symax = slim
-            elif len(slim) == 4:
-                sxmin = slim[0]
-                sxmax = slim[1]
-                symin = slim[2]
-                symax = slim[3]
-            else:
-                raise TypeError
-        except TypeError:
-            raise TypeError('Parameter slim must either be a float '
-                            'or a tuple of length 4.')
 
-        return self._array_transff_helper(sxmin, sxmax, symin, symax, sstep,
-                                          'slowness', fmin, fmax, fstep)
+        return self._array_transff_helper(slim, sstep, 'slowness', fmin, fmax,
+                                          fstep)
 
-    def _array_transff_helper(self, pxmin, pxmax, pymin, pymax, pstep, param,
-                              fmin=None, fmax=None, fstep=None):
+    def _array_transff_helper(self, plim, pstep, param, fmin=None, fmax=None,
+                              fstep=None):
         """
         Return array transfer function as function of wavenumber or slowness
         and frequency.
 
-        :param pxmin: Minimum wavenumber/slowness in x-direction.
-        :param pxmax: Maximum wavenumber/slowness in x-direction.
-        :param pymin: Minimum wavenumber/slowness in y-direction.
-        :param pymax: Maximum wavenumber/slowness in y-direction.
+        :param plim: Either a float to use symmetric limits for slowness/
+            wavenumber differences or the tuple (pxmin, pxmax, sxmin, sxmax).
         :param pstep: Step in wavenumber/slowness.
         :param param: 'wavenumber' or 'slowness'
         :param fmin: Minimum frequency (only for slowness calculation).
         :param fmax: Maximum frequency (only for slowness calculation).
         :param fstep: Frequency sample distance (only with slowness).
         """
+        if isinstance(plim, float) or isinstance(plim, int):
+            pxmin = -plim
+            pxmax = plim
+            pymin = -plim
+            pymax = plim
+        elif len(plim) == 4:
+            pxmin = plim[0]
+            pxmax = plim[1]
+            pymin = plim[2]
+            pymax = plim[3]
+        else:
+            raise TypeError('Parameter slim must either be a float '
+                            'or a tuple of length 4.')
         geometry = self._geometry_dict_to_array(self.get_geometry_xyz(
             **self.center_of_gravity))
         npx = int(np.ceil((pxmax + pstep / 10. - pxmin) / pstep))
@@ -3084,8 +3060,12 @@ class BeamformerResult(object):
             self.timestep = win_starttimes[1] - win_starttimes[0]
         if self.timestep is not None:
             # Don't use unjustified higher precision.
-            self.endtime = UTCDateTime(win_starttimes[-1] + self.timestep,
-                                       precision=win_starttimes[-1].precision)
+            try:
+                self.endtime = UTCDateTime(win_starttimes[-1] + self.timestep,
+                                           precision=win_starttimes[-1].
+                                           precision)
+            except AttributeError:
+                self.endtime = UTCDateTime(win_starttimes[-1] + self.timestep)
         self.max_rel_power = max_rel_power
         if max_rel_power is not None:
             self.max_rel_power = self.max_rel_power.astype(float)
