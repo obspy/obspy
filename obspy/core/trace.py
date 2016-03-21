@@ -564,6 +564,13 @@ class Trace(object):
         :type sanity_checks: bool, optional
         :param sanity_checks: Enables some sanity checks before merging traces.
             Defaults to ``True``.
+        :type crossfade: string, optional
+        :param crossfade: this parameter controls the crossfade type that is
+            used when method=2 is chosen. Possible values are:
+            'middle': transfers in the middle of the overlap
+            'sum': sums both traces in the overlap region
+            'linear': linear crossfade from one trace to the other
+            'sinus': sin(delta)**2 crossfade function
 
         Trace data will be converted into a NumPy masked array data type if
         any gaps are present. This behavior may be prevented by setting the
