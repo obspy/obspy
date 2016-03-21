@@ -728,12 +728,14 @@ class Trace(object):
                                                lt.data.dtype)
                     data = [lt.data[:-delta], interpolation,
                             rt.data[interpolation_samples:]]
-            elif method == 2:  # cut in the middle
-                ldelta = delta//2
-                rdelta = delta - ldelta
-                data = [lt.data[:-ldelta], rt.data[rdelta:]]
-            elif method == 3:  # sum both traces
-                if crossfade == 'sum':
+            elif method == 2:  # crossfade with different possibilities
+                if crossfade == 'middle':
+                    ldelta = delta//2
+                    rdelta = delta - ldelta
+                    new_samples = np.empty(delta)
+                    new_samples[:ldelta] = lt.data[-delta:-delta + ldelta]
+                    new_samples[ldelta:] = rt.data[delta - rdelta:delta]
+                elif crossfade == 'sum':
                     new_samples = lt[-delta:] + rt[:delta]
                 elif crossfade == 'linear':
                     fadein = np.linspace(0., 1., delta)
