@@ -61,6 +61,7 @@ install:
         MPL_VERSION=1.1.1
         # no basemap version works with this old numpy, so leave out
         BASEMAP=""
+        PYPROJ="pyproj"
         # ancient matplotlib needs to be turned to AGG before anything else,
         # otherwise it tries to import incompatible version of Qt as a backend
         # and hick-ups..
@@ -72,16 +73,20 @@ install:
         SCIPY_VERSION=0.16.0
         MPL_VERSION=1.4.3
         BASEMAP="basemap=1.0.7"
+        # anaconda doesn't provide pyproj for Python 3.3 anymore, looks like
+        PYPROJ=""
       elif [[ "${PYTHON_VERSION:0:1}" == '3' ]]; then
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
         MPL_VERSION=1.5.1
         BASEMAP="basemap=1.0.7"
+        PYPROJ="pyproj"
       else
         NUMPY_VERSION=1.10.4
         SCIPY_VERSION=0.17.0
         MPL_VERSION=1.5.1
         BASEMAP="basemap=1.0.7"
+        PYPROJ="pyproj"
       fi
   - conda create -q -n test-environment
         python=$PYTHON_VERSION
@@ -89,6 +94,7 @@ install:
         scipy=$SCIPY_VERSION
         matplotlib=$MPL_VERSION
         $BASEMAP
+        $PYPROJ
         flake8
         future
         lxml
@@ -97,7 +103,6 @@ install:
         mock
         nose
         gdal
-        pyproj
         docopt
         coverage
         requests
