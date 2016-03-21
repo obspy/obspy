@@ -112,7 +112,7 @@ def call_git_describe(abbrev=10, dirty=True,
         parts = line.split('-', 1)
         version = parts[0]
         try:
-            version += '.dev+' + parts[1]
+            version += '.post+' + parts[1]
             if remote_tracking_branch is not None:
                 version += '.' + remote_tracking_branch
         # IndexError means we are at a release version tag cleanly,
@@ -179,10 +179,10 @@ def _normalize_version(version):
     elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?rc[0-9]+?$', version):
         return version
     # we have an old-style version (i.e. a git describe string), prepare it for
-    # the rest of clean up, i.e. put the '.dev+' as separator for the local
+    # the rest of clean up, i.e. put the '.post+' as separator for the local
     # version number part
     elif re.match(r'^[0-9]+?\.[0-9]+?\.[0-9]+?-[0-9]+?-g[0-9a-z]+?$', version):
-        version = re.sub(r'-', '.dev+', version, count=1)
+        version = re.sub(r'-', '.post+', version, count=1)
     # only adapt local version part right
     version = re.match(r'(.*?\+)(.*)', version)
     # no upper case letters
@@ -190,8 +190,8 @@ def _normalize_version(version):
     # only alphanumeric and "." in local part
     local_version = re.sub(r'[^A-Za-z0-9.]', r'.', local_version)
     version = version.group(1) + local_version
-    # make sure there's a "0" after ".dev"
-    version = re.sub(r'\.dev\+', r'.dev0+', version)
+    # make sure there's a "0" after ".post"
+    version = re.sub(r'\.post\+', r'.post0+', version)
     return version
 
 
