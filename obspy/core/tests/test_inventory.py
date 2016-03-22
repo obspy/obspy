@@ -212,6 +212,14 @@ class InventoryTestCase(unittest.TestCase):
         self.assertIn("obspy.org", inv_1.module_uri)
         self.assertTrue((UTCDateTime() - inv_1.created) < 5)
 
+    def test_len(self):
+        """
+        Tests the __len__ property.
+        """
+        inv = read_inventory()
+        self.assertEqual(len(inv), len(inv.networks))
+        self.assertEqual(len(inv), 2)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class InventoryBasemapTestCase(unittest.TestCase):

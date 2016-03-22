@@ -129,6 +129,9 @@ class Inventory(ComparingObject):
             raise TypeError(msg)
         return self
 
+    def __len__(self):
+        return len(self.networks)
+
     def __getitem__(self, index):
         return self.networks[index]
 
