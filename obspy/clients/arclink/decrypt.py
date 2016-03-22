@@ -14,6 +14,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import hashlib
+
 try:
     from M2Crypto import EVP
     hasM2Crypto = True
@@ -38,7 +40,7 @@ class SSLWrapper:
         if self._cypher is None:
             if len(chunk) < 16:
                 raise Exception('Invalid first chunk (Size < 16).')
-            if chunk[0:8] != "Salted__":
+            if chunk[0:8] != b"Salted__":
                 raise Exception('Invalid first chunk (expected: Salted__')
             [key, iv] = self._get_key_iv(self._password, chunk[8:16])
             self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
@@ -54,17 +56,19 @@ class SSLWrapper:
         return self._cypher.final()
 
     def _get_key_iv(self, password, salt=None, size=8):
+        # make sure password is a string and not unicode
+        password = password.encode('utf-8')
         chunk = None
-        key = ""
-        iv = ""
+        key = b""
+        iv = b""
         while True:
-            hash = EVP.MessageDigest('md5')
+            hash = hashlib.md5()
             if (chunk is not None):
                 hash.update(chunk)
             hash.update(password)
             if (salt is not None):
                 hash.update(salt)
-            chunk = hash.final()
+            chunk = hash.digest()
             i = 0
             if len(key) < size:
                 i = min(size - len(key), len(chunk))
