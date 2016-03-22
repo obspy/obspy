@@ -2259,9 +2259,14 @@ class TraceTestCase(unittest.TestCase):
         tr.normalize()
         np.testing.assert_allclose(tr.data, np.array([-1.0, 1.0, 0.2, -0.2]))
 
-        # All zeros. Nothing should happen.
+        # All zeros. Nothing should happen but a warning will be raised.
         tr = Trace(data=np.array([-0.0, 0.0, 0.0, -0.0]))
-        tr.normalize()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize()
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
         np.testing.assert_allclose(tr.data, np.array([-0.0, 0.0, 0.0, -0.0]))
 
         # Passing the norm specifies the division factor.
@@ -2272,7 +2277,12 @@ class TraceTestCase(unittest.TestCase):
         # Passing the norm specifies the division factor. Nothing happens
         # with zero.
         tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
-        tr.normalize(norm=0)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize(norm=0)
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
         np.testing.assert_allclose(tr.data, np.array([10.0, 10.0, 0.0, 0.0]))
 
         # Warning is raised for a negative norm, but the positive value is

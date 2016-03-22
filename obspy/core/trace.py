@@ -2098,8 +2098,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             norm = self.max()
 
-        # Don't do anything for zero norm.
+        # Don't do anything for zero norm but raise a warning.
         if not norm:
+            msg = ("Attempting to normalize by dividing through zero. This "
+                   "is not allowed and the data will thus not be changed.")
+            warnings.warn(msg)
             return self
 
         self.data = self.data.astype(np.float64)
