@@ -146,6 +146,14 @@ class NetworkTestCase(unittest.TestCase):
                 net.plot_response(0.002, output="DISP", channel="B*E",
                                   time=t, outfile=ic.name)
 
+    def test_len(self):
+        """
+        Tests the __len__ property.
+        """
+        net = read_inventory()[0]
+        self.assertEqual(len(net), len(net.stations))
+        self.assertEqual(len(net), 2)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class NetworkBasemapTestCase(unittest.TestCase):

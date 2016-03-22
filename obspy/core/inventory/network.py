@@ -105,6 +105,9 @@ class Network(BaseNode):
             raise ValueError(msg)
         self._selected_number_of_stations = value
 
+    def __len__(self):
+        return len(self.stations)
+
     def __getitem__(self, index):
         return self.stations[index]
 

@@ -59,7 +59,7 @@ class StationTestCase(unittest.TestCase):
 
     def test_len(self):
         """
-        Tests the len() property.
+        Tests the __len__ property.
         """
         sta = read_inventory()[0][0]
 
