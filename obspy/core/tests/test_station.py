@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy import read_inventory
+from obspy import read_inventory, UTCDateTime
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 
 
@@ -56,6 +56,15 @@ class StationTestCase(unittest.TestCase):
                                  reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
+
+    def test_len(self):
+        """
+        Tests the len() property.
+        """
+        sta = read_inventory()[0][0]
+
+        self.assertEqual(len(sta), len(sta.channels))
+        self.assertEqual(len(sta), 12)
 
 
 def suite():

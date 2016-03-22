@@ -177,6 +177,9 @@ class Station(BaseNode):
     def __getitem__(self, index):
         return self.channels[index]
 
+    def __len__(self):
+        return len(self.channels)
+
     def get_contents(self):
         """
         Returns a dictionary containing the contents of the object.
