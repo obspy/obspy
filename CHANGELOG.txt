@@ -1,4 +1,7 @@
 1.0.x:
+ - obspy.core:
+    * Trace.normalize() does no longer divide by zero in case an all-zeros
+      data trace is being used. (see #1343)
  - obspy.clients.fdsn:
     * Local URLs are now recognized as valid URLs. (see #1309)
     * Some bug fixes for the mass downloader. (see #1293, #1304)
