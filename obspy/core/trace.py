@@ -2056,7 +2056,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param norm: If not ``None``, trace is normalized by dividing by
             specified value ``norm`` instead of dividing by its absolute
             maximum. If a negative value is specified then its absolute value
-            is used.
+            is used. If it is zero (either through a zero array or by being
+            passed), nothing will happen and the original array will not
+            change.
 
         If ``trace.data.dtype`` was integer it is changing to float.
 
