@@ -515,7 +515,19 @@ class Parser(object):
                     data['seismometer_gain'] = blkt.sensitivity_gain
                 elif blkt.stage_sequence_number == 2:
                     data['digitizer_gain'] = blkt.sensitivity_gain
+                elif blkt.stage_sequence_number == 3:
+                    if 'digitizer_gain' in data:
+                        data['digitizer_gain'] *= blkt.sensitivity_gain
+                    else:
+                        data['digitizer_gain'] = blkt.sensitivity_gain
             elif blkt.id == 53 or blkt.id == 60:
+                # If we get a blockette 53 or 60 we should add these
+                if 'zeros' not in data:
+                    data['zeros'] = []
+                if 'poles' not in data:
+                    data['poles'] = []
+                if 'gain' not in data:
+                    data['gain'] = 1.
                 if blkt.id == 60:
                     abbreviation = blkt.stages[0][1]
                     data['seismometer_gain'] = \
@@ -538,33 +550,29 @@ class Parser(object):
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
-                data['gain'] = resp.A0_normalization_factor
+                data['gain'] *= resp.A0_normalization_factor
                 # Poles
-                data['poles'] = []
                 for i in range(resp.number_of_complex_poles):
                     try:
                         p = complex(resp.real_pole[i], resp.imaginary_pole[i])
                     except TypeError:
                         p = complex(resp.real_pole, resp.imaginary_pole)
+                    # Do conversion to Laplace poles
+                    if getattr(resp, label) == "B":
+                        p *= 2. * np.pi
+                        data['gain'] *= 2. * np.pi
                     data['poles'].append(p)
                 # Zeros
-                data['zeros'] = []
                 for i in range(resp.number_of_complex_zeros):
                     try:
                         z = complex(resp.real_zero[i], resp.imaginary_zero[i])
                     except TypeError:
                         z = complex(resp.real_zero, resp.imaginary_zero)
+                    # Do conversion to Laplace zeros
+                    if getattr(resp, label) == "B":
+                        z *= 2. * np.pi
+                        data['gain'] *= 1./(2. * np.pi)
                     data['zeros'].append(z)
-                # force conversion from Hz to Laplace
-                if getattr(resp, label) == "B":
-                    def x2pi(x):
-                        return x * 2 * np.pi
-
-                    data['poles'] = list(map(x2pi, data['poles']))
-                    data['zeros'] = list(map(x2pi, data['zeros']))
-                    data['gain'] = resp.A0_normalization_factor * \
-                        (2 * np.pi) ** \
-                        (len(data['poles']) - len(data['zeros']))
         return data
 
     def get_coordinates(self, seed_id, datetime=None):

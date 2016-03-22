@@ -181,7 +181,7 @@ class Client(object):
         b_buffer = (buffer + '\r\n').encode()
         self._client.write(b_buffer)
         if self.debug:
-            print(b'>>> ' + b_buffer)
+            print('>>> ' + buffer)
 
     def _read_ln(self, value=b''):
         line = self._client.read_until(value + b'\r\n', self.timeout)
@@ -190,7 +190,7 @@ class Client(object):
             msg = "Timeout waiting for expected %s, got %s"
             raise ArcLinkException(msg % (value, line.decode()))
         if self.debug:
-            print(b'... ' + line)
+            print('... ' + line.decode())
         return line
 
     def _hello(self):

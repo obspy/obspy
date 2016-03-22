@@ -318,11 +318,11 @@ class Client(object):
             of degrees from the geographic point defined by the latitude and
             longitude parameters.
         :type mindepth: float, optional
-        :param mindepth: Limit to events with depth more than the specified
-            minimum.
+        :param mindepth: Limit to events with depth, in kilometers, larger than
+            the specified minimum.
         :type maxdepth: float, optional
-        :param maxdepth: Limit to events with depth less than the specified
-            maximum.
+        :param maxdepth: Limit to events with depth, in kilometers, smaller
+            than the specified maximum.
         :type minmagnitude: float, optional
         :param minmagnitude: Limit to events with a magnitude larger than the
             specified minimum.
