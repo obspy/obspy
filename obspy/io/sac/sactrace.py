@@ -859,7 +859,7 @@ class SACTrace(object):
                     doc=HD.DOC['evla'])
     evlo = property(_floatgetter('evlo'), _geosetter('evlo'),
                     doc=HD.DOC['evlo'])
-    evdp = property(_floatgetter('evdp'), _floatsetter('evsp'),
+    evdp = property(_floatgetter('evdp'), _floatsetter('evdp'),
                     doc=HD.DOC['evdp'])
     mag = property(_floatgetter('mag'), _floatsetter('mag'), doc=HD.DOC['mag'])
     user0 = property(_floatgetter('user0'), _floatsetter('user0'),
