@@ -2087,7 +2087,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ObsPy ...: normalize(norm=None)
         """
         # normalize, use norm-kwarg otherwise normalize to 1
-        if norm:
+        if norm is not None:
             norm = norm
             if norm < 0:
                 msg = "Normalizing with negative values is forbidden. " + \
@@ -2095,6 +2095,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 warnings.warn(msg)
         else:
             norm = self.max()
+
+        # Don't do anything for zero norm.
+        if not norm:
+            return self
 
         self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
