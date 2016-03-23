@@ -234,7 +234,7 @@ class NetworkTestCase(unittest.TestCase):
         self.assertEqual(len(net), 2)
         self.assertEqual(sum(len(sta) for sta in net), 0)
 
-        # Nothing selected, nothing should happen.
+        # No arguments, everything should be selected.
         self.assertEqual(len(net.select()), 2)
 
         # Everything selected, nothing should happen.

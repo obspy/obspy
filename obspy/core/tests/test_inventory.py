@@ -231,7 +231,7 @@ class InventoryTestCase(unittest.TestCase):
         # Currently contains 30 channels.
         self.assertEqual(sum(len(sta) for net in inv for sta in net), 30)
 
-        # Nothing selected, nothing should change.
+        # No arguments, everything should be selected.
         self.assertEqual(
             sum(len(sta) for net in inv.select() for sta in net),
             30)
@@ -324,7 +324,7 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(len(inv), 2)
         self.assertEqual(sum(len(net) for net in inv), 0)
 
-        # Nothing selected, nothing should change.
+        # No arguments, everything should be selected.
         self.assertEqual(len(inv), 2)
         # Same if everything is selected.
         self.assertEqual(len(inv.select(network="*")), 2)
