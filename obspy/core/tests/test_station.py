@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
-from obspy import read_inventory
+from obspy import read_inventory, UTCDateTime
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 
 
@@ -56,6 +56,113 @@ class StationTestCase(unittest.TestCase):
                                  reltol=reltol) as ic:
                 rcParams['savefig.dpi'] = 72
                 sta.plot(0.05, channel="*[NE]", outfile=ic.name)
+
+    def test_len(self):
+        """
+        Tests the __len__ property.
+        """
+        sta = read_inventory()[0][0]
+
+        self.assertEqual(len(sta), len(sta.channels))
+        self.assertEqual(len(sta), 12)
+
+    def test_station_select(self):
+        """
+        Tests the select() method on station objects.
+        """
+        sta = read_inventory()[0][0]
+
+        # Basic assertions to make sure the test data does not change.
+        self.assertEqual(len(sta), 12)
+        self.assertEqual(sta.code, "FUR")
+        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+                                 in sta]),
+                         ['.BHE', '.BHN', '.BHZ', '.HHE', '.HHN', '.HHZ',
+                          '.LHE', '.LHN', '.LHZ', '.VHE', '.VHN', '.VHZ'])
+
+        self.assertEqual(sta[0].code, "HHZ")
+        # Manually set the end-date of the first one.
+        sta[0].end_date = UTCDateTime(2010, 1, 1)
+
+        # If nothing is given, nothing should change.
+        sta_2 = sta.select()
+        self.assertEqual(len(sta_2), 12)
+        self.assertEqual(sta_2.code, "FUR")
+
+        # Only select vertical channels.
+        sta_2 = sta.select(channel="*Z")
+        self.assertEqual(len(sta_2), 4)
+        self.assertEqual(sta_2.code, "FUR")
+        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+                                 in sta_2]), ['.BHZ', '.HHZ', '.LHZ', '.VHZ'])
+
+        # Only BH channels.
+        sta_2 = sta.select(channel="BH?")
+        self.assertEqual(len(sta_2), 3)
+        self.assertEqual(sta_2.code, "FUR")
+        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+                                 in sta_2]), ['.BHE', '.BHN', '.BHZ'])
+
+        # All location codes.
+        sta_2 = sta.select(location="*")
+        self.assertEqual(len(sta_2), 12)
+        self.assertEqual(sta_2.code, "FUR")
+
+        sta_2 = sta.select(location="")
+        self.assertEqual(len(sta_2), 12)
+        self.assertEqual(sta_2.code, "FUR")
+
+        # None exist with this code.
+        sta_2 = sta.select(location="10")
+        self.assertEqual(len(sta_2), 0)
+        self.assertEqual(sta_2.code, "FUR")
+
+        # The time parameter selects channels active at that particular
+        # time. All channels start 2006-12-16 and only the first ends in
+        # 2010-1-1. All others don't have an end-date set.
+        self.assertEqual(len(sta.select(time=UTCDateTime(2005, 1, 1))), 0)
+        self.assertEqual(len(sta.select(time=UTCDateTime(2007, 1, 1))), 12)
+        self.assertEqual(len(sta.select(time=UTCDateTime(2006, 12, 15))), 0)
+        self.assertEqual(len(sta.select(time=UTCDateTime(2006, 12, 17))), 12)
+        self.assertEqual(len(sta.select(time=UTCDateTime(2012, 1, 1))), 11)
+
+        # Test starttime parameter.
+        self.assertEqual(
+            len(sta.select(starttime=UTCDateTime(2005, 1, 1))), 12)
+        self.assertEqual(
+            len(sta.select(starttime=UTCDateTime(2009, 1, 1))), 12)
+        self.assertEqual(
+            len(sta.select(starttime=UTCDateTime(2011, 1, 1))), 11)
+        self.assertEqual(
+            len(sta.select(starttime=UTCDateTime(2016, 1, 1))), 11)
+
+        # Test endtime parameter.
+        self.assertEqual(
+            len(sta.select(endtime=UTCDateTime(2005, 1, 1))), 0)
+        self.assertEqual(
+            len(sta.select(endtime=UTCDateTime(2009, 1, 1))), 12)
+        self.assertEqual(
+            len(sta.select(endtime=UTCDateTime(2011, 1, 1))), 12)
+        self.assertEqual(
+            len(sta.select(endtime=UTCDateTime(2016, 1, 1))), 12)
+
+        # Sampling rate parameter.
+        self.assertEqual(len(sta.select(sampling_rate=33.0)), 0)
+        self.assertEqual(len(sta.select(sampling_rate=100.0)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=20.0)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=1.0)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=0.1)), 3)
+
+        self.assertEqual(sorted(["%s.%s" % (_i.location_code, _i.code) for _i
+                                 in sta.select(sampling_rate=100.0)]),
+                         ['.HHE', '.HHN', '.HHZ'])
+
+        # Check tolerances.
+        self.assertEqual(len(sta.select(sampling_rate=33.0 + 1E-6)), 0)
+        self.assertEqual(len(sta.select(sampling_rate=100.0 + 1E-6)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=20.0 - 1E-6)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=1.0 + 1E-6)), 3)
+        self.assertEqual(len(sta.select(sampling_rate=0.1 - 1E-6)), 3)
 
 
 def suite():

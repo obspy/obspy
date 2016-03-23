@@ -129,6 +129,9 @@ class Inventory(ComparingObject):
             raise TypeError(msg)
         return self
 
+    def __len__(self):
+        return len(self.networks)
+
     def __getitem__(self, index):
         return self.networks[index]
 
@@ -383,9 +386,17 @@ class Inventory(ComparingObject):
         :func:`~fnmatch.fnmatch`).
 
         :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include networks/stations/channels active at given
             point in time.
@@ -415,11 +426,16 @@ class Inventory(ComparingObject):
                                      endtime=endtime):
                     continue
 
+            has_stations = bool(net.stations)
+
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate, keep_empty=keep_empty)
-            if not keep_empty and not net_.stations:
+
+            # If the network previously had stations but no longer has any
+            # and keep_empty is False: Skip the network.
+            if has_stations and not keep_empty and not net_.stations:
                 continue
             networks.append(net_)
         inv = copy.copy(self)

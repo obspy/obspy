@@ -105,6 +105,9 @@ class Network(BaseNode):
             raise ValueError(msg)
         self._selected_number_of_stations = value
 
+    def __len__(self):
+        return len(self.stations)
+
     def __getitem__(self, index):
         return self.stations[index]
 
@@ -321,8 +324,14 @@ class Network(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include stations/channels active at given point in
             time.
@@ -336,9 +345,11 @@ class Network(BaseNode):
             not be shown).
         :type sampling_rate: float
         :type keep_empty: bool
-        :param keep_empty: If set to `True`, networks/stations that match
-            themselves but have no matching child elements (stations/channels)
-            will be included in the result.
+        :param keep_empty: If set to `True`, stations that match
+            themselves but have no matching child elements (channels)
+            will be included in the result. This flag has no effect for
+            initially empty stations which will always be retained if they
+            are matched by the other parameters.
         """
         stations = []
         for sta in self.stations:
@@ -352,11 +363,16 @@ class Network(BaseNode):
                                      endtime=endtime):
                     continue
 
+            has_channels = bool(sta.channels)
+
             sta_ = sta.select(
                 location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate)
-            if not keep_empty and not sta_.channels:
+
+            # If the station previously had channels but no longer has any
+            # and keep_empty is False: Skip the station.
+            if has_channels and not keep_empty and not sta_.channels:
                 continue
             stations.append(sta_)
         net = copy.copy(self)
