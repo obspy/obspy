@@ -220,6 +220,36 @@ class NetworkTestCase(unittest.TestCase):
 
         self.assertEqual(p.call_args[1], select_kwargs)
 
+    def test_network_select_with_empty_stations(self):
+        """
+        Tests the behaviour of the Network.select() method for empty stations.
+        """
+        net = read_inventory()[0]
+
+        # Delete all channels.
+        for sta in net:
+            sta.channels = []
+
+        # 2 stations and 0 channels remain.
+        self.assertEqual(len(net), 2)
+        self.assertEqual(sum(len(sta) for sta in net), 0)
+
+        # Nothing selected, nothing should happen.
+        self.assertEqual(len(net.select()), 2)
+
+        # Everything selected, nothing should happen.
+        self.assertEqual(len(net.select(station="*")), 2)
+
+        # Only select a single station.
+        self.assertEqual(len(net.select(station="FUR")), 1)
+        self.assertEqual(len(net.select(station="FU?")), 1)
+        self.assertEqual(len(net.select(station="W?T")), 1)
+
+        # Once again, this time with the time selection.
+        self.assertEqual(len(net.select(time=UTCDateTime(2006, 1, 1))), 0)
+        self.assertEqual(len(net.select(time=UTCDateTime(2007, 1, 1))), 1)
+        self.assertEqual(len(net.select(time=UTCDateTime(2008, 1, 1))), 2)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class NetworkBasemapTestCase(unittest.TestCase):
