@@ -166,11 +166,13 @@ class PPSD(object):
     >>> ppsd.save_npz("myfile.npz") # doctest: +SKIP
 
     The saved PPSD can then be loaded again using the static method
-    :func:`~obspy.signal.spectral_estimation.PPSD.load_npz`, e.g. to add more
-    data afterwards or to simply plot the results again. Metadata must be
-    provided again, since it is not stored in the numpy npz file:
+    :func:`~obspy.signal.spectral_estimation.PPSD.load_npz`, e.g. to plot the
+    results again. If additional data is to be processed (note that another
+    option is to combine multiple npz files using
+    :meth:`~obspy.signal.spectral_estimation.PPSD.add_npz`), metadata must be
+    provided again, since they are not stored in the numpy npz file:
 
-    >>> ppsd = PPSD.load_npz("myfile.npz", metadata=paz)  # doctest: +SKIP
+    >>> ppsd = PPSD.load_npz("myfile.npz")  # doctest: +SKIP
 
     .. note::
 

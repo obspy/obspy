@@ -2051,7 +2051,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param norm: If not ``None``, trace is normalized by dividing by
             specified value ``norm`` instead of dividing by its absolute
             maximum. If a negative value is specified then its absolute value
-            is used.
+            is used. If it is zero (either through a zero array or by being
+            passed), nothing will happen and the original array will not
+            change.
 
         If ``trace.data.dtype`` was integer it is changing to float.
 
@@ -2082,7 +2084,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ObsPy ...: normalize(norm=None)
         """
         # normalize, use norm-kwarg otherwise normalize to 1
-        if norm:
+        if norm is not None:
             norm = norm
             if norm < 0:
                 msg = "Normalizing with negative values is forbidden. " + \
@@ -2090,6 +2092,13 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 warnings.warn(msg)
         else:
             norm = self.max()
+
+        # Don't do anything for zero norm but raise a warning.
+        if not norm:
+            msg = ("Attempting to normalize by dividing through zero. This "
+                   "is not allowed and the data will thus not be changed.")
+            warnings.warn(msg)
+            return self
 
         self.data = self.data.astype(np.float64)
         self.data /= abs(norm)
@@ -2608,8 +2617,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             ax6 = fig.add_subplot(326, sharex=ax4)
             for ax_ in (ax1, ax2, ax3, ax4, ax5, ax6):
                 ax_.grid(zorder=-10)
-            text = 'pre_filt: [{:.3g}, {:.3g}, {:.3g}, {:.3g}]'.format(
-                *pre_filt)
+            if pre_filt is None:
+                text = 'pre_filt: None'
+            else:
+                text = 'pre_filt: [{:.3g}, {:.3g}, {:.3g}, {:.3g}]'.format(
+                    *pre_filt)
             ax1.text(0.05, 0.1, text, ha="left", va="bottom",
                      transform=ax1.transAxes, fontsize="large", bbox=bbox,
                      zorder=5)

@@ -8,9 +8,15 @@ master:
      inventory object.
 
 1.0.x:
+ - obspy.core:
+    * Trace.normalize() does no longer divide by zero in case an all-zeros
+      data trace is being used. (see #1343)
  - obspy.clients.fdsn:
     * Local URLs are now recognized as valid URLs. (see #1309)
     * Some bug fixes for the mass downloader. (see #1293, #1304)
+ - obspy.taup
+   * fixed wrong azimuth direction for paths > 180 degrees distance (see #1289)
+   * azimuth is appended to arrivals as well (see #1289)
 
 1.0.0: (doi: 10.5281/zenodo.46151)
  - General:
