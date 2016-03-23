@@ -1,11 +1,11 @@
 1.0.x:
  - General:
    * Some methods might have unnecessarily upcasted float32 arrays to float64.
-	 Now methods for which it makes sense and which don't lose accuracy don't
-	 upcast float32 arrays. Integers are still upcasted. Trace.resample() will
-	 also no longer return the original dtype which might have resulted in a
-	 large loss of accuracy but it now always returns float64 arrays.
-	 (see #1302)
+     Now methods for which it makes sense and which don't lose accuracy don't
+     upcast float32 arrays. Integers are still upcasted. Trace.resample() will
+     also no longer return the original dtype which might have resulted in a
+     large loss of accuracy but it now always returns float64 arrays.
+     (see #1302)
  - obspy.core:
    * Trace.normalize() does no longer divide by zero in case an all-zeros
      data trace is being used. (see #1343)
