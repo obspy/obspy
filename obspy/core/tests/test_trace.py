@@ -7,6 +7,7 @@ import math
 import os
 import unittest
 from copy import deepcopy
+import warnings
 
 import numpy as np
 import numpy.ma as ma
@@ -2202,6 +2203,100 @@ class TraceTestCase(unittest.TestCase):
                              reltol=1.5) as ic:
             tr.remove_response(pre_filt=pre_filt, output="DISP",
                                water_level=60, end_stage=None, plot=ic.name)
+
+    def test_normalize(self):
+        """
+        Tests the normalize() method on normal and edge cases.
+        """
+        # Nothing should happen with ones.
+        tr = Trace(data=np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.ones(5))
+
+        # 10s should be normalized to all ones.
+        tr = Trace(data=10 * np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.ones(5))
+
+        # Negative 10s should be normalized to negative ones.
+        tr = Trace(data=-10 * np.ones(5))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, -np.ones(5))
+
+        # 10s and a couple of 5s should be normalized to 1s and a couple of
+        # 0.5s.
+        tr = Trace(data=np.array([10.0, 10.0, 5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([1.0, 1.0, 0.5, 0.5]))
+
+        # Same but negative values.
+        tr = Trace(data=np.array([-10.0, -10.0, -5.0, -5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, -0.5, -0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, -10.0, 5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, 0.5, 0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, 10.0, -5.0, 5.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, 1.0, -0.5, 0.5]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([-10.0, -10.0, 0.0, 0.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, -1.0, 0.0, 0.0]))
+
+        # Mixed values.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([1.0, 1.0, 0.0, 0.0]))
+
+        # Small values get larger.
+        tr = Trace(data=np.array([-0.5, 0.5, 0.1, -0.1]))
+        tr.normalize()
+        np.testing.assert_allclose(tr.data, np.array([-1.0, 1.0, 0.2, -0.2]))
+
+        # All zeros. Nothing should happen but a warning will be raised.
+        tr = Trace(data=np.array([-0.0, 0.0, 0.0, -0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize()
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
+        np.testing.assert_allclose(tr.data, np.array([-0.0, 0.0, 0.0, -0.0]))
+
+        # Passing the norm specifies the division factor.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        tr.normalize(norm=2)
+        np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
+
+        # Passing the norm specifies the division factor. Nothing happens
+        # with zero.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize(norm=0)
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Attempting to normalize by dividing through zero.",
+                      w[0].message.args[0])
+        np.testing.assert_allclose(tr.data, np.array([10.0, 10.0, 0.0, 0.0]))
+
+        # Warning is raised for a negative norm, but the positive value is
+        # used.
+        tr = Trace(data=np.array([10.0, 10.0, 0.0, 0.0]))
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.normalize(norm=-2)
+
+        self.assertEqual(w[0].category, UserWarning)
+        self.assertIn("Normalizing with negative values is forbidden.",
+                      w[0].message.args[0])
+
+        np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
 
 
 def suite():
