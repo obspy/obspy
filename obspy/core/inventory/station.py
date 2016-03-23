@@ -19,6 +19,8 @@ import fnmatch
 import textwrap
 import warnings
 
+import numpy as np
+
 from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
@@ -176,6 +178,9 @@ class Station(BaseNode):
 
     def __getitem__(self, index):
         return self.channels[index]
+
+    def __len__(self):
+        return len(self.channels)
 
     def get_contents(self):
         """
@@ -346,7 +351,11 @@ class Station(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include channels active at given point in time.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -375,7 +384,8 @@ class Station(BaseNode):
                            "specified.")
                     warnings.warn(msg)
                     continue
-                if float(sampling_rate) != cha.sample_rate:
+                if not np.allclose(float(sampling_rate), cha.sample_rate,
+                                   rtol=1E-5, atol=1E-8):
                     continue
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not cha.is_active(time=time, starttime=starttime,
