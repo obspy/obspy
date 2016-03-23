@@ -14,19 +14,27 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import hashlib
+
 try:
     from M2Crypto import EVP
     hasM2Crypto = True
 except ImportError:
     hasM2Crypto = False
 
+try:
+    from Crypto.Cipher import DES
+    hasPyCrypto = True
+except ImportError:
+    hasPyCrypto = False
+
 
 class SSLWrapper:
     """
     """
     def __init__(self, password):
-        if not hasM2Crypto:
-            raise Exception("Module M2Crypto was not found on this system.")
+        if not (hasM2Crypto or hasPyCrypto):
+            raise ImportError("Module M2Crypto or PyCrypto is needed.")
         self._cypher = None
         self._password = None
         if password is None:
@@ -38,33 +46,41 @@ class SSLWrapper:
         if self._cypher is None:
             if len(chunk) < 16:
                 raise Exception('Invalid first chunk (Size < 16).')
-            if chunk[0:8] != "Salted__":
+            if chunk[0:8] != b"Salted__":
                 raise Exception('Invalid first chunk (expected: Salted__')
             [key, iv] = self._get_key_iv(self._password, chunk[8:16])
-            self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
             chunk = chunk[16:]
-        if len(chunk) > 0:
-            return self._cypher.update(chunk)
-        else:
-            return ''
+            if len(chunk) <= 0:
+                return ''
+            if hasM2Crypto:
+                self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
+                return self._cypher.update(chunk)
+            else:
+                self._cypher = DES.new(key, DES.MODE_CBC, iv)
+                return self._cypher.decrypt(chunk)
 
     def final(self):
         if self._cypher is None:
             raise Exception('Wrapper has not started yet.')
-        return self._cypher.final()
+        if hasM2Crypto:
+            return self._cypher.final()
+        else:
+            return b""
 
     def _get_key_iv(self, password, salt=None, size=8):
+        # make sure password is a string and not unicode
+        password = password.encode('utf-8')
         chunk = None
-        key = ""
-        iv = ""
+        key = b""
+        iv = b""
         while True:
-            hash = EVP.MessageDigest('md5')
+            hash = hashlib.md5()
             if (chunk is not None):
                 hash.update(chunk)
             hash.update(password)
             if (salt is not None):
                 hash.update(salt)
-            chunk = hash.final()
+            chunk = hash.digest()
             i = 0
             if len(key) < size:
                 i = min(size - len(key), len(chunk))

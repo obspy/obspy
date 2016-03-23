@@ -23,11 +23,17 @@ def simple(data):
     point of the trace
 
     :param data: Data to detrend, type numpy.ndarray.
-    :return: Detrended data.
+    :return: Detrended data. Returns the original array which has been
+        modified in-place if possible but it might have to return a copy in
+        case the dtype has to be changed.
     """
+    # Convert data if it's not a floating point type.
+    if not np.issubdtype(data.dtype, float):
+        data = np.require(data, dtype=np.float64)
     ndat = len(data)
     x1, x2 = data[0], data[-1]
-    return data - (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
+    data -= x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1)
+    return data
 
 
 def _plotting_helper(data, fit, plot):
@@ -102,7 +108,7 @@ def polynomial(data, order, plot=False):
     """
     # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     fit = np.polyval(np.polyfit(x, data, deg=order), x)
@@ -165,7 +171,7 @@ def spline(data, order, dspline, plot=False):
     """
     # Convert data if it's not a floating point type.
     if not np.issubdtype(data.dtype, float):
-        data = np.require(data, dtype=np.float32)
+        data = np.require(data, dtype=np.float64)
 
     x = np.arange(len(data))
     splknots = np.arange(dspline / 2.0, len(data) - dspline / 2.0 + 2,

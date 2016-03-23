@@ -1609,11 +1609,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             freq = self.stats.sampling_rate * 0.5 / float(factor)
             self.filter('lowpass_cheby_2', freq=freq, maxorder=12)
 
-        orig_dtype = self.data.dtype
-        new_dtype = np.float32 if orig_dtype.itemsize == 4 else np.float64
-
-        # resample in the frequency domain
-        x = rfft(np.require(self.data, dtype=new_dtype))
+        # resample in the frequency domain. Make sure the byteorder is native.
+        x = rfft(self.data.newbyteorder("="))
         x = np.insert(x, 1, 0)
         if self.stats.npts % 2 == 0:
             x = np.append(x, [0])
@@ -1650,7 +1647,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if num % 2 == 0:
             large_y = np.delete(large_y, -1)
         self.data = irfft(large_y) * (float(num) / float(self.stats.npts))
-        self.data = np.require(self.data, dtype=orig_dtype)
         self.stats.sampling_rate = sampling_rate
 
         return self
@@ -1896,14 +1892,24 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         type = type.lower()
         # retrieve function call from entry points
         func = _get_function_from_entry_point('detrend', type)
+
         # handle function specific settings
         if func.__module__.startswith('scipy'):
             # SciPy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
             options['type'] = type
+            original_dtype = self.data.dtype
+
         # detrending
         self.data = func(self.data, **options)
+
+        # Ugly workaround for old scipy versions that might unnecessarily
+        # change the dtype of the data.
+        if func.__module__.startswith('scipy'):
+            if original_dtype == np.float32 and self.data.dtype != np.float32:
+                self.data = np.require(self.data, dtype=np.float32)
+
         return self
 
     @skip_if_no_data
@@ -2039,7 +2045,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         else:
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
                                taper_sides[len(taper_sides) - wlen:]))
-        self.data = self.data * taper
+
+        # Convert data if it's not a floating point type.
+        if not np.issubdtype(self.data.dtype, float):
+            self.data = np.require(self.data, dtype=np.float64)
+
+        self.data *= taper
         return self
 
     @_add_processing_info
@@ -2100,7 +2111,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             warnings.warn(msg)
             return self
 
-        self.data = self.data.astype(np.float64)
+        # Convert data if it's not a floating point type.
+        if not np.issubdtype(self.data.dtype, float):
+            self.data = np.require(self.data, dtype=np.float64)
+
         self.data /= abs(norm)
 
         return self
