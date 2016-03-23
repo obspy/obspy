@@ -46,14 +46,25 @@ from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
 
-def compress_start_end(x, stop_iteration, merge_overlaps=False):
+def compress_start_end(x, stop_iteration, merge_overlaps=False,
+                       margin_in_seconds=0.0):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
     by merging overlapping and exactly fitting pieces into one.
     This reduces the number of lines needed in the plot considerably and is
     necessary for very large data sets.
     The maximum number of iterations can be specified.
+
+    :type margin_in_seconds: float
+    :param margin_in_seconds: Allowance in seconds that has to be exceeded by
+        adjacent expected next sample time (earlier trace's endtime+delta) and
+        actual next sample time (later trace's starttime) so that the
+        in-between is considered a gap or overlap (e.g. to allow for up to
+        ``0.8`` times the sampling interval for a 100 Hz stream, use
+        ``(1 / 100.0) * 0.8) == 0.008``).
     """
+    # matplotlib date numbers are in days
+    margin = margin_in_seconds / (24 * 3600)
 
     def _get_indices_to_merge(startend):
         """
@@ -62,8 +73,12 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False):
         """
         diffs = x[1:, 0] - x[:-1, 1]
         if merge_overlaps:
+            # if overlaps should be merged we set any negative diff to zero and
+            # it will be merged in the following commands
             diffs[diffs < 0] = 0
-        inds = np.concatenate([diffs <= 0, [False]])
+        # any diff of expected and actual next sample time that is smaller than
+        # 0+-margin is considered no gap/overlap but rather merged together
+        inds = np.concatenate([(diffs > -margin) & (diffs < margin), [False]])
         return inds
 
     inds = _get_indices_to_merge(x)
