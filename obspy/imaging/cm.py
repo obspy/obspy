@@ -210,29 +210,30 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import ListedColormap
 
 
-def _get_cmap(name, kind='segmented', lut=None, reverse=False):
+def _get_cmap(file_name, lut=None, reverse=False):
     """
     Load a :class:`~matplotlib.colors.LinearSegmentedColormap` from
     `segmentdata` dictionary saved as numpy compressed binary data.
 
-    :type name: str
-    :param name: Name of colormap to load, same as filename in
-        `obspy/imaging/data` without `.npz or .npy` file suffix.
-    :type kind: str
-    :param kind: the type of colormap data. 'segmented' looks for
-                 a name.npz file that contains colorbar segments.
-                 'listed' looks for a name.npy file that contains a simple
-                 array of RGB values with size [ncolors, 3] that defines
-                 the colormap.
+    :type file_name: str
+    :param file_name: Name of colormap to load, same as filename in
+        `obspy/imaging/data`. The type of colormap data is determined
+        from the extension: .npz assumes the file contains colorbar
+                 segments (segmented colormap). .npy assumes the file
+                 contains a simple array of RGB values with size
+                 [ncolors, 3].
     :type lut: int
     :param lut: Specifies the number of discrete color values in the
-                segmented colormap.
+                segmented colormap. Only used for segmented colormap
         `None` to use matplotlib default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
-    if kind == 'segmented':
+    # check if it is npz -> segmented colormap or npy -> listed colormap
+    name, ending = file_name.strip().rsplit('.')
+    if ending == 'npz':
+        # segmented colormap
         directory = os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe())))
         directory = os.path.join(directory, "data")
@@ -252,7 +253,8 @@ def _get_cmap(name, kind='segmented', lut=None, reverse=False):
         kwargs = lut and {"N": lut} or {}
         cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
         return cmap
-    if kind == 'listed':
+    if ending == 'npy':
+        # listed colormap
         directory = os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe())))
         directory = os.path.join(directory, "data")
@@ -266,10 +268,10 @@ def _get_cmap(name, kind='segmented', lut=None, reverse=False):
         cmap = ListedColormap(data, name=name)
         return cmap
 
-viridis = _get_cmap("viridis", kind="segmented")
-viridis_r = _get_cmap("viridis", kind="segmented", reverse=True)
-viridis_white = _get_cmap("viridis_white", kind='listed')
-viridis_white_r = _get_cmap("viridis_white", kind='listed', reverse=True)
+viridis = _get_cmap("viridis.npz")
+viridis_r = _get_cmap("viridis.npz", reverse=True)
+viridis_white = _get_cmap("viridis_white.npy")
+viridis_white_r = _get_cmap("viridis_white.npy", reverse=True)
 obspy_sequential = viridis
 obspy_sequential_r = viridis_r
 obspy_divergent = get_cmap("RdBu_r")
