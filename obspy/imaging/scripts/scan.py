@@ -111,8 +111,9 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                 print("Skipping file with zero samlingrate: %s" % (file))
             return counter
         _data_list = data_dict.setdefault(_id, [])
-        _data_list.append([date2num(tr.stats.starttime.datetime),
-                           date2num(tr.stats.endtime.datetime)])
+        _data_list.append(
+            [date2num(tr.stats.starttime.datetime),
+             date2num((tr.stats.endtime + tr.stats.delta).datetime)])
     return (counter + 1)
 
 
@@ -344,7 +345,8 @@ def main(argv=None):
             has_gap = True
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * _samp_int[:-1]
+        # define a gap as over 0.8 delta after expected sample time
+        gap_indices = diffs > 0.8 * _samp_int[:-1]
         gap_indices = np.append(gap_indices, False)
         has_gap |= any(gap_indices)
         if has_gap:
