@@ -54,10 +54,19 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False):
     necessary for very large data sets.
     The maximum number of iterations can be specified.
     """
-    diffs = x[1:, 0] - x[:-1, 1]
-    if merge_overlaps:
-        diffs[diffs < 0] = 0
-    inds = np.concatenate([(diffs <= 0), [False]])
+
+    def _get_indices_to_merge(startend):
+        """
+        Return boolean array signaling at which positions a merge of adjacent
+        tuples should be performed.
+        """
+        diffs = x[1:, 0] - x[:-1, 1]
+        if merge_overlaps:
+            diffs[diffs < 0] = 0
+        inds = np.concatenate([diffs <= 0, [False]])
+        return inds
+
+    inds = _get_indices_to_merge(x)
     i = 0
     while any(inds):
         if i >= stop_iteration:
@@ -74,10 +83,7 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False):
         x[inds, 1] = x[inds_next, 1]
         inds_del = np.nonzero(inds_next)
         x = np.delete(x, inds_del, 0)
-        diffs = x[1:, 0] - x[:-1, 1]
-        if merge_overlaps:
-            diffs[diffs < 0] = 0
-        inds = np.concatenate([(diffs <= 0), [False]])
+        inds = _get_indices_to_merge(x)
     return x
 
 
@@ -316,7 +322,8 @@ def main(argv=None):
             warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
 
-        startend_compressed = compress_start_end(startend, 1000)
+        startend_compressed = compress_start_end(startend, 1000,
+                                                 merge_overlaps=False)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
         if not args.no_x:
