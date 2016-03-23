@@ -45,4 +45,19 @@ def integrate_spline(data, dx, k=3, **kwargs):
     time_array = np.linspace(0, (len(data) - 1) * dx, len(data))
     spline = scipy.interpolate.InterpolatedUnivariateSpline(time_array, data,
                                                             k=k)
+
+    # Backport of the antiderivative() method to old scipy versions.
+    if not hasattr(spline, "antiderivative"):
+        from scipy.interpolate import fitpack  # NOQA
+        tck = fitpack.splantider(spline._eval_args, 1)
+
+        tmp = scipy.interpolate.InterpolatedUnivariateSpline.__new__(
+            scipy.interpolate.InterpolatedUnivariateSpline)
+        t, c, k = tck
+        tmp._eval_args = tck
+        tmp._data = (None, None, None, None, None, k, None, len(t), t, c,
+                     None, None, None, None)
+        tmp.ext = 0
+        return tmp(time_array)
+
     return spline.antiderivative(n=1)(time_array)
