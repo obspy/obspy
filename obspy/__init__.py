@@ -68,6 +68,8 @@ _import_map = {
     "obspy.pdas": "obspy.io.pdas",
     "obspy.pde": "obspy.io.pde",
     "obspy.sac": "obspy.io.sac",
+    # For the attach_paz & attach_resp methods.
+    "obspy.sac.sacio": "obspy.io.sac.sacpz",
     "obspy.seg2": "obspy.io.seg2",
     "obspy.segy": "obspy.io.segy",
     "obspy.seisan": "obspy.io.seisan",
