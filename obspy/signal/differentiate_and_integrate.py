@@ -50,13 +50,20 @@ def integrate_spline(data, dx, k=3, **kwargs):
     # Can be removed once the minimum supported version is equal or larger
     # to this.
     if not hasattr(spline, "antiderivative"):
-        from scipy.interpolate import fitpack  # NOQA
-        tck = fitpack.splantider(spline._eval_args, 1)
+        t, c, k = spline._eval_args
+
+        # Compute the multiplier in the antiderivative formula.
+        dt = t[k+1:] - t[:-k-1]
+        # Compute the new coefficients
+        c = np.cumsum(c[:-k-1] * dt) / (k + 1)
+        c = np.r_[0, c, [c[-1]]*(k+2)]
+        # New knots
+        t = np.r_[t[0], t, t[-1]]
+        k += 1
 
         tmp = scipy.interpolate.InterpolatedUnivariateSpline.__new__(
             scipy.interpolate.InterpolatedUnivariateSpline)
-        t, c, k = tck
-        tmp._eval_args = tck
+        tmp._eval_args = t, c, k
         tmp._data = (None, None, None, None, None, k, None, len(t), t, c,
                      None, None, None, None)
         tmp.ext = 0
