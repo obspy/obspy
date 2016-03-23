@@ -573,7 +573,7 @@ class ClientTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # Dataless SEED
-            client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            client.save_response(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             with open(tempfile, 'rb') as fp:
                 self.assertEqual(fp.read(8), b"000001V ")
 
@@ -583,7 +583,7 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         # Dataless SEED
-        client.saveResponse(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
+        client.save_response(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
         file_object.seek(0, 0)
         self.assertEqual(file_object.read(8), b"000001V ")
 
