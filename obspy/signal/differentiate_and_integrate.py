@@ -46,7 +46,9 @@ def integrate_spline(data, dx, k=3, **kwargs):
     spline = scipy.interpolate.InterpolatedUnivariateSpline(time_array, data,
                                                             k=k)
 
-    # Backport of the antiderivative() method to old scipy versions.
+    # Backport of the antiderivative() method for scipy versions < 0.13.0.
+    # Can be removed once the minimum supported version is equal or larger
+    # to this.
     if not hasattr(spline, "antiderivative"):
         from scipy.interpolate import fitpack  # NOQA
         tck = fitpack.splantider(spline._eval_args, 1)
