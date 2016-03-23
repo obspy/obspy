@@ -324,7 +324,7 @@ class Network(BaseNode):
         :func:`~fnmatch.fnmatch`).
 
         :type station: str
-        :param param: Potentially wildcarded station code. If not given,
+        :param station: Potentially wildcarded station code. If not given,
             all station codes will be accepted.
         :type location: str
         :param location: Potentially wildcarded location code. If not given,
