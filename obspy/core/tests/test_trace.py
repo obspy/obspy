@@ -2298,6 +2298,269 @@ class TraceTestCase(unittest.TestCase):
 
         np.testing.assert_allclose(tr.data, np.array([5.0, 5.0, 0.0, 0.0]))
 
+    def test_dtype_is_not_unnecessarily_changed(self):
+        """
+        The dtype of the data should not change if not necessary. In general
+        this means that a float32 array should not become a float64 array
+        and vice-versa. Integer arrays will always be upcasted to float64
+        arrays when integer output makes no sense. Not all int32 numbers can be
+        accurately represented by float32 arrays so double precision is
+        required in order to not lose accuracy.
+
+        Exceptions are custom coded C routines where we usually opt to only
+        include either a single or a double precision version.
+        """
+        tr = read()[0]
+        tr.data = tr.data[:100]
+
+        # One for each common input dtype.
+        tr_int32 = tr.copy()
+        tr_int32.data = np.require(tr_int32.data, dtype=np.int32)
+        tr_int64 = tr.copy()
+        tr_int64.data = np.require(tr_int64.data, dtype=np.int64)
+        tr_float32 = tr.copy()
+        tr_float32.data = np.require(tr_float32.data, dtype=np.float32)
+        tr_float64 = tr.copy()
+        tr_float64.data = np.require(tr_float64.data, dtype=np.float64)
+
+        # Trimming.
+        self.assertEqual(tr_int32.copy().trim(1, 2).data.dtype, np.int32)
+        self.assertEqual(tr_int64.copy().trim(1, 2).data.dtype, np.int64)
+        self.assertEqual(tr_float32.copy().trim(1, 2).data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().trim(1, 2).data.dtype, np.float64)
+
+        # Filtering. SciPy converts data to 64bit floats. Filters are
+        # numerically tricky so a higher accuracy is justified here.
+        self.assertEqual(
+            tr_int32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().filter("lowpass", freq=2.0).data.dtype,
+            np.float64)
+
+        # Decimation should not change the dtype.
+        self.assertEqual(
+            tr_int32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int32)
+        self.assertEqual(
+            tr_int64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.int64)
+        self.assertEqual(
+            tr_float32.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().decimate(factor=2, no_filter=True).data.dtype,
+            np.float64)
+
+        # Detrending will upcast integers but should not touch floats.
+        self.assertEqual(tr_int32.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("simple").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("simple").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int32.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("linear").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("linear").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int32.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().detrend("constant").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().detrend("constant").data.dtype,
+                         np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("polynomial", order=3).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("polynomial", order=3).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int32.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().detrend("spline", order=3, dspline=100).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().detrend("spline", order=3,
+                                      dspline=100).data.dtype,
+            np.float64)
+
+        # Tapering. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().taper(0.05, "hann").data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().taper(0.05, "hann").data.dtype,
+                         np.float64)
+
+        # Normalizing. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().normalize().data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().normalize().data.dtype, np.float32)
+        self.assertEqual(tr_float64.copy().normalize().data.dtype, np.float64)
+
+        # Differentiate. Upcast to float64 but don't change float32.
+        self.assertEqual(tr_int32.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_int64.copy().differentiate().data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float32.copy().differentiate().data.dtype,
+                         np.float32)
+        self.assertEqual(tr_float64.copy().differentiate().data.dtype,
+                         np.float64)
+
+        # Integrate. Upcast to float64 but don't change float32.
+        self.assertEqual(
+            tr_int32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="cumtrapz").data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="cumtrapz").data.dtype,
+            np.float64)
+        # The spline antiderivate always returns float64.
+        self.assertEqual(
+            tr_int32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().integrate(method="spline").data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().integrate(method="spline").data.dtype,
+            np.float64)
+
+        # Simulation is an operation in the spectral domain so double
+        # precision is a lot more accurate so it's fine here.
+        paz_remove = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
+                                -251.33 + 0j],
+                      'zeros': [0j, 0j], 'gain': 60077000.0,
+                      'sensitivity': 2516778400.0}
+        self.assertEqual(
+            tr_int32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().simulate(paz_remove=paz_remove).data.dtype,
+            np.float64)
+
+        # Same with the fourier domain resampling.
+        self.assertEqual(tr_int32.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_int64.copy().resample(2.0).data.dtype, np.float64)
+        self.assertEqual(tr_float32.copy().resample(2.0).data.dtype,
+                         np.float64)
+        self.assertEqual(tr_float64.copy().resample(2.0).data.dtype,
+                         np.float64)
+
+        # Same with remove_response()
+        inv = read_inventory()
+        self.assertEqual(
+            tr_int32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float64.copy().remove_response(inventory=inv).data.dtype,
+            np.float64)
+
+        # Remove sensitivity does not have to change the dtype for float32.
+        self.assertEqual(
+            tr_int32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_int64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+        self.assertEqual(
+            tr_float32.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float32)
+        self.assertEqual(
+            tr_float64.copy().remove_sensitivity(inventory=inv).data.dtype,
+            np.float64)
+
+        # Various interpolation routines.
+        # Weighted average slopes is a custom C routine that only works with
+        # double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="weighted_average_slopes").data.dtype, np.float64)
+        # Scipy treats splines as double precision. No need to convert them.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="slinear").data.dtype, np.float64)
+        # Lanczos is a custom C routine that only works with double precision.
+        self.assertEqual(
+            tr_int32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_int64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float32.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+        self.assertEqual(
+            tr_float64.copy().interpolate(
+                1.0, method="lanczos", a=2).data.dtype, np.float64)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
