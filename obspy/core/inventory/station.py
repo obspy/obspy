@@ -384,8 +384,8 @@ class Station(BaseNode):
                            "specified.")
                     warnings.warn(msg)
                     continue
-                if not np.isclose(float(sampling_rate), cha.sample_rate,
-                                  rtol=1E-5, atol=1E-8):
+                if not np.allclose(float(sampling_rate), cha.sample_rate,
+                                   rtol=1E-5, atol=1E-8):
                     continue
             if any([t is not None for t in (time, starttime, endtime)]):
                 if not cha.is_active(time=time, starttime=starttime,
