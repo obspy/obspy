@@ -217,15 +217,15 @@ def _get_cmap(file_name, lut=None, reverse=False):
 
     :type file_name: str
     :param file_name: Name of colormap to load, same as filename in
-        `obspy/imaging/data`. The type of colormap data is determined
-        from the extension: .npz assumes the file contains colorbar
-                 segments (segmented colormap). .npy assumes the file
-                 contains a simple array of RGB values with size
-                 [ncolors, 3].
+                      `obspy/imaging/data`. The type of colormap data is
+                      determined from the extension: .npz assumes the file
+                      contains colorbar segments (segmented colormap).
+                      '*.npy' assumes the file contains a simple array of RGB
+                      values with size [ncolors, 3].
     :type lut: int
     :param lut: Specifies the number of discrete color values in the
                 segmented colormap. Only used for segmented colormap
-        `None` to use matplotlib default value (continuous colormap).
+                `None` to use matplotlib default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
@@ -239,7 +239,7 @@ def _get_cmap(file_name, lut=None, reverse=False):
         directory = os.path.join(directory, "data")
         if name.endswith(".npz"):
             name = name.rsplit(".npz", 1)[0]
-        filename = os.path.join(directory, name + ".npz")
+        filename = os.path.join(directory, file_name)
         data = dict(np.load(filename))
         if reverse:
             data_r = {}
@@ -253,20 +253,22 @@ def _get_cmap(file_name, lut=None, reverse=False):
         kwargs = lut and {"N": lut} or {}
         cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
         return cmap
-    if ending == 'npy':
+    elif ending == 'npy':
         # listed colormap
         directory = os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe())))
         directory = os.path.join(directory, "data")
         if name.endswith(".npy"):
             name = name.rsplit(".npy", 1)[0]
-        filename = os.path.join(directory, name + ".npy")
+        filename = os.path.join(directory, file_name)
         data = np.load(filename)
         if reverse:
             data = data[::-1]
             name += "_r"
         cmap = ListedColormap(data, name=name)
         return cmap
+    else:
+        raise ValueError('file ending .{} not recognized'.format(ending))
 
 viridis = _get_cmap("viridis.npz")
 viridis_r = _get_cmap("viridis.npz", reverse=True)
