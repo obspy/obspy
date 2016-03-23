@@ -345,9 +345,11 @@ class Network(BaseNode):
             not be shown).
         :type sampling_rate: float
         :type keep_empty: bool
-        :param keep_empty: If set to `True`, networks/stations that match
-            themselves but have no matching child elements (stations/channels)
-            will be included in the result.
+        :param keep_empty: If set to `True`, stations that match
+            themselves but have no matching child elements (channels)
+            will be included in the result. This flag has no effect for
+            initially empty stations which will always be retained if they
+            are matched by the other parameters.
         """
         stations = []
         for sta in self.stations:
@@ -361,11 +363,16 @@ class Network(BaseNode):
                                      endtime=endtime):
                     continue
 
+            has_channels = bool(sta.channels)
+
             sta_ = sta.select(
                 location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate)
-            if not keep_empty and not sta_.channels:
+
+            # If the station previously had channels but no longer has any
+            # and keep_empty is False: Skip the station.
+            if has_channels and not keep_empty and not sta_.channels:
                 continue
             stations.append(sta_)
         net = copy.copy(self)
