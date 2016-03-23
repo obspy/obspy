@@ -278,7 +278,7 @@ obspy_sequential = viridis
 obspy_sequential_r = viridis_r
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
-pqlx = _get_cmap("pqlx")
+pqlx = _get_cmap("pqlx.npz")
 
 
 def _colormap_plot_overview(colormap_names=(
