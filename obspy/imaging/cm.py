@@ -106,8 +106,8 @@ viridis_white
 "viridis_white" is a modified version of "viridis" that goes to white instead
 of yellow in the end. Although it remains perceptually uniform, the light
 colors are a bit more difficult to distinguish than yellow in the original
-viridis. It is useful for printing because it can merge with a white
-background (by M Meschede).
+viridis. It is useful for printing because one end of the colorbar can merge
+with a white background (by M Meschede).
 
     >>> from obspy.imaging.cm import viridis_white
 
