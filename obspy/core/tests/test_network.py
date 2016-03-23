@@ -20,7 +20,9 @@ import warnings
 import numpy as np
 from matplotlib import rcParams
 
+import obspy
 from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import mock
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.core.inventory import Channel, Network, Response, Station
@@ -153,6 +155,70 @@ class NetworkTestCase(unittest.TestCase):
         net = read_inventory()[0]
         self.assertEqual(len(net), len(net.stations))
         self.assertEqual(len(net), 2)
+
+    def test_network_select(self):
+        """
+        Test for the select() method of the network class.
+        """
+        net = read_inventory()[0]
+
+        # Basic asserts to assert some things about the test data.
+        self.assertEqual(len(net), 2)
+        self.assertEqual(len(net[0]), 12)
+        self.assertEqual(len(net[1]), 9)
+        self.assertEqual(sum(len(i) for i in net), 21)
+
+        # Artificially move the start time of the first station before the
+        # channel start times.
+        net[0].start_date = UTCDateTime(1999, 1, 1)
+
+        # Nothing happens if nothing is specified or if everything is selected.
+        self.assertEqual(sum(len(i) for i in net.select()), 21)
+        self.assertEqual(sum(len(i) for i in net.select(station="*")), 21)
+        self.assertEqual(sum(len(i) for i in net.select(location="*")), 21)
+        self.assertEqual(sum(len(i) for i in net.select(channel="*")), 21)
+        self.assertEqual(sum(len(i) for i in net.select(
+            station="*", location="*", channel="*")), 21)
+
+        # No matching station.
+        self.assertEqual(sum(len(i) for i in net.select(station="RR")), 0)
+        # keep_empty does not do anything in these cases.
+        self.assertEqual(sum(len(i) for i in
+                             net.select(station="RR", keep_empty=True)), 0)
+        # Selecting only one station.
+        self.assertEqual(sum(len(i) for i in
+                             net.select(station="FUR", keep_empty=True)), 12)
+        self.assertEqual(sum(len(i) for i in
+                             net.select(station="F*", keep_empty=True)), 12)
+        self.assertEqual(sum(len(i) for i in
+                             net.select(station="WET", keep_empty=True)), 9)
+
+        # Test the keep_empty flag.
+        net_2 = net.select(time=UTCDateTime(2000, 1, 1))
+        self.assertEqual(len(net_2), 0)
+        self.assertEqual(sum(len(i) for i in net_2), 0)
+        # One is kept - it has no more channels but the station still has a
+        # valid start time.
+        net_2 = net.select(time=UTCDateTime(2000, 1, 1), keep_empty=True)
+        self.assertEqual(len(net_2), 1)
+        self.assertEqual(sum(len(i) for i in net_2), 0)
+
+        # location, channel, time, starttime, endtime, and sampling_rate are
+        # also passed on to the station selector.
+        select_kwargs = {
+            "location": "00",
+            "channel": "EHE",
+            "time": UTCDateTime(2001, 1, 1),
+            "sampling_rate": 123.0,
+            "starttime": UTCDateTime(2002, 1, 1),
+            "endtime": UTCDateTime(2003, 1, 1)}
+
+        with mock.patch("obspy.core.inventory.station.Station.select") as p:
+            p.return_value = obspy.core.inventory.station.Station("FUR", 1,
+                                                                  2, 3)
+            net.select(**select_kwargs)
+
+        self.assertEqual(p.call_args[1], select_kwargs)
 
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
