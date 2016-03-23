@@ -426,11 +426,16 @@ class Inventory(ComparingObject):
                                      endtime=endtime):
                     continue
 
+            has_stations = bool(net.stations)
+
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate, keep_empty=keep_empty)
-            if not keep_empty and not net_.stations:
+
+            # If the network previously had stations but no longer has any
+            # and keep_empty is False: Skip the network.
+            if has_stations and not keep_empty and not net_.stations:
                 continue
             networks.append(net_)
         inv = copy.copy(self)
