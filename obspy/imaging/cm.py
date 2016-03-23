@@ -201,6 +201,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import glob
 import inspect
 import os
 
@@ -230,17 +231,20 @@ def _get_cmap(file_name, lut=None, reverse=False):
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
+    file_name = file_name.strip()
+    name, suffix = os.path.splitext(file_name)
+    directory = os.path.dirname(os.path.abspath(
+        inspect.getfile(inspect.currentframe())))
+    directory = os.path.join(directory, "data")
+    full_path = os.path.join(directory, file_name)
     # check if it is npz -> segmented colormap or npy -> listed colormap
-    name, ending = file_name.strip().rsplit('.')
-    if ending == 'npz':
+    # do it like matplotlib, append "_r" to reverted versions
+    if reverse:
+        name += "_r"
+
+    if suffix == '.npz':
         # segmented colormap
-        directory = os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe())))
-        directory = os.path.join(directory, "data")
-        if name.endswith(".npz"):
-            name = name.rsplit(".npz", 1)[0]
-        filename = os.path.join(directory, file_name)
-        data = dict(np.load(filename))
+        data = dict(np.load(full_path))
         if reverse:
             data_r = {}
             for key, val in data.items():
@@ -252,30 +256,45 @@ def _get_cmap(file_name, lut=None, reverse=False):
             name += "_r"
         kwargs = lut and {"N": lut} or {}
         cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
-        return cmap
-    elif ending == 'npy':
+    elif suffix == '.npy':
         # listed colormap
-        directory = os.path.dirname(os.path.abspath(
-            inspect.getfile(inspect.currentframe())))
-        directory = os.path.join(directory, "data")
-        if name.endswith(".npy"):
-            name = name.rsplit(".npy", 1)[0]
-        filename = os.path.join(directory, file_name)
-        data = np.load(filename)
+        data = np.load(full_path)
         if reverse:
             data = data[::-1]
             name += "_r"
         cmap = ListedColormap(data, name=name)
-        return cmap
     else:
-        raise ValueError('file ending .{} not recognized'.format(ending))
+        raise ValueError('file suffix {} not recognized.'.format(suffix))
 
-viridis = _get_cmap("viridis.npz")
-viridis_r = _get_cmap("viridis.npz", reverse=True)
-viridis_white = _get_cmap("viridis_white.npy")
-viridis_white_r = _get_cmap("viridis_white.npy", reverse=True)
-obspy_sequential = viridis
-obspy_sequential_r = viridis_r
+    return cmap
+
+
+def _get_all_cmaps():
+    """
+    Return all colormaps in "obspy/imaging/data" directory, including reversed
+    versions.
+
+    :rtype: dict
+    """
+    cmaps = {}
+    cm_file_pattern = os.path.join(
+        os.path.abspath(os.path.dirname(
+            inspect.getfile(inspect.currentframe()))),
+        "data", "*.np[yz]")
+    for filename in glob.glob(cm_file_pattern):
+        filename = os.path.basename(filename)
+        for reverse in (True, False):
+            cmap = _get_cmap(filename, reverse=reverse)
+            cmaps[cmap.name] = cmap
+    return cmaps
+
+
+# inject all colormaps into namespace
+_globals = globals()
+_globals.update(_get_all_cmaps())
+
+obspy_sequential = _globals["viridis"]
+obspy_sequential_r = _globals["viridis_r"]
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
 pqlx = _get_cmap("pqlx.npz")
