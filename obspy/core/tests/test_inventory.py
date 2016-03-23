@@ -310,6 +310,31 @@ class InventoryTestCase(unittest.TestCase):
         self.assertEqual(len(inv.select(endtime=UTCDateTime(2016, 1, 1),
                                         keep_empty=True)), 2)
 
+    def test_inventory_select_with_empty_networks(self):
+        """
+        Tests the behaviour of the Inventory.select() method with empty
+        Network objects.
+        """
+        inv = read_inventory()
+
+        # Empty all networks.
+        for net in inv:
+            net.stations = []
+
+        self.assertEqual(len(inv), 2)
+        self.assertEqual(sum(len(net) for net in inv), 0)
+
+        # Nothing selected, nothing should change.
+        self.assertEqual(len(inv), 2)
+        # Same if everything is selected.
+        self.assertEqual(len(inv.select(network="*")), 2)
+        # Select only one.
+        self.assertEqual(len(inv.select(network="BW")), 1)
+        self.assertEqual(len(inv.select(network="G?")), 1)
+        # Should only be empty if trying to select something that does not
+        # exist.
+        self.assertEqual(len(inv.select(network="RR")), 0)
+
 
 @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
 class InventoryBasemapTestCase(unittest.TestCase):
