@@ -1,4 +1,4 @@
-1.0.x:
+1.0.1: (doi: 10.5281/zenodo.48254)
  - General:
    * Some methods might have unnecessarily upcasted float32 arrays to float64.
      Now methods for which it makes sense and which don't lose accuracy don't
