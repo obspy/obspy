@@ -57,7 +57,7 @@ class ParserTestCase(unittest.TestCase):
             self.assertTrue('date' and 'required' in
                             str(w[-1].message).lower())
             # Triggers a warning.
-            paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
+            paz = parser.get_paz("NZ.DCZ.20.HNZ", t)
             result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
                       'poles': [(-981 + 1009j), (-981 - 1009j),
                                 (-3290 + 1263j), (-3290 - 1263j)],
@@ -448,7 +448,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         # test for multiple blockette 53s using II dataless
         sp = Parser(os.path.join(self.path, 'dataless.seed.II_COCO'))
-        paz = sp.getPAZ("II.COCO.00.BHZ", UTCDateTime("2013-01-01"))
+        paz = sp.get_paz("II.COCO.00.BHZ", UTCDateTime("2013-01-01"))
         result = {'gain': 1057.5083723679224,
                   'poles': [(-0.004799989149937387 + 0j),
                             (-0.07341022385496342 + 0j),
