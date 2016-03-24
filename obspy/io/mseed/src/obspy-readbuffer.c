@@ -185,7 +185,7 @@ void empty_print(char *string) {}
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long (*allocData) (int, char),
+                 int header_byteorder, long long (*allocData) (int, char),
                  void (*diag_print) (char*), void (*log_print) (char*))
 {
     int retcode = 0;

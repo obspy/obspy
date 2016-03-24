@@ -340,7 +340,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     # XXX: Do this properly!
     # Define Python callback function for use in C function. Return a long so
     # it hopefully works on 32 and 64 bit systems.
-    alloc_data = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
+    alloc_data = C.CFUNCTYPE(C.c_longlong, C.c_int, C.c_char)(allocate_data)
 
     # Collect exceptions. They cannot be raised in the callback as they
     # could never be caught then. They are collected an raised later on.
