@@ -49,15 +49,18 @@ class SSLWrapper:
             if chunk[0:8] != b"Salted__":
                 raise Exception('Invalid first chunk (expected: Salted__')
             [key, iv] = self._get_key_iv(self._password, chunk[8:16])
-            chunk = chunk[16:]
-            if len(chunk) <= 0:
-                return ''
             if hasM2Crypto:
                 self._cypher = EVP.Cipher('des_cbc', key, iv, 0)
-                return self._cypher.update(chunk)
             else:
                 self._cypher = DES.new(key, DES.MODE_CBC, iv)
+            chunk = chunk[16:]
+        if len(chunk) > 0:
+            if hasM2Crypto:
+                return self._cypher.update(chunk)
+            else:
                 return self._cypher.decrypt(chunk)
+        else:
+            return b""
 
     def final(self):
         if self._cypher is None:
