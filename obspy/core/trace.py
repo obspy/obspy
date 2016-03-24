@@ -1616,7 +1616,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         # resample in the frequency domain. Make sure the byteorder is native.
         x = rfft(self.data.newbyteorder("="))
-        x = np.insert(x, 1, 0)
+        # Cast the value to be inserted to the same dtype as the array to avoid
+        # issues with numpy rule 'safe'.
+        x = np.insert(x, 1, x.dtype.type(0))
         if self.stats.npts % 2 == 0:
             x = np.append(x, [0])
         x_r = x[::2]
