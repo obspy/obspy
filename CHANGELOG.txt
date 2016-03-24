@@ -30,6 +30,8 @@
    * The evdp header can be set again. (see #1345)
    * Correctly propagating sampling rate changes to the SAC headers.
      (see #1317)
+   * Always set nvhdr, leven, lovrok, iftype to ensure valid SAC files.
+     (see #1204)
  - obspy.io.xseed:
    * The Parser.get_paz() method now works with multiple blockette 53s.
      (see #1281)
