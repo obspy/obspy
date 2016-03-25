@@ -185,7 +185,7 @@ void empty_print(char *string) {}
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long (*allocData) (int, char),
+                 int header_byteorder, long long (*allocData) (int, char),
                  void (*diag_print) (char*), void (*log_print) (char*))
 {
     int retcode = 0;
@@ -213,7 +213,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     hptime_t lastgap = 0;
     hptime_t hptimetol = 0;
     hptime_t nhptimetol = 0;
-    long data_offset;
+    long long data_offset;
     LinkedRecordList *recordHead = NULL;
     LinkedRecordList *recordPrevious = NULL;
     LinkedRecordList *recordCurrent = NULL;
@@ -552,14 +552,14 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
 
             // Loop over all records, write the data to the buffer and free the msr structures.
             recordCurrent = segmentCurrent->firstRecord;
-            data_offset = (long)(segmentCurrent->datasamples);
+            data_offset = (long long)(segmentCurrent->datasamples);
             while (recordCurrent != NULL) {
                 datasize = recordCurrent->record->samplecnt * ms_samplesize(recordCurrent->record->sampletype);
                 memcpy((void *)data_offset, recordCurrent->record->datasamples, datasize);
                 // Free the record.
                 msr_free(&(recordCurrent->record));
                 // Increase the data_offset and the record.
-                data_offset += (long)datasize;
+                data_offset += (long long)datasize;
                 recordCurrent = recordCurrent->next;
             }
 
