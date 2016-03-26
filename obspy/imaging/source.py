@@ -575,7 +575,8 @@ def _equalarea_spherical_grid(nlat=30):
     ndim = 3
     colats = np.linspace(0., np.pi, nlat)
     norms = np.sin(colats)
-    nlons = (2*nlat * norms + 1).astype(int)  # scale number of point with lat
+    # Scale number of point with latitude.
+    nlons = (2 * nlat * norms + 1).astype(np.int_)
 
     # make colat/lon grid
     colatgrid, longrid = [], []
