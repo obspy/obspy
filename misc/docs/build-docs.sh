@@ -22,7 +22,6 @@ CONDATMPNAME=tmp_build_docs
 CONDATMPBIN=$CONDABASE/env/$CONDATMPNAME/bin
 BASEDIR=$HOME/update-docs
 LOG=$BASEDIR/log.txt
-TGZ=$HOME/.backup/update-docs.tgz
 GITDIR=$BASEDIR/src/obspy
 PIDFILE=$BASEDIR/update-docs.pid
 DOCSNAME=obspy-${GITTARGET}-documentation
@@ -41,6 +40,7 @@ $CONDAMAINBIN/conda create -y -n tmp_build_docs --clone py3-docs-master
 # clean directory
 rm -rf $BASEDIR
 mkdir -p $BASEDIR
+mkdir -p $GITDIR
 
 # check if script is alread running
 test -f $PIDFILE && echo "doc building aborted: pid file exists" && exit 1
@@ -55,9 +55,8 @@ function cleanup {
 rm -f $PIDFILE
 }
 trap cleanup EXIT
-# unpack basedir
+
 cd $HOME
-tar -xzf $TGZ
 
 # clone github repository
 git clone https://github.com/${GITFORK}/obspy.git $GITDIR
@@ -75,9 +74,6 @@ then
     git remote add upstream git://github.com/obspy/obspy.git
     git fetch upstream
 fi
-
-# use unpacked python
-# export PATH=$BASEDIR/bin:$PATH
 
 # run develop.sh
 cd $GITDIR
