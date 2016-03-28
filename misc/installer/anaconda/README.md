@@ -44,7 +44,7 @@ $ anaconda upload -u obspy linux-64/obspy*
 On OSX just execute (from this directory)
 
 ```bash
-$ conda build --py all obspy
+$ conda build --py 27 --py 33 --py 34 --py 35 obspy
 ```
 
 Afterwards check (on of the last lines in the output) where the packages are stored and
