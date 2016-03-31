@@ -459,7 +459,7 @@ class Client(object):
         else:
             return False
 
-    def get_all_nslc(self, sds_type=None):
+    def get_all_nslc(self, sds_type=None, datetime=None):
         """
         Return information on what streams are included in archive.
 
@@ -470,6 +470,11 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Only return all streams that have data at specified
+            time (checks if file exists that should have the data, i.e. streams
+            might be returned that have data on the same day but not at exactly
+            this point in time).
         :rtype: list
         :returns: List of (network, station, location, channel) 4-tuples of all
             available streams in archive.
@@ -477,11 +482,14 @@ class Client(object):
         sds_type = sds_type or self.sds_type
         result = set()
         # wildcarded pattern to match all files of interest
-        pattern = re.sub(
-            FORMAT_STR_PLACEHOLDER_REGEX,
-            _wildcarded_except(["sds_type"]),
-            self.FMTSTR).format(sds_type=sds_type)
-        pattern = os.path.join(self.sds_root, pattern)
+        if datetime is None:
+            pattern = re.sub(
+                FORMAT_STR_PLACEHOLDER_REGEX,
+                _wildcarded_except(["sds_type"]),
+                self.FMTSTR).format(sds_type=sds_type)
+            pattern = os.path.join(self.sds_root, pattern)
+        else:
+            pattern = self._get_filename("*", "*", "*", "*", datetime)
         all_files = glob.glob(pattern)
         # set up inverse regex to extract kwargs/values from full paths
         pattern_ = os.path.join(self.sds_root, self.FMTSTR)
