@@ -16,9 +16,12 @@ do
    esac
 done
 
+CONDABASE=$HOME/anaconda3
+CONDAMAINBIN=$CONDABASE/bin
+CONDATMPNAME=tmp_build_docs
+CONDATMPBIN=$CONDABASE/env/$CONDATMPNAME/bin
 BASEDIR=$HOME/update-docs
 LOG=$BASEDIR/log.txt
-TGZ=$HOME/.backup/update-docs.tgz
 GITDIR=$BASEDIR/src/obspy
 PIDFILE=$BASEDIR/update-docs.pid
 DOCSNAME=obspy-${GITTARGET}-documentation
@@ -28,9 +31,16 @@ DOCSETDIR=$HOME/htdocs/docsets
 DOCSETNAME="ObsPy ${GITTARGET}.docset"
 DOCSET=$DOCSETDIR/$DOCSETNAME
 
+# set up build env
+. $CONDAMAINBIN/deactivate
+$CONDAMAINBIN/conda env remove -y -n tmp_build_docs
+$CONDAMAINBIN/conda create -y -n tmp_build_docs --clone py3-docs-master
+. $CONDAMAINBIN/activate tmp_build_docs
+
 # clean directory
 rm -rf $BASEDIR
 mkdir -p $BASEDIR
+mkdir -p $GITDIR
 
 # check if script is alread running
 test -f $PIDFILE && echo "doc building aborted: pid file exists" && exit 1
@@ -45,9 +55,8 @@ function cleanup {
 rm -f $PIDFILE
 }
 trap cleanup EXIT
-# unpack basedir
+
 cd $HOME
-tar -xzf $TGZ
 
 # clone github repository
 git clone https://github.com/${GITFORK}/obspy.git $GITDIR
@@ -66,18 +75,16 @@ then
     git fetch upstream
 fi
 
-# use unpacked python
-export PATH=$BASEDIR/bin:$PATH
-
 # run develop.sh
 cd $GITDIR
 # export LDFLAGS="-lgcov"  # coverage on C code (make c_coverage)
-$BASEDIR/bin/python setup.py develop --verbose
+#$BASEDIR/bin/python setup.py develop --verbose
+python setup.py develop --verbose
 
 # keep some packages up to date
-$BASEDIR/bin/pip install --upgrade pip
-$BASEDIR/bin/pip install --upgrade --no-deps pep8==1.5.7 flake8
-$BASEDIR/bin/pip install pyimgur
+# $BASEDIR/bin/pip install --upgrade pip
+# $BASEDIR/bin/pip install --upgrade --no-deps pep8==1.5.7 flake8
+# $BASEDIR/bin/pip install pyimgur
 
 # make docs
 cd $GITDIR/misc/docs
@@ -116,11 +123,11 @@ then
     cat $GITDIR/misc/docs/docset_css_fixes.css >> "$DOCSETNAME/Contents/Resources/Documents/_static/css/custom.css"
     rm -f obspy-master.tgz
     tar --exclude='.DS_Store' -cvzf obspy-master.tgz "$DOCSETNAME"
-    OBSPY_VERSION=`$BASEDIR/bin/python -c 'import obspy; print obspy.__version__'`
+    OBSPY_VERSION=`python -c 'import obspy; print obspy.__version__'`
     sed "s#<version>.*</version>#<version>${OBSPY_VERSION}</version>#" --in-place obspy-master.xml
 fi
 
 
 # report
-$BASEDIR/bin/obspy-runtests -v -x seishub -n sphinx -r --all --keep-images
+$CONDATMPBIN/obspy-runtests -v -x seishub -n sphinx -r --all --keep-images
 exit 0

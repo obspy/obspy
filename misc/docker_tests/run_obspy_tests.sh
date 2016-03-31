@@ -27,10 +27,30 @@ mkdir -p $TEMP_PATH
 
 # Copy ObsPy to the temp path. This path is the execution context of the Docker images.
 mkdir -p $NEW_OBSPY_PATH
-cp -r $OBSPY_PATH/obspy $NEW_OBSPY_PATH/obspy/
-cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
-cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
-rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
+# depending on env variable OBSPY_DOCKER_TEST_SOURCE_TREE ("cp" or "clone")
+# we either copy the obspy tree (potentially with local changes) or
+# `git clone` from it for a tree free of local changes
+if [ ! "$OBSPY_DOCKER_TEST_SOURCE_TREE" ]
+then
+    # default to "cp" to not change default behavior
+    OBSPY_DOCKER_TEST_SOURCE_TREE="cp"
+fi
+if [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "cp" ]
+then
+    cp -r $OBSPY_PATH/obspy $NEW_OBSPY_PATH/obspy/
+    cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
+    cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
+    rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
+elif [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "clone" ]
+then
+    git clone file://$OBSPY_PATH $NEW_OBSPY_PATH
+    # we're cloning so we have a non-dirty version actually
+    cat $OBSPY_PATH/obspy/RELEASE-VERSION | sed 's#\.dirty$##' > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
+else
+    echo "Bad value for OBSPY_DOCKER_TEST_SOURCE_TREE: $OBSPY_DOCKER_TEST_SOURCE_TREE"
+    exit 1
+fi
+
 
 # Copy the install script.
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh

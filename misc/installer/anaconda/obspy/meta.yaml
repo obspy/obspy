@@ -4,12 +4,12 @@
 
 package:
   name: obspy
-  version: "1.0.0"
+  version: "1.0.1"
 
 source:
   fn: obspy-master.zip
-  url: https://pypi.python.org/packages/source/o/obspy/obspy-1.0.0.zip
-  md5: 40925691d3b0eaeac39b0513c46cf306
+  url: https://pypi.python.org/packages/source/o/obspy/obspy-1.0.1.zip
+  md5: be7ca359c2898038d2da2d8486276bfd
   # alternatively we can use a local path, however this fails with
   # shutil.Error: [('/path/to/obspy/misc/docs/source/tutorial/ObsPyTutorial.pdf',
   # '/path/to/miniconda3/conda-bld/work/misc/docs/source/tutorial/ObsPyTutorial.pdf',
@@ -40,7 +40,7 @@ requirements:
     - flake8
     - decorator
     - requests
-    - pyproj
+    - pyproj # [not py33]
     - nose
 test:
   imports:
