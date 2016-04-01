@@ -31,7 +31,6 @@
        ~trigger.pk_baer
        ~polarization.polarization_analysis
        ~spectral_estimation.PPSD
-       ~spectral_estimation.psd
        ~trigger.recursive_sta_lta
        ~rotate.rotate_ne_rt
        ~invsim.simulate_seismometer
