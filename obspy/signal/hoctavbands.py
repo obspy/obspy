@@ -54,8 +54,8 @@ def sonogram(data, fs, fc1, nofb, no_win):
     c = fftpack.fft(data, nfft)
     z_tot = np.sum(np.abs(c)**2, axis=1)
 
-    start = np.around(fmin * nfft / fs, 0).astype(int) - 1
-    end = np.around(fmax * nfft / fs, 0).astype(int)
+    start = np.around(fmin * nfft / fs, 0).astype(np.int_) - 1
+    end = np.around(fmax * nfft / fs, 0).astype(np.int_)
     z = np.zeros([c.shape[0], nofb])
     for i in range(nofb):
         z[:, i] = np.sum(np.abs(c[:, start[i]:end[i]])**2, axis=1)
