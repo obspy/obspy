@@ -786,6 +786,8 @@ class Trace(object):
                 data = [lt.data[:t1], gap, lt.data[t2:]]
             elif method == 1:
                 data = [lt.data]
+            elif method == 2:
+                data = [lt.data]
             else:
                 raise NotImplementedError
         elif delta == 0:
@@ -794,6 +796,7 @@ class Trace(object):
         else:
             # gap
             # use fixed value or interpolate in between
+            #gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             gap = create_empty_data_chunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on NumPy array type
