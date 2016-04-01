@@ -1,7 +1,10 @@
 master:
  - obspy.core
    * Stream/Trace.write() can now autodetect file format from file extension.
- - obspy.clients.fdsn
+   * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
+     get matplotlib datetime float representation (which can be used in
+     time-based matplotlib axes, e.g. by Stream.plot()).
+ - obspy.clients.fdsn:
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given

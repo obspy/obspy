@@ -1003,6 +1003,19 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEqual(UTCDateTime('2015-07-03-06-42-1.5123'),
                          UTCDateTime(2015, 7, 3, 6, 42, 1, 512300))
 
+    def test_matplotlib_date(self):
+        """
+        Test convenience method and property for conversion to matplotlib
+        datetime float numbers.
+        """
+        for t_, expected in zip(
+                ("1986-05-02T13:44:12.567890Z", "2009-08-24T00:20:07.700000Z",
+                 "2026-11-27T03:12:45.4"),
+                (725128.5723676839, 733643.0139780092, 739947.1338587963)):
+            t = UTCDateTime(t_)
+            np.testing.assert_almost_equal(
+                t.matplotlib_date, expected, decimal=8)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
