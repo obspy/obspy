@@ -16,7 +16,7 @@ List of all colormaps:
     * obspy_sequential (alias for `viridis`_)
     * obspy_sequential_r (alias for `viridis_r`_)
     * obspy_divergent (alias for matplotlib's RdBu_r)
-    * obspy_divergent_r (alias for matplotlib's RdBu_r)
+    * obspy_divergent_r (alias for matplotlib's RdBu)
     * `pqlx`_
 
 .. plot::
@@ -464,10 +464,10 @@ def _colormap_plot_beamforming_polar(cmaps):
     baz[baz < 0.0] += 360
     # choose number of fractions in plot (desirably 360 degree/N is an
     # integer!)
-    N = 36
-    N2 = 30
-    abins = np.arange(N + 1) * 360. / N
-    sbins = np.linspace(0, 3, N2 + 1)
+    num = 36
+    num2 = 30
+    abins = np.arange(num + 1) * 360. / num
+    sbins = np.linspace(0, 3, num2 + 1)
     # sum rel power in bins given by abins and sbins
     hist, baz_edges, sl_edges = \
         np.histogram2d(baz, slow, bins=[abins, sbins], weights=rel_power)
@@ -484,9 +484,9 @@ def _colormap_plot_beamforming_polar(cmaps):
         ax.set_theta_zero_location("N")
         # circle through backazimuth
         for i, row in enumerate(hist):
-            ax.bar(left=(i * dw) * np.ones(N2),
-                   height=dh * np.ones(N2),
-                   width=dw, bottom=dh * np.arange(N2),
+            ax.bar(left=(i * dw) * np.ones(num2),
+                   height=dh * np.ones(num2),
+                   width=dw, bottom=dh * np.arange(num2),
                    color=cmap(row / hist.max()))
         ax.set_xticks(np.linspace(0, 2 * np.pi, 4, endpoint=False))
         ax.set_xticklabels(['N', 'E', 'S', 'W'])
