@@ -370,11 +370,19 @@ def main(argv=None):
         # define a gap as over 0.8 delta after expected sample time
         gap_indices = diffs > 0.8 * _samp_int[:-1]
         gap_indices = np.append(gap_indices, False)
+        # define an overlap as over 0.8 delta before expected sample time
+        overlap_indices = diffs < -0.8 * _samp_int[:-1]
+        overlap_indices = np.append(overlap_indices, False)
         has_gap |= any(gap_indices)
+        has_gap |= any(overlap_indices)
         if has_gap:
             # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
+            overlaps_end = startend[overlap_indices, 1]
+            overlaps_start = startend[np.roll(overlap_indices, 1), 0]
+            # but now, manually add start/end for gaps at start/end of user
+            # specified start/end times
             if gap_at_start:
                 gaps_start = np.append(gaps_start, args.start_time)
                 gaps_end = np.append(gaps_end, data_start)
@@ -382,12 +390,27 @@ def main(argv=None):
                 gaps_start = np.append(gaps_start, data_end)
                 gaps_end = np.append(gaps_end, args.end_time)
             if not args.no_gaps:
-                rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_,
-                                   0.8)
-                         for start_, end_ in zip(gaps_start, gaps_end)]
-                ax.add_collection(PatchCollection(rects, color="r"))
+                if len(gaps_start):
+                    # gaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(gaps_start, gaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="r"))
+                if len(overlaps_start):
+                    # overlaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(overlaps_start, overlaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="b"))
             if args.print_gaps:
-                for start_, end_ in zip(gaps_start, gaps_end):
+                _starts = np.concatenate((gaps_start, overlaps_end))
+                _ends = np.concatenate((gaps_end, overlaps_start))
+                sort_order = np.argsort(_starts)
+                _starts = _starts[sort_order]
+                _ends = _ends[sort_order]
+                for start_, end_ in zip(_starts, _ends):
                     start_, end_ = num2date((start_, end_))
                     start_ = UTCDateTime(start_.isoformat())
                     end_ = UTCDateTime(end_.isoformat())
