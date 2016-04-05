@@ -76,7 +76,7 @@ class ScanTestCase(unittest.TestCase):
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, "
-            "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
+            "2008-01-15T00:00:00.900000, SLIST, INTEGER, Counts",
             "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
             "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
