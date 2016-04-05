@@ -359,10 +359,10 @@ def main(argv=None):
             args.end_time and
             args.end_time > data_end and
             args.end_time - data_end)
-        if args.start_time and gap_at_start:
+        if gap_at_start:
             gapsum += gap_at_start
             has_gap = True
-        if args.end_time and gap_at_end:
+        if gap_at_end:
             gapsum += gap_at_end
             has_gap = True
         perc = (timerange - gapsum) / timerange
@@ -375,10 +375,10 @@ def main(argv=None):
             # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
-            if args.start_time and gap_at_start:
+            if gap_at_start:
                 gaps_start = np.append(gaps_start, args.start_time)
                 gaps_end = np.append(gaps_end, data_start)
-            if args.end_time and gap_at_end:
+            if gap_at_end:
                 gaps_start = np.append(gaps_start, data_end)
                 gaps_end = np.append(gaps_end, args.end_time)
             if not args.no_gaps:
