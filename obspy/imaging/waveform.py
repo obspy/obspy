@@ -1228,12 +1228,10 @@ class WaveformPlotting(object):
 
     def __sect_init_time(self):
         """
-        Define the time vector for each trace \n
-        If you have supplied negative distances will compute the vred
-        using -vred (e.g. if vred=XXX, positive direction vred=XXX,
-        negative direction vred=-XXX) \n
-        Used for example, to plot a section plot when the earthquake occurs 
-        in the middle of the array
+        Define the time vector for each trace
+        If you uhave supplied negative distances will compute the vred
+        using -vred, used for example in a section plot when the earthquake
+        occurs in the middle of geophone array.
         """
         reftime = self.sect_reftime or min(self._tr_starttimes)
         self._tr_times = []
