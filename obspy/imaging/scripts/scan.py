@@ -161,11 +161,26 @@ def write_npz(file_, data_dict, samp_int_dict):
     npz_dict = data_dict.copy()
     for key in samp_int_dict.keys():
         npz_dict[key + '_SAMP'] = samp_int_dict[key]
+    npz_dict["__version__"] = __version__
     np.savez(file_, **npz_dict)
 
 
 def load_npz(file_, data_dict, samp_int_dict):
     npz_dict = np.load(file_)
+    # check obspy version the npz was done with
+    if "__version__" in npz_dict:
+        version_string = npz_dict["__version__"].item()
+    else:
+        version_string = None
+    # npz data computed with obspy < 1.1.0 are slightly different
+    if version_string is None or \
+            map(int, version_string.split(".")[:3]) < (1, 1, 0):
+        msg = ("Loading npz data computed with ObsPy < 1.1.0. Definition of "
+               "end times of individual time slices was changed by one time "
+               "the sampling interval (see #XXX), so it is best to recompute "
+               "the npz from the raw data once.")
+        warnings.warn(msg)
+    # load data from npz
     for key in npz_dict.keys():
         if key.endswith('_SAMP'):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
