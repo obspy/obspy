@@ -1,5 +1,5 @@
 master:
- - obspy.core
+ - obspy.core:
    * Stream/Trace.write() can now autodetect file format from file extension.
    * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
      get matplotlib datetime float representation (which can be used in
@@ -16,6 +16,9 @@ master:
      goes to white instead of yellow but remains perceptually uniform. It
      is especially useful for printing when an image should merge with the
      white background.
+ - obspy.scripts:
+   * obspy-scan command line script now also plots and prints overlaps
+     alongside gaps (see #1366)
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.db:

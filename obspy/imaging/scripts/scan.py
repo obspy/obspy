@@ -177,7 +177,7 @@ def load_npz(file_, data_dict, samp_int_dict):
             map(int, version_string.split(".")[:3]) < (1, 1, 0):
         msg = ("Loading npz data computed with ObsPy < 1.1.0. Definition of "
                "end times of individual time slices was changed by one time "
-               "the sampling interval (see #XXX), so it is best to recompute "
+               "the sampling interval (see #1366), so it is best to recompute "
                "the npz from the raw data once.")
         warnings.warn(msg)
     # load data from npz
