@@ -99,12 +99,17 @@ class SeismicArray(object):
 
     def inventory_cull(self, st):
         """
-        Shrink array inventory to stations represented in given data.
+        Shrink array inventory to channels present in the given stream.
 
-        Permanently remove from the array inventory all entries for stations
-        that do not have traces in given :class:`~obspy.core.stream.Stream` st.
-        This may be useful e.g. if data is not consistently available from
-        every channel in an array.
+        Permanently remove from the array inventory all entries for stations or
+        channels that do not have traces in the given
+        :class:`~obspy.core.stream.Stream` st. This may be useful e.g. if data
+        is not consistently available from every channel in an array, or if a
+        web service has returned many more inventory objects than required. The
+        method selects channels based on matching network, station, location
+        and channel codes to the ones given in the trace headers. Furthermore,
+        if a time range is specified for a channel, it will only be kept if it
+        matches the time span of its corresponding trace.
 
         If you wish to keep the original inventory, make a copy first:
 
@@ -125,6 +130,15 @@ class SeismicArray(object):
                                              cha.location_code, cha.code)
                        not in stations_present):
                         del stn.channels[i]
+                        continue
+                        # Also remove if it doesn't cover the time of the
+                        # trace:
+                    for tr in st.select(network=netw.code, station=stn.code,
+                                        location=cha.location_code,
+                                        channel=cha.code):
+                        if not cha.is_active(starttime=tr.stats.starttime,
+                                             endtime=tr.stats.endtime):
+                            del stn.channels[i]
                 stn.total_number_of_channels = len(stn.channels)
                 # no point keeping stations with all channels removed
                 if len(stn.channels) == 0:

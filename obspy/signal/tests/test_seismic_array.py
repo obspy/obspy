@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-The array_analysis test suite.
+The SeismicArray test suite.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -17,6 +17,7 @@ from obspy.signal.array_analysis import SeismicArray
 from obspy.signal.util import util_lon_lat
 from obspy import read
 from obspy.core.inventory import read_inventory
+from obspy.core.inventory.channel import Channel
 from obspy.core.inventory.station import Station
 from obspy.core.inventory.network import Network
 from obspy.core.inventory.inventory import Inventory
@@ -118,6 +119,41 @@ class SeismicArrayTestCase(unittest.TestCase):
         self.assertEqual(self.geometry_array.geometrical_center,
                          {'absolute_height_in_km': 0.0,
                           'latitude': 1.0, 'longitude': 1.0})
+
+    def test_inventory_cull(self):
+        time = UTCDateTime('2016-04-05T06:44:0.0Z')
+        # Method should work even when traces do not cover same times.
+        st = Stream([
+            Trace(data=np.empty(20), header={'network': 'BP', 'station':
+                  'CCRB', 'location': '1', 'channel': 'BP1',
+                  'starttime': time}),
+            Trace(data=np.empty(20), header={'network': 'BP', 'station':
+                  'EADB', 'channel': 'BPE', 'starttime': time-60})])
+        # Set up channels, correct ones first. The eadb channel should also be
+        # selected despite no given time.
+        kwargs = {'latitude': 0, 'longitude': 0, 'elevation': 0, 'depth': 0}
+        ch_ccrb = Channel(code='BP1', start_date=time-10, end_date=time+60,
+                          location_code='1', **kwargs)
+        wrong = [Channel(code='BP1', start_date=time-60, end_date=time-10,
+                         location_code='1', **kwargs),
+                 Channel(code='BP2', location_code='1', **kwargs)]
+        ccrb = Station('CCRB', 0, 0, 0, channels=[ch_ccrb] + wrong)
+
+        ch_eadb = Channel(code='BPE', location_code='', **kwargs)
+        wrong = Channel(code='BPE', location_code='2', **kwargs)
+        eadb = Station('EADB', 0, 0, 0, channels=[ch_eadb, wrong])
+        wrong_stn = Station('VCAB', 0, 0, 0, channels=[ch_eadb, wrong])
+
+        array = SeismicArray('testarray', Inventory([Network('BP',
+                             stations=[ccrb, eadb, wrong_stn])], 'testinv'))
+
+        array.inventory_cull(st)
+        print(array.inventory)
+        self.assertEqual(array.inventory[0][0][0], ch_ccrb)
+        self.assertEqual(array.inventory[0][1][0], ch_eadb)
+        tbc = [array.inventory.networks, array.inventory[0].stations,
+               array.inventory[0][0].channels, array.inventory[0][1].channels]
+        self.assertEqual([len(item) for item in tbc], [1, 2, 1, 1])
 
     def test_covariance_array_processing(self):
         # Generate some synthetic data for the FK/Capon tests
