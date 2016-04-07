@@ -27,10 +27,7 @@ for seismology.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from __future__ import absolute_import, division, print_function
 
 import warnings
 import requests
@@ -39,6 +36,7 @@ import requests
 from obspy.core.utcdatetime import UTCDateTime  # NOQA
 from obspy.core.util import _get_version_string
 __version__ = _get_version_string(abbrev=10)
+from obspy.core.compatibility import PY2
 from obspy.core.trace import Trace  # NOQA
 from obspy.core.stream import Stream, read
 from obspy.core.event import read_events, Catalog
@@ -50,7 +48,6 @@ from obspy.core.util.obspy_types import (
 __all__ = ["UTCDateTime", "Trace", "__version__", "Stream", "read",
            "read_events", "Catalog", "read_inventory", "ObsPyException",
            "ObsPyReadingError"]
-__all__ = [native_str(i) for i in __all__]
 
 
 # insert supported read/write format plugin lists dynamically in docstrings
