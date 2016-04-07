@@ -8,11 +8,9 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
+import collections
 import doctest
 import inspect
 import io
@@ -20,7 +18,6 @@ import os
 import pkg_resources
 import sys
 import tempfile
-from collections import OrderedDict
 
 from pkg_resources import iter_entry_points, load_entry_point
 import numpy as np
@@ -148,9 +145,6 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
                  mask = ...,
                  ...)
     """
-    # For compatibility with NumPy 1.4
-    if isinstance(dtype, str):
-        dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
         # fill with nan if float number and otherwise with a very small number
@@ -198,8 +192,7 @@ def get_example_file(filename):
     """
     for module in ALL_MODULES:
         try:
-            mod = __import__("obspy.%s" % module,
-                             fromlist=[native_str("obspy")])
+            mod = __import__("obspy.%s" % module, fromlist=["obspy"])
         except ImportError:
             continue
         file_ = os.path.join(mod.__path__[0], "tests", "data", filename)
@@ -247,7 +240,7 @@ def _get_ordered_entry_points(group, subgroup=None, order_list=[]):
     ep_dict = _get_entry_points(group, subgroup)
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
-    entry_points = OrderedDict()
+    entry_points = collections.OrderedDict()
     for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)

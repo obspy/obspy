@@ -8,11 +8,9 @@ Various types used in ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
-from collections import OrderedDict
+import collections
 
 try:
     import __builtin__
@@ -81,7 +79,8 @@ class Enum(object):
     __isabstractmethod__ = False
 
     def __init__(self, enums, replace={}):
-        self.__enums = OrderedDict((str(e).lower(), e) for e in enums)
+        self.__enums = collections.OrderedDict((
+            str(e).lower(), e) for e in enums)
         self.__replace = replace
 
     def __call__(self, enum):

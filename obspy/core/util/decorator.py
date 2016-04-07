@@ -8,10 +8,7 @@ Decorator used in ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from __future__ import absolute_import, division, print_function
 
 import functools
 import inspect
@@ -27,6 +24,7 @@ import zipfile
 import numpy as np
 from decorator import decorator
 
+from obspy.core.compatibility import PY2, string_types
 from obspy.core.util import get_example_file
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
@@ -145,7 +143,7 @@ def uncompress_file(func, filename, *args, **kwargs):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
-    if not isinstance(filename, (str, native_str)):
+    if not isinstance(filename, string_types):
         return func(filename, *args, **kwargs)
     elif not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
@@ -263,7 +261,7 @@ def map_example_filename(arg_kwarg_name):
         prefix = '/path/to/'
         # check kwargs
         if arg_kwarg_name in kwargs:
-            if isinstance(kwargs[arg_kwarg_name], (str, native_str)):
+            if isinstance(kwargs[arg_kwarg_name], string_types):
                 if re.match(prefix, kwargs[arg_kwarg_name]):
                     try:
                         kwargs[arg_kwarg_name] = \
@@ -285,8 +283,7 @@ def map_example_filename(arg_kwarg_name):
             except ValueError:
                 pass
             else:
-                if ind < len(args) and isinstance(args[ind], (str,
-                                                              native_str)):
+                if ind < len(args) and isinstance(args[ind], string_types):
                     # need to check length of args from inspect
                     if re.match(prefix, args[ind]):
                         try:

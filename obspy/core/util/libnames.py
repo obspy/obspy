@@ -8,8 +8,7 @@ Library name handling for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-# NO IMPORTS FROM OBSPY OR FUTURE IN THIS FILE! (file gets used at
-# installation time)
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 import ctypes
 import os
 import platform
