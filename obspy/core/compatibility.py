@@ -3,6 +3,7 @@
 Py3k compatibility module
 """
 import io
+import sys
 
 import numpy as np
 

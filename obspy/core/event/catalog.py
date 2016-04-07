@@ -17,10 +17,7 @@ This class hierarchy is closely modelled after the de-facto standard format
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import glob
 import io
@@ -31,6 +28,7 @@ import warnings
 import numpy as np
 from pkg_resources import load_entry_point
 
+from obspy.core.compatibility import string_types
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _read_from_plugin
 from obspy.core.util.base import ENTRY_POINTS, download_to_file
@@ -212,7 +210,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, (str, native_str)):
+        if not isinstance(index, string_types):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
@@ -801,7 +799,7 @@ def read_events(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_catalog()
-    elif not isinstance(pathname_or_url, (str, native_str)):
+    elif not isinstance(pathname_or_url, string_types):
         # not a string - we assume a file-like object
         try:
             # first try reading directly
