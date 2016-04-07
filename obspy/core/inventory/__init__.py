@@ -195,9 +195,7 @@ StationXML files, e.g. after making modifications.
 
 >>> inv.write('my_inventory.xml', format='STATIONXML')  # doctest: +SKIP
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 # Don't change order! .util must be first.
 from .util import (Angle, Azimuth, BaseNode, ClockDrift, Comment, Dip,

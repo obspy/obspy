@@ -9,10 +9,7 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible, native_str
+from __future__ import absolute_import, division, print_function
 
 import copy
 import fnmatch
@@ -22,6 +19,7 @@ import textwrap
 import warnings
 
 import obspy
+from obspy.core.compatibility import string_types, python_2_unicode_compatible
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
                                   _read_from_plugin, NamedTemporaryFile,
                                   download_to_file)
@@ -66,7 +64,7 @@ def read_inventory(path_or_file_object=None, format=None):
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
         return _create_example_inventory()
-    elif isinstance(path_or_file_object, (str, native_str)) and \
+    elif isinstance(path_or_file_object, string_types) and \
             "://" in path_or_file_object:
         # some URL
         # extract extension if any

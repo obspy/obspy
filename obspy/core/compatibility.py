@@ -126,3 +126,17 @@ def round_away(number):
         return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
+
+
+def python_2_unicode_compatible(cls):
+    """
+    A class decorator that defines __unicode__ and __str__ methods under Python
+    2. Under Python 3, this decorator is a no-op.
+
+    Take from the future package, original implementation comes from
+    django.utils.encoding.
+    """
+    if PY2:
+        cls.__unicode__ = cls.__str__
+        cls.__str__ = lambda self: self.__unicode__().encode('utf-8')
+    return cls
