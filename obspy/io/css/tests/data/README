@@ -31,3 +31,8 @@ Test data for CSS support of ObsPy:
 - Field 16: waveform directory name
 - Field 17: waveform file name
 - for meaning of other field see page 12 (15 in pdf) in ../../docs/SchemaReferenceMan.pdf
+
+'test_nnsa_kb.wfdisc'
+
+- similar layout to CSS: fields are the same but columns are different
+- for details, see page 27 (70 in pdf) in ../../docs/NNSA_KB_CORE_SchemaMan.pdf

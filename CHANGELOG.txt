@@ -9,6 +9,8 @@ master:
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given
      inventory object.
+ - obspy.css
+    * Read support for NNSA KB Core format waveform data. (see #1332)
 
 1.0.x:
  - <nothing yet>
