@@ -406,7 +406,7 @@ class TimeSeriesTrace(BaseTrace):
         super(TimeSeriesTrace, self).__init__(data=data)
         _data_sanity_checks(data)
         if header is None:
-           header = {}
+            header = {}
 
          # make sure Trace gets initialized with suitable ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data _data_sanity_checks  (data) # set some defaults if not set yet if header is None:
@@ -1503,6 +1503,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ... # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
+            
+        .. plot::
+
+            from obspy import read
+            from obspy.signal.invsim import corn_freq_2_paz
+            st = read()
+            tr = st[0]
+
 
             paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
                                   -251.33+0j,
