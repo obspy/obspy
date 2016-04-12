@@ -121,7 +121,7 @@ class SeismicArray(object):
         """
         inv = self.inventory
         # check what station/channel IDs are in the data
-        stations_present = list(set(tr.getId() for tr in st))
+        stations_present = list(set(tr.id for tr in st))
         # delete all channels that are not represented
         for k, netw in reversed(list(enumerate(inv.networks))):
             for j, stn in reversed(list(enumerate(netw.stations))):
@@ -2737,7 +2737,7 @@ class SeismicArray(object):
             singlet = 0.0
             if method == 'DLS':
                 for _j, tr in enumerate(stream.traces):
-                    station = tr.getId()
+                    station = tr.id
                     s = spoint[_j] + int(time_shift_table[slowness][station] *
                                          fs + 0.5)
                     shifted = tr.data[s: s + ndat]
