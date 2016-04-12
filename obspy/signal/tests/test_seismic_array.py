@@ -192,7 +192,8 @@ class SeismicArrayTestCase(unittest.TestCase):
         9.49584782e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
+        self.assertTrue(np.allclose(ref, np.array(out[:, 1:], dtype=float),
+                                    rtol=1e-6))
 
         out = self.fk_array._covariance_array_processing(*fk_args,
                                                          prewhiten=1, method=0)
@@ -205,7 +206,7 @@ class SeismicArrayTestCase(unittest.TestCase):
         1.32638966e-01 9.67131311e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        self.assertTrue(np.allclose(ref, out[:, 1:]))
+        self.assertTrue(np.allclose(ref, np.array(out[:, 1:], dtype=float)))
 
         # Tests for Capon
         out = self.fk_array._covariance_array_processing(*fk_args,
@@ -219,7 +220,8 @@ class SeismicArrayTestCase(unittest.TestCase):
         6.08349575e+03 6.08349575e+03  1.77709390e+02  2.50199920e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
+        self.assertTrue(np.allclose(ref, np.array(out[:, 1:], dtype=float),
+                                    rtol=1e-6))
 
         out = self.fk_array._covariance_array_processing(*fk_args,
                                                          prewhiten=1, method=1)
@@ -232,7 +234,8 @@ class SeismicArrayTestCase(unittest.TestCase):
         3.10761699e-02 7.38667657e+00  1.13099325e+01  1.52970585e+00
         """
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
-        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
+        self.assertTrue(np.allclose(ref, np.array(out[:, 1:], dtype=float),
+                                    rtol=1e-6))
 
     def test_get_stream_offset(self):
         """

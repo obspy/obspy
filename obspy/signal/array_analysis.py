@@ -21,7 +21,7 @@ import shutil
 import numpy as np
 import scipy as sp
 from scipy import interpolate
-from matplotlib import cm
+from obspy.imaging import cm
 from matplotlib.ticker import MaxNLocator
 from obspy.core import UTCDateTime
 from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
@@ -1205,7 +1205,7 @@ class SeismicArray(object):
             offset += nstep
 
             newstart += nstep / fs
-        return np.array(res, dtype=float)
+        return np.array(res)
 
     @staticmethod
     def _three_c_dowhiten(fcoeffz, fcoeffn, fcoeffe, deltaf):
@@ -2292,7 +2292,7 @@ class SeismicArray(object):
                     (np.conjugate(w) * np.dot(r, wt).T).sum(1))
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1, projection='polar')
-            cmap = cm.hot_r
+            cmap = cm.viridis
             contf = ax.contourf(theo_backazi, u,
                                 beamres.T, 100, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
@@ -2358,7 +2358,7 @@ class SeismicArray(object):
         """
         import matplotlib.pyplot as plt
         ranges = np.arange(-lim, lim + step, step)
-        plt.pcolor(ranges, ranges, transff.T, cmap=cm.hot_r)
+        plt.pcolor(ranges, ranges, transff.T, cmap=cm)
         plt.colorbar()
         plt.clim(vmin=0., vmax=1.)
         plt.xlim(-lim, lim)
@@ -3043,7 +3043,8 @@ class BeamformerResult(object):
 
     :param inventory: The inventory that was actually used in the beamforming.
     :param win_starttimes: Start times of the beamforming windows.
-    :type win_starttimes: numpy array of :class:`obspy.core.utcdatetime.UTCDateTime`
+    :type win_starttimes: numpy array of
+     :class:`obspy.core.utcdatetime.UTCDateTime`
     :param slowness_range: The slowness range used for the beamforming.
     :param max_rel_power: Maximum relative power at every timestep.
     :param max_abs_power: Maximum absolute power at every timestep.
@@ -3210,7 +3211,7 @@ class BeamformerResult(object):
         from matplotlib.colorbar import ColorbarBase
         from matplotlib.colors import Normalize
         import matplotlib.pyplot as plt
-        cmap = cm.hot_r
+        cmap = cm.viridis
         # Can't plot negative slownesses:
         sll = abs(self.slowness_range).min()
         slm = self.slowness_range.max()
@@ -3288,7 +3289,8 @@ class BeamformerResult(object):
         for i, (data, lab) in enumerate(zip(datas, labels)):
             ax = fig.add_subplot(len(labels), 1, i + 1)
             ax.scatter(self._get_plotting_timestamps(), data,
-                       c=self.max_rel_power, alpha=0.6, edgecolors='none')
+                       c=self.max_rel_power, alpha=0.6, edgecolors='none',
+                       cmap=cm.viridis)
             ax.set_ylabel(lab)
             timemargin = 0.05 * (self._get_plotting_timestamps()[-1] -
                                  self._get_plotting_timestamps()[0])
@@ -3346,7 +3348,7 @@ class BeamformerResult(object):
             ax = fig.add_subplot(len(labels), 1, i + 1)
 
             pc = ax.pcolormesh(self._get_plotting_timestamps(extended=True),
-                               azis, data.T, cmap=cm.get_cmap('hot_r'),
+                               azis, data.T, cmap=cm.viridis,
                                rasterized=True)
             timemargin = 0.05 * (self._get_plotting_timestamps(extended=True
                                                                )[-1] -
@@ -3410,7 +3412,7 @@ class BeamformerResult(object):
             """
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1, projection='polar')
-            cmap = cm.hot_r
+            cmap = cm.viridis
             contf = ax.contourf(theo_backazi, self.slowness_range, bfres.T,
                                 100, cmap=cmap, antialiased=True,
                                 linstyles='dotted')

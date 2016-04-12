@@ -19,7 +19,7 @@ kwargs2 = dict(
     wlen=1.0, wfrac=0.05,
     # frequency properties
     frqlow=1.0, frqhigh=8.0,
-    filter=True, vel_corr=4.0)
+    prefilter=True, vel_corr=4.0)
 
 results = the_array.fk_analysis(st, **kwargs2)
 
