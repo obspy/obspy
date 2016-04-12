@@ -405,6 +405,7 @@ class TimeSeriesTrace(BaseTrace):
         # otherwise we could end up with e.g. a list object in self.data
         super(TimeSeriesTrace, self).__init__(data=data)
         _data_sanity_checks(data)
+        #set some defaults if not set yet
         if header is None:
             header = {}
 
@@ -464,7 +465,6 @@ class TimeSeriesTrace(BaseTrace):
 
     def __le__(self, other):
         """
-       :meSeriesTrace' object has no attribute 'starttime'
        Too ambiguous, throw an Error.  
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
