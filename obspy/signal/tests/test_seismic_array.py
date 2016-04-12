@@ -94,10 +94,10 @@ class SeismicArrayTestCase(unittest.TestCase):
         Test get_geometry_xyz and, implicitly, _get_geometry (necessary because
         self.geometry is a property and can't be set).
         """
-        geox_exp = {'testnetwork.0..': {'x': -111.31564682647114, 'y':
-                                        -110.5751633754653, 'z': 0.0},
-                    'testnetwork.1..': {'x': 111.31564682647114, 'y':
-                                        -110.5751633754653, 'z': 0.0},
+        geox_exp = {'testnetwork.0..': {'x': -111.31564682647114,
+                                        'y': -110.5751633754653, 'z': 0.0},
+                    'testnetwork.1..': {'x': 111.31564682647114,
+                                        'y': -110.5751633754653, 'z': 0.0},
                     'testnetwork.2..': {'x': 0.0, 'y': 0.0, 'z': 0.0},
                     'testnetwork.3..': {'x': -111.28219117308639, 'y':
                                         110.5751633754653, 'z': 0.0},
@@ -126,7 +126,7 @@ class SeismicArrayTestCase(unittest.TestCase):
         st = Stream([
             Trace(data=np.empty(20), header={'network': 'BP', 'station':
                   'CCRB', 'location': '1', 'channel': 'BP1',
-                  'starttime': time}),
+                    'starttime': time}),
             Trace(data=np.empty(20), header={'network': 'BP', 'station':
                   'EADB', 'channel': 'BPE', 'starttime': time-60})])
         # Set up channels, correct ones first. The eadb channel should also be
@@ -148,7 +148,6 @@ class SeismicArrayTestCase(unittest.TestCase):
                              stations=[ccrb, eadb, wrong_stn])], 'testinv'))
 
         array.inventory_cull(st)
-        print(array.inventory)
         self.assertEqual(array.inventory[0][0][0], ch_ccrb)
         self.assertEqual(array.inventory[0][1][0], ch_eadb)
         tbc = [array.inventory.networks, array.inventory[0].stations,
@@ -171,8 +170,8 @@ class SeismicArrayTestCase(unittest.TestCase):
                                        np.sin(baz) * self.fk_testcoords[:, 0]))
         trl = []
         for i in range(len(self.fk_testcoords)):
-            tr = Trace(coherent_wave[-(np.min(dt) - 1) + dt[i]
-                                     :-(np.max(dt) + 1) + dt[i]].copy())
+            tr = Trace(coherent_wave[-(np.min(dt) - 1) +
+                                     dt[i]:-(np.max(dt) + 1) + dt[i]].copy())
             tr.stats.sampling_rate = df
             # lowpass random signal to f_nyquist / 2
             tr.filter("lowpass", freq=df / 4.)
@@ -180,7 +179,7 @@ class SeismicArrayTestCase(unittest.TestCase):
         st = Stream(trl)
         stime = UTCDateTime(1970, 1, 1, 0, 0)
         fk_args = (st, 2, 0.2, -3, 3, -3, 3, 0.1,
-                 -1e99, -1e99, 1, 8, stime, stime + 4)
+                   -1e99, -1e99, 1, 8, stime, stime + 4)
         # Tests for FK analysis:
         out = self.fk_array._covariance_array_processing(*fk_args,
                                                          prewhiten=0, method=0)
@@ -321,7 +320,7 @@ class SeismicArrayTestCase(unittest.TestCase):
                                              decimal=15)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_d'],
                                              decimal=15)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
         # Test function array_rotation_strain with synthetic data with pure
@@ -356,7 +355,7 @@ class SeismicArrayTestCase(unittest.TestCase):
                                              decimal=15)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_w3'],
                                              decimal=15)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
         # Test function array_rotation_strain with synthetic data with pure
@@ -390,7 +389,7 @@ class SeismicArrayTestCase(unittest.TestCase):
                                              decimal=12)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_w3'],
                                              decimal=12)
-        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
+        np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_m'],
                                              decimal=12)
 
     def test_three_component_beamforming(self):

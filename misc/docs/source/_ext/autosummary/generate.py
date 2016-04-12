@@ -121,7 +121,7 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
             warn('[autosummary] failed to import %r: %s' % (name, e))
             continue
 
-        fn = os.path.join(path, name + suffix[0])
+        fn = os.path.join(path, name + suffix)
 
         # skip it if it exists
         if os.path.isfile(fn):

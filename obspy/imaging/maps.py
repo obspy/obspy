@@ -703,9 +703,6 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
                              zorder=10, cmap=colormap,
                              transform=ccrs.Geodetic())
 
-    # Hack!!
-    plt.gca().basemap = bmap
-
     if title:
         plt.suptitle(title)
 
