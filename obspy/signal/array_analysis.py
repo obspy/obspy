@@ -775,7 +775,7 @@ class SeismicArray(object):
          velocity (slow!)
         :type static3d: bool
         :param vel_corr: Correction velocity for static topography correction
-        in km/s.
+         in km/s.
         :type vel_corr: float
         :param wlen: sliding window for analysis in seconds, use -1 to use the
          whole trace without windowing.
@@ -3011,21 +3011,24 @@ class BeamformerResult(object):
 
     The different beamforming algorithms produce output in different
     formats, so it needs to be standardised. The
-    :meth:`slowness_whitened_power`, :meth:`phase_weighted_stack`,
-    :meth:`delay_and_sum`, and :meth:`fk_analysis` routines internally
-    perform grid searches of slownesses in x and y directions, producing
-    numpy arrays of power for every slowness, time window and discrete
-    frequency. Only the maximum relative and absolute powers of each time
-    window are returned, as well as the slowness values at which they were
-    found. The x-y slowness values are also converted to radial slowness and
-    backazimuth. Returning the complete data arrays for these methods is not
-    currently implemented.
+    :meth:`.SeismicArray.slowness_whitened_power`,
+    :meth:`.SeismicArray.phase_weighted_stack`,
+    :meth:`.SeismicArray.delay_and_sum`,
+    and :meth:`.SeismicArray.fk_analysis` routines internally perform grid
+    searches of slownesses in x and y directions, producing numpy arrays of
+    power for every slowness, time window and discrete frequency. Only the
+    maximum relative and absolute powers of each time window are returned,
+    as well as the slowness values at which they were found. The x-y
+    slowness values are also converted to radial slowness and backazimuth.
+    Returning the complete data arrays for these methods is not currently
+    implemented.
 
-    Working somewhat differently, :meth:`three_component_beamforming` returns
-    a four-dimensional numpy array of relative powers for every backazimuth,
-    slowness, time window and discrete frequency, but no absolute powers. This
-    data allows the creation of the same plots as the previous methods, as the
-    maximum powers is easily calulated from the full power array.
+    Working somewhat differently,
+    :meth:`.SeismicArray.three_component_beamforming` returns a
+    four-dimensional numpy array of relative powers for every backazimuth,
+    slowness, time window and discrete frequency, but no absolute powers.
+    This data allows the creation of the same plots as the previous methods,
+    as the maximum powers is easily calulated from the full power array.
 
     .. rubric:: Concatenating results
 
