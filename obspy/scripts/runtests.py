@@ -104,6 +104,7 @@ from argparse import ArgumentParser
 
 import numpy as np
 
+import obspy
 from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
@@ -521,6 +522,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
+    print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
     if all:
         tests = copy.copy(ALL_MODULES)
     elif not tests:
