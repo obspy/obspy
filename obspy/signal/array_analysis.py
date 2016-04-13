@@ -1291,7 +1291,9 @@ class SeismicArray(object):
             _alldata_z[i, :] = tr_Z.data
 
         fs = stream_n.traces[0].stats.sampling_rate
-        nsamp = int(win_len * fs)
+        # Use np.int to not get the newint type, which causes an error with old
+        # versions of numpy (1.6.2 as listed in the minimum requirements).
+        nsamp = np.int(win_len * fs)
         # Number of samples to move forward by during a step.
         nstep = int(nsamp * win_frac)
         # Number of windows is determined by data length minus one window

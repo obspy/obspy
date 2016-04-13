@@ -103,12 +103,17 @@ class SeismicArrayTestCase(unittest.TestCase):
                                         110.5751633754653, 'z': 0.0},
                     'testnetwork.4..': {'x': 111.28219117308639, 'y':
                                         110.5751633754653, 'z': 0.0}}
-        geox = self.geometry_array.get_geometry_xyz(1, 1, 0,
-                                                    correct_3dplane=False)
-        self.assertEqual(geox, geox_exp)
+        geoxno3d = self.geometry_array.get_geometry_xyz(1, 1, 0,
+                                                        correct_3dplane=False)
         geox = self.geometry_array.get_geometry_xyz(1, 1, 0,
                                                     correct_3dplane=True)
-        self.assertEqual(geox_exp, geox)
+        # For flat array:
+        self.assertEqual(geoxno3d, geox)
+        # Use almost equal as calculations appear to be imprecise on OS X.
+        for key_outer in geox_exp:
+            for key_inner in geox_exp[key_outer]:
+                self.assertAlmostEqual(geox[key_outer][key_inner],
+                                       geox_exp[key_outer][key_inner])
 
     def test_center_of_gravity(self):
         self.assertEqual(self.geometry_array.center_of_gravity,
