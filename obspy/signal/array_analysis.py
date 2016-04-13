@@ -2424,7 +2424,7 @@ class SeismicArray(object):
         npy = int(np.ceil((pymax + pstep / 10. - pymin) / pstep))
         transff = np.empty((npx, npy))
 
-        if param is 'wavenumber':
+        if param == 'wavenumber':
             for i, kx in enumerate(np.arange(pxmin, pxmax + pstep / 10.,
                                              pstep)):
                 for j, ky in enumerate(np.arange(pymin, pymax + pstep / 10.,
@@ -2435,7 +2435,7 @@ class SeismicArray(object):
                                                geometry[k, 1] * ky))
                     transff[i, j] = abs(_sum) ** 2
 
-        elif param is 'slowness':
+        elif param == 'slowness':
             nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
             buff = np.zeros(nf)
             for i, sx in enumerate(np.arange(pxmin, pxmax + pstep / 10.,
