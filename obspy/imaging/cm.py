@@ -13,6 +13,8 @@ List of all colormaps:
 
     * `viridis`_
     * `viridis_r`_
+    * `viridis_white`_
+    * `viridis_white_r`_
     * obspy_sequential (alias for `viridis`_)
     * obspy_sequential_r (alias for `viridis_r`_)
     * obspy_divergent (alias for matplotlib's RdBu_r)
@@ -100,6 +102,84 @@ Reversed version of viridis.
     from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
     plot([cmap])
 
+viridis_white
+-------------
+
+"viridis_white" is a modified version of "viridis" that goes to white instead
+of yellow in the end. Although it remains perceptually uniform, the light
+colors are a bit more difficult to distinguish than yellow in the original
+viridis. It is useful for printing because one end of the colorbar can merge
+with a white background (by M Meschede).
+
+    >>> from obspy.imaging.cm import viridis_white
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_cwt as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_array_response as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_ppsd as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_similarity as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white as cmap
+    from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
+    plot([cmap])
+
+viridis_white_r
+---------------
+
+Reversed version of viridis_white.
+
+    >>> from obspy.imaging.cm import viridis_white_r
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_cwt as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_array_response as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_ppsd as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_similarity as plot
+    plot([cmap])
+
+.. plot::
+
+    from obspy.imaging.cm import viridis_white_r as cmap
+    from obspy.imaging.cm import _colormap_plot_beamforming_time as plot
+    plot([cmap])
+
 pqlx
 ----
 
@@ -123,59 +203,110 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import glob
 import inspect
 import os
 
 import numpy as np
 from matplotlib.cm import get_cmap
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 
 
-def _get_cmap(name, lut=None, reverse=False):
+def _get_cmap(file_name, lut=None, reverse=False):
     """
     Load a :class:`~matplotlib.colors.LinearSegmentedColormap` from
     `segmentdata` dictionary saved as numpy compressed binary data.
 
-    :type name: str
-    :param name: Name of colormap to load, same as filename in
-        `obspy/imaging/data` without `.npz` file suffix.
+    :type file_name: str
+    :param file_name: Name of colormap to load, same as filename in
+                      `obspy/imaging/data`. The type of colormap data is
+                      determined from the extension: .npz assumes the file
+                      contains colorbar segments (segmented colormap).
+                      '*.npy' assumes the file contains a simple array of RGB
+                      values with size [ncolors, 3].
     :type lut: int
-    :param lut: Specifies the number of discrete color values in the colormap.
-        `None` to use matplotlib default value (continuous colormap).
+    :param lut: Specifies the number of discrete color values in the
+                segmented colormap. Only used for segmented colormap
+                `None` to use matplotlib default value (continuous colormap).
     :type reverse: bool
     :param reverse: Whether to return the specified colormap reverted.
     :rtype: :class:`~matplotlib.colors.LinearSegmentedColormap`
     """
+    file_name = file_name.strip()
+    name, suffix = os.path.splitext(file_name)
     directory = os.path.dirname(os.path.abspath(
         inspect.getfile(inspect.currentframe())))
     directory = os.path.join(directory, "data")
-    if name.endswith(".npz"):
-        name = name.rsplit(".npz", 1)[0]
-    filename = os.path.join(directory, name + ".npz")
-    data = dict(np.load(filename))
+    full_path = os.path.join(directory, file_name)
+    # check if it is npz -> segmented colormap or npy -> listed colormap
+    # do it like matplotlib, append "_r" to reverted versions
     if reverse:
-        data_r = {}
-        for key, val in data.items():
-            # copied from matplotlib source, cm.py@f7a578656abc2b2c13 line 47
-            data_r[key] = [(1.0 - x, y1, y0) for x, y0, y1 in reversed(val)]
-        data = data_r
         name += "_r"
-    kwargs = lut and {"N": lut} or {}
-    cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
+
+    if suffix == '.npz':
+        # segmented colormap
+        data = dict(np.load(full_path))
+        if reverse:
+            data_r = {}
+            for key, val in data.items():
+                # copied from matplotlib source,
+                # cm.py@f7a578656abc2b2c13 line 47
+                data_r[key] = [(1.0 - x, y1, y0) for x, y0, y1 in
+                               reversed(val)]
+            data = data_r
+        kwargs = lut and {"N": lut} or {}
+        cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
+    elif suffix == '.npy':
+        # listed colormap
+        data = np.load(full_path)
+        if reverse:
+            data = data[::-1]
+        cmap = ListedColormap(data, name=name)
+    else:
+        raise ValueError('file suffix {} not recognized.'.format(suffix))
+
     return cmap
 
-viridis = _get_cmap("viridis")
-viridis_r = _get_cmap("viridis", reverse=True)
-obspy_sequential = viridis
-obspy_sequential_r = viridis_r
+
+def _get_all_cmaps():
+    """
+    Return all colormaps in "obspy/imaging/data" directory, including reversed
+    versions.
+
+    :rtype: dict
+    """
+    cmaps = {}
+    cm_file_pattern = os.path.join(
+        os.path.abspath(os.path.dirname(
+            inspect.getfile(inspect.currentframe()))),
+        "data", "*.np[yz]")
+    for filename in glob.glob(cm_file_pattern):
+        filename = os.path.basename(filename)
+        for reverse in (True, False):
+            # don't add a reversed version for PQLX colormap
+            if filename == "pqlx.npz" and reverse:
+                continue
+            cmap = _get_cmap(filename, reverse=reverse)
+            cmaps[cmap.name] = cmap
+    return cmaps
+
+
+# inject all colormaps into namespace
+_globals = globals()
+_globals.update(_get_all_cmaps())
+
+obspy_sequential = _globals["viridis"]
+obspy_sequential_r = _globals["viridis_r"]
 obspy_divergent = get_cmap("RdBu_r")
 obspy_divergent_r = get_cmap("RdBu")
-pqlx = _get_cmap("pqlx")
+pqlx = _get_cmap("pqlx.npz")
 
 
 def _colormap_plot_overview(colormap_names=(
-        "viridis", "obspy_sequential", "viridis_r", "obspy_sequential_r",
-        "obspy_divergent", "obspy_divergent_r", "pqlx")):
+        "viridis", "obspy_sequential", "viridis_white", "viridis_r",
+        "obspy_sequential_r", "viridis_white_r", "obspy_divergent",
+        "obspy_divergent_r", "pqlx")):
     """
     Overview bar plot, adapted after
     http://scipy-cookbook.readthedocs.org/items/Matplotlib_Show_colormaps.html.
