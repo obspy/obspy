@@ -255,7 +255,6 @@ def _get_cmap(file_name, lut=None, reverse=False):
                 data_r[key] = [(1.0 - x, y1, y0) for x, y0, y1 in
                                reversed(val)]
             data = data_r
-            name += "_r"
         kwargs = lut and {"N": lut} or {}
         cmap = LinearSegmentedColormap(name=name, segmentdata=data, **kwargs)
     elif suffix == '.npy':
@@ -263,7 +262,6 @@ def _get_cmap(file_name, lut=None, reverse=False):
         data = np.load(full_path)
         if reverse:
             data = data[::-1]
-            name += "_r"
         cmap = ListedColormap(data, name=name)
     else:
         raise ValueError('file suffix {} not recognized.'.format(suffix))
@@ -286,6 +284,9 @@ def _get_all_cmaps():
     for filename in glob.glob(cm_file_pattern):
         filename = os.path.basename(filename)
         for reverse in (True, False):
+            # don't add a reversed version for PQLX colormap
+            if filename == "pqlx.npz" and reverse:
+                continue
             cmap = _get_cmap(filename, reverse=reverse)
             cmaps[cmap.name] = cmap
     return cmaps
