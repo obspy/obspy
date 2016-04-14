@@ -13,6 +13,8 @@ List of all colormaps:
 
     * `viridis`_
     * `viridis_r`_
+    * `viridis_white`_
+    * `viridis_white_r`_
     * obspy_sequential (alias for `viridis`_)
     * obspy_sequential_r (alias for `viridis_r`_)
     * obspy_divergent (alias for matplotlib's RdBu_r)
@@ -301,8 +303,9 @@ pqlx = _get_cmap("pqlx.npz")
 
 
 def _colormap_plot_overview(colormap_names=(
-        "viridis", "obspy_sequential", "viridis_r", "obspy_sequential_r",
-        "obspy_divergent", "obspy_divergent_r", "pqlx")):
+        "viridis", "obspy_sequential", "viridis_white", "viridis_r",
+        "obspy_sequential_r", "viridis_white_r", "obspy_divergent",
+        "obspy_divergent_r", "pqlx")):
     """
     Overview bar plot, adapted after
     http://scipy-cookbook.readthedocs.org/items/Matplotlib_Show_colormaps.html.
