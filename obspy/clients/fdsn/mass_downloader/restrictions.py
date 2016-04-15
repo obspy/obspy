@@ -139,9 +139,9 @@ class Restrictions(object):
                  network=None, station=None, location=None, channel=None,
                  reject_channels_with_gaps=True, minimum_length=0.9,
                  sanitize=True, minimum_interstation_distance_in_m=1000,
-                 channel_priorities=("HH[ZNE]", "BH[ZNE]",
-                                     "MH[ZNE]", "EH[ZNE]",
-                                     "LH[ZNE]"),
+                 channel_priorities=("H[HL][ZNE]", "B[HL][ZNE]",
+                                     "M[HL][ZNE]", "E[HL][ZNE]",
+                                     "L[HL][ZNE]"),
                  location_priorities=("", "00", "10")):
         self.starttime = obspy.UTCDateTime(starttime)
         self.endtime = obspy.UTCDateTime(endtime)
