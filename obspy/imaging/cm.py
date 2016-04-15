@@ -434,10 +434,10 @@ def _colormap_plot_similarity(cmaps):
     from future import standard_library
     standard_library.install_aliases()
     import io
-    from urllib.request import urlopen
+    import requests
 
     url = "https://examples.obspy.org/dissimilarities.npz"
-    with io.BytesIO(urlopen(url).read()) as fh, np.load(fh) as data:
+    with io.BytesIO(requests.get(url).content) as fh, np.load(fh) as data:
         dissimilarity = data['dissimilarity']
 
     for cmap in cmaps:

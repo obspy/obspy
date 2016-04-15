@@ -7,15 +7,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import sys
 import unittest
 
-if sys.version_info.major == 2:
-    from urllib2 import urlopen
-else:
-    from urllib.request import urlopen
 
 import numpy as np
+import requests
 
 from obspy.core import AttribDict, UTCDateTime
 from obspy.clients.seishub import Client
@@ -31,7 +27,7 @@ def _check_server_availability():
     otherwise.
     """
     try:
-        code = urlopen(TESTSERVER, timeout=3).getcode()
+        code = requests.get(TESTSERVER, timeout=3).status_code
         assert(code == 200)
     except Exception:
         return TESTSERVER_UNREACHABLE_MSG

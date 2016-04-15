@@ -25,6 +25,8 @@ else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
 
+import requests
+
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
 
@@ -130,8 +132,8 @@ class Client(object):
             print('\nRequesting %s' % (remoteaddr))
         req = urllib_request.Request(url=remoteaddr, data=data,
                                      headers=headers)
-        response = urllib_request.urlopen(req, timeout=self.timeout)
-        doc = response.read()
+        response = requests.get(req, timeout=self.timeout)
+        doc = response.content
         return doc
 
     def _to_file_or_data(self, filename, data, binary=False):

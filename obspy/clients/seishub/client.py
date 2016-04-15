@@ -28,6 +28,7 @@ else:
     from urllib.parse import urlencode
     import urllib.request as urllib_request
 
+import requests
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 
@@ -159,7 +160,7 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            urllib_request.urlopen(self.base_url, timeout=self.timeout).read()
+            requests.get(self.base_url, timeout=self.timeout).content
             return (time.time() - t1) * 1000.0
         except Exception:
             pass
@@ -207,17 +208,16 @@ class Client(object):
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:
-                response = urllib_request.urlopen(remoteaddr,
-                                                  timeout=self.timeout)
-                doc = response.read()
+                response = requests.get(remoteaddr, timeout=self.timeout)
+                doc = response.content
                 return doc
             # XXX currently there are random problems with SeisHub's internal
             # XXX SQL database access ("cannot operate on a closed database").
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib_request.urlopen(remoteaddr, timeout=self.timeout)
-        doc = response.read()
+        response = requests.get(remoteaddr, timeout=self.timeout)
+        doc = response.content
         return doc
 
     def _http_request(self, url, method, xml_string=None, headers={}):
@@ -247,8 +247,8 @@ class Client(object):
         # it seems the following always ends in a HTTPError even with
         # nice status codes...?!?
         try:
-            response = urllib_request.urlopen(req, timeout=self.timeout)
-            return response.code, response.msg
+            response = requests.get(req, timeout=self.timeout)
+            return response.status_code, response.text
         except urllib_request.HTTPError as e:
             return e.code, e.msg
 
