@@ -15,18 +15,10 @@ from future.utils import PY2, native_str
 
 import os
 import pickle
-import sys
 import time
 import warnings
 from datetime import datetime
 from math import log
-
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
 
 import requests
 from lxml import objectify
@@ -146,13 +138,10 @@ class Client(object):
         self.retries = retries
         self.xml_seeds = {}
         self.station_list = {}
-        # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib_request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib_request.build_opener(auth_handler)
-        # install globally
-        urllib_request.install_opener(opener)
+        if user or password:
+            self.auth = (user, password)
+        else:
+            self.auth = None
 
     def ping(self):
         """
@@ -160,7 +149,8 @@ class Client(object):
         """
         try:
             t1 = time.time()
-            requests.get(self.base_url, timeout=self.timeout).content
+            response = requests.get(self.base_url, timeout=self.timeout)
+            response.raise_for_status()
             return (time.time() - t1) * 1000.0
         except Exception:
             pass
@@ -201,14 +191,18 @@ class Client(object):
                 params['max_' + str(key)] = str(value[1])
             else:
                 params[str(key)] = str(value)
-        # replace special characters
-        remoteaddr = self.base_url + url + '?' + urlencode(params)
+        # prepare request
+        request = requests.Request(
+            "GET", url=self.base_url + url, params=params,
+            auth=self.auth).prepare()
         if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
+            print('\nRequesting %s' % (request.url))
+        session = requests.Session()
         # certain requests randomly fail on rare occasions, retry
         for _i in range(self.retries):
             try:
-                response = requests.get(remoteaddr, timeout=self.timeout)
+                response = session.send(request, timeout=self.timeout)
+                response.raise_for_status()
                 doc = response.content
                 return doc
             # XXX currently there are random problems with SeisHub's internal
@@ -216,13 +210,14 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = requests.get(remoteaddr, timeout=self.timeout)
+        response = session.send(request, timeout=self.timeout)
+        response.raise_for_status()
         doc = response.content
         return doc
 
     def _http_request(self, url, method, xml_string=None, headers={}):
         """
-        Send a HTTP request via urllib2.
+        Send a HTTP request.
 
         :type url: str
         :param url: Complete URL of resource
@@ -242,15 +237,17 @@ class Client(object):
         elif method in HTTP_ACCEPTED_NODATA_METHODS and xml_string:
             raise TypeError("Unexpected data for %s request." % method)
 
-        req = _RequestWithMethod(method=method, url=url, data=xml_string,
-                                 headers=headers)
         # it seems the following always ends in a HTTPError even with
         # nice status codes...?!?
         try:
-            response = requests.get(req, timeout=self.timeout)
+            response = requests.request(
+                method=method, url=url, data=xml_string, headers=headers,
+                timeout=self.timeout, auth=self.auth)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            return e.response.status_code, str(e)
+        else:
             return response.status_code, response.text
-        except urllib_request.HTTPError as e:
-            return e.code, e.msg
 
     def _objectify(self, url, *args, **kwargs):
         doc = self._fetch(url, *args, **kwargs)
@@ -980,25 +977,6 @@ master/seishub/plugins/seismology/event.py
         kml_string = self.get_kml(**kwargs)
         open(filename, "wt").write(kml_string)
         return
-
-
-class _RequestWithMethod(urllib_request.Request):
-    """
-    Improved urllib2.Request Class for which the HTTP Method can be set to
-    values other than only GET and POST.
-    See http://benjamin.smedbergs.us/blog/2008-10-21/\
-    putting-and-deleteing-in-python-urllib2/
-    """
-    def __init__(self, method, *args, **kwargs):
-        if method not in HTTP_ACCEPTED_METHODS:
-            msg = "HTTP Method not supported. " + \
-                  "Supported are: %s." % HTTP_ACCEPTED_METHODS
-            raise ValueError(msg)
-        urllib_request.Request.__init__(self, *args, **kwargs)
-        self._method = method
-
-    def get_method(self):
-        return self._method
 
 
 if __name__ == '__main__':

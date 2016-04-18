@@ -27,10 +27,11 @@ def _check_server_availability():
     otherwise.
     """
     try:
-        code = requests.get(TESTSERVER, timeout=3).status_code
-        assert(code == 200)
-    except Exception:
-        return TESTSERVER_UNREACHABLE_MSG
+        response = requests.get(TESTSERVER, timeout=3)
+        assert(response.status_code == 200)
+        response.raise_for_status()
+    except Exception as e:
+        return " ".join((TESTSERVER_UNREACHABLE_MSG, str(e)))
     return ""
 
 

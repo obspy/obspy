@@ -15,17 +15,10 @@ from future.utils import native_str
 
 import io
 import platform
-import sys
 from lxml import objectify
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-
 import requests
+from requests.auth import HTTPBasicAuth
 
 from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
@@ -98,17 +91,28 @@ class Client(object):
         self.user_agent = user_agent
         self.major_versions = DEFAULT_SERVICE_VERSIONS
         self.major_versions.update(major_versions)
-        # Create an OpenerDirector for Basic HTTP Authentication
-        password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, base_url, user, password)
-        auth_handler = urllib_request.HTTPBasicAuthHandler(password_mgr)
-        opener = urllib_request.build_opener(auth_handler)
-        # install globally
-        urllib_request.install_opener(opener)
+        if self.user or self.password:
+            self.auth = HTTPBasicAuth(user, password)
+        else:
+            self.auth = None
 
-    def _fetch(self, service, data=None, headers={}, param_list=[], **params):
+    def _fetch(self, service, data=None, headers={}, param_list=[],
+               params=None, **additional_params):
         """
-        Send a HTTP request via urllib2.
+        Send a HTTP request.
+        """
+        if data is None:
+            self._get(service, headers, param_list, params, auth=self.auth,
+                      **additional_params)
+        else:
+            # currently we have no endpoints that use a POST,
+            # this is a private method so who cares and just raise
+            raise NotImplementedError()
+
+    def _get(self, service, headers={}, param_list=[], params=None,
+             **additional_params):
+        """
+        Send a HTTP GET request.
 
         :type service: str
         :param service: Name of service
@@ -119,22 +123,19 @@ class Client(object):
         """
         headers['User-Agent'] = self.user_agent
         # replace special characters
-        remoteaddr = "/".join([self.base_url.rstrip("/"), service,
-                               str(self.major_versions[service]), "query"])
-        options = '&'.join(param_list)
-        if params:
-            if options:
-                options += '&'
-            options += urlencode(params)
-        if options:
-            remoteaddr = "%s?%s" % (remoteaddr, options)
+        url = "/".join([self.base_url.rstrip("/"), service,
+                        str(self.major_versions[service]), "query"])
+        if param_list:
+            url += "?" + '&'.join(param_list)
+        for k, v in additional_params:
+            params[k] = v
+        request = requests.Request(
+            "GET", params=params, headers=headers, timeout=self.timeout)
+        request = request.prepare()
         if self.debug:
-            print('\nRequesting %s' % (remoteaddr))
-        req = urllib_request.Request(url=remoteaddr, data=data,
-                                     headers=headers)
-        response = requests.get(req, timeout=self.timeout)
-        doc = response.content
-        return doc
+            print('\nRequesting %s' % (request.url))
+        response = requests.Session().send(request)
+        return response.content
 
     def _to_file_or_data(self, filename, data, binary=False):
         """
@@ -340,7 +341,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("timeseries", param_list=filter, **kwargs)
-        except urllib_request.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -446,7 +447,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("resp", **kwargs)
-        except urllib_request.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -612,7 +613,7 @@ class Client(object):
         try:
             data = self._fetch("distaz", stalat=stalat, stalon=stalon,
                                evtlat=evtlat, evtlon=evtlon)
-        except urllib_request.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -664,23 +665,18 @@ class Client(object):
         # check rtype
         try:
             if rtype == 'code':
-                param_list = ["output=%s" % rtype, "lat=%s" % lat,
-                              "lon=%s" % lon]
-                return int(self._fetch(service, param_list=param_list))
+                params = {"output": rtype, "lat": lat, "lon": lon}
+                return int(self._fetch(service, params=params))
             elif rtype == 'region':
-                param_list = ["output=%s" % rtype, "lat=%s" % lat,
-                              "lon=%s" % lon]
-                return self._fetch(service,
-                                   param_list=param_list).strip().decode()
+                params = {"output": rtype, "lat": lat, "lon": lon}
+                return self._fetch(service, params=params).strip().decode()
             else:
-                param_list = ["output=code", "lat=%s" % lat,
-                              "lon=%s" % lon]
-                code = int(self._fetch(service, param_list=param_list))
-                param_list = ["output=region", "lat=%s" % lat,
-                              "lon=%s" % lon]
-                region = self._fetch(service, param_list=param_list).strip()
+                params = {"output": "code", "lat": lat, "lon": lon}
+                code = int(self._fetch(service, params=params))
+                params = {"output": "region", "lat": lat, "lon": lon}
+                region = self._fetch(service, params=params).strip()
                 return (code, region.decode())
-        except urllib_request.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
@@ -825,7 +821,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("traveltime", **kwargs)
-        except urllib_request.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
