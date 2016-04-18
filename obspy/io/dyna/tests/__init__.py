@@ -5,10 +5,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import unittest
+
 from obspy.core.util import add_doctests, add_unittests
 
-
-MODULE_NAME = "obspy.dyna"
+MODULE_NAME = "obspy.io.dyna"
 
 
 def suite():

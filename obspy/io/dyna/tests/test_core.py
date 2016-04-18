@@ -4,12 +4,14 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from obspy.core import UTCDateTime, read
-from obspy.core.util import NamedTemporaryFile
-from obspy.dyna.core import readDYNA, writeDYNA, isDYNA
-import numpy as np
 import os
 import unittest
+
+import numpy as np
+
+from obspy.core import UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
+from obspy.dyna.core import _is_dyna, _read_dyna, _write_dyna
 
 
 class CoreTestCase(unittest.TestCase):
@@ -19,26 +21,26 @@ class CoreTestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_read13000pts(self):
+    def test_read1_3000pts(self):
         """
         Testing reading DYNA file with (about) 9000 pts.
         """
         testfile = os.path.join(self.path, 'data',
                                 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         # read
-        stream = readDYNA(testfile)
+        stream = _read_dyna(testfile)
         stream.verify()
         self.assertEqual(len(stream[0]), 8997)
 
-    def test_isDYNAFile(self):
+    def test_is_dyna(self):
         """
         Testing DYNA file format.
         """
         testfile = os.path.join(self.path, 'data',
                                 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
-        self.assertEqual(isDYNA(testfile), True)
+        self.assertEqual(_is_dyna(testfile), True)
 
-    def _compareStream(self, stream):
+    def _compare_stream(self, stream):
         """
         Helper function to verify stream from file
         'data/IT.ARL..HGE.D.20140120.071240.X.ACC.ASC'.
@@ -55,30 +57,30 @@ class CoreTestCase(unittest.TestCase):
         data = [-0.032737, -0.037417, -0.030865, -0.021271]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data, 5)
 
-    def test_readAndWriteDYNAFile(self):
+    def test_read_write_dyna(self):
         """
-        Read and write DYNA file via obspy.sh.core.readDYNA.
+        Read and write DYNA file via obspy.sh.core._read_dyna.
         """
         origfile = os.path.join(self.path, 'data',
                                 'IT.ARL..HGE.D.20140120.071240.X.ACC.ASC')
         # read original
-        stream1 = readDYNA(origfile)
+        stream1 = _read_dyna(origfile)
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         tempfile = NamedTemporaryFile().name
-        writeDYNA(stream1, tempfile)
+        _write_dyna(stream1, tempfile)
         # read both files and compare the content
         text1 = open(origfile, 'rb').read()
         text2 = open(tempfile, 'rb').read()
         self.assertEquals(text1, text2)
         # read again
-        stream2 = readDYNA(tempfile)
+        stream2 = _read_dyna(tempfile)
         stream2.verify()
-        self._compareStream(stream2)
+        self._compare_stream(stream2)
         os.remove(tempfile)
 
-    def test_readAndWriteDYNAFileViaObsPy(self):
+    def test_read_write_dyna_plugin(self):
         """
         Read and write ASC file test via obspy.core.
         """
@@ -87,14 +89,14 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = read(origfile, format="DYNA")
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         tempfile = NamedTemporaryFile().name
         stream1.write(tempfile, format="DYNA")
         # read again w/ auto detection
         stream2 = read(tempfile)
         stream2.verify()
-        self._compareStream(stream2)
+        self._compare_stream(stream2)
         os.remove(tempfile)
 
 

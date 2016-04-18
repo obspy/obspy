@@ -13,9 +13,11 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 from io import StringIO
-from obspy.core import Stream, Trace, Stats, AttribDict, UTCDateTime
-import numpy as np
 import re
+
+import numpy as np
+
+from obspy.core import Stream, Trace, Stats, AttribDict, UTCDateTime
 
 
 class NativeHeader:
@@ -184,7 +186,7 @@ class DynaHdr(NativeHeader):
         return
 
 
-def isDYNA(filename):
+def _is_dyna(filename):
     """
     Checks whether a file is a DYNA 1.0 ASCII file or not.
 
@@ -195,7 +197,7 @@ def isDYNA(filename):
 
     .. rubric:: Example
 
-    >>> isDYNA("/path/to/IT.ARL..HGE.D.20140120.071240.X.ACC.ASC")  #doctest: +SKIP  # NOQA
+    >>> _is_dyna("/path/to/IT.ARL..HGE.D.20140120.071240.X.ACC.ASC")  #doctest: +SKIP  # NOQA
     True
     """
     # first eleven chars should contain 'EVENT_NAME:'
@@ -213,7 +215,7 @@ def isDYNA(filename):
     return False
 
 
-def isITACA(filename):
+def _is_itaca(filename):
     """
     Checks whether a file is a ITACA ASCII file or not.
 
@@ -249,7 +251,7 @@ def isITACA(filename):
     return True
 
 
-def readDYNA(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_dyna(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a DYNA 1.0 ASCII file and returns an ObsPy Stream object.
 
@@ -417,7 +419,7 @@ def readDYNA(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
+def _read_itaca(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a ITACA ASCII file and returns an ObsPy Stream object.
 
@@ -584,7 +586,7 @@ def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
     return stream
 
 
-def writeDYNA(stream, filename, **kwargs):  # @UnusedVariable
+def _write_dyna(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a DYNA 1.0 ASCII file from given ObsPy Stream object.
 
