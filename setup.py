@@ -192,13 +192,13 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.datamark.core:_read_datamark',
         ],
     "obspy.plugin.waveform.DYNA": [
-        "isFormat = obspy.dyna.core:_is_dyna",
-        "readFormat = obspy.dyna.core:_read_dyna",
-        "writeFormat = obspy.dyna.core:_write_dyna",
+        "isFormat = obspy.io.dyna.core:_is_dyna",
+        "readFormat = obspy.io.dyna.core:_read_dyna",
+        "writeFormat = obspy.io.dyna.core:_write_dyna",
         ],
     "obspy.plugin.waveform.ITACA": [
-        "isFormat = obspy.dyna.core:_is_itaca",
-        "readFormat = obspy.dyna.core:_read_itaca",
+        "isFormat = obspy.io.dyna.core:_is_itaca",
+        "readFormat = obspy.io.dyna.core:_read_itaca",
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',

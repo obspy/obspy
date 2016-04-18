@@ -11,7 +11,7 @@ import numpy as np
 
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.dyna.core import _is_dyna, _read_dyna, _write_dyna
+from obspy.io.dyna.core import _is_dyna, _read_dyna, _write_dyna
 
 
 class CoreTestCase(unittest.TestCase):
