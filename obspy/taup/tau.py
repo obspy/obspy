@@ -150,8 +150,8 @@ class Arrivals(list):
             if not ax:
                 plt.figure(figsize=(10, 10))
                 ax = plt.subplot(111, polar=True)
-            ax.set_theta_zero_location('N')
-            ax.set_theta_direction(-1)
+                ax.set_theta_zero_location('N')
+                ax.set_theta_direction(-1)
             ax.set_xticks([])
             ax.set_yticks([])
             intp = matplotlib.cbook.simple_linear_interpolation
