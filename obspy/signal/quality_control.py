@@ -508,6 +508,7 @@ class MSEEDMetadata(object):
             seg = {}
             seg['start_time'] = tr.stats.starttime
             seg['end_time'] = tr.stats.endtime + tr.stats.delta
+            seg['sample_rate'] = tr.stats.sampling_rate
             seg['sample_min'] = tr.data.min()
             seg['sample_max'] = tr.data.max()
             seg['sample_mean'] = tr.data.mean()
