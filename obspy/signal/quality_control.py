@@ -70,6 +70,7 @@ class MSEEDMetadata(object):
         """
 
         self.data = obspy.Stream()
+        self.all_files = files
         self.files = []
 
         # Allow anything UTCDateTime can parse.
@@ -157,8 +158,10 @@ class MSEEDMetadata(object):
 
         # Read all the files entirely and calculate gaps and overlaps
         # for the entire segment. Later we will narrow it to our window.
-        for file in self.files:
+        for file in self.all_files:
             self.all_data.extend(obspy.read(file, format="mseed"))
+
+        self.all_data.sort()
 
         # Implicitly put a gap at the start of the window if it is not padded
         # with data.
