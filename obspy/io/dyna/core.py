@@ -68,14 +68,14 @@ class DynaHdr(NativeHeader):
         "DURATION_S",
         "STREAM",
         "UNITS",
-        # instrumment
+        # instrument
         "INSTRUMENT",
         "INSTRUMENT_ANALOG/DIGITAL",
         "INSTRUMENTAL_FREQUENCY_HZ",
         "INSTRUMENTAL_DAMPING",
         "FULL_SCALE_G",
         "N_BIT_DIGITAL_CONVERTER",
-        # conditional, meassures
+        # measures, conditional
         ("peak"),
         ("peak_time"),
         # misc
@@ -155,7 +155,7 @@ class DynaHdr(NativeHeader):
         # XX: will need format conversion
         stats.dyna.DATE_TIME_FIRST_SAMPLE_YYYYMMDD_HHMMSS = stats.starttime
 
-        # Warining?
+        # Warning?
         if stats['calib'] != 1.0:
             pass
 
@@ -226,7 +226,7 @@ def _is_itaca(filename):
 
     .. rubric:: Example
 
-    >>> isITACA("/path/to/19971014_152309ITDPC_NCR__WEX.DAT")  #doctest: +SKIP
+    >>> _is_itaca("/path/to/19971014_152309ITDPC_NCR__WEX.DAT")  #doctest: +SKIP
     True
     """
     # first eleven chars should contain 'EVENT_NAME:'
@@ -821,6 +821,7 @@ def floattostr(fs, n):
     except:
         return ''
     return x
+
 
 if __name__ == '__main__':
     import doctest
