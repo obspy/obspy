@@ -125,9 +125,9 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :type sourcename: str
-    :param sourcename: Source name has to have the structure
-        'network.station.location.channel' and can contain globbing characters.
-        Defaults to ``None``.
+    :param sourcename: Only read data with matching SEED ID (can contain
+        wildcards "?" and "*", e.g. "BW.UH2.*" or "*.??Z"). Defaults to
+        ``None``.
     :param reclen: If it is None, it will be automatically determined for every
         record. If it is known, just set it to the record length in bytes which
         will increase the reading speed slightly.
@@ -164,12 +164,12 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
 
     >>> from obspy import UTCDateTime
-    >>> st = read("/path/to/test.mseed",
-    ...           starttime=UTCDateTime("2003-05-29T02:16:00"),
-    ...           selection="NL.*.*.?HZ")
+    >>> st = read("/path/to/two_channels.mseed",
+    ...           starttime=UTCDateTime("2010-06-20T00:00:01"),
+    ...           sourcename="*.?HZ")
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    NL.HGN.00.BHZ | 2003-05-29T02:15:59.993400Z - ... | 40.0 Hz, 5629 samples
+    BW.UH3..EHZ | 2010-06-20T00:00:00.999999Z - ... | 200.0 Hz, 242 samples
 
     Read with ``details=True`` to read more details of the file if present.
 
