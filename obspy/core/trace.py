@@ -2372,6 +2372,33 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             plotting with absolute time on axes, see :mod:`matplotlib.dates`
             and :func:`matplotlib.dates.date2num`, ``type="matplotlib"``)
 
+        >>> from obspy import read, UTCDateTime
+        >>> tr = read()[0]
+
+        >>> tr.times()
+        array([  0.00000000e+00,   1.00000000e-02,   2.00000000e-02, ...,
+                 2.99700000e+01,   2.99800000e+01,   2.99900000e+01])
+
+        >>> tr.times(reftime=UTCDateTime("2009-01-01T00"))
+        array([ 20305203.  ,  20305203.01,  20305203.02, ...,  20305232.97,
+                20305232.98,  20305232.99])
+
+        >>> tr.times("utcdatetime")
+        array([UTCDateTime(2009, 8, 24, 0, 20, 3),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 10000),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 20000), ...,
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 970000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 980000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)], dtype=object)
+
+        >>> tr.times("timestamp")
+        array([  1.25107320e+09,   1.25107320e+09,   1.25107320e+09, ...,
+                 1.25107323e+09,   1.25107323e+09,   1.25107323e+09])
+
+        >>> tr.times("matplotlib")
+        array([ 733643.01392361,  733643.01392373,  733643.01392384, ...,
+                733643.01427049,  733643.0142706 ,  733643.01427072])
+
         :type type: str
         :param type: Determines type of returned time array, see above for
             valid values.

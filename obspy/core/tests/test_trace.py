@@ -1379,6 +1379,7 @@ class TraceTestCase(unittest.TestCase):
         """
         tr = Trace(data=np.ones(100))
         tr.stats.sampling_rate = 20
+        delta = tr.stats.delta
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr.stats.starttime = start
         tm = tr.times()
@@ -1387,6 +1388,35 @@ class TraceTestCase(unittest.TestCase):
         tr.data[30:40] = np.ma.masked
         tm = tr.times()
         self.assertTrue(np.alltrue(tr.data.mask == tm.mask))
+        # test relative with reftime
+        tr.data = np.ones(100)
+        shift = 9.5
+        reftime = start - shift
+        got = tr.times(reftime=reftime)
+        self.assertEqual(len(got), tr.stats.npts)
+        expected = np.arange(shift, shift + 4.5 * delta, delta)
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-8)
+        # test other options
+        got = tr.times("utcdatetime")
+        expected = np.array([
+            UTCDateTime(2000, 1, 1, 0, 0),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 50000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 100000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 150000),
+            UTCDateTime(2000, 1, 1, 0, 0, 0, 200000)], dtype=UTCDateTime)
+        self.assertTrue(isinstance(got[0], UTCDateTime))
+        np.testing.assert_allclose(
+            [t_.timestamp for t_ in got[:5]],
+            [t_.timestamp for t_ in expected], rtol=1e-17)
+        got = tr.times("timestamp")
+        expected = np.arange(0, 4.5 * delta, delta) + 946684800.0
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
+        got = tr.times("matplotlib")
+        expected = np.array([
+            730120.00000000000000000000, 730120.00000057870056480169,
+            730120.00000115740112960339, 730120.00000173610169440508,
+            730120.00000231480225920677])
+        np.testing.assert_allclose(got[:5], expected, rtol=1e-17)
 
     def test_modulo_operation(self):
         """
