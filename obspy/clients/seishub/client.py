@@ -30,7 +30,7 @@ from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
-from obspy.core.util.decorator import deprecated
+from obspy.core.util.decorator import deprecated, deprecated_keywords
 from obspy.io.xseed import Parser
 
 
@@ -475,6 +475,8 @@ master/seishub/plugins/seismology/waveform.py
     def getWaveform(self, *args, **kwargs):
         return self.get_waveforms(*args, **kwargs)
 
+    @deprecated_keywords({
+        "getPAZ": "get_paz", "getCoordinates": "get_coordinates"})
     def get_waveforms(self, network, station, location=None, channel=None,
                       starttime=None, endtime=None, apply_filter=None,
                       get_paz=False, get_coordinates=False,
