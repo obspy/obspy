@@ -327,16 +327,9 @@ master/seishub/plugins/seismology/waveform.py
         :rtype: list
         :return: List of containing network ids.
         """
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getNetworkIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['network']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_network_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['network']) for node in root.getchildren()]
+        url = '/seismology/waveform/getNetworkIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['network']) for node in root.getchildren()]
 
     def get_station_ids(self, network=None, **kwargs):
         """
@@ -351,16 +344,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getStationIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['station']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_station_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['station']) for node in root.getchildren()]
+        url = '/seismology/waveform/getStationIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['station']) for node in root.getchildren()]
 
     def get_location_ids(self, network=None, station=None, **kwargs):
         """
@@ -377,16 +363,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getLocationIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['location']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_location_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['location']) for node in root.getchildren()]
+        url = '/seismology/waveform/getLocationIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['location']) for node in root.getchildren()]
 
     def get_channel_ids(self, network=None, station=None, location=None,
                         **kwargs):
@@ -406,16 +385,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getChannelIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['channel']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_channel_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['channel']) for node in root.getchildren()]
+        url = '/seismology/waveform/getChannelIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['channel']) for node in root.getchildren()]
 
     def get_latency(self, network=None, station=None, location=None,
                     channel=None, **kwargs):
@@ -437,18 +409,10 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getLatency'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_latency'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
+        url = '/seismology/waveform/getLatency'
+        root = self.client._objectify(url, **kwargs)
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                for node in root.getchildren()]
 
     def get_waveforms(self, network, station, location=None, channel=None,
                       starttime=None, endtime=None, apply_filter=None,
@@ -509,14 +473,8 @@ master/seishub/plugins/seismology/waveform.py
         kwargs['starttime'] = trim_start - delta
         kwargs['endtime'] = trim_end + delta
 
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getWaveform'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_waveforms'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getWaveform'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
@@ -583,14 +541,8 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getPreview'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_previews'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
@@ -619,14 +571,8 @@ master/seishub/plugins/seismology/waveform.py
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
                 kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getPreview'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_previews_by_ids'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
@@ -663,18 +609,10 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/station/getList'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/station/get_list'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
+        url = '/seismology/station/getList'
+        root = self.client._objectify(url, **kwargs)
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                for node in root.getchildren()]
 
     def get_coordinates(self, network, station, datetime, location=''):
         """
@@ -844,18 +782,10 @@ master/seishub/plugins/seismology/event.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/event/getList'
-            root = self.client._objectify(url, **kwargs)
-            results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                       for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/event/get_list'
-            root = self.client._objectify(url, **kwargs)
-            results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                       for node in root.getchildren()]
+        url = '/seismology/event/getList'
+        root = self.client._objectify(url, **kwargs)
+        results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                   for node in root.getchildren()]
         for res in results:
             res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
