@@ -182,7 +182,9 @@ def load_npz(file_, data_dict, samp_int_dict):
         warnings.warn(msg)
     # load data from npz
     for key in npz_dict.keys():
-        if key.endswith('_SAMP'):
+        if key == "__version__":
+            continue
+        elif key.endswith('_SAMP'):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
         else:
             data_dict[key] = npz_dict[key].tolist()
