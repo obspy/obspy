@@ -42,7 +42,8 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
             station_longitude=station_longitude, phase_list=phase_list,
             colorscheme=colorscheme, animate=animate, savemovie=savemovie,
             figsize=figsize, taup_model='iasp91', coastlines=coastlines,
-            icol=icol, event_labels=event_labels, station_labels=station_labels)
+            icol=icol, event_labels=event_labels,
+            station_labels=station_labels)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog,
@@ -307,13 +308,14 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         mlab.pipeline.surface(lines, line_width=0.5, color=color)
 
     # plot all stations
-    fig.scene.disable_render = True # Super duper trick
+    fig.scene.disable_render = True  # Super duper trick
     stxs, stys, stzs = zip(*stations_loc)
     stmarkers = mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
                               color=stationcolor)
     stsource = mlab.pipeline.vector_scatter(
         stxs, stys, stzs, stxs, stys, stzs)
-    stmarkers = mlab.pipeline.glyph(stsource, scale_factor=stmarkersize,
+    stmarkers = mlab.pipeline.glyph(
+        stsource, scale_factor=stmarkersize,
         scale_mode='none', color=stationcolor, mode='sphere')
     stmarkers.glyph.glyph_source.glyph_position = 'center'
 
@@ -390,13 +392,13 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         def anim():
             iframe = 0
             while 1:
-                if savemovie and iframe<360:
+                if savemovie and iframe < 360:
                     mlab.savefig('{:05d}.png'.format(iframe))
                 fig.scene.camera.azimuth(1.)
                 fig.scene.render()
                 iframe += 1
                 yield
-        anim() # Starts the animation.
+        anim()  # Starts the animation.
     else:
         mlab.show()
 
@@ -434,14 +436,13 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
 
     # make a big list of event coordinates and names
     # this part should be included as a subroutine of catalog that extracts
-    # a list of event properties. E.g. catalog.extract(['latitiude', 
+    # a list of event properties. E.g. catalog.extract(['latitiude',
     # 'longitude', 'depth', 'mag', 'focal_mechanism') The same should be done
     # for an inventory with stations
     evlats = []
     evlons = []
     evdepths = []
     evlabels = []
-    evmoment_tensors = []
     if catalog is not None:
         for event in catalog:
             if not event.origins:
@@ -488,7 +489,6 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     r_earth = model.model.radius_of_planet
     # now loop through all stations and source combinations
     greatcircles = []
-    ipath = 0
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
         for evlat, evlon, evdepth_km, evlabel in zip(evlats, evlons, evdepths,
                                                      evlabels):

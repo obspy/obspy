@@ -804,7 +804,7 @@ class TauPyModel(object):
                   "Arrivals object will not be modified. " + \
                   "Install the Python module 'geographiclib' to solve " + \
                   "this issue."
-            warnings.warn(msg)
+            raise ImportError(msg)
 
         return arrivals
 
@@ -866,7 +866,7 @@ class TauPyModel(object):
                   "Arrivals object will not be modified. " + \
                   "Install the Python module 'geographiclib' to solve " + \
                   "this issue."
-            warnings.warn(msg)
+            raise ImportError(msg)
 
         return arrivals
 

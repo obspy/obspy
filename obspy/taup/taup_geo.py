@@ -180,8 +180,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                 geo_pierce = np.empty(arrival.pierce.shape, dtype=TimeDistGeo)
 
                 for i, pierce_point in enumerate(arrival.pierce):
-                    dir_degrees = np.degrees(sign * pierce_point['dist'])
-                    pos = line.ArcPosition(dir_degrees)
+                    signed_dist = np.degrees(sign * pierce_point['dist'])
+                    pos = line.ArcPosition(signed_dist)
                     geo_pierce[i] = (pierce_point['p'], pierce_point['time'],
                                      pierce_point['dist'],
                                      pierce_point['depth'],
@@ -192,8 +192,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
             if arrival.path is not None and not resample:
                 geo_path = np.empty(arrival.path.shape, dtype=TimeDistGeo)
                 for i, path_point in enumerate(arrival.path):
-                    dir_degrees = np.degrees(sign * path_point['dist'])
-                    pos = line.ArcPosition(dir_degrees)
+                    signed_dist = np.degrees(sign * path_point['dist'])
+                    pos = line.ArcPosition(signed_dist)
                     geo_path[i] = (path_point['p'], path_point['time'],
                                    path_point['dist'], path_point['depth'],
                                    pos['lat2'], pos['lon2'])
@@ -247,8 +247,8 @@ def add_geo_to_arrivals(arrivals, source_latitude_in_deg,
                         depth_interp = np.interp(dists_new, xs, ys)
                         pos_interp = [line.ArcPosition(dist_new) for dist_new
                                       in dists_new]
-                        lat_interp = [pos['lat2'] for pos in pos_interp]
-                        lon_interp = [pos['lon2'] for pos in pos_interp]
+                        lat_interp = [point['lat2'] for point in pos_interp]
+                        lon_interp = [point['lon2'] for point in pos_interp]
 
                         # add them to geo_path
                         for i_extra in range(npts_new):
