@@ -104,6 +104,8 @@ class WaveformPlotting(object):
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
+        if self.sect_plot_dx is not None and not self.sect_dist_degree:
+            self.sect_plot_dx /= 1e3
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
@@ -1131,14 +1133,11 @@ class WaveformPlotting(object):
 
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            self.set_offset_lim(
-                left=self.__sect_offset_to_fraction(self._offset_min))
+            self.set_offset_lim(left=self._offset_min)
         if self.sect_offset_max is not None:
-            self.set_offset_lim(
-                right=self.__sect_offset_to_fraction(self._offset_max))
+            self.set_offset_lim(right=self._offset_max)
         # Set up offset ticks
-        tick_min, tick_max = \
-            self.__sect_fraction_to_offset(np.array(self.get_offset_lim()))
+        tick_min, tick_max = np.array(self.get_offset_lim())
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
@@ -1150,12 +1149,12 @@ class WaveformPlotting(object):
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        self.set_offset_ticks(self.__sect_offset_to_fraction(ticks))
+        self.set_offset_ticks(ticks)
         # Setting up tick labels
         self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
             self.set_offset_label('Offset [km]')
-            self.set_offset_ticklabels(ticks / 1e3)
+            self.set_offset_ticklabels(ticks)
         else:
             self.set_offset_label(u'Offset [°]')
             self.set_offset_ticklabels(ticks)
@@ -1224,8 +1223,11 @@ class WaveformPlotting(object):
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
         self.stream = [tr for m, tr in zip(mask, self.stream) if m]
-        # Normalized offsets for plotting
-        self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
+        # Use km on distance axis, if not degrees
+        if not self.sect_dist_degree:
+            self._tr_offsets /= 1e3
+            self._offset_min /= 1e3
+            self._offset_max /= 1e3
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list
@@ -1257,9 +1259,11 @@ class WaveformPlotting(object):
     def __sect_scale_traces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
-        gets 1./num_traces space. adjustable by scale=1.0.
+        gets distance-range/num_traces space. adjustable by scale=1.0.
         """
-        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
+        self._sect_scale = (
+            (self._offset_max - self._offset_min) * self.sect_user_scale /
+            (self._tr_num * 1.5))
 
     def __sect_init_time(self):
         """
@@ -1294,12 +1298,6 @@ class WaveformPlotting(object):
         cmap = get_cmap('Paired', lut=len(colors))
         self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
 
-    def __sect_offset_to_fraction(self, offset):
-        """
-        Helper function to return offsets from fractions
-        """
-        return offset / self._tr_offsets.max()
-
     def __sect_fraction_to_offset(self, fraction):
         """
         Helper function to return fractions from offsets
@@ -1322,7 +1320,7 @@ class WaveformPlotting(object):
             # Scale, normalize and shift traces by offset for plotting
             data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
                      self._sect_scale) +
-                    self._tr_offsets_norm[_tr])
+                    self._tr_offsets[_tr])
             time = self._tr_times[_tr]
             if self.sect_orientation == 'vertical':
                 lines += ax.plot(data, time)
