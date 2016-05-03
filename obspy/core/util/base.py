@@ -36,10 +36,11 @@ DEFAULT_MODULES = ['clients.filesystem', 'core', 'db', 'geodetics', 'imaging',
                    'io.cnv', 'io.css', 'io.win', 'io.gcf', 'io.gse2',
                    'io.json', 'io.kinemetrics', 'io.kml', 'io.mseed', 'io.ndk',
                    'io.nied', 'io.nlloc', 'io.nordic', 'io.pdas', 'io.pde',
-                   'io.quakeml', 'io.reftek', 'io.sac', 'io.seg2', 'io.segy',
-                   'io.seisan', 'io.sh', 'io.shapefile', 'io.seiscomp',
-                   'io.stationtxt', 'io.stationxml', 'io.wav', 'io.xseed',
-                   'io.y', 'io.zmap', 'realtime', 'scripts', 'signal', 'taup']
+                   'io.quakeml', 'io.reftek', 'io.sac', 'io.scardec',
+                   'io.seg2', 'io.segy', 'io.seisan', 'io.sh', 'io.shapefile',
+                   'io.seiscomp', 'io.stationtxt', 'io.stationxml', 'io.wav',
+                   'io.xseed', 'io.y', 'io.zmap', 'realtime', 'scripts',
+                   'signal', 'taup']
 NETWORK_MODULES = ['clients.arclink', 'clients.earthworm', 'clients.fdsn',
                    'clients.iris', 'clients.neic', 'clients.seedlink',
                    'clients.seishub', 'clients.syngine']
@@ -435,6 +436,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     NORDIC    :mod:`obspy.io.nordic` :func:`obspy.io.nordic.core.write_select`
     QUAKEML :mod:`...io.quakeml` :func:`obspy.io.quakeml.core._write_quakeml`
     SC3ML   :mod:`...io.seiscomp` :func:`obspy.io.seiscomp.event._write_sc3ml`
+    SCARDEC   :mod:`obspy.io.scardec`
+                             :func:`obspy.io.scardec.core._write_scardec`
     SHAPEFILE :mod:`obspy.io.shapefile`
                              :func:`obspy.io.shapefile.core._write_shapefile`
     ZMAP      :mod:`...io.zmap`  :func:`obspy.io.zmap.core._write_zmap`
