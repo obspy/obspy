@@ -2383,7 +2383,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         array([ 20305203.  ,  20305203.01,  20305203.02, ...,  20305232.97,
                 20305232.98,  20305232.99])
 
-        >>> tr.times("utcdatetime")
+        >>> tr.times("utcdatetime")  # doctest: +SKIP
         array([UTCDateTime(2009, 8, 24, 0, 20, 3),
                UTCDateTime(2009, 8, 24, 0, 20, 3, 10000),
                UTCDateTime(2009, 8, 24, 0, 20, 3, 20000), ...,
