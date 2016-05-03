@@ -1139,7 +1139,11 @@ class SACTrace(object):
                                             byteorder=byteorder,
                                             checksize=checksize)
 
-        return cls._from_arrays(hf, hi, hs, data)
+        sac = cls._from_arrays(hf, hi, hs, data)
+        if sac.dist is None:
+            sac._set_distances()
+
+        return sac
 
     def write(self, dest, headonly=False, ascii=False, byteorder=None,
               flush_headers=True):
