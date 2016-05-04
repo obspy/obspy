@@ -40,7 +40,9 @@ override_dh_auto_install:
 	#  - https://sources.debian.net/src/python-setuptools/5.5.1-1/debian/patches/multiarch-extname.diff/
 	#  - http://metadata.ftp-master.debian.org/changelogs/main/p/python-setuptools/unstable_changelog
 	#  - https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=733128
-	sh -x debian/_rename_lib_extensions.sh
+	if [ `py3versions -d` = "python3.3" ] || [ `py3versions -d` = "python3.4" ]; then \
+		sh -x debian/_rename_lib_extensions.sh; \
+	fi;
 	########## lib naming hack end
 	sh -x debian/_copy_lib_extensions_to_source_tree.sh
 	python3 setup.py build_man
