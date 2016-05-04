@@ -19,7 +19,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import collections
 import json
 
 import numpy as np
@@ -272,8 +271,18 @@ class MSEEDMetadata(object):
         meta['files'] = self.files
         meta['start_time'] = self.starttime
         meta['end_time'] = self.endtime
-        meta['num_records'] = self.number_of_records
         meta['num_samples'] = self.number_of_samples
+
+        # The number records as given by Trace.stats is always
+        # the full number of records in a file, regardless of being
+        # sliced between a start & endtime
+        # If a start/endtime is specified, we cannot be sure of
+        # the # records. We will add this parameter later
+        # if add_flags is set to true after looping all records
+        if self.window_start is None and self.window_end is None:
+            meta['num_records'] = self.number_of_records
+        else:
+            meta['num_records'] = None
 
         # The following are lists and may contain multiple unique entries.
         meta['sample_rate'] = \
@@ -286,86 +295,19 @@ class MSEEDMetadata(object):
 
     def _extract_mseed_flags(self):
 
-        # Setup counters for the MiniSEED header flags.
-        data_quality_flags = collections.Counter(
-                amplifier_saturation_detected=0,
-                digitizer_clipping_detected=0,
-                spikes_detected=0,
-                glitches_detected=0,
-                missing_data_present=0,
-                telemetry_sync_error=0,
-                digital_filter_charging=0,
-                time_tag_uncertain=0)
-        activity_flags = collections.Counter(
-                calibration_signals_present=0,
-                time_correction_applied=0,
-                beginning_event=0,
-                end_event=0,
-                positive_leap=0,
-                negative_leap=0)
-        io_and_clock_flags = collections.Counter(
-                station_volume_parity_error=0,
-                long_record_read=0,
-                short_record_read=0,
-                start_time_series=0,
-                end_time_series=0,
-                clock_locked=0)
-        timing_quality = []
+        flags = get_flags(self.files, starttime=self.starttime,
+                          endtime=self.endtime)
 
-        # Setup counters for the MiniSEED header flags percentages.
-        # Counters are supposed to work for integers, but
-        # it also appears to work for floats too
-        data_quality_flags_seconds = collections.Counter(
-                amplifier_saturation_detected=0.0,
-                digitizer_clipping_detected=0.0,
-                spikes_detected=0.0,
-                glitches_detected=0.0,
-                missing_data_present=0.0,
-                telemetry_sync_error=0.0,
-                digital_filter_charging=0.0,
-                time_tag_uncertain=0.0)
-        activity_flags_seconds = collections.Counter(
-                calibration_signals_present=0.0,
-                time_correction_applied=0.0,
-                beginning_event=0.0,
-                end_event=0.0,
-                positive_leap=0.0,
-                negative_leap=0.0)
-        io_and_clock_flags_seconds = collections.Counter(
-                station_volume_parity_error=0.0,
-                long_record_read=0.0,
-                short_record_read=0.0,
-                start_time_series=0.0,
-                end_time_series=0.0,
-                clock_locked=0.0)
+        data_quality_flags_seconds = flags["data_quality_flags_seconds"]
+        data_quality_flags = flags["data_quality_flags"]
 
-        timing_correction = 0.0
-        used_times = []
+        activity_flags_seconds = flags["activity_flags_seconds"]
+        activity_flags = flags["activity_flags"]
 
-        for file in self.files:
-            flags = get_flags(file, starttime=self.starttime,
-                              endtime=self.endtime,
-                              used_times=used_times)
+        io_and_clock_flags_seconds = flags["io_and_clock_flags_seconds"]
+        io_and_clock_flags = flags["io_and_clock_flags"]
 
-            used_times = flags["used_times"]
-
-            # Update the flag counters
-            data_quality_flags.update(flags["data_quality_flags"])
-            activity_flags.update(flags["activity_flags"])
-            io_and_clock_flags.update(flags["io_and_clock_flags"])
-
-            # Update the percentage counters
-            data_quality_flags_seconds.update(
-                flags["data_quality_flags_seconds"])
-            activity_flags_seconds.update(
-                flags["activity_flags_seconds"])
-            io_and_clock_flags_seconds.update(
-                flags["io_and_clock_flags_seconds"])
-
-            if flags["timing_quality"]:
-                timing_quality.append(flags["timing_quality"]["all_values"])
-
-            timing_correction += flags["timing_correction"]
+        timing_correction = flags["timing_correction"]
 
         # Convert second counts to percentages. The total time is the
         # difference between start & end in seconds. The percentage fields
@@ -383,8 +325,8 @@ class MSEEDMetadata(object):
         # would created tinted statistics. There is still a chance that some
         # records in a file have timing qualities set and others not but
         # that should be small.
-        if len(timing_quality) == len(self.files):
-            timing_quality = np.concatenate(timing_quality)
+        if flags["timing_quality"]:
+            timing_quality = flags["timing_quality"]["all_values"]
             timing_quality_mean = timing_quality.mean()
             timing_quality_min = timing_quality.min()
             timing_quality_max = timing_quality.max()
@@ -400,6 +342,7 @@ class MSEEDMetadata(object):
             timing_quality_upper_quartile = None
 
         meta = self.meta
+        meta['num_records'] = flags['record_count']
 
         # Set miniseed header counts
         meta['miniseed_header_percentages'] = {}

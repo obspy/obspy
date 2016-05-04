@@ -163,7 +163,7 @@ class QualityControlTestCase(unittest.TestCase):
                                 "station": "ALTM", "location": "00",
                                 "channel": "EHE"}).write(
                     tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
-            md = MSEEDMetadata([tf1.name, tf2.name])
+            md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
             self.assertEqual(md.meta["network"], "BW")
             self.assertEqual(md.meta["station"], "ALTM")
             self.assertEqual(md.meta["location"], "00")
@@ -177,6 +177,63 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(md.meta["sample_rate"], [1.0, 2.0])
             self.assertEqual(md.meta["record_length"], [256, 1024])
             self.assertEqual(md.meta["encoding"], ["FLOAT32", "STEIM1"])
+
+    def test_extraction_header_flags_complex(self):
+        """
+        Tests the flag extraction in a complex record situation
+        Three records, with records 2 & 3 two overlapping 50% and
+        a 50% record length gap between record 1 and 2.
+
+        Rules for overlaps with different bits are as follows:
+        Records are sorted from end to start by endtime and processed
+        in this order. Each consecutive record occupies a time-range
+        that can no longer be used by another record. In the following
+        example, the third record is dominant over the second record
+        because it is processed first and occupies the time range.
+        Therefore the bit in this entire range is set to 1, despite
+        partially overlapping with a record with its bit set to 0
+
+        Bits in the test are set as shown
+
+                        [ ==1== ]
+        [ ==1== ]...[ ==0== ]
+            |               |
+          START            END
+            0              125
+
+        [RECORD 1 (1)] = 0 - 50 [clock_locked: 1]
+        [RECORD 2 (0)] = 75 - 125 [clock_locked: 0]
+        [RECORD 3 (1)] = 100 - 150 [clock_locked: 1]
+        With starttime = 25 and endtime = 125
+
+        The clock_locked percentage should thus be exactly 50.0%
+        """
+
+        # Couldn't properly break this line following PEP8 so use
+        # shorter notation .....
+        short = NamedTemporaryFile
+        with short() as tf1, short() as tf2, short() as tf3:
+            _create_mseed_file(tf1.name, record_count=1,
+                               starttime=obspy.UTCDateTime(0),
+                               seed=12345, flags={
+                                'io_and_clock_flags': {
+                                    "clock_locked": 1}})
+            _create_mseed_file(tf2.name, record_count=1,
+                               starttime=obspy.UTCDateTime(75),
+                               seed=12345, flags={
+                                'io_and_clock_flags': {
+                                    "clock_locked": 0}})
+            _create_mseed_file(tf3.name, record_count=1,
+                               starttime=obspy.UTCDateTime(100),
+                               seed=12345, flags={
+                                'io_and_clock_flags': {
+                                    "clock_locked": 1}})
+
+            md = MSEEDMetadata([tf1.name, tf2.name, tf3.name],
+                               starttime=obspy.UTCDateTime(25),
+                               endtime=obspy.UTCDateTime(125), add_flags=True)
+            io_f = md.meta["miniseed_header_percentages"]["io_and_clock_flags"]
+            self.assertEqual(io_f["clock_locked"], 50.0)
 
     def test_extraction_fixed_header_flags(self):
         with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
@@ -580,6 +637,10 @@ class QualityControlTestCase(unittest.TestCase):
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
         self.assertTrue(md.meta["num_gaps"] == 0)
         self.assertTrue(md.meta["num_overlaps"] == 0)
+
+        # Slicing to a start & end without asking for flags, num_records
+        # will be set to None
+        self.assertEqual(md.meta["num_records"], None)
 
     def test_end_gap(self):
         """

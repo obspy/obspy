@@ -95,13 +95,15 @@ def get_start_and_end_time(file_or_file_object):
     return starttime, endtime
 
 
-def get_timing_and_data_quality(file_or_file_object):
+def get_flags(files, starttime=None, endtime=None,
+              io_flags=True, activity_flags=True,
+              data_quality_flags=True, timing_quality=True):
     """
     Counts all data quality, I/O, and activity flags of the given MiniSEED
     file and returns statistics about the timing quality if applicable.
 
-    :param file_or_file_object: MiniSEED file.
-    :type file_or_file_object: str or file-like object
+    :param file_or_file_object: MiniSEED file or list of MiniSEED files.
+    :type file_or_file_object: list, str, file-like object
     :param starttime: Only use records whose end time is larger then this
         given time.
     :type starttime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
@@ -208,8 +210,50 @@ def get_timing_and_data_quality(file_or_file_object):
     min 0.0
     upper_quartile 75.0
     """
-    # Keep track of the extracted information. Initialize with a list of
-    # tuples to preserve the crucial ordering.
+
+    # Splat input to a list
+    if not isinstance(files, list):
+        files = [files]
+
+    # Accepts string or anything else UTCDateTime can parse.
+    starttime = UTCDateTime(starttime) if starttime else None
+    endtime = UTCDateTime(endtime) if endtime else None
+
+    # Collect all the records for all files before processing
+    records = []
+    for mseed_file in files:
+        info = get_record_information(mseed_file)
+
+        offset = 0
+
+        # Loop over each record. A valid record needs to have a record
+        # length of at least 256 bytes.
+        while offset <= (info["filesize"] - 256):
+
+            rec_info = get_record_information(mseed_file, offset)
+            rec_info["endtime"] += (1/rec_info["samp_rate"])
+            offset += rec_info["record_length"]
+
+            # Skip records with an incompatible start/endtime
+            if rec_info["endtime"] <= rec_info["starttime"]:
+                continue
+            # Skip records that have no overlap with the requested range
+            if starttime is not None and rec_info["endtime"] < starttime:
+                continue
+            if endtime is not None and rec_info["starttime"] >= endtime:
+                continue
+
+            records.append(rec_info)
+
+    # Records that survived the filtering
+    record_count = len(records)
+
+    # Sort the records by endtime from end to start
+    # We will process in this direction because it allows
+    # us to calculate the percentages easier
+    records.sort(key=lambda x: x["endtime"], reverse=True)
+
+    # Set up containers for the percentages & counts
     quality_count = collections.OrderedDict([
         ("amplifier_saturation_detected", 0),
         ("digitizer_clipping_detected", 0),
@@ -219,22 +263,6 @@ def get_timing_and_data_quality(file_or_file_object):
         ("telemetry_sync_error", 0),
         ("digital_filter_charging", 0),
         ("time_tag_uncertain", 0)])
-    activity_count = collections.OrderedDict([
-        ("calibration_signals_present", 0),
-        ("time_correction_applied", 0),
-        ("beginning_event", 0),
-        ("end_event", 0),
-        ("positive_leap", 0),
-        ("negative_leap", 0),
-        ("event_in_progress", 0)])
-    io_count = collections.OrderedDict([
-        ("station_volume_parity_error", 0),
-        ("long_record_read", 0),
-        ("short_record_read", 0),
-        ("start_time_series", 0),
-        ("end_time_series", 0),
-        ("clock_locked", 0)])
-    # For percentages
     quality_count_seconds = collections.OrderedDict([
         ("amplifier_saturation_detected", 0),
         ("digitizer_clipping_detected", 0),
@@ -244,6 +272,15 @@ def get_timing_and_data_quality(file_or_file_object):
         ("telemetry_sync_error", 0),
         ("digital_filter_charging", 0),
         ("time_tag_uncertain", 0)])
+
+    activity_count = collections.OrderedDict([
+        ("calibration_signals_present", 0),
+        ("time_correction_applied", 0),
+        ("beginning_event", 0),
+        ("end_event", 0),
+        ("positive_leap", 0),
+        ("negative_leap", 0),
+        ("event_in_progress", 0)])
     activity_count_seconds = collections.OrderedDict([
         ("calibration_signals_present", 0),
         ("time_correction_applied", 0),
@@ -252,6 +289,14 @@ def get_timing_and_data_quality(file_or_file_object):
         ("positive_leap", 0),
         ("negative_leap", 0),
         ("event_in_progress", 0)])
+
+    io_count = collections.OrderedDict([
+        ("station_volume_parity_error", 0),
+        ("long_record_read", 0),
+        ("short_record_read", 0),
+        ("start_time_series", 0),
+        ("end_time_series", 0),
+        ("clock_locked", 0)])
     io_count_seconds = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
@@ -259,149 +304,89 @@ def get_timing_and_data_quality(file_or_file_object):
         ("start_time_series", 0),
         ("end_time_series", 0),
         ("clock_locked", 0)])
-    # Timing quality for now is a list containing the timing quality of each
-    # record.
+
     tq = []
-
-    # Read the first record to get a starting point and.
-    info = get_record_information(file_or_file_object)
-
-    # Accepts string or anything else UTCDateTime can parse.
-    starttime = UTCDateTime(starttime) if starttime else None
-    endtime = UTCDateTime(endtime) if endtime else None
-
-    offset = 0
-    record_count = 0
     timing_correction = 0.0
 
-    # Loop over each record. A valid record needs to have a record
-    # length of at least 256 bytes.
-    while offset <= (info["filesize"] - 256):
-        rec_info = get_record_information(file_or_file_object, offset)
-        # Extend the record endtime with delta
-        rec_info["endtime"] += (1/rec_info["samp_rate"])
+    # Keep track of the times occupied by the records
+    used_times = None
 
-        # We do not want to count overlapping records double..
-        # First record is always new
-        if used_times is not None:
-            if len(used_times) == 0:
-                used_times = [[rec_info["starttime"], rec_info["endtime"]]]
-            else:
-                # If we have one record coverage, try extending it
-                if len(used_times) == 1:
-                    # Extend the endtime with the new endtime
-                    if rec_info["starttime"] == used_times[0][1]:
-                        used_times[0][1] = rec_info["endtime"]
-                    # A gap, add a new segment
-                    elif rec_info["starttime"] > used_times[0][1]:
-                        used_times.append([rec_info["starttime"],
-                                           rec_info["endtime"]])
-                    # Overlap, reduce the starttime to the endtime of the
-                    # segment. Extend segment with new endtime is necessary
-                    elif rec_info["starttime"] < used_times[0][1]:
-                        rec_info["starttime"] = used_times[0][1]
-                        used_times[0][1] = max(used_times[0][1],
-                                               rec_info["endtime"])
-                # If we have multiple used segments things get tricky,
-                # because now also ends can overlap..
-                else:
-                    # Go over all segments
-                    for _i in range(len(used_times) - 1):
-                        # Starttime falls on the end of a used segment
-                        # Extend the endtime, but not past the start of next
-                        if rec_info["starttime"] == used_times[_i][1]:
-                            rec_info["endtime"] = min(used_times[_i + 1][0],
-                                                      rec_info["endtime"])
-                            used_times[_i][1] == max(used_times[_i][1],
-                                                     rec_info["endtime"])
-                        # A gap.. add new segment
-                        elif (rec_info["starttime"] > used_times[_i][1] and
-                              rec_info["starttime"] < used_times[_i + 1][0]):
-                            rec_info["endtime"] = min(used_times[_i + 1][0],
-                                                      rec_info["endtime"])
-                            used_times.append([rec_info["starttime"],
-                                               rec_info["endtime"]])
-                            # Make sure we sort by the starttime after each
-                            # new segment
-                            used_times = sorted(used_times,
-                                                key=lambda x: x[0])
-                        # Starttime of a segment falls within an occupied range
-                        elif (rec_info["starttime"] < used_times[_i][1] and
-                              rec_info["starttime"] > used_times[_i][0]):
-                            # Set the starttime to the END of this segment
-                            rec_info["starttime"] = used_times[_i][1]
-                            # End time is minimum of the end of the record or
-                            # next segment
-                            rec_info["endtime"] = min(used_times[_i + 1][0],
-                                                      rec_info["endtime"])
-                            # Fix this segment by extending the endtime
-                            used_times[_i][1] == max(used_times[_i][1],
-                                                     rec_info["endtime"])
+    # Loop over all records
+    for record in records:
 
-        offset += rec_info["record_length"]
+        if used_times is None:
+            used_times = [records[0]["starttime"], records[0]["endtime"]]
+        else:
 
-        # Skip if the record endtime is before or after starttime
-        if rec_info["endtime"] <= rec_info["starttime"]:
-            continue
-        if starttime is not None and rec_info["endtime"] <= starttime:
-            continue
-        if endtime is not None and rec_info["starttime"] >= endtime:
-            continue
+            time_tolerance = 0.5 * record["samp_rate"]
+            tolerated_end = used_times[0] - time_tolerance
+            if record["endtime"] > used_times[0]:
+                record["endtime"] = used_times[0]
 
-        record_count += 1
+            # Take in account the time tolerance
+            # This is why we process from back to front
+            # Because the flag belongs to the previous record,
+            # drag the previous endtime to the next starttime
+            elif record["endtime"] > tolerated_end:
+                record["endtime"] = used_times[0]
 
-        # If the record starts before the start time, count from starttime
-        # Otherwise, count from the record starttime
-        record_first_sample = max(rec_info["starttime"], starttime)
-        record_last_sample = min(rec_info["endtime"], endtime)
+            # Extend the new used_times with the new record coverage
+            if record["starttime"] < used_times[0]:
+                used_times[0] = record["starttime"]
+
+        # The start and end of a record may not exceed the given
+        # start and endtime respectively
+        record_first_sample = max(record["starttime"], starttime)
+        record_last_sample = min(record["endtime"], endtime)
 
         # Length of a record is R_end - R_start + sampling interval
         record_length_seconds = (record_last_sample - record_first_sample)
 
+        # Save the flags and timing quality if requested
         if io_flags:
-            for _i, key in enumerate(io_count.keys()):
-                if (rec_info["io_and_clock_flags"] & (1 << _i)) != 0:
-                    io_count[key] += 1
+            for _i, key in enumerate(io_count_seconds.keys()):
+                if (record["io_and_clock_flags"] & (1 << _i)) != 0:
                     io_count_seconds[key] += record_length_seconds
-
+                    io_count[key] += 1
         if activity_flags:
-            for _i, key in enumerate(activity_count.keys()):
-                if (rec_info["activity_flags"] & (1 << _i)) != 0:
-                    activity_count[key] += 1
+            for _i, key in enumerate(activity_count_seconds.keys()):
+                if (record["activity_flags"] & (1 << _i)) != 0:
                     activity_count_seconds[key] += record_length_seconds
-
+                    activity_count[key] += 1
         if data_quality_flags:
-            for _i, key in enumerate(quality_count.keys()):
-                if (rec_info["data_quality_flags"] & (1 << _i)) != 0:
-                    quality_count[key] += 1
+            for _i, key in enumerate(quality_count_seconds.keys()):
+                if (record["data_quality_flags"] & (1 << _i)) != 0:
                     quality_count_seconds[key] += record_length_seconds
+                    quality_count[key] += 1
+        if timing_quality and "timing_quality" in record:
+            tq.append(float(record["timing_quality"]))
 
-        if timing_quality and "timing_quality" in rec_info:
-            tq.append(float(rec_info["timing_quality"]))
-
-        # Add a new quality metric that says whether a correction is required
-        # in addition to whether this correction has been applied
-        if rec_info["time_correction"]:
+        # Add a quality metric that says whether a correction is required
+        # REGARDLESS of whether this correction has been applied
+        if record["time_correction"]:
             timing_correction += record_length_seconds
 
     results = {
-        "used_times": used_times,
         "record_count": record_count,
         "timing_correction": timing_correction
     }
 
+    # Add the flags & counts to the results
     if io_flags:
-        results["io_and_clock_flags"] = io_count
         results["io_and_clock_flags_seconds"] = io_count_seconds
+        results["io_and_clock_flags"] = io_count
     if activity_flags:
-        results["activity_flags"] = activity_count
         results["activity_flags_seconds"] = activity_count_seconds
+        results["activity_flags"] = activity_count
     if data_quality_flags:
-        results["data_quality_flags"] = quality_count
         results["data_quality_flags_seconds"] = quality_count_seconds
+        results["data_quality_flags"] = quality_count
+
+    # Add the timing quality param
     if timing_quality:
         tq = np.array(tq, dtype=np.float64)
-        if len(tq):
+        # Only add the timing quality if it is defined for all records
+        if len(tq) == record_count:
             results["timing_quality"] = {
                 "all_values": tq,
                 "min": tq.min(),
