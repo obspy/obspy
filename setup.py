@@ -134,6 +134,7 @@ ENTRY_POINTS = {
         'obspy-dataless2xseed = obspy.io.xseed.scripts.dataless2xseed:main',
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
+        'obspy-eida-fetch = obspy.clients.eida.fetch:main',
         ],
     'distutils.commands': [
         'build_man = Help2Man'
