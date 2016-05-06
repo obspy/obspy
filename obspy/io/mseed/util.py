@@ -101,12 +101,12 @@ def get_flags(files, starttime=None, endtime=None,
     Counts all data quality, I/O, and activity flags of the given MiniSEED
     file and returns statistics about the timing quality if applicable.
 
-    :param file_or_file_object: MiniSEED file or list of MiniSEED files.
-    :type file_or_file_object: list, str, file-like object
-    :param starttime: Only use records whose end time is larger then this
+    :param files: MiniSEED file or list of MiniSEED files.
+    :type files: list, str, file-like object
+    :param starttime: Only use records whose end time is larger than this
         given time.
     :type starttime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
-    :param endtime: Only use records whose start time is smaller then this
+    :param endtime: Only use records whose start time is smaller than this
         given time.
     :type endtime: str or :class:`obspy.core.utcdatetime.UTCDateTime`
     :param io_flags: Extract I/O flag counts.
@@ -117,13 +117,12 @@ def get_flags(files, starttime=None, endtime=None,
     :type data_quality_flags: bool
     :param timing_quality: Extract timing quality and corresponding statistics.
     :type timing_quality: bool
-    :param used_times: Records that fall (partially) within these ranges
-        are excluded.
-    : type used_times: array of [start, end] times
+
     :return: Dictionary with information about the timing quality and the data
         quality, I/O, and activity flags. It has the following keys:
-        ``"record_count"``, ``"data_quality_flags"``, ``"activity_flags"``,
-        ``"io_and_clock_flags"``, and ``"timing_quality"``.
+        ``"record_count"``, ``"timing_correction"``, ``"data_quality_flags"``,
+        ``"activity_flags"``, ``"io_and_clock_flags"``,
+        and ``"timing_quality"``.
 
     .. rubric:: Flags
 
@@ -132,6 +131,7 @@ def get_flags(files, starttime=None, endtime=None,
     are extracted:
 
     Data quality flags
+
     ========  =================================================
     Bit       Description
     ========  =================================================
@@ -146,6 +146,7 @@ def get_flags(files, starttime=None, endtime=None,
     ========  =================================================
 
     Activity flags
+
     ========  =================================================
     Bit       Description
     ========  =================================================
@@ -158,6 +159,7 @@ def get_flags(files, starttime=None, endtime=None,
     [Bit 6]   Event in progress
 
     I/O and clock flags
+
     ========  =================================================
     Bit       Description
     ========  =================================================

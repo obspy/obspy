@@ -31,6 +31,7 @@
        ~trigger.pk_baer
        ~polarization.polarization_analysis
        ~spectral_estimation.PPSD
+       ~quality_control.MSEEDMetadata
        ~trigger.recursive_sta_lta
        ~rotate.rotate_ne_rt
        ~invsim.simulate_seismometer
@@ -59,6 +60,7 @@
        interpolation
        konnoohmachismoothing
        polarization
+       quality_control
        spectral_estimation
        rotate
        tf_misfit
