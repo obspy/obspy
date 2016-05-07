@@ -1,9 +1,9 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-#from obspy.core.trace import FrequencyDomainTrace
+# from obspy.core.trace import FrequencyDomainTrace
 import math
 import os
 import unittest
@@ -11,7 +11,6 @@ from copy import deepcopy
 import warnings
 
 import numpy as np
-import numpy.ma as ma
 import scipy as sp
 
 from obspy import Stream, Trace, UTCDateTime, __version__, read, read_inventory
@@ -25,42 +24,66 @@ import matplotlib.pyplot as plt
 class TraceTestCase(unittest.TestCase):
 
     def test_fft_circle(self):
-        
-        #Trace
-        st=read()
-        tr=st[0]
-
-        #added a sinus-wave
-        x = np.linspace(-np.pi,np.pi,201)
-        y = np.sin(x)   
-        tr.data = y
+        # Trace
+        st = read()
+        tr = st[0]
+        # added a sinus-wave
+        x = np.linspace(0,4*(np.pi), 201)
+        #y = np.sin(x)
+        #tr.data = y
 
 #########
 
-        #Spectrum after fft
-        tr_f=tr.fft()
+        #test for fft and ifft       
 
-        #Trace after ifft
+        # Spectrum after fft
+        tr_f = tr.fft()
+        # Trace after ifft
         tr2 = tr_f.ifft()
+
+        # control of the output
+        np.testing.assert_allclose(tr.data, tr2.data, atol=10e-8)
+        #print(tr.stats == tr_f.stats == tr2.stats)
+
+############
+        #test for integration and differentiation
+
+        tr_f.data = np.sin(2*np.pi*2*x)
+        #tr_f2 = tr_f.differentiation(1)
+        #tr_f3 = tr_f2.integration(1)
+        #print (np.testing.assert_allclose(tr_f.data, tr_f3, atol=10))  
+
+############
+        # test for polar coordinates
+        #print (tr_f.data[2])
+        r, deg = tr_f.polar()
         
-        #control of the output
-        print (np.testing.assert_allclose(tr.data, tr2.data, atol=1))
-        print (tr.stats==tr_f.stats==tr2.stats)
+        #test für r 
+        np.testing.assert_allclose(r, (np.sqrt(((tr_f.data.imag)**2)+
+        (tr_f.data.real)**2)), atol = 10e-9)        
 
-###########
+        #test für deg
+        # (np.testing.assert_allclose(deg[5], (np.arctan((tr_f.data[5].imag)/(tr_f.data[5].real)))         , atol = 10e-9))        
 
-        #plots
-        plt.figure(1)
-        plt.subplot(311)
-        plt.plot(tr.data)
+############
+     
+        # plots
+        #plt.figure(1)
+        # plt.subplot(311)
+        # plt.plot(tr.data)
         plt.subplot(312)
         plt.plot(tr_f.data)
-        plt.subplot(313)
-        plt.plot(tr2.data)
+        # plt.subplot(313)
+        # plt.plot(tr2.data)
         plt.show()
 
 ############
-               
+     
+        #tr_f.plot_psd_mtspec_trace()
+
+
+############
+
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

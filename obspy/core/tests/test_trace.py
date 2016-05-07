@@ -1618,7 +1618,7 @@ class TraceTestCase(unittest.TestCase):
         """
         tr1 = read()[0]
         tr2 = read()[0]
-        #tr2 = tr1.copy()
+        # tr2 = tr1.copy()
         # deconvolve from dataless with simulate() via Parser from
         # dataless/RESP
         parser = Parser("/path/to/dataless.seed.BW_RJOB")

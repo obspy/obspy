@@ -13,7 +13,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
-import functools
 import inspect
 import math
 import warnings
@@ -21,6 +20,10 @@ from copy import copy, deepcopy
 
 import numpy as np
 from decorator import decorator
+from scipy import fftpack
+import matplotlib.pyplot as plt
+from matplotlib import mlab
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
@@ -30,13 +33,14 @@ from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import flat_not_masked_contiguous, get_window_times
 
 
-###########################################################################################
+###########################################################################
 
 class BaseStats(AttribDict):
 
     pass
 
-###########################################################################################
+###########################################################################
+
 
 class TimeSeriesStats(BaseStats):
 
@@ -63,7 +67,7 @@ class TimeSeriesStats(BaseStats):
       >>> stats['npts'] = 60
       >>> print(stats.npts)
       60
-    
+
     .. rubric:: _`Default Attributes`
 
     ``sampling_rate`` : float, optional
@@ -76,9 +80,9 @@ class TimeSeriesStats(BaseStats):
         Number of sample points (default value is 0, which implies that no data
         is present).
 
-    ##################################################################
+##################################################################
     Further Default Attributes of the class Stats(TimeSeriesStats):
- 
+
     ``network`` : string, optional
         Network code (default is an empty string).
     ``location`` : string, optional
@@ -88,7 +92,7 @@ class TimeSeriesStats(BaseStats):
     ``channel`` : string, optional
         Channel code (default is an empty string).
 
-    ##################################################################     
+##################################################################
 
     ``starttime`` : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Date and time of the first data sample given in UTC (default value is
@@ -154,7 +158,7 @@ class TimeSeriesStats(BaseStats):
         'endtime': UTCDateTime(0),
         'npts': 0,
         'calib': 1.0,
-        
+
     }
 
     def __init__(self, header={}):
@@ -215,10 +219,11 @@ class TimeSeriesStats(BaseStats):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-###################################################################################################
+######################################################################
+
 
 class Stats(TimeSeriesStats):
-    
+
     readonly = ['endtime']
     defaults = {
         'sampling_rate': 1.0,
@@ -230,9 +235,8 @@ class Stats(TimeSeriesStats):
         'network': '',
         'station': '',
         'location': '',
-        'channel': ''
-    }
-    
+        'channel': ''}
+
     def __str__(self):
         """
         Return better readable string representation of Stats object.
@@ -250,7 +254,7 @@ def _add_processing_info(func, *args, **kwargs):
     This is a decorator that attaches information about a processing call as a
     string to the Trace.stats.processing list.
     """
-    callargs = inspect.getcallargs(func,*args,**kwargs)
+    callargs = inspect.getcallargs(func, *args, **kwargs)
     callargs.pop("self")
     kwargs_ = callargs.pop("kwargs", {})
     from obspy import __version__
@@ -273,7 +277,8 @@ def _add_processing_info(func, *args, **kwargs):
     self._internal_add_processing_info(info)
     return result
 
-    ################################################################################
+######################################################################
+
 
 class BaseTrace(object):
     def __init__(self, data=np.array([])):
@@ -283,7 +288,7 @@ class BaseTrace(object):
     def max(self):
         """
         Returns the value of the absolute maximum amplitude in the trace.
- 
+
         :return: Value of absolute maximum of ``trace.data``.
 
 
@@ -298,7 +303,7 @@ class BaseTrace(object):
     ``str(trace)``
         Returns basic information about the trace object.
         See also: :meth:`Trace.__str__`.
-        
+
  .. rubric:: Example
 
         >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
@@ -317,7 +322,6 @@ class BaseTrace(object):
         if abs(_min) > abs(value):
             value = _min
         return value
-
 
     def std(self):
         """
@@ -385,7 +389,6 @@ class BaseTrace(object):
         """
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
- 
 
     def _internal_add_processing_info(self, info):
         """
@@ -395,8 +398,8 @@ class BaseTrace(object):
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
+######################################################################
 
-##################################################################################
 
 class TimeSeriesTrace(BaseTrace):
 
@@ -405,23 +408,23 @@ class TimeSeriesTrace(BaseTrace):
         # otherwise we could end up with e.g. a list object in self.data
         super(TimeSeriesTrace, self).__init__(data=data)
         _data_sanity_checks(data)
-        #set some defaults if not set yet
+        # set some defaults if not set yet
         if header is None:
             header = {}
 
-         # make sure Trace gets initialized with suitable ndarray as self.data
-        # otherwise we could end up with e.g. a list object in self.data _data_sanity_checks  (data) # set some defaults if not set yet if header is None:
-             # Default values: For detail see
-             # http://www.obspy.org/wiki/\
-             # KnownIssues#DefaultParameterValuesinPython
+        # make sure Trace gets initialized with suitable ndarray as self.data
+        # otherwise we could end up with e.g. a list
+        # object in self.data _data_sanity_checks  (data)
+        # set some defaults if not set yet if header is None:
+        # Default values: For detail see
+        # http://www.obspy.org/wiki/\
+        # KnownIssues#DefaultParameterValuesinPython
 
         header.setdefault('npts', len(data))
 
         # set data without changing npts in stats object (for headonly option)
         super(Trace, self).__setattr__('data', data)
-
         self.stats = TimeSeriesStats(header)
-
 
     @property
     def meta(self):
@@ -465,7 +468,7 @@ class TimeSeriesTrace(BaseTrace):
 
     def __le__(self, other):
         """
-       Too ambiguous, throw an Error.  
+       Too ambiguous, throw an Error.
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
@@ -810,7 +813,7 @@ class TimeSeriesTrace(BaseTrace):
             1 + 2  : AAAABCDEFFFF
         """
         if sanity_checks:
-            if not isinstance(trace,Trace):
+            if not isinstance(trace, Trace):
                 raise TypeError
             #  check id
             if self.get_id() != trace.get_id():
@@ -1427,7 +1430,7 @@ class TimeSeriesTrace(BaseTrace):
         If both `paz_remove` and `paz_simulate` are specified, both steps are
         performed in one go in the frequency domain, otherwise only the
         specified step is performed.
- 
+
         .. note::
             Instead of the builtin deconvolution based on Poles and Zeros
             information, the deconvolution can be performed using evalresp
@@ -1436,7 +1439,6 @@ class TimeSeriesTrace(BaseTrace):
             Tutorial <https://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
-
 
     def filter(self, type, **options):
         """
@@ -1503,7 +1505,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ... # doctest: +ELLIPSIS
         <...Trace object at 0x...>
         >>> tr.plot()  # doctest: +SKIP
-            
+
         .. plot::
 
             from obspy import read
@@ -1526,7 +1528,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
- 
+
         # some convenience handling for evalresp type instrument correction
         if "seedresp" in kwargs:
             seedresp = kwargs["seedresp"]
@@ -1588,7 +1590,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'bandpass'``
             Butterworth-Bandpass (uses :func:`obspy.signal.filter.bandpass`).
 
-        ``'bandstop'``-            Butterworth-Bandstop (uses :func:`obspy.signal.filter.bandstop`).
+        ``'bandstop'``-Butterworth-Bandstop (uses :func:
+          `obspy.signal.filter.bandstop`).
 
         ``'lowpass'``
             Butterworth-Lowpass (uses :func:`obspy.signal.filter.lowpass`).
@@ -2357,11 +2360,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
-
-
     @_add_processing_info
     def split(self):
-    
+
         """
          Split Trace object containing gaps using a NumPy masked array into
          several traces.
@@ -2562,6 +2563,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = np.ma.array(time_array, mask=self.data.mask)
         return time_array
 
+
 class Trace(TimeSeriesTrace):
     """
     An object containing data of a continuous series, such as a seismic trace.
@@ -2723,21 +2725,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         from obspy.signal.invsim import simulate_seismometer
 
-        print("&&&&&&&&&&&&&&&&&&&&&")
-        print("self.data is", self.data)
-        print("self.stats.sampling_rate is",self.stats.sampling_rate)
-        print("self.paz_remove is",paz_remove)
-        print("paz_simulate is", paz_simulate)
-        print("remove_sensitivity is", remove_sensitivity)
-        print("simulate_sensitivity is", simulate_sensitivity)
-        print("kwargs is", kwargs)
-        print("%%%%%%%%%%%%%%%%%%%%")
-
         self.data = simulate_seismometer(
             self.data, self.stats.sampling_rate, paz_remove=paz_remove,
             paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
             simulate_sensitivity=simulate_sensitivity, **kwargs)
-        print(self.data)
 
         return self
 
@@ -2828,7 +2819,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # mapped according to the trigger_functions dictionary
         self.data = func(self.data, **options)
         return self
-
 
     def _get_response(self, inventories):
         """
@@ -3201,6 +3191,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = data
         return self
 
+#####################
+
+    def fft(self, window_function='cosine', percentage=0.1):
+        f_tr = FrequencyDomainTrace()
+
+        f_tr.stats = self.stats
+        f_tr.id = self.id
+        #f_tr.merge = stream.Stream.merge 
+        tr2 = self.copy()
+        after_taper = self.taper(max_percentage=percentage,
+        type=window_function)
+        f_tr.data = fftpack.rfft(after_taper)
+
+        return f_tr
+
+####################
+
     @_add_processing_info
     def remove_sensitivity(self, inventory=None):
         """
@@ -3239,6 +3246,270 @@ def _data_sanity_checks(value):
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
 
+########################################
+
+
+class FrequencyDomainTrace(BaseTrace):
+
+    
+
+    def ifft(self):
+        tr = Trace()
+        tr.stats = self.stats
+        tr.data = fftpack.irfft(self.data)
+        return tr
+
+    def plot(self):
+        N = self.stats.npts
+        T = self.stats.delta
+        x = np.linspace(0.0, N*T, N)
+        yf = self.data
+        xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
+        fig, ax = plt.subplots()
+        ax.plot(xf, 2.0/N * np.abs(yf[:N/2]))
+        plt.xlabel('Freq (Hz)')
+        plt.ylabel('|Y(freq)|')
+        plt.show()
+
+    def differentiation(self, order_of_differention = 1):
+        self.data = fftpack.diff(self.data, order = order_of_differention)
+        return self
+
+    def integration(self, order_of_integration=1):
+        order_of_integration = (-1)*order_of_integration
+        self.data = fftpack.diff(self.data, order = order_of_integration)
+        return self
+
+    def polar(self):
+        r = np.absolute(self.data)
+        deg = np.angle(self.data)
+        return r, deg
+        
+    def plot_psd_trace(self, plot_type='default', nperseg=4096, noverlap=None,
+                       detrend=mlab.detrend_linear, window=mlab.window_hanning,
+                       convert_to_periods=False, convert_to_db=False, logx=False,
+                       plot_noise_models=False, ax=None, show_plot=True,
+                       amplitude_label_units=None, calc_only=False):
+    
+        """
+    
+        Plot the power spectral density estimated using Welch's method.
+        Welch's method works by averaging modified periodograms calculated from
+        overlapping data segments (see also [McNamara2004]_). When used without
+        windowing and with zero overlap, this is identical to Bartlett's method.
+        Setting plot_type to 'ppsd' sets up the plot very similar to the plot
+        generated by obspy.signal.spectral_estimation.PPSD. Note that in this mode
+        there the visible area contains data if the waveform data was converted to
+        ground acceleration.
+    
+        :type plot_type: String
+        :param plot_type: XXX move to special method?
+        :type nperseg: int
+        :param nperseg: Number of data points to use for FFT. Care must be taken
+                to choose a number suitable for FFT. See e.g.
+                :func:`~obspy.signal.util.prevpow2`.
+        :type noverlap: int
+        :param noverlap: The number of overlapping points. If `None`, defaults to
+                50% of nperseg.
+        XXX Document other options (if they stay).
+        """
+    
+        if plot_type == 'ppsd':
+    
+            # This is the same as in obspy.signal.spectral_estimation.PPSD.
+            # Initially split the trace into 13 segments, overlapping by 75%
+            segment_length = self.stats.npts / 4.0
+            # Reduce segment length to next lower power of 2 (potentially
+            # increasing number of segments up to a maximum of 27)
+
+            nperseg = prevpow2(segment_length)
+            noverlap = int(0.75 * nperseg)
+            # Since plot_type is merely a shortcut, force appropriate options,
+            # ignoring manually set values
+            detrend = mlab.detrend_linear
+            window = fft_taper
+            convert_to_periods = True
+            convert_to_db = True
+            logx = True
+            plot_noise_models = True
+    
+        if noverlap is None:
+            # Default to 50% as appropriate for window_hanning
+            noverlap = int(0.5 * nperseg)
+    
+        # Perform the spectral estimation
+        Pxx, f = mlab.psd(
+            self.data,
+            NFFT=nperseg,
+            Fs=self.stats.sampling_rate,
+            detrend=detrend,
+            window=window,
+            noverlap=noverlap
+        )
+    
+        # Remove first term (zero frequency)
+        Pxx = Pxx[1:]
+        f = f[1:]
+    
+        if calc_only:
+            return Pxx, f
+    
+        if convert_to_periods:
+            # Go from frequency to period
+            f = 1. / f
+    
+        if convert_to_db:
+            # Replace zero values for safe logarithm (as in PPSD)
+            dtiny = np.finfo(0.0).tiny
+            idx = Pxx < dtiny
+            Pxx[idx] = dtiny
+            # Go to db
+            Pxx = np.log10(Pxx)
+            Pxx *= 10
+    
+        if ax is None:
+            _fig, ax = plt.subplots(nrows=1)
+        ax.plot(f, Pxx)
+    
+        if plot_noise_models:
+            # Taken from PPSD.plot()
+            model_periods, high_noise = obspy.signal.spectral_estimation.get_NHNM()
+            ax.plot(model_periods, high_noise, '0.4', linewidth=2)
+            model_periods, low_noise = obspy.signal.spectral_estimation.get_NLNM()
+            ax.plot(model_periods, low_noise, '0.4', linewidth=2)
+    
+        if plot_type == 'ppsd':
+            # Set the same limits as in PPSD with 1h segments
+            ax.set_xlim(0.01, 179)
+            ax.set_ylim(-200, -50)
+            # Warn if there is nothing to display (likely data wasn't acceleration)
+            if not np.any((Pxx > -200) & (Pxx < -50)):
+                msg = 'No data to display (PSD data is between %.01f and ' + \
+                      '%.01f dB). Maybe instrument response was not removed ' + \
+                      'or data is not ground acceleration?'
+                warnings.warn(msg % (Pxx.min(), Pxx.max()))
+        else:
+            # Scale to maximum of central 90% (so that scaling won't be dominated
+            # by border effects)
+            cut = int(0.05 * len(Pxx))
+            y_max = np.max(Pxx[cut:-cut])
+            # Add some padding at the top
+            y_max *= 1.05
+            ax.set_ylim(0, y_max)
+    
+        if logx:
+            ax.semilogx()
+    
+        # Set plot labels
+        if convert_to_periods:
+            ax.set_xlabel('Period [s]')
+        else:
+            ax.set_xlabel('Frequency [Hz]')
+        if convert_to_db:
+            ax.set_ylabel('Amplitude [dB]')
+        else:
+            label = 'Amplitude'
+            if amplitude_label_units:
+                label += ' [' + amplitude_label_units + ']'
+            ax.set_ylabel(label)
+        ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+        title = "%s   PSD Estimation"
+        ax.set_title(title % self.id)
+    
+        if show_plot:
+            plt.show()
+    
+    
+    
+    def plot_psd_stream(self, **kwargs):
+        """
+        Same as plot_psd_trace, but for Stream objects.
+        """
+        self.merge(fill_value=0)
+        n_traces = len(self)
+        if not n_traces:
+            msg = 'No traces in stream'
+            raise IndexError(msg)
+        elif 'ax' in kwargs:
+            # Catch keyword ax, which is explicitly provided later, and silently
+            # convert to axes (if axes was not specified)
+            # XXX probably better to always raise
+            if n_traces != 1 or 'axes' in kwargs:
+                msg = "Unexpected keyword argument 'ax'"
+                raise TypeError(msg)
+            axes = (kwargs['ax'],)
+        elif 'axes' in kwargs:
+            # Check if right number of axes was provided in keywords arguments
+            if len(kwargs['axes']) != n_traces:
+                msg = 'Number of axes must match number of traces after merging'
+                raise ValueError(msg)
+            axes = kwargs['axes']
+        elif n_traces == 1:
+            _fig, ax0 = plt.subplots(nrows=1)
+            axes = (ax0,)
+        else:
+            _fig, axes = plt.subplots(nrows=n_traces)
+            plt.subplots_adjust(hspace=1.2)
+        largest_ymax = 0
+        for trace, ax in zip(self, axes):
+            kwargs['ax'] = ax
+            kwargs['show_plot'] = False
+            trace.plot_psd(**kwargs)
+            ymax = ax.get_ylim()[1]
+            if ymax > largest_ymax:
+                largest_ymax = ymax
+    
+        if not kwargs.get('plot_type') == 'ppsd':
+            for ax in axes:
+                ax.set_ylim(0, largest_ymax)
+    
+        plt.show()
+    
+    
+    
+    def plot_psd_mtspec_trace(self, ax=None, show_plot=True, **kwargs):
+    
+        """
+        Minimal method to plot the spectrum generated using mtspec for quick
+        comparison.
+        """
+        from obspy.core.mtspec import mtspec
+        Pxx, f = mtspec.mtspec(self.data, self.stats.delta, 4)
+        if ax is None:
+            _fig, ax = plt.subplots(nrows=1)
+        ax.plot(f, Pxx)
+    
+        # Scale to maximum of central 90% (so that scaling won't be dominated
+        # by border effects)
+        cut = int(0.05 * len(Pxx))
+        y_max = np.max(Pxx[cut:-cut])
+        # Add some padding at the top
+        y_max *= 1.05
+        ax.set_ylim(0, y_max)
+    
+        ax.set_xlabel('Frequency [Hz]')
+        ax.set_ylabel('Amplitude [??]')
+        ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
+        title = "%s   PSD Estimation (mtspec)"
+        ax.set_title(title % self.id)
+    
+        if show_plot:
+            plt.show()
+    
+    #def __monkey_patch():
+    #    Stream.plot_psd = plot_psd_stream
+    #    Trace.plot_psd = plot_psd_trace
+    #    Trace.plot_psd_mtspec = plot_psd_mtspec_trace
+    
+    # Apply the monkey path when the module is imported.
+    
+    #__monkey_patch()
+    
+
+
+    # def _mult_(self, others)
+
+#######################################
 
 if __name__ == '__main__':
     import doctest
