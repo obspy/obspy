@@ -23,6 +23,10 @@ master:
      white background.
  - obspy.io.css
     * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.segy:
+    * Iterative reading of large SEG-Y and SU files with
+	  `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
+	  (see #1400).
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
