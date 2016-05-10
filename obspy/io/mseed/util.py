@@ -319,7 +319,7 @@ def get_flags(files, starttime=None, endtime=None,
             used_times = [records[0]["starttime"], records[0]["endtime"]]
         else:
 
-            time_tolerance = 0.5 * record["samp_rate"]
+            time_tolerance = 0.5 * (1/record["samp_rate"])
             tolerated_end = used_times[0] - time_tolerance
             if record["endtime"] > used_times[0]:
                 record["endtime"] = used_times[0]
@@ -328,7 +328,7 @@ def get_flags(files, starttime=None, endtime=None,
             # This is why we process from back to front
             # Because the flag belongs to the previous record,
             # drag the previous endtime to the next starttime
-            elif record["endtime"] > tolerated_end:
+            elif record["endtime"] >= tolerated_end:
                 record["endtime"] = used_times[0]
 
             # Extend the new used_times with the new record coverage
@@ -339,7 +339,6 @@ def get_flags(files, starttime=None, endtime=None,
         # start and endtime respectively
         record_first_sample = max(record["starttime"], starttime)
         record_last_sample = min(record["endtime"], endtime)
-
         # Length of a record is R_end - R_start + sampling interval
         record_length_seconds = (record_last_sample - record_first_sample)
 

@@ -156,64 +156,89 @@ class MSEEDMetadata(object):
         body_overlap = []
 
         # Read all the files entirely and calculate gaps and overlaps
-        # for the entire segment. Later we will narrow it to our window.
+        # for the entire segment. Later we will narrow it to our window if
+        # it has been specified
         for file in self.all_files:
             self.all_data.extend(obspy.read(file, format="mseed"))
 
+        # Sort the data by so the start times are in order
         self.all_data.sort()
 
-        # Implicitly put a gap at the start of the window if it is not padded
-        # with data.
+        # Coverage keeps track of the time used
+        coverage = None
+        for trace in self.all_data:
+
+            # Extend the endtime of a trace with delta
+            trace_end = trace.stats.endtime + trace.stats.delta
+            trace_start = trace.stats.starttime
+
+            # If a start boundary has been specified
+            if self.window_start is not None:
+                if trace_end <= self.window_start:
+                    continue
+
+                # In case the start time of a trace comes before the window
+                # extend the length to the window start
+                cut_trace_start = max(trace_start, self.window_start)
+            else:
+                cut_trace_start = trace_start
+
+            # If a end boundary has been specified
+            if self.window_end is not None:
+                if trace_start > self.window_end:
+                    continue
+
+                # In case the end time of a trace comes after the window
+                # reduce the length to the window end
+                cut_trace_end = min(trace_end, self.window_end)
+            else:
+                cut_trace_end = trace_end
+
+            # Calculate the trace time tolerance as 0.5 * delta
+            time_tolerance_max = trace_end + 0.5 * trace.stats.delta
+            time_tolerance_min = trace_end - 0.5 * trace.stats.delta
+
+            # Set the initial trace coverage and proceed to the next trace
+            if coverage is None:
+                coverage = {
+                    'start': trace_start,
+                    'end': trace_end,
+                    'end_min': time_tolerance_min,
+                    'end_max': time_tolerance_max
+                }
+                continue
+
+            # Check if the start time of a trace falls
+            # beyond covered end max (time tolerance)
+            # this must be interpreted as a gap
+            if trace_start > coverage['end_max']:
+                body_gap.append(cut_trace_start - coverage['end'])
+
+            # Check overlap in coverage
+            # the overlap ends at the end of the trace
+            # or add the end of the coverage
+            if trace_start <= coverage['end_min']:
+                min_end = min(cut_trace_end, coverage['end'])
+                body_overlap.append(min_end - cut_trace_start)
+
+            # Extend the coverage of the trace
+            # the start coverage remains unchanged
+            if trace_end > coverage['end']:
+                coverage['end'] = trace_end
+                coverage['end_min'] = time_tolerance_min
+                coverage['end_max'] = time_tolerance_max
+
+        # We have the coverage by the traces
+        # check if there is an end or start gap caused by the
+        # window forced by the user
         if self.window_start is not None:
-            start_stats = self.all_data[0].stats
-            if self.window_start < start_stats.starttime:
-                body_gap.append(start_stats.starttime - self.window_start)
-
+            if coverage['start'] > self.window_start:
+                body_gap.append(coverage['start'] - self.window_start)
         if self.window_end is not None:
-            end_stats = self.all_data[-1].stats
-            if self.window_end > end_stats.endtime + 1.5*end_stats.delta:
-                body_gap.append(self.window_end - (end_stats.endtime +
-                                                   end_stats.delta))
+            if coverage['end'] < self.window_end:
+                body_gap.append(self.window_end - coverage['end'])
 
-        # Let ObsPy determine all the other gaps
-        gaps = self.all_data.get_gaps()
-
-        # Handle the logical to determine the actual gaps and overlaps in
-        # the user specified window.. this gets pretty tricky because gaps
-        # and overlaps may in theory cross the start/end boundaries.
-        for _i in (_ for _ in gaps if _[-1] > 0):
-
-            # Only check if the gap is within our window
-            if (_i[5] - _i[-2]) >= self.endtime or _i[5] <= self.starttime:
-                continue
-
-            # Full gap
-            if self.starttime <= (_i[5] - _i[-2]) and self.endtime >= _i[5]:
-                body_gap.append(_i[-2])
-            elif self.starttime >= (_i[5] - _i[-2]):
-                body_gap.append(min(_i[5], self.endtime) - self.starttime)
-            elif self.endtime <= _i[5]:
-                body_gap.append(self.endtime - max(_i[5] - _i[-2],
-                                                   self.starttime))
-
-        # Handle overlaps (negative gaps)
-        for _i in (_ for _ in gaps if _[-1] < 0):
-
-            # Only check if the overlap is within our window
-            if _i[5] >= self.endtime or (_i[5] - _i[-2]) <= self.starttime:
-                continue
-
-            # Full overlap
-            if self.starttime <= _i[5] and self.endtime >= (_i[5] - _i[-2]):
-                body_overlap.append(abs(_i[-2]))
-            elif self.starttime >= _i[5]:
-                body_overlap.append(abs(self.starttime - min(_i[5] - _i[-2],
-                                                             self.endtime)))
-            elif self.endtime <= (_i[5] - _i[-2]):
-                body_overlap.append(abs(max(_i[5], self.starttime) -
-                                        self.endtime))
-
-        # Set the meta
+        # Set the gap and overlap information
         self.meta['num_gaps'] = len(body_gap)
         self.meta['sum_gaps'] = sum(body_gap)
         if len(body_gap) != 0:
