@@ -74,7 +74,7 @@ class SEGYFile(object):
     Class that internally handles SEG Y files.
     """
     def __init__(self, file=None, endian=None, textual_header_encoding=None,
-                 unpack_headers=False, headonly=False):
+                 unpack_headers=False, headonly=False, read_traces=True):
         """
         Class that internally handles SEG Y files.
 
@@ -97,6 +97,10 @@ class SEGYFile(object):
             will be read and unpacked. Has a huge impact on memory usage. Data
             can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
+        :type read_traces: bool
+        :param read_traces: Data traces will only be read if this is set to
+            ``True``. The data will be completely ignored if this is set to
+            ``False``.
         """
         if file is None:
             self._create_empty_segy_file_object()
@@ -121,7 +125,8 @@ class SEGYFile(object):
         # Read the headers.
         self._read_headers()
         # Read the actual traces.
-        self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
+        if read_traces:
+            self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
 
     def __str__(self):
         """
@@ -303,7 +308,8 @@ class SEGYFile(object):
             raise SEGYWritingError(msg)
         file.write(textual_header)
 
-    def _read_traces(self, unpack_headers=False, headonly=False):
+    def _read_traces(self, unpack_headers=False, headonly=False,
+                     yield_each_trace=False):
         """
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
@@ -319,6 +325,13 @@ class SEGYFile(object):
             will be read and unpacked. Has a huge impact on memory usage. Data
             can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
+
+        :type yield_each_trace: bool
+        :param yield_each_trace: If True, it will yield each trace after it
+            has been read. This enables a simple implementation of a
+            streaming interface to read SEG-Y files. Read traces will no
+            longer be collected in ``self.traces`` list if this is set to
+            ``True``.
         """
         self.traces = []
         # Determine the filesize once.
@@ -336,7 +349,10 @@ class SEGYFile(object):
                 trace = SEGYTrace(self.file, self.data_encoding, self.endian,
                                   unpack_headers=unpack_headers,
                                   filesize=filesize, headonly=headonly)
-                self.traces.append(trace)
+                if yield_each_trace:
+                    yield trace
+                else:
+                    self.traces.append(trace)
             except SEGYTraceHeaderTooSmallError:
                 break
 
@@ -889,6 +905,69 @@ def _internal_read_segy(file, endian=None, textual_header_encoding=None,
     return SEGYFile(file, endian=endian,
                     textual_header_encoding=textual_header_encoding,
                     unpack_headers=unpack_headers, headonly=headonly)
+
+
+def iread_segy(file, endian=None, textual_header_encoding=None,
+               unpack_headers=False, headonly=False):
+    """
+    Iteratively read a SEG-Y field and yield single ObsPy Traces.
+
+    :param file: Open file like object or a string which will be assumed to be
+        a filename.
+    :type endian: str
+    :param endian: String that determines the endianness of the file. Either
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
+    :param textual_header_encoding: The encoding of the textual header.
+        Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
+        be attempted.
+    :type unpack_headers: bool
+    :param unpack_headers: Determines whether or not all headers will be
+        unpacked during reading the file. Has a huge impact on the memory usage
+        and the performance. They can be unpacked on-the-fly after being read.
+        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        read and unpacked. Has a huge impact on memory usage. Data can be read
+        and unpacked on-the-fly after reading the file. Defaults to False.
+    """
+    # Open the file if it is not a file like object.
+    if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
+            hasattr(file, 'seek'):
+        with open(file, 'rb') as open_file:
+            for tr in _internal_iread_segy(
+                    open_file, endian=endian,
+                    textual_header_encoding=textual_header_encoding,
+                    unpack_headers=unpack_headers, headonly=headonly):
+                yield tr
+            return
+    # Otherwise just read it.
+    for tr in _internal_iread_segy(file, endian=endian,
+                                   textual_header_encoding=textual_header_encoding,
+                                   unpack_headers=unpack_headers,
+                                   headonly=headonly):
+        yield tr
+
+
+def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
+                         unpack_headers=False, headonly=False):
+    segy_file =  SEGYFile(
+        file, endian=endian, textual_header_encoding=textual_header_encoding,
+        unpack_headers=unpack_headers, headonly=headonly, read_traces=False)
+    for trace in segy_file._read_traces(unpack_headers=unpack_headers,
+                                        headonly=headonly,
+                                        yield_each_trace=True):
+        tr = trace.to_obspy_trace(unpack_trace_headers=unpack_headers,
+                                  headonly=headonly)
+        # Fill stats that are normally attached to the stream stats.
+        tr.stats.segy.textual_file_header = segy_file.textual_file_header
+        tr.stats.segy.binary_file_header = segy_file.binary_file_header
+        tr.stats.segy.textual_file_header_encoding = \
+            segy_file.textual_header_encoding.upper()
+        tr.stats.segy.data_encoding = trace.data_encoding
+        tr.stats.segy.endian = trace.endian
+        yield tr
 
 
 class SUFile(object):
