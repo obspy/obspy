@@ -18,6 +18,7 @@ import fnmatch
 import math
 import os
 import pickle
+import re
 import warnings
 from glob import glob, has_magic
 
@@ -3044,6 +3045,52 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         for tr in self:
             tr.remove_sensitivity(*args, **kwargs)
         return self
+
+    @staticmethod
+    def _dummy_stream_from_string(s):
+        """
+        Helper method to create a dummy Stream object (with data always equal
+        to one) from a string representation of the Stream, mostly for
+        debugging purposes.
+
+        >>> s = ['', '', '3 Trace(s) in Stream:',
+        ...      'IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z - '
+        ...      '2016-01-07T00:00:30.098300Z | 10.0 Hz, 301 samples',
+        ...      'XX.GRFO..HH1 | 2016-01-07T00:00:02.668393Z - '
+        ...      '2016-01-07T00:00:09.518393Z | 100.0 Hz, 686 samples',
+        ...      'IU.ABCD..EH2 | 2016-01-07T00:00:09.528393Z - '
+        ...      '2016-01-07T00:00:50.378393Z | 100.0 Hz, 4086 samples',
+        ...      '', '']
+        >>> s = os.linesep.join(s)
+        >>> st = Stream._dummy_stream_from_string(s)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        IU.GRFO..HH2 | 2016-01-07T00:00:00.008300Z ... | 10.0 Hz, 301 samples
+        XX.GRFO..HH1 | 2016-01-07T00:00:02.668393Z ... | 100.0 Hz, 686 samples
+        IU.ABCD..EH2 | 2016-01-07T00:00:09.528393Z ... | 100.0 Hz, 4086 samples
+        """
+        st = Stream()
+        for line in s.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            if re.match(r'[0-9]+ Trace\(s\) in Stream:', line):
+                continue
+            items = line.split()
+            net, sta, loc, cha = items[0].split(".")
+            starttime = UTCDateTime(items[2])
+            sampling_rate = float(items[6])
+            npts = int(items[8])
+            tr = Trace()
+            tr.data = np.ones(npts, dtype=np.float_)
+            tr.stats.station = sta
+            tr.stats.network = net
+            tr.stats.location = loc
+            tr.stats.channel = cha
+            tr.stats.starttime = starttime
+            tr.stats.sampling_rate = sampling_rate
+            st += tr
+        return st
 
 
 def _is_pickle(filename):  # @UnusedVariable
