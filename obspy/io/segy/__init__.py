@@ -29,7 +29,7 @@ file formats usually used in observatories (GSE2, MiniSEED, ...). The
 of ObsPy are therefore not fully suited to handle them. Nonetheless they work
 well enough if some potential problems are kept in mind.
 
-SEG Y files can be read in three different ways that have different
+SEG Y files can be read in four different ways that have different
 advantages/disadvantages. Most of the following also applies to SU files with
 some changes (keep in mind that SU files have no file wide headers).
 
@@ -37,6 +37,9 @@ some changes (keep in mind that SU files have no file wide headers).
 2. Using the :mod:`obspy.io.segy` specific
    :func:`obspy.io.segy.core._read_segy` function.
 3. Using the internal :func:`obspy.io.segy.segy._read_segy` function.
+4. Some SEG-Y files are too large to be read into memory. The
+   :func:`obspy.io.segy.segy.iread_segy` function reads a large file trace
+   by trace circumventing this problem.
 
 Reading using methods 1 and 2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -124,6 +127,21 @@ tab completion, but data are read directly from the disk when it is accessed:
 >>> segy = _read_segy(filename, headonly=True)
 >>> print(len(segy.traces[0].data))
 2001
+
+
+Iteratively reading a file using method 4
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If a file is too big to be read into memory in one go (as all the other
+methods do), read the file trace by trace using the
+:func:`obspy.io.segy.segy.iread_segy` function:
+
+>>> from obspy.io.segy.segy import iread_segy
+>>> for trace in iread_segy(filename):
+...    # Do something meaningful.
+...    print(round(trace.data.sum() * 1E9))
+-5.0
+
 
 Writing
 -------
