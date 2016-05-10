@@ -956,7 +956,7 @@ def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
     """
     Iteratively read a SEG-Y field and yield single ObsPy Traces.
     """
-    segy_file =  SEGYFile(
+    segy_file = SEGYFile(
         file, endian=endian, textual_header_encoding=textual_header_encoding,
         unpack_headers=unpack_headers, headonly=headonly, read_traces=False)
     for trace in segy_file._read_traces(unpack_headers=unpack_headers,
@@ -971,6 +971,7 @@ def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
             segy_file.textual_header_encoding.upper()
         tr.stats.segy.data_encoding = trace.data_encoding
         tr.stats.segy.endian = trace.endian
+        tr.stats._format = "SEGY"
         yield tr
 
 
