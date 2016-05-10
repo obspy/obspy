@@ -20,6 +20,9 @@ from struct import pack, unpack
 
 import numpy as np
 
+from obspy import Trace, UTCDateTime
+from obspy.core import AttribDict
+
 from .header import (BINARY_FILE_HEADER_FORMAT,
                      DATA_SAMPLE_FORMAT_PACK_FUNCTIONS,
                      DATA_SAMPLE_FORMAT_SAMPLE_SIZE,
@@ -621,6 +624,67 @@ class SEGYTrace(object):
             msg = "'%s' object has no attribute '%s'" % \
                   (self.__class__.__name__, name)
             raise AttributeError(msg)
+
+    def to_obspy_trace(self, unpack_trace_headers=False, headonly=False):
+        """
+        Convert the current Trace to an ObsPy Trace object.
+
+        :param unpack_trace_headers:
+        """
+        # Import here to avoid circular imports.
+        from .core import LazyTraceHeaderAttribDict  # NOQA
+
+        # Create new Trace object for every segy trace and append to the Stream
+        # object.
+        trace = Trace()
+        # skip data if headonly is set
+        if headonly:
+            trace.stats.npts = self.npts
+        else:
+            trace.data = self.data
+        trace.stats.segy = AttribDict()
+        # If all values will be unpacked create a normal dictionary.
+        if unpack_trace_headers:
+            # Add the trace header as a new attrib dictionary.
+            header = AttribDict()
+            for key, value in self.header.__dict__.items():
+                setattr(header, key, value)
+        # Otherwise use the LazyTraceHeaderAttribDict.
+        else:
+            # Add the trace header as a new lazy attrib dictionary.
+            header = LazyTraceHeaderAttribDict(self.header.unpacked_header,
+                                               self.header.endian)
+        trace.stats.segy.trace_header = header
+        # The sampling rate should be set for every trace. It is a sample
+        # interval in microseconds. The only sanity check is that is should be
+        # larger than 0.
+        tr_header = trace.stats.segy.trace_header
+        if tr_header.sample_interval_in_ms_for_this_trace > 0:
+            trace.stats.delta = \
+                float(self.header.sample_interval_in_ms_for_this_trace) / \
+                1E6
+        # If the year is not zero, calculate the start time. The end time is
+        # then calculated from the start time and the sampling rate.
+        if tr_header.year_data_recorded > 0:
+            year = tr_header.year_data_recorded
+            # The SEG Y rev 0 standard specifies the year to be a 4 digit
+            # number.  Before that it was unclear if it should be a 2 or 4
+            # digit number. Old or wrong software might still write 2 digit
+            # years. Every number <30 will be mapped to 2000-2029 and every
+            # number between 30 and 99 will be mapped to 1930-1999.
+            if year < 100:
+                if year < 30:
+                    year += 2000
+                else:
+                    year += 1900
+            julday = tr_header.day_of_year
+            hour = tr_header.hour_of_day
+            minute = tr_header.minute_of_hour
+            second = tr_header.second_of_minute
+            trace.stats.starttime = UTCDateTime(
+                year=year, julday=julday, hour=hour, minute=minute,
+                second=second)
+        return trace
 
 
 class SEGYTraceHeader(object):
