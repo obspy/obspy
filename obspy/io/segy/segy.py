@@ -975,13 +975,72 @@ def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
         yield tr
 
 
+def iread_su(file, endian=None, unpack_headers=False, headonly=False):
+    """
+    Iteratively read a SU field and yield single ObsPy Traces.
+
+    :param file: Open file like object or a string which will be assumed to be
+        a filename.
+    :type endian: str
+    :param endian: String that determines the endianness of the file. Either
+        '>' for big endian or '<' for little endian. If it is None,
+        obspy.io.segy will try to autodetect the endianness. The endianness
+        is always valid for the whole file.
+    :type unpack_headers: bool
+    :param unpack_headers: Determines whether or not all headers will be
+        unpacked during reading the file. Has a huge impact on the memory usage
+        and the performance. They can be unpacked on-the-fly after being read.
+        Defaults to False.
+    :type headonly: bool
+    :param headonly: Determines whether or not the actual data records will be
+        read and unpacked. Has a huge impact on memory usage. Data can be read
+        and unpacked on-the-fly after reading the file. Defaults to False.
+    """
+    # Open the file if it is not a file like object.
+    if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
+            hasattr(file, 'seek'):
+        with open(file, 'rb') as open_file:
+            for tr in _internal_iread_su(
+                    open_file, endian=endian,
+                    unpack_headers=unpack_headers, headonly=headonly):
+                yield tr
+            return
+    # Otherwise just read it.
+    for tr in _internal_iread_su(
+            file, endian=endian,
+            unpack_headers=unpack_headers, headonly=headonly):
+        yield tr
+
+
+def _internal_iread_su(file, endian=None, unpack_headers=False,
+                       headonly=False):
+    """
+    Iteratively read a SU field and yield single ObsPy Traces.
+    """
+    su_file = SUFile(
+        file, endian=endian, unpack_headers=unpack_headers, headonly=headonly,
+        read_traces=False)
+    for trace in su_file._read_traces(unpack_headers=unpack_headers,
+                                      headonly=headonly,
+                                      yield_each_trace=True):
+        tr = trace.to_obspy_trace(unpack_trace_headers=unpack_headers,
+                                  headonly=headonly)
+        tr.stats.su = tr.stats.segy
+        del tr.stats.segy
+        # Fill stats that are normally attached to the stream stats.
+        tr.stats.su.data_encoding = trace.data_encoding
+        tr.stats.su.endian = trace.endian
+        tr.stats._format = "SU"
+        yield tr
+
+
 class SUFile(object):
     """
     Convenience class that internally handles Seismic Unix data files. It
     currently can only read IEEE 4 byte float encoded SU data files.
     """
     def __init__(self, file=None, endian=None, unpack_headers=False,
-                 headonly=False):
+                 headonly=False, read_traces=True):
         """
         :param file: A file like object with the file pointer set at the
             beginning of the SEG Y file. If file is None, an empty SEGYFile
@@ -999,6 +1058,10 @@ class SUFile(object):
             will be read and unpacked. Has a huge impact on memory usage. Data
             can be read and unpacked on-the-fly after reading the file.
             Defaults to False.
+        :type read_traces: bool
+        :param read_traces: Data traces will only be read if this is set to
+            ``True``. The data will be completely ignored if this is set to
+            ``False``.
         """
         if file is None:
             self._create_empty_su_file_object()
@@ -1015,8 +1078,10 @@ class SUFile(object):
             self._autodetect_endianness()
         else:
             self.endian = ENDIAN[endian]
-        # Read the actual traces.
-        self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
+        if read_traces:
+            # Read the actual traces.
+            [i for i in self._read_traces(unpack_headers=unpack_headers,
+                                          headonly=headonly)]
 
     def _autodetect_endianness(self):
         """
@@ -1043,7 +1108,8 @@ class SUFile(object):
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))
 
-    def _read_traces(self, unpack_headers=False, headonly=False):
+    def _read_traces(self, unpack_headers=False, headonly=False,
+                     yield_each_trace=False):
         """
         Reads the actual traces starting at the current file pointer position
         to the end of the file.
@@ -1057,6 +1123,12 @@ class SUFile(object):
         :param headonly: Determines whether or not the actual data records
             will be unpacked. Useful if one is just interested in the headers.
             Defaults to False.
+        :type yield_each_trace: bool
+        :param yield_each_trace: If True, it will yield each trace after it
+            has been read. This enables a simple implementation of a
+            streaming interface to read SEG-Y files. Read traces will no
+            longer be collected in ``self.traces`` list if this is set to
+            ``True``.
         """
         self.traces = []
         # Big loop to read all data traces.
@@ -1067,7 +1139,10 @@ class SUFile(object):
                 trace = SEGYTrace(self.file, 5, self.endian,
                                   unpack_headers=unpack_headers,
                                   headonly=headonly)
-                self.traces.append(trace)
+                if yield_each_trace:
+                    yield trace
+                else:
+                    self.traces.append(trace)
             except SEGYTraceHeaderTooSmallError:
                 break
 
