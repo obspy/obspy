@@ -126,7 +126,8 @@ class SEGYFile(object):
         self._read_headers()
         # Read the actual traces.
         if read_traces:
-            self._read_traces(unpack_headers=unpack_headers, headonly=headonly)
+            [i for i in self._read_traces(
+                unpack_headers=unpack_headers, headonly=headonly)]
 
     def __str__(self):
         """
@@ -943,15 +944,18 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
                 yield tr
             return
     # Otherwise just read it.
-    for tr in _internal_iread_segy(file, endian=endian,
-                                   textual_header_encoding=textual_header_encoding,
-                                   unpack_headers=unpack_headers,
-                                   headonly=headonly):
+    for tr in _internal_iread_segy(
+            file, endian=endian,
+            textual_header_encoding=textual_header_encoding,
+            unpack_headers=unpack_headers, headonly=headonly):
         yield tr
 
 
 def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
                          unpack_headers=False, headonly=False):
+    """
+    Iteratively read a SEG-Y field and yield single ObsPy Traces.
+    """
     segy_file =  SEGYFile(
         file, endian=endian, textual_header_encoding=textual_header_encoding,
         unpack_headers=unpack_headers, headonly=headonly, read_traces=False)
