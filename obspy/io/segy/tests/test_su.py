@@ -12,8 +12,9 @@ import unittest
 
 import numpy as np
 
+import obspy
 from obspy.core.util import NamedTemporaryFile
-from obspy.io.segy.segy import SEGYTraceReadingError, _read_su
+from obspy.io.segy.segy import SEGYTraceReadingError, _read_su, iread_su
 
 
 class SUTestCase(unittest.TestCase):
@@ -122,6 +123,21 @@ class SUTestCase(unittest.TestCase):
             data = fp.read()
         st = _read_su(io.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
+
+    def test_iterative_reading(self):
+        """
+        Tests iterative reading.
+        """
+        # Read normally.
+        filename = os.path.join(self.path, '1.su_first_trace')
+        st = obspy.read(filename, unpack_trace_headers=True)
+
+        # Read iterative.
+        ist = [_i for _i in iread_su(filename, unpack_headers=True)]
+
+        del ist[0].stats.su.data_encoding
+
+        self.assertEqual(st.traces, ist)
 
 
 def suite():
