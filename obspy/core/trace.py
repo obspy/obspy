@@ -3191,22 +3191,18 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = data
         return self
 
-#####################
-
     def fft(self, window_function='cosine', percentage=0.1):
         f_tr = FrequencyDomainTrace()
 
         f_tr.stats = self.stats
+
         f_tr.id = self.id
-        #f_tr.merge = stream.Stream.merge 
         tr2 = self.copy()
         after_taper = self.taper(max_percentage=percentage,
         type=window_function)
         f_tr.data = fftpack.rfft(after_taper)
 
         return f_tr
-
-####################
 
     @_add_processing_info
     def remove_sensitivity(self, inventory=None):
@@ -3232,7 +3228,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = self.data / response.instrument_sensitivity.value
         return self
 
-
 def _data_sanity_checks(value):
     """
     Check if a given input is suitable to be used for Trace.data. Raises the
@@ -3246,16 +3241,12 @@ def _data_sanity_checks(value):
                "arrays are allowed for initialization.") % str(value.shape)
         raise ValueError(msg)
 
-########################################
-
-
 class FrequencyDomainTrace(BaseTrace):
-
-    
 
     def ifft(self):
         tr = Trace()
-        tr.stats = self.stats
+        tr.stats = Stats()
+        tr.stats.starttime = self.stats.starttime
         tr.data = fftpack.irfft(self.data)
         return tr
 
@@ -3280,11 +3271,44 @@ class FrequencyDomainTrace(BaseTrace):
         self.data = fftpack.diff(self.data, order = order_of_integration)
         return self
 
-    def polar(self):
-        r = np.absolute(self.data)
-        deg = np.angle(self.data)
-        return r, deg
-        
+    @property
+    def phase(self):
+        return np.angle(self.data)
+
+    @property
+    def amplitude(self):
+        return np.absolute(self.data)
+    
+    def cross_correlation(self, tr2):
+
+        if self.stats.starttime != tr2.stats.starttime:
+            msg = "Traces do not have the same starttime"
+            raise Exception(msg)
+       
+        elif "FALSE" == np.array_equal(self.frequencies(), tr2.frequencies()):
+            msg = "Traces do not have the same frequencies"
+            raise Exception(msg)
+
+        else: 
+            data1 = self.data
+            data2 = tr2.data 
+            data2_conj = np.conj(data2)
+            data_multiplied = np.multiply(data1, data2_conj)
+            corr = fftpack.ifft(data_multiplied)
+       
+            plt.plot(corr)        
+            plt.xlabel('offset between two waves')
+            plt.ylabel('correlation')
+            plt.show()
+
+            return (corr)        
+
+    def frequencies(self):
+        n = self.data.size
+        timestep = self.stats.delta
+        freq = fftpack.fftfreq(n, d=timestep)       
+        return freq
+
     def plot_psd_trace(self, plot_type='default', nperseg=4096, noverlap=None,
                        detrend=mlab.detrend_linear, window=mlab.window_hanning,
                        convert_to_periods=False, convert_to_db=False, logx=False,
@@ -3418,98 +3442,6 @@ class FrequencyDomainTrace(BaseTrace):
     
         if show_plot:
             plt.show()
-    
-    
-    
-    def plot_psd_stream(self, **kwargs):
-        """
-        Same as plot_psd_trace, but for Stream objects.
-        """
-        self.merge(fill_value=0)
-        n_traces = len(self)
-        if not n_traces:
-            msg = 'No traces in stream'
-            raise IndexError(msg)
-        elif 'ax' in kwargs:
-            # Catch keyword ax, which is explicitly provided later, and silently
-            # convert to axes (if axes was not specified)
-            # XXX probably better to always raise
-            if n_traces != 1 or 'axes' in kwargs:
-                msg = "Unexpected keyword argument 'ax'"
-                raise TypeError(msg)
-            axes = (kwargs['ax'],)
-        elif 'axes' in kwargs:
-            # Check if right number of axes was provided in keywords arguments
-            if len(kwargs['axes']) != n_traces:
-                msg = 'Number of axes must match number of traces after merging'
-                raise ValueError(msg)
-            axes = kwargs['axes']
-        elif n_traces == 1:
-            _fig, ax0 = plt.subplots(nrows=1)
-            axes = (ax0,)
-        else:
-            _fig, axes = plt.subplots(nrows=n_traces)
-            plt.subplots_adjust(hspace=1.2)
-        largest_ymax = 0
-        for trace, ax in zip(self, axes):
-            kwargs['ax'] = ax
-            kwargs['show_plot'] = False
-            trace.plot_psd(**kwargs)
-            ymax = ax.get_ylim()[1]
-            if ymax > largest_ymax:
-                largest_ymax = ymax
-    
-        if not kwargs.get('plot_type') == 'ppsd':
-            for ax in axes:
-                ax.set_ylim(0, largest_ymax)
-    
-        plt.show()
-    
-    
-    
-    def plot_psd_mtspec_trace(self, ax=None, show_plot=True, **kwargs):
-    
-        """
-        Minimal method to plot the spectrum generated using mtspec for quick
-        comparison.
-        """
-        from obspy.core.mtspec import mtspec
-        Pxx, f = mtspec.mtspec(self.data, self.stats.delta, 4)
-        if ax is None:
-            _fig, ax = plt.subplots(nrows=1)
-        ax.plot(f, Pxx)
-    
-        # Scale to maximum of central 90% (so that scaling won't be dominated
-        # by border effects)
-        cut = int(0.05 * len(Pxx))
-        y_max = np.max(Pxx[cut:-cut])
-        # Add some padding at the top
-        y_max *= 1.05
-        ax.set_ylim(0, y_max)
-    
-        ax.set_xlabel('Frequency [Hz]')
-        ax.set_ylabel('Amplitude [??]')
-        ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
-        title = "%s   PSD Estimation (mtspec)"
-        ax.set_title(title % self.id)
-    
-        if show_plot:
-            plt.show()
-    
-    #def __monkey_patch():
-    #    Stream.plot_psd = plot_psd_stream
-    #    Trace.plot_psd = plot_psd_trace
-    #    Trace.plot_psd_mtspec = plot_psd_mtspec_trace
-    
-    # Apply the monkey path when the module is imported.
-    
-    #__monkey_patch()
-    
-
-
-    # def _mult_(self, others)
-
-#######################################
 
 if __name__ == '__main__':
     import doctest

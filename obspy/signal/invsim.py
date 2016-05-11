@@ -213,7 +213,7 @@ def cosine_sac_taper(freqs, flimit):
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
-             debug=False):
+             debug=True):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
@@ -247,6 +247,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):
+        import pdb; pdb.set_trace()
         data = filename.read()
     # evalresp needs files with correct line separators depending on OS
     with NamedTemporaryFile() as fh:
