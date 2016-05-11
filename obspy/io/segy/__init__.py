@@ -139,8 +139,8 @@ methods do), read the file trace by trace using the
 >>> from obspy.io.segy.segy import iread_segy
 >>> for trace in iread_segy(filename):
 ...    # Do something meaningful.
-...    print(round(trace.data.sum() * 1E9))
--5.0
+...    print(int(trace.data.sum() * 1E9))
+-5
 
 
 Writing
