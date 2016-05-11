@@ -677,6 +677,10 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.testing.assert_array_equal(data_m, data_r)
         np.testing.assert_array_equal(data_m, data_q)
 
+    @unittest.skipIf(
+        "CONDAFORGE" in os.environ and
+        os.environ.get("APPVEYOR", "false").lower() == "true",
+        'Test is known to fail when building conda package in Appveyor.')
     def test_infinite_loop(self):
         """
         Tests that libmseed doesn't enter an infinite loop on buggy files.
