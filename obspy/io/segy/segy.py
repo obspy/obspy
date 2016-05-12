@@ -913,6 +913,26 @@ def iread_segy(file, endian=None, textual_header_encoding=None,
     """
     Iteratively read a SEG-Y field and yield single ObsPy Traces.
 
+    The function iteratively loops over the whole file and yields single
+    ObsPy Traces. The next Trace will be read after the current loop has
+    finished - this function is thus suitable for reading arbitrarily large
+    SEG-Y files without running into memory problems.
+
+    >>> from obspy.core.util import get_example_file
+    >>> filename = get_example_file("00001034.sgy_first_trace")
+    >>> from obspy.io.segy.segy import iread_segy
+    >>> for tr in iread_segy(filename):
+    ...     # Each Trace's stats attribute will have references to the file
+    ...     # headers and some more information.
+    ...     tf = tr.stats.segy.textual_file_header
+    ...     bf = tr.stats.segy.binary_file_header
+    ...     tfe = tr.stats.segy.textual_file_header_encoding
+    ...     de = tr.stats.segy.data_encoding
+    ...     e = tr.stats.segy.endian
+    ...     # Also do something meaningful with each Trace.
+    ...     print(int(tr.data.sum() * 1E9))
+    -5
+
     :param file: Open file like object or a string which will be assumed to be
         a filename.
     :type endian: str
@@ -978,6 +998,23 @@ def _internal_iread_segy(file, endian=None, textual_header_encoding=None,
 def iread_su(file, endian=None, unpack_headers=False, headonly=False):
     """
     Iteratively read a SU field and yield single ObsPy Traces.
+
+    The function iteratively loops over the whole file and yields single
+    ObsPy Traces. The next Trace will be read after the current loop has
+    finished - this function is thus suitable for reading arbitrarily large
+    SU files without running into memory problems.
+
+    >>> from obspy.core.util import get_example_file
+    >>> filename = get_example_file("1.su_first_trace")
+    >>> from obspy.io.segy.segy import iread_su
+    >>> for tr in iread_su(filename):
+    ...     # Each Trace's stats attribute will have some file-wide
+    ...     # information.
+    ...     de = tr.stats.su.data_encoding
+    ...     e = tr.stats.su.endian
+    ...     # Also do something meaningful with each Trace.
+    ...     print(int(tr.data.sum()))
+    -26121
 
     :param file: Open file like object or a string which will be assumed to be
         a filename.
