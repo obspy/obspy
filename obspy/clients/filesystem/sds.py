@@ -40,6 +40,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import glob
+import io
 import os
 import re
 import warnings
@@ -50,6 +51,7 @@ import numpy as np
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
+from obspy.imaging.scripts.scan import scan
 from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
@@ -596,6 +598,80 @@ class Client(object):
                 continue
             result.add((network, station))
         return sorted(result)
+
+    def extract_missing_data(self, filenames, output_folder, plot=True):
+        """
+        Extracts data that is missing in SDS archive from given local files.
+
+        :type filenames: list
+        :param filenames: Files to extract data from.
+        :type output_folder: str
+        :param output_folder: Output folder to save extracted data to.
+        :type plot: bool
+        :param plot: Whether to save plots and obspy-scan npz files with
+            comparison of data present in SDS archive versus new data.
+        """
+        # assemble information on the files with new data for the SDS archive
+        data = {}
+        times_min = {}
+        times_max = {}
+        filenames_to_check_SDS = {}
+        for filename in filenames:
+            # read file and store info about traces
+            for tr in read(filename, headonly=True):
+                # remember overall earliest/latest data time per SEED ID
+                times_min[tr.id] = min(
+                    tr.stats.starttime,
+                    times_min.get(tr.id, tr.stats.starttime))
+                times_max[tr.id] = max(
+                    tr.stats.endtime + tr.stats.delta,
+                    times_max.get(tr.id, tr.stats.endtime))
+                # remember that file contains data for respective SEED ID
+                data.setdefault(tr.id, set()).add(filename)
+                # remember which files we need to check for gaps in SDS archive
+                filenames_to_check_SDS.setdefault(tr.id, set()).update(
+                    self._get_filenames(
+                        network=tr.stats.network, station=tr.stats.station,
+                        location=tr.stats.location, channel=tr.stats.channel,
+                        starttime=tr.stats.starttime, endtime=tr.stats.endtime,
+                        only_existing_files=False))
+
+        # assemble information on gaps in the SDS archive that might be covered
+        # by new data
+        for seed_id, filenames_ in filenames_to_check_SDS.items():
+            _, gaps, _ = scan(
+                paths=filenames_, format=self.format, recursive=False,
+                ignore_links=False, starttime=times_min[seed_id], quiet=True,
+                endtime=times_max[seed_id], seed_ids=[seed_id], plot=False)
+
+            st = Stream()
+            for _seed_id, start, end in gaps:
+                if _seed_id != seed_id:
+                    continue
+                for filename in data[seed_id]:
+                    st_ = read(filename, starttime=start, endtime=end,
+                               sourcename=seed_id)
+                    st += st_.select(id=seed_id)
+            st.merge(-1)
+            outfile = os.path.join(output_folder, seed_id + ".mseed")
+            st.write(outfile, "MSEED")
+
+            if plot:
+                for tr in st:
+                    tr.stats.location = "XX"
+
+                with io.BytesIO() as tmp:
+                    st.write(tmp, format="MSEED")
+                    tmp.seek(0)
+                    filenames_.add(tmp)
+                    outfile_plot = os.path.join(output_folder,
+                                                seed_id + ".png")
+                    outfile_npz = os.path.join(output_folder, seed_id + ".npz")
+                    scan(paths=filenames_, format=None, recursive=False,
+                         quiet=True, ignore_links=False,
+                         starttime=times_min[seed_id],
+                         endtime=times_max[seed_id], seed_ids=[seed_id, tr.id],
+                         plot=outfile_plot, npz_output=outfile_npz)
 
 
 def _wildcarded_except(exclude=[]):
