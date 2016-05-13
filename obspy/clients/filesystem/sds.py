@@ -199,7 +199,7 @@ class Client(object):
         return st
 
     def _get_filenames(self, network, station, location, channel, starttime,
-                       endtime, sds_type=None):
+                       endtime, sds_type=None, only_existing_files=True):
         """
         Get list of filenames for certain waveform and time span.
 
@@ -218,8 +218,20 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :type only_existing_files: bool
+        :param only_existing_files: Whether to only return filenames of
+            existing files or not. If True, globbing is performed and
+            wildcards can be used in ``network`` and other fields.
         :rtype: list of str
         """
+        if not only_existing_files:
+            for field in (network, station, location, channel):
+                if glob.has_magic(field):
+                    msg = (
+                        "No wildcards allowed with 'only_existing_files=False'"
+                        " (input was: '{}')").format(field)
+                    raise ValueError(msg)
+
         sds_type = sds_type or self.sds_type
         # SDS has data sometimes in adjacent days, so also try to read the
         # requested data from those files. Usually this is only a few seconds
@@ -246,7 +258,10 @@ class Client(object):
                 network=network, station=station, location=location,
                 channel=channel, year=year, doy=doy, sds_type=sds_type)
             full_path = os.path.join(self.sds_root, filename)
-            full_paths = full_paths.union(glob.glob(full_path))
+            if only_existing_files:
+                full_paths = full_paths.union(glob.glob(full_path))
+            else:
+                full_paths.add(full_path)
 
         return full_paths
 
