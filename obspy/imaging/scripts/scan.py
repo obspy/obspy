@@ -192,6 +192,267 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
+def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
+         ignore_links=False, starttime=None, endtime=None, seed_ids=None,
+         event_times=None, npz_output=None, npz_input=None, plot_x=True,
+         plot_gaps=True, print_gaps=False, plot=False):
+    """
+    :type plot: bool or str
+    :param plot: False for no plot at all, True for interactive window, str for
+        output to image file.
+    """
+    if plot is None:
+        plot = False
+
+    if plot not in (True, False):
+        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+
+    # Print help and exit if no arguments are given
+    if len(paths) == 0 and npz_input is None:
+        msg = "No paths specified and no npz data to load specified"
+        raise ValueError(msg)
+
+    # Use recursively parsing function?
+    if recursive:
+        parse_func = recursive_parse
+    else:
+        parse_func = parse_file_to_dict
+
+    from matplotlib.dates import date2num, num2date
+    from matplotlib.ticker import FuncFormatter
+    from matplotlib.patches import Rectangle
+    from matplotlib.collections import PatchCollection
+    import matplotlib.pyplot as plt
+
+    if plot:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        # Plot vertical lines if option 'event_time' was specified
+        if event_times:
+            times = [date2num(t.datetime) for t in event_times]
+            for time in times:
+                ax.axvline(time, color='k')
+
+    if starttime is not None:
+        starttime = date2num(starttime.datetime)
+    if endtime is not None:
+        endtime = date2num(endtime.datetime)
+
+    # Generate dictionary containing nested lists of start and end times per
+    # station
+    data = {}
+    samp_int = {}
+    counter = 1
+    if npz_input:
+        load_npz(npz_input, data, samp_int)
+    for path in paths:
+        counter = parse_func(data, samp_int, path, counter, format,
+                             verbose=verbose, quiet=quiet,
+                             ignore_links=ignore_links)
+    if not data:
+        if verbose or not quiet:
+            print("No waveform data found.")
+        return 1, None, None
+    if npz_output:
+        write_npz(npz_output, data, samp_int)
+
+    # either use ids specified by user or use ids based on what data we have
+    # parsed
+    ids = seed_ids or list(data.keys())
+    ids = sorted(ids)[::-1]
+    labels = [""] * len(ids)
+    if verbose or not quiet:
+        print('\n')
+    gap_info = []
+    overlap_info = []
+    for _i, _id in enumerate(ids):
+        labels[_i] = ids[_i]
+        # sort data list and sampling rate list
+        if _id in data:
+            startend = np.array(data[_id])
+            _samp_int = np.array(samp_int[_id])
+            indices = np.lexsort((startend[:, 1], startend[:, 0]))
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
+        else:
+            startend = np.array([])
+            _samp_int = np.array([])
+        if len(startend) == 0:
+            if not (starttime and endtime):
+                continue
+            if plot and plot_gaps:
+                rects = [Rectangle((starttime, _i - 0.4),
+                                   endtime - starttime, 0.8)]
+                ax.add_collection(PatchCollection(rects, color="r"))
+            if print_gaps and (verbose or not quiet):
+                print("%s %s %s %.3f" % (
+                    _id, starttime, endtime, endtime - starttime))
+            continue
+        # restrict plotting of results to given start/end time
+        if starttime:
+            indices = startend[:, 1] > starttime
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
+        if len(startend) == 0:
+            continue
+        if endtime:
+            indices = startend[:, 0] < endtime
+            startend = startend[indices]
+            _samp_int = _samp_int[indices]
+        if len(startend) == 0:
+            continue
+        data_start = startend[:, 0].min()
+        data_end = startend[:, 1].max()
+        timerange_start = starttime or data_start
+        timerange_end = endtime or data_end
+        timerange = timerange_end - timerange_start
+        if timerange == 0.0:
+            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
+            continue
+
+        startend_compressed = compress_start_end(startend, 1000,
+                                                 merge_overlaps=False)
+
+        if plot:
+            offset = np.ones(len(startend)) * _i  # generate list of y values
+            if plot_x:
+                ax.plot(startend[:, 0], offset, 'x', linewidth=2)
+            ax.hlines(offset[:len(startend_compressed)],
+                      startend_compressed[:, 0], startend_compressed[:, 1],
+                      'b', linewidth=2, zorder=3)
+        # find the gaps
+        diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
+        gapsum = diffs[diffs > 0].sum()
+        # if start- and/or endtime is specified, add missing data at start/end
+        # to gap sum
+        has_gap = False
+        gap_at_start = (
+            starttime and
+            data_start > starttime and
+            data_start - starttime)
+        gap_at_end = (
+            endtime and
+            endtime > data_end and
+            endtime - data_end)
+        if gap_at_start:
+            gapsum += gap_at_start
+            has_gap = True
+        if gap_at_end:
+            gapsum += gap_at_end
+            has_gap = True
+        perc = (timerange - gapsum) / timerange
+        labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
+        # define a gap as over 0.8 delta after expected sample time
+        gap_indices = diffs > 0.8 * _samp_int[:-1]
+        gap_indices = np.append(gap_indices, False)
+        # define an overlap as over 0.8 delta before expected sample time
+        overlap_indices = diffs < -0.8 * _samp_int[:-1]
+        overlap_indices = np.append(overlap_indices, False)
+        has_gap |= any(gap_indices)
+        has_gap |= any(overlap_indices)
+        if has_gap:
+            # don't handle last end time as start of gap
+            gaps_start = startend[gap_indices, 1]
+            gaps_end = startend[np.roll(gap_indices, 1), 0]
+            overlaps_end = startend[overlap_indices, 1]
+            overlaps_start = startend[np.roll(overlap_indices, 1), 0]
+            # but now, manually add start/end for gaps at start/end of user
+            # specified start/end times
+            if gap_at_start:
+                gaps_start = np.append(gaps_start, starttime)
+                gaps_end = np.append(gaps_end, data_start)
+            if gap_at_end:
+                gaps_start = np.append(gaps_start, data_end)
+                gaps_end = np.append(gaps_end, endtime)
+            if plot and plot_gaps:
+                if len(gaps_start):
+                    # gaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(gaps_start, gaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="r"))
+                if len(overlaps_start):
+                    # overlaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(overlaps_start, overlaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="b"))
+            _starts = np.concatenate((gaps_start, overlaps_end))
+            _ends = np.concatenate((gaps_end, overlaps_start))
+            sort_order = np.argsort(_starts)
+            _starts = _starts[sort_order]
+            _ends = _ends[sort_order]
+            for start_, end_ in zip(_starts, _ends):
+                start_, end_ = num2date((start_, end_))
+                start_ = UTCDateTime(start_.isoformat())
+                end_ = UTCDateTime(end_.isoformat())
+                if print_gaps and (verbose or not quiet):
+                    print("%s %s %s %.3f" % (_id, start_, end_,
+                                             end_ - start_))
+                if start_ < end_:
+                    gap_info.append((_id, start_, end_))
+                else:
+                    overlap_info.append((_id, start_, end_))
+
+    if plot:
+        # Pretty format the plot
+        ax.set_ylim(0 - 0.5, len(ids) - 0.5)
+        ax.set_yticks(np.arange(len(ids)))
+        ax.set_yticklabels(labels, family="monospace", ha="right")
+        fig.autofmt_xdate()  # rotate date
+        ax.xaxis_date()
+        # set custom formatters to always show date in first tick
+        formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
+        formatter.scaled[1 / 24.] = \
+            FuncFormatter(decimal_seconds_format_date_first_tick)
+        formatter.scaled.pop(1/(24.*60.))
+        ax.xaxis.set_major_formatter(formatter)
+        plt.subplots_adjust(left=0.2)
+        # set x-axis limits according to given start/end time
+        if starttime and endtime:
+            ax.set_xlim(left=starttime, right=endtime)
+        elif starttime:
+            ax.set_xlim(left=starttime, auto=None)
+        elif endtime:
+            ax.set_xlim(right=endtime, auto=None)
+        else:
+            left, right = ax.xaxis.get_data_interval()
+            x_axis_range = right - left
+            ax.set_xlim(left - 0.05 * x_axis_range,
+                        right + 0.05 * x_axis_range)
+
+        if plot is True:
+            plt.show()
+        else:
+            fig.set_dpi(72)
+            height = len(ids) * 0.5
+            height = max(4, height)
+            fig.set_figheight(height)
+            plt.tight_layout()
+
+            if not starttime or not endtime:
+                days = ax.get_xlim()
+                days = days[1] - days[0]
+            else:
+                days = endtime - starttime
+
+            width = max(6, days / 30.)
+            width = min(width, height * 4)
+            fig.set_figwidth(width)
+            plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+            plt.tight_layout()
+
+            fig.savefig(plot)
+
+    if verbose and not quiet:
+        sys.stdout.write('\n')
+
+    return 0, gap_info, overlap_info
+
+
 def main(argv=None):
     parser = ArgumentParser(prog='obspy-scan', description=__doc__.strip(),
                             formatter_class=RawDescriptionHelpFormatter)
@@ -250,240 +511,15 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
 
-    if args.output is not None:
-        MatplotlibBackend.switch_backend("AGG", sloppy=False)
-
-    # Print help and exit if no arguments are given
-    if len(args.paths) == 0 and args.load is None:
-        parser.error('No paths specified.')
-
-    # Use recursively parsing function?
-    if args.recursive:
-        parse_func = recursive_parse
-    else:
-        parse_func = parse_file_to_dict
-
-    from matplotlib.dates import date2num, num2date
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.patches import Rectangle
-    from matplotlib.collections import PatchCollection
-    import matplotlib.pyplot as plt
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-
-    # Plot vertical lines if option 'event_time' was specified
-    if args.event_time:
-        times = [date2num(t.datetime) for t in args.event_time]
-        for time in times:
-            ax.axvline(time, color='k')
-
-    if args.start_time:
-        args.start_time = date2num(args.start_time.datetime)
-    if args.end_time:
-        args.end_time = date2num(args.end_time.datetime)
-
-    # Generate dictionary containing nested lists of start and end times per
-    # station
-    data = {}
-    samp_int = {}
-    counter = 1
-    if args.load:
-        load_npz(args.load, data, samp_int)
-    for path in args.paths:
-        counter = parse_func(data, samp_int, path, counter, args.format,
-                             verbose=args.verbose, quiet=args.quiet,
-                             ignore_links=args.ignore_links)
-    if not data:
-        if args.verbose or not args.quiet:
-            print("No waveform data found.")
-        return
-    if args.write:
-        write_npz(args.write, data, samp_int)
-
-    # either use ids specified by user or use ids based on what data we have
-    # parsed
-    ids = args.id or list(data.keys())
-    ids = sorted(ids)[::-1]
-    labels = [""] * len(ids)
-    if args.verbose or not args.quiet:
-        print('\n')
-    for _i, _id in enumerate(ids):
-        labels[_i] = ids[_i]
-        # sort data list and sampling rate list
-        if _id in data:
-            startend = np.array(data[_id])
-            _samp_int = np.array(samp_int[_id])
-            indices = np.lexsort((startend[:, 1], startend[:, 0]))
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        else:
-            startend = np.array([])
-            _samp_int = np.array([])
-        if len(startend) == 0:
-            if not (args.start_time and args.end_time):
-                continue
-            if not args.no_gaps:
-                rects = [Rectangle((args.start_time, _i - 0.4),
-                                   args.end_time - args.start_time, 0.8)]
-                ax.add_collection(PatchCollection(rects, color="r"))
-            if args.print_gaps and (args.verbose or not args.quiet):
-                print("%s %s %s %.3f" % (
-                    _id, args.start_time, args.end_time,
-                    args.end_time - args.start_time))
-            continue
-        # restrict plotting of results to given start/end time
-        if args.start_time:
-            indices = startend[:, 1] > args.start_time
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        if len(startend) == 0:
-            continue
-        if args.end_time:
-            indices = startend[:, 0] < args.end_time
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        if len(startend) == 0:
-            continue
-        data_start = startend[:, 0].min()
-        data_end = startend[:, 1].max()
-        timerange_start = args.start_time or data_start
-        timerange_end = args.end_time or data_end
-        timerange = timerange_end - timerange_start
-        if timerange == 0.0:
-            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
-            continue
-
-        startend_compressed = compress_start_end(startend, 1000,
-                                                 merge_overlaps=False)
-
-        offset = np.ones(len(startend)) * _i  # generate list of y values
-        if not args.no_x:
-            ax.plot(startend[:, 0], offset, 'x', linewidth=2)
-        ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
-                  startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
-        # find the gaps
-        diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
-        gapsum = diffs[diffs > 0].sum()
-        # if start- and/or endtime is specified, add missing data at start/end
-        # to gap sum
-        has_gap = False
-        gap_at_start = (
-            args.start_time and
-            data_start > args.start_time and
-            data_start - args.start_time)
-        gap_at_end = (
-            args.end_time and
-            args.end_time > data_end and
-            args.end_time - data_end)
-        if gap_at_start:
-            gapsum += gap_at_start
-            has_gap = True
-        if gap_at_end:
-            gapsum += gap_at_end
-            has_gap = True
-        perc = (timerange - gapsum) / timerange
-        labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        # define a gap as over 0.8 delta after expected sample time
-        gap_indices = diffs > 0.8 * _samp_int[:-1]
-        gap_indices = np.append(gap_indices, False)
-        # define an overlap as over 0.8 delta before expected sample time
-        overlap_indices = diffs < -0.8 * _samp_int[:-1]
-        overlap_indices = np.append(overlap_indices, False)
-        has_gap |= any(gap_indices)
-        has_gap |= any(overlap_indices)
-        if has_gap:
-            # don't handle last end time as start of gap
-            gaps_start = startend[gap_indices, 1]
-            gaps_end = startend[np.roll(gap_indices, 1), 0]
-            overlaps_end = startend[overlap_indices, 1]
-            overlaps_start = startend[np.roll(overlap_indices, 1), 0]
-            # but now, manually add start/end for gaps at start/end of user
-            # specified start/end times
-            if gap_at_start:
-                gaps_start = np.append(gaps_start, args.start_time)
-                gaps_end = np.append(gaps_end, data_start)
-            if gap_at_end:
-                gaps_start = np.append(gaps_start, data_end)
-                gaps_end = np.append(gaps_end, args.end_time)
-            if not args.no_gaps:
-                if len(gaps_start):
-                    # gaps
-                    rects = [
-                        Rectangle((start_, offset[0] - 0.4),
-                                  end_ - start_, 0.8)
-                        for start_, end_ in zip(gaps_start, gaps_end)]
-                    ax.add_collection(PatchCollection(rects, color="r"))
-                if len(overlaps_start):
-                    # overlaps
-                    rects = [
-                        Rectangle((start_, offset[0] - 0.4),
-                                  end_ - start_, 0.8)
-                        for start_, end_ in zip(overlaps_start, overlaps_end)]
-                    ax.add_collection(PatchCollection(rects, color="b"))
-            if args.print_gaps:
-                _starts = np.concatenate((gaps_start, overlaps_end))
-                _ends = np.concatenate((gaps_end, overlaps_start))
-                sort_order = np.argsort(_starts)
-                _starts = _starts[sort_order]
-                _ends = _ends[sort_order]
-                for start_, end_ in zip(_starts, _ends):
-                    start_, end_ = num2date((start_, end_))
-                    start_ = UTCDateTime(start_.isoformat())
-                    end_ = UTCDateTime(end_.isoformat())
-                    if args.verbose or not args.quiet:
-                        print("%s %s %s %.3f" % (_id, start_, end_,
-                                                 end_ - start_))
-
-    # Pretty format the plot
-    ax.set_ylim(0 - 0.5, len(ids) - 0.5)
-    ax.set_yticks(np.arange(len(ids)))
-    ax.set_yticklabels(labels, family="monospace", ha="right")
-    fig.autofmt_xdate()  # rotate date
-    ax.xaxis_date()
-    # set custom formatters to always show date in first tick
-    formatter = ObsPyAutoDateFormatter(ax.xaxis.get_major_locator())
-    formatter.scaled[1 / 24.] = \
-        FuncFormatter(decimal_seconds_format_date_first_tick)
-    formatter.scaled.pop(1/(24.*60.))
-    ax.xaxis.set_major_formatter(formatter)
-    plt.subplots_adjust(left=0.2)
-    # set x-axis limits according to given start/end time
-    if args.start_time and args.end_time:
-        ax.set_xlim(left=args.start_time, right=args.end_time)
-    elif args.start_time:
-        ax.set_xlim(left=args.start_time, auto=None)
-    elif args.end_time:
-        ax.set_xlim(right=args.end_time, auto=None)
-    else:
-        left, right = ax.xaxis.get_data_interval()
-        x_axis_range = right - left
-        ax.set_xlim(left - 0.05 * x_axis_range, right + 0.05 * x_axis_range)
-    if args.output is None:
-        plt.show()
-    else:
-        fig.set_dpi(72)
-        height = len(ids) * 0.5
-        height = max(4, height)
-        fig.set_figheight(height)
-        plt.tight_layout()
-
-        if not args.start_time or not args.end_time:
-            days = ax.get_xlim()
-            days = days[1] - days[0]
-        else:
-            days = args.end_time - args.start_time
-
-        width = max(6, days / 30.)
-        width = min(width, height * 4)
-        fig.set_figwidth(width)
-        plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
-        plt.tight_layout()
-
-        fig.savefig(args.output)
-    if args.verbose and not args.quiet:
-        sys.stdout.write('\n')
+    return scan(
+        paths=args.paths, format=args.format, verbose=args.verbose,
+        quiet=args.quiet, recursive=args.recursive,
+        ignore_links=args.ignore_links, starttime=args.start_time,
+        endtime=args.end_time, seed_ids=args.id, event_times=args.event_time,
+        npz_output=args.write, npz_input=args.load, plot_x=not args.no_x,
+        plot_gaps=not args.no_gaps, print_gaps=args.print_gaps,
+        plot=args.output or True)[0]
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
