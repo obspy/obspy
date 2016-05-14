@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-################################################################################
-# (C) 2014-2016 Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ #
-#                                                                              #
-# License: LGPLv3 (https://www.gnu.org/copyleft/lesser.html)                   #
-################################################################################
+###############################################################################
+# (C) 2014-2016 Helmholtz-Zentrum Potsdam - Deutsches GeoForschungsZentrum GFZ#
+#                                                                             #
+# License: LGPLv3 (https://www.gnu.org/copyleft/lesser.html)                  #
+###############################################################################
 
 """
-A command-line FDSN Web Service client with EIDA routing and authentication support.
+A command-line FDSN Web Service client with EIDA routing and authentication
+support.
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+
 import sys
 import time
 import datetime
@@ -54,11 +58,14 @@ GET_PARAMS = set(('net', 'network',
 POST_PARAMS = set(('service',
                    'alternative'))
 
+
 class Error(Exception):
     pass
 
+
 class AuthNotSupported(Exception):
     pass
+
 
 class TargetURL(object):
     def __init__(self, url, qp):
@@ -69,22 +76,43 @@ class TargetURL(object):
 
     def wadl(self):
         path = self.__path + '/application.wadl'
-        return urlparse.urlunparse((self.__scheme, self.__netloc, path, u'', u'', u''))
+        return urlparse.urlunparse((self.__scheme,
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    u'',
+                                    u''))
 
     def auth(self):
         path = self.__path + '/auth'
-        return urlparse.urlunparse((u'https', self.__netloc, path, u'', u'', u''))
+        return urlparse.urlunparse((u'https',
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    u'',
+                                    u''))
 
     def post(self):
         path = self.__path + '/query'
-        return urlparse.urlunparse((self.__scheme, self.__netloc, path, u'', u'', u''))
+        return urlparse.urlunparse((self.__scheme,
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    u'',
+                                    u''))
 
     def post_qa(self):
         path = self.__path + '/queryauth'
-        return urlparse.urlunparse((self.__scheme, self.__netloc, path, u'', u'', u''))
+        return urlparse.urlunparse((self.__scheme,
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    u'',
+                                    u''))
 
     def post_params(self):
         return self.__qp.items()
+
 
 class RoutingURL(object):
     def __init__(self, url, qp):
@@ -98,11 +126,21 @@ class RoutingURL(object):
         qp = [(p, v) for (p, v) in self.__qp.items() if p in GET_PARAMS]
         qp.append(('format', 'post'))
         query = urllib.urlencode(qp)
-        return urlparse.urlunparse((self.__scheme, self.__netloc, path, u'', query, u''))
+        return urlparse.urlunparse((self.__scheme,
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    query,
+                                    u''))
 
     def post(self):
         path = self.__path + '/query'
-        return urlparse.urlunparse((self.__scheme, self.__netloc, path, u'', u'', u''))
+        return urlparse.urlunparse((self.__scheme,
+                                    self.__netloc,
+                                    path,
+                                    u'',
+                                    u'',
+                                    u''))
 
     def post_params(self):
         qp = [(p, v) for (p, v) in self.__qp.items() if p in POST_PARAMS]
@@ -111,6 +149,7 @@ class RoutingURL(object):
 
     def target_params(self):
         return [(p, v) for (p, v) in self.__qp.items() if p not in GET_PARAMS]
+
 
 class XMLCombiner(object):
     def __init__(self):
@@ -152,46 +191,54 @@ class XMLCombiner(object):
         if self.__et:
             self.__et.write(fd, encoding='utf-8', xml_declaration=True)
 
+
 class BreqParser(object):
     """
     Parses the breq_fast email format using regular expressions.
 
-    @classvaribales: __tokenrule, defines the syntax of the beginning of a Breq_fast header token
-                     __tokenlist, specifies the tokens required for the ArcLink request
-                     __reqlist,   defines the syntax for a request line in Breq_fast format
+    @classvaribales: __tokenrule, defines the syntax of the beginning of a
+                                  Breq_fast header token
+                     __tokenlist, specifies the tokens required for the ArcLink
+                                  request
+                     __reqlist,   defines the syntax for a request line in
+                                  Breq_fast format
     """
-    __tokenrule="^\.[A-Z_]+[:]?\s"
+    __tokenrule = "^\.[A-Z_]+[:]?\s"
 
-    __tokenlist=("\.NAME\s+(?P<name>.+)",
-                 "\.INST\s+(?P<institution>.+)?",
-                 "\.EMAIL\s+(?P<email>.+[@].+)",
-                 "\.LABEL\s+(?P<label>.+)?")
+    __tokenlist = ("\.NAME\s+(?P<name>.+)",
+                   "\.INST\s+(?P<institution>.+)?",
+                   "\.EMAIL\s+(?P<email>.+[@].+)",
+                   "\.LABEL\s+(?P<label>.+)?")
 
-    __reqlist=("(?P<station>[\w?\*]+)",
-               "(?P<network>[\w?]+)",
-               "((?P<beg_2year>\d{2})|(?P<beg_4year>\d{4}))",
-               "(?P<beg_month>\d{1,2})",
-               "(?P<beg_day>\d{1,2})",
-               "(?P<beg_hour>\d{1,2})",
-               "(?P<beg_min>\d{1,2})",
-               "(?P<beg_sec>\d{1,2})(\.\d*)?",
-               "((?P<end_2year>\d{2})|(?P<end_4year>\d{4}))",
-               "(?P<end_month>\d{1,2})",
-               "(?P<end_day>\d{1,2})",
-               "(?P<end_hour>\d{1,2})",
-               "(?P<end_min>\d{1,2})",
-               "(?P<end_sec>\d{1,2})(\.\d*)?",
-               "(?P<cha_num>\d+)",
-               "(?P<cha_list>[\w?\s*]+)")
+    __reqlist = ("(?P<station>[\w?\*]+)",
+                 "(?P<network>[\w?]+)",
+                 "((?P<beg_2year>\d{2})|(?P<beg_4year>\d{4}))",
+                 "(?P<beg_month>\d{1,2})",
+                 "(?P<beg_day>\d{1,2})",
+                 "(?P<beg_hour>\d{1,2})",
+                 "(?P<beg_min>\d{1,2})",
+                 "(?P<beg_sec>\d{1,2})(\.\d*)?",
+                 "((?P<end_2year>\d{2})|(?P<end_4year>\d{4}))",
+                 "(?P<end_month>\d{1,2})",
+                 "(?P<end_day>\d{1,2})",
+                 "(?P<end_hour>\d{1,2})",
+                 "(?P<end_min>\d{1,2})",
+                 "(?P<end_sec>\d{1,2})(\.\d*)?",
+                 "(?P<cha_num>\d+)",
+                 "(?P<cha_list>[\w?\s*]+)")
 
     def __init__(self):
         """
         Constructor.
 
-        @instancevariables: head,      a string concatenation of certain Breq_fast header lines
-                            request,   a string concatenation of the Breq_fast request lines
-                            tokendict, a dictionary storing the ArcLink required matches
-                            postdata,  a string containing the matched requests in FDSNWS format
+        @instancevariables: head,      a string concatenation of certain
+                                       Breq_fast header lines
+                            request,   a string concatenation of the Breq_fast
+                                       request lines
+                            tokendict, a dictionary storing the ArcLink
+                                       required matches
+                            postdata,  a string containing the matched requests
+                                       in FDSNWS format
                             failstr,   a string documenting failed matches
         """
         self.__rx_tokenrule = re.compile(BreqParser.__tokenrule)
@@ -205,26 +252,30 @@ class BreqParser(object):
 
     def __parse_tokens(self, head):
         """
-        Gets the Breq_fast header to match it against the corresponding pattern.
-        If successul sets the dictionary for storing the ArcLink required matches.
+        Gets the Breq_fast header to match it against the corresponding
+        pattern. If successul sets the dictionary for storing the ArcLink
+        required matches.
 
-        @arguments: head, a string storing the email request header in Breq_fast format
+        @arguments: head, a string storing the email request header in
+                          Breq_fast format
         """
         for line in head.split("\n"):
             m = self.__rx_tokenlist.search(line)
 
             if m:
-                for k,v in m.groupdict().items():
+                for k, v in m.groupdict().items():
                     if v is not None:
-                         self.tokendict[k] = v
+                        self.tokendict[k] = v
 
-        if not "name" in self.tokendict or not "email" in self.tokendict:
-            self.failstr = "%sBreq_fast header must contain at least .NAME and .EMAIL arguments.\n" % self.failstr
+        if "name" not in self.tokendict or "email" not in self.tokendict:
+            self.failstr = "%sBreq_fast header must contain at least .NAME " \
+                           "and .EMAIL arguments.\n" % self.failstr
 
     def __parse_request(self, line):
         """
-        Gets a request line in Breq_fast format to match it against the corresponding pattern.
-        If successful the request list will be completed; the fail string otherwise.
+        Gets a request line in Breq_fast format to match it against the
+        corresponding pattern. If successful the request list will be
+        completed; the fail string otherwise.
 
         @arguments: line, a request line in Breq_fast format
         """
@@ -270,13 +321,23 @@ class BreqParser(object):
                 d["end_sec"] = "59"
 
             try:
-                beg_time = datetime.datetime(int(d["beg_4year"]),int(d["beg_month"]),int(d["beg_day"]),
-                                             int(d["beg_hour"]),int(d["beg_min"]),int(d["beg_sec"]))
-                end_time = datetime.datetime(int(d["end_4year"]),int(d["end_month"]),int(d["end_day"]),
-                                             int(d["end_hour"]),int(d["end_min"]),int(d["end_sec"]))
+                beg_time = datetime.datetime(int(d["beg_4year"]),
+                                             int(d["beg_month"]),
+                                             int(d["beg_day"]),
+                                             int(d["beg_hour"]),
+                                             int(d["beg_min"]),
+                                             int(d["beg_sec"]))
+
+                end_time = datetime.datetime(int(d["end_4year"]),
+                                             int(d["end_month"]),
+                                             int(d["end_day"]),
+                                             int(d["end_hour"]),
+                                             int(d["end_min"]),
+                                             int(d["end_sec"]))
 
             except ValueError as e:
-                self.failstr = "%s%s [error: wrong begin or end time: %s]\n" % (self.failstr, line, e)
+                self.failstr = "%s%s [error: wrong begin or end time: %s]\n" \
+                               % (self.failstr, line, e)
                 return
 
             cha_list = re.findall("([\w?\*]+)\s*", d["cha_list"])
@@ -285,20 +346,27 @@ class BreqParser(object):
                 loc = cha_list.pop()
 
             for cha in cha_list:
-                self.postdata += "%s %s %s %s %sZ %sZ\n" % (d["network"], d["station"], loc, cha, beg_time.isoformat(), end_time.isoformat())
+                self.postdata += "%s %s %s %s %sZ %sZ\n" \
+                                 % (d["network"],
+                                    d["station"],
+                                    loc,
+                                    cha,
+                                    beg_time.isoformat(),
+                                    end_time.isoformat())
 
         else:
             self.failstr = "%s%s\n" % (self.failstr, line)
 
     def parse(self, path):
         """
-        Parses the Breq_fast email and stores matches in structures required for the FDSNWS request.
+        Parses the Breq_fast email and stores matches in structures required
+        for the FDSNWS request.
 
-        @arguments: path, the absolute path to file containing the email Breq_fast request
+        @arguments: path, the absolute path to file containing the email
+                          Breq_fast request
         """
         with open(path) as fd:
             endtoken = False
-            reqflag = False
 
             for line in fd:
                 if self.__rx_tokenrule.match(line):
@@ -309,23 +377,19 @@ class BreqParser(object):
                     line = line.rstrip("\n")
 
                     if len(line) > 0:
-                        #reqflag = True
                         self.__parse_request(line)
-
-                    # (new)lines following the request lines are ignored #
-                    else:
-                        if reqflag:
-                            break
 
         self.__parse_tokens(self.head)
 
 msglock = threading.Lock()
+
 
 def msg(s, verbose=True):
     if verbose:
         with msglock:
             sys.stderr.write(s + '\n')
             sys.stderr.flush()
+
 
 def retry(urlopen, url, data, timeout, count, wait, verbose):
     n = 0
@@ -342,41 +406,55 @@ def retry(urlopen, url, data, timeout, count, wait, verbose):
             if fd.getcode() == 200 or fd.getcode() == 204:
                 return fd
 
-            msg("retrying %s (%d) after %d seconds due to HTTP status code %d" % (url, n, wait, fd.getcode()), verbose)
+            msg("retrying %s (%d) after %d seconds due to HTTP status code %d"
+                % (url, n, wait, fd.getcode()), verbose)
+
             time.sleep(wait)
 
         except urllib2.HTTPError as e:
             if e.code >= 400 and e.code < 500:
                 raise
 
-            msg("retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)), verbose)
+            msg("retrying %s (%d) after %d seconds due to %s"
+                % (url, n, wait, str(e)), verbose)
+
             time.sleep(wait)
 
         except (urllib2.URLError, socket.error) as e:
-            msg("retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)), verbose)
+            msg("retrying %s (%d) after %d seconds due to %s"
+                % (url, n, wait, str(e)), verbose)
+
             time.sleep(wait)
 
-def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verbose):
+
+def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count,
+          retry_wait, finished, lock, verbose):
     try:
         url_handlers = []
 
-        if cred and url.post_qa() in cred: # use static credentials
+        if cred and url.post_qa() in cred:  # use static credentials
             query_url = url.post_qa()
             (user, passwd) = cred[query_url]
             mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             mgr.add_password(None, query_url, user, passwd)
-            url_handlers.append(urllib2.HTTPDigestAuthHandler(mgr))
+            h = urllib2.HTTPDigestAuthHandler(mgr)
+            url_handlers.append(h)
 
-        elif authdata: # use the pgp-based auth method if supported
+        elif authdata:  # use the pgp-based auth method if supported
             wadl_url = url.wadl()
             auth_url = url.auth()
             query_url = url.post_qa()
 
             try:
-                fd = retry(urllib2.urlopen, wadl_url, None, timeout, retry_count, retry_wait, verbose)
+                fd = retry(urllib2.urlopen, wadl_url, None, timeout,
+                           retry_count, retry_wait, verbose)
 
                 try:
-                    if ET.parse(fd).getroot().find(".//{http://wadl.dev.java.net/2009/02}resource[@path='auth']") is None:
+                    root = ET.parse(fd).getroot()
+                    ns = "{http://wadl.dev.java.net/2009/02}"
+                    el = "resource[@path='auth']"
+
+                    if root.find(".//" + ns + el) is None:
                         raise AuthNotSupported
 
                 finally:
@@ -388,7 +466,8 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                     authdata = authdata.encode('utf-8')
 
                 try:
-                    fd = retry(urllib2.urlopen, auth_url, authdata, timeout, retry_count, retry_wait, verbose)
+                    fd = retry(urllib2.urlopen, auth_url, authdata, timeout,
+                               retry_count, retry_wait, verbose)
 
                     try:
                         if fd.getcode() == 200:
@@ -401,16 +480,19 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                                 (user, passwd) = up.split(':')
                                 mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
                                 mgr.add_password(None, query_url, user, passwd)
-                                url_handlers.append(urllib2.HTTPDigestAuthHandler(mgr))
+                                h = urllib2.HTTPDigestAuthHandler(mgr)
+                                url_handlers.append(h)
 
                             except ValueError:
                                 msg("invalid auth response: %s" % up)
                                 return
 
-                            msg("authentication at %s successful" % auth_url, verbose)
+                            msg("authentication at %s successful"
+                                % auth_url, verbose)
 
                         else:
-                            msg("authentication at %s failed with HTTP status code %d" % (auth_url, fd.getcode()))
+                            msg("authentication at %s failed with HTTP "
+                                "status code %d" % (auth_url, fd.getcode()))
 
                     finally:
                         fd.close()
@@ -424,10 +506,12 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                 query_url = url.post()
 
             except AuthNotSupported:
-                msg("authentication at %s is not supported" % auth_url, verbose)
+                msg("authentication at %s is not supported"
+                    % auth_url, verbose)
+
                 query_url = url.post()
 
-        else: # fetch data anonymously
+        else:  # fetch data anonymously
             query_url = url.post()
 
         opener = urllib2.build_opener(*url_handlers)
@@ -440,22 +524,31 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                 msg("getting data from %s" % query_url, verbose)
 
             else:
-                msg("getting data from %s (%d%%..%d%%)" % (query_url, 100*i/len(postlines), min(100, 100*(i+n)/len(postlines))), verbose)
+                msg("getting data from %s (%d%%..%d%%)"
+                    % (query_url,
+                       100*i/len(postlines),
+                       min(100, 100*(i+n)/len(postlines))),
+                    verbose)
 
-            postdata = ''.join((p + '=' + v + '\n') for (p, v) in url.post_params()) + ''.join(postlines[i:i+n])
+            postdata = (''.join((p + '=' + v + '\n')
+                                for (p, v) in url.post_params()) +
+                        ''.join(postlines[i:i+n]))
 
             if not isinstance(postdata, bytes):
                 postdata = postdata.encode('utf-8')
 
             try:
-                fd = retry(opener.open, query_url, postdata, timeout, retry_count, retry_wait, verbose)
+                fd = retry(opener.open, query_url, postdata, timeout,
+                           retry_count, retry_wait, verbose)
 
                 try:
                     if fd.getcode() == 204:
                         msg("received no data from %s" % query_url, verbose)
 
                     elif fd.getcode() != 200:
-                        msg("getting data from %s failed with HTTP status code %d" % (query_url, fd.getcode()))
+                        msg("getting data from %s failed with HTTP status "
+                            "code %d" % (query_url, fd.getcode()))
+
                         break
 
                     else:
@@ -466,15 +559,25 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                         if content_type == "application/vnd.fdsn.mseed":
                             while True:
                                 buf = fd.read(4096)
-                                if not buf: break
-                                with lock: dest.write(buf)
+
+                                if not buf:
+                                    break
+
+                                with lock:
+                                    dest.write(buf)
+
                                 size += len(buf)
 
                         elif content_type == "text/plain":
                             while True:
                                 buf = fd.readline()
-                                if not buf: break
-                                with lock: dest.write(buf)
+
+                                if not buf:
+                                    break
+
+                                with lock:
+                                    dest.write(buf)
+
                                 size += len(buf)
 
                         elif content_type == "application/xml":
@@ -491,10 +594,14 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                             size = s[0]
 
                         else:
-                            msg("getting data from %s failed: unsupported content type '%s'" % (query_url, content_type))
+                            msg("getting data from %s failed: unsupported "
+                                "content type '%s'" % (query_url,
+                                                       content_type))
+
                             break
 
-                        msg("got %d bytes (%s) from %s" % (size, content_type, query_url), verbose)
+                        msg("got %d bytes (%s) from %s"
+                            % (size, content_type, query_url), verbose)
 
                     i += n
 
@@ -503,21 +610,29 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
 
             except urllib2.HTTPError as e:
                 if e.code == 413 and n > 1:
-                    msg("request too large for %s, splitting" % query_url, verbose)
+                    msg("request too large for %s, splitting"
+                        % query_url, verbose)
+
                     n = -(n//-2)
 
                 else:
-                    msg("getting data from %s failed: %s" % (query_url, str(e)))
+                    msg("getting data from %s failed: %s"
+                        % (query_url, str(e)))
+
                     break
 
             except (urllib2.URLError, socket.error, ET.ParseError) as e:
-                msg("getting data from %s failed: %s" % (query_url, str(e)))
+                msg("getting data from %s failed: %s"
+                    % (query_url, str(e)))
+
                 break
 
     finally:
         finished.put(threading.current_thread())
 
-def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait, maxthreads, verbose):
+
+def route(url, cred, authdata, postdata, dest, timeout, retry_count,
+          retry_wait, maxthreads, verbose):
     threads = []
     running = 0
     finished = Queue.Queue()
@@ -526,7 +641,9 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
 
     if postdata:
         query_url = url.post()
-        postdata = ''.join((p + '=' + v + '\n') for (p, v) in url.post_params()) + postdata
+        postdata = (''.join((p + '=' + v + '\n')
+                            for (p, v) in url.post_params()) +
+                    postdata)
 
         if not isinstance(postdata, bytes):
             postdata = postdata.encode('utf-8')
@@ -537,14 +654,16 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
     msg("getting routes from %s" % query_url, verbose)
 
     try:
-        fd = retry(urllib2.urlopen, query_url, postdata, timeout, retry_count, retry_wait, verbose)
+        fd = retry(urllib2.urlopen, query_url, postdata, timeout, retry_count,
+                   retry_wait, verbose)
 
         try:
             if fd.getcode() == 204:
                 raise Error("received no routes from %s" % query_url)
 
             elif fd.getcode() != 200:
-                raise Error("getting routes from %s failed with HTTP status code %d" % (query_url, fd.getcode()))
+                raise Error("getting routes from %s failed with HTTP status "
+                            "code %d" % (query_url, fd.getcode()))
 
             else:
                 urlline = None
@@ -561,9 +680,21 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
 
                     elif not line.strip():
                         if postlines:
-                            target_url = TargetURL(urlparse.urlparse(urlline), url.target_params())
-                            threads.append(threading.Thread(target=fetch, args=(target_url, cred, authdata,
-                                postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verbose)))
+                            target_url = TargetURL(urlparse.urlparse(urlline),
+                                                   url.target_params())
+                            threads.append(threading.Thread(target=fetch,
+                                                            args=(target_url,
+                                                                  cred,
+                                                                  authdata,
+                                                                  postlines,
+                                                                  xc,
+                                                                  dest,
+                                                                  timeout,
+                                                                  retry_count,
+                                                                  retry_wait,
+                                                                  finished,
+                                                                  lock,
+                                                                  verbose)))
 
                         urlline = None
                         postlines = []
@@ -596,6 +727,7 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
 
     xc.dump(dest)
 
+
 def main():
     qp = {}
 
@@ -605,78 +737,91 @@ def main():
                 (p, v) = value.split('=', 1)
                 qp[p] = v
 
-            except ValueError as e:
-                raise optparse.OptionValueError("%s expects parameter=value" % opt_str)
+            except ValueError:
+                raise optparse.OptionValueError("%s expects parameter=value"
+                                                % opt_str)
 
         else:
             qp[option.dest] = value
 
-    parser = optparse.OptionParser(usage="Usage: %prog [-h|--help] [OPTIONS] -o file",
-                                   version="%prog " + VERSION,
-                                   description=__doc__.strip())
+    parser = optparse.OptionParser(
+            usage="Usage: %prog [-h|--help] [OPTIONS] -o file",
+            version="%prog " + VERSION,
+            description=__doc__.strip())
 
-    parser.set_defaults(url = "http://geofon.gfz-potsdam.de/eidaws/routing/1/",
-                        timeout = 600,
-                        retries = 10,
-                        retry_wait = 60,
-                        threads = 5)
+    parser.set_defaults(
+            url="http://geofon.gfz-potsdam.de/eidaws/routing/1/",
+            timeout=600,
+            retries=10,
+            retry_wait=60,
+            threads=5)
 
     parser.add_option("-v", "--verbose", action="store_true", default=False,
-        help="verbose mode")
+                      help="verbose mode")
 
     parser.add_option("-u", "--url", type="string",
-        help="URL of routing service (default %default)")
+                      help="URL of routing service (default %default)")
 
-    parser.add_option("-y", "--service", type="string", action="callback", callback=add_qp,
-        help="target service (default dataselect)")
+    parser.add_option("-y", "--service", type="string", action="callback",
+                      callback=add_qp,
+                      help="target service (default dataselect)")
 
-    parser.add_option("-N", "--network", type="string", action="callback", callback=add_qp,
-        help="network code or pattern")
+    parser.add_option("-N", "--network", type="string", action="callback",
+                      callback=add_qp,
+                      help="network code or pattern")
 
-    parser.add_option("-S", "--station", type="string", action="callback", callback=add_qp,
-        help="station code or pattern")
+    parser.add_option("-S", "--station", type="string", action="callback",
+                      callback=add_qp,
+                      help="station code or pattern")
 
-    parser.add_option("-L", "--location", type="string", action="callback", callback=add_qp,
-        help="location code or pattern")
+    parser.add_option("-L", "--location", type="string", action="callback",
+                      callback=add_qp,
+                      help="location code or pattern")
 
-    parser.add_option("-C", "--channel", type="string", action="callback", callback=add_qp,
-        help="channel code or pattern")
+    parser.add_option("-C", "--channel", type="string", action="callback",
+                      callback=add_qp,
+                      help="channel code or pattern")
 
-    parser.add_option("-s", "--starttime", type="string", action="callback", callback=add_qp,
-        help="start time")
+    parser.add_option("-s", "--starttime", type="string", action="callback",
+                      callback=add_qp,
+                      help="start time")
 
-    parser.add_option("-e", "--endtime", type="string", action="callback", callback=add_qp,
-        help="end time")
+    parser.add_option("-e", "--endtime", type="string", action="callback",
+                      callback=add_qp,
+                      help="end time")
 
-    parser.add_option("-q", "--query", type="string", action="callback", callback=add_qp,
-        help="additional query parameter", metavar="PARAMETER=VALUE")
+    parser.add_option("-q", "--query", type="string", action="callback",
+                      callback=add_qp, metavar="PARAMETER=VALUE",
+                      help="additional query parameter")
 
     parser.add_option("-t", "--timeout", type="int",
-        help="request timeout in seconds (default %default)")
+                      help="request timeout in seconds (default %default)")
 
     parser.add_option("-r", "--retries", type="int",
-        help="number of retries (default %default)")
+                      help="number of retries (default %default)")
 
     parser.add_option("-w", "--retry-wait", type="int",
-        help="seconds to wait before each retry (default %default)")
+                      help="seconds to wait before each retry "
+                           "(default %default)")
 
     parser.add_option("-n", "--threads", type="int",
-        help="maximum number of download threads (default %default)")
+                      help="maximum number of download threads "
+                           "(default %default)")
 
     parser.add_option("-c", "--credentials-file", type="string",
-        help="URL,user,password file (CSV format) for queryauth")
+                      help="URL,user,password file (CSV format) for queryauth")
 
     parser.add_option("-a", "--auth-file", type="string",
-        help="file that contains the auth token")
+                      help="file that contains the auth token")
 
     parser.add_option("-p", "--post-file", type="string",
-        help="request file in FDSNWS POST format")
+                      help="request file in FDSNWS POST format")
 
     parser.add_option("-b", "--breqfast-file", type="string",
-        help="request file in breq_fast format")
+                      help="request file in breq_fast format")
 
     parser.add_option("-o", "--output-file", type="string",
-        help="file where downloaded data is written")
+                      help="file where downloaded data is written")
 
     (options, args) = parser.parse_args()
 
@@ -685,23 +830,26 @@ def main():
         return 1
 
     try:
-        if options.credentials_file:
-            cred = {}
-
-            try:
-                for (url, user, passwd) in csv.reader(open(options.credentials_file)):
-                    cred[url] = (user, passwd)
-
-            except (ValueError, csv.Error):
-                raise Error("error parsing %s" % options.credentials_file)
-
-        else:
-            cred = None
-
+        cred = {}
+        authdata = None
         postdata = None
 
+        if options.credentials_file:
+            with open(options.credentials_file) as fd:
+                try:
+                    for (url, user, passwd) in csv.reader(fd):
+                        cred[url] = (user, passwd)
+
+                except (ValueError, csv.Error):
+                    raise Error("error parsing %s" % options.credentials_file)
+
+        if options.auth_file:
+            with open(options.auth_file) as fd:
+                authdata = fd.read()
+
         if options.post_file:
-            postdata = open(options.post_file).read()
+            with open(options.post_file) as fd:
+                postdata = fd.read()
 
         if options.breqfast_file:
             if postdata is not None:
@@ -718,11 +866,11 @@ def main():
             postdata = breq.postdata
 
         url = RoutingURL(urlparse.urlparse(options.url), qp)
-        authdata = open(options.auth_file).read() if options.auth_file else None
         dest = open(options.output_file, 'wb')
 
-        route(url, cred, authdata, postdata, dest, options.timeout, options.retries, options.retry_wait,
-            options.threads, options.verbose)
+        route(url, cred, authdata, postdata, dest, options.timeout,
+              options.retries, options.retry_wait, options.threads,
+              options.verbose)
 
     except (IOError, Error) as e:
         msg(str(e))
@@ -734,5 +882,5 @@ if __name__ == "__main__":
     sys.exit(main())
 
 import obspy
+from future.builtins import *  # NOQA
 VERSION += " (ObsPy %s)" % obspy.__version__
-
