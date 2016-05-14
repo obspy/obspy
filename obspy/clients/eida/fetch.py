@@ -40,7 +40,7 @@ except ImportError:
     import urllib.parse as urlparse
     import urllib.parse as urllib
 
-VERSION = "1.99 (2016.127)"
+VERSION = "2016.127"
 
 GET_PARAMS = set(('net', 'network',
                   'sta', 'station',
@@ -321,13 +321,13 @@ class BreqParser(object):
 
 msglock = threading.Lock()
 
-def msg(verb, s):
-    if verb:
+def msg(s, verbose=True):
+    if verbose:
         with msglock:
             sys.stderr.write(s + '\n')
             sys.stderr.flush()
 
-def retry(urlopen, url, data, timeout, count, wait, verb):
+def retry(urlopen, url, data, timeout, count, wait, verbose):
     n = 0
 
     while True:
@@ -342,21 +342,21 @@ def retry(urlopen, url, data, timeout, count, wait, verb):
             if fd.getcode() == 200 or fd.getcode() == 204:
                 return fd
 
-            msg(verb, "retrying %s (%d) after %d seconds due to HTTP status code %d" % (url, n, wait, fd.getcode()))
+            msg("retrying %s (%d) after %d seconds due to HTTP status code %d" % (url, n, wait, fd.getcode()), verbose)
             time.sleep(wait)
 
         except urllib2.HTTPError as e:
             if e.code >= 400 and e.code < 500:
                 raise
 
-            msg(verb, "retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)))
+            msg("retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)), verbose)
             time.sleep(wait)
 
         except (urllib2.URLError, socket.error) as e:
-            msg(verb, "retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)))
+            msg("retrying %s (%d) after %d seconds due to %s" % (url, n, wait, str(e)), verbose)
             time.sleep(wait)
 
-def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verb):
+def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verbose):
     try:
         url_handlers = []
 
@@ -373,7 +373,7 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
             query_url = url.post_qa()
 
             try:
-                fd = retry(urllib2.urlopen, wadl_url, None, timeout, retry_count, retry_wait, verb)
+                fd = retry(urllib2.urlopen, wadl_url, None, timeout, retry_count, retry_wait, verbose)
 
                 try:
                     if ET.parse(fd).getroot().find(".//{http://wadl.dev.java.net/2009/02}resource[@path='auth']") is None:
@@ -382,13 +382,13 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                 finally:
                     fd.close()
 
-                msg(verb, "authenticating at %s" % auth_url)
+                msg("authenticating at %s" % auth_url, verbose)
 
                 if not isinstance(authdata, bytes):
                     authdata = authdata.encode('utf-8')
 
                 try:
-                    fd = retry(urllib2.urlopen, auth_url, authdata, timeout, retry_count, retry_wait, verb)
+                    fd = retry(urllib2.urlopen, auth_url, authdata, timeout, retry_count, retry_wait, verbose)
 
                     try:
                         if fd.getcode() == 200:
@@ -404,27 +404,27 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                                 url_handlers.append(urllib2.HTTPDigestAuthHandler(mgr))
 
                             except ValueError:
-                                msg(True, "invalid auth response: %s" % up)
+                                msg("invalid auth response: %s" % up)
                                 return
 
-                            msg(verb, "authentication at %s successful" % auth_url)
+                            msg("authentication at %s successful" % auth_url, verbose)
 
                         else:
-                            msg(True, "authentication at %s failed with HTTP status code %d" % (auth_url, fd.getcode()))
+                            msg("authentication at %s failed with HTTP status code %d" % (auth_url, fd.getcode()))
 
                     finally:
                         fd.close()
 
                 except (urllib2.URLError, socket.error) as e:
-                    msg(True, "authentication at %s failed: %s" % (auth_url, str(e)))
+                    msg("authentication at %s failed: %s" % (auth_url, str(e)))
                     query_url = url.post()
 
             except (urllib2.URLError, socket.error, ET.ParseError) as e:
-                msg(True, "reading %s failed: %s" % (wadl_url, str(e)))
+                msg("reading %s failed: %s" % (wadl_url, str(e)))
                 query_url = url.post()
 
             except AuthNotSupported:
-                msg(verb, "authentication at %s is not supported" % auth_url)
+                msg("authentication at %s is not supported" % auth_url, verbose)
                 query_url = url.post()
 
         else: # fetch data anonymously
@@ -437,10 +437,10 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
 
         while i < len(postlines):
             if n == len(postlines):
-                msg(verb, "getting data from %s" % query_url)
+                msg("getting data from %s" % query_url, verbose)
 
             else:
-                msg(verb, "getting data from %s (%d%%..%d%%)" % (query_url, 100*i/len(postlines), min(100, 100*(i+n)/len(postlines))))
+                msg("getting data from %s (%d%%..%d%%)" % (query_url, 100*i/len(postlines), min(100, 100*(i+n)/len(postlines))), verbose)
 
             postdata = ''.join((p + '=' + v + '\n') for (p, v) in url.post_params()) + ''.join(postlines[i:i+n])
 
@@ -448,14 +448,14 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                 postdata = postdata.encode('utf-8')
 
             try:
-                fd = retry(opener.open, query_url, postdata, timeout, retry_count, retry_wait, verb)
+                fd = retry(opener.open, query_url, postdata, timeout, retry_count, retry_wait, verbose)
 
                 try:
                     if fd.getcode() == 204:
-                        msg(verb, "received no data from %s" % query_url)
+                        msg("received no data from %s" % query_url, verbose)
 
                     elif fd.getcode() != 200:
-                        msg(True, "getting data from %s failed with HTTP status code %d" % (query_url, fd.getcode()))
+                        msg("getting data from %s failed with HTTP status code %d" % (query_url, fd.getcode()))
                         break
 
                     else:
@@ -491,10 +491,10 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
                             size = s[0]
 
                         else:
-                            msg(True, "getting data from %s failed: unsupported content type '%s'" % (query_url, content_type))
+                            msg("getting data from %s failed: unsupported content type '%s'" % (query_url, content_type))
                             break
 
-                        msg(verb, "got %d bytes (%s) from %s" % (size, content_type, query_url))
+                        msg("got %d bytes (%s) from %s" % (size, content_type, query_url), verbose)
 
                     i += n
 
@@ -503,21 +503,21 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count, retry_
 
             except urllib2.HTTPError as e:
                 if e.code == 413 and n > 1:
-                    msg(verb, "request too large for %s, splitting" % query_url)
+                    msg("request too large for %s, splitting" % query_url, verbose)
                     n = -(n//-2)
 
                 else:
-                    msg(True, "getting data from %s failed: %s" % (query_url, str(e)))
+                    msg("getting data from %s failed: %s" % (query_url, str(e)))
                     break
 
             except (urllib2.URLError, socket.error, ET.ParseError) as e:
-                msg(True, "getting data from %s failed: %s" % (query_url, str(e)))
+                msg("getting data from %s failed: %s" % (query_url, str(e)))
                 break
 
     finally:
         finished.put(threading.current_thread())
 
-def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait, maxthreads, verb):
+def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait, maxthreads, verbose):
     threads = []
     running = 0
     finished = Queue.Queue()
@@ -534,10 +534,10 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
     else:
         query_url = url.get()
 
-    msg(verb, "getting routes from %s" % query_url)
+    msg("getting routes from %s" % query_url, verbose)
 
     try:
-        fd = retry(urllib2.urlopen, query_url, postdata, timeout, retry_count, retry_wait, verb)
+        fd = retry(urllib2.urlopen, query_url, postdata, timeout, retry_count, retry_wait, verbose)
 
         try:
             if fd.getcode() == 204:
@@ -563,7 +563,7 @@ def route(url, cred, authdata, postdata, dest, timeout, retry_count, retry_wait,
                         if postlines:
                             target_url = TargetURL(urlparse.urlparse(urlline), url.target_params())
                             threads.append(threading.Thread(target=fetch, args=(target_url, cred, authdata,
-                                postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verb)))
+                                postlines, xc, dest, timeout, retry_count, retry_wait, finished, lock, verbose)))
 
                         urlline = None
                         postlines = []
@@ -612,7 +612,7 @@ def main():
             qp[option.dest] = value
 
     parser = optparse.OptionParser(usage="Usage: %prog [-h|--help] [OPTIONS] -o file",
-                                   version="%prog v" + VERSION,
+                                   version="%prog " + VERSION,
                                    description=__doc__.strip())
 
     parser.set_defaults(url = "http://geofon.gfz-potsdam.de/eidaws/routing/1/",
@@ -705,14 +705,14 @@ def main():
 
         if options.breqfast_file:
             if postdata is not None:
-                msg(True, "cannot use both --post-file and --breqfast-file")
+                msg("cannot use both --post-file and --breqfast-file")
                 return 1
 
             breq = BreqParser()
             breq.parse(options.breqfast_file)
 
             if breq.failstr:
-                msg(True, breq.failstr)
+                msg(breq.failstr)
                 return 1
 
             postdata = breq.postdata
@@ -725,11 +725,14 @@ def main():
             options.threads, options.verbose)
 
     except (IOError, Error) as e:
-        msg(True, str(e))
+        msg(str(e))
         return 1
 
     return 0
 
 if __name__ == "__main__":
     sys.exit(main())
+
+import obspy
+VERSION += " (ObsPy %s)" % obspy.__version__
 

@@ -11,16 +11,20 @@ FDSN Web Service client with EIDA routing and authentication support.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+from future import standard_library
+from future.utils import PY2, native_str
+
 import io
 import obspy.clients.fdsn
 from . import fetch
 
-try:
-    # Python 2.x
+if PY2:
     import urlparse
 
-except ImportError:
-    # Python 3.x
+else:
     import urllib.parse as urlparse
 
 class Client(obspy.clients.fdsn.Client):
@@ -31,7 +35,7 @@ class Client(obspy.clients.fdsn.Client):
         :type base_url: str
         :param base_url: Base URL of FDSN/EIDA web service compatible server
             (e.g. "http://geofon.gfz-potsdam.de") or key string for recognized
-            server.
+            server. See :mod:`FDSN client documentation <obspy.clients.fdsn>`
         :type debug: bool
         :param debug: Debug flag.
         :type timeout: float
@@ -50,7 +54,7 @@ class Client(obspy.clients.fdsn.Client):
         :param authdata: Authentication token (PGP base64 format).
 
         """
-        obspy.clients.fdsn.Client.__init__(self, base_url, **kwargs)
+        super(Client, self).__init__(base_url, **kwargs)
         self.__retry_count = retry_count
         self.__retry_wait = retry_wait
         self.__maxthreads = maxthreads
@@ -58,13 +62,15 @@ class Client(obspy.clients.fdsn.Client):
         self.__authdata = authdata
 
     def _create_url_from_parameters(self, service, *args):
+        url = super(Client, self)._create_url_from_parameters(service, *args)
+
         if service in ('dataselect', 'station'):
             # construct a URL for the routing service
-            u = urlparse.urlparse(obspy.clients.fdsn.Client._create_url_from_parameters(self, service, *args))
+            u = urlparse.urlparse(url)
             return urlparse.urlunparse((u.scheme, u.netloc, u'/eidaws/routing/1/query', u'', u.query + u'&service=' + service, u''))
 
         else: # 'event' is not routed
-            return obspy.clients.fdsn.Client._create_url_from_parameters(self, service, *args)
+            return url
 
     def _download(self, url, return_string=False, data=None, use_gzip=True):
         u = urlparse.urlparse(url)
@@ -90,5 +96,5 @@ class Client(obspy.clients.fdsn.Client):
                 return dest
 
         else:
-            return obspy.clients.fdsn.Client._download(self, url, return_string, data, use_gzip)
+            return super(Client, self)._download(self, url, return_string, data, use_gzip)
 
