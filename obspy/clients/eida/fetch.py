@@ -44,7 +44,7 @@ except ImportError:
     import urllib.parse as urlparse
     import urllib.parse as urllib
 
-VERSION = "2016.127"
+VERSION = "2016.136"
 
 GET_PARAMS = set(('net', 'network',
                   'sta', 'station',
@@ -79,36 +79,36 @@ class TargetURL(object):
         return urlparse.urlunparse((self.__scheme,
                                     self.__netloc,
                                     path,
-                                    u'',
-                                    u'',
-                                    u''))
+                                    '',
+                                    '',
+                                    ''))
 
     def auth(self):
         path = self.__path + '/auth'
-        return urlparse.urlunparse((u'https',
+        return urlparse.urlunparse(('https',
                                     self.__netloc,
                                     path,
-                                    u'',
-                                    u'',
-                                    u''))
+                                    '',
+                                    '',
+                                    ''))
 
     def post(self):
         path = self.__path + '/query'
         return urlparse.urlunparse((self.__scheme,
                                     self.__netloc,
                                     path,
-                                    u'',
-                                    u'',
-                                    u''))
+                                    '',
+                                    '',
+                                    ''))
 
     def post_qa(self):
         path = self.__path + '/queryauth'
         return urlparse.urlunparse((self.__scheme,
                                     self.__netloc,
                                     path,
-                                    u'',
-                                    u'',
-                                    u''))
+                                    '',
+                                    '',
+                                    ''))
 
     def post_params(self):
         return self.__qp.items()
@@ -129,18 +129,18 @@ class RoutingURL(object):
         return urlparse.urlunparse((self.__scheme,
                                     self.__netloc,
                                     path,
-                                    u'',
+                                    '',
                                     query,
-                                    u''))
+                                    ''))
 
     def post(self):
         path = self.__path + '/query'
         return urlparse.urlunparse((self.__scheme,
                                     self.__netloc,
                                     path,
-                                    u'',
-                                    u'',
-                                    u''))
+                                    '',
+                                    '',
+                                    ''))
 
     def post_params(self):
         qp = [(p, v) for (p, v) in self.__qp.items() if p in POST_PARAMS]
@@ -189,26 +189,66 @@ class XMLCombiner(object):
 
     def dump(self, fd):
         if self.__et:
-            self.__et.write(fd, encoding='utf-8', xml_declaration=True)
+            self.__et.write(fd)
+
+
+class ArclinkParser(object):
+    def __init__(self):
+        self.postdata = ""
+        self.failstr = ""
+
+    def __parse_line(self, line):
+        items = line.split()
+
+        if len(items) < 2:
+            self.failstr += "%s [syntax error]\n" % line
+            return
+
+        try:
+            beg_time = datetime.datetime(*map(int, items[0].split(",")))
+            end_time = datetime.datetime(*map(int, items[1].split(",")))
+
+        except ValueError as e:
+            self.failstr += "%s [invalid begin or end time: %s]\n" \
+                            % (line, str(e))
+            return
+
+        network = 'XX'
+        station = 'XXXXX'
+        channel = 'XXX'
+        location = '--'
+
+        if len(items) > 2 and items[2] != '.':
+            network = items[2]
+
+            if len(items) > 3 and items[3] != '.':
+                station = items[3]
+
+                if len(items) > 4 and items[4] != '.':
+                    channel = items[4]
+
+                    if len(items) > 5 and items[5] != '.':
+                        location = items[5]
+
+        self.postdata += "%s %s %s %s %sZ %sZ\n" \
+                         % (network,
+                            station,
+                            location,
+                            channel,
+                            beg_time.isoformat(),
+                            end_time.isoformat())
+
+    def parse(self, path):
+        with open(path) as fd:
+            for line in fd:
+                line = line.rstrip()
+
+                if line:
+                    self.__parse_line(line)
 
 
 class BreqParser(object):
-    """
-    Parses the breq_fast email format using regular expressions.
-
-    @classvaribales: __tokenrule, defines the syntax of the beginning of a
-                                  Breq_fast header token
-                     __tokenlist, specifies the tokens required for the ArcLink
-                                  request
-                     __reqlist,   defines the syntax for a request line in
-                                  Breq_fast format
-    """
     __tokenrule = "^\.[A-Z_]+[:]?\s"
-
-    __tokenlist = ("\.NAME\s+(?P<name>.+)",
-                   "\.INST\s+(?P<institution>.+)?",
-                   "\.EMAIL\s+(?P<email>.+[@].+)",
-                   "\.LABEL\s+(?P<label>.+)?")
 
     __reqlist = ("(?P<station>[\w?\*]+)",
                  "(?P<network>[\w?]+)",
@@ -228,60 +268,13 @@ class BreqParser(object):
                  "(?P<cha_list>[\w?\s*]+)")
 
     def __init__(self):
-        """
-        Constructor.
-
-        @instancevariables: head,      a string concatenation of certain
-                                       Breq_fast header lines
-                            request,   a string concatenation of the Breq_fast
-                                       request lines
-                            tokendict, a dictionary storing the ArcLink
-                                       required matches
-                            postdata,  a string containing the matched requests
-                                       in FDSNWS format
-                            failstr,   a string documenting failed matches
-        """
         self.__rx_tokenrule = re.compile(BreqParser.__tokenrule)
-        self.__rx_tokenlist = re.compile("|".join(BreqParser.__tokenlist))
         self.__rx_reqlist = re.compile("\s+".join(BreqParser.__reqlist))
-        self.head = ""
-        self.request = ""
-        self.tokendict = {}
         self.postdata = ""
         self.failstr = ""
 
-    def __parse_tokens(self, head):
-        """
-        Gets the Breq_fast header to match it against the corresponding
-        pattern. If successul sets the dictionary for storing the ArcLink
-        required matches.
-
-        @arguments: head, a string storing the email request header in
-                          Breq_fast format
-        """
-        for line in head.split("\n"):
-            m = self.__rx_tokenlist.search(line)
-
-            if m:
-                for k, v in m.groupdict().items():
-                    if v is not None:
-                        self.tokendict[k] = v
-
-        if "name" not in self.tokendict or "email" not in self.tokendict:
-            self.failstr = "%sBreq_fast header must contain at least .NAME " \
-                           "and .EMAIL arguments.\n" % self.failstr
-
-    def __parse_request(self, line):
-        """
-        Gets a request line in Breq_fast format to match it against the
-        corresponding pattern. If successful the request list will be
-        completed; the fail string otherwise.
-
-        @arguments: line, a request line in Breq_fast format
-        """
-        loc = "*"
-        self.request = "%s\n%s" % (self.request, line)
-        m = self.__rx_reqlist.search(line)
+    def __parse_line(self, line):
+        m = self.__rx_reqlist.match(line)
 
         if m:
             d = m.groupdict()
@@ -336,50 +329,38 @@ class BreqParser(object):
                                              int(d["end_sec"]))
 
             except ValueError as e:
-                self.failstr = "%s%s [error: wrong begin or end time: %s]\n" \
-                               % (self.failstr, line, e)
+                self.failstr += "%s [error: wrong begin or end time: %s]\n" \
+                                % (line, str(e))
                 return
 
+            location = "*"
             cha_list = re.findall("([\w?\*]+)\s*", d["cha_list"])
 
             if len(cha_list) == int(d['cha_num'])+1:
-                loc = cha_list.pop()
+                location = cha_list.pop()
 
-            for cha in cha_list:
+            for channel in cha_list:
                 self.postdata += "%s %s %s %s %sZ %sZ\n" \
                                  % (d["network"],
                                     d["station"],
-                                    loc,
-                                    cha,
+                                    location,
+                                    channel,
                                     beg_time.isoformat(),
                                     end_time.isoformat())
 
         else:
-            self.failstr = "%s%s\n" % (self.failstr, line)
+            self.failstr += "%s [syntax error]\n" % line
 
     def parse(self, path):
-        """
-        Parses the Breq_fast email and stores matches in structures required
-        for the FDSNWS request.
-
-        @arguments: path, the absolute path to file containing the email
-                          Breq_fast request
-        """
         with open(path) as fd:
-            endtoken = False
-
             for line in fd:
                 if self.__rx_tokenrule.match(line):
-                    self.head = "".join((self.head, line))
-                    endtoken = True
+                    continue
 
-                elif endtoken:
-                    line = line.rstrip("\n")
+                line = line.rstrip()
 
-                    if len(line) > 0:
-                        self.__parse_request(line)
-
-        self.__parse_tokens(self.head)
+                if line:
+                    self.__parse_line(line)
 
 msglock = threading.Lock()
 
@@ -409,6 +390,7 @@ def retry(urlopen, url, data, timeout, count, wait, verbose):
             msg("retrying %s (%d) after %d seconds due to HTTP status code %d"
                 % (url, n, wait, fd.getcode()), verbose)
 
+            fd.close()
             time.sleep(wait)
 
         except urllib2.HTTPError as e:
@@ -817,6 +799,9 @@ def main():
     parser.add_option("-p", "--post-file", type="string",
                       help="request file in FDSNWS POST format")
 
+    parser.add_option("-f", "--arclink-file", type="string",
+                      help="request file in ArcLink format")
+
     parser.add_option("-b", "--breqfast-file", type="string",
                       help="request file in breq_fast format")
 
@@ -827,6 +812,12 @@ def main():
 
     if args or not options.output_file:
         parser.print_usage()
+        return 1
+
+    if bool(options.post_file) + bool(options.arclink_file) + \
+            bool(options.breqfast_file) > 1:
+        msg("only one of (--post-file, --arclink-file, --breqfast-file) "
+            "can be used")
         return 1
 
     try:
@@ -851,19 +842,23 @@ def main():
             with open(options.post_file) as fd:
                 postdata = fd.read()
 
-        if options.breqfast_file:
-            if postdata is not None:
-                msg("cannot use both --post-file and --breqfast-file")
-                return 1
+        else:
+            parser = None
 
-            breq = BreqParser()
-            breq.parse(options.breqfast_file)
+            if options.arclink_file:
+                parser = ArclinkParser()
+                parser.parse(options.arclink_file)
 
-            if breq.failstr:
-                msg(breq.failstr)
-                return 1
+            elif options.breqfast_file:
+                parser = BreqParser()
+                parser.parse(options.breqfast_file)
 
-            postdata = breq.postdata
+            if parser is not None:
+                if parser.failstr:
+                    msg(parser.failstr)
+                    return 1
+
+                postdata = parser.postdata
 
         url = RoutingURL(urlparse.urlparse(options.url), qp)
         dest = open(options.output_file, 'wb')
