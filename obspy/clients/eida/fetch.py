@@ -25,10 +25,10 @@ import re
 
 try:
     # Python 3.2 and earlier
-    from xml.etree import cElementTree as ET
+    from xml.etree import cElementTree as ET  # NOQA
 
 except ImportError:
-    from xml.etree import ElementTree as ET
+    from xml.etree import ElementTree as ET  # NOQA
 
 try:
     # Python 2.x

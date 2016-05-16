@@ -65,7 +65,7 @@ class ClientTestCase(unittest.TestCase):
     Test cases for obspy.clients.eida.Client.
     """
     @classmethod
-    def getCredentials(cls):
+    def credentials(cls):
         url = re.sub("^http:", "https:", URL_MAPPINGS[cls.base_url]) + \
                 "/fdsnws/dataselect/1/auth"
 
@@ -105,7 +105,7 @@ hMrp91PMe04c0otcNytOKDFe/uDva3sd9jZKcxSXb3Gs2Rxf2QgA
 """
         cls.cred = {
             URL_MAPPINGS[cls.base_url] + "/fdsnws/dataselect/1/queryauth":
-                cls.getCredentials()}
+                cls.credentials()}
 
         cls.client = Client(base_url=cls.base_url)
 
