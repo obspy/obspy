@@ -14,8 +14,7 @@ FDSN Web Service client with EIDA routing and authentication support.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future import standard_library
-from future.utils import PY2, native_str
+from future.utils import PY2
 
 import io
 import obspy.clients.fdsn
@@ -27,8 +26,10 @@ if PY2:
 else:
     import urllib.parse as urlparse
 
+
 class Client(obspy.clients.fdsn.Client):
-    def __init__(self, base_url='GFZ', retry_count=10, retry_wait=60, maxthreads=5, credentials=None, authdata=None, **kwargs):
+    def __init__(self, base_url='GFZ', retry_count=10, retry_wait=60,
+                 maxthreads=5, credentials=None, authdata=None, **kwargs):
         """
         Initializes an FDSN/EIDA Web Service client.
 
@@ -61,40 +62,68 @@ class Client(obspy.clients.fdsn.Client):
         self.__credentials = credentials
         self.__authdata = authdata
 
-    def _create_url_from_parameters(self, service, *args):
-        url = super(Client, self)._create_url_from_parameters(service, *args)
-
-        if service in ('dataselect', 'station'):
-            # construct a URL for the routing service
-            u = urlparse.urlparse(url)
-            return urlparse.urlunparse((u.scheme, u.netloc, u'/eidaws/routing/1/query', u'', u.query + u'&service=' + service, u''))
-
-        else: # 'event' is not routed
-            return url
-
     def _download(self, url, return_string=False, data=None, use_gzip=True):
         u = urlparse.urlparse(url)
-        q = dict((p, v[0]) for (p, v) in urlparse.parse_qs(u[4]).items())
+        q = dict((p, v[0]) for (p, v) in urlparse.parse_qs(u.query).items())
 
-        if 'service' in q:
-            dest = io.BytesIO()
+        if '/dataselect/' in u.path:
+            q['service'] = 'dataselect'
 
-            try:
-                fetch.route(fetch.RoutingURL(u, q), self.__credentials, self.__authdata, data, dest,
-                    self.timeout, self.__retry_count, self.__retry_wait, self.__maxthreads, self.debug)
+        elif '/station/' in u.path:
+            q['service'] = 'station'
 
-            except fetch.Error as e:
-                raise obspy.clients.fdsn.header.FDSNException(str(e))
+        else:  # 'event' is not routed
+            return super(Client, self)._download(
+                    self, url, return_string, data, use_gzip)
 
-            if dest.tell() == 0:
-                raise obspy.clients.fdsn.header.FDSNException("No data available for request.")
+        u = urlparse.ParseResult(
+                u.scheme, u.netloc, '/eidaws/routing/1/query', '', '', '')
 
-            if return_string:
-                return dest.getvalue()
+        if data is not None:
+            if isinstance(data, bytes):
+                data = data.decode('utf-8')
 
-            else:
-                return dest
+            # Remove key=value parameters (not applicable to the routing
+            # service) from POST data and put them into a separate dict.
+            postlines = data.splitlines()
+
+            for i in range(len(postlines)):
+                kv = postlines[i].split('=')
+
+                if len(kv) != 2:
+                    break
+
+                q[kv[0]] = kv[1]
+
+            data = '\n'.join(postlines[i:])
+
+        elif 'end' not in q:
+            # IRIS FDSNWS does not accept POST data with missing endtime.
+            q['end'] = '2500-01-01T00:00:00Z'
+
+        dest = io.BytesIO()
+
+        try:
+            fetch.route(fetch.RoutingURL(u, q),
+                        self.__credentials,
+                        self.__authdata,
+                        data,
+                        dest,
+                        self.timeout,
+                        self.__retry_count,
+                        self.__retry_wait,
+                        self.__maxthreads,
+                        self.debug)
+
+        except fetch.Error as e:
+            raise obspy.clients.fdsn.header.FDSNException(str(e))
+
+        if dest.tell() == 0:
+            raise obspy.clients.fdsn.header.FDSNException(
+                    "No data available for request.")
+
+        if return_string:
+            return dest.getvalue()
 
         else:
-            return super(Client, self)._download(self, url, return_string, data, use_gzip)
-
+            return dest
