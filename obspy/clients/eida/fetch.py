@@ -8,8 +8,56 @@
 ###############################################################################
 
 """
-A command-line FDSN Web Service client with EIDA routing and authentication
-support.
+A command-line FDSN Web Service client using EIDA routing and authentication.
+
+Examples
+========
+
+Request 60 minutes of the ``"LHZ"`` channel of EIDA stations starting with
+``"A"`` for an seismic event around 2010-02-27 07:00 (UTC). Optionally add
+``"-v"`` for verbosity. Resulting Mini-SEED data is written to file
+``"data.mseed"``.
+
+.. code-block:: bash
+
+    $ %(prog)s -N '*' -S '*' -L '*' -C 'LHZ' \
+-s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -v -o data.mseed
+
+The above request is anonymous and therefore restricted data will not be
+included. To include restricted data, use a file containing a token obtained
+from an EIDA authentication service and/or a CSV file with username and
+password for each node not implementing the EIDA auth extension.
+
+.. code-block:: bash
+
+    $ %(prog)s -a token.asc -c credentials.csv -N '*' -S '*' -L '*' -C 'LHZ' \
+-s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -v -o data.mseed
+
+StationXML metadata for the above request can be requested using the following
+command:
+
+.. code-block:: bash
+
+    $ %(prog)s -N '*' -S '*' -L '*' -C 'LHZ' \
+-s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -y station \
+-q level=response -v -o station.xml
+
+Multiple query parameters can be used:
+
+.. code-block:: bash
+
+    $ %(prog)s -N '*' -S '*' -L '*' -C '*' \
+-s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -y station \
+-q format=text -q level=channel -q latitude=20 -q longitude=-150 \
+-q maxradius=15 -v -o station.txt
+
+Bulk requests can be made in ArcLink (-f), breq_fast (-b) or native FDSNWS POST
+(-p) format. Query parameters should not be included in the request file, but
+specified on the command line.
+
+.. code-block:: bash
+
+    $ %(prog)s -p request.txt -y station -q level=channel -v -o data.xml
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -44,7 +92,7 @@ except ImportError:
     import urllib.parse as urlparse
     import urllib.parse as urllib
 
-VERSION = "2016.136"
+VERSION = "2016.139"
 
 GET_PARAMS = set(('net', 'network',
                   'sta', 'station',
@@ -362,6 +410,7 @@ class BreqParser(object):
                 if line:
                     self.__parse_line(line)
 
+
 msglock = threading.Lock()
 
 
@@ -537,6 +586,7 @@ def fetch(url, cred, authdata, postlines, xc, dest, timeout, retry_count,
                         size = 0
 
                         content_type = fd.info().get('Content-Type')
+                        content_type = content_type.split(';')[0]
 
                         if content_type == "application/vnd.fdsn.mseed":
                             while True:
@@ -729,7 +779,7 @@ def main():
     parser = optparse.OptionParser(
             usage="Usage: %prog [-h|--help] [OPTIONS] -o file",
             version="%prog " + VERSION,
-            description=__doc__.strip())
+            description=__doc__.split('\n', 2)[1])
 
     parser.set_defaults(
             url="http://geofon.gfz-potsdam.de/eidaws/routing/1/",
@@ -873,9 +923,12 @@ def main():
 
     return 0
 
+
 if __name__ == "__main__":
+    __doc__ %= {"prog": sys.argv[0]}
     sys.exit(main())
 
 import obspy
 from future.builtins import *  # NOQA
 VERSION += " (ObsPy %s)" % obspy.__version__
+__doc__ %= {"prog": "obspy-eida-fetch"}

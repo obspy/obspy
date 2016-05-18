@@ -1,7 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-FDSN Web Service client with EIDA routing and authentication support.
+obspy.clients.eida - FDSN/EIDA Web service client for ObsPy
+===========================================================
+The obspy.clients.eida package contains a client to access web servers that
+implement the FDSN web services using EIDA routing and authentication
+extensions (http://www.orfeus-eu.org/eida/eida-webservices.html).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -10,120 +13,182 @@ FDSN Web Service client with EIDA routing and authentication support.
 :license:
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
+
+Basic Usage
+-----------
+
+The first step is always to initialize a client object.
+
+>>> from obspy.clients.eida import Client
+>>> client = Client("GFZ")
+
+A client object can be initialized either with the base URL of any EIDA routing
+service or with a shortcut name that will be mapped to such a URL. The examples
+make use of the EIDA routing service at GFZ, which is the default.
+
+Regardless of which EIDA routing service is used, requests will be routed to
+all EIDA nodes. However, there may be special routing services that route
+requests to a different set of nodes, even globally.
+
+To access restricted data, add a token obtained from an EIDA authentication
+service:
+
+>>> from obspy.clients.eida import Client
+>>> authdata = open("token.asc").read()
+>>> client = Client(authdata=authdata)
+
+For backwards compatibility, username/password authentication is supported as
+well. Different credentials can be specified for each node and they take
+precedence over token authentication at that node.
+
+Add debug=True to see what is going on.
+
+>>> from obspy.clients.eida import Client
+>>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth":
+                   ("nobody@iris.edu", "anonymous")}
+>>> authdata = open("token.asc").read()
+>>> client = Client(credentials=credentials, authdata=authdata, debug=True)
+
+(1) :meth:`~obspy.clients.eida.client.Client.get_waveforms()`: The following
+    example illustrates how to request and plot 60 minutes of the ``"LHZ"``
+    channel of EIDA stations starting with ``"A"`` for a seismic event around
+    2010-02-27 07:00 (UTC). Results are returned as a
+    :class:`~obspy.core.stream.Stream` object.
+    See the :meth:`~obspy.clients.eida.client.Client.get_waveforms_bulk()`
+    method for information on how to send multiple requests simultaneously to
+    avoid unnecessary network overhead.
+
+    >>> from obspy import UTCDateTime
+    >>> t = UTCDateTime("2010-02-27T07:00:00.000")
+    >>> st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60))
+    >>> st.plot(starttime=t, endtime=t+60*60)  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.clients.eida import Client
+        client = Client()
+        t = UTCDateTime("2010-02-27T07:00:00.000")
+        st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60))
+        st.plot(starttime=t, endtime=t+60*60)
+
+(2) :meth:`~obspy.clients.eida.client.Client.get_events()`: Retrieves event
+    data from the server. Results are returned as a
+    :class:`~obspy.core.event.Catalog` object.
+
+    The event service is not routed, so a node that is running an event service
+    locally must be used.
+
+    >>> client = Client("INGV")
+    >>> starttime = UTCDateTime("2002-01-01")
+    >>> endtime = UTCDateTime("2002-01-02")
+    >>> cat = client.get_events(starttime=starttime, endtime=endtime)
+    >>> print(cat)  # doctest: +NORMALIZE_WHITESPACE
+    4 Event(s) in Catalog:
+    2002-01-01T19:42:34.670000Z | +43.434,  +12.525 | 1.9 Md | manual
+    2002-01-01T10:54:09.040000Z | +43.439,  +12.476 | 2.2 Md | manual
+    2002-01-01T08:21:30.790000Z | +46.071,  +10.630 | 2.3 Md | manual
+    2002-01-01T05:07:31.250000Z | +44.781,   +8.361 | 2.7 Md | manual
+    >>> cat.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.clients.eida import Client
+        client = Client("INGV")
+        starttime = UTCDateTime("2002-01-01")
+        endtime = UTCDateTime("2002-01-02")
+        cat = client.get_events(starttime=starttime, endtime=endtime)
+        cat.plot()
+
+(3) :meth:`~obspy.clients.eida.client.Client.get_stations()`: Retrieves station
+    data from a set of nodes known to the routing service. Results are returned
+    as an :class:`~obspy.core.inventory.inventory.Inventory` object.
+
+    Since the information comes from multiple nodes, "Created by" and
+    "Sending institution" cannot be relied on.
+
+    >>> inventory = client.get_stations(network="*", station="A*",
+    ...                                 starttime=starttime,
+    ...                                 endtime=endtime)
+    >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    Inventory created at ...
+        Created by: ...
+        Sending institution: ...
+        Contains:
+                Networks (16):
+                        II
+                        IU
+                        NO
+                        OE
+                        YF
+                        G
+                        MN
+                        CH
+                        BW
+                        DK
+                        GE
+                        JS
+                        ZC
+                        YR
+                        CL
+                        FR
+                Stations (25):
+                        BW.ALTM (Beilngries, Bavaria, BW-Net)
+                        CH.ACB (Klingnau, Acheberg, AG)
+                        CH.AIGLE (Aigle, VD)
+                        CL.AGEO (Agios Giorgios, Aigialia, West Greece, Greece)
+                        CL.AIOA (Agios Ioannis, Aigialia, West Greece, Greece)
+                        DK.ANGG (Station Ammassalik, Greenland)
+                        FR.ARBF (technopole de l'Arbois)
+                        G.AIS (Nouvelle-Amsterdam - TAAF, France)
+                        G.ATD (Arta Cave - Arta, Republic of Djibouti)
+                        GE.APE (GEOFON Station Apirathos, Naxos)
+                        GE.APEZ (GEOFON Station Moni Apezanon, Greece)
+                        II.AAK (Ala Archa, Kyrgyzstan)
+                        II.ARU (Arti, Russia)
+                        IU.ANTO (Ankara, Turkey)
+                        JS.AQBJ (Station JS station, Jordan)
+                        JS.ASF (Station Asfer, Jordan)
+                        MN.AIO (Antillo, Italy)
+                        MN.AQU (L'Aquila, Italy)
+                        NO.ARE0 (ARE0)
+                        OE.ARSA (ARZBERG, AUSTRIA)
+                        YF.ABSA (DJEBEL ABABSIA, ALGERIA)
+                        YR.ALE (Alemeya, Ethiopie)
+                        ZC.ACBG (Station ACBG, Spain)
+                        ZC.ACLR (Station ACLR, Spain)
+                        ZC.ALB (Station ALB, Spain)
+                Channels (0):
+    >>> inventory.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        from obspy import UTCDateTime
+        from obspy.clients.eida import Client
+        client = Client()
+        starttime = UTCDateTime("2002-01-01")
+        endtime = UTCDateTime("2002-01-02")
+        inventory = client.get_stations(network="*", station="A*",
+                                        starttime=starttime,
+                                        endtime=endtime)
+        inventory.plot()
+
+Please see the documentation for each method for further information and
+examples.
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import PY2
+from future.utils import native_str
 
-import io
-import obspy.clients.fdsn
-from . import fetch
-
-if PY2:
-    import urlparse
-
-else:
-    import urllib.parse as urlparse
+from .client import Client  # NOQA
+from obspy.clients.fdsn.header import URL_MAPPINGS  # NOQA
 
 
-class Client(obspy.clients.fdsn.Client):
-    def __init__(self, base_url='GFZ', retry_count=10, retry_wait=60,
-                 maxthreads=5, credentials=None, authdata=None, **kwargs):
-        """
-        Initializes an FDSN/EIDA Web Service client.
+__all__ = [native_str("Client")]
 
-        :type base_url: str
-        :param base_url: Base URL of FDSN/EIDA web service compatible server
-            (e.g. "http://geofon.gfz-potsdam.de") or key string for recognized
-            server. See :mod:`FDSN client documentation <obspy.clients.fdsn>`
-        :type debug: bool
-        :param debug: Debug flag.
-        :type timeout: float
-        :param timeout: Maximum time (in seconds) to wait for a single request
-            to receive the first byte of the response (after which an exception
-            is raised).
-        :type retry_count: int
-        :param retry_count: Number of retries.
-        :type retry_wait: int
-        :param retry_wait: Seconds to wait before each retry.
-        :type maxthreads: int
-        :param maxthreads: Maximum number of download threads.
-        :type credentials: dict
-        :param credentials: url -> (username, password).
-        :type authdata: string
-        :param authdata: Authentication token (PGP base64 format).
 
-        """
-        super(Client, self).__init__(base_url, **kwargs)
-        self.__retry_count = retry_count
-        self.__retry_wait = retry_wait
-        self.__maxthreads = maxthreads
-        self.__credentials = credentials
-        self.__authdata = authdata
-
-    def _download(self, url, return_string=False, data=None, use_gzip=True):
-        u = urlparse.urlparse(url)
-        q = dict((p, v[0]) for (p, v) in urlparse.parse_qs(u.query).items())
-
-        if '/dataselect/' in u.path:
-            q['service'] = 'dataselect'
-
-        elif '/station/' in u.path:
-            q['service'] = 'station'
-
-        else:  # 'event' is not routed
-            return super(Client, self)._download(
-                    self, url, return_string, data, use_gzip)
-
-        u = urlparse.ParseResult(
-                u.scheme, u.netloc, '/eidaws/routing/1/query', '', '', '')
-
-        if data is not None:
-            if isinstance(data, bytes):
-                data = data.decode('utf-8')
-
-            # Remove key=value parameters (not applicable to the routing
-            # service) from POST data and put them into a separate dict.
-            postlines = data.splitlines()
-
-            for i in range(len(postlines)):
-                kv = postlines[i].split('=')
-
-                if len(kv) != 2:
-                    break
-
-                q[kv[0]] = kv[1]
-
-            data = '\n'.join(postlines[i:])
-
-        elif 'end' not in q:
-            # IRIS FDSNWS does not accept POST data with missing endtime.
-            q['end'] = '2500-01-01T00:00:00Z'
-
-        dest = io.BytesIO()
-
-        try:
-            fetch.route(fetch.RoutingURL(u, q),
-                        self.__credentials,
-                        self.__authdata,
-                        data,
-                        dest,
-                        self.timeout,
-                        self.__retry_count,
-                        self.__retry_wait,
-                        self.__maxthreads,
-                        self.debug)
-
-        except fetch.Error as e:
-            raise obspy.clients.fdsn.header.FDSNException(str(e))
-
-        if dest.tell() == 0:
-            raise obspy.clients.fdsn.header.FDSNException(
-                    "No data available for request.")
-
-        if return_string:
-            return dest.getvalue()
-
-        else:
-            return dest
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

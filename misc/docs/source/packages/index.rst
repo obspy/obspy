@@ -92,6 +92,7 @@ The functionality is provided through the following packages:
 
    obspy.clients.arclink
    obspy.clients.earthworm
+   obspy.clients.eida
    obspy.clients.fdsn
    obspy.clients.filesystem
    obspy.clients.iris

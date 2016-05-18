@@ -169,18 +169,18 @@ hMrp91PMe04c0otcNytOKDFe/uDva3sd9jZKcxSXb3Gs2Rxf2QgA
 
         # Misc query.
         inv = client.get_stations(
-            startafter=UTCDateTime("2000-01-07"),
-            endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
+            starttime=UTCDateTime("2000-01-07"),
+            endtime=UTCDateTime("2011-02-07"), minlatitude=15,
             maxlatitude=55, minlongitude=150, maxlongitude=-150, network="GE")
         self.assertGreater(len(inv.networks), 0)  # at least one network
         for net in inv:
             self.assertGreater(len(net.stations), 0)  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                self.assertGreater(sta.start_date, UTCDateTime("2000-01-07"),
+                self.assertGreater(sta.end_date, UTCDateTime("2000-01-07"),
                                    msg)
                 if sta.end_date is not None:
-                    self.assertGreater(UTCDateTime("2011-02-07"), sta.end_date,
+                    self.assertGreater(UTCDateTime("2011-02-07"), sta.start_date,
                                        msg)
                 self.assertGreater(sta.latitude, 14.9, msg)
                 self.assertGreater(55.1, sta.latitude, msg)
