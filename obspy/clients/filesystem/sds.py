@@ -712,6 +712,9 @@ def _parse_path_to_dict(path, pattern, group_map):
                 warnings.warn(msg)
                 return None
         result[key] = value
+    for key in ("year", "doy"):
+        if key in result:
+            result[key] = int(result[key])
     return result
 
 
