@@ -177,10 +177,12 @@ hMrp91PMe04c0otcNytOKDFe/uDva3sd9jZKcxSXb3Gs2Rxf2QgA
             self.assertGreater(len(net.stations), 0)  # at least one station
             for sta in net:
                 msg = "%s.%s" % (net.code, sta.code)
-                self.assertGreater(sta.end_date, UTCDateTime("2000-01-07"),
+                self.assertGreater(sta.end_date,
+                                   UTCDateTime("2000-01-07"),
                                    msg)
                 if sta.end_date is not None:
-                    self.assertGreater(UTCDateTime("2011-02-07"), sta.start_date,
+                    self.assertGreater(UTCDateTime("2011-02-07"),
+                                       sta.start_date,
                                        msg)
                 self.assertGreater(sta.latitude, 14.9, msg)
                 self.assertGreater(55.1, sta.latitude, msg)
