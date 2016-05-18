@@ -28,6 +28,12 @@ else:
 
 
 class Client(obspy.clients.fdsn.Client):
+    """
+    FDSN Web Service client using EIDA routing and authentication.
+
+    For details see the :meth:`~obspy.clients.eida.client.Client.__init__()`
+    method.
+    """
     def __init__(self, base_url='GFZ', retry_count=10, retry_wait=60,
                  maxthreads=5, credentials=None, authdata=None, **kwargs):
         """

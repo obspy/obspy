@@ -20,5 +20,6 @@
        :nosignatures:
 
        client
+       fetch
 
     .. comment to end block

@@ -44,7 +44,7 @@ precedence over token authentication at that node.
 Add debug=True to see what is going on.
 
 >>> from obspy.clients.eida import Client
->>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth":
+>>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth": \
                    ("nobody@iris.edu", "anonymous")}
 >>> authdata = open("token.asc").read()
 >>> client = Client(credentials=credentials, authdata=authdata, debug=True)
@@ -60,7 +60,7 @@ Add debug=True to see what is going on.
 
     >>> from obspy import UTCDateTime
     >>> t = UTCDateTime("2010-02-27T07:00:00.000")
-    >>> st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60))
+    >>> st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60)
     >>> st.plot(starttime=t, endtime=t+60*60)  # doctest: +SKIP
 
     .. plot::
@@ -108,6 +108,9 @@ Add debug=True to see what is going on.
     Since the information comes from multiple nodes, "Created by" and
     "Sending institution" cannot be relied on.
 
+    >>> client = Client("GFZ")
+    >>> starttime = UTCDateTime("2002-01-01")
+    >>> endtime = UTCDateTime("2002-01-02")
     >>> inventory = client.get_stations(network="*", station="A*",
     ...                                 starttime=starttime,
     ...                                 endtime=endtime)
