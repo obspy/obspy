@@ -294,6 +294,38 @@ class Client(object):
             sds_type=sds_type)
         return os.path.join(self.sds_root, filename)
 
+    def _filename_to_time_range(self, filename):
+        """
+        Get expected start and end time of data stored in given filename (full
+        path).
+
+        >>> client = Client(sds_root="/tmp")
+        >>> t = UTCDateTime("2016-05-18T14:12:43.682261Z")
+        >>> filename = client._get_filename("NE", "STA", "LO", "CHA", t)
+        >>> print(filename)
+        /tmp/2016/NE/STA/CHA.D/NE.STA.LO.CHA.D.2016.139
+        >>> client._filename_to_time_range(filename)
+        (UTCDateTime(2016, 5, 18, 0, 0), UTCDateTime(2016, 5, 19, 0, 0))
+        >>> filename = "/tmp/2016/NE/STA/CHA.D/NE.STA.LO.CHA.D.2016.366"
+        >>> client._filename_to_time_range(filename)
+        (UTCDateTime(2016, 12, 31, 0, 0), UTCDateTime(2017, 1, 1, 0, 0))
+
+        :type filename: str
+        :param filename: Filename to get expected start and end time for.
+        :type sds_type: str
+        :param sds_type: Override SDS data type identifier that was specified
+            during client initialization.
+        :rtype: dict
+        """
+        pattern = os.path.join(self.sds_root, self.FMTSTR)
+        group_map = {i: groups[0] for i, groups in
+                     enumerate(re.findall(FORMAT_STR_PLACEHOLDER_REGEX,
+                                          pattern))}
+        dict_ = _parse_path_to_dict(filename, pattern, group_map)
+        starttime = UTCDateTime(year=dict_["year"], julday=dict_["doy"])
+        endtime = starttime + 24 * 3600
+        return (starttime, endtime)
+
     def get_availability_percentage(self, network, station, location, channel,
                                     starttime, endtime, sds_type=None):
         """
