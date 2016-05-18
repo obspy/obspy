@@ -69,7 +69,7 @@ Add debug=True to see what is going on.
         from obspy.clients.eida import Client
         client = Client()
         t = UTCDateTime("2010-02-27T07:00:00.000")
-        st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60))
+        st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60)
         st.plot(starttime=t, endtime=t+60*60)
 
 (2) :meth:`~obspy.clients.eida.client.Client.get_events()`: Retrieves event

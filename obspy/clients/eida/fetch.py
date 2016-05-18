@@ -15,7 +15,7 @@ Examples
 
 Request 60 minutes of the ``"LHZ"`` channel of EIDA stations starting with
 ``"A"`` for an seismic event around 2010-02-27 07:00 (UTC). Optionally add
-``"-v"`` for verbosity. Resulting Mini-SEED data is written to file
+``"-v"`` for verbosity. Resulting Mini-SEED data will be written to file
 ``"data.mseed"``.
 
 .. code-block:: bash
@@ -57,7 +57,7 @@ specified on the command line.
 
 .. code-block:: bash
 
-    $ %(prog)s -p request.txt -y station -q level=channel -v -o data.xml
+    $ %(prog)s -p request.txt -y station -q level=channel -v -o station.xml
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -92,7 +92,7 @@ except ImportError:
     import urllib.parse as urlparse
     import urllib.parse as urllib
 
-VERSION = "2016.139"
+VERSION = "2016.140"
 
 GET_PARAMS = set(('net', 'network',
                   'sta', 'station',
