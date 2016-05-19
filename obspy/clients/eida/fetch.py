@@ -20,8 +20,8 @@ Request 60 minutes of the ``"LHZ"`` channel of EIDA stations starting with
 
 .. code-block:: bash
 
-    $ %(prog)s -N '*' -S '*' -L '*' -C 'LHZ' \
--s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -v -o data.mseed
+    $ %(prog)s -N '*' -S 'A*' -L '*' -C 'LHZ' \
+-s "2010-02-27T07:00:00Z" -e "2010-02-27T08:00:00Z" -v -o data.mseed
 
 The above request is anonymous and therefore restricted data will not be
 included. To include restricted data, use a file containing a token obtained
@@ -30,16 +30,16 @@ password for each node not implementing the EIDA auth extension.
 
 .. code-block:: bash
 
-    $ %(prog)s -a token.asc -c credentials.csv -N '*' -S '*' -L '*' -C 'LHZ' \
--s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -v -o data.mseed
+    $ %(prog)s -a token.asc -c credentials.csv -N '*' -S 'A*' -L '*' -C 'LHZ' \
+-s "2010-02-27T07:00:00Z" -e "2010-02-27T08:00:00Z" -v -o data.mseed
 
 StationXML metadata for the above request can be requested using the following
 command:
 
 .. code-block:: bash
 
-    $ %(prog)s -N '*' -S '*' -L '*' -C 'LHZ' \
--s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -y station \
+    $ %(prog)s -N '*' -S 'A*' -L '*' -C 'LHZ' \
+-s "2010-02-27T07:00:00Z" -e "2010-02-27T08:00:00Z" -y station \
 -q level=response -v -o station.xml
 
 Multiple query parameters can be used:
@@ -47,7 +47,7 @@ Multiple query parameters can be used:
 .. code-block:: bash
 
     $ %(prog)s -N '*' -S '*' -L '*' -C '*' \
--s "2016-05-01T10:00:00Z" -e "2016-05-01T10:01:00Z" -y station \
+-s "2010-02-27T07:00:00Z" -e "2010-02-27T08:00:00Z" -y station \
 -q format=text -q level=channel -q latitude=20 -q longitude=-150 \
 -q maxradius=15 -v -o station.txt
 
