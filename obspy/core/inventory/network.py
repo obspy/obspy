@@ -16,7 +16,6 @@ from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
@@ -133,7 +132,9 @@ class Network(BaseNode):
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret += "\n"
         ret += "\t\tChannels (%i):\n" % len(contents["channels"])
         ret += "\n".join(textwrap.wrap(", ".join(

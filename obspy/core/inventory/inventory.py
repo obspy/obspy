@@ -203,6 +203,7 @@ class Inventory(ComparingObject):
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
+        content_dict['networks'].sort()
         return content_dict
 
     def __str__(self):
@@ -219,7 +220,9 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n".join(textwrap.wrap(
+            ", ".join(contents["networks"]), initial_indent="\t\t\t",
+            subsequent_indent="\t\t\t", expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
         ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])

@@ -16,7 +16,6 @@ from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
 import numpy as np
