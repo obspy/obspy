@@ -23,8 +23,9 @@ The first step is always to initialize a client object.
 >>> client = Client("GFZ")
 
 A client object can be initialized either with the base URL of any EIDA routing
-service or with a shortcut name that will be mapped to such a URL. The examples
-make use of the EIDA routing service at GFZ, which is the default.
+service or with a :mod:`shortcut name <obspy.clients.fdsn>` that will be mapped
+to such a URL (only works if the node is running the EIDA routing service). The
+examples use ``"GFZ"``, which is the default.
 
 Regardless of which EIDA routing service is used, requests will be routed to
 all EIDA nodes. However, there may be special routing services that route
@@ -44,10 +45,12 @@ precedence over token authentication at that node.
 Add debug=True to see what is going on.
 
 >>> from obspy.clients.eida import Client
->>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth": \
-("nobody@iris.edu", "anonymous")}
+>>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth":
+...                ("nobody@iris.edu", "anonymous")}
 >>> authdata = open("token.asc").read()
->>> client = Client(credentials=credentials, authdata=authdata, debug=True)
+>>> client = Client(credentials=credentials,
+...                 authdata=authdata,
+...                 debug=True)  # doctest: +SKIP
 
 (1) :meth:`~obspy.clients.eida.client.Client.get_waveforms()`: The following
     example illustrates how to request and plot 60 minutes of the ``"LHZ"``
@@ -59,6 +62,8 @@ Add debug=True to see what is going on.
     avoid unnecessary network overhead.
 
     >>> from obspy import UTCDateTime
+    >>> from obspy.clients.eida import Client
+    >>> client = Client()
     >>> t = UTCDateTime("2010-02-27T07:00:00.000")
     >>> st = client.get_waveforms("*", "A*", "", "LHZ", t, t+60*60)
     >>> st.plot(starttime=t, endtime=t+60*60)  # doctest: +SKIP
@@ -79,6 +84,8 @@ Add debug=True to see what is going on.
     The event service is not routed, so a node that is running an event service
     locally must be used.
 
+    >>> from obspy import UTCDateTime
+    >>> from obspy.clients.eida import Client
     >>> client = Client("INGV")
     >>> starttime = UTCDateTime("2002-01-01")
     >>> endtime = UTCDateTime("2002-01-02")
@@ -89,7 +96,7 @@ Add debug=True to see what is going on.
     2002-01-01T10:54:09.040000Z | +43.439,  +12.476 | 2.2 Md | manual
     2002-01-01T08:21:30.790000Z | +46.071,  +10.630 | 2.3 Md | manual
     2002-01-01T05:07:31.250000Z | +44.781,   +8.361 | 2.7 Md | manual
-    >>> cat.plot()  # doctest: +SKIP
+    >>> cat.plot(projection="local")  # doctest: +SKIP
 
     .. plot::
 
@@ -99,7 +106,7 @@ Add debug=True to see what is going on.
         starttime = UTCDateTime("2002-01-01")
         endtime = UTCDateTime("2002-01-02")
         cat = client.get_events(starttime=starttime, endtime=endtime)
-        cat.plot()
+        cat.plot(projection="local")
 
 (3) :meth:`~obspy.clients.eida.client.Client.get_stations()`: Retrieves station
     data from a set of nodes known to the routing service. Results are returned
@@ -108,34 +115,37 @@ Add debug=True to see what is going on.
     Since the information comes from multiple nodes, "Created by" and
     "Sending institution" cannot be relied on.
 
-    >>> client = Client("GFZ")
+    >>> from obspy import UTCDateTime
+    >>> from obspy.clients.eida import Client
+    >>> client = Client()
     >>> starttime = UTCDateTime("2002-01-01")
     >>> endtime = UTCDateTime("2002-01-02")
     >>> inventory = client.get_stations(network="*", station="A*",
     ...                                 starttime=starttime,
     ...                                 endtime=endtime)
+    >>> inventory.networks = sorted(inventory.networks, key=lambda x: x.code)
     >>> print(inventory)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     Inventory created at ...
         Created by: ...
         Sending institution: ...
         Contains:
                 Networks (16):
+                        BW
+                        CH
+                        CL
+                        DK
+                        FR
+                        G
+                        GE
                         II
                         IU
+                        JS
+                        MN
                         NO
                         OE
                         YF
-                        G
-                        MN
-                        CH
-                        BW
-                        DK
-                        GE
-                        JS
-                        ZC
                         YR
-                        CL
-                        FR
+                        ZC
                 Stations (25):
                         BW.ALTM (Beilngries, Bavaria, BW-Net)
                         CH.ACB (Klingnau, Acheberg, AG)
@@ -143,7 +153,7 @@ Add debug=True to see what is going on.
                         CL.AGEO (Agios Giorgios, Aigialia, West Greece, Greece)
                         CL.AIOA (Agios Ioannis, Aigialia, West Greece, Greece)
                         DK.ANGG (Station Ammassalik, Greenland)
-                        FR.ARBF (technopole de l'Arbois)
+                        FR.ARBF (technopole de l'Arbois - 13001, Aix-en-Prov...
                         G.AIS (Nouvelle-Amsterdam - TAAF, France)
                         G.ATD (Arta Cave - Arta, Republic of Djibouti)
                         GE.APE (GEOFON Station Apirathos, Naxos)

@@ -20,6 +20,16 @@
        :nosignatures:
 
        client
+
+    .. comment to end block
+
+    Scripts
+    -------
+    .. autosummary::
+      :template: script.rst
+      :toctree: autogen
+      :nosignatures:
+
        fetch
 
     .. comment to end block

@@ -10,11 +10,11 @@
 """
 A command-line FDSN Web Service client using EIDA routing and authentication.
 
-Examples
-========
+Usage Examples
+==============
 
 Request 60 minutes of the ``"LHZ"`` channel of EIDA stations starting with
-``"A"`` for an seismic event around 2010-02-27 07:00 (UTC). Optionally add
+``"A"`` for a seismic event around 2010-02-27 07:00 (UTC). Optionally add
 ``"-v"`` for verbosity. Resulting Mini-SEED data will be written to file
 ``"data.mseed"``.
 
