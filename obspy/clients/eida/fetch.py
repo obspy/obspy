@@ -779,7 +779,7 @@ def main():
     parser = optparse.OptionParser(
             usage="Usage: %prog [-h|--help] [OPTIONS] -o file",
             version="%prog " + VERSION,
-            description=__doc__.split('\n', 2)[1])
+            add_help_option=False)
 
     parser.set_defaults(
             url="http://geofon.gfz-potsdam.de/eidaws/routing/1/",
@@ -787,6 +787,12 @@ def main():
             retries=10,
             retry_wait=60,
             threads=5)
+
+    parser.add_option("-h", "--help", action="store_true", default=False,
+                      help="show help message and exit")
+
+    parser.add_option("-l", "--longhelp", action="store_true", default=False,
+                      help="show extended help message and exit")
 
     parser.add_option("-v", "--verbose", action="store_true", default=False,
                       help="verbose mode")
@@ -859,6 +865,16 @@ def main():
                       help="file where downloaded data is written")
 
     (options, args) = parser.parse_args()
+
+    if options.help:
+        print(__doc__.split("Usage Examples", 1)[0], end="")
+        parser.print_help()
+        return 0
+
+    if options.longhelp:
+        print(__doc__)
+        parser.print_help()
+        return 0
 
     if args or not options.output_file:
         parser.print_usage()
