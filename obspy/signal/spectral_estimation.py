@@ -1558,30 +1558,42 @@ class PPSD(object):
                 periods, percentile_values = \
                     self.get_percentile(percentile=percentile)
                 if xaxis_frequency:
-                    periods = 1.0 / periods
-                ax.plot(periods, percentile_values, color="black", zorder=8)
+                    xdata = 1.0 / periods
+                else:
+                    xdata = periods
+                ax.plot(xdata, percentile_values, color="black", zorder=8)
 
         if show_mode:
             periods, mode_ = self.get_mode()
+            if xaxis_frequency:
+                xdata = 1.0 / periods
+            else:
+                xdata = periods
             if cmap.name == "viridis":
                 color = "0.8"
             else:
                 color = "black"
-            ax.plot(periods, mode_, color=color, zorder=9)
+            ax.plot(xdata, mode_, color=color, zorder=9)
 
         if show_mean:
             periods, mean_ = self.get_mean()
+            if xaxis_frequency:
+                xdata = 1.0 / periods
+            else:
+                xdata = periods
             if cmap.name == "viridis":
                 color = "0.8"
             else:
                 color = "black"
-            ax.plot(periods, mean_, color=color, zorder=9)
+            ax.plot(xdata, mean_, color=color, zorder=9)
 
         if show_noise_models:
             for periods, noise_model in (get_nhnm(), get_nlnm()):
                 if xaxis_frequency:
-                    periods = 1.0 / periods
-                ax.plot(periods, noise_model, '0.4', linewidth=2, zorder=10)
+                    xdata = 1.0 / periods
+                else:
+                    xdata = periods
+                ax.plot(xdata, noise_model, '0.4', linewidth=2, zorder=10)
 
         if show_histogram:
             label = "[%]"
@@ -1613,7 +1625,11 @@ class PPSD(object):
             self._plot_histogram(fig=fig)
 
         ax.semilogx()
-        ax.set_xlim(period_lim)
+        if xaxis_frequency:
+            xlim = map(lambda x: 1.0 / x, period_lim)
+        else:
+            xlim = period_lim
+        ax.set_xlim(xlim)
         ax.set_ylim(self.db_bin_edges[0], self.db_bin_edges[-1])
         if xaxis_frequency:
             ax.set_xlabel('Frequency [Hz]')

@@ -44,6 +44,7 @@ Matthias Meschede
 Alberto Michelini
 Bernhard Morgenstern
 Nathaniel C. Miller
+Ran Novitsky Nof
 Mark P. Panning
 Giovanni Rapagnani
 Celso Reyes
