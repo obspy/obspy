@@ -17,7 +17,8 @@ from obspy import Stream, Trace, UTCDateTime, __version__, read, read_inventory
 from obspy.core.compatibility import mock
 from obspy.core.util.testing import ImageComparison
 from obspy.io.xseed import Parser
-from obspy.core.trace import FrequencyDomainTrace, BaseTrace
+from obspy.core.trace import BaseStats, TimeSeriesStats, Stats, TimeSeriesTrace
+from obspy.core.frequency_domain_trace import FrequencyDomainTrace
 
 import matplotlib.pyplot as plt
 
