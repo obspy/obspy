@@ -29,6 +29,7 @@ from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
+from .util import _unified_content_strings, _textwrap
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
@@ -220,17 +221,21 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["networks"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["networks"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret_str
 
     def _repr_pretty_(self, p, cycle):

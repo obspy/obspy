@@ -23,7 +23,8 @@ import numpy as np
 from obspy import UTCDateTime
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
-from .util import BaseNode, Equipment, Operator, Distance, Latitude, Longitude
+from .util import (BaseNode, Equipment, Operator, Distance, Latitude,
+                   Longitude, _unified_content_strings, _textwrap)
 
 
 @python_2_unicode_compatible
@@ -167,9 +168,10 @@ class Station(BaseNode):
             historical_code="historical Code: %s " % self.historical_code if
             self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        ret += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t",
-            subsequent_indent="\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t", subsequent_indent="\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):

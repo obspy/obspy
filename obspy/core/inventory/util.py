@@ -15,6 +15,7 @@ from future.builtins import *  # NOQA
 
 import copy
 import re
+from textwrap import TextWrapper
 
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
@@ -769,6 +770,37 @@ class Angle(FloatWithUncertaintiesFixedUnit):
     _minimum = -360
     _maximum = 360
     unit = "DEGREES"
+
+
+def _unified_content_strings(contents):
+    contents_set = set(contents)
+    contents_counts = [
+        (item, contents.count(item)) for item in contents_set]
+    items = [item if count == 1 else "{} ({}x)".format(item, count)
+             for item, count in contents_counts]
+    return items
+
+
+# make TextWrapper only split on colons, so that we avoid splitting in between
+# e.g. network code and network code occurence count (can be controlled with
+# class attributes).
+# Also avoid lines starting with ", " (need to patch the class for this)
+class InventoryTextWrapper(TextWrapper):
+    wordsep_re = re.compile(r'(, )')
+    wordsep_simple_re = re.compile(r'(, )')
+
+    def _wrap_chunks(self, *args, **kwargs):
+        # the following doesn't work somehow (likely because of future??)
+        # lines = super(InventoryTextWrapper, self)._wrap_chunks(
+        #     *args, **kwargs)
+        lines = TextWrapper._wrap_chunks(self, *args, **kwargs)
+        lines = [re.sub(r'([\b\s]+), (.*)', r'\1\2', line, count=1)
+                 for line in lines]
+        return lines
+
+
+def _textwrap(text, *args, **kwargs):
+    return InventoryTextWrapper(*args, **kwargs).wrap(text)
 
 
 if __name__ == '__main__':
