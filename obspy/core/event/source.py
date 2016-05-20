@@ -49,18 +49,18 @@ class Axis(__Axis):
     :param azimuth: Azimuth of eigenvector of moment tensor expressed in
         principal-axes system. Measured clockwise from South-North direction at
         epicenter. Unit: deg
-    :type azimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type azimuth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param azimuth_errors: AttribDict containing error quantities.
     :type plunge: float
     :param plunge: Plunge of eigenvector of moment tensor expressed in
         principal-axes system. Measured against downward vertical direction at
         epicenter. Unit: deg
-    :type plunge_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type plunge_errors: :class:`~obspy.core.event.base.QuantityError`
     :param plunge_errors: AttribDict containing error quantities.
     :type length: float
     :param length: Eigenvalue of moment tensor expressed in principal-axes
         system. Unit: Nm
-    :type length_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type length_errors: :class:`~obspy.core.event.base.QuantityError`
     :param length_errors: AttribDict containing error quantities.
 
     .. note::
@@ -85,15 +85,15 @@ class NodalPlane(__NodalPlane):
 
     :type strike: float
     :param strike: Strike angle of nodal plane. Unit: deg
-    :type strike_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type strike_errors: :class:`~obspy.core.event.base.QuantityError`
     :param strike_errors: AttribDict containing error quantities.
     :type dip: float
     :param dip: Dip angle of nodal plane. Unit: deg
-    :type dip_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type dip_errors: :class:`~obspy.core.event.base.QuantityError`
     :param dip_errors: AttribDict containing error quantities.
     :type rake: float
     :param rake: Rake angle of nodal plane. Unit: deg
-    :type rake_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type rake_errors: :class:`~obspy.core.event.base.QuantityError`
     :param rake_errors: AttribDict containing error quantities.
 
     .. note::
@@ -180,27 +180,27 @@ class Tensor(__Tensor):
 
     :type m_rr: float
     :param m_rr: Moment-tensor element Mrr. Unit: Nm
-    :type m_rr_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_rr_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_rr_errors: AttribDict containing error quantities.
     :type m_tt: float
     :param m_tt: Moment-tensor element Mtt. Unit: Nm
-    :type m_tt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_tt_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_tt_errors: AttribDict containing error quantities.
     :type m_pp: float
     :param m_pp: Moment-tensor element Mpp. Unit: Nm
-    :type m_pp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_pp_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_pp_errors: AttribDict containing error quantities.
     :type m_rt: float
     :param m_rt: Moment-tensor element Mrt. Unit: Nm
-    :type m_rt_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_rt_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_rt_errors: AttribDict containing error quantities.
     :type m_rp: float
     :param m_rp: Moment-tensor element Mrp. Unit: Nm
-    :type m_rp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_rp_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_rp_errors: AttribDict containing error quantities.
     :type m_tp: float
     :param m_tp: Moment-tensor element Mtp. Unit: Nm
-    :type m_tp_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type m_tp_errors: :class:`~obspy.core.event.base.QuantityError`
     :param m_tp_errors: AttribDict containing error quantities.
 
     .. note::
@@ -289,7 +289,7 @@ class MomentTensor(__MomentTensor):
     :type scalar_moment: float, optional
     :param scalar_moment: Scalar moment as derived in moment tensor inversion.
         Unit: Nm
-    :type scalar_moment_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type scalar_moment_errors: :class:`~obspy.core.event.base.QuantityError`
     :param scalar_moment_errors: AttribDict containing error quantities.
     :type tensor: :class:`~obspy.core.event.Tensor`, optional
     :param tensor: Tensor object holding the moment tensor elements.

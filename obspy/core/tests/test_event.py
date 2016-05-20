@@ -17,6 +17,7 @@ from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
+from obspy.core.event.base import QuantityError
 
 BASEMAP_VERSION = get_basemap_version()
 
@@ -846,6 +847,26 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             {})
 
 
+class BaseTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.base.
+    """
+    def test_quantity_error_warn_on_non_default_key(self):
+        """
+        """
+        err = QuantityError()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            err.uncertainty = 0.01
+            err.lower_uncertainty = 0.1
+            err.upper_uncertainty = 0.02
+            err.confidence_level = 80
+            self.assertEqual(len(w), 0)
+            # setting a typoed or custom field should warn!
+            err.confidence_levle = 80
+            self.assertEqual(len(w), 1)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
@@ -855,6 +876,7 @@ def suite():
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(BaseTestCase, 'test'))
     return suite
 
 
