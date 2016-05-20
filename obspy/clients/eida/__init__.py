@@ -47,7 +47,7 @@ Add debug=True to see what is going on.
 >>> from obspy.clients.eida import Client
 >>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth":
 ...                ("nobody@iris.edu", "anonymous")}
->>> authdata = open("token.asc").read()
+>>> authdata = open("token.asc").read()  # doctest: +SKIP
 >>> client = Client(credentials=credentials,
 ...                 authdata=authdata,
 ...                 debug=True)  # doctest: +SKIP
