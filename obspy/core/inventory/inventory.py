@@ -381,8 +381,7 @@ class Inventory(ComparingObject):
             Sending institution: Erdbebendienst Bayern
             Contains:
                 Networks (2):
-                    GR
-                    BW
+                    BW, GR
                 Stations (2):
                     BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)
