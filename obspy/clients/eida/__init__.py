@@ -35,8 +35,8 @@ To access restricted data, add a token obtained from an EIDA authentication
 service:
 
 >>> from obspy.clients.eida import Client
->>> authdata = open("token.asc").read()
->>> client = Client(authdata=authdata)
+>>> authdata = open("token.asc").read()  # doctest: +SKIP
+>>> client = Client(authdata=authdata)  # doctest: +SKIP
 
 For backwards compatibility, username/password authentication is supported as
 well. Different credentials can be specified for each node and they take
