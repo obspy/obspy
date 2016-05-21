@@ -34,9 +34,22 @@ requests to a different set of nodes, even globally.
 To access restricted data, add a token obtained from an EIDA authentication
 service:
 
->>> from obspy.clients.eida import Client
->>> authdata = open("token.asc").read()  # doctest: +SKIP
->>> client = Client(authdata=authdata)  # doctest: +SKIP
+>>> authdata = b\"\"\"
+... -----BEGIN PGP MESSAGE-----
+... Version: GnuPG v2.0.9 (GNU/Linux)
+...
+... owGbwMvMwMR4USg04vQMEQbG0+5JDOEWH+OrlXITM3OUrBSUSlKLSxzyk4oLKvXy
+... i9KVdBSUyhJzMlPiS/NKIAqMDIwMdA0MgSjEwMAKjKKUajsZZVgYGJkY2FiZQOYx
+... cHEKwCx5Lcv+T0W79KhOxauJLEnP7t0768ZTvzk1Z7XbnSSmqvB7/rfsRfOvSrMt
+... 39GjosTgveqB7gHRYz0+jPP36dj073r2s8h6Xvu0+sAtLbfO6C3xNolRDPgQ4tud
+... m6J8tm573KGFFTG/+uI/hSir56Uav33xN1DBwKPs1pt8H6vFirf81J5Y3eR8wbmm
+... c9eXV5VeBy/9bYrd+TXsnFkiayjrxViWdm8uUXnj4hzDE5vvTeVZGH/nclVE1v6z
+... DO3n3STZvjMKsRUxVPKcnTmHcU64qiTX10bRqi1yHzuMs35Gzz0sMpXbTencLduG
+... hMrp91PMe04c0otcNytOKDFe/uDva3sd9jZKcxSXb3Gs2Rxf2QgA
+... =VVHX
+... -----END PGP MESSAGE-----
+... \"\"\"
+>>> client = Client(authdata=authdata)
 
 For backwards compatibility, username/password authentication is supported as
 well. Different credentials can be specified for each node and they take
@@ -44,13 +57,14 @@ precedence over token authentication at that node.
 
 Add debug=True to see what is going on.
 
->>> from obspy.clients.eida import Client
 >>> credentials = {"http://service.iris.edu/fdsnws/dataselect/1/queryauth":
 ...                ("nobody@iris.edu", "anonymous")}
->>> authdata = open("token.asc").read()  # doctest: +SKIP
 >>> client = Client(credentials=credentials,
 ...                 authdata=authdata,
-...                 debug=True)  # doctest: +SKIP
+...                 debug=True)  # doctest: +ELLIPSIS
+Base URL: http://geofon.gfz-potsdam.de
+Request Headers: ...
+Loading discovered services from cache.
 
 (1) :meth:`~obspy.clients.eida.client.Client.get_waveforms()`: The following
     example illustrates how to request and plot 60 minutes of the ``"LHZ"``
