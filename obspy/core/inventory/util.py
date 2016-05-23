@@ -773,7 +773,7 @@ class Angle(FloatWithUncertaintiesFixedUnit):
 
 
 def _unified_content_strings(contents):
-    contents_unique = sorted(set(contents), cmp=_cmp_seed_ids)
+    contents_unique = sorted(set(contents), key=_seed_id_keyfunction)
     contents_counts = [
         (item, contents.count(item)) for item in contents_unique]
     items = [item if count == 1 else "{} ({}x)".format(item, count)
@@ -803,43 +803,49 @@ def _textwrap(text, *args, **kwargs):
     return InventoryTextWrapper(*args, **kwargs).wrap(text)
 
 
-def _cmp_seed_ids(x, y):
+def _seed_id_keyfunction(x):
     """
-    cmp-like function to compare two (partial) SEED IDs
+    Keyfunction to use in sorting two (partial) SEED IDs
 
     Assumes that the last (or only) "."-separated part is a channel code.
     Assumes the last character is a the component code and sorts it
     "Z"-"N"-"E"-others_lexical.
     """
-    if x.count(".") != y.count("."):
-        raise ValueError()
+    # for comparison we build a list of 5 SEED code pieces:
+    # [network, station, location, band+instrument, component]
+    # with partial codes (i.e. not 4 fields after splitting at dots),
+    # we go with the following assumptions (these seem a bit random, but that's
+    # what can be encountered in string representations of the Inventory object
+    # hierarchy):
+    #  - no dot means network code only (e.g. "IU")
+    #  - one dot means network.station code only (e.g. "IU.ANMO")
+    #  - two dots means station.location.channel code only (e.g. "ANMO.10.BHZ")
+    #  - three dots: full SEED ID (e.g. "IU.ANMO.10.BHZ")
+    #  - more dots: sort after any of the previous, plain lexical sort
+    # if no "." in the string: assume it's a network code
+    number_of_dots = x.count(".")
     x = x.upper()
-    y = y.upper()
-    if "." in x:
-        x_chunks = x.split(".")
-        y_chunks = y.split(".")
-        x_chunks = x_chunks[:-1] + [x_chunks[-1][:-1], x_chunks[-1][-1]]
-        y_chunks = y_chunks[:-1] + [y_chunks[-1][:-1], y_chunks[-1][-1]]
+    if number_of_dots == 0:
+        x = [x] + [""] * 4
+    elif number_of_dots == 1:
+        x = x.split(".") + [""] * 3
+    elif number_of_dots in (2, 3):
+        x = x.split(".")
+        if number_of_dots == 2:
+            x = [""] + x
+        # split channel code into band+instrument code and component code
+        x = x[:-1] + [x[-1][:-1], x[-1] and x[-1][-1] or '']
+        # special comparison for component code, convert "ZNE" to integers
+        # which compare less than any character
+        comp = "ZNE".find(x[-1])
+        if comp >= 0:
+            x[-1] = comp
+    # all other cases, just leave the upper case string, it will compare
+    # greater than any of the split lists
     else:
-        # append a fake empty component code, so that the rest of the logic
-        # can be the same
-        x_chunks = [x, ""]
-        y_chunks = [y, ""]
-    # just a normal comparison by SEED ID parts up to the last item
-    # (== component code)
-    for x_, y_ in zip(x_chunks[:-1], y_chunks[:-1]):
-        result = cmp(x_, y_)
-        if result:
-            return result
-    # special comparison for component code
-    x_ = x_chunks[-1]
-    y_ = y_chunks[-1]
-    component_sorter = "ENZ"
-    result = -cmp(component_sorter.find(x_), component_sorter.find(y_))
-    if result:
-        return result
-    # if neither of both component codes is in Z/N/E, just do a lexical sort
-    return cmp(x_, y_)
+        pass
+
+    return x
 
 
 if __name__ == '__main__':
