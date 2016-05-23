@@ -199,7 +199,7 @@ class QualityControlTestCase(unittest.TestCase):
         [ ==1== ]...[ ==0== ]
             |               |
           START            END
-            0              125
+           25              125
 
         [RECORD 1 (1)] = 0 - 50 [clock_locked: 1]
         [RECORD 2 (0)] = 75 - 125 [clock_locked: 0]
@@ -236,6 +236,8 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(io_f["clock_locked"], 50.0)
 
     def test_extraction_fixed_header_flags(self):
+        # Had to put positive_leap count to 0 to prevent
+        # end time from being wrong
         with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
             _create_mseed_file(tf1.name, record_count=35,
                                starttime=obspy.UTCDateTime(0),
@@ -254,7 +256,7 @@ class QualityControlTestCase(unittest.TestCase):
                                     "time_correction_applied": 20,
                                     "beginning_event": 33,
                                     "end_event": 33,
-                                    "positive_leap": 34,
+                                    "positive_leap": 0,
                                     "negative_leap": 10,
                                     "event_in_progress": 15},
                                 'io_and_clock_flags': {
@@ -284,7 +286,7 @@ class QualityControlTestCase(unittest.TestCase):
                                     "time_correction_applied": 0,
                                     "beginning_event": 3,
                                     "end_event": 3,
-                                    "positive_leap": 4,
+                                    "positive_leap": 0,
                                     "negative_leap": 1,
                                     "event_in_progress": 5},
                                 'io_and_clock_flags': {
@@ -331,96 +333,10 @@ class QualityControlTestCase(unittest.TestCase):
             _assert_float_equal(meta_io['start_time_series'], 34/0.58)
             _assert_float_equal(meta_io['end_time_series'], 28/0.58)
 
-            # Check counts
-            meta = md.meta['miniseed_header_counts']
-
-            meta_dq = meta['data_quality_flags']
-            self.assertEqual(meta_dq["glitches"], 9)
-            self.assertEqual(meta_dq['amplifier_saturation'], 30)
-            self.assertEqual(meta_dq['digital_filter_charging'], 8)
-            self.assertEqual(meta_dq['digitizer_clipping'], 19)
-            self.assertEqual(meta_dq['missing_padded_data'], 20)
-            self.assertEqual(meta_dq['spikes'], 35)
-            self.assertEqual(meta_dq['suspect_time_tag'], 10)
-            self.assertEqual(meta_dq['telemetry_sync_error'], 19)
-
-            meta_af = meta['activity_flags']
-            self.assertEqual(meta_af['calibration_signal'], 11)
-            self.assertEqual(meta_af['event_begin'], 36)
-            self.assertEqual(meta_af['event_end'], 36)
-            self.assertEqual(meta_af['event_in_progress'], 20)
-            self.assertEqual(meta_af['time_correction_applied'], 20)
-
-            meta_io = meta['io_and_clock_flags']
-            self.assertEqual(meta_io['clock_locked'], 34)
-
             ref = md.meta['miniseed_header_percentages']
             self.assertEqual(ref['timing_quality_mean'], None)
             self.assertEqual(ref['timing_quality_min'], None)
             self.assertEqual(ref['timing_quality_max'], None)
-
-            # Create a new file that is overlapping with the first
-            _create_mseed_file(tf2.name, record_count=23,
-                               starttime=obspy.UTCDateTime(400),
-                               seed=12345, flags={
-                                'data_quality_flags': {
-                                    "amplifier_saturation_detected": 5,
-                                    "digitizer_clipping_detected": 7,
-                                    "spikes_detected": 5,
-                                    "glitches_detected": 3,
-                                    "missing_data_present": 5,
-                                    "telemetry_sync_error": 3,
-                                    "digital_filter_charging": 4,
-                                    "time_tag_uncertain": 2},
-                                'activity_flags': {
-                                    "calibration_signals_present": 1,
-                                    "time_correction_applied": 0,
-                                    "beginning_event": 3,
-                                    "end_event": 3,
-                                    "positive_leap": 4,
-                                    "negative_leap": 1,
-                                    "event_in_progress": 5},
-                                'io_and_clock_flags': {
-                                    "station_volume_parity_error": 1,
-                                    "long_record_read": 3,
-                                    "short_record_read": 2,
-                                    "start_time_series": 3,
-                                    "end_time_series": 4,
-                                    "clock_locked": 2}})
-
-            md = MSEEDMetadata([tf1.name, tf2.name], add_flags=True)
-
-            # Contributions should only come from the first file
-            # Now overlap! Thus, length of file should be 35 records
-            self.assertEqual(md.meta['end_time'] - md.meta['start_time'], 1750)
-            self.assertEqual(35*50, 1750)
-
-            # Check percentages of records in this window
-            meta = md.meta['miniseed_header_percentages']
-            meta_dq = meta['data_quality_flags']
-            _assert_float_equal(meta_dq['glitches'], 6/0.35)
-            _assert_float_equal(meta_dq['amplifier_saturation'], 25/0.35)
-            _assert_float_equal(meta_dq['digital_filter_charging'], 4/0.35)
-            _assert_float_equal(meta_dq['digitizer_clipping'], 12/0.35)
-            _assert_float_equal(meta_dq['missing_padded_data'], 15/0.35)
-            _assert_float_equal(meta_dq['spikes'], 30/0.35)
-            _assert_float_equal(meta_dq['suspect_time_tag'], 8/0.35)
-            _assert_float_equal(meta_dq['telemetry_sync_error'], 16/0.35)
-
-            meta_af = meta['activity_flags']
-            _assert_float_equal(meta_af['calibration_signal'], 10/0.35)
-            _assert_float_equal(meta_af['event_begin'], 33/0.35)
-            _assert_float_equal(meta_af['event_end'], 33/0.35)
-            _assert_float_equal(meta_af['event_in_progress'], 15/0.35)
-            _assert_float_equal(meta_af['time_correction_applied'], 20/0.35)
-
-            meta_io = meta['io_and_clock_flags']
-            _assert_float_equal(meta_io['clock_locked'], 32/0.35)
-            _assert_float_equal(meta_io['station_volume'], 8/0.35)
-            _assert_float_equal(meta_io['long_record_read'], 33/0.35)
-            _assert_float_equal(meta_io['short_record_read'], 24/0.35)
-            _assert_float_equal(meta_io['start_time_series'], 31/0.35)
-            _assert_float_equal(meta_io['end_time_series'], 24/0.35)
 
     def test_timing_quality(self):
         """

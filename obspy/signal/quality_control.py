@@ -23,7 +23,7 @@ import json
 
 import numpy as np
 import obspy
-from obspy.io.mseed.util import get_flags
+from obspy.io.mseed.util import get_flags_c
 
 
 class DataQualityEncoder(json.JSONEncoder):
@@ -118,15 +118,17 @@ class MSEEDMetadata(object):
             raise ValueError("All traces must have the same SEED id and "
                              "quality")
 
+        self.data.sort(keys=['endtime'])
+        end_stats = self.data[-1].stats
+        self.endtime = endtime or end_stats.endtime + end_stats.delta
+
         self.data.sort()
 
         # Set the metric start and endtime specified by the user.
         # If no start and endtime are given, we pick our own, and the window
         # will start on the first sample and end on the last sample + Δt.
         # This is conform to the definition of [T0, T1).
-        end_stats = self.data[-1].stats
         self.starttime = starttime or self.data[0].stats.starttime
-        self.endtime = endtime or end_stats.endtime + end_stats.delta
         self.total_time = self.endtime - self.starttime
 
         self.meta = {}
@@ -320,38 +322,21 @@ class MSEEDMetadata(object):
 
     def _extract_mseed_flags(self):
 
-        flags = get_flags(self.files, starttime=self.starttime,
-                          endtime=self.endtime)
+        flags = get_flags_c(self.files, starttime=self.starttime,
+                            endtime=self.endtime)
 
-        data_quality_flags_seconds = flags["data_quality_flags_seconds"]
-        data_quality_flags = flags["data_quality_flags"]
-
-        activity_flags_seconds = flags["activity_flags_seconds"]
-        activity_flags = flags["activity_flags"]
-
-        io_and_clock_flags_seconds = flags["io_and_clock_flags_seconds"]
-        io_and_clock_flags = flags["io_and_clock_flags"]
-
+        data_quality_flags_seconds = flags["dq_flags_percentages"]
+        activity_flags_seconds = flags["ac_flags_percentages"]
+        io_and_clock_flags_seconds = flags["io_flags_percentages"]
         timing_correction = flags["timing_correction"]
-
-        # Convert second counts to percentages. The total time is the
-        # difference between start & end in seconds. The percentage fields
-        # are the sum of record lengths for which the respective bits are
-        # set in SECONDS
-        for key in data_quality_flags_seconds:
-            data_quality_flags_seconds[key] /= self.total_time * 1e-2
-        for key in activity_flags_seconds:
-            activity_flags_seconds[key] /= self.total_time * 1e-2
-        for key in io_and_clock_flags_seconds:
-            io_and_clock_flags_seconds[key] /= self.total_time * 1e-2
 
         # Only calculate the timing quality statistics if each files has the
         # timing quality set. This should usually be the case. Otherwise we
         # would created tinted statistics. There is still a chance that some
         # records in a file have timing qualities set and others not but
         # that should be small.
-        if flags["timing_quality"]:
-            timing_quality = flags["timing_quality"]["all_values"]
+        if flags["timing_quality"] is not None:
+            timing_quality = flags["timing_quality"]
             timing_quality_mean = timing_quality.mean()
             timing_quality_min = timing_quality.min()
             timing_quality_max = timing_quality.max()
@@ -387,12 +372,6 @@ class MSEEDMetadata(object):
         ref['io_and_clock_flags'] = io_and_clock_flags_seconds
 
         # Similarly, set miniseed header flag counts
-        meta['miniseed_header_counts'] = {}
-        ref = meta['miniseed_header_counts']
-        ref['activity_flags'] = activity_flags
-        ref['data_quality_flags'] = data_quality_flags
-        ref['io_and_clock_flags'] = io_and_clock_flags
-
         # Small function to change flag names from the get_flags routine
         # to match the schema
         self._fix_flag_names()
@@ -426,16 +405,14 @@ class MSEEDMetadata(object):
         """
         # Loop over all keys and replace where required according to
         # the name_reference
-        prefix = 'miniseed_header'
-        for flag_type in ['_percentages', '_counts']:
-            for group, flags in self.meta[prefix + flag_type].items():
-                if group not in ["activity_flags", "data_quality_flags",
-                                 "io_and_clock_flags"]:
-                    continue
-                new_flags = {}
-                for param in flags:
-                    new_flags[self._get_flag_map(param)] = flags[param]
-                self.meta[prefix + flag_type][group] = new_flags
+        for group, flags in self.meta['miniseed_header_percentages'].items():
+            if group not in ["activity_flags", "data_quality_flags",
+                             "io_and_clock_flags"]:
+                continue
+            new_flags = {}
+            for param in flags:
+                new_flags[self._get_flag_map(param)] = flags[param]
+            self.meta['miniseed_header_percentages'][group] = new_flags
 
     def _compute_sample_metrics(self):
         """

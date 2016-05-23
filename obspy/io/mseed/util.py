@@ -22,7 +22,8 @@ from obspy import UTCDateTime
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
-                      SAMPLESIZES, UNSUPPORTED_ENCODINGS, clibmseed)
+                      SAMPLESIZES, UNSUPPORTED_ENCODINGS, MSRecord,
+                      MSFileParam, MS_NOERROR, clibmseed)
 
 
 def get_start_and_end_time(file_or_file_object):
@@ -92,6 +93,228 @@ def get_start_and_end_time(file_or_file_object):
         (info['number_of_records'] - 1) * info['record_length'])
     endtime = info['endtime']
     return starttime, endtime
+
+
+def get_flags_c(files, starttime=None, endtime=None,
+                io_flags=True, ac_flags=True,
+                dq_flags=True, timing_quality=True):
+    """
+    clibmseed implementation of get_flags to be used in
+    obspy.signal.quality_control for a performance boost.
+    See get_flags for a description
+    """
+
+    # Splat input files to array
+    if not isinstance(files, list):
+        files = [files]
+
+    starttime = float(UTCDateTime(starttime)) if starttime else None
+    endtime = float(UTCDateTime(endtime)) if endtime else None
+
+    msr = clibmseed.msr_init(C.POINTER(MSRecord)())
+    msf = C.POINTER(MSFileParam)()
+
+    records = []
+    retcode = 0
+
+    # Use clibmseed to get header parameters for all files
+    for file in files:
+
+        while(True):
+
+            retcode = clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                                             file, -1, None, None, 1, 1, 0)
+
+            if retcode != MS_NOERROR:
+                break
+
+            # Check starttime and endtime of the record
+            # Read the sampling rate from the header (is this unsafe?)
+            # Tried using msr.msr_nomsamprate(msr) but the return is strange
+            r_start = clibmseed.msr_starttime(msr) / HPTMODULUS
+            r_delta = (1 / msr.contents.samprate)
+            r_end = (clibmseed.msr_endtime(msr) / HPTMODULUS) + r_delta
+
+            # Skip records out of the range
+            if r_start > endtime or r_end < starttime:
+                continue
+
+            # Cut off records to start & endtime
+            if starttime is not None:
+                if r_end <= starttime:
+                    continue
+                if r_start < starttime:
+                    r_start = starttime
+
+            if endtime is not None:
+                if r_start >= endtime:
+                    continue
+                if r_end > endtime:
+                    r_end = endtime
+
+            # Get the timing quality in blockette1001 if it exists
+            if msr.contents.Blkt1001:
+                r_tq = msr.contents.Blkt1001.contents.timing_qual
+            else:
+                r_tq = None
+
+            # Collect all records and parameters in the range
+            records.append({
+                'start': r_start,
+                'delta': r_delta,
+                'end': r_end,
+                'tq': r_tq,
+                'tc': msr.contents.fsdh.contents.time_correct,
+                'io': msr.contents.fsdh.contents.io_flags,
+                'dq': msr.contents.fsdh.contents.dq_flags,
+                'ac': msr.contents.fsdh.contents.act_flags
+            })
+
+        # Reset for new file
+        clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
+                               None, -1, None, None, 0, 0, 0)
+
+    # It should be faster to sort by record endtime
+    # if we reverse the array first
+    records.reverse()
+    records.sort(key=lambda x: x["end"], reverse=True)
+
+    # Create collections for the flags
+    dq_flags_seconds = collections.OrderedDict([
+        ("amplifier_saturation_detected", 0),
+        ("digitizer_clipping_detected", 0),
+        ("spikes_detected", 0),
+        ("glitches_detected", 0),
+        ("missing_data_present", 0),
+        ("telemetry_sync_error", 0),
+        ("digital_filter_charging", 0),
+        ("time_tag_uncertain", 0)
+    ])
+
+    io_flags_seconds = collections.OrderedDict([
+        ("station_volume_parity_error", 0),
+        ("long_record_read", 0),
+        ("short_record_read", 0),
+        ("start_time_series", 0),
+        ("end_time_series", 0),
+        ("clock_locked", 0)
+    ])
+
+    ac_flags_seconds = collections.OrderedDict([
+        ("calibration_signals_present", 0),
+        ("time_correction_applied", 0),
+        ("beginning_event", 0),
+        ("end_event", 0),
+        ("positive_leap", 0),
+        ("negative_leap", 0),
+        ("event_in_progress", 0)
+    ])
+
+    coverage = None
+    used_record_count = 0
+    timing_correction = 0.0
+    tq = []
+
+    # Go over all sorted records from back to front
+    for record in records:
+
+        # Coverage is the timewindow that is covered by the records
+        # so bits in overlapping records are not counted
+        # The first record starts a clean window
+        if coverage is None:
+            coverage = [record["start"], record["end"]]
+        else:
+
+            # Account for time tolerance
+            time_tolerance = 0.5 * record['delta']
+            tolerated_end = coverage[0] - time_tolerance
+
+            # Start is beyond coverage, skip the overlapping record
+            if record["start"] >= coverage[0]:
+                continue
+
+            # Fix end to the start of the coverage if it is overlaps
+            # with the coverage window. Or if it is within the allowed
+            # time tolerance
+            if record["end"] > coverage[0] or record["end"] > tolerated_end:
+                record["end"] = coverage[0]
+
+            # Extend the coverage
+            if record["start"] < coverage[0]:
+                coverage[0] = record["start"]
+
+        # Get the record length in seconds
+        record_length_seconds = (record["end"] - record["start"])
+
+        # Skip if the record length is 0 (or negative)
+        if record_length_seconds <= 0.0:
+            continue
+
+        # Overlapping records do not count ot the used_records
+        # used records tracks the amount of timing quality
+        # parameters we expect
+        used_record_count += 1
+
+        # Bitwise AND to count flags and store in orderedDicts
+        if io_flags:
+            for _i, key in enumerate(io_flags_seconds.keys()):
+                if (record["io"] & (1 << _i)) != 0:
+                    io_flags_seconds[key] += record_length_seconds
+
+        if ac_flags:
+            for _i, key in enumerate(ac_flags_seconds.keys()):
+                if (record["ac"] & (1 << _i)) != 0:
+                    ac_flags_seconds[key] += record_length_seconds
+
+        if dq_flags:
+            for _i, key in enumerate(dq_flags_seconds.keys()):
+                if (record["dq"] & (1 << _i)) != 0:
+                    dq_flags_seconds[key] += record_length_seconds
+
+        # Get the timing quality parameter and append to array
+        if timing_quality and record["tq"] is not None:
+            tq.append(float(record["tq"]))
+
+        # Check if a timing correction is specified
+        # (not whether it has been applied)
+        if record["tc"] != 0:
+            timing_correction += record_length_seconds
+
+    # Get the total time analyzed
+    if endtime is not None and starttime is not None:
+        total_time_seconds = endtime - starttime
+    else:
+        total_time_seconds = coverage[1] - coverage[0]
+
+    # Percentage of time of bit flags set
+    if io_flags:
+        for _i, key in enumerate(io_flags_seconds.keys()):
+            io_flags_seconds[key] /= total_time_seconds * 1e-2
+    if dq_flags:
+        for _i, key in enumerate(dq_flags_seconds.keys()):
+            dq_flags_seconds[key] /= total_time_seconds * 1e-2
+    if ac_flags:
+        for _i, key in enumerate(ac_flags_seconds.keys()):
+            ac_flags_seconds[key] /= total_time_seconds * 1e-2
+
+    timing_correction /= total_time_seconds * 1e-2
+
+    # Add the timing quality if it is set for all used records
+    if timing_quality:
+        if len(tq) == used_record_count:
+            tq = np.array(tq, dtype=np.float64)
+        else:
+            tq = None
+
+    return {
+        'timing_correction': timing_correction,
+        'io_flags_percentages': io_flags_seconds,
+        'dq_flags_percentages': dq_flags_seconds,
+        'ac_flags_percentages': ac_flags_seconds,
+        'timing_quality': tq,
+        'record_count': len(records),
+        'number_of_records_used': used_record_count,
+    }
 
 
 def get_flags(files, starttime=None, endtime=None,
@@ -220,9 +443,42 @@ def get_flags(files, starttime=None, endtime=None,
     starttime = UTCDateTime(starttime) if starttime else None
     endtime = UTCDateTime(endtime) if endtime else None
 
+    quality_count = collections.OrderedDict([
+        ("amplifier_saturation_detected", 0),
+        ("digitizer_clipping_detected", 0),
+        ("spikes_detected", 0),
+        ("glitches_detected", 0),
+        ("missing_data_present", 0),
+        ("telemetry_sync_error", 0),
+        ("digital_filter_charging", 0),
+        ("time_tag_uncertain", 0)
+    ])
+
+    activity_count = collections.OrderedDict([
+        ("calibration_signals_present", 0),
+        ("time_correction_applied", 0),
+        ("beginning_event", 0),
+        ("end_event", 0),
+        ("positive_leap", 0),
+        ("negative_leap", 0),
+        ("event_in_progress", 0)
+    ])
+
+    io_count = collections.OrderedDict([
+        ("station_volume_parity_error", 0),
+        ("long_record_read", 0),
+        ("short_record_read", 0),
+        ("start_time_series", 0),
+        ("end_time_series", 0),
+        ("clock_locked", 0)
+    ])
+
+    tq = []
+    record_count = 0
+
     # Collect all the records for all files before processing
-    records = []
     for mseed_file in files:
+
         info = get_record_information(mseed_file)
 
         offset = 0
@@ -232,161 +488,52 @@ def get_flags(files, starttime=None, endtime=None,
         while offset <= (info["filesize"] - 256):
 
             rec_info = get_record_information(mseed_file, offset)
-            rec_info["endtime"] += (1/rec_info["samp_rate"])
+            rec_info["endtime"] += (1 / rec_info["samp_rate"])
             offset += rec_info["record_length"]
 
-            # Skip records with an incompatible start/endtime
-            if rec_info["endtime"] <= rec_info["starttime"]:
-                continue
             # Skip records that have no overlap with the requested range
             if starttime is not None and rec_info["endtime"] < starttime:
                 continue
-            if endtime is not None and rec_info["starttime"] >= endtime:
+            if endtime is not None and rec_info["starttime"] > endtime:
                 continue
 
-            records.append(rec_info)
+            record_count += 1
 
-    # Records that survived the filtering
-    record_count = len(records)
+            # Save the flags and timing quality if requested
+            if io_flags:
+                for _i, key in enumerate(io_count.keys()):
+                    if (rec_info["io_and_clock_flags"] & (1 << _i)) != 0:
+                        io_count[key] += 1
+            if activity_flags:
+                for _i, key in enumerate(activity_count.keys()):
+                    if (rec_info["activity_flags"] & (1 << _i)) != 0:
+                        activity_count[key] += 1
+            if data_quality_flags:
+                for _i, key in enumerate(quality_count.keys()):
+                    if (rec_info["data_quality_flags"] & (1 << _i)) != 0:
+                        quality_count[key] += 1
 
-    # Sort the records by endtime from end to start
-    # We will process in this direction because it allows
-    # us to calculate the percentages easier
-    records.sort(key=lambda x: x["endtime"], reverse=True)
-
-    # Set up containers for the percentages & counts
-    quality_count = collections.OrderedDict([
-        ("amplifier_saturation_detected", 0),
-        ("digitizer_clipping_detected", 0),
-        ("spikes_detected", 0),
-        ("glitches_detected", 0),
-        ("missing_data_present", 0),
-        ("telemetry_sync_error", 0),
-        ("digital_filter_charging", 0),
-        ("time_tag_uncertain", 0)])
-    quality_count_seconds = collections.OrderedDict([
-        ("amplifier_saturation_detected", 0),
-        ("digitizer_clipping_detected", 0),
-        ("spikes_detected", 0),
-        ("glitches_detected", 0),
-        ("missing_data_present", 0),
-        ("telemetry_sync_error", 0),
-        ("digital_filter_charging", 0),
-        ("time_tag_uncertain", 0)])
-
-    activity_count = collections.OrderedDict([
-        ("calibration_signals_present", 0),
-        ("time_correction_applied", 0),
-        ("beginning_event", 0),
-        ("end_event", 0),
-        ("positive_leap", 0),
-        ("negative_leap", 0),
-        ("event_in_progress", 0)])
-    activity_count_seconds = collections.OrderedDict([
-        ("calibration_signals_present", 0),
-        ("time_correction_applied", 0),
-        ("beginning_event", 0),
-        ("end_event", 0),
-        ("positive_leap", 0),
-        ("negative_leap", 0),
-        ("event_in_progress", 0)])
-
-    io_count = collections.OrderedDict([
-        ("station_volume_parity_error", 0),
-        ("long_record_read", 0),
-        ("short_record_read", 0),
-        ("start_time_series", 0),
-        ("end_time_series", 0),
-        ("clock_locked", 0)])
-    io_count_seconds = collections.OrderedDict([
-        ("station_volume_parity_error", 0),
-        ("long_record_read", 0),
-        ("short_record_read", 0),
-        ("start_time_series", 0),
-        ("end_time_series", 0),
-        ("clock_locked", 0)])
-
-    tq = []
-    timing_correction = 0.0
-
-    # Keep track of the times occupied by the records
-    used_times = None
-
-    # Loop over all records
-    for record in records:
-
-        if used_times is None:
-            used_times = [records[0]["starttime"], records[0]["endtime"]]
-        else:
-
-            time_tolerance = 0.5 * (1/record["samp_rate"])
-            tolerated_end = used_times[0] - time_tolerance
-            if record["endtime"] > used_times[0]:
-                record["endtime"] = used_times[0]
-
-            # Take in account the time tolerance
-            # This is why we process from back to front
-            # Because the flag belongs to the previous record,
-            # drag the previous endtime to the next starttime
-            elif record["endtime"] >= tolerated_end:
-                record["endtime"] = used_times[0]
-
-            # Extend the new used_times with the new record coverage
-            if record["starttime"] < used_times[0]:
-                used_times[0] = record["starttime"]
-
-        # The start and end of a record may not exceed the given
-        # start and endtime respectively
-        record_first_sample = max(record["starttime"], starttime)
-        record_last_sample = min(record["endtime"], endtime)
-        # Length of a record is R_end - R_start + sampling interval
-        record_length_seconds = (record_last_sample - record_first_sample)
-
-        # Save the flags and timing quality if requested
-        if io_flags:
-            for _i, key in enumerate(io_count_seconds.keys()):
-                if (record["io_and_clock_flags"] & (1 << _i)) != 0:
-                    io_count_seconds[key] += record_length_seconds
-                    io_count[key] += 1
-        if activity_flags:
-            for _i, key in enumerate(activity_count_seconds.keys()):
-                if (record["activity_flags"] & (1 << _i)) != 0:
-                    activity_count_seconds[key] += record_length_seconds
-                    activity_count[key] += 1
-        if data_quality_flags:
-            for _i, key in enumerate(quality_count_seconds.keys()):
-                if (record["data_quality_flags"] & (1 << _i)) != 0:
-                    quality_count_seconds[key] += record_length_seconds
-                    quality_count[key] += 1
-        if timing_quality and "timing_quality" in record:
-            tq.append(float(record["timing_quality"]))
-
-        # Add a quality metric that says whether a correction is required
-        # REGARDLESS of whether this correction has been applied
-        if record["time_correction"]:
-            timing_correction += record_length_seconds
+            if timing_quality and "timing_quality" in rec_info:
+                tq.append(float(rec_info["timing_quality"]))
 
     results = {
         "record_count": record_count,
-        "timing_correction": timing_correction
     }
 
     # Add the flags & counts to the results
     if io_flags:
-        results["io_and_clock_flags_seconds"] = io_count_seconds
         results["io_and_clock_flags"] = io_count
     if activity_flags:
-        results["activity_flags_seconds"] = activity_count_seconds
         results["activity_flags"] = activity_count
     if data_quality_flags:
-        results["data_quality_flags_seconds"] = quality_count_seconds
         results["data_quality_flags"] = quality_count
 
     # Add the timing quality param
     if timing_quality:
         tq = np.array(tq, dtype=np.float64)
+
         # Only add the timing quality if it is defined for all records
-        if len(tq) == record_count:
+        if len(tq):
             results["timing_quality"] = {
                 "all_values": tq,
                 "min": tq.min(),
