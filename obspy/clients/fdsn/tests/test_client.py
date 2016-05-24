@@ -231,6 +231,19 @@ class ClientTestCase(unittest.TestCase):
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2CBB%2C--")
 
+        # The location parameter is also passed through the
+        # _create_url_from_parameters() method and thus has to survive it!
+        # This guards against a regression where all empty location codes
+        # where removed by this function!
+        for service in ["station", "dataselect"]:
+            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                        u"", u" ", u"  ", u"--"]:
+                self.assertIn(
+                    "location=--",
+                    self.client._create_url_from_parameters(
+                        service, [],
+                        {"location": loc, "starttime": 0, "endtime": 1}))
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.

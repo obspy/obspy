@@ -1154,6 +1154,14 @@ class Client(object):
                     raise TypeError(msg)
             # Now attempt to convert the parameter to the correct type.
             this_type = service_params[key]["type"]
+
+            # Try to decode to be able to work with bytes.
+            if this_type is native_str:
+                try:
+                    value = value.decode()
+                except AttributeError:
+                    pass
+
             try:
                 value = this_type(value)
             except:
@@ -1163,7 +1171,7 @@ class Client(object):
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
             if isinstance(value, (str, native_str)):
-                if not value:
+                if not value and key != "location":
                     continue
             final_parameter_set[key] = value
 
