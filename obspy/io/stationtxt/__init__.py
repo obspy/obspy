@@ -29,15 +29,13 @@ Inventory created at ...
     Sending institution: None
     Contains:
         Networks (2):
-            AK
-            AZ
+            AK, AZ
         Stations (3):
             AK.BAGL ()
             AK.BWN ()
             AZ.BZN ()
         Channels (6):
-            AK.BAGL..LHZ, AK.BWN..LHZ, AK.BWN..LHZ, AZ.BZN..LHZ, AZ.BZN..LHZ,
-            AZ.BZN..LHZ
+            AK.BAGL..LHZ, AK.BWN..LHZ (2x), AZ.BZN..LHZ (3x)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)

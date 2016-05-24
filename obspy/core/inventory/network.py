@@ -16,13 +16,12 @@ from future.utils import python_2_unicode_compatible
 
 import copy
 import fnmatch
-import textwrap
 import warnings
 
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .station import Station
-from .util import BaseNode
+from .util import BaseNode, _unified_content_strings, _textwrap
 
 
 @python_2_unicode_compatible
@@ -133,12 +132,15 @@ class Network(BaseNode):
         contents = self.get_contents()
         ret += "\tContains:\n"
         ret += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret += "\n"
         ret += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret += "\n".join(textwrap.wrap(", ".join(
-            contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret += "\n".join(_textwrap(", ".join(
+            _unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret
 
     def _repr_pretty_(self, p, cycle):

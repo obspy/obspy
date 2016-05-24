@@ -935,8 +935,7 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
@@ -966,13 +965,12 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (5):
-                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    GR.GRA1..BHZ, GR.GRA1..BHN, GR.GRA1..BHE, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
         >>> inv = client.get_stations_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
