@@ -520,10 +520,12 @@ extern int unpackencodingfallback;
 #define MS_UNPACKENCODINGFALLBACK(X) (unpackencodingfallback = X);
 
 /* Mini-SEED record related functions */
-extern int           msr_parse (char *record, int recbuflen, MSRecord **ppmsr, int reclen,
+extern int           msr_parse (char *record, unsigned long long recbuflen,
+				MSRecord **ppmsr, int reclen,
 				flag dataflag, flag verbose);
 
-extern int           msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
+extern int           msr_parse_selection ( char *recbuf,
+					   unsigned long long recbuflen, int64_t *offset,
 					   MSRecord **ppmsr, int reclen,
 					   Selections *selections, flag dataflag, flag verbose );
 
@@ -553,7 +555,7 @@ extern char*         msr_srcname (MSRecord *msr, char *srcname, flag quality);
 extern void          msr_print (MSRecord *msr, flag details);
 extern double        msr_host_latency (MSRecord *msr);
 
-extern int           ms_detect (const char *record, int recbuflen);
+extern int           ms_detect (const char *record, unsigned long long recbuflen);
 extern int           ms_parse_raw (char *record, int maxreclen, flag details, flag swapflag);
 
 

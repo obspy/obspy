@@ -41,8 +41,8 @@
  *  <0 : libmseed error code (listed in libmseed.h) is returned.
  *********************************************************************/
 int
-msr_parse ( char *record, int recbuflen, MSRecord **ppmsr, int reclen,
-	    flag dataflag, flag verbose )
+msr_parse ( char *record, unsigned long long recbuflen, MSRecord **ppmsr,
+            int reclen, flag dataflag, flag verbose )
 {
   int detlen = 0;
   int retcode = 0;
@@ -144,8 +144,8 @@ msr_parse ( char *record, int recbuflen, MSRecord **ppmsr, int reclen,
  * returned when end-of-buffer is reached.
  *********************************************************************/
 int
-msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
-		      MSRecord **ppmsr, int reclen,
+msr_parse_selection ( char *recbuf, unsigned long long recbuflen,
+                      int64_t *offset, MSRecord **ppmsr, int reclen,
 		      Selections *selections, flag dataflag, flag verbose )
 {
   int retval = MS_GENERROR;
@@ -228,7 +228,7 @@ msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
  * >0 : size of the record in bytes
  *********************************************************************/
 int
-ms_detect ( const char *record, int recbuflen )
+ms_detect ( const char *record, unsigned long long recbuflen )
 {
   uint16_t blkt_offset;    /* Byte offset for next blockette */
   uint8_t swapflag  = 0;   /* Byte swapping flag */

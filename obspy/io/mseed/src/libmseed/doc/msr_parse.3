@@ -6,10 +6,12 @@ Detect and parse a SEED data record from a memory buffer
 .nf
 .B #include <libmseed.h>
 
-.BI "int  \fBmsr_parse\fP ( char *" record ", int " recbuflen ", MSRecord " **ppmsr "," 
+.BI "int  \fBmsr_parse\fP ( char *" record ",
+.BI                   unsigned long long " recbuflen ", MSRecord " **ppmsr ","
 .BI "                 int " reclen ", flag " dataflag ", flag " verbose " );"
 
-.BI "int  \fBmsr_parse_selection\fP ( char *" recbuf ", int " recbuflen ","
+.BI "int  \fBmsr_parse_selection\fP ( char *" recbuf ",
+.BI                             unsinged long long " recbuflen ","
 .BI "                           int64_t *" offset ", MSRecord " **ppmsr ","
 .BI "                           int " reclen ", Selections *" selections ","
 .BI "                           flag " dataflag ", flag " verbose " );"

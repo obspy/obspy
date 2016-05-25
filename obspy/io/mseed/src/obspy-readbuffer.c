@@ -214,12 +214,12 @@ readMSEEDBuffer (char *mseed, unsigned long long buflen,
     hptime_t lastgap = 0;
     hptime_t hptimetol = 0;
     hptime_t nhptimetol = 0;
-    long long data_offset;
+    unsigned long long data_offset;
     LinkedRecordList *recordHead = NULL;
     LinkedRecordList *recordPrevious = NULL;
     LinkedRecordList *recordCurrent = NULL;
-    int datasize;
-    int record_count = 0;
+    unsigned int datasize;
+    unsigned long long record_count = 0;
 
     // A negative verbosity suppressed as much as possible.
     if (verbose < 0) {
