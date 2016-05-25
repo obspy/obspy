@@ -294,13 +294,16 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
             indices = startend[:, 1] > starttime
             startend = startend[indices]
             _samp_int = _samp_int[indices]
-        if len(startend) == 0:
-            continue
         if endtime:
             indices = startend[:, 0] < endtime
             startend = startend[indices]
             _samp_int = _samp_int[indices]
         if len(startend) == 0:
+            # if both start and endtime are given, add it to gap info
+            if starttime and endtime:
+                gap_info.append((
+                    _id, UTCDateTime(num2date(starttime).isoformat()),
+                    UTCDateTime(num2date(endtime).isoformat())))
             continue
         data_start = startend[:, 0].min()
         data_end = startend[:, 1].max()
