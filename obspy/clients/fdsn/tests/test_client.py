@@ -244,6 +244,24 @@ class ClientTestCase(unittest.TestCase):
                         service, [],
                         {"location": loc, "starttime": 0, "endtime": 1}))
 
+        # Also check the full call with a mock test.
+        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                    u"", u" ", u"  ", u"--"]:
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_stations(0, 0, location=loc)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_waveforms(1, 2, loc, 4, 0, 0)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.
