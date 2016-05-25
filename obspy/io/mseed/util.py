@@ -124,7 +124,7 @@ def get_flags_c(files, starttime=None, endtime=None,
 
             retcode = clibmseed.ms_readmsr_r(C.pointer(msf), C.pointer(msr),
                                              file.encode('ascii', 'strict'),
-                                             -1, None, None, 1, 1, 0)
+                                             -1, None, None, 1, 0, 0)
 
             if retcode != MS_NOERROR:
                 break
