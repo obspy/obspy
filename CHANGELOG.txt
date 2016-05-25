@@ -1,4 +1,7 @@
 1.0.2: (doi: 10.5281/zenodo.49636)
+ - obspy.clients.fdsn:
+   * Fixing issue with location codes potentially resulting in unwanted data
+     to be requested. (see #1422)
  - obspy.io.nlloc:
    * Use geographic coordinates from the NonLinLoc Hypocenter-Phase file if
      no custom coordinate converter is provided.
