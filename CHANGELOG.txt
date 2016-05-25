@@ -28,6 +28,15 @@ master:
      alongside gaps (see #1366)
 
 1.0.2: (doi: 10.5281/zenodo.49636)
+ - obspy.clients.fdsn:
+   * Fixing issue with location codes potentially resulting in unwanted data
+     to be requested. (see #1422)
+ - obspy.io.nlloc:
+   * Use geographic coordinates from the NonLinLoc Hypocenter-Phase file if
+     no custom coordinate converter is provided.
+ - obspy.io.sac:
+   * Try to set SAC distances (dist, az, baz, gcarc) on read, if "lcalda" is
+     true.  If "dist" header is found, distances aren't calculated.
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)

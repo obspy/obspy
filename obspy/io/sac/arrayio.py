@@ -514,7 +514,8 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     #                                          'strict')
                     hs[HD.STRHDRS.index(hdr)] = value
             else:
-                raise ValueError("Unrecognized header name: {}.".format(hdr))
+                msg = "Unrecognized header name: {}. Ignored.".format(hdr)
+                warnings.warn(msg)
 
     return hf, hi, hs
 

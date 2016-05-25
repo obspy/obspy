@@ -64,9 +64,8 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
-        If left ``None``, NonLinLoc (x, y, z) output is left unchanged (e.g. if
-        it is in geographical coordinates already like for NonLinLoc in
-        global mode).
+        If left ``None``, the geographical coordinates in the "GEOGRAPHIC" line
+        of NonLinLoc output are used.
         The function should accept three arguments x, y, z (each of type
         :class:`numpy.ndarray`) and return a tuple of three
         :class:`numpy.ndarray` (lon, lat, depth in kilometers).
@@ -138,15 +137,16 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     signature, version, date, time = line.rsplit(" ", 3)
     creation_time = UTCDateTime().strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
 
-    # maximum likelihood origin location info line
-    line = lines["HYPOCENTER"]
-
-    x, y, z = map(float, line.split()[1:7:2])
-
     if coordinate_converter:
-        x, y, z = coordinate_converter(x, y, z)
+        # maximum likelihood origin location in km info line
+        line = lines["HYPOCENTER"]
+        x, y, z = coordinate_converter(*map(float, line.split()[1:7:2]))
+    else:
+        # maximum likelihood origin location lon lat info line
+        line = lines["GEOGRAPHIC"]
+        x, y, z = map(float, line.split()[8:13:2])
 
-    # origin time info line
+    # maximum likelihood origin time info line
     line = lines["GEOGRAPHIC"]
 
     year, month, day, hour, minute = map(int, line.split()[1:6])

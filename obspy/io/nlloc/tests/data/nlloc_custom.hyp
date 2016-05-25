@@ -1,0 +1,27 @@
+NLLOC "./nlloc.20100527.165625.grid0" "LOCATED" "Location completed."
+SIGNATURE "Megies LMU Munich   NLLoc:v6.00.0 17Oct2014 16h30m08"
+COMMENT "NonLinLoc OctTree Location"
+GRID  248 148 94  4460.1 5315.1 -0.35  0.1 0.1 0.1 PROB_DENSITY
+SEARCH OCTREE nInitial 400 nEvaluated 50008 smallestNodeSide 0.019297/0.011484/0.018359 oct_tree_integral 6.282412e-02 scatter_volume 6.282412e-02
+HYPOCENTER  x 4473.68 y 5323.28 z 4.57949  OT 24.6126  ix -1 iy -1 iz -1
+GEOGRAPHIC  OT 2010 05 27  16 56   24.6126  Lat 5323.28 Long 4473.68 Depth 4.57949
+QUALITY  Pmax 0.418427 MFmin 0.466705 MFmax 8.23868 RMS 0.0189187 Nphs 8 Gap 129.214 Dist 1.87959 Mamp  -9.9 0 Mdur  -9.9 0
+VPVSRATIO  VpVsRatio 1.82937  Npair 4  Diff 0.805
+STATISTICS  ExpectX 4473.68 Y 5323.29 Z 4.59501  CovXX 0.0282621 XY -0.0053866 XZ 0.0043871 YY 0.0191034 YZ 0.00503624 ZZ 0.036713 EllAz1  206.782 Dip1  16.4026 Len1  0.227982 Az2  300.149 Dip2  11.2855 Len2  0.327468 Len3  3.709256e-01
+STAT_GEOG  ExpectLat 5323.29 Long 4473.68 Depth 4.59501
+TRANSFORM  NONE
+QML_OriginQuality  assocPhCt 8  usedPhCt 8  assocStaCt -1  usedStaCt 4  depthPhCt -1  stdErr 0.0189187  azGap 129.214  secAzGap 129.214  gtLevel -  minDist 1.87959 maxDist 8.35898 medDist 3.43311
+QML_OriginUncertainty  horUnc -1  minHorUnc 0.195472  maxHorUnc 0.265954  azMaxHorUnc 114.816
+FOCALMECH  Hyp  5323.28 4473.68 4.57949 Mech  0 0 0 mf  0 nObs 0
+PHASE ID Ins Cmp On Pha  FM Date     HrMn   Sec     Err  ErrMag    Coda      Amp       Per  >   TTpred    Res       Weight    StaLoc(X  Y         Z)        SDist    SAzim  RAz  RDip RQual    Tcorr 
+UH3    ?    ?    ? P      ? 20100527 1656     25.93 GAU      0.02        -1        -1        -1 >    1.2474   -0.0150    2.0540 4473.1664 5321.4733   -0.4000    1.8796 195.71 200.7 152.6  9     0.0850
+UH3    ?    ?    ? S      ? 20100527 1656      27.1 GAU      0.06        -1        -1        -1 >    2.2999    0.0195    0.4108 4473.1664 5321.4733   -0.4000    1.8796 195.71 200.6 156.4  9     0.1680
+UH2    ?    ?    ? P      ? 20100527 1656     26.04 GAU      0.03        -1        -1        -1 >    1.3698    0.0076    1.2640 4476.4043 5324.4693   -0.4000    2.9758  66.50  64.7 139.3  9     0.0500
+UH2    ?    ?    ? S      ? 20100527 1656     27.27 GAU      0.06        -1        -1        -1 >    2.5339    0.0156    0.4108 4476.4043 5324.4693   -0.4000    2.9758  66.50  63.9 144.4  9     0.1080
+UH1    ?    ?    ? P      ? 20100527 1656     26.13 GAU      0.02        -1        -1        -1 >    1.4759   -0.0085    2.0540 4472.9896 5327.1122   -0.4000    3.8905 349.85 348.8 131.0  9     0.0500
+UH1    ?    ?    ? S      ? 20100527 1656     27.46 GAU      0.03        -1        -1        -1 >    2.7386    0.0008    1.2640 4472.9896 5327.1122   -0.4000    3.8905 349.85 348.4 137.7  9     0.1080
+UH4    ?    ?    ? P      ? 20100527 1656     26.93 GAU      0.06        -1        -1        -1 >    2.1391    0.0663    0.4108 4465.4714 5321.6804   -0.4000    8.3590 258.95 258.3 106.5  9     0.1070
+UH4    ?    ?    ? S      ? 20100527 1656      28.9 GAU      0.11        -1        -1        -1 >    4.1113   -0.0299    0.1315 4465.4714 5321.6804   -0.4000    8.3590 258.95 258.1 113.1  9     0.2060
+END_PHASE
+END_NLLOC
+

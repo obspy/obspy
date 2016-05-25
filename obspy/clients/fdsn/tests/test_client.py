@@ -231,6 +231,37 @@ class ClientTestCase(unittest.TestCase):
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2CBB%2C--")
 
+        # The location parameter is also passed through the
+        # _create_url_from_parameters() method and thus has to survive it!
+        # This guards against a regression where all empty location codes
+        # where removed by this function!
+        for service in ["station", "dataselect"]:
+            for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                        u"", u" ", u"  ", u"--"]:
+                self.assertIn(
+                    "location=--",
+                    self.client._create_url_from_parameters(
+                        service, [],
+                        {"location": loc, "starttime": 0, "endtime": 1}))
+
+        # Also check the full call with a mock test.
+        for loc in ["", " ", "  ", "--", b"", b" ", b"  ", b"--",
+                    u"", u" ", u"  ", u"--"]:
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_stations(0, 0, location=loc)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+            with mock.patch("obspy.clients.fdsn.Client._download") as p:
+                try:
+                    self.client.get_waveforms(1, 2, loc, 4, 0, 0)
+                except:
+                    pass
+            self.assertEqual(p.call_count, 1)
+            self.assertIn("location=--", p.call_args[0][0])
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.

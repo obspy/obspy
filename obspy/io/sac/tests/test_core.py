@@ -839,6 +839,29 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr1.stats.sac.npts, tr.stats.sac.npts / 2)
         self.assertEqual(tr1.stats.sac.delta, tr.stats.sac.delta * 2)
 
+    def test_invalid_header_field(self):
+        """
+        Given a SAC file on disk, when it is read and an invalid header is
+        appended to the stats.sac dictionary, then the invalid header should be
+        ignored (user given a warning) and the written file should be the same
+        as the original.
+        """
+        tr = read(self.file, format='SAC')[0]
+
+        with io.BytesIO() as buf:
+            tr.write(buf, format='SAC')
+            buf.seek(0, 0)
+
+            tr.stats.sac.AAA = 10.
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter('always')
+                with io.BytesIO() as buf1:
+                    tr.write(buf1, format='SAC')
+                    self.assertIn('Ignored', str(w[-1].message))
+                    buf1.seek(0, 0)
+
+                    self.assertEqual(buf.read(), buf1.read())
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

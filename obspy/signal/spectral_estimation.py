@@ -1363,6 +1363,8 @@ class PPSD(object):
             for percentile in percentiles:
                 periods, percentile_values = \
                     self.get_percentile(percentile=percentile)
+                if xaxis_frequency:
+                    periods = 1.0 / periods
                 ax.plot(periods, percentile_values, color="black", zorder=8)
 
         if show_mode:
