@@ -113,7 +113,7 @@ class Client(object):
             raise IOError(msg)
         self.sds_root = sds_root
         self.sds_type = sds_type
-        self.format = format and format.upper()
+        self.format = format and format.upper() or format
         self.fileborder_seconds = fileborder_seconds
         self.fileborder_samples = fileborder_samples
 
@@ -716,6 +716,51 @@ class Client(object):
             gaps += gaps_
 
         return data, gaps
+
+    def add_data_to_archive(self, filenames, only_missing=True):
+        """
+        Adds data from given files to SDS Archive.
+
+        Currently only implemented for SDS archive in MSEED format.
+
+        :type filenames: list of str
+        :param filenames: Data to add to archive.
+        :type only_missing: bool
+        :param only_missing: Whether to only add data missing in archive
+            (slicing the input data to gaps present in archive) or just add all
+            input data to archive without any checks of archive contents (might
+            lead to duplicate data in archive).
+        """
+        format = self.format
+
+        if format != "MSEED":
+            msg = ("Currently only implemented for SDS Archive with format "
+                   "'MSEED'.")
+            raise NotImplementedError(msg)
+
+        print(filenames)
+        if only_missing:
+            data, gaps = self._extract_missing_data(filenames)
+            for id, start, end in gaps:
+                data_files = set()
+                for filename, traces in data.get(id, {}).items():
+                    for tr in traces:
+                        if (start < tr.stats.starttime < end or
+                                start < tr.stats.endtime < end):
+                            data_files.add(filename)
+                st = Stream()
+                for filename in data_files:
+                    st = read(filename, starttime=start, endtime=end,
+                              sourcename=id)
+                    st = st.select(id=id).trim(start, end,
+                                               nearest_sample=False)
+                    st_dict = self._split_stream_by_filenames(st)
+                    for filename_, st_ in st_dict.items():
+                        with open(filename_, "ab") as fh:
+                            st_.write(fh, format=format)
+        else:
+            # XXX TODO
+            raise NotImplementedError()
 
 
 def _wildcarded_except(exclude=[]):
