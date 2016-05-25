@@ -54,7 +54,7 @@ msr_parse ( char *record, unsigned long long recbuflen, MSRecord **ppmsr,
     return MS_GENERROR;
   
   /* Sanity check: record length cannot be larger than buffer */
-  if ( reclen > 0 && reclen > recbuflen )
+  if ( reclen > 0 && (unsigned int) reclen > recbuflen )
     {
       ms_log (2, "ms_parse() Record length (%d) cannot be larger than buffer (%d)\n",
 	      reclen, recbuflen);
@@ -96,7 +96,7 @@ msr_parse ( char *record, unsigned long long recbuflen, MSRecord **ppmsr,
     }
   
   /* Check if more data is required, return hint */
-  if ( reclen > recbuflen )
+  if ( (unsigned int) reclen > recbuflen )
     {
       if ( verbose > 2 )
 	ms_log (1, "Detected %d byte record, need %d more bytes\n",
@@ -162,7 +162,7 @@ msr_parse_selection ( char *recbuf, unsigned long long recbuflen,
   if ( ! offset )
     return MS_GENERROR;
   
-  while ( *offset < recbuflen )
+  while ( (unsigned long long)*offset < recbuflen )
     {
       retval = msr_parse (recbuf+*offset, (int)(recbuflen-*offset), ppmsr, reclen, 0, verbose);
       
@@ -276,7 +276,7 @@ ms_detect ( const char *record, unsigned long long recbuflen )
       
       /* Found a 1000 blockette, not truncated */
       if ( blkt_type == 1000  &&
-	   (int)(blkt_offset + 4 + sizeof(struct blkt_1000_s)) <= recbuflen )
+	   (unsigned long long)(blkt_offset + 4 + sizeof(struct blkt_1000_s)) <= recbuflen )
 	{
           blkt_1000 = (struct blkt_1000_s *) (record + blkt_offset + 4);
 	  
@@ -306,7 +306,7 @@ ms_detect ( const char *record, unsigned long long recbuflen )
       nextfsdh = record + MINRECLEN;
       
       /* Check for record header or blank/noise record at MINRECLEN byte offsets */
-      while ( ((nextfsdh - record) + 48) < recbuflen )
+      while ( (unsigned long long)((nextfsdh - record) + 48) < recbuflen )
 	{
 	  if ( MS_ISVALIDHEADER(nextfsdh) || MS_ISVALIDBLANK(nextfsdh) )
             {
