@@ -40,7 +40,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import glob
-import io
 import os
 import re
 import warnings
@@ -671,25 +670,23 @@ class Client(object):
             result.add((network, station))
         return sorted(result)
 
-    def extract_missing_data(self, filenames, output_folder, plot=True):
+    def _extract_missing_data(self, filenames):
         """
         Extracts data that is missing in SDS archive from given local files.
 
-        :type filenames: list
+        :type filenames: list of str
         :param filenames: Files to extract data from.
-        :type output_folder: str
-        :param output_folder: Output folder to save extracted data to.
-        :type plot: bool
-        :param plot: Whether to save plots and obspy-scan npz files with
-            comparison of data present in SDS archive versus new data.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Input data reduced to what is not currently in the SDS
+            archive.
         """
         # assemble information on the files with new data for the SDS archive
         data = {}
         times_min = {}
         times_max = {}
         filenames_to_check_SDS = {}
+
         for filename in filenames:
-            # read file and store info about traces
             for tr in read(filename, headonly=True):
                 # remember overall earliest/latest data time per SEED ID
                 times_min[tr.id] = min(
@@ -699,7 +696,7 @@ class Client(object):
                     tr.stats.endtime + tr.stats.delta,
                     times_max.get(tr.id, tr.stats.endtime))
                 # remember that file contains data for respective SEED ID
-                data.setdefault(tr.id, set()).add(filename)
+                data.setdefault(tr.id, {}).setdefault(filename, []).append(tr)
                 # remember which files we need to check for gaps in SDS archive
                 filenames_to_check_SDS.setdefault(tr.id, set()).update(
                     self._get_filenames(
@@ -710,40 +707,15 @@ class Client(object):
 
         # assemble information on gaps in the SDS archive that might be covered
         # by new data
+        gaps = []
         for seed_id, filenames_ in filenames_to_check_SDS.items():
-            _, gaps, _ = scan(
+            _, gaps_, _ = scan(
                 paths=filenames_, format=self.format, recursive=False,
                 ignore_links=False, starttime=times_min[seed_id], quiet=True,
                 endtime=times_max[seed_id], seed_ids=[seed_id], plot=False)
+            gaps += gaps_
 
-            st = Stream()
-            for _seed_id, start, end in gaps:
-                if _seed_id != seed_id:
-                    continue
-                for filename in data[seed_id]:
-                    st_ = read(filename, starttime=start, endtime=end,
-                               sourcename=seed_id)
-                    st += st_.select(id=seed_id)
-            st.merge(-1)
-            outfile = os.path.join(output_folder, seed_id + ".mseed")
-            st.write(outfile, "MSEED")
-
-            if plot:
-                for tr in st:
-                    tr.stats.location = "XX"
-
-                with io.BytesIO() as tmp:
-                    st.write(tmp, format="MSEED")
-                    tmp.seek(0)
-                    filenames_.add(tmp)
-                    outfile_plot = os.path.join(output_folder,
-                                                seed_id + ".png")
-                    outfile_npz = os.path.join(output_folder, seed_id + ".npz")
-                    scan(paths=filenames_, format=None, recursive=False,
-                         quiet=True, ignore_links=False,
-                         starttime=times_min[seed_id],
-                         endtime=times_max[seed_id], seed_ids=[seed_id, tr.id],
-                         plot=outfile_plot, npz_output=outfile_npz)
+        return data, gaps
 
 
 def _wildcarded_except(exclude=[]):
