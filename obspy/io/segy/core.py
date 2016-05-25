@@ -190,59 +190,13 @@ def _read_segy(filename, headonly=False, byteorder=None,
     stream.stats.endian = endian
     stream.stats.textual_file_header_encoding = \
         textual_file_header_encoding
-    # Loop over all traces.
+
+    # Convert traces to ObsPy Trace objects.
     for tr in segy_object.traces:
-        # Create new Trace object for every segy trace and append to the Stream
-        # object.
-        trace = Trace()
-        stream.append(trace)
-        # skip data if headonly is set
-        if headonly:
-            trace.stats.npts = tr.npts
-        else:
-            trace.data = tr.data
-        trace.stats.segy = AttribDict()
-        # If all values will be unpacked create a normal dictionary.
-        if unpack_trace_headers:
-            # Add the trace header as a new attrib dictionary.
-            header = AttribDict()
-            for key, value in tr.header.__dict__.items():
-                setattr(header, key, value)
-        # Otherwise use the LazyTraceHeaderAttribDict.
-        else:
-            # Add the trace header as a new lazy attrib dictionary.
-            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header,
-                                               tr.header.endian)
-        trace.stats.segy.trace_header = header
-        # The sampling rate should be set for every trace. It is a sample
-        # interval in microseconds. The only sanity check is that is should be
-        # larger than 0.
-        tr_header = trace.stats.segy.trace_header
-        if tr_header.sample_interval_in_ms_for_this_trace > 0:
-            trace.stats.delta = \
-                float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                1E6
-        # If the year is not zero, calculate the start time. The end time is
-        # then calculated from the start time and the sampling rate.
-        if tr_header.year_data_recorded > 0:
-            year = tr_header.year_data_recorded
-            # The SEG Y rev 0 standard specifies the year to be a 4 digit
-            # number.  Before that it was unclear if it should be a 2 or 4
-            # digit number. Old or wrong software might still write 2 digit
-            # years. Every number <30 will be mapped to 2000-2029 and every
-            # number between 30 and 99 will be mapped to 1930-1999.
-            if year < 100:
-                if year < 30:
-                    year += 2000
-                else:
-                    year += 1900
-            julday = tr_header.day_of_year
-            hour = tr_header.hour_of_day
-            minute = tr_header.minute_of_hour
-            second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(
-                year=year, julday=julday, hour=hour, minute=minute,
-                second=second)
+        stream.append(tr.to_obspy_trace(
+            headonly=headonly,
+            unpack_trace_headers=unpack_trace_headers))
+
     return stream
 
 

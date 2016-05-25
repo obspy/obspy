@@ -16,13 +16,17 @@ master:
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given
      inventory object.
- - obspy.css
-    * Read support for NNSA KB Core format waveform data. (see #1332)
  - obspy.imaging.cm
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
      is especially useful for printing when an image should merge with the
      white background.
+ - obspy.io.css
+    * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.segy:
+    * Iterative reading of large SEG-Y and SU files with
+	  `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
+	  (see #1400).
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
