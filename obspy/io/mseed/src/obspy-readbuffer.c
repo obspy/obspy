@@ -183,9 +183,10 @@ void empty_print(char *string) {}
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
-readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
-                 unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long long (*allocData) (int, char),
+readMSEEDBuffer (char *mseed, unsigned long long buflen,
+                 Selections *selections, flag unpack_data, int reclen,
+                 flag verbose, flag details, int header_byteorder,
+                 long long (*allocData) (int, char),
                  void (*diag_print) (char*), void (*log_print) (char*))
 {
     int retcode = 0;
@@ -193,7 +194,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     flag swapflag = 0;
 
     // current offset of mseed char pointer
-    int offset = 0;
+    unsigned long long offset = 0;
 
     // Unpack without reading the data first
     flag dataflag = 0;

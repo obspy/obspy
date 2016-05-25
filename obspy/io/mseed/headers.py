@@ -701,7 +701,7 @@ LinkedIDList._fields_ = [
 clibmseed.readMSEEDBuffer.argtypes = [
     np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
-    C.c_int,
+    C.c_ulonglong,
     C.POINTER(Selections),
     C.c_int8,
     C.c_int,
