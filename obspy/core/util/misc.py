@@ -494,6 +494,37 @@ class MatplotlibBackend(object):
                 raise Exception(msg)
 
 
+def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
+    """
+    NumPy's FFT implementation utilizes caches to speedup subsequent FFTs of
+    the same size. This accumulates memory when run for various length FFTs
+    as can readily happen in seismology.
+
+    This utility function clears both, full and real-only caches if their
+    size is above the given threshold.
+
+    The default 100 MB is fairly generous but we still want to profit from
+    the cache where applicable.
+    """
+    for cache in ["_fft_cache", "_real_fft_cache"]:
+        # Guard against different numpy versions just to be safe.
+        if not hasattr(np.fft.fftpack, cache):
+            continue
+        cache = getattr(np.fft.fftpack, cache)
+        # Check type directly and don't use isinstance() as future numpy
+        # versions might use some subclass or what not.
+        if type(cache) is not dict:
+            continue
+        # Its a dictionary with list's of arrays as the values. Wrap in
+        # try/except to guard against future numpy changes.
+        try:
+            total_size = sum([_j.nbytes for _i in cache.values() for _j in _i])
+        except:
+            pass
+        if total_size > max_size_in_mb_per_cache * 1024 * 1024:
+            cache.clear()
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
