@@ -520,7 +520,7 @@ def limit_numpy_fft_cache(max_size_in_mb_per_cache=100):
         try:
             total_size = sum([_j.nbytes for _i in cache.values() for _j in _i])
         except:
-            pass
+            continue
         if total_size > max_size_in_mb_per_cache * 1024 * 1024:
             cache.clear()
 
