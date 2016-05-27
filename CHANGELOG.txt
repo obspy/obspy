@@ -26,6 +26,8 @@
  - obspy.signal:
    * PPSD.plot(): fix plotting of percentiles, mode and mean and setting
      period limits when using "xaxis_frequency=True" (see #1406, #1416)
+ - obspy.taup:
+   * Fixing path for Pn. (see #1392)
 
 1.0.1: (doi: 10.5281/zenodo.48254)
  - General:
