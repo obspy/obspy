@@ -63,7 +63,7 @@ class Magnitude(__Magnitude):
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
-    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type mag_errors: :class:`~obspy.core.event.base.QuantityError`
     :param mag_errors: AttribDict containing error quantities.
     :type magnitude_type: str, optional
     :param magnitude_type: Describes the type of magnitude. This is a free-text
@@ -156,7 +156,7 @@ class StationMagnitude(__StationMagnitude):
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
     :param mag: Estimated magnitude.
-    :type mag_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type mag_errors: :class:`~obspy.core.event.base.QuantityError`
     :param mag_errors: AttribDict containing error quantities.
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: See :class:`~obspy.core.event.Magnitude`
@@ -266,7 +266,7 @@ class Amplitude(__Amplitude):
         here. For clarity, using the optional unit attribute is highly
         encouraged.
     :type generic_amplitude_errors:
-        :class:`~obspy.core.util.attribdict.AttribDict`
+        :class:`~obspy.core.event.base.QuantityError`
     :param generic_amplitude_errors: AttribDict containing error quantities.
     :type type: str, optional
     :param type: Describes the type of amplitude using the nomenclature from
@@ -331,7 +331,7 @@ class Amplitude(__Amplitude):
         the waveform stream referenced by ``waveform_id``.
     :type scaling_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param scaling_time: Scaling time for amplitude measurement.
-    :type scaling_time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type scaling_time_errors: :class:`~obspy.core.event.base.QuantityError`
     :param scaling_time_errors: AttribDict containing error quantities.
     :type magnitude_hint: str, optional
     :param magnitude_hint: Type of magnitude the amplitude measurement is used
