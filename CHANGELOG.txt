@@ -44,6 +44,8 @@ master:
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
+ - obspy.io.mseed:
+   * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
 
 1.0.1: (doi: 10.5281/zenodo.48254)
  - General:

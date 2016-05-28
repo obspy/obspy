@@ -194,17 +194,17 @@ class Origin(__Origin):
         `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Focal time.
-    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type time_errors: :class:`~obspy.core.event.base.QuantityError`
     :param time_errors: AttribDict containing error quantities.
     :type longitude: float
     :param longitude: Hypocenter longitude, with respect to the World Geodetic
         System 1984 (WGS84) reference system. Unit: deg
-    :type longitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type longitude_errors: :class:`~obspy.core.event.base.QuantityError`
     :param longitude_errors: AttribDict containing error quantities.
     :type latitude: float
     :param latitude: Hypocenter latitude, with respect to the WGS84 reference
         system. Unit: deg
-    :type latitude_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type latitude_errors: :class:`~obspy.core.event.base.QuantityError`
     :param latitude_errors: AttribDict containing error quantities.
     :type depth: float, optional
     :param depth: Depth of hypocenter with respect to the nominal sea level
@@ -214,7 +214,7 @@ class Origin(__Origin):
         As an example, GSE2.0, defines depth with respect to the local surface.
         If event data is converted from other formats to QuakeML, depth values
         may have to be modified accordingly. Unit: m
-    :type depth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type depth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
     :param depth_type: Type of depth determination. Allowed values are the
@@ -312,6 +312,7 @@ class Origin(__Origin):
     >>> origin.resource_id = 'smi:ch.ethz.sed/origin/37465'
     >>> origin.time = UTCDateTime(0)
     >>> origin.latitude = 12
+    >>> origin.latitude_errors.uncertainty = 0.01
     >>> origin.latitude_errors.confidence_level = 95.0
     >>> origin.longitude = 42
     >>> origin.depth_type = 'from location'
@@ -320,7 +321,7 @@ class Origin(__Origin):
         resource_id: ResourceIdentifier(id="smi:ch.ethz.sed/...")
                time: UTCDateTime(1970, 1, 1, 0, 0)
           longitude: 42.0
-           latitude: 12.0 [confidence_level=95.0]
+           latitude: 12.0 [confidence_level=95.0, uncertainty=0.01]
          depth_type: ...'from location'
 
     .. note::
@@ -362,7 +363,7 @@ class Pick(__Pick):
         `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param time: Observed onset time of signal (“pick time”).
-    :type time_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type time_errors: :class:`~obspy.core.event.base.QuantityError`
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
@@ -376,12 +377,12 @@ class Pick(__Pick):
     :param horizontal_slowness: Observed horizontal slowness of the signal.
         Most relevant in array measurements. Unit: s·deg^(−1)
     :type horizontal_slowness_errors:
-        :class:`~obspy.core.util.attribdict.AttribDict`
+        :class:`~obspy.core.event.base.QuantityError`
     :param horizontal_slowness_errors: AttribDict containing error quantities.
     :type backazimuth: float, optional
     :param backazimuth: Observed backazimuth of the signal. Most relevant in
         array measurements. Unit: deg
-    :type backazimuth_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type backazimuth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param backazimuth_errors: AttribDict containing error quantities.
     :type slowness_method_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
@@ -491,7 +492,7 @@ class Arrival(__Arrival):
     :type takeoff_angle: float, optional
     :param takeoff_angle: Angle of emerging ray at the source, measured against
         the downward normal direction. Unit: deg
-    :type takeoff_angle_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type takeoff_angle_errors: :class:`~obspy.core.event.base.QuantityError`
     :param takeoff_angle_errors: AttribDict containing error quantities.
     :type time_residual: float, optional
     :param time_residual: Residual between observed and expected arrival time

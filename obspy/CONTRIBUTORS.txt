@@ -45,6 +45,7 @@ Alberto Michelini
 Bernhard Morgenstern
 Nathaniel C. Miller
 Mark P. Panning
+Giovanni Rapagnani
 Celso Reyes
 Adam Ringler
 Nicolas Rothenhäusler

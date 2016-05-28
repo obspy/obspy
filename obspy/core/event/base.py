@@ -39,10 +39,58 @@ from obspy.core.util import AttribDict
 
 
 class QuantityError(AttribDict):
-    uncertainty = None
-    lower_uncertainty = None
-    upper_uncertainty = None
-    confidence_level = None
+    """
+    Uncertainty information for a physical quantity.
+
+    :type uncertainty: float
+    :param uncertainty: Uncertainty as the absolute value of symmetric
+        deviation from the main value.
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Uncertainty as the absolute value of deviation
+        from the main value towards smaller values.
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Uncertainty as the absolute value of deviation
+        from the main value towards larger values.
+    :type confidence_level: float
+    :param confidence_level: Confidence level of the uncertainty, given in
+        percent (0-100).
+    """
+    defaults = {"uncertainty": None, "lower_uncertainty": None,
+                "upper_uncertainty": None, "confidence_level": None}
+    warn_on_non_default_key = True
+
+    def __init__(self, uncertainty=None, lower_uncertainty=None,
+                 upper_uncertainty=None, confidence_level=None):
+        super(QuantityError, self).__init__()
+        self.uncertainty = uncertainty
+        self.lower_uncertainty = lower_uncertainty
+        self.upper_uncertainty = upper_uncertainty
+        self.confidence_level = confidence_level
+
+    def __bool__(self):
+        """
+        Boolean testing for QuantityError.
+
+        QuantityError evaluates ``True`` if any of the default fields is not
+        ``None``.
+
+        >>> err = QuantityError()
+        >>> bool(err)
+        False
+        >>> err.custom_field = "spam"
+        >>> bool(err)
+        False
+        >>> err.uncertainty = 0.05
+        >>> bool(err)
+        True
+        >>> del err.custom_field
+        >>> bool(err)
+        True
+        """
+        return any([getattr(self, key) is not None for key in self.defaults])
+
+    # Python 2 compatibility
+    __nonzero__ = __bool__
 
 
 def _bool(value):
@@ -130,8 +178,9 @@ def _event_type_class_factory(class_name, class_attributes=[],
         ValueError: Setting attribute "some_letters" failed. ...
 
     If you pass ``ATTRIBUTE_HAS_ERRORS`` as the third tuple item for the
-    class_attributes, an error QuantityError will be be created that will be
-    named like the attribute with "_errors" appended.
+    class_attributes, a error (type
+    :class:`~obspy.core.event.base.QuantityError`) will be be created that will
+    be named like the attribute with "_errors" appended.
 
         >>> assert(hasattr(test_event, "some_error_quantity_errors"))
         >>> test_event.some_error_quantity_errors  # doctest: +ELLIPSIS
@@ -150,6 +199,9 @@ def _event_type_class_factory(class_name, class_attributes=[],
         for key, value in _properties:
             _property_dict[key] = value
         _containers = class_contains
+        warn_on_non_default_key = True
+        defaults = dict.fromkeys(class_contains, [])
+        defaults.update(dict.fromkeys(_property_keys, None))
 
         def __init__(self, *args, **kwargs):
             # Make sure the args work as expected. Therefore any specified
@@ -217,11 +269,11 @@ def _event_type_class_factory(class_name, class_attributes=[],
                 repr_str = value.__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
-                if hasattr(self, error_key) and\
-                   _bool(getattr(self, error_key)):
+                if self.get(error_key, False):
                     err_items = sorted(getattr(self, error_key).items())
                     repr_str += " [%s]" % ', '.join(
-                        [str(k) + "=" + str(v) for k, v in err_items])
+                        sorted([str(k) + "=" + str(v) for k, v in err_items
+                                if v is not None]))
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
@@ -851,28 +903,28 @@ class CompositeTime(__CompositeTime):
 
     :type year: int
     :param year: Year or range of years of the event's focal time.
-    :type year_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type year_errors: :class:`~obspy.core.event.base.QuantityError`
     :param year_errors: AttribDict containing error quantities.
     :type month: int
     :param month: Month or range of months of the event’s focal time.
-    :type month_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type month_errors: :class:`~obspy.core.event.base.QuantityError`
     :param month_errors: AttribDict containing error quantities.
     :type day: int
     :param day: Day or range of days of the event’s focal time.
-    :type day_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type day_errors: :class:`~obspy.core.event.base.QuantityError`
     :param day_errors: AttribDict containing error quantities.
     :type hour: int
     :param hour: Hour or range of hours of the event’s focal time.
-    :type hour_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type hour_errors: :class:`~obspy.core.event.base.QuantityError`
     :param hour_errors: AttribDict containing error quantities.
     :type minute: int
     :param minute: Minute or range of minutes of the event’s focal time.
-    :type minute_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type minute_errors: :class:`~obspy.core.event.base.QuantityError`
     :param minute_errors: AttribDict containing error quantities.
     :type second: float
     :param second: Second and fraction of seconds or range of seconds with
         fraction of the event’s focal time.
-    :type second_errors: :class:`~obspy.core.util.attribdict.AttribDict`
+    :type second_errors: :class:`~obspy.core.event.base.QuantityError`
     :param second_errors: AttribDict containing error quantities.
 
     >>> print(CompositeTime(2011, 1, 1))

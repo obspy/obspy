@@ -220,7 +220,7 @@ class RecordAnalyser(object):
             if cur_blkt_offset >= self.fixed_header['Beginning of data']:
                 break
             # Seek to the offset.
-            self.file.seek(cur_blkt_offset, 0)
+            self.file.seek(self.record_offset + cur_blkt_offset, 0)
             # Unpack the first two values. This is always the blockette type
             # and the beginning of the next blockette.
             encoding = native_str('%s2H' % self.endian)
