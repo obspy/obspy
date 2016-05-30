@@ -66,6 +66,18 @@ Read/write SAC files
     # write a binary SAC file for a Sun machine
     sac.write(filename, byteorder='big')
 
+Build a SACTrace from a header dictionary and data array
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: python
+
+    header = {'kstnm': 'ANMO', 'kcmpnm': 'BHZ', stla=40.5, stlo=-108.23,
+              'evla': -15.123, 'evlo': 123, 'evdp': 50, 'nzyear': 2012,
+              'nzjday': 123, 'nzhour': 13, 'nzmin': 43, 'nzsec': 17,
+              'nzmsec': 100}
+    sac = SACTrace(data=my_array, **header)
+
+
 Reference-time and relative time headers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
