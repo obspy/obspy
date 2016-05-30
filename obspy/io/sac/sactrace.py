@@ -71,10 +71,10 @@ Build a SACTrace from a header dictionary and data array
 
 .. code:: python
 
-    header = {'kstnm': 'ANMO', 'kcmpnm': 'BHZ', stla=40.5, stlo=-108.23,
+    header = {'kstnm': 'ANMO', 'kcmpnm': 'BHZ', 'stla': 40.5, 'stlo': -108.23,
               'evla': -15.123, 'evlo': 123, 'evdp': 50, 'nzyear': 2012,
               'nzjday': 123, 'nzhour': 13, 'nzmin': 43, 'nzsec': 17,
-              'nzmsec': 100}
+              'nzmsec': 100, 'delta': 1.0/40}
     sac = SACTrace(data=my_array, **header)
 
 
