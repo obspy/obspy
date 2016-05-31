@@ -2,6 +2,7 @@ import traceback
 import warnings
 import numpy as np
 from obspy import Trace, Stream
+from obspy.core.compatibility import from_buffer
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
 from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
 
@@ -35,7 +36,14 @@ def _read_reftek(filename, network="", component_codes=None, location=""):
         raise NotImplementedError()
     st = Stream()
     for channel_number, data_ in data.items():
-        tr = Trace(data=np.concatenate(data_), header=header.copy())
+        npts = sum(_bcd_int(_i[:2]) for _i in data_)
+        data = from_buffer(b"".join(_i[44:] for _i in data_), dtype=np.uint8)
+
+        from obspy.io.mseed.util import _unpack_steim_1
+        data = _unpack_steim_1(data_string=data,
+                               npts=npts, swapflag=1)
+
+        tr = Trace(data=data, header=header.copy())
         if component_codes is not None:
             tr.stats.channel = (
                 eh.stream_name.strip() + component_codes[channel_number])

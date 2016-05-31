@@ -61,7 +61,7 @@ PAYLOAD = {
         (4, 2, "number_of_samples", _bcd_int),
         (6, 1, "flags", _flags),
         (7, 1, "data_format", _bcd_hexstr),
-        (4, 1004, "sample_data", _parse_data),
+        (4, 1004, "sample_data", None),
         ),
     }
 PAYLOAD["ET"] = PAYLOAD["EH"]
