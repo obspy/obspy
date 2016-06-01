@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 
 from obspy import read, Stream
-from obspy.io.reftek.core import _read_reftek
+from obspy.io.reftek.core import _read_reftek130
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -68,15 +68,15 @@ class ReftekTestCase(unittest.TestCase):
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
 
-    def test_read_reftek(self):
+    def test_read_reftek130(self):
         """
-        Test original reftek data file against miniseed files converted using
-        "rt_mseed" utility from Trimble/Reftek.
+        Test original reftek 130 data file against miniseed files converted
+        using "rt_mseed" utility from Trimble/Reftek.
 
         rt_mseed fills in network as "XX", location as "01" and channels as
         "001", "002", "003".
         """
-        st_reftek = _read_reftek(
+        st_reftek = _read_reftek130(
             self.reftek_file, network="XX", location="01",
             component_codes=["1", "2", "3"])
         st_mseed = Stream()

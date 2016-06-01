@@ -91,9 +91,10 @@ KEYWORDS = [
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
-    'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'REFTEK', 'REFTEK130',
+    'RT-130', 'RESP', 'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED',
+    'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler',
+    'seismology',
     'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
     'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
     'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
@@ -159,7 +160,8 @@ ENTRY_POINTS = {
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
         'KNET = obspy.io.nied.knet',
-        'GCF = obspy.io.gcf.core'
+        'GCF = obspy.io.gcf.core',
+        'REFTEK130 = obspy.io.reftek.core',
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -268,6 +270,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.GCF': [
         'isFormat = obspy.io.gcf.core:_is_gcf',
         'readFormat = obspy.io.gcf.core:_read_gcf',
+        ],
+    'obspy.plugin.waveform.REFTEK130': [
+        'isFormat = obspy.io.reftek.core:_is_reftek130',
+        'readFormat = obspy.io.reftek.core:_read_reftek130',
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
