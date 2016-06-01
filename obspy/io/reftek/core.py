@@ -6,17 +6,53 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import os
 import traceback
 import warnings
+
 import numpy as np
+
 from obspy import Trace, Stream
 from obspy.core.compatibility import from_buffer
 from .header import PACKETS_IMPLEMENTED, PAYLOAD
 from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
 
 
-def _read_reftek(filename, network="", component_codes=None, location=""):
+def _is_reftek130(filename):
     """
+    Checks whether a file is REFTEK130 format or not.
+
+    :type filename: str
+    :param filename: REFTEK130 file to be checked.
+    :rtype: bool
+    :return: ``True`` if a REFTEK130 file.
+
+    Checks if overall length of file is consistent (i.e. multiple of 1024
+    bytes) and checks for valid packet type identifiers in all expected packet
+    positions.
+    """
+    if not os.path.isfile(filename):
+        return False
+    filesize = os.stat(filename).st_size
+    # check if overall file size is a multiple of 1024
+    if filesize < 1024 or filesize % 1024 != 0:
+        return False
+
+    with open(filename, 'rb') as fp:
+        # check each expected packet's type header field
+        while True:
+            packet_type = fp.read(2)
+            if not packet_type:
+                break
+            if packet_type not in PACKETS_IMPLEMENTED:
+                return False
+            fp.seek(1022, os.SEEK_CUR)
+    return True
+
+
+def _read_reftek130(filename, network="", component_codes=None, location=""):
+    """
+    Read a REFTEK130 file into an ObsPy Stream.
     """
     from obspy.io.mseed.util import _unpack_steim_1
 
