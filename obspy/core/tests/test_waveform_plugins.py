@@ -425,6 +425,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
             msg = "Error in wavform format=%s" % format
             self.assertEqual(str(st), str(st_deepcopy), msg=msg)
 
+    def test_reading_tarfile_impostor(self):
+        """
+        Tests that a file, that by chance is interpreted as a valid tar file
+        can be read by ObsPy as is not treated as a tar file.
+
+        See #1435.
+        """
+        st = read("/path/to/tarfile_impostor.mseed")
+        self.assertEqual(st[0].id, "10.864.1B.004")
 
 def suite():
     return unittest.makeSuite(WaveformPluginsTestCase, 'test')
