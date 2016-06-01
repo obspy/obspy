@@ -10,6 +10,8 @@ from .util import _bcd_int, _bcd_str, _bcd_hexstr, _parse_short_time
 def _read_reftek(filename, network="", component_codes=None, location=""):
     """
     """
+    from obspy.io.mseed.util import _unpack_steim_1
+
     packets = _read_into_packetlist(filename)
     packets = sorted(packets, key=lambda x: x.packet_sequence)
     # for now only support uninterrupted packet sequences
@@ -24,35 +26,64 @@ def _read_reftek(filename, network="", component_codes=None, location=""):
     header = {
         "network": network,
         "station": (p.station_name + p.station_name_extension).strip(),
-        "location": location, "sampling_rate": p.sampling_rate,
-        "starttime": p.first_sample_time}
+        "location": location, "sampling_rate": p.sampling_rate}
     data = {}
     p = packets.pop(0)
     while p.type == "DT":
-        data.setdefault(p.channel_number, []).append(p.sample_data)
+        if p.data_format != "C0":
+            raise NotImplementedError()
+        data.setdefault(p.channel_number, []).append(
+            (p.time, p.packet_sequence, p.number_of_samples, p.sample_data))
         p = packets.pop(0)
     # expecting an ET packet at the end
     if p.type != "ET":
         raise NotImplementedError()
     st = Stream()
     for channel_number, data_ in data.items():
-        npts = sum(_bcd_int(_i[:2]) for _i in data_)
-        data = from_buffer(b"".join(_i[44:] for _i in data_), dtype=np.uint8)
+        # sort by start time of packet
+        data_ = sorted(data_)
+        # split data into contiguous blocks
+        delta = 1.0 / eh.sampling_rate
+        data_contiguous = []
+        chunk = data_.pop(0)
+        chunk_list = [chunk]
+        while data_:
+            chunk = data_.pop(0)
+            t, _, npts, _ = chunk
+            if chunk_list:
+                t_last, _, npts_last, _ = chunk_list[-1]
+                # check if next starttime matches seamless to last chunk
+                if t != t_last + npts_last * delta:
+                    # gap/overlap, start new contiguous list
+                    data_contiguous.append(chunk_list)
+                    chunk_list = [chunk]
+                    continue
+            # otherwise add to current chunk list
+            chunk_list.append(chunk)
+        data_contiguous.append(chunk_list)
+        # read each block into one trace
+        for data_ in data_contiguous:
+            npts = sum(npts_ for _, _, npts_, _ in data_)
+            starttime = data_[0][0]
+            data = from_buffer(
+                b"".join(dat_[44:] for _, _, _, dat_ in data_), dtype=np.uint8)
 
-        from obspy.io.mseed.util import _unpack_steim_1
-        data = _unpack_steim_1(data_string=data,
-                               npts=npts, swapflag=1)
+            data = _unpack_steim_1(data_string=data,
+                                   npts=npts, swapflag=1)
 
-        tr = Trace(data=data, header=header.copy())
-        if component_codes is not None:
-            tr.stats.channel = (
-                eh.stream_name.strip() + component_codes[channel_number])
-        elif p.channel_code is not None:
-            tr.stats.channel = eh.channel_code[channel_number]
-        else:
-            tr.stats.channel = str(channel_number)
-        assert tr.stats.endtime == p.last_sample_time
-        st += tr
+            tr = Trace(data=data, header=header.copy())
+            tr.stats.starttime = starttime
+            if component_codes is not None:
+                tr.stats.channel = (
+                    eh.stream_name.strip() + component_codes[channel_number])
+            elif p.channel_code is not None:
+                tr.stats.channel = eh.channel_code[channel_number]
+            else:
+                tr.stats.channel = str(channel_number)
+            # check if endtime of trace is consistent
+            t_last, _, npts_last, _ = data_[-1]
+            assert tr.stats.endtime == t_last + (npts_last - 1) * delta
+            st += tr
 
     return st
 
