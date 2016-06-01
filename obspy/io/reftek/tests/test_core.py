@@ -11,7 +11,7 @@ import unittest
 import numpy as np
 
 from obspy import read, Stream
-from obspy.io.reftek.core import _read_reftek130
+from obspy.io.reftek.core import _read_reftek130, _is_reftek130
 
 
 class ReftekTestCase(unittest.TestCase):
@@ -85,9 +85,9 @@ class ReftekTestCase(unittest.TestCase):
         # reftek reader correctly fills in band+instrument code but rt_mseed
         # does not apparently, so set it now for the comparison
         for tr in st_mseed:
-            tr.stats.channel = "EH" + tr.channel[-1]
+            tr.stats.channel = "EH" + tr.stats.channel[-1]
             tr.stats.pop("_format")
-            tr.stats.pop("MSEED")
+            tr.stats.pop("mseed")
         # sort streams
         st_reftek = st_reftek.sort()
         st_mseed = st_mseed.sort()
@@ -99,6 +99,14 @@ class ReftekTestCase(unittest.TestCase):
         # check equality of data
         for tr_got, tr_expected in zip(st_reftek, st_mseed):
             np.testing.assert_array_equal(tr_got.data, tr_expected.data)
+
+    def test_is_reftek130(self):
+        """
+        Test checking whether file is REFTEK130 format or not.
+        """
+        self.assertTrue(_is_reftek130(self.reftek_file))
+        for file_ in self.mseed_files:
+            self.assertFalse(_is_reftek130(file_))
 
 
 def suite():
