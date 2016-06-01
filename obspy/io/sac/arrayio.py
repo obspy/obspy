@@ -29,7 +29,7 @@ from obspy import UTCDateTime
 
 from . import header as HD  # noqa
 from .util import SacIOError, SacInvalidContentError
-from .util import is_valid_enum_int
+from .util import is_valid_enum_int, _decode_bytes_and_warn
 
 
 def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
@@ -446,15 +446,17 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
     if nulls:
         items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)] + \
-                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)]
+                [(key, _decode_bytes_and_warn(val, key))
+                 for (key, val) in zip(HD.STRHDRS, hs)]
     else:
         # more readable
         items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)
                  if val != HD.FNULL] + \
                 [(key, val) for (key, val) in zip(HD.INTHDRS, hi)
                  if val != HD.INULL] + \
-                [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)
-                 if val.decode() != HD.SNULL]
+                [(key, _decode_bytes_and_warn(val, key))
+                 for (key, val) in zip(HD.STRHDRS, hs)
+                 if _decode_bytes_and_warn(val, key) != HD.SNULL]
 
     header = dict(items)
 

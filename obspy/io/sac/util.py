@@ -7,6 +7,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import re
 import sys
 import warnings
 
@@ -460,3 +461,20 @@ def get_sac_reftime(header):
         raise SacHeaderTimeError(msg)
 
     return reftime
+
+
+def _decode_bytes_and_warn(bytestring, key=None, strip_null_terminated=True):
+    """
+    Decodes bytestring to ASCII, ignoring invalid characters if present and
+    issuing a warning if invalid characters are encountered.
+    """
+    if strip_null_terminated:
+        bytestring = re.sub(r'\x00.*', '', bytestring)
+    try:
+        return bytestring.decode("ASCII")
+    except UnicodeDecodeError as e:
+        key_info = key and " (in SAC header field '{}')".format(key) or ""
+        msg = "Invalid non-ASCII characters encountered{}: {}".format(
+            key_info, str(e))
+        warnings.warn(msg)
+    return bytestring.decode("ASCII", "replace")
