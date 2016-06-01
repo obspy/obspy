@@ -430,7 +430,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests that a file, that by chance is interpreted as a valid tar file
         can be read by ObsPy as is not treated as a tar file.
 
-        See #1435.
+        See #1436.
         """
         st = read("/path/to/tarfile_impostor.mseed")
         self.assertEqual(st[0].id, "10.864.1B.004")
