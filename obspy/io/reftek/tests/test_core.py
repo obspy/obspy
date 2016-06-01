@@ -4,6 +4,13 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
+import inspect
+import os
+import unittest
+
+from obspy import read, Stream
+from obspy.io.reftek.core import _read_reftek
+
 
 class ReftekTestCase(unittest.TestCase):
     """
@@ -13,8 +20,13 @@ class ReftekTestCase(unittest.TestCase):
         self.path = os.path.dirname(os.path.abspath(inspect.getfile(
             inspect.currentframe())))
         self.datapath = os.path.join(self.path, "data")
-        self.filename = "225051000_00008656"
-        self.filepath = os.path.join(self.datapath, self.filename)
+        self.reftek_filename = "225051000_00008656"
+        self.reftek_file = os.path.join(self.datapath, self.reftek_filename)
+        self.mseed_filenames = [
+            "2015282_225051_0ae4c_1_1.msd",
+            "2015282_225051_0ae4c_1_2.msd", "2015282_225051_0ae4c_1_3.msd"]
+        self.mseed_files = [os.path.join(self.datapath, filename)
+                            for filename in self.mseed_filenames]
         # files "2015282_225051_0ae4c_1_[123].msd" contain miniseed data
         # converted with "rt_mseed" tool of Reftek utilities.
 
@@ -53,6 +65,38 @@ class ReftekTestCase(unittest.TestCase):
         #   25 1 673 2015-10-09T22:51:22.025000Z
         #   26 2 759 2015-10-09T22:51:21.595000Z
         #   27 0 067 2015-10-09T22:51:25.055000Z
+
+    def test_read_reftek(self):
+        """
+        Test original reftek data file against miniseed files converted using
+        "rt_mseed" utility from Trimble/Reftek.
+
+        rt_mseed fills in network as "XX", location as "01" and channels as
+        "001", "002", "003".
+        """
+        st_reftek = _read_reftek(
+            self.reftek_file, network="XX", location="01",
+            component_codes=["1", "2", "3"])
+        st_mseed = Stream()
+        for file_ in self.mseed_files:
+            st_mseed += read(file_, "MSEED")
+        # reftek reader correctly fills in band+instrument code but rt_mseed
+        # does not apparently, so set it now for the comparison
+        for tr in st_mseed:
+            tr.stats.channel = "EH" + tr.channel[-1]
+            tr.stats.pop("_format")
+            tr.stats.pop("MSEED")
+        # sort streams
+        st_reftek = st_reftek.sort()
+        st_mseed = st_mseed.sort()
+        # check amount of traces
+        self.assertEqual(len(st_reftek), len(st_mseed))
+        # check equality of headers
+        for tr_got, tr_expected in zip(st_reftek, st_mseed):
+            self.assertEqual(tr_got.stats, tr_expected.stats)
+        # check equality of data
+        for tr_got, tr_expected in zip(st_reftek, st_mseed):
+            np.testing.assert_array_equal(tr_got.data, tr_expected.data)
 
 
 def suite():
