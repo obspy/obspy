@@ -168,20 +168,21 @@ class NLLOCTestCase(unittest.TestCase):
         self.assertAlmostEqual(orig.quality.median_distance,
                                orig_expected.quality.median_distance)
         self.assertAlmostEqual(
-          orig.origin_uncertainty.min_horizontal_uncertainty,
-          orig_expected.origin_uncertainty.min_horizontal_uncertainty)
+            orig.origin_uncertainty.min_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.min_horizontal_uncertainty)
         self.assertAlmostEqual(
-          orig.origin_uncertainty.max_horizontal_uncertainty,
-          orig_expected.origin_uncertainty.max_horizontal_uncertainty)
+            orig.origin_uncertainty.max_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.max_horizontal_uncertainty)
         self.assertAlmostEqual(
-          orig.origin_uncertainty.azimuth_max_horizontal_uncertainty,
-          orig_expected.origin_uncertainty.azimuth_max_horizontal_uncertainty)
+            orig.origin_uncertainty.azimuth_max_horizontal_uncertainty,
+            orig_expected.origin_uncertainty.
+            azimuth_max_horizontal_uncertainty)
         self.assertEqual(
-          orig.origin_uncertainty.preferred_description,
-          orig_expected.origin_uncertainty.preferred_description)
+            orig.origin_uncertainty.preferred_description,
+            orig_expected.origin_uncertainty.preferred_description)
         self.assertAlmostEqual(
-          orig.origin_uncertainty.confidence_level,
-          orig_expected.origin_uncertainty.confidence_level)
+            orig.origin_uncertainty.confidence_level,
+            orig_expected.origin_uncertainty.confidence_level)
         self.assertEqual(orig.creation_info.creation_time,
                          orig_expected.creation_info.creation_time)
         self.assertEqual(orig.comments[0].text, orig_expected.comments[0].text)

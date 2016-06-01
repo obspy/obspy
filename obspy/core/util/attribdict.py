@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 import collections
 import copy
+import warnings
 
 
 class AttribDict(collections.MutableMapping):
@@ -43,6 +44,7 @@ class AttribDict(collections.MutableMapping):
     """
     defaults = {}
     readonly = []
+    warn_on_non_default_key = False
 
     def __init__(self, *args, **kwargs):
         """
@@ -80,6 +82,10 @@ class AttribDict(collections.MutableMapping):
         if key in self.readonly:
             msg = 'Attribute "%s" in %s object is read only!'
             raise AttributeError(msg % (key, self.__class__.__name__))
+        if self.warn_on_non_default_key and key not in self.defaults:
+            msg = ('Setting attribute "{}" which is not a default attribute '
+                   '("{}").').format(key, '", "'.join(self.defaults.keys()))
+            warnings.warn(msg)
 
         if isinstance(value, collections.Mapping) and \
            not isinstance(value, AttribDict):
