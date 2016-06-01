@@ -47,6 +47,29 @@ class PPSDTestCase(unittest.TestCase):
         finally:
             np.seterr(**_t)
 
+    def test_ppsd_plot_frequency(self):
+        """
+        Test plot of ppsd example data, normal (non-cumulative) style.
+        """
+        # Catch underflow warnings due to plotting on log-scale.
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path, 'ppsd_freq.png', reltol=1.5) as ic:
+                self.ppsd.plot(
+                    show=False, show_coverage=False, show_histogram=True,
+                    show_percentiles=True, percentiles=[20, 40],
+                    show_noise_models=True, grid=False, max_percentage=50,
+                    period_lim=(0.2, 50), show_mode=True, show_mean=True,
+                    xaxis_frequency=True)
+                fig = plt.gcf()
+                ax = fig.axes[0]
+                ax.set_ylim(-160, -130)
+                plt.draw()
+                fig.savefig(ic.name, dpi=50)
+        finally:
+            np.seterr(**_t)
+
     def test_ppsd_plot_cumulative(self):
         """
         Test plot of ppsd example data, cumulative style.
