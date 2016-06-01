@@ -8,6 +8,8 @@ import inspect
 import os
 import unittest
 
+import numpy as np
+
 from obspy import read, Stream
 from obspy.io.reftek.core import _read_reftek
 

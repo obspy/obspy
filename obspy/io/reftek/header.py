@@ -1,5 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+REFTEK130 read support, header definitions.
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 from .util import (
-    _bcd_int, _bcd_str, _bcd_hexstr, _parse_long_time, _parse_data,
+    _bcd_int, _bcd_str, _bcd_hexstr, _parse_long_time,
     _flags, _channel_codes)
 
 

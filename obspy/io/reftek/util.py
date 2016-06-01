@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+REFTEK130 read support, utility functions.
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import numpy as np
 from obspy import UTCDateTime
 from obspy.io.mseed.util import _unpack_steim_1
@@ -89,3 +97,8 @@ def _channel_codes(chars):
         return None
     codes = np.fromstring(chars, dtype="S4").tolist()
     return [c.strip() for c in codes]
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

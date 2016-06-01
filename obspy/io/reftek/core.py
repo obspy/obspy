@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+REFTEK130 read support.
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import traceback
 import warnings
 import numpy as np
@@ -12,38 +20,60 @@ def _read_reftek(filename, network="", component_codes=None, location=""):
     """
     from obspy.io.mseed.util import _unpack_steim_1
 
+    # read all packets from file, sort by packet sequence number
     packets = _read_into_packetlist(filename)
     packets = sorted(packets, key=lambda x: x.packet_sequence)
-    # for now only support uninterrupted packet sequences
-    np.testing.assert_array_equal(
-        np.bincount(np.diff([p.packet_sequence for p in packets])),
-        [0, len(packets) - 1])
+    try:
+        # check if packet sequence is uninterrupted
+        np.testing.assert_array_equal(
+            np.bincount(np.diff([p.packet_sequence for p in packets])),
+            [0, len(packets) - 1])
+    except AssertionError:
+        # for now only support uninterrupted packet sequences
+        msg = ("Reftek files with non-contiguous packet sequences are not "
+               "yet implemented. Please open an issue on GitHub and provide "
+               "a small (< 50kb) test file.")
+        raise NotImplementedError(msg)
     # drop everything up to first EH packet
     p = packets.pop(0)
     while p.type != "EH":
+        # warn if packet sequence does not start with EH packet
+        msg = ("Reftek file not starting with EH (event header) packet. "
+               "Dropping all packets up to the first EH packet")
+        warnings.warn(msg)
         p = packets.pop(0)
     eh = p
+    # set common header fields from EH packet
     header = {
         "network": network,
         "station": (p.station_name + p.station_name_extension).strip(),
         "location": location, "sampling_rate": p.sampling_rate}
+    # set up a list of data (DT) packets per channel number
     data = {}
     p = packets.pop(0)
     while p.type == "DT":
+        # only "C0" encoding supported right now
         if p.data_format != "C0":
-            raise NotImplementedError()
+            msg = ("Reftek data encoding '{}' not implemented yet. Please "
+                   "open an issue on GitHub and provide a small (< 50kb) "
+                   "test file.").format(p.type)
+            raise NotImplementedError(msg)
         data.setdefault(p.channel_number, []).append(
             (p.time, p.packet_sequence, p.number_of_samples, p.sample_data))
         p = packets.pop(0)
     # expecting an ET packet at the end
     if p.type != "ET":
-        raise NotImplementedError()
+        msg = ("Data not ending with an ET (event trailer) package. Please "
+               "open an issue on GitHub and provide your file for testing.")
+        raise NotImplementedError(msg)
+
     st = Stream()
+    delta = 1.0 / eh.sampling_rate
     for channel_number, data_ in data.items():
-        # sort by start time of packet
+        # sort by start time of packet (should not be necessary, in principle,
+        # as we sorted by packet sequence number already.. but safety first)
         data_ = sorted(data_)
-        # split data into contiguous blocks
-        delta = 1.0 / eh.sampling_rate
+        # split data into a list of contiguous blocks
         data_contiguous = []
         chunk = data_.pop(0)
         chunk_list = [chunk]
@@ -54,14 +84,14 @@ def _read_reftek(filename, network="", component_codes=None, location=""):
                 t_last, _, npts_last, _ = chunk_list[-1]
                 # check if next starttime matches seamless to last chunk
                 if t != t_last + npts_last * delta:
-                    # gap/overlap, start new contiguous list
+                    # gap/overlap, so start new contiguous list
                     data_contiguous.append(chunk_list)
                     chunk_list = [chunk]
                     continue
             # otherwise add to current chunk list
             chunk_list.append(chunk)
         data_contiguous.append(chunk_list)
-        # read each block into one trace
+        # read each contiguous block into one trace
         for data_ in data_contiguous:
             npts = sum(npts_ for _, _, npts_, _ in data_)
             starttime = data_[0][0]
@@ -82,7 +112,15 @@ def _read_reftek(filename, network="", component_codes=None, location=""):
                 tr.stats.channel = str(channel_number)
             # check if endtime of trace is consistent
             t_last, _, npts_last, _ = data_[-1]
-            assert tr.stats.endtime == t_last + (npts_last - 1) * delta
+            try:
+                assert tr.stats.endtime == t_last + (npts_last - 1) * delta
+                assert tr.stats.endtime == (
+                    tr.stats.starttime + (npts - 1) * delta)
+            except AssertionError:
+                msg = ("Reftek file has a trace with an inconsistent endtime. "
+                       "Please open an issue on GitHub and provide your file "
+                       "for testing.")
+                raise Exception(msg)
             st += tr
 
     return st
@@ -187,3 +225,8 @@ def _read_into_packetlist(filename):
             packets.append(packet)
             packet = _parse_next_packet(fh)
     return packets
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
