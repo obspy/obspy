@@ -45,13 +45,15 @@
         </Point>
         <description>Event:	2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
 
-	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000041")
-	         event_type: 'not reported'
-	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
-	---------
-	 event_descriptions: 1 Elements
-	            origins: 1 Elements
-	         magnitudes: 1 Elements</description>
+	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000041")
+	             event_type: 'not reported'
+	          creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	    preferred_origin_id: 'quakeml:eu.emsc/origin/rts/261020/782484'
+	 preferred_magnitude_id: 'quakeml:eu.emsc/NetworkMagnitude/rts/261020/782484/796646'
+	                  ---------
+	     event_descriptions: 1 Elements
+	                origins: 1 Elements
+	             magnitudes: 1 Elements</description>
         <TimeStamp>2012-04-04T14:21:42.300000Z</TimeStamp>
       </Placemark>
       <Placemark>
@@ -70,13 +72,15 @@
         </Point>
         <description>Event:	2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
 
-	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000038")
-	         event_type: 'not reported'
-	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
-	---------
-	 event_descriptions: 1 Elements
-	            origins: 1 Elements
-	         magnitudes: 1 Elements</description>
+	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000038")
+	             event_type: 'not reported'
+	          creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	    preferred_origin_id: 'quakeml:eu.emsc/origin/rts/261017/782476'
+	 preferred_magnitude_id: 'quakeml:eu.emsc/NetworkMagnitude/rts/261017/782476/796628'
+	                  ---------
+	     event_descriptions: 1 Elements
+	                origins: 1 Elements
+	             magnitudes: 1 Elements</description>
         <TimeStamp>2012-04-04T14:18:37.000000Z</TimeStamp>
       </Placemark>
       <Placemark>
@@ -95,13 +99,15 @@
         </Point>
         <description>Event:	2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
 
-	        resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000039")
-	         event_type: 'not reported'
-	      creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
-	---------
-	 event_descriptions: 1 Elements
-	            origins: 1 Elements
-	         magnitudes: 1 Elements</description>
+	            resource_id: ResourceIdentifier(id="quakeml:eu.emsc/event/20120404_0000039")
+	             event_type: 'not reported'
+	          creation_info: CreationInfo(agency_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), author_uri=ResourceIdentifier(id="smi:smi-registry/organization/EMSC"), creation_time=UTCDateTime(2012, 4, 4, 16, 40, 50), version='1.0.1')
+	    preferred_origin_id: 'quakeml:eu.emsc/origin/rts/261018/782478'
+	 preferred_magnitude_id: 'quakeml:eu.emsc/NetworkMagnitude/rts/261018/782478/796631'
+	                  ---------
+	     event_descriptions: 1 Elements
+	                origins: 1 Elements
+	             magnitudes: 1 Elements</description>
         <TimeStamp>2012-04-04T14:08:46.000000Z</TimeStamp>
       </Placemark>
     </Folder>
