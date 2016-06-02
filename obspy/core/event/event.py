@@ -35,9 +35,9 @@ __Event = _event_type_class_factory(
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
                       ("creation_info", CreationInfo),
-                      ("preferred_origin_id", str),
-                      ("preferred_magnitude_id", str),
-                      ("preferred_focal_mechanism_id", str)],
+                      ("preferred_origin_id", ResourceIdentifier),
+                      ("preferred_magnitude_id", ResourceIdentifier),
+                      ("preferred_focal_mechanism_id", ResourceIdentifier)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'focal_mechanisms', 'origins', 'magnitudes',
                     'station_magnitudes'])
@@ -189,8 +189,7 @@ class Event(__Event):
         """
         if self.preferred_origin_id is None:
             return None
-        return ResourceIdentifier(self.preferred_origin_id).\
-            get_referred_object()
+        return self.preferred_origin_id.get_referred_object()
 
     def preferred_magnitude(self):
         """
@@ -198,8 +197,7 @@ class Event(__Event):
         """
         if self.preferred_magnitude_id is None:
             return None
-        return ResourceIdentifier(self.preferred_magnitude_id).\
-            get_referred_object()
+        return self.preferred_magnitude_id.get_referred_object()
 
     def preferred_focal_mechanism(self):
         """
@@ -207,8 +205,7 @@ class Event(__Event):
         """
         if self.preferred_focal_mechanism_id is None:
             return None
-        return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-            get_referred_object()
+        return self.preferred_focal_mechanism_id.get_referred_object()
 
     def plot(self, kind=[['ortho', 'beachball'], ['p_sphere', 's_sphere']],
              subplot_size=4.0, show=True, outfile=None, **kwargs):

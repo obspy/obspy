@@ -31,9 +31,9 @@ Event:  2011-03-11T05:46:18.120000Z | +38.103, +142.861 | 8.7 Mw
 <BLANKLINE>
                    resource_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/event")
                     event_type: 'earthquake'
-           preferred_origin_id: 'smi:local/fnetmt/2011excpds/origin#MT'
-        preferred_magnitude_id: 'smi:local/fnetmt/2011excpds/magnitude#MT'
-  preferred_focal_mechanism_id: 'smi:local/fnetmt/2011excpds/focal_mechanism'
+           preferred_origin_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/origin#MT")
+        preferred_magnitude_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/magnitude#MT")
+  preferred_focal_mechanism_id: ResourceIdentifier(id="smi:local/fnetmt/2011excpds/focal_mechanism")
                           ---------
               focal_mechanisms: 1 Elements
                        origins: 2 Elements
