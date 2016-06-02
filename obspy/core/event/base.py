@@ -203,6 +203,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
         warn_on_non_default_key = True
         defaults = dict.fromkeys(class_contains, [])
         defaults.update(dict.fromkeys(_property_keys, None))
+        do_not_warn_on = ["extra"]
 
         def __init__(self, *args, **kwargs):
             # Make sure the args work as expected. Therefore any specified

@@ -144,6 +144,8 @@ class Event(__Event):
         standard and how to output it to QuakeML see the
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
+    do_not_warn_on = ["_format", "extra"]
+
     def short_str(self):
         """
         Returns a short string representation of the current Event.
