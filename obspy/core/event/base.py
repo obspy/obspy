@@ -298,7 +298,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             if containers:
                 # Print delimiter only if there are attributes.
                 if attributes:
-                    ret_str += '\n\t---------'
+                    ret_str += '\n\t' + '---------'.rjust(max_length + 5)
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
                     "\n\t".join(
