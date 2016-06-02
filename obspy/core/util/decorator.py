@@ -156,6 +156,11 @@ def uncompress_file(func, filename, *args, **kwargs):
                     if not tarinfo.isfile():
                         continue
                     data = tar.extractfile(tarinfo).read()
+                    # Skip empty files - we don't need them no matter what
+                    # and it guards against rare cases where waveforms files
+                    # are also slightly valid tar-files.
+                    if not data:
+                        continue
                     obj_list.append(data)
         except:
             pass
