@@ -433,7 +433,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     def test_reading_tarfile_impostor(self):
         """
         Tests that a file, that by chance is interpreted as a valid tar file
-        can be read by ObsPy as is not treated as a tar file.
+        can be read by ObsPy and is not treated as a tar file.
 
         See #1436.
         """
