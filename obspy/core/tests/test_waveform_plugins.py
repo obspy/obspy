@@ -165,6 +165,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
                          '2011-09-06-1311-36S.A1032_001BH_Z_MSEED'),
             os.path.join('core', 'tests', 'data',
                          'IU_ULN_00_LH1_2015-07-18T02.mseed'),
+            # That file is not in obspy.io.mseed as it is used to test an
+            # issue with the uncompress_data() decorator.
+            os.path.join('core', 'tests', 'data',
+                         'tarfile_impostor.mseed')
         ]
         formats_ep = _get_default_eps('obspy.plugin.waveform', 'isFormat')
         formats = list(formats_ep.values())
@@ -178,6 +182,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             all_paths.append(path)
             if os.path.exists(path):
                 paths[f.name] = path
+
         msg = 'Test data directories do not exist:\n    '
         self.assertTrue(len(paths) > 0, msg + '\n    '.join(all_paths))
         # Collect all false positives.
@@ -434,6 +439,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         st = read("/path/to/tarfile_impostor.mseed")
         self.assertEqual(st[0].id, "10.864.1B.004")
+
 
 def suite():
     return unittest.makeSuite(WaveformPluginsTestCase, 'test')
