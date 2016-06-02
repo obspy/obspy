@@ -846,6 +846,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                 ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
             {})
 
+    def test_initialize_with_resource_identifier(self):
+        """
+        Test initializing an ResourceIdentifier with an ResourceIdentifier.
+        """
+        rid = ResourceIdentifier()
+        rid2 = ResourceIdentifier(str(rid))
+        rid3 = ResourceIdentifier(rid)
+        self.assertEqual(rid, rid2)
+        self.assertEqual(rid, rid3)
+
 
 class BaseTestCase(unittest.TestCase):
     """
