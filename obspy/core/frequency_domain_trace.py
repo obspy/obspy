@@ -9,28 +9,26 @@ from obspy.core.trace import Trace
 class TimeSeriesFrequencyDomainTrace(BaseTrace):
 
     def ifft(self):
-        from obspy.core.trace import (Trace, TimeSeriesTrace)
-        
-        if isinstance(self, FrequencyDomainTrace):
-            tr = Trace()
-            tr.stats = Stats()
-            tr.stats.starttime = self.stats.starttime
-            tr.data = fft.irfft(self.data)
-            return tr    
+        from obspy.core.trace import TimeSeriesTrace
+        t_tr = TimeSeriesTrace()
+        t_tr.data = fft.irfft(self.data)
+        t_tr.stats = Stats()
+        #remaining stats information
+        t_tr.stats.network = self.stats.network
+        t_tr.stats.station = self.stats.station
+        t_tr.stats.location = self.stats.location
+        t_tr.stats.starttime = self.stats.starttime
 
-        elif isinstance(self, TimeSeriesFrequencyDomainTrace):
-            t_tr = TimeSeriesTrace()
-            t_tr.stats = Stats()
-            t_tr.stats.starttime = self.stats.starttime
-            t_tr.data = fft.irfft(self.data)
-            return t_tr  
-  
-        else:
-            msg = "not an FrequencyDomainTrace or TimeSeriesFrequencyDomainTrace"
-            raise Exception(msg)        
+        t_tr.stats.calib = self.stats.calib
+        t_tr.stats.back_azimuth = self.stats.back_azimuth
+        t_tr.stats.inclination = self.stats.inclination
 
+        #modifiable stats information
+        #t_tr.stats.endtime = self.stats.endtime
+        t_tr.stats.sampling_rate = self.stats.sampling_rate
+        t_tr.stats.npts = self.stats.npts
 
-class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
+        return t_tr
 
     def plot(self):
         N = self.stats.npts
@@ -88,8 +86,49 @@ class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
     def frequencies(self):
         n = self.data.size
         timestep = self.stats.delta
-        freq = fft.fftfreq(n, d=timestep)       
+        freq = fft.rfftfreq(n, d=timestep)       
         return freq
+
+    def cross_spectrum(self, tr2):
+        data1 = self.data
+        data2 = tr2.data
+        data2_conj = np.conj(data2)
+        cross_spectrum = data2_conj*data1
+        return (cross_spectrum)
+
+    def coherence(self, tr2):
+        data1 = self.data
+        data2 = tr2.data
+        data2_conj = np.conj(data2)
+        cross_spectrum = data2_conj*data1
+        coherence = (cross_spectrum)**2/(np.abs(data1)*np.abs(data2))
+        return (coherence)
+
+class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
+
+    def ifft(self):
+        from obspy.core.trace import Trace    
+        tr = Trace()
+        tr.data = fft.irfft(self.data)
+
+        tr.stats = Stats()
+        #remaining stats information
+        tr.stats.network = self.stats.network
+        tr.stats.station = self.stats.station
+        tr.stats.location = self.stats.location
+        tr.stats.starttime = self.stats.starttime
+
+        tr.stats.calib = self.stats.calib
+        tr.stats.back_azimuth = self.stats.back_azimuth
+        tr.stats.inclination = self.stats.inclination
+
+        #modifiable stats information
+        #tr.stats.endtime = self.stats.endtime
+        tr.stats.sampling_rate = self.stats.sampling_rate
+        tr.stats.npts = self.stats.npts
+
+        return tr
+
 
     def plot_psd_trace(self, plot_type='default', nperseg=4096, noverlap=None,
                        detrend=mlab.detrend_linear, window=mlab.window_hanning,
@@ -123,7 +162,7 @@ class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
         if plot_type == 'ppsd':
     
             # This is the same as in obspy.signal.spectral_estimation.PPSD.
-            # Initially split the trace into 13 segments, overlapping by 75%
+            # Initiially split the trace into 13 segments, overlapping by 75%
             segment_length = self.stats.npts / 4.0
         
         

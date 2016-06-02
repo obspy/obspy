@@ -1441,130 +1441,7 @@ class TimeSeriesTrace(BaseTrace):
             Tutorial <https://docs.obspy.org/master/tutorial/code_snippets/\
 seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
-
-    def filter(self, type, **options):
-        """
-        Filter the data of the current trace
-
-        :type type: str
-        :param type: String that specifies which filter is applied (e.g.
-            ``"bandpass"``). See the `Supported Filter`_ section below for
-            further details.
-        :param options: Necessary keyword arguments for the respective filter
-            that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
-            ``"bandpass"``)
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
-            a copy of your trace object.
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of this trace.
-
-
-        .. rubric:: _`Supported Filter`
-
-        ``'bandpass'``
-            Butterworth-Bandpass (uses :func:`obspy.signal.filter.bandpass`).
-
-        ``'bandstop'``
-            Butterworth-Bandstop (uses :func:`obspy.signal.filter.bandstop`).
-
-        ``'lowpass'``
-            Butterworth-Lowpass (uses :func:`obspy.signal.filter.lowpass`).
-
-        ``'highpass'``
-            Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
-
-        ``'lowpass_cheby_2'``
-            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpass_cheby_2`).
-
-        ``'lowpassFIR'`` (experimental)
-            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
-
-        ``'remezFIR'`` (experimental)
-            Minimax optimal bandpass using Remez algorithm (uses
-            :func:`obspy.signal.filter.remezFIR`).
-
-
-        .. rubric:: Example
-
-        >>> from obspy import read
-        >>> from obspy.signal.invsim import corn_freq_2_paz
-        >>> st = read()
-        >>> tr = st[0]
-        >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-        ...                       -251.33+0j,
-        ...                       -131.04-467.29j, -131.04+467.29j],
-        ...             'zeros': [0j, 0j],
-        ...             'gain': 60077000.0,
-        ...             'sensitivity': 2516778400.0}
-        >>> paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
-        >>> paz_1hz['sensitivity'] = 1.0
-        >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-        ... # doctest: +ELLIPSIS
-        <...Trace object at 0x...>
-        >>> tr.plot()  # doctest: +SKIP
-
-        .. plot::
-
-            from obspy import read
-            from obspy.signal.invsim import corn_freq_2_paz
-            st = read()
-            tr = st[0]
-
-
-            paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
-                                  -251.33+0j,
-                                  -131.04-467.29j, -131.04+467.29j],
-                        'zeros': [0j, 0j],
-                        'gain': 60077000.0,
-                        'sensitivity': 2516778400.0}
-            paz_1hz = corn_freq_2_paz(1.0, damp=0.707)
-            paz_1hz['sensitivity'] = 1.0
-            tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-            tr.plot()
-        """
-        # XXX accepting string "self" and using attached PAZ then
-        if paz_remove == 'self':
-            paz_remove = self.stats.paz
-
-        # some convenience handling for evalresp type instrument correction
-        if "seedresp" in kwargs:
-            seedresp = kwargs["seedresp"]
-            # if date is missing use trace's starttime
-            seedresp.setdefault("date", self.stats.starttime)
-            # if a Parser object is provided, get corresponding RESP
-            # information
-            from obspy.io.xseed import Parser
-            if isinstance(seedresp['filename'], Parser):
-                seedresp = deepcopy(seedresp)
-                kwargs['seedresp'] = seedresp
-                resp_key = ".".join(("RESP", self.stats.network,
-                                     self.stats.station, self.stats.location,
-                                     self.stats.channel))
-                for key, stringio in seedresp['filename'].get_resp():
-                    if key == resp_key:
-                        stringio.seek(0, 0)
-                        seedresp['filename'] = stringio
-                        break
-                else:
-                    msg = "Response for %s not found in Parser" % self.id
-                    raise ValueError(msg)
-            # Set the SEED identifiers!
-            for item in ["network", "station", "location", "channel"]:
-                seedresp[item] = self.stats[item]
-
-        from obspy.signal.invsim import simulate_seismometer
-        self.data = simulate_seismometer(
-            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
-            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
-            simulate_sensitivity=simulate_sensitivity, **kwargs)
-
-        return self
-
+  
     @_add_processing_info
     def filter(self, type, **options):
         """
@@ -2565,34 +2442,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             time_array = np.ma.array(time_array, mask=self.data.mask)
         return time_array
 
-
     def fft(self, window_function='cosine', percentage=0.1):
-        from obspy.core.frequency_domain_trace import (TimeSeriesFrequencyDomainTrace, 
-        FrequencyDomainTrace)
-        
-        if isinstance(self, Trace):                    
-            f_tr = FrequencyDomainTrace()
-            f_tr.stats = self.stats
-            f_tr.id = self.id
-            tr2 = self.copy()
-            after_taper = self.taper(max_percentage=percentage,
-            type=window_function)
-            f_tr.data = fft.rfft(after_taper)
-            return f_tr
-        
-        elif isinstance(self, TimeSeriesTrace):
-            tsf_tr = TimeSeriesFrequencyDomainTrace()
-            tsf_tr.stats = self.stats
-            tsf_tr.id = self.id
-            tr2 = self.copy()
-            after_taper = self.taper(max_percentage=percentage, 
-            type=window_function)
-            tsf_tr.data = fft.rfft(after_taper)
-            return tsf_tr
+        from obspy.core.frequency_domain_trace import TimeSeriesFrequencyDomainTrace      
 
-        else:
-            msg = "not an Trace or TimeSeriesFrequencyDomainTrace object"
-            raise Exception(msg)
+        tsf_tr = TimeSeriesFrequencyDomainTrace()
+        
+        tsf_tr.stats = self.stats.copy()
+        tsf_tr.data = fft.rfft(self.data)
+        return tsf_tr
 
 class Trace(TimeSeriesTrace):
     """
@@ -2761,6 +2618,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             simulate_sensitivity=simulate_sensitivity, **kwargs)
 
         return self
+
+    def fft(self, window_function='cosine', percentage=0.1):
+        from obspy.core.frequency_domain_trace import FrequencyDomainTrace                
+        f_tr = FrequencyDomainTrace()
+        f_tr.stats = self.stats
+        f_tr.id = self.id
+        tr2 = self.copy()
+        after_taper = self.taper(max_percentage=percentage,
+        type=window_function)
+        f_tr.data = fft.rfft(after_taper)
+        return f_tr
 
     @_add_processing_info
     def trigger(self, type, **options):
