@@ -161,7 +161,7 @@ if [ "$SUCCESS" = true ] ; then
             cat $GITDIR/misc/docs/docset_css_fixes.css >> "$DOCSETNAME/Contents/Resources/Documents/_static/css/custom.css"
             rm -f obspy-master.tgz
             tar --exclude='.DS_Store' -cvzf obspy-master.tgz "$DOCSETNAME"
-            OBSPY_VERSION=`python -c 'import obspy; print obspy.__version__'`
+            OBSPY_VERSION=`python -c 'import obspy; print(obspy.__version__)'`
             sed "s#<version>.*</version>#<version>${OBSPY_VERSION}</version>#" --in-place obspy-master.xml
         fi
     fi
