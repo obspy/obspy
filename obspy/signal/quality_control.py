@@ -458,29 +458,73 @@ class MSEEDMetadata(object):
         if not self.data:
             return
 
-        c_segments = []
+        # Collect data in arrays of continuous segments
+        # Manually set the first segment
+        c_seg = {
+            'start': self.data[0].stats.starttime,
+            'data': self.data[0].data,
+        }
 
-        # Add metrics for all continuous segments from the start of the trace
-        # until the end of the trace + delta
-        for tr in self.data:
-            seg = {}
-            seg['start_time'] = tr.stats.starttime
-            seg['end_time'] = tr.stats.endtime + tr.stats.delta
-            seg['sample_rate'] = tr.stats.sampling_rate
-            seg['sample_min'] = tr.data.min()
-            seg['sample_max'] = tr.data.max()
-            seg['sample_mean'] = tr.data.mean()
-            seg['sample_median'] = np.median(tr.data)
-            seg['sample_rms'] = np.sqrt((tr.data.astype(object) ** 2).sum() /
-                                        tr.stats.npts)
-            seg['sample_lower_quartile'] = np.percentile(tr.data, 25)
-            seg['sample_upper_quartile'] = np.percentile(tr.data, 75)
-            seg['sample_stdev'] = tr.data.std()
-            seg['num_samples'] = tr.stats.npts
-            seg['seg_len'] = tr.stats.endtime - tr.stats.starttime
-            c_segments.append(seg)
+        c_segs = []
+        for i in range(len(self.data)):
 
-        self.meta['c_segments'] = c_segments
+            trace_end = self.data[i].stats.endtime + self.data[i].stats.delta
+            time_tolerance = 0.5 * self.data[i].stats.delta
+
+            c_seg['s_rate'] = self.data[i].stats.sampling_rate
+            c_seg['end'] = trace_end
+
+            # Final trace, make sure to append
+            if i == len(self.data) - 1:
+                c_segs.append(c_seg)
+                break
+
+            trace_offset = abs(self.data[i + 1].stats.starttime - trace_end)
+
+            # Check if trace endtime is equal to (trace + 1) starttime
+            # and if the sampling_rates match, if so, extend the data with
+            # data from trace + 1 and extend the endtime
+            # Otherwise the segment stops being continuous and we append it
+            # and we create a new data segment
+            if (trace_offset < time_tolerance and
+                    self.data[i + 1].stats.sampling_rate == c_seg['s_rate']):
+                c_seg['data'] = np.concatenate((c_seg['data'],
+                                                self.data[i + 1].data))
+                c_seg['end'] = self.data[i + 1].stats.endtime + \
+                    self.data[i + 1].stats.delta
+            else:
+                c_segs.append(c_seg)
+                c_seg = {
+                  'data': self.data[i + 1].data,
+                  'start': self.data[i + 1].stats.starttime,
+                }
+
+        # Set array of continuous segments from this data
+        self.meta['c_segments'] = [self._parse_c_stats(seg) for seg in c_segs]
+
+    def _parse_c_stats(self, tr):
+        """
+        :param tr: custom dictionary with start, end, data, and sampling_rate
+            of a continuous trace
+        """
+
+        seg = {}
+        seg['start_time'] = tr['start']
+        seg['end_time'] = tr['end']
+        seg['sample_rate'] = tr['s_rate']
+        seg['sample_min'] = tr['data'].min()
+        seg['sample_max'] = tr['data'].max()
+        seg['sample_mean'] = tr['data'].mean()
+        seg['sample_median'] = np.median(tr['data'])
+        seg['sample_rms'] = np.sqrt((tr['data'].astype(object) ** 2).sum() /
+                                    len(tr['data']))
+        seg['sample_lower_quartile'] = np.percentile(tr['data'], 25)
+        seg['sample_upper_quartile'] = np.percentile(tr['data'], 75)
+        seg['sample_stdev'] = tr['data'].std()
+        seg['num_samples'] = len(tr['data'])
+        seg['seg_len'] = tr['end'] - tr['start']
+
+        return seg
 
     def get_json_meta(self):
         """
