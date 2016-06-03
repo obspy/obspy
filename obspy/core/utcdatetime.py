@@ -8,14 +8,13 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import datetime
 import math
 import time
+
+from .compatibility import string_types, unicode_type
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
@@ -265,8 +264,8 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._from_datetime(dt)
                 return
-            elif isinstance(value, (bytes, str)):
-                if not isinstance(value, (str, native_str)):
+            elif isinstance(value, string_types):
+                if not isinstance(value, unicode_type):
                     value = value.decode()
                 # got a string instance
                 value = value.strip()
@@ -1333,7 +1332,7 @@ class UTCDateTime(object):
         >>> dt.isoformat()
         '2008-10-01T00:00:00'
         """
-        return self.datetime.isoformat(sep=native_str(sep))
+        return self.datetime.isoformat(sep=sep)
 
     def format_fissures(self):
         """
