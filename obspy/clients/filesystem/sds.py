@@ -42,6 +42,9 @@ from future.builtins import *  # NOQA
 import glob
 import os
 import re
+import shutil
+import tempfile
+import traceback
 import warnings
 from datetime import timedelta
 
@@ -718,7 +721,8 @@ class Client(object):
 
         return data, gaps
 
-    def add_data_to_archive(self, filenames, only_missing=True):
+    def add_data_to_archive(self, filenames, only_missing=True, backup=True,
+                            verbose=True):
         """
         Adds data from given files to SDS Archive.
 
@@ -739,7 +743,10 @@ class Client(object):
                    "'MSEED'.")
             raise NotImplementedError(msg)
 
-        print(filenames)
+        backupdir = None
+        backed_up = set()
+        appended_files = set()
+
         if only_missing:
             data, gaps = self._extract_missing_data(filenames)
             for id, start, end in gaps:
@@ -756,12 +763,52 @@ class Client(object):
                     st = st.select(id=id).trim(start, end,
                                                nearest_sample=False)
                     st_dict = self._split_stream_by_filenames(st)
+                    if not st_dict:
+                        continue
                     for filename_, st_ in st_dict.items():
+                        # backup original file
+                        if backup and filename_ not in backed_up:
+                            if backupdir is None:
+                                prefix = "obspy-sds-backup-{}-".format(
+                                    UTCDateTime().strftime("%Y%m%d%H%M%S"))
+                                backupdir = tempfile.mkdtemp(prefix=prefix)
+                            backupfile = os.path.join(
+                                backupdir,
+                                self._filename_strip_sds_root(filename_))
+                            target_dir = os.path.dirname(backupfile)
+                            try:
+                                if not os.path.isdir(target_dir):
+                                    os.makedirs(target_dir)
+                                shutil.copy2(filename_, backupfile)
+                            except Exception:
+                                err_msg = \
+                                    traceback.format_exc(0).splitlines()[-1]
+                                info = ""
+                                if appended_files:
+                                    info = (" The following files have so far "
+                                            "been modified: {}")
+                                    info = info.format(appended_files)
+                                msg = ("Backup option chosen and backup of "
+                                       "file '{}' to '{}' failed ({}). "
+                                       "Aborting appending to SDS archive.{}")
+                                msg = msg.format(filename_, backupfile,
+                                                 err_msg, info)
+                                raise Exception(msg)
+                        # now append the missing segment to the file
                         with open(filename_, "ab") as fh:
                             st_.write(fh, format=format)
+                        appended_files.add(filename_)
         else:
             # XXX TODO
             raise NotImplementedError()
+
+        if verbose and appended_files:
+            print("The following files have been appended to:")
+            print("\n".join("\t" + filename
+                            for filename in sorted(appended_files)))
+            if backup:
+                print("Backups of original files have been stored "
+                      "in '{}'.".format(backupdir))
 
     def _filename_strip_sds_root(self, filename):
         """
