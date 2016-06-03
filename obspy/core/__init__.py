@@ -109,9 +109,7 @@ See :mod:`obspy.core.inventory` for more details.
 
 .. _NumPy: http://www.numpy.org
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
