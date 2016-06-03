@@ -52,9 +52,7 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 >>> print(st[0].data)
 [  464   492   519 ..., -7042 -6960 -6858]
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 
 if __name__ == '__main__':

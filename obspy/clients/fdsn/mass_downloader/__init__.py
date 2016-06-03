@@ -510,10 +510,7 @@ Further functionality of this module is documented at a couple of other places:
 * :class:`~.restrictions.Restrictions` class
 * :class:`~.mass_downloader.MassDownloader` class
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import warnings
 
@@ -525,9 +522,8 @@ from .domain import (Domain, RectangularDomain,  # NOQA
                      CircularDomain, GlobalDomain)  # NOQA
 
 
-__all__ = [native_str(i) for i in (
-    'MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
-    'CircularDomain', 'GlobalDomain')]
+__all__ = ['MassDownloader', 'Restrictions', 'Domain', 'RectangularDomain',
+           'CircularDomain', 'GlobalDomain']
 
 if SCIPY_VERSION < [0, 12]:
     msg = ('At least some parts of FDSN Mass downloader might not '

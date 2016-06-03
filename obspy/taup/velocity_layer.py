@@ -3,10 +3,7 @@
 """
 Functionality for dealing with a single velocity layer.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 

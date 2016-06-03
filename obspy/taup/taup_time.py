@@ -3,9 +3,7 @@
 """
 Travel time calculations.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 from .helper_classes import TauModelError
 from .seismic_phase import SeismicPhase

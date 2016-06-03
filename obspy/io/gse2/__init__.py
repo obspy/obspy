@@ -151,9 +151,7 @@ Data example::
 
     STOP
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 
 if __name__ == '__main__':

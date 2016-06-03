@@ -8,10 +8,7 @@ SeisHub database client for ObsPy.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import PY2, native_str
+from __future__ import absolute_import, division, print_function
 
 import os
 import pickle
@@ -31,7 +28,7 @@ else:
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 
-from obspy import Catalog, UTCDateTime, read_events
+from obspy import Catalog, UTCDateTime, read_events, compatibility
 from obspy.core.util import guess_delta
 from obspy.core.util.decorator import deprecated_keywords
 from obspy.io.xseed import Parser
@@ -49,7 +46,7 @@ KEYWORDS = {'network': 'network_id', 'station': 'station_id',
 
 
 def _unpickle(data):
-    if PY2:
+    if compatibility.PY2:
         obj = pickle.loads(data)
     else:
         # https://api.mongodb.org/python/current/\
@@ -487,7 +484,7 @@ master/seishub/plugins/seismology/waveform.py
 
         # allow time strings in arguments
         for time_ in ["starttime", "endtime"]:
-            if isinstance(kwargs[time_], (str, native_str)):
+            if isinstance(kwargs[time_], native_str):
                 kwargs[time_] = UTCDateTime(kwargs[time_])
 
         trim_start = kwargs['starttime']

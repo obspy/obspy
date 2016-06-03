@@ -17,9 +17,7 @@ data format of the WIN system developed by Earthquake Research Institute
     (https://www.gnu.org/copyleft/lesser.html)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 
 if __name__ == '__main__':

@@ -47,10 +47,7 @@ class MyNewClient(WaveformClient, StationClient):
                                          starttime, endtime)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import PY2, with_metaclass
+from __future__ import absolute_import, division, print_function
 
 from abc import ABCMeta, abstractmethod
 import io

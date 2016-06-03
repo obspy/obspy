@@ -3,9 +3,7 @@
 """
 Slowness model class.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 from copy import deepcopy
 import math

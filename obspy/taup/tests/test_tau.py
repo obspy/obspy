@@ -3,10 +3,7 @@
 """
 Tests the high level obspy.taup.tau interface.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import collections
 import inspect

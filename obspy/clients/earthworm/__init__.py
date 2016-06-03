@@ -40,9 +40,7 @@ Basic Usage
         st = client.get_waveforms('AV', 'ACH', '', 'EH*', t + 100, t + 130)
         st.plot()
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 from .client import Client  # NOQA
 

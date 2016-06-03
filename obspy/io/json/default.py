@@ -18,9 +18,7 @@ Example
 >>> s = json.dumps(c, default=d)
 
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 from obspy import UTCDateTime
 from obspy.core.event import Catalog, ResourceIdentifier

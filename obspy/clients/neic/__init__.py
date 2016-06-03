@@ -11,9 +11,7 @@ A public server is at 137.227.224.97 (cwbpub.cr.usgs.gov) on port 2061.
     GNU Lesser General Public License, Version 3
     (https://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 from .client import Client  # NOQA
 

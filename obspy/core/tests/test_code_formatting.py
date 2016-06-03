@@ -131,12 +131,9 @@ class FutureUsageTestCase(unittest.TestCase):
 
         future_import_line = (
             "from __future__ import (absolute_import, division, "
-            "print_function, unicode_literals)")
-        builtins_line = "from future.builtins import *  # NOQA"
 
         future_imports_pattern = re.compile(
             r"^from __future__ import \(absolute_import,\s*"
-            r"division,\s*print_function,\s*unicode_literals\)$",
             flags=re.MULTILINE)
 
         builtin_pattern = re.compile(

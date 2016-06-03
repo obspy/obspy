@@ -2,10 +2,7 @@
 """
 The obspy.clients.syngine test suite.
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA @UnusedWildImport
-from future.utils import native_str
+from __future__ import absolute_import, division, print_function
 
 import io
 import unittest

@@ -191,9 +191,7 @@ and the same page in the `Tutorial`_. For automated use see the following
 .. _`Tutorial`: https://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-from future.builtins import *  # NOQA
+from __future__ import absolute_import, division, print_function
 
 if "filter" in locals():
     del filter
