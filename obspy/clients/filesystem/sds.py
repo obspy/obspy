@@ -108,6 +108,7 @@ class Client(object):
             both ``fileborder_seconds`` and ``fileborder_samples`` is used when
             determining if previous/next day should be checked for data.
         """
+        sds_root = os.path.abspath(sds_root)
         if not os.path.isdir(sds_root):
             msg = ("SDS root is not a local directory: " + sds_root)
             raise IOError(msg)
@@ -761,6 +762,12 @@ class Client(object):
         else:
             # XXX TODO
             raise NotImplementedError()
+
+    def _filename_strip_sds_root(self, filename):
+        """
+        Strip SDS root from a full-path filename in the SDS archive.
+        """
+        return re.sub(r'^{}{}*'.format(self.sds_root, os.sep), '', filename)
 
 
 def _wildcarded_except(exclude=[]):
