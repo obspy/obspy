@@ -17,17 +17,16 @@ community process works in practice.
 
 We love pull requests! Here's a quick guide:
 
-First, if the PR is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening this PR. We can make existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model).
+First, if the PR is directly related to an already existing issue (which is no PR yet), drop us a note in that issue before opening the PR. We can make existing issues into a PR, which avoids duplicated tickets. Otherwise, please follow the ObsPy [branching model](https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model).
 
  1. Fork the repo.
  2. Make a new branch. For feature additions/changes base your new branch at "master", for pure bugfixes base your new branch at e.g. "maintenance_1.0.x" .
- 3. Run the tests. We only take pull requests with passing tests.
- 4. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
- 5. Make the test pass.
- 6. Push to your fork and submit a pull request.
+ 3. Add a test for your change. Only refactoring and documentation changes require no new tests. If you are adding functionality or fixing a bug, we need a test!
+ 4. Make the test pass.
+ 5. Push to your fork and submit a pull request.
     - for feature branches set base branch to "obspy:master"
     - for bugfix branches set base branch to the latests maintenance branch, e.g. "obspy:maintenance_1.0.x"
- 7. Wait for our review. We may suggest some changes or improvements or alternatives. Keep in mind that PR checklist items can be met after the pull request has been opened by adding more commits to the branch.
+ 6. Wait for our review. We may suggest some changes or improvements or alternatives. Keep in mind that PR checklist items can be met after the pull request has been opened by adding more commits to the branch.
 
 The base branch of the PR cannot be changed after the pull request has been opened so please make sure to get the base branch (`master` vs. `maintenance_x.x.x`) correct the first time.
 
