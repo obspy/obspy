@@ -458,6 +458,8 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
               [(gcircle, phase_name, value, station_label, event_label), ...]
               gcircle is a [3, npoints] array with the path coordinates.
               phase_name is the name of the seismic phase,
+              value is a certain value that can be chosen, like the radiation
+              pattern intensity.
               station_label is the name of the station that belongs to the path
               event_label is the name of the event that belongs to the path
     """
@@ -493,7 +495,10 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     evlons = []
     evdepths = []
     evlabels = []
-    if catalog is not None:
+    use_catalog = catalog is not None
+    use_location = (evlon is not None and evlat is not None and
+                    evdepth_km is not None)
+    if use_catalog:
         for event in catalog:
             if not event.origins:
                 msg = ("Event '%s' does not have an origin and will not be "
@@ -515,16 +520,11 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
             mag = magnitude.mag
             label = '  {:s} | M{:.1f}'.format(str(origin.time.date), mag)
             evlabels.append(label)
-    elif evlat is not None and evlon is not None and evdepth_km is not None:
+    elif use_location:
         evlats.append(evlat)
         evlons.append(evlon)
         evdepths.append(evdepth_km)
         evlabels.append('')
-    elif event is not None:
-        raise NotImplementedError("Event input not implemented yet. "
-                                  "You should either provide a complete "
-                                  "catalogue or the evlat, evlon, evdepth_km "
-                                  "arguments")
     else:
         raise ValueError("either catalog or evlat, evlon and evdepth_km have "
                          "to be set")
