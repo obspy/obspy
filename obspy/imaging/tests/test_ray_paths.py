@@ -53,23 +53,24 @@ class PathPlottingTestCase(unittest.TestCase):
         # uncomment the following to read the global network inventory and
         # a basic catalog that are used by the commented tests:
         #
-        # filedir, filename = os.path.split(__file__)
-        # data_path = os.path.join(filedir, 'data', 'IU.xml')
-        # inventory = read_inventory(data_path)
-        # catalog = read_events()
+        filedir, filename = os.path.split(__file__)
+        data_path = os.path.join(filedir, 'data', 'IU.xml')
+        inventory = read_inventory(data_path)
+        catalog = read_events()
 
         # catalog and inventory test with a phase that doesn't
         # have too many paths (PKIKP):
         #
-        # plot_rays(inventory=inventory, catalog=catalog,
-        #           phase_list=['PKIKP'],
-        #           kind='mayavi', colorscheme='dark')
+        plot_rays(inventory=inventory, catalog=catalog,
+                  phase_list=['PKIKP'],
+                  kind='mayavi', colorscheme='dark')
 
-        # the following test is for an animated mayavi window.
+        # the following test is for an animated mayavi windows
+        # and movie plotting.
         # Needs third party coastlines by default !
         #
         # plot_rays(inventory=inv, catalog=cat,
-        #           phase_list=['PKP'], animate=False, savemovie=False,
+        #           phase_list=['PKP'], animate=True, savemovie=False,
         #           kind='mayavi', figsize=(1920, 1080),
         #           coastlines='data/coastlines.vtk')
 
