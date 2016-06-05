@@ -6,15 +6,26 @@ from future.builtins import *  # NOQA
 import unittest
 
 from obspy import read_inventory, read_events
-from obspy.imaging.ray_paths import plot_rays
+from obspy.imaging.ray_paths import plot_rays, get_ray_paths
 
 
 class PathPlottingTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
     """
+    def setUp(self):
+        # load an inventory and an event catalog to test
+        # the ray path routines
+        self.inventory = read_inventory('data/IU.xml')
+        self.catalog = read_events()
 
-    @unittest.skip('Needs Mayavi to run')
+    def test_getraypaths(self):
+        greatcircles = get_ray_paths(
+                inventory=self.inventory, catalog=self.catalog,
+                phase_list=['P'], coordinate_system='XYZ', taup_model='iasp91')
+        print(len(greatcircles))
+
+    #@unittest.skip('Needs Mayavi to run')
     def test_pathplotting(self):
         inv = read_inventory('data/IU.xml')
         cat = read_events()

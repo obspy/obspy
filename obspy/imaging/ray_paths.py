@@ -30,7 +30,37 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
               taup_model='iasp91', icol=0, event_labels=True,
               station_labels=True):
     """
-    Plot ray paths between this inventory and one or more events.
+    Ray path plotting routine
+
+    :param inventory: an obspy station inventory
+    :param catalog: an obspy event catalog
+    :param station_latitude: station latitude (alternative to inventory)
+    :param station_longitude: station longitude (alternative to inventory)
+    :param event_latitude: event latitude (alternative to catalog)
+    :param event_longitude: event longitude (alternative to catalog)
+    :param event_depth_in_km: event depth in km (alternative to a catalog)
+    :param phase_list: a list of seismic phase names that is passed to taup
+    :param kind: selects the plot type.
+                 'mayavi' uses the mayavi library for plotting
+                 'vtkfiles' outputs vtk data files that can be used by
+                 third party software for visualization to the current
+                 working directory.
+    :param colorscheme: one of 'default', 'dark', or 'bright'
+    :param animate: if set to True, mayavi is going to rotate the Earth
+              around it's axis
+    :param savemovie: if set to True and animate is set to True as well,
+              mayavi is going to write png files of each frame to the current
+              working directory.
+    :param figsize: the figure size of the mayavi plot
+    :param coastlines: if 'internal' mayavi uses internal coastlines.
+              Alternatively it can be set to the path of a vtk file with
+              higher resolution coastlines (e.g. data/coastlines.vtk)
+    :param taup_model: the taup model for which the greatcircle paths are
+                  computed
+    :param icol: integer that changes the color. It cycles through the
+              internal colorcycle of the different phases.
+    :param event_labels: if True, plots a little label next to the events
+    :param station_labels: if True, plots a little label next to each station
     """
     if kind == 'mayavi':
         _plot_rays_mayavi(
@@ -405,11 +435,31 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
                   evlat=None, evlon=None, evdepth_km=None, phase_list=['P'],
-                  coordinate_system='XYZ', taup_model='iasp91',
-                  value='radpattern'):
+                  coordinate_system='XYZ', taup_model='iasp91'):
     """
     This function returns lat, lon, depth coordinates from an event
     location to all stations in the inventory object
+
+    :param inventory: an obspy station inventory
+    :param catalog: an obspy event catalog
+    :param stlat: station latitude (stlat/stlon are alternative to inventory)
+    :param stlon: station longitude (stlat/stlon are alternative to inventory)
+    :param evlat: event latitude (evlat/evlon/evdepth_km are alternative to
+                  a catalog)
+    :param evlon: event longitude (evlat/evlon/evdepth_km are alternative to
+                  a catalog)
+    :param evdepth_km: event depth in km (evlat/evlon/evdepth_km are
+                  alternative to a catalog)
+    :param phase_list: a list of seismic phase names that is passed to taup
+    :param coordinate_system: can be either 'XYZ' or 'RTP'.
+    :param taup_model: the taup model for which the greatcircle paths are
+                  computed
+    :returns: a list of tuples
+              [(gcircle, phase_name, value, station_label, event_label), ...]
+              gcircle is a [3, npoints] array with the path coordinates.
+              phase_name is the name of the seismic phase,
+              station_label is the name of the station that belongs to the path
+              event_label is the name of the event that belongs to the path
     """
     # make a big list of station coordinates and names
     stlats = []
@@ -486,8 +536,8 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     else:
         model = taup_model
 
-    r_earth = model.model.radius_of_planet
     # now loop through all stations and source combinations
+    r_earth = model.model.radius_of_planet
     greatcircles = []
     for stlat, stlon, stlabel in zip(stlats, stlons, stlabels):
         for evlat, evlon, evdepth_km, evlabel in zip(evlats, evlons, evdepths,
