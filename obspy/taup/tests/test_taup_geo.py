@@ -23,7 +23,6 @@ class TaupGeoTestCase(unittest.TestCase):
 
     @unittest.skipIf(not geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34,
                      'Module geographiclib is not installed or too old.')
-
     def test_path_geo(self):
         evlat, evlon = 0., 20.
         evdepth = 10.

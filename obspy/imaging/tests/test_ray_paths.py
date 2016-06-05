@@ -13,6 +13,7 @@ class PathPlottingTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
     """
+
     @unittest.skip('Needs Mayavi to run')
     def test_pathplotting(self):
         inv = read_inventory('data/IU.xml')
