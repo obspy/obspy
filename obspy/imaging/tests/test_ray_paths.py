@@ -13,18 +13,21 @@ class PathPlottingTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
     """
+    @unittest.skip('Needs Mayavi to run')
     def test_pathplotting(self):
         inv = read_inventory('data/IU.xml')
         cat = read_events()
-        #plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
-        #          kind='mayavi', colorscheme='dark')
-        #plot_rays(inventory=inv, catalog=cat,
-        #          phase_list=['PKP'], animate=False, savemovie=False,
-        #          kind='mayavi', figsize=(1920, 1080),
-        #          coastlines='data/coastlines.vtk')
-        plot_rays(station_latitude=0.,station_longitude=30, event_latitude=0.,
-                  event_longitude=170, event_depth_in_km=200.,
-                  phase_list=['Pdiff'], colorscheme='dark', kind='mayavi')
+        # uncomment the following for mayavi tests
+        plot_rays(inventory=inv, catalog=cat, phase_list=['PcP'],
+                  kind='mayavi', colorscheme='dark')
+        # plot_rays(inventory=inv, catalog=cat,
+        #           phase_list=['PKP'], animate=False, savemovie=False,
+        #           kind='mayavi', figsize=(1920, 1080),
+        #           coastlines='data/coastlines.vtk')
+        # plot_rays(station_latitude=0., station_longitude=30,
+        #           event_latitude=0.,
+        #           event_longitude=170, event_depth_in_km=200.,
+        #           phase_list=['Pdiff'], colorscheme='dark', kind='mayavi')
 
 
 def suite():
