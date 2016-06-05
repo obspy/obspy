@@ -17,10 +17,9 @@ from future.builtins import *  # NOQA @UnusedWildImport
 
 from colorsys import hls_to_rgb, rgb_to_hls
 
+import warnings
 import numpy as np
 from matplotlib.colors import hex2color
-
-import ipdb
 
 
 def plot_rays(inventory=None, catalog=None, station_latitude=None,
@@ -328,15 +327,16 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     evxs, evys, evzs = zip(*events_loc)
     evsource = mlab.pipeline.vector_scatter(
         evxs, evys, evzs, -np.array(evxs), -np.array(evys), -np.array(evzs))
-    evmarkers = mlab.pipeline.glyph(evsource, scale_factor=evmarkersize,
-        scale_mode='none', color=eventcolor, mode='cone', resolution=8)
+    evmarkers = mlab.pipeline.glyph(
+            evsource, scale_factor=evmarkersize, scale_mode='none',
+            color=eventcolor, mode='cone', resolution=8)
     evmarkers.glyph.glyph_source.glyph_position = 'head'
 
     if event_labels:
         for loc, evlabel in zip(events_loc, events_lab):
             mlab.text3d(loc[0], loc[1], loc[2], evlabel, scale=evtextsize,
                         color=eventcolor)
-    fig.scene.disable_render = False # Super duper trick
+    fig.scene.disable_render = False  # Super duper trick
 
     # read and plot coastlines
     if coastlines == 'internal':
@@ -370,7 +370,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     z = rad * np.cos(phi)
     cmb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     cmb.actor.property.interpolation = 'gouraud'
-    #cmb.actor.property.interpolation = 'flat'
+    # cmb.actor.property.interpolation = 'flat'
 
     # make ICB sphere
     r_iocb = r_earth - model.model.iocb_depth
@@ -418,12 +418,12 @@ def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,
     if inventory is not None:
         for network in inventory:
             for station in network:
+                label_ = "   " + ".".join((network.code, station.code))
                 if station.latitude is None or station.longitude is None:
                     msg = ("Station '%s' does not have latitude/longitude "
-                           "information and will not be plotted." % label)
+                           "information and will not be plotted." % label_)
                     warnings.warn(msg)
                     continue
-                label_ = "   " + ".".join((network.code, station.code))
                 stlats.append(station.latitude)
                 stlons.append(station.longitude)
                 stlabels.append(label_)
