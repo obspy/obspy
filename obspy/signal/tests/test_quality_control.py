@@ -653,6 +653,54 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertTrue(md.meta["num_samples"] == 2306)
         self.assertTrue(md.meta["start_time"] == starttime)
 
+    def test_continuous_segments_combined(self):
+        """
+        Test continuous segments from traces in two files
+        that are continuous. Also test a continuous segment
+        that is continuous but has a different sampling rate
+        """
+        tr_1 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(0)})
+        tr_2 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(10)})
+        tr_3 = obspy.Trace(data=np.arange(10, dtype=np.int32),
+                           header={"starttime": obspy.UTCDateTime(20),
+                                   "sampling_rate": 0.5})
+        st = obspy.Stream(traces=[tr_1, tr_3])
+        st2 = obspy.Stream(traces=[tr_2])
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+
+            st.write(tf1.name, format="mseed")
+            st2.write(tf2.name, format="mseed")
+            md = MSEEDMetadata(files=[tf1.name, tf2.name])
+            c_seg = md.meta["c_segments"]
+            self.assertEqual(len(c_seg), 2)
+
+            c = c_seg[0]
+            self.assertEqual(c["start_time"], obspy.UTCDateTime(0))
+            self.assertEqual(c["end_time"], obspy.UTCDateTime(20))
+            self.assertEqual(c["seg_len"], 20)
+            self.assertEqual(c["sample_min"], 0)
+            self.assertEqual(c["sample_max"], 9)
+            self.assertEqual(c["num_samples"], 20)
+            self.assertEqual(c["sample_median"], 4.5)
+            self.assertEqual(c["sample_lower_quartile"], 2.0)
+            self.assertEqual(c["sample_upper_quartile"], 7.0)
+            self.assertEqual(c["sample_rate"], 1.0)
+
+            # Not continuous because of different sampling_rate (0.5)
+            c = c_seg[1]
+            self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
+            self.assertEqual(c["end_time"], obspy.UTCDateTime(40))
+            self.assertEqual(c["seg_len"], 20)
+            self.assertEqual(c["sample_min"], 0)
+            self.assertEqual(c["sample_max"], 9)
+            self.assertEqual(c["num_samples"], 10)
+            self.assertEqual(c["sample_median"], 4.5)
+            self.assertEqual(c["sample_lower_quartile"], 2.25)
+            self.assertEqual(c["sample_upper_quartile"], 6.75)
+            self.assertEqual(c["sample_rate"], 0.5)
+
     def test_continuous_segments_sample_metrics(self):
         """
         Tests the metrics on each segment.
