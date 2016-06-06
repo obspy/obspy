@@ -148,7 +148,7 @@ install:
 =======
   # install mayavi in python 2.7
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-        conda install mayavi
+        conda install mayavi;
     fi
 >>>>>>> another travis correction
   # install packages not available via conda
