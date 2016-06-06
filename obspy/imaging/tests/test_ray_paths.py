@@ -7,6 +7,7 @@ import unittest
 
 import os
 
+from obspy.core.util.testing import ImageComparison
 from obspy import read_inventory, read_events
 from obspy.imaging.ray_paths import plot_rays, get_ray_paths
 
@@ -27,10 +28,7 @@ class PathPlottingTestCase(unittest.TestCase):
         # the ray path routines. Careful, the full catalog
         # test is quite long and is therefore commented out
         # by default
-        # filedir, filename = os.path.split(__file__)
-        # data_path = os.path.join(filedir, 'data', 'IU.xml')
-        # self.inventory = read_inventory(data_path)
-        # self.catalog = read_events()
+        self.path = os.path.join(os.path.dirname(__file__), 'images')
         pass
 
     def test_getraypaths(self):
@@ -53,10 +51,9 @@ class PathPlottingTestCase(unittest.TestCase):
     def test_pathplotting(self):
         # uncomment the following to read the global network inventory and
         # a basic catalog that are used by the commented tests:
-        #
-        filedir, filename = os.path.split(__file__)
+        filedir = os.path.dirname(__file__)
         data_path = os.path.join(filedir, 'data', 'IU.xml')
-        image_path = os.path.join(filedir, 'images', 'ray_paths.png')
+        # image_path = os.path.join(filedir, 'images', 'ray_paths.png')
         inventory = read_inventory(data_path)
         # inventory = read_inventory()
         catalog = read_events()
@@ -64,11 +61,11 @@ class PathPlottingTestCase(unittest.TestCase):
         # this test uses the resampling method along the CMB
         view_dict = {'elevation': 80, 'azimuth': -20, 'distance': 4.,
                      'focalpoint': (0., 0., 0.)}
-        plot_rays(inventory=inventory,
-                  catalog=catalog,
-                  phase_list=['Pdiff'], colorscheme='dark',
-                  kind='mayavi', view_dict=view_dict, icol=2,
-                  fname_out=image_path)
+        with ImageComparison(self.path, 'spectrogram.png', reltol=-0.5) as ic:
+            plot_rays(inventory=inventory, catalog=catalog,
+                      phase_list=['Pdiff'], colorscheme='dark',
+                      kind='mayavi', view_dict=view_dict, icol=2,
+                      fname_out=ic.name)
 
         # catalog and inventory test with a phase that doesn't
         # have too many paths (PKIKP):
