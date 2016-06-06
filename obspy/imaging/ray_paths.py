@@ -28,7 +28,7 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
               kind='mayavi', colorscheme='default', animate=False,
               savemovie=False, figsize=(800, 800), coastlines='internal',
               taup_model='iasp91', icol=0, event_labels=True,
-              station_labels=True):
+              station_labels=True, fname_out=None, view_dict=None):
     """
     Ray path plotting routine
 
@@ -72,7 +72,8 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
             colorscheme=colorscheme, animate=animate, savemovie=savemovie,
             figsize=figsize, taup_model='iasp91', coastlines=coastlines,
             icol=icol, event_labels=event_labels,
-            station_labels=station_labels)
+            station_labels=station_labels, fname_out=fname_out,
+            view_dict=view_dict)
     elif kind == 'vtkfiles':
         _write_vtk_files(
             inventory=inventory, catalog=catalog,
@@ -190,7 +191,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
                       phase_list=['P'], colorscheme='default', animate=False,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
                       coastlines='internal', icol=0, event_labels=True,
-                      station_labels=True):
+                      station_labels=True, fname_out=None, view_dict=None):
     try:
         from mayavi import mlab
     except Exception as err:
@@ -212,6 +213,9 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         model = TauPyModel(model=taup_model)
     else:
         model = taup_model
+
+    if fname_out is not None:
+        offscreen = True
     nphases = len(phase_list)
 
     greatcircles = get_ray_paths(
@@ -302,6 +306,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
             events_lab.append(evlabel)
 
     # now begin mayavi plotting
+    if offscreen:
+        mlab.options.offscreen = True
     fig = mlab.figure(size=figsize, bgcolor=bgcolor)
 
     # make the connectivity of each phase and plot them
@@ -412,11 +418,14 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     z = rad * np.cos(phi)
     icb = mlab.mesh(x, y, z, color=cmbcolor, opacity=0.3, line_width=0.5)
     icb.actor.property.interpolation = 'gouraud'
-    mlab.view(azimuth=0., elevation=90., distance=4., focalpoint=(0., 0., 0.))
+    if view_dict is None:
+        view_dict = {'azimuth': 0., 'elevation': 90., 'distance': 4.,
+                     'focalpoint': (0., 0., 0.)}
+    mlab.view(**view_dict)
 
     # to make a movie from the image files, you can use the command:
     # avconv -qscale 5 -r 20 -b 9600 -i %05d.png -vf scale=800:752 movie.mp4
-    if animate:
+    if animate and not offscreen:
         @mlab.show
         @mlab.animate(delay=20)
         def anim():
@@ -424,13 +433,17 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
             while 1:
                 if savemovie and iframe < 360:
                     mlab.savefig('{:05d}.png'.format(iframe))
-                fig.scene.camera.azimuth(1.)
+                # camera moves from East to West opposite of Earth's rotation
+                fig.scene.camera.azimuth(-1.)
                 fig.scene.render()
                 iframe += 1
                 yield
         anim()  # Starts the animation.
     else:
-        mlab.show()
+        if offscreen:
+            mlab.savefig(fname_out)
+        else:
+            mlab.show()
 
 
 def get_ray_paths(inventory=None, catalog=None, stlat=None, stlon=None,

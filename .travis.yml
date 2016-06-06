@@ -142,6 +142,8 @@ install:
   # least our builds work..
   # XXX - conda install --no-update-dependencies m2crypto || true
   # XXX - conda install --no-update-dependencies cartopy || true
+  # install mayavi
+  - conda install -c menpo mayavi
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib

@@ -11,6 +11,13 @@ from obspy import read_inventory, read_events
 from obspy.imaging.ray_paths import plot_rays, get_ray_paths
 
 
+try:
+    from mayavi import mlab  # @UnusedImport # NOQA
+    HAS_MAYAVI = True
+except ImportError:
+    HAS_MAYAVI = False
+
+
 class PathPlottingTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.geodetics
@@ -41,29 +48,34 @@ class PathPlottingTestCase(unittest.TestCase):
         self.assertEqual(len(greatcircles), 1)
         self.assertEqual(greatcircles[0][1], 'P')
 
-    @unittest.skip('Needs Mayavi to run')
+    @unittest.skipIf(not HAS_MAYAVI,
+                     'Module mayavi is not installed or doesn\'t run')
     def test_pathplotting(self):
-        # this test uses station lon/lat and event lon/lat/depth input
-        # and test the resampling method along the CMB
-        plot_rays(station_latitude=0., station_longitude=30,
-                  event_latitude=0.,
-                  event_longitude=170, event_depth_in_km=200.,
-                  phase_list=['Pdiff'], colorscheme='dark', kind='mayavi')
-
         # uncomment the following to read the global network inventory and
         # a basic catalog that are used by the commented tests:
         #
         filedir, filename = os.path.split(__file__)
         data_path = os.path.join(filedir, 'data', 'IU.xml')
+        image_path = os.path.join(filedir, 'images', 'ray_paths.png')
         inventory = read_inventory(data_path)
+        # inventory = read_inventory()
         catalog = read_events()
+
+        # this test uses the resampling method along the CMB
+        view_dict = {'elevation': 80, 'azimuth': -20, 'distance': 4.,
+                     'focalpoint': (0., 0., 0.)}
+        plot_rays(inventory=inventory,
+                  catalog=catalog,
+                  phase_list=['Pdiff'], colorscheme='dark',
+                  kind='mayavi', view_dict=view_dict, icol=2,
+                  fname_out=image_path)
 
         # catalog and inventory test with a phase that doesn't
         # have too many paths (PKIKP):
         #
-        plot_rays(inventory=inventory, catalog=catalog,
-                  phase_list=['PKIKP'],
-                  kind='mayavi', colorscheme='dark')
+        # plot_rays(inventory=inventory, catalog=catalog,
+        #          phase_list=['PKIKP'],
+        #          kind='mayavi', colorscheme='dark')
 
         # the following test is for an animated mayavi windows
         # and movie plotting.
