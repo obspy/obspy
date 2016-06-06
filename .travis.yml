@@ -148,6 +148,8 @@ install:
 =======
   # install mayavi in python 2.7
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+        export DISPLAY=:99.0;
+        sh -e /etc/init.d/xvfb start;
         conda install mayavi;
     fi
 >>>>>>> another travis correction
