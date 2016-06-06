@@ -61,8 +61,7 @@ class PathPlottingTestCase(unittest.TestCase):
         # this test uses the resampling method along the CMB
         view_dict = {'elevation': 80, 'azimuth': -20, 'distance': 4.,
                      'focalpoint': (0., 0., 0.)}
-        with ImageComparison(self.path, 'spectrogram.png', reltol=-0.5) as ic:
-            print('now running mayavi test')
+        with ImageComparison(self.path, 'ray_paths.png', reltol=20) as ic:
             plot_rays(inventory=inventory, catalog=catalog,
                       phase_list=['Pdiff'], colorscheme='dark',
                       kind='mayavi', view_dict=view_dict, icol=2,
