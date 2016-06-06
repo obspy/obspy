@@ -133,6 +133,7 @@ install:
         jsonschema
         "freetype<2.8"
   - source activate test-environment
+<<<<<<< 4f813800a597e01f27f24af0def05e9d6ad16519
   # additional, optional packages that run some more tests but are not
   # available for all archs. "--no-update-dependencies" keeps other packages at
   # already installed version (ideally we should handle package versions
@@ -144,6 +145,12 @@ install:
   # XXX - conda install --no-update-dependencies cartopy || true
   # install mayavi
   - conda install -c menpo mayavi
+=======
+  # install mayavi in python 2.7
+  - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
+        conda install mayavi
+    fi
+>>>>>>> another travis correction
   # install packages not available via conda
   - pip install codecov
   - pip install geographiclib
