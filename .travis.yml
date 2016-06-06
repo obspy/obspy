@@ -147,8 +147,8 @@ install:
   - conda install -c menpo mayavi
 =======
   # install mayavi in python 2.7
+  # we need to emulate an xserver for mayavi offscreen rendering
   - if [[ "${PYTHON_VERSION:0:1}" == '2' ]]; then
-        # we need to emulate an xserver for mayavi offscreen rendering
         export DISPLAY=:99.0;
         sh -e /etc/init.d/xvfb start;
         conda install mayavi;
