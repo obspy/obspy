@@ -38,6 +38,10 @@ import warnings
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 import numpy as np
+from matplotlib.ticker import FuncFormatter
+from matplotlib.patches import Rectangle
+from matplotlib.collections import PatchCollection
+from matplotlib.dates import date2num, num2date
 
 from obspy import UTCDateTime, __version__, read
 from obspy.core.util.base import ENTRY_POINTS
@@ -192,41 +196,55 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
-         ignore_links=False, starttime=None, endtime=None, seed_ids=None,
-         event_times=None, npz_output=None, npz_input=None, plot_x=True,
-         plot_gaps=True, print_gaps=False, plot=False):
+def _seconds_to_days(seconds):
+    return seconds / (24 * 3600)
+
+
+class Scanner(object):
     """
-    :type plot: bool or str
-    :param plot: False for no plot at all, True for interactive window, str for
-        output to image file.
     """
-    if plot is None:
-        plot = False
+    def __init__(self, format=None, verbose=False, quiet=True, recursive=True,
+                 ignore_links=False, starttime=None, endtime=None,
+                 seed_ids=None):
+        self.format = format
+        self.verbose = verbose
+        self.quiet = quiet
+        self.recursive = recursive
+        self.ignore_links = ignore_links
+        if starttime is None:
+            self.starttime = None
+        else:
+            self.starttime = date2num(starttime.datetime)
+        if endtime is None:
+            self.endtime = None
+        else:
+            self.endtime = date2num(endtime.datetime)
+        self.seed_ids = seed_ids
+        # Generate dictionary containing nested lists of start and end times
+        # per station
+        self.data = {}
+        self.samp_int = {}
+        self.counter = 1
 
-    if plot not in (True, False):
-        MatplotlibBackend.switch_backend("AGG", sloppy=False)
+    def plot(self, show=True, fig=None, outfile=None, plot_x=True,
+             plot_gaps=True, print_gaps=False, event_times=None):
+        """
+        Plot the information on parsed waveform files.
+        """
+        import matplotlib.pyplot as plt
 
-    # Print help and exit if no arguments are given
-    if len(paths) == 0 and npz_input is None:
-        msg = "No paths specified and no npz data to load specified"
-        raise ValueError(msg)
+        if fig:
+            if fig.axes:
+                ax = fig.axes[0]
+            else:
+                ax = fig.add_subplot(111)
+        else:
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
 
-    # Use recursively parsing function?
-    if recursive:
-        parse_func = recursive_parse
-    else:
-        parse_func = parse_file_to_dict
-
-    from matplotlib.dates import date2num, num2date
-    from matplotlib.ticker import FuncFormatter
-    from matplotlib.patches import Rectangle
-    from matplotlib.collections import PatchCollection
-    import matplotlib.pyplot as plt
-
-    if plot:
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        self.analyze_parsed_data(print_gaps=print_gaps)
+        starttime = self.starttime
+        endtime = self.endtime
 
         # Plot vertical lines if option 'event_time' was specified
         if event_times:
@@ -234,176 +252,43 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
             for time in times:
                 ax.axvline(time, color='k')
 
-    if starttime is not None:
-        starttime = date2num(starttime.datetime)
-    if endtime is not None:
-        endtime = date2num(endtime.datetime)
-
-    # Generate dictionary containing nested lists of start and end times per
-    # station
-    data = {}
-    samp_int = {}
-    counter = 1
-    if npz_input:
-        load_npz(npz_input, data, samp_int)
-    for path in paths:
-        counter = parse_func(data, samp_int, path, counter, format,
-                             verbose=verbose, quiet=quiet,
-                             ignore_links=ignore_links)
-    if not data:
-        if verbose or not quiet:
-            print("No waveform data found.")
-        return 1, None, None
-    if npz_output:
-        write_npz(npz_output, data, samp_int)
-
-    # either use ids specified by user or use ids based on what data we have
-    # parsed
-    ids = seed_ids or list(data.keys())
-    ids = sorted(ids)[::-1]
-    labels = [""] * len(ids)
-    if verbose or not quiet:
-        print('\n')
-    gap_info = []
-    overlap_info = []
-    for _i, _id in enumerate(ids):
-        labels[_i] = ids[_i]
-        # sort data list and sampling rate list
-        if _id in data:
-            startend = np.array(data[_id])
-            _samp_int = np.array(samp_int[_id])
-            indices = np.lexsort((startend[:, 1], startend[:, 0]))
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        else:
-            startend = np.array([])
-            _samp_int = np.array([])
-        if len(startend) == 0:
-            if not (starttime and endtime):
-                continue
-            if plot and plot_gaps:
-                rects = [Rectangle((starttime, _i - 0.4),
-                                   endtime - starttime, 0.8)]
-                ax.add_collection(PatchCollection(rects, color="r"))
-            if print_gaps and (verbose or not quiet):
-                print("%s %s %s %.3f" % (
-                    _id, starttime, endtime, endtime - starttime))
-            continue
-        # restrict plotting of results to given start/end time
-        if starttime:
-            indices = startend[:, 1] > starttime
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        if endtime:
-            indices = startend[:, 0] < endtime
-            startend = startend[indices]
-            _samp_int = _samp_int[indices]
-        if len(startend) == 0:
-            # if both start and endtime are given, add it to gap info
-            if starttime and endtime:
-                gap_info.append((
-                    _id, UTCDateTime(num2date(starttime).isoformat()),
-                    UTCDateTime(num2date(endtime).isoformat())))
-            continue
-        data_start = startend[:, 0].min()
-        data_end = startend[:, 1].max()
-        timerange_start = starttime or data_start
-        timerange_end = endtime or data_end
-        timerange = timerange_end - timerange_start
-        if timerange == 0.0:
-            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
-            continue
-
-        startend_compressed = compress_start_end(startend, 1000,
-                                                 merge_overlaps=False)
-
-        if plot:
-            offset = np.ones(len(startend)) * _i  # generate list of y values
+        labels = [""] * len(self._info)
+        for _i, info in enumerate(self._info):
+            offset = np.ones(len(info["data_starts"])) * _i
             if plot_x:
-                ax.plot(startend[:, 0], offset, 'x', linewidth=2)
-            ax.hlines(offset[:len(startend_compressed)],
-                      startend_compressed[:, 0], startend_compressed[:, 1],
-                      'b', linewidth=2, zorder=3)
-        # find the gaps
-        diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
-        gapsum = diffs[diffs > 0].sum()
-        # if start- and/or endtime is specified, add missing data at start/end
-        # to gap sum
-        has_gap = False
-        gap_at_start = (
-            starttime and
-            data_start > starttime and
-            data_start - starttime)
-        gap_at_end = (
-            endtime and
-            endtime > data_end and
-            endtime - data_end)
-        if gap_at_start:
-            gapsum += gap_at_start
-            has_gap = True
-        if gap_at_end:
-            gapsum += gap_at_end
-            has_gap = True
-        perc = (timerange - gapsum) / timerange
-        labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        # define a gap as over 0.8 delta after expected sample time
-        gap_indices = diffs > 0.8 * _samp_int[:-1]
-        gap_indices = np.append(gap_indices, False)
-        # define an overlap as over 0.8 delta before expected sample time
-        overlap_indices = diffs < -0.8 * _samp_int[:-1]
-        overlap_indices = np.append(overlap_indices, False)
-        has_gap |= any(gap_indices)
-        has_gap |= any(overlap_indices)
-        if has_gap:
-            # don't handle last end time as start of gap
-            gaps_start = startend[gap_indices, 1]
-            gaps_end = startend[np.roll(gap_indices, 1), 0]
-            overlaps_end = startend[overlap_indices, 1]
-            overlaps_start = startend[np.roll(overlap_indices, 1), 0]
-            # but now, manually add start/end for gaps at start/end of user
-            # specified start/end times
-            if gap_at_start:
-                gaps_start = np.append(gaps_start, starttime)
-                gaps_end = np.append(gaps_end, data_start)
-            if gap_at_end:
-                gaps_start = np.append(gaps_start, data_end)
-                gaps_end = np.append(gaps_end, endtime)
-            if plot and plot_gaps:
-                if len(gaps_start):
+                ax.plot(info["data_starts"], offset, 'x', linewidth=2)
+            if len(info["data_startends_compressed"]):
+                ax.hlines(offset[:len(info["data_startends_compressed"])],
+                          info["data_startends_compressed"][:, 0],
+                          info["data_startends_compressed"][:, 1],
+                          'b', linewidth=2, zorder=3)
+
+            label = info["label"]
+            if info["percentage"] is not None:
+                label = label + "\n%.1f%%" % (info["percentage"])
+            labels[_i] = label
+
+            if plot_gaps:
+                gaps = info["gaps"]
+                overlaps = info["overlaps"]
+                if len(gaps):
                     # gaps
                     rects = [
-                        Rectangle((start_, offset[0] - 0.4),
-                                  end_ - start_, 0.8)
-                        for start_, end_ in zip(gaps_start, gaps_end)]
+                        Rectangle((date2num(start_.datetime), _i - 0.4),
+                                  _seconds_to_days(end_ - start_), 0.8)
+                        for start_, end_ in gaps]
                     ax.add_collection(PatchCollection(rects, color="r"))
-                if len(overlaps_start):
+                if len(overlaps):
                     # overlaps
                     rects = [
-                        Rectangle((start_, offset[0] - 0.4),
-                                  end_ - start_, 0.8)
-                        for start_, end_ in zip(overlaps_start, overlaps_end)]
+                        Rectangle((date2num(start_.datetime), _i - 0.4),
+                                  _seconds_to_days(end_ - start_), 0.8)
+                        for start_, end_ in overlaps]
                     ax.add_collection(PatchCollection(rects, color="b"))
-            _starts = np.concatenate((gaps_start, overlaps_end))
-            _ends = np.concatenate((gaps_end, overlaps_start))
-            sort_order = np.argsort(_starts)
-            _starts = _starts[sort_order]
-            _ends = _ends[sort_order]
-            for start_, end_ in zip(_starts, _ends):
-                start_, end_ = num2date((start_, end_))
-                start_ = UTCDateTime(start_.isoformat())
-                end_ = UTCDateTime(end_.isoformat())
-                if print_gaps and (verbose or not quiet):
-                    print("%s %s %s %.3f" % (_id, start_, end_,
-                                             end_ - start_))
-                if start_ < end_:
-                    gap_info.append((_id, start_, end_))
-                else:
-                    overlap_info.append((_id, start_, end_))
 
-    if plot:
         # Pretty format the plot
-        ax.set_ylim(0 - 0.5, len(ids) - 0.5)
-        ax.set_yticks(np.arange(len(ids)))
+        ax.set_ylim(0 - 0.5, len(labels) - 0.5)
+        ax.set_yticks(np.arange(len(labels)))
         ax.set_yticklabels(labels, family="monospace", ha="right")
         fig.autofmt_xdate()  # rotate date
         ax.xaxis_date()
@@ -427,11 +312,9 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
             ax.set_xlim(left - 0.05 * x_axis_range,
                         right + 0.05 * x_axis_range)
 
-        if plot is True:
-            plt.show()
-        else:
+        if outfile:
             fig.set_dpi(72)
-            height = len(ids) * 0.5
+            height = len(labels) * 0.5
             height = max(4, height)
             fig.set_figheight(height)
             plt.tight_layout()
@@ -448,12 +331,236 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
             plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
             plt.tight_layout()
 
-            fig.savefig(plot)
+            fig.savefig(outfile)
+            plt.close(fig)
+        else:
+            if show:
+                plt.show()
 
-    if verbose and not quiet:
-        sys.stdout.write('\n')
+        if self.verbose and not self.quiet:
+            sys.stdout.write('\n')
+        return fig
 
-    return 0, gap_info, overlap_info
+    def analyze_parsed_data(self, print_gaps=False):
+        """
+        Prepare information for plotting.
+        """
+        data = self.data
+        samp_int = self.samp_int
+        starttime = self.starttime
+        endtime = self.endtime
+        # either use ids specified by user or use ids based on what data we
+        # have parsed
+        ids = self.seed_ids or list(data.keys())
+        ids = sorted(ids)[::-1]
+        if self.verbose or not self.quiet:
+            print('\n')
+        self._info = []
+        for _i, _id in enumerate(ids):
+            info = {"label": _id, "gaps": [], "overlaps": [],
+                    "data_starts": [], "data_startends_compressed": [],
+                    "percentage": None}
+            self._info.append(info)
+            gap_info = info["gaps"]
+            overlap_info = info["overlaps"]
+            # sort data list and sampling rate list
+            if _id in data:
+                startend = np.array(data[_id])
+                _samp_int = np.array(samp_int[_id])
+                indices = np.lexsort((startend[:, 1], startend[:, 0]))
+                startend = startend[indices]
+                _samp_int = _samp_int[indices]
+            else:
+                startend = np.array([])
+                _samp_int = np.array([])
+            if len(startend) == 0:
+                if not (starttime and endtime):
+                    continue
+                gap_info.append((UTCDateTime(num2date(starttime)),
+                                 UTCDateTime(num2date(endtime))))
+                if print_gaps and (self.verbose or not self.quiet):
+                    print("%s %s %s %.3f" % (
+                        _id, starttime, endtime, endtime - starttime))
+                continue
+            # restrict plotting of results to given start/end time
+            if starttime:
+                indices = startend[:, 1] > starttime
+                startend = startend[indices]
+                _samp_int = _samp_int[indices]
+            if endtime:
+                indices = startend[:, 0] < endtime
+                startend = startend[indices]
+                _samp_int = _samp_int[indices]
+            if len(startend) == 0:
+                # if both start and endtime are given, add it to gap info
+                if starttime and endtime:
+                    gap_info.append((
+                        UTCDateTime(num2date(starttime)),
+                        UTCDateTime(num2date(endtime))))
+                continue
+            data_start = startend[:, 0].min()
+            data_end = startend[:, 1].max()
+            timerange_start = starttime or data_start
+            timerange_end = endtime or data_end
+            timerange = timerange_end - timerange_start
+            if timerange == 0.0:
+                msg = 'Zero sample long data for _id=%s, skipping' % _id
+                warnings.warn(msg)
+                continue
+
+            startend_compressed = compress_start_end(startend, 1000,
+                                                     merge_overlaps=False)
+
+            info["data_starts"] = startend[:, 0]
+            info["data_startends_compressed"] = startend_compressed
+
+            # find the gaps
+            # currend.start - last.end
+            diffs = startend[1:, 0] - startend[:-1, 1]
+            gapsum = diffs[diffs > 0].sum()
+            # if start- and/or endtime is specified, add missing data at
+            # start/end to gap sum
+            has_gap = False
+            gap_at_start = (
+                starttime and
+                data_start > starttime and
+                data_start - starttime)
+            gap_at_end = (
+                endtime and
+                endtime > data_end and
+                endtime - data_end)
+            if gap_at_start:
+                gapsum += gap_at_start
+                has_gap = True
+            if gap_at_end:
+                gapsum += gap_at_end
+                has_gap = True
+            info["percentage"] = (timerange - gapsum) / timerange * 100
+            # define a gap as over 0.8 delta after expected sample time
+            gap_indices = diffs > 0.8 * _samp_int[:-1]
+            gap_indices = np.append(gap_indices, False)
+            # define an overlap as over 0.8 delta before expected sample time
+            overlap_indices = diffs < -0.8 * _samp_int[:-1]
+            overlap_indices = np.append(overlap_indices, False)
+            has_gap |= any(gap_indices)
+            has_gap |= any(overlap_indices)
+            if has_gap:
+                # don't handle last end time as start of gap
+                gaps_start = startend[gap_indices, 1]
+                gaps_end = startend[np.roll(gap_indices, 1), 0]
+                overlaps_end = startend[overlap_indices, 1]
+                overlaps_start = startend[np.roll(overlap_indices, 1), 0]
+                # but now, manually add start/end for gaps at start/end of user
+                # specified start/end times
+                if gap_at_start:
+                    gaps_start = np.append(gaps_start, starttime)
+                    gaps_end = np.append(gaps_end, data_start)
+                if gap_at_end:
+                    gaps_start = np.append(gaps_start, data_end)
+                    gaps_end = np.append(gaps_end, endtime)
+
+                _starts = np.concatenate((gaps_start, overlaps_end))
+                _ends = np.concatenate((gaps_end, overlaps_start))
+                sort_order = np.argsort(_starts)
+                _starts = _starts[sort_order]
+                _ends = _ends[sort_order]
+                for start_, end_ in zip(_starts, _ends):
+                    start_, end_ = num2date((start_, end_))
+                    start_ = UTCDateTime(start_.isoformat())
+                    end_ = UTCDateTime(end_.isoformat())
+                    if print_gaps and (self.verbose or not self.quiet):
+                        print("%s %s %s %.3f" % (_id, start_, end_,
+                                                 end_ - start_))
+                    if start_ < end_:
+                        gap_info.append((start_, end_))
+                    else:
+                        overlap_info.append((start_, end_))
+
+    def load_npz(self, filename):
+        """
+        Load information on scanned data from npz file.
+
+        Currently, data can only be loaded from npz as the first operation,
+        i.e. before parsing any files.
+        """
+        if self.data or self.samp_int:
+            msg = ("Currently, data can only be loaded from npz as the first "
+                   "operation, i.e. before parsing any files.")
+            raise NotImplementedError(msg)
+        load_npz(filename, data_dict=self.data, samp_int_dict=self.samp_int)
+
+    def save_npz(self, filename):
+        """
+        Save information on scanned data to npz file.
+        """
+        write_npz(filename, data_dict=self.data, samp_int_dict=self.samp_int)
+
+    def parse(self, path, recursive=None, ignore_links=None):
+        """
+        Parse file/directory and store information on encountered waveform
+        files.
+        """
+        if recursive is None:
+            recursive = self.recursive
+        if ignore_links is None:
+            ignore_links = self.ignore_links
+
+        if recursive:
+            parse_func = recursive_parse
+        else:
+            parse_func = parse_file_to_dict
+
+        self.counter = parse_func(
+            self.data, self.samp_int, path, self.counter, self.format,
+            verbose=self.verbose, quiet=self.quiet, ignore_links=ignore_links)
+
+
+def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
+         ignore_links=False, starttime=None, endtime=None, seed_ids=None,
+         event_times=None, npz_output=None, npz_input=None, plot_x=True,
+         plot_gaps=True, print_gaps=False, plot=False):
+    """
+    :type plot: bool or str
+    :param plot: False for no plot at all, True for interactive window, str for
+        output to image file.
+    """
+    scanner = Scanner(format=format, verbose=verbose, quiet=quiet,
+                      recursive=recursive, ignore_links=ignore_links,
+                      starttime=starttime, endtime=endtime, seed_ids=seed_ids)
+
+    if plot is None:
+        plot = False
+
+    # Print help and exit if no arguments are given
+    if len(paths) == 0 and npz_input is None:
+        msg = "No paths specified and no npz data to load specified"
+        raise ValueError(msg)
+
+    if npz_input:
+        scanner.load_npz(npz_input)
+    for path in paths:
+        scanner.parse(path)
+
+    if not scanner.data:
+        if verbose or not quiet:
+            print("No waveform data found.")
+        return None
+    if npz_output:
+        scanner.save_npz(npz_output)
+
+    if plot:
+        plot_kwargs = dict(plot_x=plot_x, plot_gaps=plot_gaps,
+                           print_gaps=print_gaps, event_times=event_times)
+        if plot is True:
+            scanner.plot(outfile=None, show=True, **plot_kwargs)
+        else:
+            # plotting to file, so switch to non-interactive backend
+            with MatplotlibBackend("AGG", sloppy=False):
+                scanner.plot(outfile=plot, show=False, **plot_kwargs)
+    else:
+        scanner.analyze_parsed_data(print_gaps=print_gaps)
+
+    return scanner
 
 
 def main(argv=None):
@@ -514,15 +621,15 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
 
-    return scan(
-        paths=args.paths, format=args.format, verbose=args.verbose,
-        quiet=args.quiet, recursive=args.recursive,
-        ignore_links=args.ignore_links, starttime=args.start_time,
-        endtime=args.end_time, seed_ids=args.id, event_times=args.event_time,
-        npz_output=args.write, npz_input=args.load, plot_x=not args.no_x,
-        plot_gaps=not args.no_gaps, print_gaps=args.print_gaps,
-        plot=args.output or True)[0]
+    scan(paths=args.paths, format=args.format, verbose=args.verbose,
+         quiet=args.quiet, recursive=args.recursive,
+         ignore_links=args.ignore_links, starttime=args.start_time,
+         endtime=args.end_time, seed_ids=args.id,
+         event_times=args.event_time, npz_output=args.write,
+         npz_input=args.load, plot_x=not args.no_x,
+         plot_gaps=not args.no_gaps, print_gaps=args.print_gaps,
+         plot=args.output or True)
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
