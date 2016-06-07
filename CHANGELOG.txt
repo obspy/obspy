@@ -1,4 +1,8 @@
 1.0.2: (doi: 10.5281/zenodo.49636)
+ - obspy.core:
+   * Added workaround for numpy issue where many FFTs of various lengths fill
+     a cache that never gets cleared, effectively creating a memory leak
+     (see #1424).
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
