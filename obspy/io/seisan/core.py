@@ -165,8 +165,8 @@ def _read_seisan(filename, headonly=False, **kwargs):  # @UnusedVariable
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch // 8
-    dtype = np.dtype(native_str(byteorder + 'i' + str(dlen)))
-    stype = native_str('=i' + str(dlen))
+    dtype = np.dtype(byteorder + 'i' + str(dlen))
+    stype = '=i' + str(dlen)
     for _i in range(number_of_channels):
         # get channel header
         temp = _readline(fh, 1040).decode()

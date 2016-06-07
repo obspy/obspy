@@ -122,7 +122,7 @@ from __future__ import absolute_import, division, print_function
 
 from .client import Client  # NOQA
 
-__all__ = [native_str("Client")]
+__all__ = ["Client"]
 
 
 if __name__ == '__main__':

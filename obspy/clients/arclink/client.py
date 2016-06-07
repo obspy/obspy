@@ -161,13 +161,12 @@ class Client(object):
     def _reconnect(self):
         self._client.close()
         try:
-            self._client.open(native_str(self._client.host),
+            self._client.open(self._client.host,
                               self._client.port,
                               self._client.timeout)
         except Exception:
             # old Python 2.7: port needs to be native int or string -> not long
-            self._client.open(native_str(self._client.host),
-                              native_str(self._client.port),
+            self._client.open(self._client.host, self._client.port,
                               self._client.timeout)
 
     def _write_ln(self, buffer):
@@ -541,7 +540,7 @@ class Client(object):
                    "'FSEED'")
             raise ArcLinkException(msg)
         # check parameters
-        is_name = isinstance(filename, (str, native_str))
+        is_name = isinstance(filename, str):
         if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)

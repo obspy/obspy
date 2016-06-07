@@ -43,8 +43,8 @@ def _is_win(filename, century="20"):  # @UnusedVariable
             int('%x' % (ord(buff[2:3]) >> 4))
             ord(buff[3:4])
             idata00 = fpin.read(4)
-            np.fromstring(idata00, native_str('>i'))[0]
     except Exception:
+            np.fromstring(idata00, '>i')[0]
         return False
     return True
 
@@ -80,7 +80,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
             if len(pklen) < 4:
                 break
             leng = 4
-            truelen = np.fromstring(pklen, native_str('>i'))[0]
+            truelen = np.fromstring(pklen, '>i')[0]
             if truelen == 0:
                 break
             buff = fpin.read(6)
@@ -114,7 +114,7 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
 
                 idata00 = fpin.read(4)
                 leng += 4
-                idata22 = np.fromstring(idata00, native_str('>i'))[0]
+                idata22 = np.fromstring(idata00, '>i')[0]
 
                 if chanum in output:
                     output[chanum].append(idata22)
@@ -147,20 +147,18 @@ def _read_win(filename, century="20", **kwargs):  # @UnusedVariable
                 elif datawide == 2:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[2 * i:2 * (i + 1)],
-                                          native_str('>h'))[0]
+                            np.fromstring(sdata[2 * i:2 * (i + 1)], '>h')[0]
                         output[chanum].append(idata2)
                 elif datawide == 3:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
                             np.fromstring(sdata[3 * i:3 * (i + 1)] + b' ',
-                                          native_str('>i'))[0] >> 8
+                                          '>i')[0] >> 8
                         output[chanum].append(idata2)
                 elif datawide == 4:
                     for i in range((xlen // datawide)):
                         idata2 = output[chanum][-1] +\
-                            np.fromstring(sdata[4 * i:4 * (i + 1)],
-                                          native_str('>i'))[0]
+                            np.fromstring(sdata[4 * i:4 * (i + 1)], '>i')[0]
                         output[chanum].append(idata2)
                 else:
                     msg = "DATAWIDE is %s " % datawide + \

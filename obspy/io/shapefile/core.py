@@ -48,7 +48,7 @@ def _write_shapefile(obj, filename, **kwargs):
     if not filename.endswith(".shp"):
         filename += ".shp"
 
-    driver = ogr.GetDriverByName(native_str("ESRI Shapefile"))
+    driver = ogr.GetDriverByName("ESRI Shapefile")
 
     driver.DeleteDataSource(filename)
     data_source = driver.CreateDataSource(filename)
@@ -124,36 +124,36 @@ def _add_catalog_layer(data_source, catalog):
             # setting fields with `None` results in values of `0.000`
             # need to really omit setting values if they are `None`
             if event.resource_id is not None:
-                feature.SetField(native_str("EventID"),
-                                 native_str(event.resource_id))
+                feature.SetField("EventID",
+                                 event.resource_id)
             if origin.resource_id is not None:
-                feature.SetField(native_str("OriginID"),
-                                 native_str(origin.resource_id))
+                feature.SetField("OriginID",
+                                 origin.resource_id)
             if t_origin is not None:
                 # Use timestamp for exact timing
-                feature.SetField(native_str("OriginTime"), t_origin.timestamp)
+                feature.SetField("OriginTime", t_origin.timestamp)
             if t_pick is not None:
                 # Use timestamp for exact timing
-                feature.SetField(native_str("FirstPick"), t_pick.timestamp)
+                feature.SetField("FirstPick", t_pick.timestamp)
             if date is not None:
                 # ESRI shapefile attributes are stored in dbf files, which can
                 # not store datetimes, only dates. We still need to use the
                 # GDAL API with precision up to seconds (aiming at other output
                 # drivers of GDAL; `100` stands for GMT)
-                feature.SetField(native_str("Date"), date.year, date.month,
+                feature.SetField("Date", date.year, date.month,
                                  date.day, date.hour, date.minute, date.second,
                                  100)
             if origin.latitude is not None:
-                feature.SetField(native_str("Latitude"), origin.latitude)
+                feature.SetField("Latitude", origin.latitude)
             if origin.longitude is not None:
-                feature.SetField(native_str("Longitude"), origin.longitude)
+                feature.SetField("Longitude", origin.longitude)
             if origin.depth is not None:
-                feature.SetField(native_str("Depth"), origin.depth / 1e3)
+                feature.SetField("Depth", origin.depth / 1e3)
             if magnitude.mag is not None:
-                feature.SetField(native_str("Magnitude"), magnitude.mag)
+                feature.SetField("Magnitude", magnitude.mag)
             if magnitude.resource_id is not None:
-                feature.SetField(native_str("MagID"),
-                                 native_str(magnitude.resource_id))
+                feature.SetField("MagID",
+                                 magnitude.resource_id)
 
             if origin.latitude is not None and origin.longitude is not None:
                 point = ogr.Geometry(ogr.wkbPoint)
@@ -211,24 +211,24 @@ def _add_inventory_layer(data_source, inventory):
                 # setting fields with `None` results in values of `0.000`
                 # need to really omit setting values if they are `None`
                 if net.code is not None:
-                    feature.SetField(native_str("Network"),
-                                     native_str(net.code))
+                    feature.SetField("Network",
+                                     net.code)
                 if sta.code is not None:
-                    feature.SetField(native_str("Station"),
-                                     native_str(sta.code))
+                    feature.SetField("Station",
+                                     sta.code)
                 if sta.latitude is not None:
-                    feature.SetField(native_str("Latitude"), sta.latitude)
+                    feature.SetField("Latitude", sta.latitude)
                 if sta.longitude is not None:
-                    feature.SetField(native_str("Longitude"), sta.longitude)
+                    feature.SetField("Longitude", sta.longitude)
                 if sta.elevation is not None:
-                    feature.SetField(native_str("Elevation"), sta.elevation)
+                    feature.SetField("Elevation", sta.elevation)
                 if sta.start_date is not None:
                     date = sta.start_date
                     # ESRI shapefile attributes are stored in dbf files, which
                     # can not store datetimes, only dates. We still need to use
                     # the GDAL API with precision up to seconds (aiming at
                     # other output drivers of GDAL; `100` stands for GMT)
-                    feature.SetField(native_str("StartDate"), date.year,
+                    feature.SetField("StartDate", date.year,
                                      date.month, date.day, date.hour,
                                      date.minute, date.second, 100)
                 if sta.end_date is not None:
@@ -237,12 +237,12 @@ def _add_inventory_layer(data_source, inventory):
                     # can not store datetimes, only dates. We still need to use
                     # the GDAL API with precision up to seconds (aiming at
                     # other output drivers of GDAL; `100` stands for GMT)
-                    feature.SetField(native_str("StartDate"), date.year,
+                    feature.SetField("StartDate", date.year,
                                      date.month, date.day, date.hour,
                                      date.minute, date.second, 100)
                 if channel_list:
-                    feature.SetField(native_str("Channels"),
-                                     native_str(channel_list))
+                    feature.SetField("Channels",
+                                     channel_list)
 
                 if sta.latitude is not None and sta.longitude is not None:
                     point = ogr.Geometry(ogr.wkbPoint)
@@ -283,11 +283,11 @@ def _get_wgs84_spatial_reference():
 
 def _create_layer(data_source, layer_name, field_definitions):
     sr = _get_wgs84_spatial_reference()
-    layer = data_source.CreateLayer(native_str(layer_name), sr,
+    layer = data_source.CreateLayer(layer_name, sr,
                                     ogr.wkbPoint)
     # Add the fields we're interested in
     for name, type_, width, precision in field_definitions:
-        field = ogr.FieldDefn(native_str(name), type_)
+        field = ogr.FieldDefn(name, type_)
         if width is not None:
             field.SetWidth(width)
         if precision is not None:

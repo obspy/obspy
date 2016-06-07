@@ -130,15 +130,13 @@ class FutureUsageTestCase(unittest.TestCase):
         exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
 
         future_import_line = (
-            "from __future__ import (absolute_import, division, "
-
+            "from __future__ import absolute_import, division, print_function")
         future_imports_pattern = re.compile(
-            r"^from __future__ import \(absolute_import,\s*"
+            r"^from __future__ import absolute_import,\s*"
+            r"division,\s*print_function$",
             flags=re.MULTILINE)
 
-        builtin_pattern = re.compile(
-            r"^from future\.builtins import \*  # NOQA",
-            flags=re.MULTILINE)
+        builtin_pattern = re.compile(r"^from future.*", flags=re.MULTILINE)
 
         failures = []
         for filename in get_all_py_files():
@@ -151,9 +149,8 @@ class FutureUsageTestCase(unittest.TestCase):
                 failures.append("File '%s' misses imports: %s" %
                                 (filename, future_import_line))
 
-            if re.search(builtin_pattern, content) is None:
-                failures.append("File '%s' misses imports: %s" %
-                                (filename, builtins_line))
+            if re.search(builtin_pattern, content):
+                failures.append("File '%s' has a future import." % filename)
         self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
 
 

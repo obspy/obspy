@@ -32,10 +32,10 @@ RETURNFLAG_KEY = {
 }
 
 DATATYPE_KEY = {
-    b't4': '>f4', b't8': '>f8',
-    b's4': '>i4', b's2': '>i2',
-    b'f4': '<f4', b'f8': '<f8',
-    b'i4': '<i4', b'i2': '<i2'
+    't4': '>f4', 't8': '>f8',
+    's4': '>i4', 's2': '>i2',
+    'f4': '<f4', 'f8': '<f8',
+    'i4': '<i4', 'i2': '<i2'
 }
 
 
@@ -45,7 +45,7 @@ def get_numpy_type(tpstr):
     return appropriate numpy.dtype object
     """
     dtypestr = DATATYPE_KEY[tpstr]
-    tp = np.dtype(native_str(dtypestr))
+    tp = np.dtype(dtypestr)
     return tp
 
 

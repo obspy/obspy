@@ -179,7 +179,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
     # present.
     if colorbar is None:
         if len(lons) > 1 and hasattr(color, "__len__") and \
-                not isinstance(color, (str, native_str)):
+                not isinstance(color, str):
             colorbar = True
         else:
             colorbar = False
@@ -234,7 +234,7 @@ def plot_basemap(lons, lats, size, color, labels=None, projection='global',
 
     if colorbar:
         if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, (str, native_str)):
+            if isinstance(colorbar_ticklabel_format, str):
                 formatter = FormatStrFormatter(colorbar_ticklabel_format)
             elif hasattr(colorbar_ticklabel_format, '__call__'):
                 formatter = FuncFormatter(colorbar_ticklabel_format)
@@ -554,7 +554,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         show_colorbar = colorbar
     else:
         if len(lons) > 1 and hasattr(color, "__len__") and \
-                not isinstance(color, (str, native_str)):
+                not isinstance(color, str):
             show_colorbar = True
         else:
             show_colorbar = False
@@ -704,7 +704,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     # Only show the colorbar for more than one event.
     if show_colorbar:
         if colorbar_ticklabel_format is not None:
-            if isinstance(colorbar_ticklabel_format, (str, native_str)):
+            if isinstance(colorbar_ticklabel_format, str):
                 formatter = FormatStrFormatter(colorbar_ticklabel_format)
             elif hasattr(colorbar_ticklabel_format, '__call__'):
                 formatter = FuncFormatter(colorbar_ticklabel_format)

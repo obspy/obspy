@@ -141,7 +141,7 @@ class Client(WaveformClient, HTTPClient):
         int_arguments = ["kernelwidth"]
         time_arguments = ["origintime"]
 
-        for keys, t in ((str_arguments, native_str),
+        for keys, t in ((str_arguments, str),
                         (float_arguments, float),
                         (int_arguments, int),
                         (time_arguments, obspy.UTCDateTime)):
@@ -155,7 +155,7 @@ class Client(WaveformClient, HTTPClient):
                 value = t(value)
                 # String arguments are stripped and empty strings are not
                 # allowed.
-                if t is native_str:
+                if t is str:
                     value = value.strip()
                     if not value:
                         raise ValueError("String argument '%s' must not be "
@@ -177,7 +177,7 @@ class Client(WaveformClient, HTTPClient):
             # If a string like object, attempt to parse it to a datetime
             # object, otherwise assume it`s a phase-relative time and let the
             # Syngine service deal with the error handling.
-            elif isinstance(value, (str, native_str)):
+            elif isinstance(value, str):
                 try:
                     value = obspy.UTCDateTime(value)
                 except Exception:
@@ -186,7 +186,7 @@ class Client(WaveformClient, HTTPClient):
             # constructor without catching the error.
             else:
                 value = obspy.UTCDateTime(value)
-            params[key] = native_str(value)
+            params[key] = value
 
         # These all have to be lists of floats. Otherwise it fails.
         source_mecs = ["sourcemomenttensor",
