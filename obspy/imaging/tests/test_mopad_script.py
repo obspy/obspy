@@ -10,13 +10,9 @@ import sys
 import unittest
 from itertools import product
 
-if sys.version_info.major == 2:
-    from itertools import izip_longest as zip_longest
-else:
-    from itertools import zip_longest
-
 import numpy as np
 
+from obspy.core import compatibility
 from obspy.core.util.misc import CatchOutput
 from obspy.core.util.testing import ImageComparison, ImageComparisonException
 from obspy.imaging.scripts.mopad import main as obspy_mopad
@@ -191,9 +187,10 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
         with open(expected, 'rt') as expf:
             bio = out.stdout.decode('utf-8')
             # expf.read().splitlines() differs to expf.readlines() ?!?!?!
-            for exp_line, out_line in zip_longest(expf.read().splitlines(),
-                                                  bio.splitlines(),
-                                                  fillvalue=''):
+            for exp_line, out_line in compatibility.zip_longest(
+                    expf.read().splitlines(),
+                    bio.splitlines(),
+                    fillvalue=''):
                 if exp_line.startswith('>') or out_line.startswith('>'):
                     self.assertEqual(exp_line, out_line,
                                      msg='Headers do not match!')

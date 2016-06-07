@@ -17,26 +17,20 @@ import gzip
 import io
 import os
 import re
-import sys
 from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
-from collections import OrderedDict
 
-if sys.version_info.major == 2:
-    from urllib import urlencode
-    import urllib2 as urllib_request
-    import Queue as queue
-else:
-    from urllib.parse import urlencode
-    import urllib.request as urllib_request
-    import queue
 
 from lxml import etree
 
 import obspy
 from obspy import UTCDateTime, read_inventory, compatibility
+from obspy import UTCDateTime, read_inventory
+from obspy.core.compatibility import (
+    queue, urlencode, HTTPRedirectHandler, HTTPDigestAuthHandler,
+    HTTPPasswordMgrWithDefaultRealm, Request, build_opener)
 from .header import (DEFAULT_PARAMETERS, DEFAULT_USER_AGENT, FDSNWS,
                      OPTIONAL_PARAMETERS, PARAMETER_ALIASES, URL_MAPPINGS,
                      WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException,
@@ -47,7 +41,7 @@ from .wadl_parser import WADLParser
 DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
 
-class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
+class CustomRedirectHandler(HTTPRedirectHandler):
     """
     Custom redirection handler to also do it for POST requests which the
     standard library does not do by default.
@@ -71,14 +65,14 @@ class CustomRedirectHandler(urllib_request.HTTPRedirectHandler):
 
         # Also redirect the data of the request which the standard library
         # interestingly enough does not do.
-        return urllib_request.Request(
+        return Request(
             newurl, headers=newheaders,
             data=req.data,
             origin_req_host=req.origin_req_host,
             unverifiable=True)
 
 
-class NoRedirectionHandler(urllib_request.HTTPRedirectHandler):
+class NoRedirectionHandler(HTTPRedirectHandler):
     """
     Handler that does not direct!
     """
@@ -221,9 +215,10 @@ class Client(object):
         handlers = []
         if user is not None and password is not None:
             # Create an OpenerDirector for HTTP Digest Authentication
-            password_mgr = urllib_request.HTTPPasswordMgrWithDefaultRealm()
+
+            password_mgr = HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
-            handlers.append(urllib_request.HTTPDigestAuthHandler(password_mgr))
+            handlers.append(HTTPDigestAuthHandler(password_mgr))
 
         if (user is None and password is None) or force_redirect is True:
             # Redirect if no credentials are given or the force_redirect
@@ -233,7 +228,7 @@ class Client(object):
             handlers.append(NoRedirectionHandler())
 
         # Don't install globally to not mess with other codes.
-        self._url_opener = urllib_request.build_opener(*handlers)
+        self._url_opener = build_opener(*handlers)
 
         self.request_headers = {"User-Agent": user_agent}
         # Avoid mutable kwarg.
@@ -875,7 +870,7 @@ class Client(object):
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
-        arguments = OrderedDict(
+        arguments = collections.OrderedDict(
             quality=quality,
             minimumlength=minimumlength,
             longestonly=longestonly
@@ -1020,7 +1015,7 @@ class Client(object):
             msg = "The current client does not have a station service."
             raise ValueError(msg)
 
-        arguments = OrderedDict(
+        arguments = collections.OrderedDict(
             level=level,
             includerestriced=includerestricted,
             includeavailability=includeavailability
@@ -1638,7 +1633,7 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
             print("-" * 70)
 
     try:
-        request = urllib_request.Request(url=url, headers=headers)
+        request = Request(url=url, headers=headers)
         # Request gzip encoding if desired.
         if use_gzip:
             request.add_header("Accept-encoding", "gzip")

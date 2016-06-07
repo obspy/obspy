@@ -32,21 +32,22 @@ import select
 import sys
 from argparse import ArgumentParser
 
-if sys.version_info.major == 2:
-    import BaseHTTPServer as http_server
-else:
-    import http.server as http_server
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
 
 from obspy import __version__
+from obspy.core import compatibility
 from obspy.db.db import Base
 from obspy.db.indexer import WaveformFileCrawler, worker
 from obspy.db.util import parse_mapping_data
 
+if compatibility.PY2:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+else:
+    from from http.server import BaseHTTPRequestHandler, HTTPServer
 
-class MyHandler(http_server.BaseHTTPRequestHandler):
+
+class MyHandler(compatibility.BaseHTTPRequestHandler):
     def do_GET(self):  # noqa
         """
         Respond to a GET request.
@@ -91,7 +92,7 @@ class MyHandler(http_server.BaseHTTPRequestHandler):
         self.wfile.write(out)
 
 
-class WaveformIndexer(http_server.HTTPServer, WaveformFileCrawler):
+class WaveformIndexer(compatibility.HTTPServer, WaveformFileCrawler):
     """
     A waveform indexer server.
     """

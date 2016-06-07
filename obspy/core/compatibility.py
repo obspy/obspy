@@ -20,9 +20,27 @@ except ImportError:
     pass
 
 if PY2:
+    import Queue as queue
     from string import maketrans
+
+    from urllib import urlencode
+    from urllib2 import (HTTPRedirectHandler, Request,
+                         HTTPPasswordMgrWithDefaultRealm,
+                         HTTPDigestAuthHandler, build_opener)
+    import BaseHTTPServer as http_server
+
+    from itertools import izip_longest as zip_longest
 else:
+    import queue
     maketrans = bytes.maketrans
+
+    from urllib.parse import urlencode
+    from urllib.request import (HTTPRedirectHandler, Request,
+                                HTTPPasswordMgrWithDefaultRealm,
+                                HTTPDigestAuthHandler, build_opener)
+    import http.server as http_server
+
+    from itertools import zip_longest
 
 
 if PY2:
