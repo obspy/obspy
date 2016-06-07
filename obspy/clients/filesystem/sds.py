@@ -53,7 +53,7 @@ import numpy as np
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
 from obspy.core.util.misc import BAND_CODE
-from obspy.imaging.scripts.scan import scan
+from obspy.imaging.scripts.scan import scan, Scanner
 from obspy.io.mseed import ObsPyMSEEDFilesizeTooSmallError
 
 
@@ -676,13 +676,11 @@ class Client(object):
 
     def _extract_missing_data(self, filenames):
         """
-        Extracts data that is missing in SDS archive from given local files.
+        Extracts information on data that is missing in SDS archive and could
+        be retrieved from given local files.
 
         :type filenames: list of str
         :param filenames: Files to extract data from.
-        :rtype: :class:`~obspy.core.stream.Stream`
-        :returns: Input data reduced to what is not currently in the SDS
-            archive.
         """
         # assemble information on the files with new data for the SDS archive
         data = {}
@@ -711,13 +709,17 @@ class Client(object):
 
         # assemble information on gaps in the SDS archive that might be covered
         # by new data
-        gaps = []
+        gaps = {}
         for seed_id, filenames_ in filenames_to_check_SDS.items():
-            _, gaps_, _ = scan(
+            scanner = scan(
                 paths=filenames_, format=self.format, recursive=False,
                 ignore_links=False, starttime=times_min[seed_id], quiet=True,
-                endtime=times_max[seed_id], seed_ids=[seed_id], plot=False)
-            gaps += gaps_
+                endtime=times_max[seed_id], seed_ids=[seed_id], plot=False,
+                print_gaps=False)
+            if scanner is None:
+                continue
+            for info in scanner._info:
+                gaps.setdefault(info["label"], []).extend(info["gaps"])
 
         return data, gaps
 
@@ -737,6 +739,8 @@ class Client(object):
             lead to duplicate data in archive).
         """
         format = self.format
+        now = UTCDateTime()
+        now_str = now.strftime("%Y%m%d%H%M%S")
 
         if format != "MSEED":
             msg = ("Currently only implemented for SDS Archive with format "
@@ -744,68 +748,76 @@ class Client(object):
             raise NotImplementedError(msg)
 
         backupdir = None
-        backed_up = set()
-        appended_files = set()
+        # maps original file paths (that were appended to) to backup file paths
+        # (or `None` if backup option is not selected)
+        changed_files = {}
 
         if only_missing:
             data, gaps = self._extract_missing_data(filenames)
-            for id, start, end in gaps:
-                data_files = set()
-                for filename, traces in data.get(id, {}).items():
-                    for tr in traces:
-                        if (start < tr.stats.starttime < end or
-                                start < tr.stats.endtime < end):
-                            data_files.add(filename)
-                st = Stream()
-                for filename in data_files:
-                    st = read(filename, starttime=start, endtime=end,
-                              sourcename=id)
-                    st = st.select(id=id).trim(start, end,
-                                               nearest_sample=False)
-                    st_dict = self._split_stream_by_filenames(st)
-                    if not st_dict:
-                        continue
-                    for filename_, st_ in st_dict.items():
-                        # backup original file
-                        if backup and filename_ not in backed_up:
-                            if backupdir is None:
-                                prefix = "obspy-sds-backup-{}-".format(
-                                    UTCDateTime().strftime("%Y%m%d%H%M%S"))
-                                backupdir = tempfile.mkdtemp(prefix=prefix)
-                            backupfile = os.path.join(
-                                backupdir,
-                                self._filename_strip_sds_root(filename_))
-                            target_dir = os.path.dirname(backupfile)
-                            try:
-                                if not os.path.isdir(target_dir):
-                                    os.makedirs(target_dir)
-                                shutil.copy2(filename_, backupfile)
-                            except Exception:
-                                err_msg = \
-                                    traceback.format_exc(0).splitlines()[-1]
-                                info = ""
-                                if appended_files:
-                                    info = (" The following files have so far "
-                                            "been modified: {}")
-                                    info = info.format(appended_files)
-                                msg = ("Backup option chosen and backup of "
-                                       "file '{}' to '{}' failed ({}). "
-                                       "Aborting appending to SDS archive.{}")
-                                msg = msg.format(filename_, backupfile,
-                                                 err_msg, info)
-                                raise Exception(msg)
-                        # now append the missing segment to the file
-                        with open(filename_, "ab") as fh:
-                            st_.write(fh, format=format)
-                        appended_files.add(filename_)
+            for id, gaps_ in gaps.items():
+                for start, end in gaps_:
+                    data_files = set()
+                    for filename, traces in data.get(id, {}).items():
+                        for tr in traces:
+                            if (start < tr.stats.starttime < end or
+                                    start < tr.stats.endtime < end):
+                                data_files.add(filename)
+                    st = Stream()
+                    for filename in data_files:
+                        st = read(filename, starttime=start, endtime=end,
+                                  sourcename=id)
+                        st = st.select(id=id).trim(start, end,
+                                                   nearest_sample=False)
+                        st_dict = self._split_stream_by_filenames(st)
+                        if not st_dict:
+                            continue
+                        for filename_, st_ in st_dict.items():
+                            if not st_:
+                                continue
+                            # backup original file
+                            backupfile = None
+                            if backup and filename_ not in changed_files:
+                                if backupdir is None:
+                                    prefix = "obspy-sds-backup-{}-".format(
+                                        now_str)
+                                    backupdir = tempfile.mkdtemp(prefix=prefix)
+                                backupfile = os.path.join(
+                                    backupdir,
+                                    self._filename_strip_sds_root(filename_))
+                                target_dir = os.path.dirname(backupfile)
+                                try:
+                                    if not os.path.isdir(target_dir):
+                                        os.makedirs(target_dir)
+                                    shutil.copy2(filename_, backupfile)
+                                except Exception:
+                                    err_msg = \
+                                        traceback.format_exc(0).\
+                                        splitlines()[-1]
+                                    info = ""
+                                    if changed_files:
+                                        info = (
+                                            " The following files have so far "
+                                            "been modified: {}").format(
+                                                changed_files.keys())
+                                    msg = (
+                                        "Backup option chosen and backup of "
+                                        "file '{}' to '{}' failed ({}). "
+                                        "Aborting appending to SDS archive.{}")
+                                    msg = msg.format(filename_, backupfile,
+                                                     err_msg, info)
+                                    raise Exception(msg)
+                            # now append the missing segment to the file
+                            with open(filename_, "ab") as fh:
+                                st_.write(fh, format=format)
+                            changed_files[filename_] = backupfile
         else:
             # XXX TODO
             raise NotImplementedError()
 
-        if verbose and appended_files:
+        if verbose and changed_files:
             print("The following files have been appended to:")
             print("\n".join("\t" + filename
-                            for filename in sorted(appended_files)))
+                            for filename in sorted(changed_files)))
             if backup:
                 print("Backups of original files have been stored "
                       "in '{}'.".format(backupdir))
