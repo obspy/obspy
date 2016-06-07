@@ -61,6 +61,12 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
               internal colorcycle of the different phases.
     :param event_labels: if True, plots a little label next to the events
     :param station_labels: if True, plots a little label next to each station
+    :param fname_out: file name under which the plot is saved. Uses offscreen
+              rendering which can be useful if mayavi or OpenGl make problems
+    :param view_dict: mayaview view dictionary that defines the initial
+                      perspective of the 3d camera. E.g.:
+                     {'elevation': 80, 'azimuth': -20, 'distance': 4.,
+                     'roll': 0, '', 'focalpoint': (0., 0., 0.)}
     """
     if kind == 'mayavi':
         _plot_rays_mayavi(
@@ -89,7 +95,10 @@ def _write_vtk_files(inventory=None, catalog=None, station_latitude=None,
                      station_longitude=None, event_latitude=None,
                      event_longitude=None, event_depth_in_km=None,
                      phase_list=('P'), taup_model='iasp91'):
-
+    """
+    internal vtk output routine. Check out the plot_rays routine
+    for more information on the parameters
+    """
     # define file names
     fname_paths = 'paths.vtk'
     fname_events = 'events.vtk'
@@ -192,6 +201,10 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
                       savemovie=False, figsize=(800, 800), taup_model='iasp91',
                       coastlines='internal', icol=0, event_labels=True,
                       station_labels=True, fname_out=None, view_dict=None):
+    """
+    internal mayavi plotting routine. Check out the plot_rays routine
+    for more information on the parameters
+    """
     try:
         from mayavi import mlab
     except Exception as err:

@@ -31,7 +31,7 @@ class PathPlottingTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'images')
         pass
 
-    def test_getraypaths(self):
+    def test_compute_ray_paths(self):
         # careful, the full inventory, catalog test is long (1min)
         # greatcircles = get_ray_paths(
         #        inventory=self.inventory, catalog=self.catalog,
@@ -48,7 +48,7 @@ class PathPlottingTestCase(unittest.TestCase):
 
     @unittest.skipIf(not HAS_MAYAVI,
                      'Module mayavi is not installed or doesn\'t run')
-    def test_pathplotting(self):
+    def test_path_plotting(self):
         # uncomment the following to read the global network inventory and
         # a basic catalog that are used by the commented tests:
         filedir = os.path.dirname(__file__)
@@ -61,7 +61,7 @@ class PathPlottingTestCase(unittest.TestCase):
         # this test uses the resampling method along the CMB
         view_dict = {'elevation': 80, 'azimuth': -20, 'distance': 4.,
                      'focalpoint': (0., 0., 0.)}
-        with ImageComparison(self.path, 'ray_paths.png', reltol=20) as ic:
+        with ImageComparison(self.path, 'ray_paths.png', reltol=1.5) as ic:
             plot_rays(inventory=inventory, catalog=catalog,
                       phase_list=['Pdiff'], colorscheme='dark',
                       kind='mayavi', view_dict=view_dict, icol=2,
