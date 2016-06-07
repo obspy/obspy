@@ -67,16 +67,10 @@ class PathPlottingTestCase(unittest.TestCase):
                       kind='mayavi', view_dict=view_dict, icol=2,
                       fname_out=ic.name)
 
-        # catalog and inventory test with a phase that doesn't
-        # have too many paths (PKIKP):
-        #
-        # plot_rays(inventory=inventory, catalog=catalog,
-        #          phase_list=['PKIKP'],
-        #          kind='mayavi', colorscheme='dark')
-
         # the following test is for an animated mayavi windows
         # and movie plotting.
-        # Needs third party coastlines by default !
+        # Needs third party coastlines by default, otherwise
+        # remove the coastlines keyword !
         #
         # plot_rays(inventory=inv, catalog=cat,
         #           phase_list=['PKP'], animate=True, savemovie=False,
