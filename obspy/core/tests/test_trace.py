@@ -2591,6 +2591,30 @@ class TraceTestCase(unittest.TestCase):
             tr_float64.copy().interpolate(
                 1.0, method="lanczos", a=2).data.dtype, np.float64)
 
+    def test_set_trace_id(self):
+        """
+        Test setter of `id` property.
+        """
+        tr = Trace()
+        tr.stats.location = "00"
+        # check setting net/sta/loc/cha with an ID
+        tr.id = "GR.FUR..HHZ"
+        self.assertEqual(tr.stats.network, "GR")
+        self.assertEqual(tr.stats.station, "FUR")
+        self.assertEqual(tr.stats.location, "")
+        self.assertEqual(tr.stats.channel, "HHZ")
+        # check that invalid types will raise
+        invalid = (True, False, -10, 0, 1.0, [1, 4, 3, 2], np.ones(4))
+        for id_ in invalid:
+            with self.assertRaises(TypeError):
+                tr.id = id_
+        # check that invalid ID strings will raise
+        invalid = ("ABCD", "AB.CD", "AB.CD.00", "..EE", "....",
+                   "GR.FUR..HHZ.", "GR.FUR..HHZ...")
+        for id_ in invalid:
+            with self.assertRaises(ValueError):
+                tr.id = id_
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

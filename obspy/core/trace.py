@@ -807,6 +807,41 @@ class Trace(object):
 
     id = property(get_id)
 
+    @id.setter
+    def id(self, value):
+        """
+        Set network, station, location and channel codes from a SEED ID.
+
+        Raises an Exception if the provided ID does not contain exactly three
+        dots (or is not of type `str`).
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> tr.id = "GR.FUR..HHZ"
+        >>> print(tr)  # doctest: +ELLIPSIS
+        GR.FUR..HHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+
+        :type value: str
+        :param value: SEED ID to use for setting `self.stats.network`,
+            `self.stats.station`, `self.stats.location` and
+            `self.stats.channel`.
+        """
+        try:
+            net, sta, loc, cha = value.split(".")
+        except AttributeError:
+            msg = ("Can only set a Trace's SEED ID from a string "
+                   "(and not from {})").format(type(value))
+            raise TypeError(msg)
+        except ValueError:
+            msg = ("Not a valid SEED ID: '{}'").format(value)
+            raise ValueError(msg)
+        self.stats.network = net
+        self.stats.station = sta
+        self.stats.location = loc
+        self.stats.channel = cha
+
     def plot(self, **kwargs):
         """
         Create a simple graph of the current trace.

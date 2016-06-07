@@ -11,6 +11,9 @@ master:
      "timestamp": array of float POSIX timestamps, compare
      `UTCDateTime.timestamp`; "matplotlib": array of float matplotlib dates,
      useful for plotting on matplotlib time axes; see #1307)
+   * A trace's stats.network/station/location/channel can now also be set in
+     one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
+     see #1439).
  - obspy.clients.fdsn:
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
