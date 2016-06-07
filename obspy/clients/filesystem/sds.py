@@ -724,7 +724,7 @@ class Client(object):
         return data, gaps
 
     def add_data_to_archive(self, filenames, only_missing=True, backup=True,
-                            verbose=True):
+                            verbose=True, plot=True):
         """
         Adds data from given files to SDS Archive.
 
@@ -751,6 +751,9 @@ class Client(object):
         # maps original file paths (that were appended to) to backup file paths
         # (or `None` if backup option is not selected)
         changed_files = {}
+        if plot:
+            scanner = Scanner(format=format, verbose=False, quiet=True,
+                              recursive=False, ignore_links=False)
 
         if only_missing:
             data, gaps = self._extract_missing_data(filenames)
@@ -806,6 +809,9 @@ class Client(object):
                                     msg = msg.format(filename_, backupfile,
                                                      err_msg, info)
                                     raise Exception(msg)
+                            # scan original file for before/after comparison
+                            if plot and filename_ not in changed_files:
+                                scanner.parse(filename_)
                             # now append the missing segment to the file
                             with open(filename_, "ab") as fh:
                                 st_.write(fh, format=format)
@@ -821,6 +827,24 @@ class Client(object):
             if backup:
                 print("Backups of original files have been stored "
                       "in '{}'.".format(backupdir))
+
+        if plot and changed_files:
+            output_file = os.path.join(
+                tempfile.gettempdir(),
+                "obspy-sds-backup-{now}.png".format(now=now_str))
+            # change seed id's of "before" data so that they don't clash with
+            # the "after" data
+            for id_ in scanner.data.keys():
+                scanner.data[id_ + " (before)"] = scanner.data.pop(id_)
+            for id_ in scanner.samp_int.keys():
+                scanner.samp_int[id_ + " (before)"] = scanner.samp_int.pop(id_)
+            # now scan modified files
+            for path in changed_files.keys():
+                scanner.parse(path)
+            scanner.plot(show=False, outfile=output_file)
+            if verbose:
+                print(("Before/after comparison plot saved as: {}").format(
+                    output_file))
 
     def _filename_strip_sds_root(self, filename):
         """
