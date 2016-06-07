@@ -19,7 +19,7 @@ import warnings
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core import AttribDict
+from obspy.core import AttribDict, compatibility
 from .header import MONTHS
 
 
@@ -277,7 +277,7 @@ class SEG2(object):
         # solved with a number of imports from the python-future module and
         # all kinds of subtle changes throughout this file. Separating the
         # handling for Python 2 and 3 seems the cleaner and simpler approach.
-        if PY2:
+        if compatibility.PY2:
             strings = ["".join(filter(is_good_char, _i))
                        for _i in strings
                        if len(_i) >= 3]
