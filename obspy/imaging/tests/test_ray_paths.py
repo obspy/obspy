@@ -52,7 +52,7 @@ class PathPlottingTestCase(unittest.TestCase):
         # uncomment the following to read the global network inventory and
         # a basic catalog that are used by the commented tests:
         filedir = os.path.dirname(__file__)
-        data_path = os.path.join(filedir, 'data', 'IU.xml')
+        data_path = os.path.join(filedir, 'data', 'IU.xml.gz')
         # image_path = os.path.join(filedir, 'images', 'ray_paths.png')
         inventory = read_inventory(data_path)
         # inventory = read_inventory()
