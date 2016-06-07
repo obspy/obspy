@@ -33,6 +33,9 @@ master:
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
+ - obspy.imaging.waveform
+   * Support for filling the wiggles when plotting sections (horizontal and
+     vertical, see #1445).
 
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.clients.fdsn:
