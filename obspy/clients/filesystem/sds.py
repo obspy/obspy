@@ -731,12 +731,23 @@ class Client(object):
         Currently only implemented for SDS archive in MSEED format.
 
         :type filenames: list of str
-        :param filenames: Data to add to archive.
+        :param filenames: Files to check for new data to add to archive.
         :type only_missing: bool
         :param only_missing: Whether to only add data missing in archive
             (slicing the input data to gaps present in archive) or just add all
             input data to archive without any checks of archive contents (might
             lead to duplicate data in archive).
+        :type backup: bool
+        :param backup: Whether to backup original version of changed files in
+            SDS archive to a temporary directory.
+        :type verbose: bool
+        :param verbose: Whether to print info messages on performed operations.
+        :type plot: bool or str
+        :param plot: Whether to save a before/after comparison plot to an image
+            file. ``False`` for no image output, ``True`` for output to a
+            temporary file or a filename.
+        :rtype: str
+        :returns: Textual information of new data added to SDS archive.
         """
         format = self.format
         now = UTCDateTime()
@@ -754,6 +765,8 @@ class Client(object):
         if plot:
             scanner = Scanner(format=format, verbose=False, quiet=True,
                               recursive=False, ignore_links=False)
+
+        new_data_string = []
 
         if only_missing:
             data, gaps = self._extract_missing_data(filenames)
@@ -815,6 +828,7 @@ class Client(object):
                             # now append the missing segment to the file
                             with open(filename_, "ab") as fh:
                                 st_.write(fh, format=format)
+                            new_data_string += str(st_).splitlines()[1:]
                             changed_files[filename_] = backupfile
         else:
             # XXX TODO
@@ -829,9 +843,12 @@ class Client(object):
                       "in '{}'.".format(backupdir))
 
         if plot and changed_files:
-            output_file = os.path.join(
-                tempfile.gettempdir(),
-                "obspy-sds-backup-{now}.png".format(now=now_str))
+            if plot is True:
+                output_file = os.path.join(
+                    tempfile.gettempdir(),
+                    "obspy-sds-backup-{now}.png".format(now=now_str))
+            else:
+                output_file = plot
             # change seed id's of "before" data so that they don't clash with
             # the "after" data
             for id_ in scanner.data.keys():
@@ -845,6 +862,13 @@ class Client(object):
             if verbose:
                 print(("Before/after comparison plot saved as: {}").format(
                     output_file))
+
+        new_data_string = "\n".join(new_data_string)
+        if verbose and new_data_string:
+            print("New data added to archive:")
+            print(new_data_string)
+
+        return new_data_string
 
     def _filename_strip_sds_root(self, filename):
         """
