@@ -204,22 +204,12 @@ class Scanner(object):
     """
     """
     def __init__(self, format=None, verbose=False, quiet=True, recursive=True,
-                 ignore_links=False, starttime=None, endtime=None,
-                 seed_ids=None):
+                 ignore_links=False):
         self.format = format
         self.verbose = verbose
         self.quiet = quiet
         self.recursive = recursive
         self.ignore_links = ignore_links
-        if starttime is None:
-            self.starttime = None
-        else:
-            self.starttime = date2num(starttime.datetime)
-        if endtime is None:
-            self.endtime = None
-        else:
-            self.endtime = date2num(endtime.datetime)
-        self.seed_ids = seed_ids
         # Generate dictionary containing nested lists of start and end times
         # per station
         self.data = {}
@@ -227,7 +217,8 @@ class Scanner(object):
         self.counter = 1
 
     def plot(self, show=True, fig=None, outfile=None, plot_x=True,
-             plot_gaps=True, print_gaps=False, event_times=None):
+             plot_gaps=True, print_gaps=False, event_times=None,
+             starttime=None, endtime=None, seed_ids=None):
         """
         Plot the information on parsed waveform files.
         """
@@ -242,9 +233,8 @@ class Scanner(object):
             fig = plt.figure()
             ax = fig.add_subplot(111)
 
-        self.analyze_parsed_data(print_gaps=print_gaps)
-        starttime = self.starttime
-        endtime = self.endtime
+        self.analyze_parsed_data(print_gaps=print_gaps, starttime=starttime,
+                                 endtime=endtime, seed_ids=seed_ids)
 
         # Plot vertical lines if option 'event_time' was specified
         if event_times:
@@ -341,17 +331,20 @@ class Scanner(object):
             sys.stdout.write('\n')
         return fig
 
-    def analyze_parsed_data(self, print_gaps=False):
+    def analyze_parsed_data(self, print_gaps=False, starttime=None,
+                            endtime=None, seed_ids=None):
         """
         Prepare information for plotting.
         """
         data = self.data
         samp_int = self.samp_int
-        starttime = self.starttime
-        endtime = self.endtime
+        if starttime is not None:
+            starttime = starttime.matplotlib_date
+        if endtime is not None:
+            endtime = endtime.matplotlib_date
         # either use ids specified by user or use ids based on what data we
         # have parsed
-        ids = self.seed_ids or list(data.keys())
+        ids = seed_ids or list(data.keys())
         ids = sorted(ids)[::-1]
         if self.verbose or not self.quiet:
             print('\n')
