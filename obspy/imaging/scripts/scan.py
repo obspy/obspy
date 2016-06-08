@@ -200,18 +200,64 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def _seconds_to_days(seconds):
-    return seconds / (24 * 3600)
-
-
 class Scanner(object):
     """
+    Class to scan contents of waveform files, file by file or recursively
+    across directory trees.
+
+    >>> scanner = Scanner()
+    >>> scanner.parse("/some/directory/with/waveforms")  # doctest: +SKIP
+    >>> scanner.plot()  # doctest: +SKIP
+
+    .. plot::
+
+        import os
+        import obspy
+        directory = os.path.join(os.path.dirname(obspy.__file__),
+                                 "io", "gse2", "tests", "data")
+        scanner = Scanner(quiet=True)
+        scanner.parse(directory)
+        scanner.plot()
+
+    Information on gaps can be accessed in a dictionary structure as
+    ``scanner._info`` after calling
+    :meth:`~obspy.imaging.scripts.scan.Scanner.plot()` or
+    :meth:`~obspy.imaging.scripts.scan.Scanner.analyze_parsed_data()` (all
+    timing information is in matplotlib date numbers):
+
+    >>> print(scanner._info.keys())  # doctest: +SKIP
+    [u'.LE0083..  Z', u'.RNON..Z', u'.GRB1.. BZ', u'.RNHA..EHN', u'.GRA1.. BN',
+     u'ABCD.ABCDE..HHZ', u'.RJOB..Z', u'.CLZ.. BZ',
+     u'SEDZ.\x00\x00\x00\x00\x00..A\x00', u'.GRA1.. BZ']
+    >>> print(scanner._info[".RJOB..Z"])  # doctest: +SKIP
+    {u'data_startends_compressed': array(
+        [[ 732189.10682697,  732189.10752141]]),
+     u'data_starts': array(
+        [ 732189.10682697,  732189.10682697,  732189.10682697]),
+     u'gaps': [],
+     u'overlaps': [(732189.10752141208, 732189.10682696756),
+                   (732189.10752141208, 732189.10682696756)],
+     u'percentage': 100.0}
+
+    :type format: str
+    :param format: Use fixed format for reading all files (e.g. ``MSEED``).
+        This skips file format autodetection and speeds up reading waveform
+        data if file format of all files is known to be the same (files with
+        different waveform format will be skipped!).
+    :type verbose: bool
+    :param verbose: Whether to print information messages.
+    :type recursive: bool
+    :param recursive: Whether to parse directories recursively.
+    :type ignore_links: bool
+    :param ignore_links: Whether to ignore symbolic links.
     """
-    def __init__(self, format=None, verbose=False, quiet=True, recursive=True,
+    def __init__(self, format=None, verbose=False, recursive=True,
                  ignore_links=False):
+        """
+        see :class:`~obspy.imaging.scripts.scan.Scanner`
+        """
         self.format = format
         self.verbose = verbose
-        self.quiet = quiet
         self.recursive = recursive
         self.ignore_links = ignore_links
         # Generate dictionary containing nested lists of start and end times
@@ -220,11 +266,43 @@ class Scanner(object):
         self.samp_int = {}
         self.counter = 1
 
-    def plot(self, show=True, fig=None, outfile=None, plot_x=True,
+    def plot(self, outfile=None, show=True, fig=None, plot_x=True,
              plot_gaps=True, print_gaps=False, event_times=None,
              starttime=None, endtime=None, seed_ids=None):
         """
         Plot the information on parsed waveform files.
+
+        :type outfile: str
+        :param outfile: Filename for image output (e.g.
+            ``"folder/image.png"``). No interactive plot is shown if an output
+            filename is specified.
+        :type show: bool
+        :param show: Whether to open up any interactive plot after plotting.
+        :type fig: :class:`matplotlib.figure.Figure`
+        :param fig: Figure instance to reuse.
+        :type plot_x: bool
+        :param plot_x: Whether to plot "X" markers at start of all parsed
+            ``Trace``s.
+        :type plot_gaps: bool
+        :param plot_gaps: Whether to plot filled rectangles at data gaps (red)
+            and overlaps (blue).
+        :type print_gaps: bool
+        :param print_gaps: Whether to print information on all encountered gaps
+            and overlaps.
+        :type event_times: list of :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param event_times: Highlight given times (e.g. of events or phase
+            onsets for visual inspection of data availability) by plotting
+            vertical lines.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Whether to use a fixed start time for the plot and
+            data percentage calculation.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Whether to use a fixed end time for the plot and
+            data percentage calculation.
+        :type seed_ids: list of str
+        :param endtime: Whether to consider only a specific set of SEED IDs
+            (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
+            IDs encountered in data (if left ``None``).
         """
         import matplotlib.pyplot as plt
 
@@ -239,6 +317,10 @@ class Scanner(object):
 
         self.analyze_parsed_data(print_gaps=print_gaps, starttime=starttime,
                                  endtime=endtime, seed_ids=seed_ids)
+        if starttime is not None:
+            starttime = starttime.matplotlib_date
+        if endtime is not None:
+            endtime = endtime.matplotlib_date
 
         # Plot vertical lines if option 'event_time' was specified
         if event_times:
@@ -247,7 +329,8 @@ class Scanner(object):
                 ax.axvline(time, color='k')
 
         labels = [""] * len(self._info)
-        for _i, (id_, info) in enumerate(sorted(self._info.items())):
+        for _i, (id_, info) in enumerate(sorted(self._info.items(),
+                                                reverse=True)):
             offset = np.ones(len(info["data_starts"])) * _i
             if plot_x:
                 ax.plot(info["data_starts"], offset, 'x', linewidth=2)
@@ -322,7 +405,7 @@ class Scanner(object):
             if show:
                 plt.show()
 
-        if self.verbose and not self.quiet:
+        if self.verbose:
             sys.stdout.write('\n')
         return fig
 
@@ -330,6 +413,23 @@ class Scanner(object):
                             endtime=None, seed_ids=None):
         """
         Prepare information for plotting.
+
+        Information is stored in a dictionary as ``scanner._info``, only
+        containing these data matching the given parameters.
+
+        :type print_gaps: bool
+        :param print_gaps: Whether to print information on all encountered gaps
+            and overlaps.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Whether to use a fixed start time for the plot and
+            data percentage calculation.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Whether to use a fixed end time for the plot and
+            data percentage calculation.
+        :type seed_ids: list of str
+        :param endtime: Whether to consider only a specific set of SEED IDs
+            (e.g. ``seed_ids=["GR.FUR..BHZ", "GR.WET..BHZ"]``) or just all SEED
+            IDs encountered in data (if left ``None``).
         """
         data = self.data
         samp_int = self.samp_int
@@ -341,7 +441,7 @@ class Scanner(object):
         # have parsed
         ids = seed_ids or list(data.keys())
         ids = sorted(ids)[::-1]
-        if self.verbose or not self.quiet:
+        if self.verbose:
             print('\n')
         self._info = {}
         for _i, _id in enumerate(ids):
@@ -364,7 +464,7 @@ class Scanner(object):
                 if not (starttime and endtime):
                     continue
                 gap_info.append((starttime, endtime))
-                if print_gaps and (self.verbose or not self.quiet):
+                if print_gaps:
                     print("%s %s %s %.3f" % (
                         _id, starttime, endtime, endtime - starttime))
                 continue
@@ -393,7 +493,7 @@ class Scanner(object):
                 continue
 
             startend_compressed = compress_start_end(startend.copy(), 1000,
-                                                     merge_overlaps=False)
+                                                     merge_overlaps=True)
 
             info["data_starts"] = startend[:, 0]
             info["data_startends_compressed"] = startend_compressed
@@ -449,7 +549,7 @@ class Scanner(object):
                 _starts = _starts[sort_order]
                 _ends = _ends[sort_order]
                 for start_, end_ in zip(_starts, _ends):
-                    if print_gaps and (self.verbose or not self.quiet):
+                    if print_gaps:
                         start__, end__ = num2date((start_, end_))
                         start__ = UTCDateTime(start__.isoformat())
                         end__ = UTCDateTime(end__.isoformat())
@@ -466,6 +566,9 @@ class Scanner(object):
 
         Currently, data can only be loaded from npz as the first operation,
         i.e. before parsing any files.
+
+        :type filename: str
+        :param filename: Filename to load from.
         """
         if self.data or self.samp_int:
             msg = ("Currently, data can only be loaded from npz as the first "
@@ -476,6 +579,9 @@ class Scanner(object):
     def save_npz(self, filename):
         """
         Save information on scanned data to npz file.
+
+        :type filename: str
+        :param filename: Filename to save to.
         """
         write_npz(filename, data_dict=self.data, samp_int_dict=self.samp_int)
 
@@ -483,6 +589,15 @@ class Scanner(object):
         """
         Parse file/directory and store information on encountered waveform
         files.
+
+        :type path: str
+        :param path: File or directory path (relative or absolute) to parse.
+        :type recursive: bool
+        :param recursive: Override for value of option ``recursive`` set at
+            initialization.
+        :type ignore_links: bool
+        :param ignore_links: Override for value of option ``ignore_links`` set
+            at initialization.
         """
         if recursive is None:
             recursive = self.recursive
@@ -496,7 +611,8 @@ class Scanner(object):
 
         self.counter = parse_func(
             self.data, self.samp_int, path, self.counter, self.format,
-            verbose=self.verbose, quiet=self.quiet, ignore_links=ignore_links)
+            verbose=self.verbose, quiet=not self.verbose,
+            ignore_links=ignore_links)
 
 
 def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
