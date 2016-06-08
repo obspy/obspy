@@ -215,7 +215,7 @@ class Scanner(object):
         import obspy
         directory = os.path.join(os.path.dirname(obspy.__file__),
                                  "io", "gse2", "tests", "data")
-        scanner = Scanner(quiet=True)
+        scanner = Scanner()
         scanner.parse(directory)
         scanner.plot()
 
@@ -615,7 +615,7 @@ class Scanner(object):
             ignore_links=ignore_links)
 
 
-def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
+def scan(paths, format=None, verbose=False, recursive=True,
          ignore_links=False, starttime=None, endtime=None, seed_ids=None,
          event_times=None, npz_output=None, npz_input=None, plot_x=True,
          plot_gaps=True, print_gaps=False, plot=False):
@@ -624,9 +624,8 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
     :param plot: False for no plot at all, True for interactive window, str for
         output to image file.
     """
-    scanner = Scanner(format=format, verbose=verbose, quiet=quiet,
-                      recursive=recursive, ignore_links=ignore_links,
-                      starttime=starttime, endtime=endtime, seed_ids=seed_ids)
+    scanner = Scanner(format=format, verbose=verbose, recursive=recursive,
+                      ignore_links=ignore_links)
 
     if plot is None:
         plot = False
@@ -642,23 +641,25 @@ def scan(paths, format=None, verbose=False, quiet=True, recursive=True,
         scanner.parse(path)
 
     if not scanner.data:
-        if verbose or not quiet:
+        if verbose:
             print("No waveform data found.")
         return None
     if npz_output:
         scanner.save_npz(npz_output)
 
+    kwargs = dict(starttime=starttime, endtime=endtime,
+                  seed_ids=seed_ids)
     if plot:
-        plot_kwargs = dict(plot_x=plot_x, plot_gaps=plot_gaps,
-                           print_gaps=print_gaps, event_times=event_times)
+        kwargs.update(dict(plot_x=plot_x, plot_gaps=plot_gaps,
+                           print_gaps=print_gaps, event_times=event_times))
         if plot is True:
-            scanner.plot(outfile=None, show=True, **plot_kwargs)
+            scanner.plot(outfile=None, show=True, **kwargs)
         else:
             # plotting to file, so switch to non-interactive backend
             with MatplotlibBackend("AGG", sloppy=False):
-                scanner.plot(outfile=plot, show=False, **plot_kwargs)
+                scanner.plot(outfile=plot, show=False, **kwargs)
     else:
-        scanner.analyze_parsed_data(print_gaps=print_gaps)
+        scanner.analyze_parsed_data(print_gaps=print_gaps, **kwargs)
 
     return scanner
 
@@ -721,8 +722,13 @@ def main(argv=None):
 
     args = parser.parse_args(argv)
 
+    if args.quiet:
+        msg = ("'--quiet' is now the default behavior and the option has been "
+               "deprecated.")
+        warnings.warn(msg)
+
     scan(paths=args.paths, format=args.format, verbose=args.verbose,
-         quiet=args.quiet, recursive=args.recursive,
+         recursive=args.recursive,
          ignore_links=args.ignore_links, starttime=args.start_time,
          endtime=args.end_time, seed_ids=args.id,
          event_times=args.event_time, npz_output=args.write,

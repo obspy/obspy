@@ -98,7 +98,6 @@ class ScanTestCase(unittest.TestCase):
 
         files = []
         expected_stdout_lines = [
-            "", "",
             "XX.TEST..BHZ 2008-01-15T00:00:01.000000Z "
             "2008-01-15T00:00:00.899995Z -0.100",
             "XX.TEST..BHZ 2008-01-15T00:00:01.899999Z "
