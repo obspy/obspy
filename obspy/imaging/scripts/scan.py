@@ -259,22 +259,13 @@ class Scanner(object):
             labels[_i] = label
 
             if plot_gaps:
-                gaps = info["gaps"]
-                overlaps = info["overlaps"]
-                if len(gaps):
-                    # gaps
-                    rects = [
-                        Rectangle((date2num(start_.datetime), _i - 0.4),
-                                  _seconds_to_days(end_ - start_), 0.8)
-                        for start_, end_ in gaps]
-                    ax.add_collection(PatchCollection(rects, color="r"))
-                if len(overlaps):
-                    # overlaps
-                    rects = [
-                        Rectangle((date2num(start_.datetime), _i - 0.4),
-                                  _seconds_to_days(end_ - start_), 0.8)
-                        for start_, end_ in overlaps]
-                    ax.add_collection(PatchCollection(rects, color="b"))
+                for key, color in zip(("gaps", "overlaps"), ("r", "b")):
+                    data_ = info[key]
+                    if len(data_):
+                        rects = [
+                            Rectangle((start_, _i - 0.4), end_ - start_, 0.8)
+                            for start_, end_ in data_]
+                        ax.add_collection(PatchCollection(rects, color=color))
 
         # Pretty format the plot
         ax.set_ylim(0 - 0.5, len(labels) - 0.5)
@@ -368,8 +359,7 @@ class Scanner(object):
             if len(startend) == 0:
                 if not (starttime and endtime):
                     continue
-                gap_info.append((UTCDateTime(num2date(starttime)),
-                                 UTCDateTime(num2date(endtime))))
+                gap_info.append((starttime, endtime))
                 if print_gaps and (self.verbose or not self.quiet):
                     print("%s %s %s %.3f" % (
                         _id, starttime, endtime, endtime - starttime))
@@ -386,9 +376,7 @@ class Scanner(object):
             if len(startend) == 0:
                 # if both start and endtime are given, add it to gap info
                 if starttime and endtime:
-                    gap_info.append((
-                        UTCDateTime(num2date(starttime)),
-                        UTCDateTime(num2date(endtime))))
+                    gap_info.append((starttime, endtime))
                 continue
             data_start = startend[:, 0].min()
             data_end = startend[:, 1].max()
@@ -457,12 +445,12 @@ class Scanner(object):
                 _starts = _starts[sort_order]
                 _ends = _ends[sort_order]
                 for start_, end_ in zip(_starts, _ends):
-                    start_, end_ = num2date((start_, end_))
-                    start_ = UTCDateTime(start_.isoformat())
-                    end_ = UTCDateTime(end_.isoformat())
                     if print_gaps and (self.verbose or not self.quiet):
-                        print("%s %s %s %.3f" % (_id, start_, end_,
-                                                 end_ - start_))
+                        start__, end__ = num2date((start_, end_))
+                        start__ = UTCDateTime(start__.isoformat())
+                        end__ = UTCDateTime(end__.isoformat())
+                        print("{} {} {} {:.3f}".format(
+                            _id, start__, end__, end__ - start__))
                     if start_ < end_:
                         gap_info.append((start_, end_))
                     else:
