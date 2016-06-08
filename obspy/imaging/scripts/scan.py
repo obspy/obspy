@@ -469,12 +469,12 @@ class Scanner(object):
                         _id, starttime, endtime, endtime - starttime))
                 continue
             # restrict plotting of results to given start/end time
-            if starttime:
-                indices = startend[:, 1] > starttime
-                startend = startend[indices]
-                _samp_int = _samp_int[indices]
-            if endtime:
-                indices = startend[:, 0] < endtime
+            if starttime or endtime:
+                indices = np.ones(len(startend), dtype=np.bool_)
+                if starttime:
+                    indices &= startend[:, 1] > starttime
+                if endtime:
+                    indices &= startend[:, 0] < endtime
                 startend = startend[indices]
                 _samp_int = _samp_int[indices]
             if len(startend) == 0:
