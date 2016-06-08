@@ -54,10 +54,13 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False,
                        margin_in_seconds=0.0):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
-    by merging overlapping and exactly fitting pieces into one.
+    (in matplotlib date numbers) by merging overlapping and exactly fitting
+    pieces into one.
     This reduces the number of lines needed in the plot considerably and is
     necessary for very large data sets.
     The maximum number of iterations can be specified.
+
+    Works in-place!
 
     :type margin_in_seconds: float
     :param margin_in_seconds: Allowance in seconds that has to be exceeded by
@@ -82,7 +85,8 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False,
             diffs[diffs < 0] = 0
         # any diff of expected and actual next sample time that is smaller than
         # 0+-margin is considered no gap/overlap but rather merged together
-        inds = np.concatenate([(diffs > -margin) & (diffs < margin), [False]])
+        inds = np.concatenate(
+            [(diffs >= -margin) & (diffs <= margin), [False]])
         return inds
 
     inds = _get_indices_to_merge(x)
@@ -388,7 +392,7 @@ class Scanner(object):
                 warnings.warn(msg)
                 continue
 
-            startend_compressed = compress_start_end(startend, 1000,
+            startend_compressed = compress_start_end(startend.copy(), 1000,
                                                      merge_overlaps=False)
 
             info["data_starts"] = startend[:, 0]
