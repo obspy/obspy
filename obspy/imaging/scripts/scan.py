@@ -243,7 +243,7 @@ class Scanner(object):
                 ax.axvline(time, color='k')
 
         labels = [""] * len(self._info)
-        for _i, info in enumerate(self._info):
+        for _i, (id_, info) in enumerate(sorted(self._info.items())):
             offset = np.ones(len(info["data_starts"])) * _i
             if plot_x:
                 ax.plot(info["data_starts"], offset, 'x', linewidth=2)
@@ -253,7 +253,7 @@ class Scanner(object):
                           info["data_startends_compressed"][:, 1],
                           'b', linewidth=2, zorder=3)
 
-            label = info["label"]
+            label = id_
             if info["percentage"] is not None:
                 label = label + "\n%.1f%%" % (info["percentage"])
             labels[_i] = label
@@ -348,12 +348,11 @@ class Scanner(object):
         ids = sorted(ids)[::-1]
         if self.verbose or not self.quiet:
             print('\n')
-        self._info = []
+        self._info = {}
         for _i, _id in enumerate(ids):
-            info = {"label": _id, "gaps": [], "overlaps": [],
-                    "data_starts": [], "data_startends_compressed": [],
-                    "percentage": None}
-            self._info.append(info)
+            info = {"gaps": [], "overlaps": [], "data_starts": [],
+                    "data_startends_compressed": [], "percentage": None}
+            self._info[_id] = info
             gap_info = info["gaps"]
             overlap_info = info["overlaps"]
             # sort data list and sampling rate list
