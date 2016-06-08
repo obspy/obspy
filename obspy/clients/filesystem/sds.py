@@ -49,6 +49,7 @@ import warnings
 from datetime import timedelta
 
 import numpy as np
+from matplotlib.dates import num2date
 
 from obspy import Stream, read, UTCDateTime
 from obspy.core.stream import _headonly_warning_msg
@@ -713,13 +714,16 @@ class Client(object):
         for seed_id, filenames_ in filenames_to_check_SDS.items():
             scanner = scan(
                 paths=filenames_, format=self.format, recursive=False,
-                ignore_links=False, starttime=times_min[seed_id], quiet=True,
-                endtime=times_max[seed_id], seed_ids=[seed_id], plot=False,
-                print_gaps=False)
+                ignore_links=False, starttime=times_min[seed_id],
+                verbose=False, endtime=times_max[seed_id], seed_ids=[seed_id],
+                plot=False, print_gaps=False)
             if scanner is None:
                 continue
-            for info in scanner._info:
-                gaps.setdefault(info["label"], []).extend(info["gaps"])
+            for id_, info in scanner._info.items():
+                gaps.setdefault(id_, []).extend(
+                    [(UTCDateTime(num2date(start_)),
+                      UTCDateTime(num2date(end_)))
+                     for start_, end_ in info["gaps"]])
 
         return data, gaps
 
@@ -763,8 +767,8 @@ class Client(object):
         # (or `None` if backup option is not selected)
         changed_files = {}
         if plot:
-            scanner = Scanner(format=format, verbose=False, quiet=True,
-                              recursive=False, ignore_links=False)
+            scanner = Scanner(format=format, verbose=False, recursive=False,
+                              ignore_links=False)
 
         new_data_string = []
 
