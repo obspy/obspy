@@ -475,6 +475,25 @@ class ASCIITestCase(unittest.TestCase):
                 self.assertEqual(len(st), 1)
                 self.assertEqual(len(st[0]), num)
 
+    def test_float_sampling_rates_write_and_read(self):
+        """
+        Tests writing and reading Traces with floating point and with less than
+        1 Hz sampling rates.
+        """
+        tr = Trace(np.arange(10))
+        check_sampling_rates = (0.000000001, 1.000000001, 100.000000001,
+                                99.999999999, 1.5, 1.666666, 10000.0001)
+        for format in ['SLIST', 'TSPAIR']:
+            for sps in check_sampling_rates:
+                tr.stats.sampling_rate = sps
+                with NamedTemporaryFile() as tf:
+                    tempfile = tf.name
+                    tr.write(tempfile, format=format)
+                    # test results
+                    got = read(tempfile, format=format)[0]
+                self.assertEqual(tr.stats.sampling_rate,
+                                 got.stats.sampling_rate)
+
 
 def suite():
     return unittest.makeSuite(ASCIITestCase, 'test')
