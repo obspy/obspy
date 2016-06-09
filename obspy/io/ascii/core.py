@@ -44,7 +44,7 @@ from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 
 
-HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
+HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %s sps, %.26s, %s, %s, %s\n"
 
 
 def _is_slist(filename):
