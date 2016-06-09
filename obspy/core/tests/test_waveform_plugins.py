@@ -140,10 +140,11 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
-                    if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
-                        self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
-                    else:
+                    if format in ['DYNA', 'MSEED', 'SLIST', 'TSPAIR', 'WAV',]:
                         self.assertEqual(st[0].stats.calib, 1.0)
+                    else:
+                        self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
+
                     if format not in ['WAV']:
                         self.assertEqual(st[0].stats.starttime, start)
                         self.assertEqual(st[0].stats.endtime, start + 9.995)

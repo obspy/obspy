@@ -83,21 +83,20 @@ EXTERNAL_LIBS = False
 
 # package specific settings
 KEYWORDS = [
-    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
-    'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
-    'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
-    'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
-    'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
-    'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED',
-    'XSEED']
+    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball', 'beamforming',
+    'cross correlation', 'database', 'dataless', 'Dataless SEED', 'datamark',
+    'DYNA', 'earthquakes', 'Earthworm', 'EIDA', 'envelope', 'ESRI', 'events',
+    'FDSN', 'features', 'filter', 'focal mechanism', 'GSE1', 'GSE2', 'hob',
+    'imaging', 'instrument correction', 'instrument simulation', 'IRIS',
+    'kinemetrics', 'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED',
+    'NDK', 'NERA', 'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS',
+    'PDAS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
+    'RESP', 'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink',
+    'SEG-2', 'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
+    'StationXML', 'taper', 'Tau-P', 'taup', 'travel time', 'trigger', 'VERCE',
+    'WAV', 'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service',
+    'Winston', 'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -144,6 +143,8 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.io.css.core',
         'DATAMARK = obspy.io.datamark.core',
+        'DYNA = obspy.io.dyna.core',
+        'ITACA = obspy.io.dyna.core',
         'KINEMETRICS_EVT = obspy.io.kinemetrics.core',
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
@@ -189,6 +190,15 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.io.datamark.core:_is_datamark',
         'readFormat = obspy.io.datamark.core:_read_datamark',
+        ],
+    "obspy.plugin.waveform.DYNA": [
+        "isFormat = obspy.io.dyna.core:_is_dyna",
+        "readFormat = obspy.io.dyna.core:_read_dyna",
+        "writeFormat = obspy.io.dyna.core:_write_dyna",
+        ],
+    "obspy.plugin.waveform.ITACA": [
+        "isFormat = obspy.io.dyna.core:_is_itaca",
+        "readFormat = obspy.io.dyna.core:_read_itaca",
         ],
     'obspy.plugin.waveform.KINEMETRICS_EVT': [
         'isFormat = obspy.io.kinemetrics.core:is_evt',
