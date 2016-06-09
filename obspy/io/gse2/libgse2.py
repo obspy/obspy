@@ -465,13 +465,32 @@ def parse_sta2(line):
     """
     header = {}
     try:
+        lat = line[15:24].strip()
+        if lat:
+            lat = float(lat)
+        else:
+            lat = None
+        lon = line[25:35].strip()
+        if lon:
+            lon = float(lon)
+        else:
+            lon = None
+        elev_edepth = line[48:].strip().split()
+        elev, edepth = elev_edepth or (None, None)
+        if elev:
+            elev = float(elev)
+        else:
+            elev = None
+        if edepth:
+            edepth = float(edepth)
+        else:
+            edepth = None
         header['network'] = line[5:14].strip()
-        header['lat'] = float(line[15:24])
-        header['lon'] = float(line[25:35])
+        header['lat'] = lat
+        header['lon'] = lon
         header['coordsys'] = line[36:48].strip()
-        elev, edepth = line[48:].strip().split()
-        header['elev'] = float(elev)
-        header['edepth'] = float(edepth)
+        header['elev'] = elev
+        header['edepth'] = edepth
     except:
         msg = 'GSE2: Invalid STA2 header, ignoring.'
         warnings.warn(msg)
@@ -485,15 +504,18 @@ def compile_sta2(stats):
     Returns a STA2 line as a string (including newline at end) from a
     :class:`~obspy.core.stats.Stats` object.
     """
-    fmt1 = "STA2 %-9s %9.5f %10.5f %-12s "
-    fmt2 = "%5.3f %5.3f\n"
+    fmt1 = "STA2 %-9s %9s %10s %-12s "
+    fmt2 = "%5s %5s\n"
     # compile first part, problems can only arise with invalid lat/lon values
     # or if coordsys has more than 12 characters. raise in case of problems.
+    lat = stats['gse2'].get('lat')
+    lon = stats['gse2'].get('lon')
+    coordsys = stats['gse2'].get('coordsys')
     line = fmt1 % (
         stats['network'],
-        stats['gse2']['lat'],
-        stats['gse2']['lon'],
-        stats['gse2']['coordsys'])
+        lat is not None and '{:9.5f}'.format(lat) or '',
+        lon is not None and '{:10.5f}'.format(lon) or '',
+        coordsys or '')
     if len(line) != 49:
         msg = ("GSE2: Invalid header values, unable to compile valid "
                "STA2 line. Omitting STA2 line in output")
@@ -501,10 +523,14 @@ def compile_sta2(stats):
         raise Exception()
     # compile second part, in many cases it is impossible to adhere to manual.
     # follow common practice, just not adhere to fixed format strictly.
+    elev = stats['gse2'].get('elev')
+    edepth = stats['gse2'].get('edepth')
     line = line + fmt2 % (
-        stats['gse2']['elev'],
-        stats['gse2']['edepth'])
-    for key in ('elev', 'edepth'):
+        elev is not None and '{:5.3f}'.format(elev) or '',
+        edepth is not None and '{:5.3f}'.format(edepth) or '')
+    for key, value in zip(('elev', 'edepth'), (elev, edepth)):
+        if value is None:
+            continue
         if len('%5.3f' % stats['gse2'][key]) > 5:
             msg = ("Bad value in GSE2 '%s' header field detected. "
                    "The last two header fields of the STA2 line in the "

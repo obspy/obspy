@@ -149,9 +149,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         self.assertEqual(st[0].stats.delta, 0.005)
                         self.assertEqual(st[0].stats.sampling_rate, 200.0)
                     # network/station/location/channel codes
-                    if format in ['Q', 'SH_ASC', 'GSE2']:
-                        # no network or location code in Q, SH_ASC, GSE2
+                    if format in ['Q', 'SH_ASC']:
+                        # no network or location code in Q, SH_ASC
                         self.assertEqual(st[0].id, ".MANZ1..EHE")
+                    elif format == "GSE2":
+                        # no location code in GSE2
+                        self.assertEqual(st[0].id, "BW.MANZ1..EHE")
                     elif format not in ['WAV']:
                         self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
 
