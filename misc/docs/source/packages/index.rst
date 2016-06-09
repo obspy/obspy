@@ -39,6 +39,7 @@ The functionality is provided through the following packages:
    obspy.io.ascii
    obspy.io.css
    obspy.io.datamark
+   obspy.io.gcf
    obspy.io.gse2
    obspy.io.kinemetrics
    obspy.io.mseed

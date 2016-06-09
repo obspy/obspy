@@ -1,4 +1,7 @@
 master:
+ - General:
+   * Read support for Guralp Compressed Format (GCF) waveform data,
+     obspy.io.gcf (see #1449)
  - obspy.core:
    * Stream/Trace.write() can now autodetect file format from file extension.
    * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
