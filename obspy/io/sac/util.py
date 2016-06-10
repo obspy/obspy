@@ -143,7 +143,7 @@ def is_same_byteorder(bo1, bo2):
     :return: True of same byte order.
 
     """
-    # TODO: extend this as is_same_byteorder(*byteorders)
+    # TODO: extend this as is_same_byteorder(*byteorders) using itertools
     be = ('b', 'big', '>')
     le = ('l', 'little', '<')
     ne = ('n', 'native', '=')

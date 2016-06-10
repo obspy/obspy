@@ -62,7 +62,8 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
             for i, hdr in enumerate(HD.INTHDRS):
                 if hdr.startswith('l'):
                     hi[i] = 0
-            # TODO: initialize enumerated values to something?
+            # TODO: make an init_header_array_values function that sets sane
+            #   initial values, including lcalda, nvhdr, leven, etc..
             # calculate distances by default
             hi[HD.INTHDRS.index('lcalda')] = 1
             out.append(hi)
