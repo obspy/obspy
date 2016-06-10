@@ -7,7 +7,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-import re
 import sys
 import warnings
 
@@ -160,19 +159,27 @@ def is_same_byteorder(bo1, bo2):
     return (bo1.lower() in le) == (bo2.lower() in le)
 
 
-def _clean_str(value):
-    # Remove null values and whitespace, return a str
+def _clean_str(value, strip_whitespace=True):
+    """
+    Remove null values and whitespace, return a str
+
+    This fn is used in two places: in SACTrace.read, to sanitize strings for
+    SACTrace, and in sac_to_obspy_header, to sanitize strings for making a
+    Trace that the user may have manually added.
+    """
     try:
         # value is a str
         null_term = value.find('\x00')
     except TypeError:
         # value is a bytes
-        # null_term = value.decode().find('\x00')
         null_term = value.find(b'\x00')
+    except UnicodeError:
+        null_term = value.decode('ASCII', 'replace').find(b'\x00')
 
     if null_term >= 0:
-        value = value[:null_term]
-    value = value.strip()
+        value = value[:null_term] + b" " * len(value[null_term:])
+    if strip_whitespace:
+        value = value.strip()
 
     try:
         value = value.decode()
@@ -461,20 +468,3 @@ def get_sac_reftime(header):
         raise SacHeaderTimeError(msg)
 
     return reftime
-
-
-def _decode_bytes_and_warn(bytestring, key=None, strip_null_terminated=True):
-    """
-    Decodes bytestring to ASCII, ignoring invalid characters if present and
-    issuing a warning if invalid characters are encountered.
-    """
-    if strip_null_terminated:
-        bytestring = re.sub(r'\x00.*', '', bytestring)
-    try:
-        return bytestring.decode("ASCII")
-    except UnicodeDecodeError as e:
-        key_info = key and " (in SAC header field '{}')".format(key) or ""
-        msg = "Invalid non-ASCII characters encountered{}: {}".format(
-            key_info, str(e))
-        warnings.warn(msg)
-    return bytestring.decode("ASCII", "replace")
