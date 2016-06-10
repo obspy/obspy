@@ -165,7 +165,10 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
@@ -230,7 +233,10 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
