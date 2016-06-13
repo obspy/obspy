@@ -1463,7 +1463,7 @@ class SACTrace(object):
         >>> from obspy.core.util import get_example_file
         >>> file_ = get_example_file("LMOW.BHE.SAC")
         >>> sac = SACTrace.read(file_)
-        >>> sac.lh()  # doctest: +NORMALIZE_WHITESPACE
+        >>> sac.lh()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
         Reference Time = 04/10/2001 (100) 00:23:00.465000
            iztype IB: begin time
         a          = 0.0
