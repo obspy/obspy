@@ -791,117 +791,175 @@ class Client(object):
                    "'MSEED'.")
             raise NotImplementedError(msg)
 
-        backupdir = None
+        self._backupdir = None
+        tmp_prefix = "obspy-sds-backup-{}-".format(now_str)
         # maps original file paths (that were appended to) to backup file paths
         # (or `None` if backup option is not selected)
         changed_files = {}
+        new_files = set()
         if plot:
-            scanner = Scanner(format=format, verbose=False, recursive=False,
+            scanner = Scanner(verbose=False, recursive=False,
                               ignore_links=False)
 
         new_data_string = []
 
+        def _handle_gap(id, start, end):
+            """
+            """
+            backupdir = self._backupdir
+
+            data_files = set()
+            for filename, traces in data.get(id, {}).items():
+                for tr in traces:
+                    if start and tr.stats.endtime < start:
+                        continue
+                    if end and tr.stats.starttime > end:
+                        continue
+                    data_files.add(filename)
+            for filename in data_files:
+                st = read(filename, starttime=start, endtime=end,
+                          sourcename=id, details=True)
+                st = st.select(id=id).trim(start, end,
+                                           nearest_sample=False)
+                for tr in st:
+                    if tr.stats.endtime == end:
+                        tr.data = tr.data[:-1]
+                st_dict = self._split_stream_by_filenames(st)
+                if not st_dict:
+                    continue
+                for filename_, st_ in st_dict.items():
+                    if not st_:
+                        continue
+                    # backup original file
+                    backupfile = None
+                    if (backup and filename_ not in changed_files and
+                            filename_ not in new_files and
+                            os.path.exists(filename_)):
+                        if backupdir is None:
+                            self._backupdir = tempfile.mkdtemp(
+                                prefix=tmp_prefix)
+                            backupdir = self._backupdir
+                        backupfile = os.path.join(
+                            backupdir,
+                            self._filename_strip_sds_root(filename_))
+                        target_dir = os.path.dirname(backupfile)
+                        try:
+                            if not os.path.isdir(target_dir):
+                                os.makedirs(target_dir)
+                            shutil.copy2(filename_, backupfile)
+                        except Exception:
+                            err_msg = \
+                                traceback.format_exc(0).\
+                                splitlines()[-1]
+                            info = ""
+                            if changed_files:
+                                info = (
+                                    " The following files have so far "
+                                    "been modified: {}").format(
+                                        changed_files.keys())
+                            msg = (
+                                "Backup option chosen and backup of "
+                                "file '{}' to '{}' failed ({}). "
+                                "Aborting appending to SDS archive.{}")
+                            msg = msg.format(filename_, backupfile,
+                                             err_msg, info)
+                            raise Exception(msg)
+                    # scan original file for before/after comparison
+                    if plot and filename_ not in changed_files:
+                        scanner.parse(filename_)
+                    # check if we can convert data to int32 without
+                    # changing it
+                    for tr in st_:
+                        try:
+                            data_int32 = tr.data.astype(np.int32)
+                            np.testing.assert_array_equal(
+                                tr.data, data_int32)
+                        except:
+                            pass
+                        else:
+                            tr.data = data_int32
+                    # now append the missing segment to the file
+                    target_dir = os.path.dirname(filename_)
+                    if not os.path.exists(target_dir):
+                        os.makedirs(target_dir)
+                    with open(filename_, "ab") as fh:
+                        st_.write(fh, format=format)
+
+                    new_data_string.extend(str(st_).splitlines()[1:])
+                    if filename_ in new_files:
+                        pass
+                    elif filename_ in changed_files:
+                        pass
+                    elif backupfile:
+                        changed_files[filename_] = backupfile
+                    else:
+                        new_files.add(filename_)
+
         if only_missing:
             data, gaps = self._extract_missing_data(filenames)
+            # handle gaps inside data
             for id, gaps_ in gaps.items():
                 for start, end in gaps_:
-                    data_files = set()
-                    for filename, traces in data.get(id, {}).items():
-                        for tr in traces:
-                            if (start < tr.stats.starttime < end or
-                                    start < tr.stats.endtime < end):
-                                data_files.add(filename)
-                    st = Stream()
-                    for filename in data_files:
-                        st = read(filename, starttime=start, endtime=end,
-                                  sourcename=id)
-                        st = st.select(id=id).trim(start, end,
-                                                   nearest_sample=False)
-                        st_dict = self._split_stream_by_filenames(st)
-                        if not st_dict:
-                            continue
-                        for filename_, st_ in st_dict.items():
-                            if not st_:
-                                continue
-                            # backup original file
-                            backupfile = None
-                            if backup and filename_ not in changed_files:
-                                if backupdir is None:
-                                    prefix = "obspy-sds-backup-{}-".format(
-                                        now_str)
-                                    backupdir = tempfile.mkdtemp(prefix=prefix)
-                                backupfile = os.path.join(
-                                    backupdir,
-                                    self._filename_strip_sds_root(filename_))
-                                target_dir = os.path.dirname(backupfile)
-                                try:
-                                    if not os.path.isdir(target_dir):
-                                        os.makedirs(target_dir)
-                                    shutil.copy2(filename_, backupfile)
-                                except Exception:
-                                    err_msg = \
-                                        traceback.format_exc(0).\
-                                        splitlines()[-1]
-                                    info = ""
-                                    if changed_files:
-                                        info = (
-                                            " The following files have so far "
-                                            "been modified: {}").format(
-                                                changed_files.keys())
-                                    msg = (
-                                        "Backup option chosen and backup of "
-                                        "file '{}' to '{}' failed ({}). "
-                                        "Aborting appending to SDS archive.{}")
-                                    msg = msg.format(filename_, backupfile,
-                                                     err_msg, info)
-                                    raise Exception(msg)
-                            # scan original file for before/after comparison
-                            if plot and filename_ not in changed_files:
-                                scanner.parse(filename_)
-                            # now append the missing segment to the file
-                            with open(filename_, "ab") as fh:
-                                st_.write(fh, format=format)
-                            new_data_string += str(st_).splitlines()[1:]
-                            changed_files[filename_] = backupfile
+                    _handle_gap(id, start, end)
         else:
             # XXX TODO
             raise NotImplementedError()
 
-        if verbose and changed_files:
-            print("The following files have been appended to:")
-            print("\n".join("\t" + filename
-                            for filename in sorted(changed_files)))
-            if backup:
+        if verbose:
+            if changed_files:
+                print("The following files have been appended to:")
+                print("\n".join("\t" + filename
+                                for filename in sorted(changed_files)))
+            if new_files:
+                print("The following new files have been created:")
+                print("\n".join("\t" + filename
+                                for filename in sorted(new_files)))
+            if backup and changed_files:
                 print("Backups of original files have been stored "
-                      "in '{}'.".format(backupdir))
+                      "in: {}".format(self._backupdir))
 
-        if plot and changed_files:
+        plot_output_file = None
+        if plot and (changed_files or new_files):
             if plot is True:
-                output_file = os.path.join(
-                    tempfile.gettempdir(),
-                    "obspy-sds-backup-{now}.png".format(now=now_str))
+                fd, plot_output_file = tempfile.mkstemp(
+                    prefix=tmp_prefix, suffix=".png")
+                os.close(fd)
             else:
-                output_file = plot
+                plot_output_file = plot
             # change seed id's of "before" data so that they don't clash with
             # the "after" data
             for id_ in scanner.data.keys():
                 scanner.data[id_ + " (before)"] = scanner.data.pop(id_)
-            for id_ in scanner.samp_int.keys():
                 scanner.samp_int[id_ + " (before)"] = scanner.samp_int.pop(id_)
             # now scan modified files
             for path in changed_files.keys():
                 scanner.parse(path)
-            scanner.plot(show=False, outfile=output_file)
+            for id_ in scanner.data.keys():
+                if id_.endswith(" (before)"):
+                    continue
+                scanner.data[id_ + "  (after)"] = scanner.data.pop(id_)
+                scanner.samp_int[id_ + "  (after)"] = scanner.samp_int.pop(id_)
+            # also scan new files
+            for path in new_files:
+                scanner.parse(path)
+            for id_ in scanner.data.keys():
+                if id_.endswith(" (before)") or id_.endswith("  (after)"):
+                    continue
+                scanner.data[id_ + "    (new)"] = scanner.data.pop(id_)
+                scanner.samp_int[id_ + "    (new)"] = scanner.samp_int.pop(id_)
+            # plot everything together
+            scanner.plot(show=False, outfile=plot_output_file)
             if verbose:
                 print(("Before/after comparison plot saved as: {}").format(
-                    output_file))
+                    plot_output_file))
 
-        new_data_string = "\n".join(new_data_string)
+        new_data_string = "\n".join(sorted(new_data_string))
         if verbose and new_data_string:
             print("New data added to archive:")
             print(new_data_string)
 
-        return new_data_string
+        return (new_data_string, changed_files, self._backupdir,
+                plot_output_file)
 
     def _filename_strip_sds_root(self, filename):
         """
