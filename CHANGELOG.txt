@@ -35,12 +35,20 @@ master:
      alongside gaps (see #1366)
 
 1.0.2: (doi: 10.5281/zenodo.49636)
+ - obspy.core:
+   * Added workaround for numpy issue where many FFTs of various lengths fill
+     a cache that never gets cleared, effectively creating a memory leak
+     (see #1424).
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
+ - obspy.io.ascii:
+   * Fixed a bug that lead to wrong header information in output files when
+     writing non-integer sampling rate data to SLIST or TSPAIR formats
+     (see #1447)
  - obspy.io.mseed:
    * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
  - obspy.io.nlloc:

@@ -44,7 +44,21 @@ from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 
 
-HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
+HEADER = ("TIMESERIES {network}_{station}_{location}_{channel}_{dataquality}, "
+          "{npts:d} samples, {sampling_rate} sps, {starttime!s:.26s}, "
+          "{format}, {dtype}, {unit}\n")
+
+
+def _format_header(stats, format, dataquality, dtype, unit):
+    sampling_rate = str(stats.sampling_rate)
+    if "." in sampling_rate and "E" not in sampling_rate.upper():
+        sampling_rate = sampling_rate.rstrip('0').rstrip('.')
+    header = HEADER.format(
+        network=stats.network, station=stats.station, location=stats.location,
+        channel=stats.channel, dataquality=dataquality, npts=stats.npts,
+        sampling_rate=sampling_rate, starttime=stats.starttime,
+        format=format, dtype=dtype, unit=unit)
+    return header
 
 
 def _is_slist(filename):
@@ -151,7 +165,10 @@ def _read_slist(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
@@ -216,7 +233,10 @@ def _read_tspair(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
+        # don't put blank quality code into 'mseed' dictionary
+        # (quality code is mentioned as optional by format specs anyway)
+        if temp[4]:
+            stats.mseed = AttribDict({'dataquality': temp[4]})
         stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
@@ -314,10 +334,7 @@ def _write_slist(stream, filename, **kwargs):  # @UnusedVariable
             except:
                 unit = ''
             # write trace header
-            header = HEADER % (stats.network, stats.station, stats.location,
-                               stats.channel, dataquality, stats.npts,
-                               stats.sampling_rate, stats.starttime, 'SLIST',
-                               dtype, unit)
+            header = _format_header(stats, 'SLIST', dataquality, dtype, unit)
             fh.write(header.encode('ascii', 'strict'))
             # write data
             rest = stats.npts % 6
@@ -425,10 +442,7 @@ def _write_tspair(stream, filename, **kwargs):  # @UnusedVariable
             except:
                 unit = ''
             # write trace header
-            header = HEADER % (stats.network, stats.station, stats.location,
-                               stats.channel, dataquality, stats.npts,
-                               stats.sampling_rate, stats.starttime, 'TSPAIR',
-                               dtype, unit)
+            header = _format_header(stats, 'TSPAIR', dataquality, dtype, unit)
             fh.write(header.encode('ascii', 'strict'))
             # write data
             times = np.linspace(stats.starttime.timestamp,

@@ -6,6 +6,7 @@ The Rotate test suite.
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import PY2
 
 import gzip
 import os
@@ -143,6 +144,26 @@ class RotateTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(z, z_new, rtol=1E-7, atol=1e-7))
         self.assertTrue(np.allclose(n, n_new, rtol=1E-7, atol=1e-7))
         self.assertTrue(np.allclose(e, e_new, rtol=1E-7, atol=1e-7))
+
+    def test_rotate2zne_raise(self):
+        """
+        Check that rotate2zne() raises on unequal lengths of data.
+        """
+        z = np.ones(3, dtype=np.float64)
+        n = np.ones(5, dtype=np.float64)
+        e = np.ones(3, dtype=np.float64)
+
+        # Random values.
+        dip_1, dip_2, dip_3 = 0.0, 30.0, 60.0
+        azi_1, azi_2, azi_3 = 0.0, 170.0, 35.0
+
+        if PY2:
+            testmethod = self.assertRaisesRegexp
+        else:
+            testmethod = self.assertRaisesRegex
+        testmethod(
+            ValueError, 'All three data arrays must be of same length.',
+            rotate2zne, z, azi_1, dip_1, n, azi_2, dip_2, e, azi_3, dip_3)
 
     def test_base_vector_from_azimuth_and_dip_calculation(self):
         """

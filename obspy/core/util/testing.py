@@ -402,14 +402,25 @@ class ImageComparison(NamedTemporaryFile):
                 msg = self.compare()
         # we can still upload images if comparison fails on two different sized
         # images
-        except ValueError as e:
+        except ImageComparisonException as e:
             failed = True
-            if "operands could not be broadcast together" in msg:
+            if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
                 msg += ("\tExpected:  {expected}\n"
                         "\tActual:    {actual}\n"
                         "\tDiff:      {diff}\n").format(**upload_links)
+                raise ImageComparisonException(msg)
+            raise
+        # we can still upload actual image if baseline image does not exist
+        except IOError as e:
+            failed = True
+            if "Baseline image" in msg and "does not exist." in msg:
+                msg = str(e) + "\n"
+                upload_links = self._upload_images()
+                msg += ("\tExpected:  ---\n"
+                        "\tActual:    {actual}\n"
+                        "\tDiff:      ---\n").format(**upload_links)
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
