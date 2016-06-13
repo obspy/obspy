@@ -80,7 +80,45 @@ class TemporarySDSDirectory(object):
         shutil.rmtree(self.tempdir)
 
 
-class SDSTestCase(unittest.TestCase):
+class ObsPyTestCase(unittest.TestCase):
+    def assert_traces_equal(self, first, second):
+        if not isinstance(first, Trace):
+            msg = "'first' not a Trace object: " + repr(first)
+        if not isinstance(second, Trace):
+            msg = "'second' not a Trace object: " + repr(second)
+        try:
+            np.testing.assert_array_equal(first.data, second.data)
+        except Exception as e:
+            msg = "Traces' data array not equal:\n" + str(e)
+            raise AssertionError(msg)
+        try:
+            self.assertEqual(first.stats.__dict__, second.stats.__dict__)
+        except Exception as e:
+            msg = "Traces' Stats not equal:\n" + str(e)
+            raise AssertionError(msg)
+
+    def assert_streams_equal(self, first, second):
+        if len(first) != len(second):
+            msg = "\n".join(("Streams not equal:", str(first), str(second)))
+            raise AssertionError(msg)
+        msg = "Streams not equal (comparing traces no. {}):\n{}"
+        for i, (tr1, tr2) in enumerate(zip(first, second)):
+            try:
+                self.assert_traces_equal(tr1, tr2)
+            except Exception as e:
+                msg = msg.format(i, str(e))
+                raise AssertionError(msg)
+
+    def assertEqual(self, first, second):  # NoQA
+        if isinstance(first, Trace) and isinstance(second, Trace):
+            self.assert_traces_equal(first, second)
+        if isinstance(first, Stream) and isinstance(second, Stream):
+            self.assert_streams_equal(first, second)
+        else:
+            super(ObsPyTestCase, self).assertEqual(first, second)
+
+
+class SDSTestCase(ObsPyTestCase):
     """
     Test reading data from SDS file structure.
     """
