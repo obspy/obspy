@@ -9,6 +9,10 @@
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
+ - obspy.io.ascii:
+   * Fixed a bug that lead to wrong header information in output files when
+     writing non-integer sampling rate data to SLIST or TSPAIR formats
+     (see #1447)
  - obspy.io.mseed:
    * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
  - obspy.io.nlloc:
