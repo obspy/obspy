@@ -711,7 +711,12 @@ class Client(object):
         # assemble information on gaps in the SDS archive that might be covered
         # by new data
         gaps = {}
+        earliest = {}
+        latest = {}
         for seed_id, filenames_ in filenames_to_check_SDS.items():
+            gaps.setdefault(seed_id, [])
+            earliest.setdefault(seed_id, np.inf)
+            latest.setdefault(seed_id, -np.inf)
             scanner = scan(
                 paths=filenames_, format=self.format, recursive=False,
                 ignore_links=False, starttime=times_min[seed_id],
@@ -720,10 +725,34 @@ class Client(object):
             if scanner is None:
                 continue
             for id_, info in scanner._info.items():
-                gaps.setdefault(id_, []).extend(
-                    [(UTCDateTime(num2date(start_)),
-                      UTCDateTime(num2date(end_)))
-                     for start_, end_ in info["gaps"]])
+                gaps[id_].extend([(UTCDateTime(num2date(start_)),
+                                   UTCDateTime(num2date(end_)))
+                                  for start_, end_ in info["gaps"]])
+                if len(info["data_startends_compressed"]):
+                    earliest_ = min([start_ for start_, _ in
+                                    info["data_startends_compressed"]])
+                    earliest[id_] = min(earliest[id_], earliest_)
+                    latest_ = max([end_ for _, end_ in
+                                   info["data_startends_compressed"]])
+                    latest[id_] = max(latest[id_], latest_)
+
+        timeranges = {}
+        for id_ in gaps:
+            start = earliest[id_]
+            end = latest[id_]
+            if start == np.inf:
+                start = None
+                end = None
+            else:
+                start = UTCDateTime(num2date(start))
+                end = UTCDateTime(num2date(end))
+            timeranges[id_] = (start, end)
+
+        # set a full-extent gap for all IDs that we did not encounter existing
+        # data in the time range of new data
+        for id_ in gaps:
+            if timeranges[id_] == (None, None):
+                gaps[id_] = [(times_min[seed_id], times_max[seed_id])]
 
         return data, gaps
 
