@@ -77,10 +77,10 @@ Build a SACTrace from a header dictionary and data array
 ...           'nzmsec': 100, 'delta': 1.0/40}
 >>> sac = SACTrace(data=np.random.random(100), **header)
 >>> sac  # doctest: +NORMALIZE_WHITESPACE
-SACTrace(nzyear=2012, delta=0.025, nzsec=17, iztype=9, evla=-15.123,
-nzhour=13, lcalda=0, evlo=123.0, iftype=1, nvhdr=6, kcmpnm=u'BHZ', nzjday=123,
-internal0=2.0, lovrok=1, npts=0, e=0.0, nzmsec=100, lpspol=1, b=0.0,
-stla=40.5, leven=1, stlo=-108.23, kstnm=u'ANMO', nzmin=43, evdp=50.0)
+SACTrace(b=0.0, delta=0.025, e=0.0, evdp=50.0, evla=-15.123, evlo=123.0,
+iftype=1, internal0=2.0, iztype=9, kcmpnm=u'BHZ', kstnm=u'ANMO', lcalda=0,
+leven=1, lovrok=1, lpspol=1, npts=0, nvhdr=6, nzhour=13, nzjday=123, nzmin=43,
+nzmsec=100, nzsec=17, nzyear=2012, stla=40.5, stlo=-108.23)
 
 
 Reference-time and relative time headers
@@ -1508,9 +1508,9 @@ class SACTrace(object):
     def __repr__(self):
         # XXX: run self._flush_headers first?
         # TODO: make this somehow more readable.
-        h = self._header
+        h = sorted(self._header.items())
         fmt = ", {}={!r}" * len(h)
-        argstr = fmt.format(*chain.from_iterable(h.items()))[2:]
+        argstr = fmt.format(*chain.from_iterable(h))[2:]
         return self.__class__.__name__ + "(" + argstr + ")"
 
     def copy(self):
