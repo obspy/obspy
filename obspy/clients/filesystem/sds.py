@@ -309,11 +309,17 @@ class Client(object):
         # subsequently in a place were it's not caught
         # see https://bugs.python.org/issue4180
         # see e.g. http://blog.ionelmc.ro/2013/06/26/testing-python-warnings/
-        from obspy.core.stream import __warningregistry__ as \
-            stream_warningregistry
-        for key in list(stream_warningregistry.keys()):
-            if key[0] == _headonly_warning_msg:
-                stream_warningregistry.pop(key)
+        try:
+            from obspy.core.stream import __warningregistry__ as \
+                stream_warningregistry
+        except ImportError:
+            # import error means no warning has been issued from
+            # obspy.core.stream before, so nothing to do.
+            pass
+        else:
+            for key in list(stream_warningregistry.keys()):
+                if key[0] == _headonly_warning_msg:
+                    stream_warningregistry.pop(key)
         st.sort(keys=['starttime', 'endtime'])
         st.traces = [tr for tr in st
                      if not (tr.stats.endtime < starttime or
