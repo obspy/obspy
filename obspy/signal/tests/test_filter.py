@@ -10,10 +10,12 @@ from future.builtins import *  # NOQA
 import gzip
 import os
 import unittest
+import warnings
 
 import numpy as np
 import scipy.signal as sg
 
+from obspy import read
 from obspy.signal.filter import (bandpass, highpass, lowpass, envelope,
                                  lowpass_cheby_2)
 
@@ -238,6 +240,30 @@ class FilterTestCase(unittest.TestCase):
         self.assertGreater(-96, h_db[freq > 50].max())
         # be 0 (1dB ripple) before filter ramp
         self.assertGreater(h_db[freq < 25].min(), -1)
+
+    def test_bandpass_high_corner_at_nyquist(self):
+        """
+        Check that using exactly Nyquist for high corner gives correct results.
+        See #1451.
+        """
+        tr = read()[0]
+        data = tr.data[:1000]
+
+        df = tr.stats.sampling_rate
+        nyquist = df / 2.0
+
+        for low_corner in (6.0, 8.55, 8.59):
+            for corners in (3, 4, 5, 6):
+                expected = bandpass(data, low_corner, nyquist - 1e-5,
+                                    df=df, corners=corners)
+                got1 = bandpass(data, low_corner, nyquist,
+                                df=df, corners=corners)
+                with warnings.catch_warnings(record=True):
+                    got2 = bandpass(data, low_corner, nyquist + 1.78,
+                                    df=df, corners=corners)
+                for got in (got1, got2):
+                    np.testing.assert_allclose(got, expected, rtol=1e-3,
+                                               atol=1e-3)
 
 
 def suite():
