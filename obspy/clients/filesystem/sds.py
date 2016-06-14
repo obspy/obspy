@@ -687,7 +687,7 @@ class Client(object):
         data = {}
         times_min = {}
         times_max = {}
-        filenames_to_check_SDS = {}
+        filenames_to_check_sds = {}
 
         for filename in filenames:
             for tr in read(filename, headonly=True):
@@ -701,7 +701,7 @@ class Client(object):
                 # remember that file contains data for respective SEED ID
                 data.setdefault(tr.id, {}).setdefault(filename, []).append(tr)
                 # remember which files we need to check for gaps in SDS archive
-                filenames_to_check_SDS.setdefault(tr.id, set()).update(
+                filenames_to_check_sds.setdefault(tr.id, set()).update(
                     self._get_filenames(
                         network=tr.stats.network, station=tr.stats.station,
                         location=tr.stats.location, channel=tr.stats.channel,
@@ -713,7 +713,7 @@ class Client(object):
         gaps = {}
         earliest = {}
         latest = {}
-        for seed_id, filenames_ in filenames_to_check_SDS.items():
+        for seed_id, filenames_ in filenames_to_check_sds.items():
             gaps.setdefault(seed_id, [])
             earliest.setdefault(seed_id, np.inf)
             latest.setdefault(seed_id, -np.inf)
