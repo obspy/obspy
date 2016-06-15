@@ -399,7 +399,7 @@ class SDSTestCase(ObsPyTestCase):
                     "BW.RMOA..EHZ | 2016-06-30T00:00:00.000000Z - "
                     "2016-06-30T01:00:00.000000Z | 100.0 s, 37 samples",
                     ]
-                self.assertEqual(expected, out.stdout.splitlines())
+                self.assertEqual(expected, out.stdout.decode().splitlines())
                 # check that backup directory holds original data
                 for st_orig, doy in zip((st_sds_1, st_sds_2), ("180", "181")):
                     st_backup = read(os.path.join(
@@ -441,7 +441,7 @@ class SDSTestCase(ObsPyTestCase):
                                 client.add_data_to_archive(
                                     filenames=(filename,),
                                     plot=comparison_plot_filename)
-                        got_stdout += out.stdout.splitlines()
+                        got_stdout += out.stdout.decode().splitlines()
                 self.assertEqual(comparison_plot_filename, plot_output_file_2)
                 self.assertTrue(os.path.exists(comparison_plot_filename))
                 expected_paths = (
