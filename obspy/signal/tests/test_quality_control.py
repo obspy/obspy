@@ -307,6 +307,32 @@ class QualityControlTestCase(unittest.TestCase):
 
             # Sum up contributions from both files.
             # Check percentages
+            meta = md.meta['miniseed_header_counts']
+            meta_dq = meta['data_quality_flags']
+            self.assertEqual(meta_dq['glitches'], 9)
+            self.assertEqual(meta_dq['amplifier_saturation'], 30)
+            self.assertEqual(meta_dq['digital_filter_charging'], 8)
+            self.assertEqual(meta_dq['digitizer_clipping'], 19)
+            self.assertEqual(meta_dq['missing_padded_data'], 20)
+            self.assertEqual(meta_dq['spikes'], 35)
+            self.assertEqual(meta_dq['suspect_time_tag'], 10)
+            self.assertEqual(meta_dq['telemetry_sync_error'], 19)
+
+            meta_af = meta['activity_flags']
+            self.assertEqual(meta_af['calibration_signal'], 11)
+            self.assertEqual(meta_af['event_begin'], 36)
+            self.assertEqual(meta_af['event_end'], 36)
+            self.assertEqual(meta_af['event_in_progress'], 20)
+            self.assertEqual(meta_af['time_correction_applied'], 20)
+
+            meta_io = meta['io_and_clock_flags']
+            self.assertEqual(meta_io['clock_locked'], 34)
+            self.assertEqual(meta_io['station_volume'], 9)
+            self.assertEqual(meta_io['long_record_read'], 36)
+            self.assertEqual(meta_io['short_record_read'], 26)
+            self.assertEqual(meta_io['start_time_series'], 34)
+            self.assertEqual(meta_io['end_time_series'], 28)
+
             meta = md.meta['miniseed_header_percentages']
             meta_dq = meta['data_quality_flags']
             _assert_float_equal(meta_dq['glitches'], 9/0.58)
@@ -529,15 +555,18 @@ class QualityControlTestCase(unittest.TestCase):
 
         self.assertTrue(md.meta["num_gaps"] == 1)
         self.assertTrue(md.meta["sum_gaps"] == 0.025)
+        self.assertTrue(md.meta["start_gap"] == 0.025)
 
         # Start beyond a sample, but it is padded to the left, no gap
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
         endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
         self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["start_gap"] is None)
 
         md = MSEEDMetadata([file])
         self.assertTrue(md.meta["num_gaps"] == 0)
+        self.assertTrue(md.meta["start_gap"] is None)
 
     def test_random_window(self):
         """
@@ -573,19 +602,14 @@ class QualityControlTestCase(unittest.TestCase):
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
         self.assertTrue(md.meta["num_gaps"] == 0)
         self.assertTrue(md.meta["sum_gaps"] == 0.0)
-
-        # This is an incorrect test
-        # Add time tolerance (1/2 sampling_rate) - no gaps
-        # endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 337500)
-        # md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
-        # self.assertTrue(md.meta["num_gaps"] == 0)
-        # self.assertTrue(md.meta["sum_gaps"] == 0.0)
+        self.assertTrue(md.meta["end_gap"] is None)
 
         # Add 1μs; exceed projected sample plus time tolerance - GAP!
-        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 337501)
+        endtime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 350001)
         md = MSEEDMetadata([file], starttime=starttime, endtime=endtime)
         self.assertTrue(md.meta["num_gaps"] == 1)
-        self.assertTrue(md.meta["sum_gaps"] == 0.012501)
+        self.assertTrue(md.meta["sum_gaps"] == 0.025001)
+        self.assertTrue(md.meta["end_gap"] == 0.025001)
 
     def test_clock_locked_percentage(self):
         """

@@ -233,12 +233,16 @@ class MSEEDMetadata(object):
         # We have the coverage by the traces
         # check if there is an end or start gap caused by the
         # window forced by the user
+        self.meta['start_gap'] = None
+        self.meta['end_gap'] = None
         if self.window_start is not None:
             if coverage['start'] > self.window_start:
-                body_gap.append(coverage['start'] - self.window_start)
+                self.meta['start_gap'] = coverage['start'] - self.window_start
+                body_gap.append(self.meta['start_gap'])
         if self.window_end is not None:
             if coverage['end'] < self.window_end:
-                body_gap.append(self.window_end - coverage['end'])
+                self.meta['end_gap'] = self.window_end - coverage['end']
+                body_gap.append(self.meta['end_gap'])
 
         # Set the gap and overlap information
         self.meta['num_gaps'] = len(body_gap)
@@ -355,6 +359,14 @@ class MSEEDMetadata(object):
         meta['num_records'] = flags['record_count']
 
         # Set miniseed header counts
+        meta['miniseed_header_counts'] = {}
+        ref = meta['miniseed_header_counts']
+        ref['timing_correction'] = flags['timing_correction_count']
+        ref['activity_flags'] = flags['ac_flags_counts']
+        ref['io_and_clock_flags'] = flags['io_flags_counts']
+        ref['data_quality_flags'] = flags['dq_flags_counts']
+
+        # Set miniseed header percentages
         meta['miniseed_header_percentages'] = {}
         ref = meta['miniseed_header_percentages']
         ref['timing_correction'] = timing_correction
@@ -374,7 +386,8 @@ class MSEEDMetadata(object):
         # Similarly, set miniseed header flag counts
         # Small function to change flag names from the get_flags routine
         # to match the schema
-        self._fix_flag_names()
+        self._fix_flag_names('percentages')
+        self._fix_flag_names('counts')
 
     def _get_flag_map(self, flag_id):
         """
@@ -398,21 +411,21 @@ class MSEEDMetadata(object):
         else:
             return flag_id
 
-    def _fix_flag_names(self):
+    def _fix_flag_names(self, suffix):
         """
         Supplementary function to fix flag parameter names
         Parameters with a key in the name_ref will be changed to its value
         """
         # Loop over all keys and replace where required according to
         # the name_reference
-        for group, flags in self.meta['miniseed_header_percentages'].items():
+        for group, flags in self.meta['miniseed_header_' + suffix].items():
             if group not in ["activity_flags", "data_quality_flags",
                              "io_and_clock_flags"]:
                 continue
             new_flags = {}
             for param in flags:
                 new_flags[self._get_flag_map(param)] = flags[param]
-            self.meta['miniseed_header_percentages'][group] = new_flags
+            self.meta['miniseed_header_' + suffix][group] = new_flags
 
     def _compute_sample_metrics(self):
         """

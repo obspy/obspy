@@ -136,10 +136,6 @@ def get_flags_c(files, starttime=None, endtime=None,
             r_delta = (1 / msr.contents.samprate)
             r_end = (clibmseed.msr_endtime(msr) / HPTMODULUS) + r_delta
 
-            # Skip records out of the range
-            if r_start > endtime or r_end < starttime:
-                continue
-
             # Cut off records to start & endtime
             if starttime is not None:
                 if r_end <= starttime:
@@ -181,6 +177,16 @@ def get_flags_c(files, starttime=None, endtime=None,
     records.sort(key=lambda x: x["end"], reverse=True)
 
     # Create collections for the flags
+    dq_flags_counts = collections.OrderedDict([
+        ("amplifier_saturation_detected", 0),
+        ("digitizer_clipping_detected", 0),
+        ("spikes_detected", 0),
+        ("glitches_detected", 0),
+        ("missing_data_present", 0),
+        ("telemetry_sync_error", 0),
+        ("digital_filter_charging", 0),
+        ("time_tag_uncertain", 0)
+    ])
     dq_flags_seconds = collections.OrderedDict([
         ("amplifier_saturation_detected", 0),
         ("digitizer_clipping_detected", 0),
@@ -192,6 +198,14 @@ def get_flags_c(files, starttime=None, endtime=None,
         ("time_tag_uncertain", 0)
     ])
 
+    io_flags_counts = collections.OrderedDict([
+        ("station_volume_parity_error", 0),
+        ("long_record_read", 0),
+        ("short_record_read", 0),
+        ("start_time_series", 0),
+        ("end_time_series", 0),
+        ("clock_locked", 0)
+    ])
     io_flags_seconds = collections.OrderedDict([
         ("station_volume_parity_error", 0),
         ("long_record_read", 0),
@@ -201,6 +215,15 @@ def get_flags_c(files, starttime=None, endtime=None,
         ("clock_locked", 0)
     ])
 
+    ac_flags_counts = collections.OrderedDict([
+        ("calibration_signals_present", 0),
+        ("time_correction_applied", 0),
+        ("beginning_event", 0),
+        ("end_event", 0),
+        ("positive_leap", 0),
+        ("negative_leap", 0),
+        ("event_in_progress", 0)
+    ])
     ac_flags_seconds = collections.OrderedDict([
         ("calibration_signals_present", 0),
         ("time_correction_applied", 0),
@@ -214,10 +237,28 @@ def get_flags_c(files, starttime=None, endtime=None,
     coverage = None
     used_record_count = 0
     timing_correction = 0.0
+    timing_correction_count = 0
     tq = []
 
     # Go over all sorted records from back to front
     for record in records:
+
+        # For counts we do not care about overlaps
+        # simply count contribution from all the records
+        if io_flags:
+            for _i, key in enumerate(io_flags_seconds.keys()):
+                if (record["io"] & (1 << _i)) != 0:
+                    io_flags_counts[key] += 1
+
+        if ac_flags:
+            for _i, key in enumerate(ac_flags_seconds.keys()):
+                if (record["ac"] & (1 << _i)) != 0:
+                    ac_flags_counts[key] += 1
+
+        if dq_flags:
+            for _i, key in enumerate(dq_flags_seconds.keys()):
+                if (record["dq"] & (1 << _i)) != 0:
+                    dq_flags_counts[key] += 1
 
         # Coverage is the timewindow that is covered by the records
         # so bits in overlapping records are not counted
@@ -280,6 +321,7 @@ def get_flags_c(files, starttime=None, endtime=None,
         # (not whether it has been applied)
         if record["tc"] != 0:
             timing_correction += record_length_seconds
+            timing_correction_count += 1
 
     # Get the total time analyzed
     if endtime is not None and starttime is not None:
@@ -309,9 +351,13 @@ def get_flags_c(files, starttime=None, endtime=None,
 
     return {
         'timing_correction': timing_correction,
+        'timing_correction_count': timing_correction_count,
         'io_flags_percentages': io_flags_seconds,
+        'io_flags_counts': io_flags_counts,
         'dq_flags_percentages': dq_flags_seconds,
+        'dq_flags_counts': dq_flags_counts,
         'ac_flags_percentages': ac_flags_seconds,
+        'ac_flags_counts': ac_flags_counts,
         'timing_quality': tq,
         'record_count': len(records),
         'number_of_records_used': used_record_count,
