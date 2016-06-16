@@ -258,10 +258,10 @@ class PolesZerosResponseStage(ResponseStage):
 
     @zeros.setter
     def zeros(self, value):
-        for x in value:
+        value = list(value)
+        for i, x in enumerate(value):
             if not isinstance(x, CustomComplex):
-                msg = "Zeros must be of CustomComplex type."
-                raise TypeError(msg)
+                value[i] = CustomComplex(x)
         self._zeros = value
 
     @property
@@ -270,10 +270,10 @@ class PolesZerosResponseStage(ResponseStage):
 
     @poles.setter
     def poles(self, value):
-        for x in value:
+        value = list(value)
+        for i, x in enumerate(value):
             if not isinstance(x, CustomComplex):
-                msg = "Poles must be of CustomComplex type."
-                raise TypeError(msg)
+                value[i] = CustomComplex(x)
         self._poles = value
 
     @property
