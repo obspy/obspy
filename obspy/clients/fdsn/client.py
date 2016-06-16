@@ -529,18 +529,18 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated.
+            comma-separated (e.g. ``"IU,TA"``).
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"ANMO,PFO"``).
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case ``“--“`` (two
-            dashes) will be translated to a string of two space characters to
-            match blank location IDs.
+            identifiers are comma-separated (e.g. ``"00,01"``).  As a
+            special case ``“--“`` (two dashes) will be translated to a string
+            of two space characters to match blank location IDs.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type minlatitude: float
         :param minlatitude: Limit to stations with a latitude larger than the
             specified minimum.
@@ -670,16 +670,17 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated. Wildcards are allowed.
+            comma-separated (e.g. ``"IU,TA"``). Wildcards are allowed.
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated. Wildcards are allowed.
+            are comma-separated (e.g. ``"ANMO,PFO"``). Wildcards are allowed.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. Wildcards are allowed.
+            identifiers are comma-separated (e.g. ``"00,01"``). Wildcards are
+            allowed.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit results to time series samples on or after the
             specified start time
