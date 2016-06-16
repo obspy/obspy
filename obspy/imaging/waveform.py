@@ -23,6 +23,7 @@ from future.utils import native_str
 
 import io
 import warnings
+import functools
 from copy import copy
 from datetime import datetime
 from dateutil.rrule import MINUTELY, SECONDLY
@@ -214,6 +215,8 @@ class WaveformPlotting(object):
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
         self.title = kwargs.get('title', self.stream[0].id)
+        self.fillcolor_pos, self.fillcolor_neg = \
+            kwargs.get('fillcolors', (None, None))
 
     def __del__(self):
         """
@@ -1281,6 +1284,13 @@ class WaveformPlotting(object):
         self.plot_section()
         """
         ax = self.fig.gca()
+        # Matplotlib 1.5.x does not support interpolation on fill_betweenx
+        # Should be integrated by version 2.1 (see PR#6560)
+        if self.sect_orientation == 'vertical':
+            self.fillfun = functools.partial(ax.fill_betweenx, lw=0)
+        else:
+            self.fillfun = functools.partial(ax.fill_between, lw=0,
+                                             interpolate=True)
         # Calculate normalizing factor
         self.__sect_normalize_traces()
         # Calculate scaling factor
@@ -1300,6 +1310,14 @@ class WaveformPlotting(object):
             else:
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
+            if self.fillcolor_pos:
+                self.fillfun(time, data, self._tr_offsets_norm[_tr],
+                             where=data > self._tr_offsets_norm[_tr],
+                             facecolor=self.fillcolor_pos)
+            if self.fillcolor_neg:
+                self.fillfun(time, data, self._tr_offsets_norm[_tr],
+                             where=data < self._tr_offsets_norm[_tr],
+                             facecolor=self.fillcolor_neg)
 
         # Set correct axes orientation
         if self.sect_orientation == 'vertical':

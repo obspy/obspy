@@ -1094,6 +1094,10 @@ class Stream(object):
         :type orientation: str, optional
         :param orientation: The orientation of the time axis, either
             ``'vertical'`` or ``'horizontal'``. Defaults to ``'vertical'``.
+        :type fillcolors: tuple, optional
+        :param fillcolors:  Fill the inside of the lines (wiggle plot),
+            for both the positive and negative sides; use ``None`` to omit
+            one of the sides. Defaults to ``(None,None)``.
 
         **Relative Parameters**
 
