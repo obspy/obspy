@@ -5,14 +5,6 @@ branches:
     - "master"
     - "maintenance_1.0.x"
 
-env:
-  global:
-    - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-        export RUNTESTSOPTIONS="--ci-url https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}"
-      else
-        export RUNTESTSOPTIONS="--ci-url https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID} --pr-url https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}"
-      fi
-
 matrix:
   include:
     # do one build run with our minimum dependencies
@@ -154,8 +146,16 @@ script:
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-  - coverage run --rcfile=.coveragerc --source=$MODULELIST -m obspy.scripts.runtests -n travis-ci -r $RUNTESTSOPTIONS
+  - export MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+  - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+      export RUNTESTSOPTIONS="--ci-url=\"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}\"";
+    else
+      export RUNTESTSOPTIONS="--ci-url=\"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID} --pr-url=\"https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}\"";
+    fi;
+  - echo $MODULELIST
+  - echo $RUNTESTSOPTIONS
+  - echo "coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r ${RUNTESTSOPTIONS}"
+  - coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r ${RUNTESTSOPTIONS}
 
 after_success:
   - mv .coverage ../.coverage.empty
