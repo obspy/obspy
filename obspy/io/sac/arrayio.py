@@ -585,7 +585,7 @@ def validate_sac_content(hf, hi, hs, data, *tests):
         except (AttributeError, ValueError) as e:
             msg = "Data array is None, empty array, or non-array. " + \
                   "Cannot check data headers."
-            raise ValueError(msg)
+            raise SacInvalidContentError(msg)
 
     if 'enums' in tests:
         for hdr in HD.ACCEPTED_VALS:
