@@ -369,7 +369,7 @@ from . import arrayio as _io
 # floats
 def _floatgetter(hdr):
     def get_float(self):
-        value = self._hf[HD.FLOATHDRS.index(hdr)]
+        value = float(self._hf[HD.FLOATHDRS.index(hdr)])
         if value == HD.FNULL:
             value = None
         return value
@@ -387,7 +387,7 @@ def _floatsetter(hdr):
 # ints
 def _intgetter(hdr):
     def get_int(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
+        value = int(self._hi[HD.INTHDRS.index(hdr)])
         if value == HD.INULL:
             value = None
         return value
@@ -459,10 +459,10 @@ def _strgetter(hdr):
     def get_str(self):
         try:
             # value is a bytes
-            value = self._hs[HD.STRHDRS.index(hdr)].decode()
+            value = str(self._hs[HD.STRHDRS.index(hdr)].decode())
         except AttributeError:
             # value is a str
-            value = self._hs[HD.STRHDRS.index(hdr)]
+            value = str(self._hs[HD.STRHDRS.index(hdr)])
 
         if value == HD.SNULL:
             value = None
@@ -500,15 +500,17 @@ def _make_data_func(func, hdr):
     def do_data_func(self):
         try:
             value = func(self.data)
+            if not isinstance(value, int):
+                value = float(value)
         except TypeError:
-            # data=None (headonly=True)
+            # data is None, get the value from header
             try:
-                value = self._hf[HD.FLOATHDRS.index(hdr)]
-                null = HD.INULL
+                value = float(self._hf[HD.FLOATHDRS.index(hdr)])
+                null = HD.FNULL
             except ValueError:
                 # hdr is 'npts', the only integer
-                # Will this also trip if a data-centric header is misspelled?
-                value = self._hi[HD.INTHDRS.index(hdr)]
+                # XXX: this also trip if a data-centric header is misspelled?
+                value = int(self._hi[HD.INTHDRS.index(hdr)])
                 null = HD.INULL
             if value == null:
                 value = None
