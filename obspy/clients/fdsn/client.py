@@ -1639,6 +1639,11 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     if debug is True:
         print("Downloading %s %s requesting gzip compression" % (
             url, "with" if use_gzip else "without"))
+        if data:
+            print("Sending along the following payload:")
+            print("-" * 70)
+            print(data.decode())
+            print("-" * 70)
 
     try:
         request = urllib.request.Request(url=url, headers=headers)

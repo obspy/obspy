@@ -532,8 +532,7 @@ class ClientDownloadHelper(object):
         # There are essentially two possibilities. If no station exists yet,
         # it will choose the largest subset of stations satisfying the
         # minimum inter-station distance constraint.
-        if not existing_stations and \
-                not any([_i.has_existing_time_intervals for _i in stations]):
+        if not existing_stations:
             # Build k-d-tree and query for the neighbours of each point within
             # the minimum distance.
             kd_tree = utils.SphericalNearestNeighbour(stations)
@@ -1076,6 +1075,14 @@ class ClientDownloadHelper(object):
                 "Client '{0}' - Failed getting availability: %s".format(
                     self.client_name), str(e))
             return
+        # This sometimes fires if a service returns some random stuff which
+        # is not a valid station file.
+        except Exception as e:
+            self.logger.error(
+                "Client '{0}' - Failed getting availability due to "
+                "unexpected exception: %s".format(self.client_name), str(e))
+            return
+
         self.logger.info("Client '%s' - Successfully requested availability "
                          "(%.2f seconds)" % (self.client_name, end - start))
 
