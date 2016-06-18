@@ -328,6 +328,7 @@ Convert to/from ObsPy Traces
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import sys
 import warnings
@@ -459,10 +460,10 @@ def _strgetter(hdr):
     def get_str(self):
         try:
             # value is a bytes
-            value = unicode(self._hs[HD.STRHDRS.index(hdr)].decode())
+            value = native_str(self._hs[HD.STRHDRS.index(hdr)].decode())
         except AttributeError:
             # value is a str
-            value = unicode(self._hs[HD.STRHDRS.index(hdr)])
+            value = native_str(self._hs[HD.STRHDRS.index(hdr)])
 
         if value == HD.SNULL:
             value = None
