@@ -2,6 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import os
 import unittest
@@ -15,6 +16,7 @@ from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
 from ..sactrace import SACTrace
 from ..util import SacHeaderError
+from .. import header as HD
 
 
 class SACTraceTestCase(unittest.TestCase):
@@ -211,6 +213,20 @@ class SACTraceTestCase(unittest.TestCase):
         # values are set. NOTE: still have a problem when others are "None".
         sac = SACTrace(lcalda=True, stla=stla)
         self.assertRaises(SacHeaderError, sac._set_distances, force=True)
+
+    def test_native_types(self):
+        """
+        SACTrace headers should be returned as native Python types.
+        Addresses #1456.
+        """
+        # sac = SACTrace.read(self.fileseis)
+        sac = SACTrace()
+        native_types = (float, int, type(native_str()), type(None))
+        skip_headers = ('reftime', 'data')
+        for attr in dir(sac):
+            if (not attr.startswith('_') and 'method' not in \
+                    str(getattr(sac, attr)) and attr not in skip_headers):
+                self.assertIsInstance(getattr(sac, attr), native_types)
 
 
 def suite():
