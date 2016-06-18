@@ -124,7 +124,7 @@ class ChannelTestCase(unittest.TestCase):
             "\tDip: 6.00 degrees down from horizontal\n"
             "\tChannel types: A, B\n"
             "\tSampling Rate: 10.00 Hz\n"
-            "\tSensor: None\n"
+            "\tSensor (Description): None (None)\n"
             "\tResponse information available"
         )
 
@@ -139,7 +139,7 @@ class ChannelTestCase(unittest.TestCase):
             "\tDip: 6.00 degrees down from horizontal\n"
             "\tChannel types: A, B\n"
             "\tSampling Rate: 10.00 Hz\n"
-            "\tSensor: random\n"
+            "\tSensor (Description): random (None)\n"
             "\tResponse information available"
         )
 
@@ -154,7 +154,7 @@ class ChannelTestCase(unittest.TestCase):
             "\tDip: 6.00 degrees down from horizontal\n"
             "\tChannel types: A, B\n"
             "\tSampling Rate: 10.00 Hz\n"
-            "\tSensor: None\n"
+            "\tSensor (Description): None (some description)\n"
             "\tResponse information available"
         )
 
@@ -169,7 +169,7 @@ class ChannelTestCase(unittest.TestCase):
             "\tDip: 6.00 degrees down from horizontal\n"
             "\tChannel types: A, B\n"
             "\tSampling Rate: 10.00 Hz\n"
-            "\tSensor: random\n"
+            "\tSensor (Description): random (some description)\n"
             "\tResponse information available"
         )
 
