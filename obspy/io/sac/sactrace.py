@@ -76,12 +76,34 @@ Build a SACTrace from a header dictionary and data array
 ...           'nzjday': 123, 'nzhour': 13, 'nzmin': 43, 'nzsec': 17,
 ...           'nzmsec': 100, 'delta': 1.0/40}
 >>> sac = SACTrace(data=np.random.random(100), **header)
->>> sac  # doctest: +NORMALIZE_WHITESPACE
-SACTrace(b=0.0, delta=0.025, e=0.0, evdp=50.0, evla=-15.123, evlo=123.0,
-iftype=1, internal0=2.0, iztype=9, kcmpnm=u'BHZ', kstnm=u'ANMO', lcalda=0,
-leven=1, lovrok=1, lpspol=1, npts=0, nvhdr=6, nzhour=13, nzjday=123, nzmin=43,
-nzmsec=100, nzsec=17, nzyear=2012, stla=40.5, stlo=-108.23)
-
+>>> print(sac)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+Reference Time = 05/02/2012 (123) 13:43:17.100000
+   iztype IB: begin time
+b          = 0.0
+delta      = 0.0250000...
+e          = 2.4750000...
+evdp       = 50.0
+evla       = -15.123000...
+evlo       = 123.0
+iftype     = itime
+internal0  = 2.0
+iztype     = ib
+kcmpnm     = BHZ
+kstnm      = ANMO
+lcalda     = False
+leven      = True
+lovrok     = True
+lpspol     = True
+npts       = 100
+nvhdr      = 6
+nzhour     = 13
+nzjday     = 123
+nzmin      = 43
+nzmsec     = 100
+nzsec      = 17
+nzyear     = 2012
+stla       = 40.5
+stlo       = -108.23000...
 
 Reference-time and relative time headers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,7 +313,7 @@ nzyear     = 2009
 scale      = 1.0
 
 >>> tr2 = sac.to_obspy_trace()
->>> print(tr2.stats)  # doctest: +NORMALIZE_WHITESPACE
+>>> print(tr2.stats)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
          network: BW
          station: RJOB
         location:
@@ -302,14 +324,7 @@ scale      = 1.0
            delta: 0.01
             npts: 3000
            calib: 1.0
-             sac: AttribDict({u'nzsec': 3, u'scale': 1.0, u'e': 29.99,
-                              u'nzyear': 2009, u'nvhdr': 6, u'kcmpnm': u'EHZ',
-                              u'b': 0.0, u'nzjday': 236, u'iztype': 9,
-                              u'kstnm': u'RJOB', u'iftype': 1, u'npts': 3000,
-                              u'lovrok': 1, u'nzhour': 0, u'nzmin': 20,
-                              u'delta': 0.0099999998, u'knetwk': u'BW',
-                              u'lcalda': 1, u'lpspol': 0, u'nzmsec': 0,
-                              u'leven': 1})
+             sac: AttribDict(...)
 
 """
 from __future__ import (absolute_import, division, print_function,
