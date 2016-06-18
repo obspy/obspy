@@ -1386,7 +1386,8 @@ class SACTrace(object):
         ... except SacInvalidContentError as e:
         ...     sac.delta *= -1.0
         ...     sac.validate('delta')
-        >>> # make the data headers not match, catch them, and fix (flush) them
+        >>> # make the data and depmin/men/max not match, catch the validation
+        >>> # error, then fix (flush) the headers so that they validate
         >>> sac.data += 5.0
         >>> try:
         ...     sac.validate('data_hdrs')
