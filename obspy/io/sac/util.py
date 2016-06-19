@@ -313,9 +313,6 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
     header = {}
     oldsac = stats.get('sac', {})
 
-    header['npts'] = stats['npts']
-    header['delta'] = stats['delta']
-
     if keep_sac_header and oldsac:
         # start with the old header
         header.update(oldsac)
@@ -372,15 +369,11 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
 
         # merge some values from stats if they're missing in the SAC header
         # ObsPy issue 1204
-        if header.get('kstnm') in (None, HD.SNULL):
-            header['kstnm'] = stats['station'] or HD.SNULL
-        if header.get('knetwk') in (None, HD.SNULL):
-            header['knetwk'] = stats['network'] or HD.SNULL
-        if header.get('kcmpnm') in (None, HD.SNULL):
-            header['kcmpnm'] = stats['channel'] or HD.SNULL
-        if header.get('khole') in (None, HD.SNULL):
-            header['khole'] = stats['location'] or HD.SNULL
-
+        for sachdr, statshdr in [('kstnm', 'station'), ('knetwk', 'network'),
+                                 ('kcmpnm', 'channel'), ('khole', 'location')]:
+            if (header.get(sachdr) in (None, HD.SNULL)) or \
+               (header.get(sachdr).strip() != stats[statshdr]):
+                header[sachdr] = stats[statshdr] or HD.SNULL
     else:
         # SAC header from scratch.  Just use stats.
 
