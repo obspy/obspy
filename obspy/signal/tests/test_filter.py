@@ -254,16 +254,32 @@ class FilterTestCase(unittest.TestCase):
 
         for low_corner in (6.0, 8.55, 8.59):
             for corners in (3, 4, 5, 6):
-                expected = bandpass(data, low_corner, nyquist - 1e-5,
+                # this is filtering with high corner slightly below what we
+                # catch and change into highpass
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    expected = bandpass(
+                        data, low_corner, nyquist * (1 - 1.1e-6), df=df,
+                        corners=corners)
+                    self.assertEqual(len(w), 0)
+                # all of these should be changed into a highpass
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    got1 = bandpass(data, low_corner, nyquist * (1 - 0.9e-6),
                                     df=df, corners=corners)
-                got1 = bandpass(data, low_corner, nyquist,
-                                df=df, corners=corners)
-                with warnings.catch_warnings(record=True):
-                    got2 = bandpass(data, low_corner, nyquist + 1.78,
+                    got2 = bandpass(data, low_corner, nyquist,
                                     df=df, corners=corners)
-                for got in (got1, got2):
+                    got3 = bandpass(data, low_corner, nyquist + 1.78,
+                                    df=df, corners=corners)
+                    self.assertEqual(len(w), 3)
+                    for w_ in w:
+                        self.assertTrue('Selected high corner frequency ' in
+                                        str(w[0].message))
+                        self.assertTrue('Applying a high-pass instead.' in
+                                        str(w[0].message))
+                for got in (got1, got2, got3):
                     np.testing.assert_allclose(got, expected, rtol=1e-3,
-                                               atol=1e-3)
+                                               atol=0.9)
 
 
 def suite():

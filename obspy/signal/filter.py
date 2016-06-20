@@ -60,12 +60,13 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     low = freqmin / fe
     high = freqmax / fe
     # raise for some bad scenarios
-    if high >= 1.0:
-        high = 0.999999999
-        msg = ("Selected high corner frequency ({}) is at or above Nyquist "
-               "({}). Setting ({} * Nyquist = {} Hz) as high corner.").format(
-                   freqmax, fe, high, high * fe)
+    if high - 1.0 > -1e-6:
+        msg = ("Selected high corner frequency ({}) of bandpass is at or "
+               "above Nyquist ({}). Applying a high-pass instead.").format(
+                    freqmax, fe)
         warnings.warn(msg)
+        return highpass(data, freq=freqmin, df=df, corners=corners,
+                        zerophase=zerophase)
     if low > 1:
         msg = "Selected low corner frequency is above Nyquist."
         raise ValueError(msg)
