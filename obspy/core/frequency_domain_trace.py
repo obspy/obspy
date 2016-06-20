@@ -3,7 +3,7 @@ from matplotlib import mlab
 from numpy import fft
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import fftpack
+from scipy import fftpack, signal, stats
 from obspy.core.trace import Trace
 
 class TimeSeriesFrequencyDomainTrace(BaseTrace):
@@ -13,27 +13,12 @@ class TimeSeriesFrequencyDomainTrace(BaseTrace):
         t_tr = TimeSeriesTrace()
         t_tr.data = fft.irfft(self.data)
         t_tr.stats = Stats()
-        #remaining stats information
-        t_tr.stats.network = self.stats.network
-        t_tr.stats.station = self.stats.station
-        t_tr.stats.location = self.stats.location
-        t_tr.stats.starttime = self.stats.starttime
-
-        t_tr.stats.calib = self.stats.calib
-        t_tr.stats.back_azimuth = self.stats.back_azimuth
-        t_tr.stats.inclination = self.stats.inclination
-
-        #modifiable stats information
-        #t_tr.stats.endtime = self.stats.endtime
-        t_tr.stats.sampling_rate = self.stats.sampling_rate
-        t_tr.stats.npts = self.stats.npts
-
+        t_tr.stats = self.stats
         return t_tr
 
     def plot(self):
         N = self.stats.npts
         T = self.stats.delta
-        #x = np.linspace(0.0, N*T, N)
         yf = self.data
         xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
         fig, ax = plt.subplots()
@@ -59,50 +44,58 @@ class TimeSeriesFrequencyDomainTrace(BaseTrace):
     def amplitude(self):
         return np.absolute(self.data)
     
-    def cross_correlation(self, tr2):
-
-        if self.stats.starttime != tr2.stats.starttime:
+    def cross_correlation(self, other):
+        if self.stats.starttime != other.stats.starttime:
             msg = "Traces do not have the same starttime"
             raise Exception(msg)
-       
-        elif "FALSE" == np.array_equal(self.frequencies(), tr2.frequencies()):
+        elif "FALSE" == np.array_equal(self.frequencies, other.frequencies):
             msg = "Traces do not have the same frequencies"
             raise Exception(msg)
-
         else: 
+
+
             data1 = self.data
-            data2 = tr2.data 
+            data2 = other.data 
+     
             data2_conj = np.conj(data2)
             data_multiplied = np.multiply(data1, data2_conj)
             corr = fftpack.ifft(data_multiplied)
-       
             plt.plot(corr)        
             plt.xlabel('offset between two waves')
             plt.ylabel('correlation')
             plt.show()
+            return corr        
 
-            return (corr)        
 
+
+    @property
     def frequencies(self):
-        n = self.data.size
+        # XXX: Take care of odd/even number of samples
+        n = self.data.size * 2 - 1
         timestep = self.stats.delta
         freq = fft.rfftfreq(n, d=timestep)       
         return freq
 
-    def cross_spectrum(self, tr2):
-        data1 = self.data
-        data2 = tr2.data
-        data2_conj = np.conj(data2)
-        cross_spectrum = data2_conj*data1
-        return (cross_spectrum)
+    def cross_spectrum(self, other):
+        return self.data.conj() * other.data
 
-    def coherence(self, tr2):
-        data1 = self.data
-        data2 = tr2.data
-        data2_conj = np.conj(data2)
-        cross_spectrum = data2_conj*data1
-        coherence = (cross_spectrum)**2/(np.abs(data1)*np.abs(data2))
-        return (coherence)
+    @property
+    def conjugate(self):
+        return np.conjugate(self.data)
+
+    def coherence(self,other):
+        XY = (self.data)*(other.data).conjugate()
+        XX = (self.data)*(self.data).conjugate()
+        YY = (other.data)*(other.data).conjugate()
+        w = np.hanning(20)
+        XY = np.abs((self.data)*(other.data).conjugate())
+        XX = np.abs((self.data)*(self.data).conjugate())
+        YY = np.abs((other.data)*(other.data).conjugate())
+        cross = np.convolve(XY,w,mode='same')
+        cross *= cross
+        coh = cross/(np.convolve(XX,w,mode='same')*np.convolve(YY,w,mode='same'))
+        coh = np.sqrt(coh)
+        return coh
 
 class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
 
@@ -110,25 +103,9 @@ class FrequencyDomainTrace(TimeSeriesFrequencyDomainTrace):
         from obspy.core.trace import Trace    
         tr = Trace()
         tr.data = fft.irfft(self.data)
-
         tr.stats = Stats()
-        #remaining stats information
-        tr.stats.network = self.stats.network
-        tr.stats.station = self.stats.station
-        tr.stats.location = self.stats.location
-        tr.stats.starttime = self.stats.starttime
-
-        tr.stats.calib = self.stats.calib
-        tr.stats.back_azimuth = self.stats.back_azimuth
-        tr.stats.inclination = self.stats.inclination
-
-        #modifiable stats information
-        #tr.stats.endtime = self.stats.endtime
-        tr.stats.sampling_rate = self.stats.sampling_rate
-        tr.stats.npts = self.stats.npts
-
+        tr.stats = self.stats
         return tr
-
 
     def plot_psd_trace(self, plot_type='default', nperseg=4096, noverlap=None,
                        detrend=mlab.detrend_linear, window=mlab.window_hanning,
