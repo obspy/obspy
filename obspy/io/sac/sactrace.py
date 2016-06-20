@@ -242,7 +242,7 @@ Great for interactive use, with (ipython) tab-completion...
     sac.kcmpnm            sac.nzmin             sac.write
     sac.kdatrd            sac.nzmsec
 
-...and documentation (in iPython)!
+...and documentation (in IPython)!
 
 .. code:: python
 
