@@ -14,6 +14,7 @@ from future.builtins import *  # NOQA
 from future.utils import PY2, native_str
 
 import functools
+import importlib
 import inspect
 import os
 import re
@@ -237,6 +238,46 @@ def skip_if_no_data(func, *args, **kwargs):
     if not args[0]:
         return
     return func(*args, **kwargs)
+
+
+@decorator
+def _add_processing_info(func, *args, **kwargs):
+    """
+    This is a decorator that attaches information about a processing call as a
+    string to the Trace.stats.processing list.
+    """
+    callargs = inspect.getcallargs(func, *args, **kwargs)
+    callargs.pop("self")
+    kwargs_ = callargs.pop("kwargs", {})
+    module = inspect.getmodule(func).__name__
+    if '.' in module:
+        module = module.split('.')[0]
+    version = getattr(importlib.import_module(module), '__version__')
+    if module == 'obspy':
+        module = 'ObsPy'
+    info = "{module} {version}: {function}(%s)".format(
+        module=module,
+        version=version,
+        function=func.__name__)
+    arguments = []
+    arguments += \
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
+         "%s='%s'" % (k, v) for k, v in callargs.items()]
+    arguments += \
+        ["%s=%s" % (k, repr(v)) if not isinstance(v, native_str) else
+         "%s='%s'" % (k, v) for k, v in kwargs_.items()]
+    arguments.sort()
+    info = info % "::".join(arguments)
+    self = args[0]
+    result = func(*args, **kwargs)
+    # Attach after executing the function to avoid having it attached
+    # while the operation failed.
+    try:
+        self._internal_add_processing_info(info)
+    except AttributeError:
+        for tr in self:
+            tr._internal_add_processing_info(info)
+    return result
 
 
 def map_example_filename(arg_kwarg_name):
