@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 from future.utils import native_str
 
+import importlib
 import inspect
 import math
 import warnings
@@ -215,9 +216,15 @@ def _add_processing_info(func, *args, **kwargs):
     callargs = inspect.getcallargs(func, *args, **kwargs)
     callargs.pop("self")
     kwargs_ = callargs.pop("kwargs", {})
-    from obspy import __version__
-    info = "ObsPy {version}: {function}(%s)".format(
-        version=__version__,
+    module = inspect.getmodule(func).__name__
+    if '.' in module:
+        module = module.split('.')[0]
+    version = getattr(importlib.import_module(module), '__version__')
+    if module == 'obspy':
+        module = 'ObsPy'
+    info = "{module} {version}: {function}(%s)".format(
+        module=module,
+        version=version,
         function=func.__name__)
     arguments = []
     arguments += \
