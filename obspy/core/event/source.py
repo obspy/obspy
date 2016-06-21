@@ -117,10 +117,10 @@ class NodalPlanes(__NodalPlanes):
     solution. The attribute ``preferred_plane`` can be used to define which
     plane is the preferred one.
 
-    :type nodal_plane_1: :class:`~obspy.core.event.NodalPlane`, optional
+    :type nodal_plane_1: :class:`~obspy.core.event.source.NodalPlane`, optional
     :param nodal_plane_1: First nodal plane of double-couple moment tensor
         solution.
-    :type nodal_plane_2: :class:`~obspy.core.event.NodalPlane`, optional
+    :type nodal_plane_2: :class:`~obspy.core.event.source.NodalPlane`, optional
     :param nodal_plane_2: Second nodal plane of double-couple moment tensor
         solution.
     :type preferred_plane: int, optional
@@ -147,11 +147,11 @@ class PrincipalAxes(__PrincipalAxes):
     This class describes the principal axes of a double-couple moment tensor
     solution. t_axis and p_axis are required, while n_axis is optional.
 
-    :type t_axis: :class:`~obspy.core.event.Axis`
+    :type t_axis: :class:`~obspy.core.event.source.Axis`
     :param t_axis: T (tension) axis of a double-couple moment tensor solution.
-    :type p_axis: :class:`~obspy.core.event.Axis`
+    :type p_axis: :class:`~obspy.core.event.source.Axis`
     :param p_axis: P (pressure) axis of a double-couple moment tensor solution.
-    :type n_axis: :class:`~obspy.core.event.Axis`, optional
+    :type n_axis: :class:`~obspy.core.event.source.Axis`, optional
     :param n_axis: N (neutral) axis of a double-couple moment tensor solution.
 
     .. note::
@@ -274,16 +274,16 @@ class MomentTensor(__MomentTensor):
     This class represents a moment tensor solution for an event. It is an
     optional part of a FocalMechanism description.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of MomentTensor.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type derived_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type derived_origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param derived_origin_id: Refers to the resource_id of the Origin derived
         in the moment tensor inversion.
-    :type moment_magnitude_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type moment_magnitude_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param moment_magnitude_id: Refers to the publicID of the Magnitude object
         which represents the derived moment magnitude.
     :type scalar_moment: float, optional
@@ -291,7 +291,7 @@ class MomentTensor(__MomentTensor):
         Unit: Nm
     :type scalar_moment_errors: :class:`~obspy.core.event.base.QuantityError`
     :param scalar_moment_errors: AttribDict containing error quantities.
-    :type tensor: :class:`~obspy.core.event.Tensor`, optional
+    :type tensor: :class:`~obspy.core.event.source.Tensor`, optional
     :param tensor: Tensor object holding the moment tensor elements.
     :type variance: float, optional
     :param variance: Variance of moment tensor inversion.
@@ -307,20 +307,22 @@ class MomentTensor(__MomentTensor):
     :type iso: float, optional
     :param iso: Isotropic part obtained from moment tensor inversion (decimal
         fraction between 0 and 1).
-    :type greens_function_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type greens_function_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param greens_function_id: Resource identifier of the Green’s function used
         in moment tensor inversion.
-    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param filter_id: Resource identifier of the filter setup used in moment
         tensor inversion.
-    :type source_time_function: :class:`~obspy.core.event.SourceTimeFunction`,
-        optional
+    :type source_time_function:
+        :class:`~obspy.core.event.source.SourceTimeFunction`, optional
     :param source_time_function: Source time function used in moment-tensor
         inversion.
-    :type data_used: list of :class:`~obspy.core.event.DataUsed`, optional
+    :type data_used: list of :class:`~obspy.core.event.base.DataUsed`, optional
     :param data_used: Describes waveform data used for moment-tensor inversion.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Resource identifier of the method used for moment-tensor
         inversion.
     :type category: str, optional
@@ -339,9 +341,9 @@ class MomentTensor(__MomentTensor):
         * ``"zero trace"``,
         * ``"double couple"``
 
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 
@@ -378,18 +380,19 @@ class FocalMechanism(__FocalMechanism):
     moment tensor description is provided by objects of the class MomentTensor
     which can be specified as child elements of FocalMechanism.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of FocalMechanism.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type triggering_origin_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type triggering_origin_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param triggering_origin_id: Refers to the resource_id of the triggering
         origin.
-    :type nodal_planes: :class:`~obspy.core.event.NodalPlanes`, optional
+    :type nodal_planes: :class:`~obspy.core.event.source.NodalPlanes`, optional
     :param nodal_planes: Nodal planes of the focal mechanism.
-    :type principal_axes: :class:`~obspy.core.event.PrincipalAxes`, optional
+    :type principal_axes: :class:`~obspy.core.event.source.PrincipalAxes`,
+        optional
     :param principal_axes: Principal axes of the focal mechanism.
     :type azimuthal_gap: float, optional
     :param azimuthal_gap: Largest azimuthal gap in distribution of stations
@@ -404,11 +407,12 @@ class FocalMechanism(__FocalMechanism):
         parameter. Indicates how the stations are distributed about the focal
         sphere (Reasenberg and Oppenheimer 1985). Decimal fraction between 0
         and 1.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Resource identifier of the method used for determination
         of the focal mechanism.
-    :type waveform_id: list of :class:`~obspy.core.event.WaveformStreamID`,
-        optional
+    :type waveform_id: list of
+        :class:`~obspy.core.event.base.WaveformStreamID`, optional
     :param waveform_id: Refers to a set of waveform streams from which the
         focal mechanism was derived.
     :type evaluation_mode: str, optional
@@ -429,11 +433,12 @@ class FocalMechanism(__FocalMechanism):
         * ``"rejected"``
         * ``"reported"``
 
-    :type moment_tensor: :class:`~obspy.core.event.MomentTensor`, optional
+    :type moment_tensor: :class:`~obspy.core.event.source.MomentTensor`,
+        optional
     :param moment_tensor: Moment tensor description for this focal mechanism.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 

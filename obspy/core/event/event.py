@@ -51,7 +51,7 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -112,27 +112,28 @@ class Event(__Event):
         * ``"suspected"``
         * ``"known"``
 
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     :type event_descriptions: list of
-        :class:`~obspy.core.event.EventDescription`
+        :class:`~obspy.core.event.event.EventDescription`
     :param event_descriptions: Additional event description, like earthquake
         name, Flinn-Engdahl region, etc.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type picks: list of :class:`~obspy.core.event.Pick`
+    :type picks: list of :class:`~obspy.core.event.origin.Pick`
     :param picks: Picks associated with the event.
-    :type amplitudes: list of :class:`~obspy.core.event.Amplitude`
+    :type amplitudes: list of :class:`~obspy.core.event.magnitude.Amplitude`
     :param amplitudes: Amplitudes associated with the event.
-    :type focal_mechanisms: list of :class:`~obspy.core.event.FocalMechanism`
+    :type focal_mechanisms: list of
+        :class:`~obspy.core.event.source.FocalMechanism`
     :param focal_mechanisms: Focal mechanisms associated with the event
-    :type origins: list of :class:`~obspy.core.event.Origin`
+    :type origins: list of :class:`~obspy.core.event.origin.Origin`
     :param origins: Origins associated with the event.
-    :type magnitudes: list of :class:`~obspy.core.event.Magnitude`
+    :type magnitudes: list of :class:`~obspy.core.event.magnitude.Magnitude`
     :param magnitudes: Magnitudes associated with the event.
     :type station_magnitudes: list of
-        :class:`~obspy.core.event.StationMagnitude`
+        :class:`~obspy.core.event.magnitude.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
 
     .. note::
