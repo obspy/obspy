@@ -239,7 +239,11 @@ def _add_processing_info(func, *args, **kwargs):
     result = func(*args, **kwargs)
     # Attach after executing the function to avoid having it attached
     # while the operation failed.
-    self._internal_add_processing_info(info)
+    try:
+        self._internal_add_processing_info(info)
+    except AttributeError:
+        for tr in self:
+            tr._internal_add_processing_info(info)
     return result
 
 
