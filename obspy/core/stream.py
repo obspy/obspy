@@ -30,7 +30,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.base import (ENTRY_POINTS, _get_function_from_entry_point,
                                   _read_from_plugin, download_to_file)
-from obspy.core.util.decorator import (deprecated, map_example_filename,
+from obspy.core.util.decorator import (_add_processing_info, deprecated,
+                                       map_example_filename,
                                        raise_if_masked, uncompress_file)
 from obspy.core.util.misc import get_window_times
 
@@ -2564,6 +2565,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.normalize(norm=norm)
         return self
 
+    @_add_processing_info
     def rotate(self, method, back_azimuth=None, inclination=None):
         """
         Rotate stream objects.
