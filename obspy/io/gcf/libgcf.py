@@ -89,21 +89,22 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     if not a data block (SPS=0) - returns None.
     """
     # get ID
-    sysid = np.fromfile(f, count=1, dtype='>u4')
+    sysid = f.read(4)
     if not sysid:
         raise EOFError  # got to EOF
+    sysid = np.frombuffer(sysid, count=1, dtype='>u4')
     if sysid >> 31 & 0b1 > 0:
         sysid = (sysid << 6) >> 6
     sysid = decode36(sysid)
     # get Stream ID
-    stid = np.fromfile(f, count=1, dtype='>u4')
+    stid = np.frombuffer(f.read(4), count=1, dtype='>u4')
     stid = decode36(stid)
     # get Date & Time
-    data = np.fromfile(f, count=1, dtype='>u4')
+    data = np.frombuffer(f.read(4), count=1, dtype='>u4')
     starttime = decode_date_time(data)
     # get data format
     # get reserved, SPS, data type compression, number of 32bit records (N)
-    reserved, sps, compress, N = np.fromfile(f, count=4, dtype='>u1')
+    reserved, sps, compress, N = np.frombuffer(f.read(4), count=4, dtype='>u1')
     compression = compress & 0b00001111  # get compression code
     t_offset = compress >> 4  # get time offset
     if t_offset > 0:
@@ -130,14 +131,14 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
         return header
     else:
         # get FIC
-        fic = np.fromfile(f, count=1, dtype='>i4')
+        fic = np.frombuffer(f.read(4), count=1, dtype='>i4')
         # get incremental data
-        data = np.fromfile(f, count=npts,
-                           dtype=compression_d[compression])
+        data = np.frombuffer(f.read(4 * N), count=npts,
+                             dtype=compression_d[compression])
         # construct time series
         data = (fic + np.cumsum(data)).astype('i4')
         # get RIC
-        ric = np.fromfile(f, count=1, dtype='>i4')
+        ric = np.frombuffer(f.read(4), count=1, dtype='>i4')
         # skip to end of block if only partly filled with data
         if 1000 - int(N) * 4 > 0:
             f.seek(1000 - int(N) * 4, 1)
