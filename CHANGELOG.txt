@@ -29,6 +29,8 @@ master:
      vertical, see #1445).
  - obspy.io.css
     * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.quakeml
+    * Read and write support for nested custom tags (see #1463)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
 	  `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.

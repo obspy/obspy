@@ -871,32 +871,43 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - tag with explicit namespace and namespace abbreviation
         my_extra = AttribDict(
             {'public': {'value': False,
-                        'namespace': r"http://some-page.de/xmlns/1.0",
-                        'attrib': {u"some_attrib": u"some_value",
-                                   u"another_attrib": u"another_value"}},
-             'custom': {'value': u"True",
-                        'namespace': r'http://test.org/xmlns/0.1'},
+                        'namespace': 'http://some-page.de/xmlns/1.0',
+                        'attrib': {'some_attrib': 'some_value',
+                                   'another_attrib': 'another_value'}},
+             'custom': {'value': 'True',
+                        'namespace': 'http://test.org/xmlns/0.1'},
              'new_tag': {'value': 1234,
-                         'namespace': r"http://test.org/xmlns/0.1"},
+                         'namespace': 'http://test.org/xmlns/0.1'},
              'tX': {'value': UTCDateTime('2013-01-02T13:12:14.600000Z'),
-                    'namespace': r'http://test.org/xmlns/0.1'},
-             'dataid': {'namespace': r'http://anss.org/xmlns/catalog/0.1',
-                        'type': 'attribute', 'value': '00999999'}})
-        nsmap = {"ns0": r"http://test.org/xmlns/0.1",
-                 "catalog": r'http://anss.org/xmlns/catalog/0.1'}
+                    'namespace': 'http://test.org/xmlns/0.1'},
+             'dataid': {'namespace': 'http://anss.org/xmlns/catalog/0.1',
+                        'type': 'attribute', 'value': '00999999'},
+             # some nested tags :
+             'quantity': {'namespace': 'http://some-page.de/xmlns/1.0',
+                          'attrib': {'attrib1': 'attrib_value1',
+                                     'attrib2': 'attrib_value2'},
+                          'value': {
+                             'my_nested_tag1': {
+                                 'namespace': 'http://some-page.de/xmlns/1.0',
+                                 'value': 1.23E10},
+                             'my_nested_tag2': {
+                                 'namespace': 'http://some-page.de/xmlns/1.0',
+                                 'value': False}}}})
+        nsmap = {'ns0': 'http://test.org/xmlns/0.1',
+                 'catalog': 'http://anss.org/xmlns/catalog/0.1'}
         cat[0].extra = my_extra.copy()
         # insert a pick with an extra field
         p = Pick()
         p.extra = {'weight': {'value': 2,
-                              'namespace': r"http://test.org/xmlns/0.1"}}
+                              'namespace': 'http://test.org/xmlns/0.1'}}
         cat[0].picks.append(p)
 
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
             # write file
-            cat.write(tmpfile, format="QUAKEML", nsmap=nsmap)
+            cat.write(tmpfile, format='QUAKEML', nsmap=nsmap)
             # check contents
-            with open(tmpfile, "rb") as fh:
+            with open(tmpfile, 'rb') as fh:
                 # enforce reproducible attribute orders through write_c14n
                 obj = etree.fromstring(fh.read()).getroottree()
                 buf = io.BytesIO()
@@ -930,26 +941,31 @@ class QuakeMLTestCase(unittest.TestCase):
         #  - we always end up with a namespace definition, even if it was
         #    omitted when originally setting the custom tag
         #  - custom namespace abbreviations should attached to Catalog
-        self.assertTrue(hasattr(cat[0], "extra"))
+        self.assertTrue(hasattr(cat[0], 'extra'))
 
         def _tostr(x):
             if isinstance(x, bool):
                 if x:
-                    return str("true")
+                    return str('true')
                 else:
-                    return str("false")
-            return str(x)
+                    return str('false')
+            elif isinstance(x, AttribDict):
+                for key, value in x.items():
+                    x[key].value = _tostr(value['value'])
+                return x
+            else:
+                return str(x)
 
         for key, value in my_extra.items():
             my_extra[key]['value'] = _tostr(value['value'])
         self.assertEqual(cat[0].extra, my_extra)
-        self.assertTrue(hasattr(cat[0].picks[0], "extra"))
+        self.assertTrue(hasattr(cat[0].picks[0], 'extra'))
         self.assertEqual(
             cat[0].picks[0].extra,
             {'weight': {'value': '2',
-                        'namespace': r'http://test.org/xmlns/0.1'}})
-        self.assertTrue(hasattr(cat, "nsmap"))
-        self.assertEqual(getattr(cat, "nsmap")['ns0'], nsmap['ns0'])
+                        'namespace': 'http://test.org/xmlns/0.1'}})
+        self.assertTrue(hasattr(cat, 'nsmap'))
+        self.assertEqual(getattr(cat, 'nsmap')['ns0'], nsmap['ns0'])
 
 
 def suite():
