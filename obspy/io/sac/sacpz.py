@@ -312,11 +312,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     sensitivity
     t_shift
     zeros
-    >>> print(tr.stats.paz.poles)  # doctest: +SKIP
-    [(-0.15931644664884559+0.15931644664884559j),
-     (-0.15931644664884559-0.15931644664884559j),
-     (-314.15926535897933+202.31856689118268j),
-     (-314.15926535897933-202.31856689118268j)]
+    >>> print(tr.stats.paz.poles)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    [(-0.15931...+0.15931...j), (-0.15931...-0.15931...j),
+     (-314.159...+202.318...j), (-314.159...-202.318...j)]
     """
     if not hasattr(resp_file, 'write'):
         resp_filep = open(resp_file, 'r')

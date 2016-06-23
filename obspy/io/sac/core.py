@@ -36,7 +36,11 @@ def _is_sac(filename):
 
     .. rubric:: Example
 
-    >>> _is_sac('/path/to/test.sac')  #doctest: +SKIP
+    >>> from obspy.core.util import get_example_file
+    >>> _is_sac(get_example_file('test.sac'))
+    True
+    >>> _is_sac(get_example_file('test.mseed'))
+    False
     """
     if is_bytes_buffer(filename):
         return _internal_is_sac(filename)
@@ -125,7 +129,11 @@ def _is_sac_xy(filename):
 
     .. rubric:: Example
 
-    >>> _is_sac_xy('/path/to/testxy.sac')  #doctest: +SKIP
+    >>> from obspy.core.util import get_example_file
+    >>> _is_sac_xy(get_example_file('testxy.sac'))
+    True
+    >>> _is_sac_xy(get_example_file('test.sac'))
+    False
     """
     if is_bytes_buffer(filename):
         return _internal_is_sac_xy(filename)
@@ -191,8 +199,8 @@ def _read_sac_xy(filename, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/testxy.sac")
     """
     if is_bytes_buffer(filename):
         return _internal_read_sac_xy(buf=filename, headonly=headonly,
@@ -229,8 +237,8 @@ def _internal_read_sac_xy(buf, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/testxy.sac")
     """
     sac = SACTrace.read(buf, headonly=headonly, ascii=True)
     # assign all header entries to a new dictionary compatible with ObsPy
@@ -331,8 +339,8 @@ def _read_sac(filename, headonly=False, debug_headers=False, fsize=True,
 
     .. rubric:: Example
 
-    >>> from obspy import read # doctest: +SKIP
-    >>> st = read("/path/to/test.sac") # doctest: +SKIP
+    >>> from obspy import read
+    >>> st = read("/path/to/test.sac")
     """
     # Only byte buffers for binary SAC.
     if is_bytes_buffer(filename):
