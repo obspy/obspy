@@ -116,7 +116,7 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
         if 1008 - N * 4 > 0:
             f.seek(1008 - N * 4, 1)  # keep skipping to get 1008 record
         return None
-    npts = int(N) * compression  # number of samples
+    npts = N * compression  # number of samples
     header = {}
     header['starttime'] = starttime
     header['station'] = stid[:4]
@@ -126,8 +126,8 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     if headonly:
         f.seek(4 * (N + 2), 1)  # skip data part (inc. FIC and RIC)
         # skip to end of block if only partly filled with data
-        if 1000 - int(N) * 4 > 0:
-            f.seek(1000 - int(N) * 4, 1)
+        if 1000 - N * 4 > 0:
+            f.seek(1000 - N * 4, 1)
         return header
     else:
         # get FIC
@@ -140,8 +140,8 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
         # get RIC
         ric = np.frombuffer(f.read(4), count=1, dtype='>i4')
         # skip to end of block if only partly filled with data
-        if 1000 - int(N) * 4 > 0:
-            f.seek(1000 - int(N) * 4, 1)
+        if 1000 - N * 4 > 0:
+            f.seek(1000 - N * 4, 1)
         # verify last data sample matches RIC
         if not data[-1] == ric:
             raise ValueError("Last sample mismatch with RIC")
