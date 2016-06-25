@@ -29,11 +29,11 @@ def merge_gcf_stream(st):
         for trace in traces:
             if tr.id == trace.id and delta == trace.stats.delta \
                and not starttime == trace.stats.starttime:
-                if starttime - trace.stats.endtime <= delta:
+                if 0 < starttime - trace.stats.endtime <= delta:
                     trace.stats.npts += tr.stats.npts
                     merged = 1
                     break
-                elif trace.stats.starttime - endtime <= delta:
+                elif 0 < trace.stats.starttime - endtime <= delta:
                     trace.stats.starttime = UTCDateTime(starttime)
                     trace.stats.npts += tr.stats.npts
                     merged = 1
