@@ -6,16 +6,16 @@ anaconda3/bin/python update_pull_request_metadata.py
 # check free space and free inodes (current docs server has relatively low
 # inode quota)
 ## `df` on docs server doesn't have "output" option
-## FREE_INODES = `df . --output="iavail" | tail -1`
-FREE_INODES = `df $HOME/htdocs -i | tail -1 | awk '{print $4}'`
-INODE_CRITICAL = "300000"  # 300k
+## FREE_INODES=`df . --output="iavail" | tail -1`
+FREE_INODES=`df $HOME/htdocs -i | tail -1 | awk '{print $4}'`
+INODE_CRITICAL="300000"  # 300k
 if [ "$FREE_INODES" -lt "$INODE_CRITICAL" ]
 then
     echo "Aborting PR docs build, low inodes: $FREE_INODES"
     exit 1
 fi
-FREE_SPACE = `df $HOME/htdocs/ | tail -1 | awk '{print $4}'`
-SPACE_CRITICAL = "10000000"  # 10G
+FREE_SPACE=`df $HOME/htdocs/ | tail -1 | awk '{print $4}'`
+SPACE_CRITICAL="10000000"  # 10G
 if [ "$FREE_SPACE" -lt "$SPACE_CRITICAL" ]
 then
     echo "Aborting PR docs build, low disk space: $FREE_INODES"
