@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# check if a PR build is already running
+test -f $HOME/update-docs-pr.pid && echo "doc building aborted: pid file exists" && exit 1
+
 cd $HOME
 anaconda3/bin/python update_pull_request_metadata.py
 
@@ -36,7 +39,7 @@ do
         # double check that output is really where it should be before marking
         # build as done (in case the docs build gets terminated from outside
         # leading to a non-"-1" return code)
-        if [ -f $HOME/pull_request_docs/${PR}/index.html ]
+        if [ -f $HOME/htdocs/docs/pull_requests/${PR}/index.html ]
         then
             touch -d "$DATETIME" $HOME/pull_request_docs/${PR}.done
             rm $HOME/pull_request_docs/${PR}.todo

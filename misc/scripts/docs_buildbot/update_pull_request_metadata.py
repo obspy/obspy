@@ -4,7 +4,7 @@ import requests
 from obspy import UTCDateTime
 
 
-def check_docs_build_requested(issue_number):
+def check_docs_build_requested(issue_number, headers=None):
     """
     Check if a docs build was requested for given issue number (by magic string
     '+DOCS' anywhere in issue comments).
@@ -12,8 +12,14 @@ def check_docs_build_requested(issue_number):
     :rtype: bool
     """
     url = "https://api.github.com/repos/obspy/obspy/issues/{:d}/comments"
-    data = requests.get(url.format(issue_number), params={"per_page": 100})
-    comments = [x["body"] for x in data.json()]
+    data = requests.get(url.format(issue_number), params={"per_page": 100},
+                        headers=headers)
+    data = data.json()
+    if not isinstance(data, list):
+        from pprint import pprint
+        msg = "Unexpected response from github API:\n{}".format(pprint(data))
+        raise Exception(msg)
+    comments = [x["body"] for x in data]
     pattern = r'\+DOCS'
     return any(re.search(pattern, comment) for comment in comments)
 
@@ -42,7 +48,7 @@ data = data.json()
 for d in data:
     # extract the pieces we need from the PR data
     number = d['number']
-    if not check_docs_build_requested(number):
+    if not check_docs_build_requested(number, headers=headers):
         continue
     fork = d['head']['user']['login']
     branch = d['head']['ref']
