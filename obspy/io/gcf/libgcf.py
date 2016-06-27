@@ -13,7 +13,7 @@ import numpy as np
 
 from obspy import UTCDateTime
 
-sps_d = {  # Table 3.1: special sample rates
+SPS_D = {  # Table 3.1: special sample rates
     157: 0.1,
     161: 0.125,
     162: 0.2,
@@ -24,17 +24,17 @@ sps_d = {  # Table 3.1: special sample rates
     176: 1000,
     179: 2000,
     181: 4000}
-time_offsets_d = {  # Table 3.1: Time fractional offset denominator
+TIME_OFFSETS_D = {  # Table 3.1: Time fractional offset denominator
     171: 8.,
     174: 2.,
     176: 4.,
     179: 8.,
     181: 16.}
-compression_d = {  # Table 3.2: format field to data type
+COMPRESSION_D = {  # Table 3.2: format field to data type
     1: '>i4',
     2: '>i2',
     4: '>i1'}
-bits_d = {  # Table 3.2: format field to data bytes
+BITS_D = {  # Table 3.2: format field to data bytes
     1: 4,  # 32bits
     2: 2,  # 16bits
     4: 1}   # 8bits
@@ -103,20 +103,23 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     data = np.frombuffer(f.read(4), count=1, dtype='>u4')
     starttime = decode_date_time(data)
     # get data format
-    # get reserved, SPS, data type compression, number of 32bit records (N)
-    reserved, sps, compress, N = np.frombuffer(f.read(4), count=4, dtype='>u1')
+    # get reserved, SPS, data type compression,
+    # number of 32bit records (num_records)
+    reserved, sps, compress, num_records = np.frombuffer(f.read(4), count=4,
+                                                         dtype='>u1')
     compression = compress & 0b00001111  # get compression code
     t_offset = compress >> 4  # get time offset
     if t_offset > 0:
-        starttime = starttime + t_offset / time_offsets_d[sps]
-    if sps in sps_d:
-        sps = sps_d[sps]  # get special SPS value if needed
+        starttime = starttime + t_offset / TIME_OFFSETS_D[sps]
+    if sps in SPS_D:
+        sps = SPS_D[sps]  # get special SPS value if needed
     if not sps:
-        f.seek(N * 4, 1)  # skip if not a data block
-        if 1008 - N * 4 > 0:
-            f.seek(1008 - N * 4, 1)  # keep skipping to get 1008 record
+        f.seek(num_records * 4, 1)  # skip if not a data block
+        if 1008 - num_records * 4 > 0:
+            # keep skipping to get 1008 record
+            f.seek(1008 - num_records * 4, 1)
         return None
-    npts = N * compression  # number of samples
+    npts = num_records * compression  # number of samples
     header = {}
     header['starttime'] = starttime
     header['station'] = stid[:4]
@@ -124,24 +127,24 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     header['sampling_rate'] = float(sps)
     header['npts'] = npts
     if headonly:
-        f.seek(4 * (N + 2), 1)  # skip data part (inc. FIC and RIC)
+        f.seek(4 * (num_records + 2), 1)  # skip data part (inc. FIC and RIC)
         # skip to end of block if only partly filled with data
-        if 1000 - N * 4 > 0:
-            f.seek(1000 - N * 4, 1)
+        if 1000 - num_records * 4 > 0:
+            f.seek(1000 - num_records * 4, 1)
         return header
     else:
         # get FIC
         fic = np.frombuffer(f.read(4), count=1, dtype='>i4')
         # get incremental data
-        data = np.frombuffer(f.read(4 * N), count=npts,
-                             dtype=compression_d[compression])
+        data = np.frombuffer(f.read(4 * num_records), count=npts,
+                             dtype=COMPRESSION_D[compression])
         # construct time series
         data = (fic + np.cumsum(data)).astype('i4')
         # get RIC
         ric = np.frombuffer(f.read(4), count=1, dtype='>i4')
         # skip to end of block if only partly filled with data
-        if 1000 - N * 4 > 0:
-            f.seek(1000 - N * 4, 1)
+        if 1000 - num_records * 4 > 0:
+            f.seek(1000 - num_records * 4, 1)
         # verify last data sample matches RIC
         if not data[-1] == ric:
             raise ValueError("Last sample mismatch with RIC")
