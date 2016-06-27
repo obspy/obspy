@@ -120,7 +120,7 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
     header['starttime'] = starttime
     header['station'] = stid[:4]
     header['channel'] = (channel_prefix[:2] + stid[4]).upper()
-    header['sampling_rate'] = sps
+    header['sampling_rate'] = float(sps)
     header['npts'] = npts
     if headonly:
         f.seek(4 * (N + 2), 1)  # skip data part (inc. FIC and RIC)
@@ -135,7 +135,7 @@ def read_data_block(f, headonly=False, channel_prefix="HH", **kwargs):
         data = np.fromfile(f, count=npts,
                            dtype=compression_d[compression])
         # construct time series
-        data = (fic + np.cumsum(data)).astype('>i4')
+        data = (fic + np.cumsum(data)).astype('i4')
         # get RIC
         ric = np.fromfile(f, count=1, dtype='>i4')
         # skip to end of block if only partly filled with data
