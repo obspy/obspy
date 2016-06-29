@@ -154,6 +154,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         size = 100
 
     # Return as collection
+    plot_dc_used = True
     if mt:
         (T, N, P) = mt2axes(mt)
         if np.fabs(N.val) < EPSILON and np.fabs(T.val + P.val) < EPSILON:
@@ -161,6 +162,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             colors, p = plot_mt(T, N, P, size,
                                 plot_zerotrace=True, xy=xy, width=width)
+            plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
 

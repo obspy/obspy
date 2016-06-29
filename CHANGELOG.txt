@@ -13,6 +13,8 @@
    * Fixed a bug that leads to pressure/tension color blending when plotting
      semi-transparent DC beachball patches (i.e. with "alpha" not equal to 1,
      see #1464)
+   * Fixed a bug when plotting non-DC beachball patches without fill colors
+     (i.e. with "nofill=True", see #1464)
  - obspy.io.ascii:
    * Fixed a bug that lead to wrong header information in output files when
      writing non-integer sampling rate data to SLIST or TSPAIR formats
