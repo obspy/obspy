@@ -34,10 +34,6 @@ COMPRESSION_D = {  # Table 3.2: format field to data type
     1: '>i4',
     2: '>i2',
     4: '>i1'}
-BITS_D = {  # Table 3.2: format field to data bytes
-    1: 4,  # 32bits
-    2: 2,  # 16bits
-    4: 1}   # 8bits
 
 
 def is_gcf(f):
