@@ -33,8 +33,8 @@ master:
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
-	  `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
-	  (see #1400).
+      `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
+      (see #1400).
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
@@ -489,7 +489,7 @@ master:
    * write support for SACPZ ASCII representation of channel responses.
  - obspy.taup:
    * Replaced Fortran implementation with much more powerful Python port of
-	 Java TauP. This enabled us to drop all Fortran code, which simplifies
+     Java TauP. This enabled us to drop all Fortran code, which simplifies
      releases and builds tremendously.
  - obspy.xseed:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
