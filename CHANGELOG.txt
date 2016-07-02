@@ -13,6 +13,9 @@
    * Fixed a bug that lead to wrong header information in output files when
      writing non-integer sampling rate data to SLIST or TSPAIR formats
      (see #1447)
+ - obspy.io.gse2:
+   * Fixed a bug that could lead to network code not present in GSE2 output
+     (see #1448)
  - obspy.io.mseed:
    * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
  - obspy.io.nlloc:

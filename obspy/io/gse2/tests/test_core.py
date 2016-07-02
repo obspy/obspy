@@ -323,6 +323,20 @@ class CoreTestCase(unittest.TestCase):
         testdata = [n * tr.stats.calib for n in testdata]
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
+    def test_write_and_read_correct_network(self):
+        """
+        Tests that writing and reading the STA2 line works (otherwise the
+        network code of the data is missing), even if some details like e.g.
+        latitude are not present.
+        """
+        tr = Trace(np.arange(5, dtype=np.int32))
+        tr.stats.network = "BW"
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            tr.write(tmpfile, format='GSE2')
+            tr = read(tmpfile)[0]
+        self.assertEqual(tr.stats.network, "BW")
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
