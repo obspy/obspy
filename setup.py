@@ -87,17 +87,17 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
+    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED',
-    'XSEED']
+    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
+    'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
+    'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
+    'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -161,7 +161,8 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
-        'KNET = obspy.io.nied.knet'
+        'KNET = obspy.io.nied.knet',
+        'GCF = obspy.io.gcf.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -266,6 +267,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.KNET': [
         'isFormat = obspy.io.nied.knet:_is_knet_ascii',
         'readFormat = obspy.io.nied.knet:_read_knet_ascii',
+        ],
+    'obspy.plugin.waveform.GCF': [
+        'isFormat = obspy.io.gcf.core:_is_gcf',
+        'readFormat = obspy.io.gcf.core:_read_gcf',
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
