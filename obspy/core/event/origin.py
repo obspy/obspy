@@ -68,13 +68,9 @@ class OriginUncertainty(__OriginUncertainty):
         :class:`~obspy.core.event.base.ConfidenceEllipsoid`, optional
     :param confidence_ellipsoid: Confidence ellipsoid
     :type preferred_description: str, optional
-    :param preferred_description: Preferred uncertainty description. Allowed
-        values are the following:
-
-        * horizontal uncertainty
-        * uncertainty ellipse
-        * confidence ellipsoid
-
+    :param preferred_description: Preferred uncertainty description.
+        See :class:`~obspy.core.event.header.OriginUncertaintyDescription` for
+        allowed values.
     :type confidence_level: float, optional
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
@@ -217,18 +213,9 @@ class Origin(__Origin):
     :type depth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
-    :param depth_type: Type of depth determination. Allowed values are the
-        following:
-
-        * ``"from location"``
-        * ``"from moment tensor inversion"``
-        * ``"from modeling of broad-band P waveforms"``
-        * ``"constrained by depth phases"``
-        * ``"constrained by direct phases"``
-        * ``"constrained by depth and direct phases"``
-        * ``"operator assigned"``
-        * ``"other"``
-
+    :param depth_type: Type of depth determination.
+        See :class:`~obspy.core.event.header.OriginDepthType` for allowed
+        values.
     :type time_fixed: bool, optional
     :param time_fixed: True if focal time was kept fixed for computation of the
         Origin.
@@ -261,16 +248,8 @@ class Origin(__Origin):
     :param quality: Additional parameters describing the quality of an Origin
         determination.
     :type origin_type: str, optional
-    :param origin_type: Describes the origin type. Allowed values are the
-        following:
-
-        * ``"hypocenter"``
-        * ``"centroid"``
-        * ``"amplitude"``
-        * ``"macroseismic"``
-        * ``"rupture start"``
-        * ``"rupture end"``
-
+    :param origin_type: Describes the origin type.
+        See :class:`~obspy.core.event.header.OriginType` for allowed values.
     :type origin_uncertainty:
         :class:`~obspy.core.event.origin.OriginUncertainty`, optional
     :param origin_uncertainty: Describes the location uncertainties of an
@@ -283,23 +262,13 @@ class Origin(__Origin):
         of an Event object. The user has to take care that this information
         corresponds to the region attribute of the preferred Origin.
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
-        following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Origin.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Origin. Allowed values are
-        the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
+    :param evaluation_status: Evaluation status of Origin.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
@@ -393,41 +362,22 @@ class Pick(__Pick):
         the slowness.
     :type onset: str, optional
     :param onset: Flag that roughly categorizes the sharpness of the onset.
-        Allowed values are:
-
-        * ``"emergent"``
-        * ``"impulsive"``
-        * ``"questionable"``
-
+        See :class:`~obspy.core.event.header.PickOnset` for allowed values.
     :type phase_hint: str, optional
     :param phase_hint: Tentative phase identification as specified by the
         picker.
     :type polarity: str, optional
     :param polarity: Indicates the polarity of first motion, usually from
-        impulsive onsets. Allowed values are:
-
-        * ``"positive"``
-        * ``"negative"``
-        * ``"undecidable"``
-
+        impulsive onsets.
+        See :class:`~obspy.core.event.header.PickPolarity` for allowed values.
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Pick. Allowed values are the
-        following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Pick.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Pick. Allowed values are
-        the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
+    :param evaluation_status: Evaluation status of Pick.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional

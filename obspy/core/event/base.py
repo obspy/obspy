@@ -1166,16 +1166,9 @@ class DataUsed(__DataUsed):
     moment-tensor inversion.
 
     :type wave_type: str
-    :param wave_type: Type of waveform data. This can be one of the following
-        values:
-
-        * ``"P waves"``,
-        * ``"body waves"``,
-        * ``"surface waves"``,
-        * ``"mantle waves"``,
-        * ``"combined"``,
-        * ``"unknown"``
-
+    :param wave_type: Type of waveform data.
+        See :class:`~obspy.core.event.header.DataUsedWaveType` for allowed
+        values.
     :type station_count: int, optional
     :param station_count: Number of stations that have contributed data of the
         type given in wave_type.

@@ -57,61 +57,13 @@ class Event(__Event):
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
     :type event_type: str, optional
-    :param event_type: Describes the type of an event. Allowed values are the
-        following:
-
-        * ``"not existing"``
-        * ``"not reported"``
-        * ``"earthquake"``
-        * ``"anthropogenic event"``
-        * ``"collapse"``
-        * ``"cavity collapse"``
-        * ``"mine collapse"``
-        * ``"building collapse"``
-        * ``"explosion"``
-        * ``"accidental explosion"``
-        * ``"chemical explosion"``
-        * ``"controlled explosion"``
-        * ``"experimental explosion"``
-        * ``"industrial explosion"``
-        * ``"mining explosion"``
-        * ``"quarry blast"``
-        * ``"road cut"``
-        * ``"blasting levee"``
-        * ``"nuclear explosion"``
-        * ``"induced or triggered event"``
-        * ``"rock burst"``
-        * ``"reservoir loading"``
-        * ``"fluid injection"``
-        * ``"fluid extraction"``
-        * ``"crash"``
-        * ``"plane crash"``
-        * ``"train crash"``
-        * ``"boat crash"``
-        * ``"other event"``
-        * ``"atmospheric event"``
-        * ``"sonic boom"``
-        * ``"sonic blast"``
-        * ``"acoustic noise"``
-        * ``"thunder"``
-        * ``"avalanche"``
-        * ``"snow avalanche"``
-        * ``"debris avalanche"``
-        * ``"hydroacoustic event"``
-        * ``"ice quake"``
-        * ``"slide"``
-        * ``"landslide"``
-        * ``"rockslide"``
-        * ``"meteorite"``
-        * ``"volcanic eruption"``
-
+    :param event_type: Describes the type of an event.
+        See :class:`~obspy.core.event.header.EventType` for allowed values.
     :type event_type_certainty: str, optional
     :param event_type_certainty: Denotes how certain the information on event
-        type is. Allowed values are the following:
-
-        * ``"suspected"``
-        * ``"known"``
-
+        type is.
+        See :class:`~obspy.core.event.header.EventTypeCertainty` for allowed
+        values.
     :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
@@ -354,16 +306,9 @@ class EventDescription(__EventDescription):
     :type text: str, optional
     :param text: Free-form text with earthquake description.
     :type type: str, optional
-    :param type: Category of earthquake description. Values
-        can be taken from the following:
-
-        * ``"felt report"``
-        * ``"Flinn-Engdahl region"``
-        * ``"local time"``
-        * ``"tectonic summary"``
-        * ``"nearest cities"``
-        * ``"earthquake name"``
-        * ``"region name"``
+    :param type: Category of earthquake description.
+        See :class:`~obspy.core.event.header.EventDescriptionType` for allowed
+        values.
 
     .. note::
 

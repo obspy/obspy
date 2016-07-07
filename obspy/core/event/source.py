@@ -224,14 +224,9 @@ class SourceTimeFunction(__SourceTimeFunction):
     Source time function used in moment-tensor inversion.
 
     :type type: str
-    :param type: Type of source time function. Values can be taken from the
-        following:
-
-        * ``"box car"``,
-        * ``"triangle"``,
-        * ``"trapezoid"``,
-        * ``"unknown"``
-
+    :param type: Type of source time function.
+        See :class:`~obspy.core.event.header.SourceTimeFunctionType` for
+        allowed values.
     :type duration: float
     :param duration: Source time function duration. Unit: s
     :type rise_time: float, optional
@@ -326,21 +321,14 @@ class MomentTensor(__MomentTensor):
     :param method_id: Resource identifier of the method used for moment-tensor
         inversion.
     :type category: str, optional
-    :param category: Moment tensor category. Values can be taken from the
-        following:
-
-        * ``"teleseismic"``,
-        * ``"regional"``
-
+    :param category: Moment tensor category.
+        See :class:`~obspy.core.event.header.MomentTensorCategory` for allowed
+        values.
     :type inversion_type: str, optional
     :param inversion_type: Moment tensor inversion type. Users should avoid to
-        give contradictory information in inversion_type and method_id. Values
-        can be taken from the following:
-
-        * ``"general"``,
-        * ``"zero trace"``,
-        * ``"double couple"``
-
+        give contradictory information in inversion_type and method_id.
+        See :class:`~obspy.core.event.header.MTInversionType` for allowed
+        values.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
@@ -416,23 +404,13 @@ class FocalMechanism(__FocalMechanism):
     :param waveform_id: Refers to a set of waveform streams from which the
         focal mechanism was derived.
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of FocalMechanism. Allowed values
-        are the following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of FocalMechanism.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of FocalMechanism. Allowed
-        values are the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
+    :param evaluation_status: Evaluation status of FocalMechanism.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
     :type moment_tensor: :class:`~obspy.core.event.source.MomentTensor`,
         optional
     :param moment_tensor: Moment tensor description for this focal mechanism.

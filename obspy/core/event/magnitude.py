@@ -96,24 +96,13 @@ class Magnitude(__Magnitude):
     :param azimuthal_gap: Azimuthal gap for this magnitude computation.
         Unit: deg
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Magnitude. Allowed values are
-        the following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
-    :type evaluation_status:
-        :class:`~obspy.core.event.header.EvaluationStatus`, optional
-    :param evaluation_status: Evaluation status of Magnitude. Allowed values
-        are the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
+    :param evaluation_mode: Evaluation mode of Magnitude.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
+    :type evaluation_status: str, optional
+    :param evaluation_status: Evaluation status of Magnitude.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type station_magnitude_contributions: list of
@@ -294,30 +283,15 @@ class Amplitude(__Amplitude):
         mean value over a time interval (mean), integrating the trace over a
         time interval (integral), specifying just a time interval (duration),
         or evaluating a period (period).
-        Possible values are:
-
-        * ``"point"``,
-        * ``"mean"``,
-        * ``"duration"``,
-        * ``"period"``,
-        * ``"integral"``,
-        * ``"other"``
-
+        See :class:`~obspy.core.event.header.AmplitudeCategory` for allowed
+        values.
     :type unit: str, optional
     :param unit: Amplitude unit. This attribute provides the most likely
         measurement units for the physical quantity described in the
         genericAmplitude attribute. Possible values are specified as
         combinations of SI base units.
-        Possible values are:
-
-        * ``"m"``,
-        * ``"s"``,
-        * ``"m/s"``,
-        * ``"m/(s*s)"``,
-        * ``"m*s"``,
-        * ``"dimensionless"``,
-        * ``"other"``
-
+        See :class:`~obspy.core.event.header.AmplitudeUnit` for allowed
+        values.
     :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
         optional
     :param method_id: Describes the method of amplitude determination.
@@ -361,23 +335,13 @@ class Amplitude(__Amplitude):
         * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
 
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Amplitude. Allowed values are
-        the following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Amplitude.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Amplitude. Allowed values
-        are the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
+    :param evaluation_status: Evaluation status of Amplitude.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
     :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
