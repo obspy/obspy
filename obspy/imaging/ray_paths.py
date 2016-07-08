@@ -67,6 +67,14 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
                       perspective of the 3d camera. E.g.:
                      {'elevation': 80, 'azimuth': -20, 'distance': 4.,
                      'roll': 0, '', 'focalpoint': (0., 0., 0.)}
+
+    .. rubric:: Examples
+
+    >>> from obspy.imaging.ray_paths import plot_rays
+    >>> inventory = read_events("/path/to/IU_stations.txt")
+    >>> catalog = read_events()
+    >>> plot_rays(inventory=inventory, catalog=catalog,
+                  phase_list=['Pdiff'], kind='mayavi', icol=2)
     """
     if kind == 'mayavi':
         _plot_rays_mayavi(
