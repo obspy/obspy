@@ -21,6 +21,9 @@
  - obspy.io.nlloc:
    * Use geographic coordinates from the NonLinLoc Hypocenter-Phase file if
      no custom coordinate converter is provided.
+ - obspy.io.quakeml:
+   * Fixed issue with improperly raised warnings when the same file is read
+     twice. (#1376)
  - obspy.io.sac:
    * Try to set SAC distances (dist, az, baz, gcarc) on read, if "lcalda" is
      true.  If "dist" header is found, distances aren't calculated.
