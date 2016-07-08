@@ -200,6 +200,10 @@ def _event_type_class_factory(class_name, class_attributes=[],
         for key, value in _properties:
             _property_dict[key] = value
         _containers = class_contains
+        warn_on_non_default_key = True
+        defaults = dict.fromkeys(class_contains, [])
+        defaults.update(dict.fromkeys(_property_keys, None))
+        do_not_warn_on = ["extra"]
 
         def __init__(self, *args, **kwargs):
             # Make sure the args work as expected. Therefore any specified
@@ -294,7 +298,7 @@ def _event_type_class_factory(class_name, class_attributes=[],
             if containers:
                 # Print delimiter only if there are attributes.
                 if attributes:
-                    ret_str += '\n\t---------'
+                    ret_str += '\n\t' + '---------'.rjust(max_length + 5)
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
                     "\n\t".join(
@@ -557,6 +561,9 @@ class ResourceIdentifier(object):
             self.fixed = False
             self._prefix = prefix
             self._uuid = str(uuid4())
+        elif isinstance(id, ResourceIdentifier):
+            self.__dict__.update(id.__dict__)
+            return
         else:
             self.fixed = True
             self.id = id

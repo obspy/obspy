@@ -13,7 +13,7 @@ from matplotlib import rcParams
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events)
+                              read_events, Magnitude, FocalMechanism)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
@@ -96,8 +96,12 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(p.phase_hint, "p")
         # Add some more random attributes. These should disappear upon
         # cleaning.
-        p.test_1 = "a"
-        p.test_2 = "b"
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            p.test_1 = "a"
+            p.test_2 = "b"
+            # two warnings should have been issued by setting non-default keys
+            self.assertEqual(len(w), 2)
         self.assertEqual(p.test_1, "a")
         self.assertEqual(p.test_2, "b")
         p.clear()
@@ -846,6 +850,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
                 ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict),
             {})
 
+    def test_initialize_with_resource_identifier(self):
+        """
+        Test initializing an ResourceIdentifier with an ResourceIdentifier.
+        """
+        rid = ResourceIdentifier()
+        rid2 = ResourceIdentifier(str(rid))
+        rid3 = ResourceIdentifier(rid)
+        self.assertEqual(rid, rid2)
+        self.assertEqual(rid, rid3)
+
 
 class BaseTestCase(unittest.TestCase):
     """
@@ -865,6 +879,17 @@ class BaseTestCase(unittest.TestCase):
             # setting a typoed or custom field should warn!
             err.confidence_levle = 80
             self.assertEqual(len(w), 1)
+
+    def test_event_type_objects_warn_on_non_default_key(self):
+        """
+        """
+        for cls in (Event, Origin, Pick, Magnitude, FocalMechanism):
+            obj = cls()
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                # setting a typoed or custom field should warn!
+                obj.some_custom_non_default_crazy_key = "my_text_here"
+                self.assertEqual(len(w), 1)
 
 
 def suite():
