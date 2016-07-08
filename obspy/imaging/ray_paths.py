@@ -74,8 +74,9 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
     >>> from obspy.imaging.ray_paths import plot_rays
     >>> inventory = read_inventory("/path/to/IU_stations.txt")
     >>> catalog = read_events()
-    >>> plot_rays(inventory=inventory, catalog=catalog, phase_list=['Pdiff'],
-                  icol=2)
+    >>> plot_rays(inventory=inventory, catalog=catalog, phase_list=['Pdiff'])
+
+    .. figure:: /_images/expensive_plots/mayavi_ray_paths.png
     """
 
     if kind == 'mayavi':
@@ -336,7 +337,7 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
         mlab.options.offscreen = True
     fig = mlab.figure(size=figsize, bgcolor=bgcolor)
 
-    # make the connectivity of each phase and plot them
+    # define connectivity of each ray and add it to the scene
     for iphase, phase in enumerate(phases):
         index = 0
         connects = []
@@ -371,14 +372,8 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
     # plot all stations
     fig.scene.disable_render = True  # Super duper trick
     stxs, stys, stzs = zip(*stations_loc)
-    stmarkers = mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
-                              color=stationcolor)
-    stsource = mlab.pipeline.vector_scatter(
-        stxs, stys, stzs, stxs, stys, stzs)
-    stmarkers = mlab.pipeline.glyph(
-        stsource, scale_factor=stmarkersize,
-        scale_mode='none', color=stationcolor, mode='sphere')
-    stmarkers.glyph.glyph_source.glyph_position = 'center'
+    mlab.points3d(stxs, stys, stzs, scale_factor=stmarkersize,
+                  color=stationcolor)
 
     if station_labels:
         for loc, stlabel in zip(stations_loc, stations_lab):
