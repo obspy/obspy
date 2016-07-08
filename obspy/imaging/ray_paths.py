@@ -70,12 +70,14 @@ def plot_rays(inventory=None, catalog=None, station_latitude=None,
 
     .. rubric:: Examples
 
+    >>> from obspy import read_events, read_inventory
     >>> from obspy.imaging.ray_paths import plot_rays
-    >>> inventory = read_events("/path/to/IU_stations.txt")
+    >>> inventory = read_inventory("/path/to/IU_stations.txt")
     >>> catalog = read_events()
-    >>> plot_rays(inventory=inventory, catalog=catalog,
-                  phase_list=['Pdiff'], kind='mayavi', icol=2)
+    >>> plot_rays(inventory=inventory, catalog=catalog, phase_list=['Pdiff'],
+                  icol=2)
     """
+
     if kind == 'mayavi':
         _plot_rays_mayavi(
             inventory=inventory, catalog=catalog,
@@ -237,6 +239,9 @@ def _plot_rays_mayavi(inventory=None, catalog=None, station_latitude=None,
 
     if fname_out is not None:
         offscreen = True
+    else:
+        offscreen = False
+
     nphases = len(phase_list)
 
     greatcircles = get_ray_paths(
