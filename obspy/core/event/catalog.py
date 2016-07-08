@@ -50,16 +50,16 @@ class Catalog(object):
     """
     This class serves as a container for Event objects.
 
-    :type events: list of :class:`~obspy.core.event.Event`, optional
+    :type events: list of :class:`~obspy.core.event.event.Event`, optional
     :param events: List of events
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the
         earthquake catalog, or collection of events.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 
@@ -179,7 +179,7 @@ class Catalog(object):
         events will be appended.
 
         :type other: :class:`~obspy.core.event.Catalog` or
-            :class:`~obspy.core.event.Event`
+            :class:`~obspy.core.event.event.Event`
         :param other: Catalog or Event object to add.
         """
         if isinstance(other, Event):
@@ -222,7 +222,8 @@ class Catalog(object):
         Returns short summary string of the current catalog.
 
         It will contain the number of Events in the Catalog and the return
-        value of each Event's :meth:`~obspy.core.event.Event.__str__` method.
+        value of each Event's :meth:`~obspy.core.event.event.Event.__str__`
+        method.
 
         :type print_all: bool, optional
         :param print_all: If True, all events will be printed, otherwise a

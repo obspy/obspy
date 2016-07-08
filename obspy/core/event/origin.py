@@ -64,17 +64,13 @@ class OriginUncertainty(__OriginUncertainty):
     :param azimuth_max_horizontal_uncertainty: Azimuth of major axis of
         confidence ellipse. Measured clockwise from South-North direction at
         epicenter. Unit: deg
-    :type confidence_ellipsoid: :class:`~obspy.core.event.ConfidenceEllipsoid`,
-        optional
+    :type confidence_ellipsoid:
+        :class:`~obspy.core.event.base.ConfidenceEllipsoid`, optional
     :param confidence_ellipsoid: Confidence ellipsoid
     :type preferred_description: str, optional
-    :param preferred_description: Preferred uncertainty description. Allowed
-        values are the following:
-
-        * horizontal uncertainty
-        * uncertainty ellipse
-        * confidence ellipsoid
-
+    :param preferred_description: Preferred uncertainty description.
+        See :class:`~obspy.core.event.header.OriginUncertaintyDescription` for
+        allowed values.
     :type confidence_level: float, optional
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
@@ -187,7 +183,7 @@ class Origin(__Origin):
     earthquake hypocenter, as well as additional meta-information. Origin can
     have objects of type OriginUncertainty and Arrival as child elements.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Origin.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -217,61 +213,45 @@ class Origin(__Origin):
     :type depth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
-    :param depth_type: Type of depth determination. Allowed values are the
-        following:
-
-        * ``"from location"``
-        * ``"from moment tensor inversion"``
-        * ``"from modeling of broad-band P waveforms"``
-        * ``"constrained by depth phases"``
-        * ``"constrained by direct phases"``
-        * ``"constrained by depth and direct phases"``
-        * ``"operator assigned"``
-        * ``"other"``
-
+    :param depth_type: Type of depth determination.
+        See :class:`~obspy.core.event.header.OriginDepthType` for allowed
+        values.
     :type time_fixed: bool, optional
     :param time_fixed: True if focal time was kept fixed for computation of the
         Origin.
     :type epicenter_fixed: bool, optional
     :param epicenter_fixed: True if epicenter was kept fixed for computation of
         Origin.
-    :type reference_system_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type reference_system_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param reference_system_id: Identifies the reference system used for
         hypocenter determination. This is only necessary if a modified version
         of the standard (with local extensions) is used that provides a
         non-standard coordinate system.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Identifies the method used for locating the event.
-    :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
+    :type earth_model_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
         optional
     :param earth_model_id: Identifies the earth model used in method_id.
-    :type arrivals: list of :class:`~obspy.core.event.Arrival`, optional
+    :type arrivals: list of :class:`~obspy.core.event.origin.Arrival`, optional
     :param arrivals: List of arrivals associated with the origin.
-    :type composite_times: list of :class:`~obspy.core.event.CompositeTime`,
-        optional
+    :type composite_times: list of
+        :class:`~obspy.core.event.base.CompositeTime`, optional
     :param composite_times: Supplementary information on time of rupture start.
         Complex descriptions of focal times of historic events are possible,
         see description of the CompositeTime type. Note that even if
         compositeTime is used, the mandatory time attribute has to be set, too.
         It has to be set to the single point in time (with uncertainties
         allowed) that is most characteristic for the event.
-    :type quality: :class:`~obspy.core.event.OriginQuality`, optional
+    :type quality: :class:`~obspy.core.event.origin.OriginQuality`, optional
     :param quality: Additional parameters describing the quality of an Origin
         determination.
     :type origin_type: str, optional
-    :param origin_type: Describes the origin type. Allowed values are the
-        following:
-
-        * ``"hypocenter"``
-        * ``"centroid"``
-        * ``"amplitude"``
-        * ``"macroseismic"``
-        * ``"rupture start"``
-        * ``"rupture end"``
-
-    :type origin_uncertainty: :class:`~obspy.core.event.OriginUncertainty`,
-        optional
+    :param origin_type: Describes the origin type.
+        See :class:`~obspy.core.event.header.OriginType` for allowed values.
+    :type origin_uncertainty:
+        :class:`~obspy.core.event.origin.OriginUncertainty`, optional
     :param origin_uncertainty: Describes the location uncertainties of an
         origin.
     :type region: str, optional
@@ -282,26 +262,16 @@ class Origin(__Origin):
         of an Event object. The user has to take care that this information
         corresponds to the region attribute of the preferred Origin.
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
-        following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Origin.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Origin. Allowed values are
-        the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param evaluation_status: Evaluation status of Origin.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 
@@ -356,7 +326,7 @@ class Pick(__Pick):
     A pick is the observation of an amplitude anomaly in a seismogram at a
     specific point in time. It is not necessarily related to a seismic event.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -365,12 +335,14 @@ class Pick(__Pick):
     :param time: Observed onset time of signal (“pick time”).
     :type time_errors: :class:`~obspy.core.event.base.QuantityError`
     :param time_errors: AttribDict containing error quantities.
-    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
+    :type waveform_id: :class:`~obspy.core.event.base.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
-    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by waveform_id.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Identifies the picker that produced the pick. This can be
         either a detection software program or a person.
     :type horizontal_slowness: float, optional
@@ -384,50 +356,31 @@ class Pick(__Pick):
         array measurements. Unit: deg
     :type backazimuth_errors: :class:`~obspy.core.event.base.QuantityError`
     :param backazimuth_errors: AttribDict containing error quantities.
-    :type slowness_method_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type slowness_method_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param slowness_method_id: Identifies the method that was used to determine
         the slowness.
     :type onset: str, optional
     :param onset: Flag that roughly categorizes the sharpness of the onset.
-        Allowed values are:
-
-        * ``"emergent"``
-        * ``"impulsive"``
-        * ``"questionable"``
-
+        See :class:`~obspy.core.event.header.PickOnset` for allowed values.
     :type phase_hint: str, optional
     :param phase_hint: Tentative phase identification as specified by the
         picker.
     :type polarity: str, optional
     :param polarity: Indicates the polarity of first motion, usually from
-        impulsive onsets. Allowed values are:
-
-        * ``"positive"``
-        * ``"negative"``
-        * ``"undecidable"``
-
+        impulsive onsets.
+        See :class:`~obspy.core.event.header.PickPolarity` for allowed values.
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Pick. Allowed values are the
-        following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Pick.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Pick. Allowed values are
-        the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param evaluation_status: Evaluation status of Pick.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: CreationInfo for the Pick object.
 
     .. note::
@@ -470,12 +423,12 @@ class Arrival(__Arrival):
     slowness and backazimuth of the observed wave—especially if derived from
     array data—may further constrain the nature of the arrival.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Arrival.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type pick_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param pick_id: Refers to the resource_id of a Pick.
     :type phase: str
     :param phase: Phase identification. For possible values, please refer to
@@ -518,13 +471,13 @@ class Arrival(__Arrival):
     :param backazimuth_weight: Weight of the backazimuth for computation of the
         associated Origin. Note that the sum of all weights is not required to
         be unity.
-    :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
+    :type earth_model_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
         optional
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: CreationInfo for the Arrival object.
 
     .. note::
