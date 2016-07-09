@@ -153,6 +153,11 @@ def create_empty_data_chunk(delta, dtype, fill_value=None):
         dtype = native_str(dtype)
     if fill_value is None:
         temp = np.ma.masked_all(delta, dtype=np.dtype(dtype))
+        # fill with nan if float number and otherwise with a very small number
+        if issubclass(temp.data.dtype.type, np.integer):
+            temp.data[:] = np.iinfo(temp.data.dtype).min
+        else:
+            temp.data[:] = np.nan
     elif (isinstance(fill_value, list) or isinstance(fill_value, tuple)) \
             and len(fill_value) == 2:
         # if two values are supplied use these as samples bordering to our data

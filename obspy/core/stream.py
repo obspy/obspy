@@ -2055,6 +2055,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return self
 
+    @raise_if_masked
     def filter(self, type, **options):
         """
         Filter the data of all traces in the Stream.

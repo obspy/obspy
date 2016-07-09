@@ -3,6 +3,11 @@
    * Added workaround for numpy issue where many FFTs of various lengths fill
      a cache that never gets cleared, effectively creating a memory leak
      (see #1424).
+   * Trace.filter and Stream.filter don't work on masked arrays anymore because
+     it produced unpredictable results due to the un-initialized data-chunk.
+     The uninitialized masked gap is now also initialized to np.nan in case
+     of floating point data which and a consistent fill value in case of
+     integer data. (see #1363)
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
