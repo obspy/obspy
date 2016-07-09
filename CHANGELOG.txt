@@ -11,6 +11,8 @@
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
+   * The ISC mapping now directly points to the ISC implementation. The IRIS
+     mirror	has been moved to a separate mapping (see #1470).
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
