@@ -331,6 +331,36 @@ def verify_checksum(fh, data, version=2):
     return
 
 
+def read_integer_data(fh, npts):
+    """
+    Reads npts points of uncompressed integers from given file handler.
+
+    :type fh: file
+    :param fh: File Pointer
+    :type npts: int
+    :param npts: Number of samples to read
+    :rtype: :class:`numpy.ndarray`, dtype=int32
+    :return: Data as numpy.ndarray of type int32.
+    """
+    # find next DAT2 section within file
+    data = []
+    in_data_section = False
+
+    while len(data) < npts:
+        buf = fh.readline()
+        if not buf:
+            # break loop if no data is given
+            break
+        if buf.strip() in (b"DAT1", b"DAT2"):
+            in_data_section = True
+            continue
+        if not in_data_section:
+            continue
+        data.extend(buf.strip().split(b" "))
+
+    return np.array(data, dtype=np.int32)
+
+
 def read(f, verify_chksum=True):
     """
     Read GSE2 file and return header and data.
@@ -350,7 +380,14 @@ def read(f, verify_chksum=True):
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     headdict = read_header(f)
-    data = uncompress_cm6(f, headdict['npts'])
+    dtype = headdict['gse2']['datatype']
+    if dtype == 'CM6':
+        data = uncompress_cm6(f, headdict['npts'])
+    elif dtype == 'INT':
+        data = read_integer_data(f, headdict['npts'])
+    else:
+        msg = "Unsupported data type %s in GSE2 file" % (dtype)
+        raise NotImplementedError(msg)
     # test checksum only if enabled
     if verify_chksum:
         verify_checksum(f, data, version=2)
