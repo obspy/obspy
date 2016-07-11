@@ -277,6 +277,14 @@ class PolesZerosResponseStage(ResponseStage):
         self._poles = value
 
     @property
+    def normalization_frequency(self):
+        return self._normalization_frequency
+
+    @normalization_frequency.setter
+    def normalization_frequency(self, value):
+        self._normalization_frequency = Frequency(value)
+
+    @property
     def pz_transfer_function_type(self):
         return self._pz_transfer_function_type
 
