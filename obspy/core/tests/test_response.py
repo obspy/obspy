@@ -26,7 +26,7 @@ from obspy import UTCDateTime, read_inventory
 from obspy.core.inventory.response import (
     _pitick2latex, PolesZerosResponseStage)
 from obspy.core.util.misc import CatchOutput
-from obspy.core.util.obspy_types import CustomComplex
+from obspy.core.util.obspy_types import ComplexWithUncertainties
 from obspy.core.util.testing import ImageComparison, get_matplotlib_version
 from obspy.signal.invsim import evalresp
 from obspy.io.xseed import Parser
@@ -165,15 +165,15 @@ class ResponseTestCase(unittest.TestCase):
     def test_custom_types_init(self):
         """
         Test initializations that involve custom decimal types like
-        `CustomComplex`.
+        `ComplexWithUncertainties`.
         """
         # initializing poles / zeros from native types should work
         poles = [1+1j, 1, 1j]
         zeros = [2+3j, 2, 3j]
         stage = PolesZerosResponseStage(
             1, 1, 1, "", "", "LAPLACE (HERTZ)", 1, zeros, poles)
-        self.assertEqual(type(stage.zeros[0]), CustomComplex)
-        self.assertEqual(type(stage.poles[0]), CustomComplex)
+        self.assertEqual(type(stage.zeros[0]), ComplexWithUncertainties)
+        self.assertEqual(type(stage.poles[0]), ComplexWithUncertainties)
         self.assertEqual(stage.poles, poles)
         self.assertEqual(stage.zeros, zeros)
 

@@ -22,7 +22,7 @@ from math import pi
 import numpy as np
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
@@ -260,8 +260,8 @@ class PolesZerosResponseStage(ResponseStage):
     def zeros(self, value):
         value = list(value)
         for i, x in enumerate(value):
-            if not isinstance(x, CustomComplex):
-                value[i] = CustomComplex(x)
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._zeros = value
 
     @property
@@ -272,8 +272,8 @@ class PolesZerosResponseStage(ResponseStage):
     def poles(self, value):
         value = list(value)
         for i, x in enumerate(value):
-            if not isinstance(x, CustomComplex):
-                value[i] = CustomComplex(x)
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._poles = value
 
     @property
