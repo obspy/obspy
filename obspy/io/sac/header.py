@@ -180,13 +180,13 @@ DOC = {'npts': 'N    Number of points per data component. [required]',
        'gcarc': 'F    Station to event great circle arc length (degrees).',
        'lcalda': 'L    TRUE if DIST AZ BAZ and GCARC are to be calculated '
                  'from st event coordinates.',
-       'iqual': '''I    Quality of data [not currently used]:
+       'iqual': '''N    Quality of data, as integers. Enum values listed:
 
-                  * IGOOD (Good data)
-                  * IGLCH (Glitches)
-                  * IDROP (Dropouts)
-                  * ILOWSN (Low signal to noise ratio)
-                  * IOTHER (Other)''',
+                  * IGOOD (45) (Good data)
+                  * IGLCH (46) (Glitches)
+                  * IDROP (47) (Dropouts)
+                  * ILOWSN (48) (Low signal to noise ratio)
+                  * IOTHER (44) (Other)''',
        'isynth': '''I    Synthetic data flag [not currently used]:
 
                   * IRLDTA (Real data)
