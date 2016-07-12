@@ -125,7 +125,8 @@ class QualityControlTestCase(unittest.TestCase):
                         header={"starttime": obspy.UTCDateTime(100)}).write(
                     tf2.name, format="mseed")
             # Don't calculate statistics on the single segments.
-            mseed_metadata = MSEEDMetadata([tf1.name, tf2.name], c_seg=False)
+            mseed_metadata = MSEEDMetadata([tf1.name, tf2.name],
+                                           add_c_segments=False)
             self.assertEqual(mseed_metadata.meta['num_gaps'], 1)
             self.assertNotIn("c_segments", mseed_metadata.meta)
 
@@ -174,7 +175,7 @@ class QualityControlTestCase(unittest.TestCase):
                              obspy.UTCDateTime(105))
             self.assertEqual(md.meta["num_records"], 2)
             self.assertEqual(md.meta["num_samples"], 20)
-            self.assertEqual(md.meta["sample_rate"], [1.0, 2.0])
+            self.assertEqual(md.meta["sampling_rate"], [1.0, 2.0])
             self.assertEqual(md.meta["record_length"], [256, 1024])
             self.assertEqual(md.meta["encoding"], ["FLOAT32", "STEIM1"])
 
@@ -701,29 +702,29 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(len(c_seg), 2)
 
             c = c_seg[0]
-            self.assertEqual(c["start_time"], obspy.UTCDateTime(0))
-            self.assertEqual(c["end_time"], obspy.UTCDateTime(20))
-            self.assertEqual(c["seg_len"], 20)
+            self.assertEqual(c["segment_start"], obspy.UTCDateTime(0))
+            self.assertEqual(c["segment_end"], obspy.UTCDateTime(20))
+            self.assertEqual(c["segment_length"], 20)
             self.assertEqual(c["sample_min"], 0)
             self.assertEqual(c["sample_max"], 9)
             self.assertEqual(c["num_samples"], 20)
             self.assertEqual(c["sample_median"], 4.5)
             self.assertEqual(c["sample_lower_quartile"], 2.0)
             self.assertEqual(c["sample_upper_quartile"], 7.0)
-            self.assertEqual(c["sample_rate"], 1.0)
+            self.assertEqual(c["sampling_rate"], 1.0)
 
             # Not continuous because of different sampling_rate (0.5)
             c = c_seg[1]
-            self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
-            self.assertEqual(c["end_time"], obspy.UTCDateTime(40))
-            self.assertEqual(c["seg_len"], 20)
+            self.assertEqual(c["segment_start"], obspy.UTCDateTime(20))
+            self.assertEqual(c["segment_end"], obspy.UTCDateTime(40))
+            self.assertEqual(c["segment_length"], 20)
             self.assertEqual(c["sample_min"], 0)
             self.assertEqual(c["sample_max"], 9)
             self.assertEqual(c["num_samples"], 10)
             self.assertEqual(c["sample_median"], 4.5)
             self.assertEqual(c["sample_lower_quartile"], 2.25)
             self.assertEqual(c["sample_upper_quartile"], 6.75)
-            self.assertEqual(c["sample_rate"], 0.5)
+            self.assertEqual(c["sampling_rate"], 0.5)
 
     def test_continuous_segments_sample_metrics(self):
         """
@@ -748,38 +749,38 @@ class QualityControlTestCase(unittest.TestCase):
         self.assertEqual(len(c_seg), 3)
 
         c = c_seg[0]
-        self.assertEqual(c["start_time"], obspy.UTCDateTime(0))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(5))
+        self.assertEqual(c["segment_start"], obspy.UTCDateTime(0))
+        self.assertEqual(c["segment_end"], obspy.UTCDateTime(5))
         self.assertEqual(c["sample_min"], 0)
         self.assertEqual(c["sample_max"], 4)
         self.assertEqual(c["sample_mean"], 2.0)
         self.assertTrue(c["sample_rms"] - 2.4494897427831779 < 1E-6)
         self.assertTrue(c["sample_stdev"] - 1.4142135623730951 < 1E-6)
         self.assertEqual(c["num_samples"], 5)
-        self.assertEqual(c["seg_len"], 5.0)
+        self.assertEqual(c["segment_length"], 5.0)
         self.assertEqual(c["sample_median"], 2)
         self.assertTrue(c["sample_lower_quartile"], 1.0)
         self.assertTrue(c["sample_upper_quartile"], 3.0)
 
         c = c_seg[1]
-        self.assertEqual(c["start_time"], obspy.UTCDateTime(10))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(15))
+        self.assertEqual(c["segment_start"], obspy.UTCDateTime(10))
+        self.assertEqual(c["segment_end"], obspy.UTCDateTime(15))
         self.assertEqual(c["sample_min"], 5)
         self.assertEqual(c["sample_max"], 9)
         self.assertEqual(c["sample_mean"], 7.0)
         self.assertTrue(c["sample_rms"] - 7.1414284285428504 < 1E-6)
         self.assertTrue(c["sample_stdev"] - 1.4142135623730951 < 1E-6)
         self.assertEqual(c["num_samples"], 5)
-        self.assertEqual(c["seg_len"], 5.0)
+        self.assertEqual(c["segment_length"], 5.0)
         self.assertEqual(c["sample_median"], 7)
         self.assertTrue(c["sample_lower_quartile"], 6.0)
         self.assertTrue(c["sample_upper_quartile"], 8.0)
 
         c = c_seg[2]
-        self.assertEqual(c["start_time"], obspy.UTCDateTime(20))
-        self.assertEqual(c["end_time"], obspy.UTCDateTime(30))
+        self.assertEqual(c["segment_start"], obspy.UTCDateTime(20))
+        self.assertEqual(c["segment_end"], obspy.UTCDateTime(30))
         self.assertEqual(c["num_samples"], 10)
-        self.assertEqual(c["seg_len"], 10.0)
+        self.assertEqual(c["segment_length"], 10.0)
         self.assertEqual(c["sample_min"], 0)
         self.assertEqual(c["sample_max"], 9)
         self.assertEqual(c["sample_mean"], 4.5)

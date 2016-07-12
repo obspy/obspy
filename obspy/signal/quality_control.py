@@ -47,8 +47,8 @@ class MSEEDMetadata(object):
     """
     A container for MSEED specific metadata including QC.
     """
-    def __init__(self, files, starttime=None, endtime=None, c_seg=True,
-                 add_flags=False):
+    def __init__(self, files, starttime=None, endtime=None,
+                 add_c_segments=True, add_flags=False):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
 
@@ -62,8 +62,8 @@ class MSEEDMetadata(object):
             given time. Also specifies the new official end time of the
             metadata object
         :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param c_seg: Calculate metrics for each continuous segment.
-        :type c_seg: bool
+        :param add_c_segments: Calculate metrics for each continuous segment.
+        :type add_c_segments: bool
         :param add_flags: Include miniSEED header statistics in result.
         :type add_flags: bool
         """
@@ -144,7 +144,7 @@ class MSEEDMetadata(object):
         if add_flags:
             self._extract_mseed_flags()
 
-        if c_seg:
+        if add_c_segments:
             self._compute_continuous_seg_sample_metrics()
 
     def _get_gaps_and_overlaps(self):
@@ -316,7 +316,7 @@ class MSEEDMetadata(object):
             meta['num_records'] = None
 
         # The following are lists and may contain multiple unique entries.
-        meta['sample_rate'] = \
+        meta['sampling_rate'] = \
             sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
         meta['record_length'] = \
             sorted(list(set([tr.stats.mseed.record_length
@@ -522,9 +522,20 @@ class MSEEDMetadata(object):
         """
 
         seg = {}
-        seg['start_time'] = tr['start']
-        seg['end_time'] = tr['end']
-        seg['sample_rate'] = tr['s_rate']
+
+        # Set continous segments start & end
+        # limit to specified window start/end if set
+        if self.window_start is not None:
+            seg['segment_start'] = max(self.window_start, tr['start'])
+        else:
+            seg['segment_start'] = tr['start']
+
+        if self.window_end is not None:
+            seg['segment_end'] = min(self.window_end, tr['end'])
+        else:
+            seg['segment_end'] = tr['end']
+
+        seg['sampling_rate'] = tr['s_rate']
         seg['sample_min'] = tr['data'].min()
         seg['sample_max'] = tr['data'].max()
         seg['sample_mean'] = tr['data'].mean()
@@ -535,7 +546,7 @@ class MSEEDMetadata(object):
         seg['sample_upper_quartile'] = np.percentile(tr['data'], 75)
         seg['sample_stdev'] = tr['data'].std()
         seg['num_samples'] = len(tr['data'])
-        seg['seg_len'] = tr['end'] - tr['start']
+        seg['segment_length'] = seg['segment_end'] - seg['segment_start']
 
         return seg
 
