@@ -66,6 +66,21 @@ class MSEEDMetadata(object):
         :type add_c_segments: bool
         :param add_flags: Include miniSEED header statistics in result.
         :type add_flags: bool
+
+        .. rubric:: Example
+
+        >>> from obspy.signal.quality_control import
+        ...     MSEEDMetadata #doctest: +SKIP
+        >>> mseedqc = MSEEDMetadata(['path/to/file',
+        ...                         'path/to/file2']) #doctest: +SKIP
+        >>> mseedqc.get_json_meta() #doctest: +SKIP
+
+        The class requires a list of files for calculating metrics.
+        Add optional parameters ``starttime="YYYY-MM-DDThh:mm:ss`` and
+        ``endtime="YYYY-MM-DDThh:mm:ss"`` or obspy.core.utcdatetime.UTCDateTime
+        to limit metric calculation to this window. Continuous segments are
+        returned when add_c_segments=True and mSEED header flags information
+        is returned when ``add_flags=True``.
         """
 
         self.data = obspy.Stream()
