@@ -929,7 +929,7 @@ class SACTrace(object):
                       doc=HD.DOC['ievreg'])
     ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
                       doc=HD.DOC['ievtyp'])
-    iqual = property(_enumgetter('iqual'), _enumsetter('iqual'),
+    iqual = property(_intgetter('iqual'), _intsetter('iqual'),
                      doc=HD.DOC['iqual'])
     isynth = property(_enumgetter('isythn'), _enumsetter('isynth'),
                       doc=HD.DOC['isynth'])
