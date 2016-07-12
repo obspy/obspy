@@ -5,11 +5,11 @@ obspy.clients.filesystem.sds - read support for SeisComP Data Structure
 This module provides read support for data stored locally in a SeisComP Data
 Structure (SDS) directory structure.
 
-The directory and file layout of SDS is defined as:
+The directory and file layout of SDS is defined as::
 
     <SDSdir>/YEAR/NET/STA/CHAN.TYPE/NET.STA.LOC.CHAN.TYPE.YEAR.DAY
 
-These fields are defined by SDS as follows:
+These fields are defined by SDS as follows::
 
     SDSdir :  arbitrary base directory
     YEAR   :  4 digit year
@@ -33,7 +33,7 @@ See https://www.seiscomp3.org/wiki/doc/applications/slarchive/SDS.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -55,7 +55,7 @@ from obspy.core.util.misc import BAND_CODE
 SDS_FMTSTR = os.path.join(
     "{year}", "{network}", "{station}", "{channel}.{sds_type}",
     "{network}.{station}.{location}.{channel}.{sds_type}.{year}.{doy:03d}")
-FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w*?)?([!:].*?)?}"
+FORMAT_STR_PLACEHOLDER_REGEX = r"{(\w+?)?([!:].*?)?}"
 
 
 class Client(object):
@@ -162,6 +162,8 @@ class Client(object):
             raise ValueError(msg)
         sds_type = sds_type or self.sds_type
 
+        seed_pattern = ".".join((network, station, location, channel))
+
         st = Stream()
         full_paths = self._get_filenames(
             network=network, station=station, location=location,
@@ -169,7 +171,7 @@ class Client(object):
             sds_type=sds_type)
         for full_path in full_paths:
             st += read(full_path, format=self.format, starttime=starttime,
-                       endtime=endtime, **kwargs)
+                       endtime=endtime, sourcename=seed_pattern, **kwargs)
 
         # make sure we only have the desired data, just in case the file
         # contents do not match the expected SEED id
@@ -307,11 +309,17 @@ class Client(object):
         # subsequently in a place were it's not caught
         # see https://bugs.python.org/issue4180
         # see e.g. http://blog.ionelmc.ro/2013/06/26/testing-python-warnings/
-        from obspy.core.stream import __warningregistry__ as \
-            stream_warningregistry
-        for key in list(stream_warningregistry.keys()):
-            if key[0] == _headonly_warning_msg:
-                stream_warningregistry.pop(key)
+        try:
+            from obspy.core.stream import __warningregistry__ as \
+                stream_warningregistry
+        except ImportError:
+            # import error means no warning has been issued from
+            # obspy.core.stream before, so nothing to do.
+            pass
+        else:
+            for key in list(stream_warningregistry.keys()):
+                if key[0] == _headonly_warning_msg:
+                    stream_warningregistry.pop(key)
         st.sort(keys=['starttime', 'endtime'])
         st.traces = [tr for tr in st
                      if not (tr.stats.endtime < starttime or
@@ -322,7 +330,7 @@ class Client(object):
 
         total_duration = endtime - starttime
         # sum up gaps in the middle
-        gaps = [gap[6] for gap in st.getGaps()]
+        gaps = [gap[6] for gap in st.get_gaps()]
         gap_sum = np.sum(gaps)
         gap_count = len(gaps)
         # check if we have a gap at start or end
@@ -363,6 +371,8 @@ class Client(object):
         """
         sds_type = sds_type or self.sds_type
 
+        seed_pattern = ".".join((network, station, location, channel))
+
         if not self.has_data(
                 network=network, station=station, location=location,
                 channel=channel, sds_type=sds_type):
@@ -379,7 +389,8 @@ class Client(object):
                 network=network, station=station, location=location,
                 channel=channel, time=time, sds_type=sds_type)
             if os.path.isfile(filename):
-                st = read(filename, format=self.format, headonly=True)
+                st = read(filename, format=self.format, headonly=True,
+                          sourcename=seed_pattern)
                 st = st.select(network=network, station=station,
                                location=location, channel=channel)
                 if st:
@@ -459,7 +470,7 @@ class Client(object):
         else:
             return False
 
-    def get_all_nslc(self, sds_type=None):
+    def get_all_nslc(self, sds_type=None, datetime=None):
         """
         Return information on what streams are included in archive.
 
@@ -470,6 +481,11 @@ class Client(object):
         :type sds_type: str
         :param sds_type: Override SDS data type identifier that was specified
             during client initialization.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Only return all streams that have data at specified
+            time (checks if file exists that should have the data, i.e. streams
+            might be returned that have data on the same day but not at exactly
+            this point in time).
         :rtype: list
         :returns: List of (network, station, location, channel) 4-tuples of all
             available streams in archive.
@@ -477,11 +493,14 @@ class Client(object):
         sds_type = sds_type or self.sds_type
         result = set()
         # wildcarded pattern to match all files of interest
-        pattern = re.sub(
-            FORMAT_STR_PLACEHOLDER_REGEX,
-            _wildcarded_except(["sds_type"]),
-            self.FMTSTR).format(sds_type=sds_type)
-        pattern = os.path.join(self.sds_root, pattern)
+        if datetime is None:
+            pattern = re.sub(
+                FORMAT_STR_PLACEHOLDER_REGEX,
+                _wildcarded_except(["sds_type"]),
+                self.FMTSTR).format(sds_type=sds_type)
+            pattern = os.path.join(self.sds_root, pattern)
+        else:
+            pattern = self._get_filename("*", "*", "*", "*", datetime)
         all_files = glob.glob(pattern)
         # set up inverse regex to extract kwargs/values from full paths
         pattern_ = os.path.join(self.sds_root, self.FMTSTR)
@@ -554,11 +573,11 @@ def _wildcarded_except(exclude=[]):
     replacing all format string place holders with ``*`` wildcards, except
     named fields as specified in ``exclude``.
     """
-    def __wildcarded(match):
+    def _wildcarded(match):
         if match.group(1) in exclude:
             return match.group(0)
         return "*"
-    return __wildcarded
+    return _wildcarded
 
 
 def _parse_path_to_dict(path, pattern, group_map):

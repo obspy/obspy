@@ -113,29 +113,29 @@ class TauPyModelTestCase(unittest.TestCase):
     def test_taup_geo_calc_dist(self):
         """Test for calc_dist"""
         self.assertAlmostEqual(calc_dist(source_latitude_in_deg=20.0,
-                               source_longitude_in_deg=33.0,
-                               receiver_latitude_in_deg=55.0,
-                               receiver_longitude_in_deg=33.0,
-                               radius_of_earth_in_km=6371.0,
-                               flattening_of_earth=0.0), 35.0, 5)
+                                         source_longitude_in_deg=33.0,
+                                         receiver_latitude_in_deg=55.0,
+                                         receiver_longitude_in_deg=33.0,
+                                         radius_of_planet_in_km=6371.0,
+                                         flattening_of_planet=0.0), 35.0, 5)
         self.assertAlmostEqual(calc_dist(source_latitude_in_deg=55.0,
-                               source_longitude_in_deg=33.0,
-                               receiver_latitude_in_deg=20.0,
-                               receiver_longitude_in_deg=33.0,
-                               radius_of_earth_in_km=6371.0,
-                               flattening_of_earth=0.0), 35.0, 5)
+                                         source_longitude_in_deg=33.0,
+                                         receiver_latitude_in_deg=20.0,
+                                         receiver_longitude_in_deg=33.0,
+                                         radius_of_planet_in_km=6371.0,
+                                         flattening_of_planet=0.0), 35.0, 5)
         self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                               source_longitude_in_deg=33.0,
-                               receiver_latitude_in_deg=-55.0,
-                               receiver_longitude_in_deg=33.0,
-                               radius_of_earth_in_km=6371.0,
-                               flattening_of_earth=0.0), 35.0, 5)
+                                         source_longitude_in_deg=33.0,
+                                         receiver_latitude_in_deg=-55.0,
+                                         receiver_longitude_in_deg=33.0,
+                                         radius_of_planet_in_km=6371.0,
+                                         flattening_of_planet=0.0), 35.0, 5)
         self.assertAlmostEqual(calc_dist(source_latitude_in_deg=-20.0,
-                               source_longitude_in_deg=33.0,
-                               receiver_latitude_in_deg=-55.0,
-                               receiver_longitude_in_deg=33.0,
-                               radius_of_earth_in_km=6.371,
-                               flattening_of_earth=0.0), 35.0, 5)
+                                         source_longitude_in_deg=33.0,
+                                         receiver_latitude_in_deg=-55.0,
+                                         receiver_longitude_in_deg=33.0,
+                                         radius_of_planet_in_km=6.371,
+                                         flattening_of_planet=0.0), 35.0, 5)
 
     @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
@@ -213,6 +213,39 @@ class TauPyModelTestCase(unittest.TestCase):
         self._compare_arrivals_with_file(
             arrivals, "taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135")
 
+    def test_p_ak135f_no_mud(self):
+        """
+        Test P phase arrival against TauP output in in model ak135f_no_mud.
+        """
+        m = TauPyModel(model="ak135f_no_mud")
+        arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                      distance_in_degree=35.0,
+                                      phase_list=["P"])
+        self._compare_arrivals_with_file(
+            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_ak135f_no_mud")
+
+    def test_p_jb(self):
+        """
+        Test P phase arrival against TauP output in in model jb.
+        """
+        m = TauPyModel(model="jb")
+        arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                      distance_in_degree=35.0,
+                                      phase_list=["P"])
+        self._compare_arrivals_with_file(
+            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_jb")
+
+    def test_p_pwdk(self):
+        """
+        Test P phase arrival against TauP output in in model pwdk.
+        """
+        m = TauPyModel(model="pwdk")
+        arrivals = m.get_travel_times(source_depth_in_km=10.0,
+                                      distance_in_degree=35.0,
+                                      phase_list=["P"])
+        self._compare_arrivals_with_file(
+            arrivals, "taup_time_-h_10_-ph_P_-deg_35_-mod_pwdk")
+
     def test_iasp91(self):
         """
         Test travel times for lots of phases against output from TauP in model
@@ -269,12 +302,14 @@ class TauPyModelTestCase(unittest.TestCase):
         This version of the test is used when geographiclib is installed
         """
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_pierce_points_geo(source_depth_in_km=10.0,
-                                           source_latitude_in_deg=-45.0,
-                                           source_longitude_in_deg=-50.0,
-                                           receiver_latitude_in_deg=-80.0,
-                                           receiver_longitude_in_deg=-50.0,
-                                           phase_list=["P"])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            arrivals = m.get_pierce_points_geo(
+                source_depth_in_km=10.0,
+                source_latitude_in_deg=-45.0,
+                source_longitude_in_deg=-50.0,
+                receiver_latitude_in_deg=-80.0,
+                receiver_longitude_in_deg=-50.0, phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
         p_arr = arrivals[0]
 
@@ -291,10 +326,11 @@ class TauPyModelTestCase(unittest.TestCase):
                                        p_arr.pierce['depth'], 1)
         np.testing.assert_almost_equal(expected[:, 2],
                                        p_arr.pierce['time'], 1)
-        np.testing.assert_almost_equal(expected[:, 3],
-                                       p_arr.pierce['lat'], 1)
-        np.testing.assert_almost_equal(expected[:, 4],
-                                       p_arr.pierce['lon'], 1)
+        if geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34:
+            np.testing.assert_almost_equal(expected[:, 3],
+                                           p_arr.pierce['lat'], 1)
+            np.testing.assert_almost_equal(expected[:, 4],
+                                           p_arr.pierce['lon'], 1)
 
     def test_pierce_p_iasp91_fallback_geo(self):
         """
@@ -334,10 +370,10 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check pierce['lat'] and pierce['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
-                                 'lat')
-        np.testing.assert_raises(ValueError, lambda k: p_arr.pierce[k],
-                                 'lon')
+        with self.assertRaises(ValueError):
+            p_arr.pierce["lat"]
+        with self.assertRaises(ValueError):
+            p_arr.pierce["lon"]
 
     def test_vs_java_iasp91(self):
         """
@@ -502,12 +538,14 @@ class TauPyModelTestCase(unittest.TestCase):
         expected = np.genfromtxt(filename, comments='>')
 
         m = TauPyModel(model="iasp91")
-        arrivals = m.get_ray_paths_geo(source_depth_in_km=10.0,
-                                       source_latitude_in_deg=-80.0,
-                                       source_longitude_in_deg=-60.0,
-                                       receiver_latitude_in_deg=-45.0,
-                                       receiver_longitude_in_deg=-60.0,
-                                       phase_list=["P"])
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("always")
+            arrivals = m.get_ray_paths_geo(
+                source_depth_in_km=10.0,
+                source_latitude_in_deg=-80.0,
+                source_longitude_in_deg=-60.0,
+                receiver_latitude_in_deg=-45.0,
+                receiver_longitude_in_deg=-60.0, phase_list=["P"])
         self.assertEqual(len(arrivals), 1)
 
         # Interpolate both paths to 100 samples and make sure they are
@@ -531,24 +569,25 @@ class TauPyModelTestCase(unittest.TestCase):
             sample_points,
             np.round(np.degrees(arrivals[0].path['dist']), 2),
             np.round(6371 - arrivals[0].path['depth'], 2))
-        interpolated_actual_lat = np.interp(
-            sample_points,
-            np.round(np.degrees(arrivals[0].path['dist']), 2),
-            np.round(arrivals[0].path['lat'], 2))
-        interpolated_actual_lon = np.interp(
-            sample_points,
-            np.round(np.degrees(arrivals[0].path['dist']), 2),
-            np.round(arrivals[0].path['lon'], 2))
-
         np.testing.assert_allclose(interpolated_actual_depth,
                                    interpolated_expected_depth,
                                    rtol=1E-4, atol=0)
-        np.testing.assert_allclose(interpolated_actual_lat,
-                                   interpolated_expected_lat,
-                                   rtol=1E-4, atol=0)
-        np.testing.assert_allclose(interpolated_actual_lon,
-                                   interpolated_expected_lon,
-                                   rtol=1E-4, atol=0)
+
+        if geodetics.GEOGRAPHICLIB_VERSION_AT_LEAST_1_34:
+            interpolated_actual_lat = np.interp(
+                sample_points,
+                np.round(np.degrees(arrivals[0].path['dist']), 2),
+                np.round(arrivals[0].path['lat'], 2))
+            interpolated_actual_lon = np.interp(
+                sample_points,
+                np.round(np.degrees(arrivals[0].path['dist']), 2),
+                np.round(arrivals[0].path['lon'], 2))
+            np.testing.assert_allclose(interpolated_actual_lat,
+                                       interpolated_expected_lat,
+                                       rtol=1E-4, atol=0)
+            np.testing.assert_allclose(interpolated_actual_lon,
+                                       interpolated_expected_lon,
+                                       rtol=1E-4, atol=0)
 
     def test_single_path_geo_fallback_iasp91(self):
         """
@@ -597,10 +636,10 @@ class TauPyModelTestCase(unittest.TestCase):
         # NB: we do not check path['lat'] and path['lon'] here, as these
         # are not calculated when geographiclib is not installed. We check
         # that they are not present.
-        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
-                                 'lat')
-        np.testing.assert_raises(ValueError, lambda k: arrivals[0].path[k],
-                                 'lon')
+        with self.assertRaises(ValueError):
+            arrivals[0].path["lat"]
+        with self.assertRaises(ValueError):
+            arrivals[0].path["lon"]
 
     def test_single_path_ak135(self):
         """
@@ -686,39 +725,39 @@ class TauPyModelTestCase(unittest.TestCase):
             self.assertTrue(abs(arr.ray_param_sec_degree -
                                 value["ray_param"]) < 0.11)
 
-    def test_kennet_ak135_ttime_tables_P_deep(self):
+    def test_kennet_ak135_ttime_tables_p_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_deep.txt", phases=["p", "Pdiff", "P"])
 
-    def test_kennet_ak135_ttime_tables_P_shallow(self):
+    def test_kennet_ak135_ttime_tables_p_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_P_shallow.txt", phases=["p", "Pdiff", "P"])
 
-    def test_kennet_ak135_ttime_tables_PcP(self):
+    def test_kennet_ak135_ttime_tables_pcp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PcP.txt", phases=["PcP"])
 
-    def test_kennet_ak135_ttime_tables_PKIKP(self):
+    def test_kennet_ak135_ttime_tables_pkikp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_PKIKP.txt", phases=["PKIKP"])
 
-    def test_kennet_ak135_ttime_tables_S_deep(self):
+    def test_kennet_ak135_ttime_tables_s_deep(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_deep.txt", phases=["s", "S", "Sdiff"])
 
-    def test_kennet_ak135_ttime_tables_S_shallow(self):
+    def test_kennet_ak135_ttime_tables_s_shallow(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_S_shallow.txt", phases=["s", "S", "Sdiff"])
 
-    def test_kennet_ak135_ttime_tables_ScP(self):
+    def test_kennet_ak135_ttime_tables_scp(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_ScP.txt", phases=["ScP"])
 
-    def test_kennet_ak135_ttime_tables_ScS(self):
+    def test_kennet_ak135_ttime_tables_scs(self):
         self._compare_against_ak135_tables_kennet(
             "ak135_ScS.txt", phases=["ScS"])
 
-    def test_javaPnPs(self):
+    def test_java_pnps(self):
         """
         Test for Pn Ps waves bug, 53797854298c6ee9dcbf3398bbec3bdd12def964
 
@@ -803,7 +842,8 @@ class TauPyModelTestCase(unittest.TestCase):
         Open all included models and make sure that they can produce
         reasonable travel times.
         """
-        models = ["1066a", "1066b", "ak135", "herrin", "iasp91", "prem", "sp6"]
+        models = ["1066a", "1066b", "ak135", "herrin", "iasp91", "prem",
+                  "sp6", "jb", "pwdk", "ak135f_no_mud"]
         for model in models:
             m = TauPyModel(model=model)
 

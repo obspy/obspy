@@ -20,7 +20,7 @@ class KMLTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_write_Inventory(self):
+    def test_write_inventory(self):
         """
         Test writing Inventory to KML.
         """
@@ -37,7 +37,7 @@ class KMLTestCase(unittest.TestCase):
         # compare the two
         compare_xml_strings(expected, got)
 
-    def test_write_Catalog(self):
+    def test_write_catalog(self):
         """
         Test writing Catalog to KML.
         """

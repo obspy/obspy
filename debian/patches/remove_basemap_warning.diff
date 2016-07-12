@@ -8,7 +8,7 @@ Bug: https://github.com/obspy/obspy/commit/bc7bb622bae20d2d281646ba1934ab7be27b6
 This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
 --- a/obspy/imaging/maps.py
 +++ b/obspy/imaging/maps.py
-@@ -41,11 +41,6 @@ BASEMAP_VERSION = getBasemapVersion()
+@@ -33,11 +33,6 @@ BASEMAP_VERSION = get_basemap_version()
  if BASEMAP_VERSION:
      from mpl_toolkits.basemap import Basemap
      HAS_BASEMAP = True

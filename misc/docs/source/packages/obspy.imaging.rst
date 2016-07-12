@@ -15,6 +15,7 @@
        waveform
        mopad_wrapper
        maps
+       source
 
     .. comment to end block
 

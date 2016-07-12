@@ -7,7 +7,7 @@ Test suite for the response handling.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -77,7 +77,7 @@ class ResponseTestCase(unittest.TestCase):
             if p.blockettes[52][0].end_date > t_:
                 p.blockettes[52][0].end_date = None
 
-            resp_filename = p.get_RESP()[0][-1]
+            resp_filename = p.get_resp()[0][-1]
 
             inv = read_inventory(xml_filename)
 

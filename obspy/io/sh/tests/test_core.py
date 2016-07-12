@@ -22,7 +22,7 @@ class CoreTestCase(unittest.TestCase):
         # Directory where the test files are located
         self.path = os.path.dirname(__file__)
 
-    def test_read101Traces(self):
+    def test_read_101_traces(self):
         """
         Testing reading Q file with more than 100 traces.
         """
@@ -32,7 +32,7 @@ class CoreTestCase(unittest.TestCase):
         stream.verify()
         self.assertEqual(len(stream), 101)
 
-    def test_is_ascFile(self):
+    def test_is_asc_file(self):
         """
         Testing ASC file format.
         """
@@ -41,7 +41,7 @@ class CoreTestCase(unittest.TestCase):
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-SUN.QHD')
         self.assertEqual(_is_asc(testfile), False)
 
-    def test_is_qFile(self):
+    def test_is_q_file(self):
         """
         Testing Q header file format.
         """
@@ -52,7 +52,7 @@ class CoreTestCase(unittest.TestCase):
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
         self.assertEqual(_is_q(testfile), False)
 
-    def test_readSingleChannelASCFile(self):
+    def test_read_single_channel_asc_file(self):
         """
         Read ASC file test via obspy.io.sh.core._read_asc.
         """
@@ -71,7 +71,7 @@ class CoreTestCase(unittest.TestCase):
         data = [2.176000e+01, 2.195485e+01, 2.213356e+01, 2.229618e+01]
         np.testing.assert_array_almost_equal(stream[0].data[-4:], data)
 
-    def _compareStream(self, stream):
+    def _compare_stream(self, stream):
         """
         Helper function to verify stream from file 'data/QFILE-TEST*'.
         """
@@ -114,7 +114,7 @@ class CoreTestCase(unittest.TestCase):
         data = [4.449060e+02, 4.279572e+02, 4.120677e+02, 4.237200e+02]
         np.testing.assert_array_almost_equal(stream[2].data[0:4], data, 4)
 
-    def test_readAndWriteMultiChannelASCFile(self):
+    def test_read_and_write_multi_channel_asc_file(self):
         """
         Read and write ASC file via obspy.io.sh.core._read_asc.
         """
@@ -122,7 +122,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = _read_asc(origfile)
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -136,9 +136,9 @@ class CoreTestCase(unittest.TestCase):
             # read again
             stream2 = _read_asc(tempfile)
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
 
-    def test_readAndWriteMultiChannelASCFileViaObsPy(self):
+    def test_read_and_write_multi_channel_asc_file_via_obspy(self):
         """
         Read and write ASC file test via obspy.core.
         """
@@ -146,7 +146,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = read(origfile, format="SH_ASC")
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -155,9 +155,9 @@ class CoreTestCase(unittest.TestCase):
             # read again w/ auto detection
             stream2 = read(tempfile)
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
 
-    def test_readAndWriteMultiChannelQFile(self):
+    def test_read_and_write_multi_channel_q_file(self):
         """
         Read and write Q file via obspy.io.sh.core._read_q.
         """
@@ -166,7 +166,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = _read_q(origfile)
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
@@ -174,7 +174,7 @@ class CoreTestCase(unittest.TestCase):
             # read again
             stream2 = _read_q(tempfile)
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         # 2 - big endian (SUN)
@@ -182,7 +182,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = _read_q(origfile, byteorder=">")
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
@@ -190,11 +190,11 @@ class CoreTestCase(unittest.TestCase):
             # read again
             stream2 = _read_q(tempfile, byteorder=">")
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
-    def test_readAndWriteMultiChannelQFileViaObsPy(self):
+    def test_read_and_write_multi_channel_q_file_via_obspy(self):
         """
         Read and write Q file test via obspy.core.
         """
@@ -203,7 +203,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = read(origfile, format="Q")
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
@@ -211,7 +211,7 @@ class CoreTestCase(unittest.TestCase):
             # read again w/ auto detection
             stream2 = read(tempfile)
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         # 2 - big endian (SUN)
@@ -219,7 +219,7 @@ class CoreTestCase(unittest.TestCase):
         # read original
         stream1 = read(origfile, format="Q", byteorder=">")
         stream1.verify()
-        self._compareStream(stream1)
+        self._compare_stream(stream1)
         # write
         with NamedTemporaryFile(suffix='.QHD') as tf:
             tempfile = tf.name
@@ -227,11 +227,11 @@ class CoreTestCase(unittest.TestCase):
             # read again w/ auto detection
             stream2 = read(tempfile, byteorder=">")
             stream2.verify()
-            self._compareStream(stream2)
+            self._compare_stream(stream2)
             # remove binary file too (dynamically created)
             os.remove(os.path.splitext(tempfile)[0] + '.QBN')
 
-    def test_skipASClines(self):
+    def test_skip_asc_lines(self):
         testfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
         # read
         stream = _read_asc(testfile, skip=100, delta=0.1, length=2)
@@ -246,7 +246,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(stream[0].data[0], 111.7009, 4)
         self.assertAlmostEqual(stream[0].data[1], 119.5831, 4)
 
-    def test_writeSmallTrace(self):
+    def test_write_small_trace(self):
         """
         Tests writing Traces containing 0, 1 or 2 samples only.
         """

@@ -177,7 +177,7 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
     # obspy-mopad gmt
     #
 
-    def compareGMT(self, exp_file, *args):
+    def compare_gmt(self, exp_file, *args):
         """
         Helper function that runs GMT and compares results.
         """
@@ -208,37 +208,37 @@ Fault plane 2: strike = 346°, dip =  51°, slip-rake =   -1°
                         msg='Data does not match!')
 
     def test_script_gmt_fill(self):
-        self.compareGMT('mopad_fill.gmt',
-                        '-t', 'fill',
-                        '--scaling', '2', '--color1', '3', '--color2', '5')
+        self.compare_gmt('mopad_fill.gmt',
+                         '-t', 'fill',
+                         '--scaling', '2', '--color1', '3', '--color2', '5')
 
     def test_script_gmt_lines(self):
-        self.compareGMT('mopad_lines.gmt',
-                        '-t', 'lines',
-                        '--scaling', '2', '--color1', '3', '--color2', '5')
+        self.compare_gmt('mopad_lines.gmt',
+                         '-t', 'lines',
+                         '--scaling', '2', '--color1', '3', '--color2', '5')
 
     def test_script_gmt_lines_stereo(self):
-        self.compareGMT('mopad_lines_stereo.gmt',
-                        '-t', 'lines',
-                        '--scaling', '2', '--color1', '3', '--color2', '5',
-                        '--projection', 'stereo')
+        self.compare_gmt('mopad_lines_stereo.gmt',
+                         '-t', 'lines',
+                         '--scaling', '2', '--color1', '3', '--color2', '5',
+                         '--projection', 'stereo')
 
     def test_script_gmt_lines_ortho(self):
-        self.compareGMT('mopad_lines_ortho.gmt',
-                        '-t', 'lines',
-                        '--scaling', '2', '--color1', '3', '--color2', '5',
-                        '--projection', 'ortho')
+        self.compare_gmt('mopad_lines_ortho.gmt',
+                         '-t', 'lines',
+                         '--scaling', '2', '--color1', '3', '--color2', '5',
+                         '--projection', 'ortho')
 
     def test_script_gmt_lines_lambo(self):
-        self.compareGMT('mopad_lines_lambo.gmt',
-                        '-t', 'lines',
-                        '--scaling', '2', '--color1', '3', '--color2', '5',
-                        '--projection', 'stereo')
+        self.compare_gmt('mopad_lines_lambo.gmt',
+                         '-t', 'lines',
+                         '--scaling', '2', '--color1', '3', '--color2', '5',
+                         '--projection', 'stereo')
 
     def test_script_gmt_event(self):
-        self.compareGMT('mopad_ev.gmt',
-                        '-t', 'ev',
-                        '-r', '3')
+        self.compare_gmt('mopad_ev.gmt',
+                         '-t', 'ev',
+                         '-r', '3')
 
     #
     # obspy-mopad plot

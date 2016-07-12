@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import lookup_code, format_RESP
+from ..utils import lookup_code, format_resp
 
 
 RESP = """\
@@ -72,7 +72,7 @@ class Blockette053(Blockette):
         ])
     ]
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -106,17 +106,17 @@ class Blockette053(Blockette):
                 for _i in range(self.number_of_complex_zeros):
                     out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        format_RESP(self.real_zero[_i], 6),
-                        format_RESP(self.imaginary_zero[_i], 6),
-                        format_RESP(self.real_zero_error[_i], 6),
-                        format_RESP(self.imaginary_zero_error[_i], 6))
+                        format_resp(self.real_zero[_i], 6),
+                        format_resp(self.imaginary_zero[_i], 6),
+                        format_resp(self.real_zero_error[_i], 6),
+                        format_resp(self.imaginary_zero_error[_i], 6))
             else:
                 out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    format_RESP(self.real_zero, 6),
-                    format_RESP(self.imaginary_zero, 6),
-                    format_RESP(self.real_zero_error, 6),
-                    format_RESP(self.imaginary_zero_error, 6))
+                    format_resp(self.real_zero, 6),
+                    format_resp(self.imaginary_zero, 6),
+                    format_resp(self.real_zero_error, 6),
+                    format_resp(self.imaginary_zero_error, 6))
         out += '#\t\tComplex poles:\n'
         out += '#\t\t  i  real          imag          real_error    '
         out += 'imag_error\n'
@@ -126,16 +126,16 @@ class Blockette053(Blockette):
                 for _i in range(self.number_of_complex_poles):
                     out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
                         _i,
-                        format_RESP(self.real_pole[_i], 6),
-                        format_RESP(self.imaginary_pole[_i], 6),
-                        format_RESP(self.real_pole_error[_i], 6),
-                        format_RESP(self.imaginary_pole_error[_i], 6))
+                        format_resp(self.real_pole[_i], 6),
+                        format_resp(self.imaginary_pole[_i], 6),
+                        format_resp(self.real_pole_error[_i], 6),
+                        format_resp(self.imaginary_pole_error[_i], 6))
             else:
                 out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
                     0,
-                    format_RESP(self.real_pole, 6),
-                    format_RESP(self.imaginary_pole, 6),
-                    format_RESP(self.real_pole_error, 6),
-                    format_RESP(self.imaginary_pole_error, 6))
+                    format_resp(self.real_pole, 6),
+                    format_resp(self.imaginary_pole, 6),
+                    format_resp(self.real_pole_error, 6),
+                    format_resp(self.imaginary_pole_error, 6))
         out += '#\t\t\n'
         return out.encode()

@@ -6,7 +6,7 @@ Low-level Earthworm Wave Server tools.
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -79,7 +79,7 @@ class TraceBuf2(object):
         """
         Parse tracebuf header into class variables
         """
-        packStr = b'2i3d7s9s4s3s2s3s2s2s'
+        pack_str = b'2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
         if dtype[0:1] in b'ts':
             endian = b'>'
@@ -90,7 +90,7 @@ class TraceBuf2(object):
         self.inputType = get_numpy_type(dtype)
         (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
          self.chan, self.loc, self.version, tp, self.qual, _pad) = \
-            struct.unpack(endian + packStr, head)
+            struct.unpack(endian + pack_str, head)
         if not tp.startswith(dtype):
             msg = 'Error parsing header: %s!=%s'
             print(msg % (dtype, tp), file=sys.stderr)
@@ -129,18 +129,18 @@ class TraceBuf2(object):
         return Trace(data=self.data, header=stat)
 
 
-def send_sock_req(server, port, reqStr, timeout=None):
+def send_sock_req(server, port, req_str, timeout=None):
     """
-    Sets up socket to server and port, sends reqStr
+    Sets up socket to server and port, sends req_str
     to socket and returns open socket
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(timeout)
     s.connect((server, port))
-    if reqStr[-1:] == b'\n':
-        s.send(reqStr)
+    if req_str[-1:] == b'\n':
+        s.send(req_str)
     else:
-        s.send(reqStr + b'\n')
+        s.send(req_str + b'\n')
     return s
 
 
@@ -153,7 +153,7 @@ def get_sock_char_line(sock, timeout=10.):
     indat = b'^'
     try:
         while indat[-1:] != b'\n':
-            # see http://obspy.org/ticket/383
+            # see https://github.com/obspy/obspy/issues/383
             # indat = sock.recv(8192)
             indat = sock.recv(1)
             chunks.append(indat)

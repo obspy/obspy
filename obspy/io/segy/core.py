@@ -6,7 +6,7 @@ SEG Y bindings to ObsPy core module.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -23,9 +23,10 @@ from obspy.core import AttribDict
 from .header import (BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_CODE_DTYPE,
                      ENDIAN, TRACE_HEADER_FORMAT, TRACE_HEADER_KEYS)
 from .segy import _read_segy as _read_segyrev1
-from .segy import _read_su as _read_suFile
+from .segy import _read_su as _read_su_file
 from .segy import (SEGYBinaryFileHeader, SEGYError, SEGYFile, SEGYTrace,
-                   SEGYTraceHeader, SUFile, autodetectEndianAndSanityCheckSU)
+                   SEGYTraceHeader, SUFile,
+                   autodetect_endian_and_sanity_check_su)
 from .util import unpack_header_value
 
 
@@ -189,59 +190,13 @@ def _read_segy(filename, headonly=False, byteorder=None,
     stream.stats.endian = endian
     stream.stats.textual_file_header_encoding = \
         textual_file_header_encoding
-    # Loop over all traces.
+
+    # Convert traces to ObsPy Trace objects.
     for tr in segy_object.traces:
-        # Create new Trace object for every segy trace and append to the Stream
-        # object.
-        trace = Trace()
-        stream.append(trace)
-        # skip data if headonly is set
-        if headonly:
-            trace.stats.npts = tr.npts
-        else:
-            trace.data = tr.data
-        trace.stats.segy = AttribDict()
-        # If all values will be unpacked create a normal dictionary.
-        if unpack_trace_headers:
-            # Add the trace header as a new attrib dictionary.
-            header = AttribDict()
-            for key, value in tr.header.__dict__.items():
-                setattr(header, key, value)
-        # Otherwise use the LazyTraceHeaderAttribDict.
-        else:
-            # Add the trace header as a new lazy attrib dictionary.
-            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header,
-                                               tr.header.endian)
-        trace.stats.segy.trace_header = header
-        # The sampling rate should be set for every trace. It is a sample
-        # interval in microseconds. The only sanity check is that is should be
-        # larger than 0.
-        tr_header = trace.stats.segy.trace_header
-        if tr_header.sample_interval_in_ms_for_this_trace > 0:
-            trace.stats.delta = \
-                float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                1E6
-        # If the year is not zero, calculate the start time. The end time is
-        # then calculated from the start time and the sampling rate.
-        if tr_header.year_data_recorded > 0:
-            year = tr_header.year_data_recorded
-            # The SEG Y rev 0 standard specifies the year to be a 4 digit
-            # number.  Before that it was unclear if it should be a 2 or 4
-            # digit number. Old or wrong software might still write 2 digit
-            # years. Every number <30 will be mapped to 2000-2029 and every
-            # number between 30 and 99 will be mapped to 1930-1999.
-            if year < 100:
-                if year < 30:
-                    year += 2000
-                else:
-                    year += 1900
-            julday = tr_header.day_of_year
-            hour = tr_header.hour_of_day
-            minute = tr_header.minute_of_hour
-            second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(
-                year=year, julday=julday, hour=hour, minute=minute,
-                second=second)
+        stream.append(tr.to_obspy_trace(
+            headonly=headonly,
+            unpack_trace_headers=unpack_trace_headers))
+
     return stream
 
 
@@ -445,7 +400,7 @@ def _is_su(filename):
         Seismic Unix file.
     """
     with open(filename, 'rb') as f:
-        stat = autodetectEndianAndSanityCheckSU(f)
+        stat = autodetect_endian_and_sanity_check_su(f)
     if stat is False:
         return False
     else:
@@ -491,8 +446,8 @@ def _read_su(filename, headonly=False, byteorder=None,
     ... | 2005-12-19T15:07:54.000000Z - ... | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
-    su_object = _read_suFile(filename, endian=byteorder,
-                             unpack_headers=unpack_trace_headers)
+    su_object = _read_su_file(filename, endian=byteorder,
+                              unpack_headers=unpack_trace_headers)
 
     # Create the stream object.
     stream = Stream()
@@ -654,7 +609,7 @@ def _write_su(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     su_file.write(filename, endian=byteorder)
 
 
-def __segy_trace__str__(self, *args, **kwargs):
+def _segy_trace_str_(self, *args, **kwargs):
     """
     Monkey patch for the __str__ method of the Trace object. SEGY object do not
     have network, station, channel codes. It just prints the trace sequence
@@ -752,4 +707,4 @@ if __name__ == '__main__':
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', __segy_trace__str__)
+setattr(Trace, '__str__', _segy_trace_str_)

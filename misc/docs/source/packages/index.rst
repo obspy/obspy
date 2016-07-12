@@ -39,6 +39,7 @@ The functionality is provided through the following packages:
    obspy.io.ascii
    obspy.io.css
    obspy.io.datamark
+   obspy.io.gcf
    obspy.io.gse2
    obspy.io.kinemetrics
    obspy.io.mseed
@@ -79,6 +80,7 @@ The functionality is provided through the following packages:
    obspy.io.css
    obspy.io.kml
    obspy.io.sac.sacpz
+   obspy.io.seiscomp
    obspy.io.shapefile
    obspy.io.stationtxt
    obspy.io.stationxml
@@ -97,4 +99,5 @@ The functionality is provided through the following packages:
    obspy.clients.neic
    obspy.clients.seedlink
    obspy.clients.seishub
+   obspy.clients.syngine
    obspy.db

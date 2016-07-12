@@ -10,11 +10,11 @@ from future.utils import native_str
 import ctypes as C
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 from .helper_classes import SlownessLayer, TimeDist
 
 
-clibtau = _load_CDLL("tau")
+clibtau = _load_cdll("tau")
 
 
 clibtau.tau_branch_calc_time_dist_inner_loop.argtypes = [

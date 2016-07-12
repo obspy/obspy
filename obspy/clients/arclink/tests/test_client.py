@@ -9,7 +9,6 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import io
 import operator
 import unittest
-import warnings
 
 import numpy as np
 
@@ -18,14 +17,13 @@ from obspy.clients.arclink import Client
 from obspy.clients.arclink.client import ArcLinkException
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, NamedTemporaryFile
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 
 
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.clients.arclink.client.Client.
     """
-    def test_getWaveform(self):
+    def test_get_waveform(self):
         """
         Tests get_waveforms method.
         """
@@ -56,7 +54,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'BHE')
 
-    def test_getWaveformNoRouting(self):
+    def test_get_waveform_no_routing(self):
         """
         Tests routing parameter of get_waveforms method.
         """
@@ -81,7 +79,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.location, '')
             self.assertEqual(trace.stats.channel[0:2], 'EH')
 
-    def test_delayedRequest(self):
+    def test_delayed_request(self):
         """
         """
         # initialize client with 0.1 delay
@@ -96,7 +94,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.get_routing('GR', 'FUR', start, end)
         self.assertIn('GR...', results)
 
-    def test_getRouting(self):
+    def test_get_routing(self):
         """
         Tests get_routing method on various ArcLink nodes.
         """
@@ -168,7 +166,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.get_routing('00', '', dt, dt + 1)
         self.assertEqual(results, {})
 
-    def test_getInventory(self):
+    def test_get_inventory(self):
         """
         Tests get_inventory method on various ArcLink nodes.
         """
@@ -232,7 +230,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(channel[2].endtime, UTCDateTime(2011, 1, 15, 9, 56))
         self.assertEqual(channel[2].gain, 588000000.0)
 
-    def test_getInventoryTwice(self):
+    def test_get_inventory_twice(self):
         """
         Requesting inventory data twice should not fail.
         """
@@ -245,7 +243,7 @@ class ClientTestCase(unittest.TestCase):
         client.get_inventory('BW', starttime=dt, endtime=dt + 1)
         client.get_inventory('BW', starttime=dt, endtime=dt + 1)
 
-    def test_getWaveformWithMetadata(self):
+    def test_get_waveform_with_metadata(self):
         """
         """
         # initialize client
@@ -339,7 +337,7 @@ class ClientTestCase(unittest.TestCase):
         results['processing'] = st[0].stats['processing']
         self.assertEqual(st[0].stats, results)
 
-    def test_getNotExistingWaveform(self):
+    def test_get_not_existing_waveform(self):
         """
         """
         # initialize client
@@ -355,7 +353,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MANZ',
                           '', '*', start, end)
 
-    def test_getWaveformWrongPattern(self):
+    def test_get_waveform_wrong_pattern(self):
         """
         """
         # initialize client
@@ -366,7 +364,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_waveforms, 'BW', 'MAN*',
                           '', '*', start, end)
 
-    def test_getNetworks(self):
+    def test_get_networks(self):
         """
         """
         # initialize client
@@ -379,7 +377,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(result['BW']['code'], 'BW')
         self.assertEqual(result['BW']['description'], 'BayernNetz')
 
-    def test_getStations(self):
+    def test_get_stations(self):
         """
         """
         # initialize client
@@ -398,13 +396,13 @@ class ClientTestCase(unittest.TestCase):
                         'country': ' BW-Net', 'latitude': 47.744171,
                         'end': None}) in result)
 
-    def test_saveWaveform(self):
+    def test_save_waveform(self):
         """
         Default behavior is requesting data compressed and unpack on the fly.
         """
         # initialize client
-        client = Client("erde.geophysik.uni-muenchen.de", 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host="erde.geophysik.uni-muenchen.de", port=18001)
         start = UTCDateTime(2008, 1, 1)
         end = start + 10
         # MiniSEED
@@ -440,7 +438,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'EHZ')
 
-    def test_getWaveformNoCompression(self):
+    def test_get_waveform_no_compression(self):
         """
         Disabling compression during waveform request.
         """
@@ -455,7 +453,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(trace.stats.network, 'BW')
             self.assertEqual(trace.stats.station, 'MANZ')
 
-    def test_saveWaveformNoCompression(self):
+    def test_save_waveform_no_compression(self):
         """
         Explicitly disable compression during waveform request and save it
         directly to disk.
@@ -493,7 +491,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'BHZ')
 
-    def test_saveWaveformCompressed(self):
+    def test_save_waveform_compressed(self):
         """
         Tests saving compressed and not unpacked bzip2 files to disk.
         """
@@ -522,7 +520,7 @@ class ClientTestCase(unittest.TestCase):
             # importing via read should work too
             read(fseedfile)
 
-    def test_getPAZ(self):
+    def test_get_paz(self):
         """
         Test for the Client.get_paz function.
 
@@ -537,8 +535,8 @@ class ClientTestCase(unittest.TestCase):
         normalization_factor = 6.0077e+07
         sensitivity = 2.5168e+09
         # initialize client
-        client = Client('erde.geophysik.uni-muenchen.de', 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host='erde.geophysik.uni-muenchen.de', port=18001)
         # fetch poles and zeros
         dt = UTCDateTime(2009, 1, 1)
         paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
@@ -551,21 +549,21 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.get_paz, 'BW', 'MANZ', '',
                           'EH*', dt)
 
-    def test_getPAZ2(self):
+    def test_get_paz2(self):
         """
         Test for the Client.get_paz function for
         erde.geophysik.uni-muenchen.de.
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         dt = UTCDateTime(2009, 1, 1)
-        client = Client("erde.geophysik.uni-muenchen.de", 18001,
-                        user='test@obspy.org')
+        client = Client('test@obspy.org',
+                        host='erde.geophysik.uni-muenchen.de', port=18001)
         # fetch poles and zeros
         paz = client.get_paz('BW', 'MANZ', '', 'EHZ', dt)
         self.assertEqual(len(poles), 2)
         self.assertEqual(poles, paz['poles'][:2])
 
-    def test_saveResponse(self):
+    def test_save_response(self):
         """
         Fetches and stores response information as Dataless SEED volume.
         """
@@ -575,7 +573,7 @@ class ClientTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             # Dataless SEED
-            client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            client.save_response(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             with open(tempfile, 'rb') as fp:
                 self.assertEqual(fp.read(8), b"000001V ")
 
@@ -585,11 +583,11 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         # Dataless SEED
-        client.saveResponse(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
+        client.save_response(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
         file_object.seek(0, 0)
         self.assertEqual(file_object.read(8), b"000001V ")
 
-    def test_SRL(self):
+    def test_srl(self):
         """
         Tests if example in ObsPy paper submitted to the Electronic
         Seismologist section of SRL is still working. The test shouldn't be
@@ -606,7 +604,7 @@ class ClientTestCase(unittest.TestCase):
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
         # Retrieve data via ArcLink
-        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
+        client = Client('test@obspy.org', host='webdc.eu', port=18001)
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.get_waveforms("BW", "RJOB", "", "EHZ", t, t + 30)
         # original but deprecated call
@@ -626,11 +624,11 @@ class ClientTestCase(unittest.TestCase):
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 
-    def test_issue311(self):
+    def test_issue_311(self):
         """
         Testing issue #311.
         """
-        client = Client("webdc.eu", 18001, user='test@obspy.org')
+        client = Client('test@obspy.org', host='webdc.eu', port=18001)
         t = UTCDateTime("2009-08-20 04:03:12")
         # 1
         st = client.get_waveforms("BW", "MANZ", "", "EH*", t - 3, t + 15,
@@ -645,7 +643,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('paz', st[0].stats)
         self.assertIn('coordinates', st[0].stats)
 
-    def test_issue372(self):
+    def test_issue_372(self):
         """
         Test case for issue #372.
         """
@@ -660,7 +658,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertIn('zeros', tr.stats.paz)
             self.assertIn('latitude', tr.stats.coordinates)
 
-    def test_getInventoryInstrumentChange(self):
+    def test_get_inventory_instrument_change(self):
         """
         Check results of get_inventory if instrumentation has been changed.
 
@@ -683,7 +681,7 @@ class ClientTestCase(unittest.TestCase):
                                    instruments=True, route=False)
         self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
 
-    def test_getWaveformInstrumentChange(self):
+    def test_get_waveform_instrument_change(self):
         """
         Check results of get_waveforms if instrumentation has been changed.
 
@@ -712,15 +710,6 @@ class ClientTestCase(unittest.TestCase):
                                   metadata=True)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.paz.sensitivity, 588000000.0)
-
-    def test_init(self):
-        """
-        Testing client initialization.
-        """
-        # user is a required keyword - raises now a deprecation warning
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter('error', ObsPyDeprecationWarning)
-            self.assertRaises(ObsPyDeprecationWarning, Client)
 
 
 def suite():

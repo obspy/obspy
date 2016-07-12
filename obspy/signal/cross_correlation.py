@@ -14,7 +14,7 @@ Signal processing routines based on cross correlation techniques.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -117,7 +117,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         return shift.value, coe_p.value
 
 
-def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
+def xcorr_3c(st1, st2, shift_len, components=["Z", "N", "E"],
              full_xcorr=False, abs_max=True):
     """
     Calculates the cross correlation on each of the specified components
@@ -431,7 +431,7 @@ def xcorr_pick_correction(pick1, trace1, pick2, trace2, t_before, t_after,
     return (pick2_corr, coeff)
 
 
-def templatesMaxSimilarity(st, time, streams_templates):
+def templates_max_similarity(st, time, streams_templates):
     """
     Compares all event templates in the streams_templates list of streams
     against the given stream around the time of the suspected event. The stream
@@ -445,7 +445,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     compared. Also see :func:`obspy.signal.trigger.coincidence_trigger` and the
     corresponding example in the
     `Trigger/Picker Tutorial
-    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+    <https://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     - computes cross correlation on each component (one stream serves as
       template, one as a longer search stream)
@@ -461,7 +461,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print(templatesMaxSimilarity(st, t, [templ]))
+    >>> print(templates_max_similarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross

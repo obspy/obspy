@@ -11,13 +11,13 @@ import ctypes as C
 
 import numpy as np
 
-from obspy.core.util.libnames import _load_CDLL
+from obspy.core.util.libnames import _load_cdll
 
 
 # Import shared libsignal
-clibsignal = _load_CDLL("signal")
+clibsignal = _load_cdll("signal")
 # Import shared libevresp
-clibevresp = _load_CDLL("evresp")
+clibevresp = _load_cdll("evresp")
 
 clibsignal.calcSteer.argtypes = [
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
@@ -158,7 +158,7 @@ CHALEN = 64
 LOCIDLEN = 64
 
 
-class C_COMPLEX(C.Structure):
+class C_COMPLEX(C.Structure):  # noqa
     _fields_ = [("real", C.c_double),
                 ("imag", C.c_double)]
 

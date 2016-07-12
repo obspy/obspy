@@ -60,7 +60,6 @@ void tau_branch_calc_time_dist_inner_loop(
     double max_ray_param, int allow_turn) {
 
     int i, j;
-    int m;
     double p, time_sum, dist_sum;
 
     for (i=0; i < max_i; i++) {

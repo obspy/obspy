@@ -3,25 +3,25 @@
 obspy.clients.iris - IRIS Web service client for ObsPy
 ======================================================
 The obspy.clients.iris package contains a client for the DMC Web services
-provided by IRIS (http://service.iris.edu/irisws/).
+provided by IRIS (https://service.iris.edu/irisws/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Web service Interfaces
 ----------------------
 
 Each of the following methods directly wrap a single Web service provided by
-IRIS (http://service.iris.edu/irisws/):
+IRIS (https://service.iris.edu/irisws/):
 
 **Request Tools**
 
 * :meth:`~obspy.clients.iris.client.Client.evalresp()` - evaluates instrument
   response information stored at the IRIS DMC and outputs ASCII data or
-  `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+  `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 * :meth:`~obspy.clients.iris.client.Client.resp()` - provides access to channel
   response information in the SEED RESP format (as used by evalresp)
 * :meth:`~obspy.clients.iris.client.Client.sacpz()` - provides access to

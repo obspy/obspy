@@ -214,7 +214,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests resp Web service interface.
 
-        Examples are inspired by http://www.iris.edu/ws/resp/.
+        Examples are inspired by https://service.iris.edu/irisws/resp/1/.
         """
         client = Client()
         # 1
@@ -239,7 +239,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests timeseries Web service interface.
 
-        Examples are inspired by http://www.iris.edu/ws/timeseries/.
+        Examples are inspired by https://service.iris.edu/irisws/timeseries/1/.
         """
         client = Client()
         # 1

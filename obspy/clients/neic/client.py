@@ -6,7 +6,7 @@ NEIC CWB Query service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org) & David Ketchum
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -18,7 +18,6 @@ from time import sleep
 
 from obspy import Stream, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated
 from .util import ascdate, asctime
 
 
@@ -67,11 +66,6 @@ class Client(object):
         self.port = port
         self.timeout = timeout
         self.debug = debug
-
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
@@ -130,11 +124,6 @@ class Client(object):
         seedname = seedname.replace("?", ".")
         return self.get_waveforms_nscl(seedname, starttime,
                                        endtime - starttime)
-
-    @deprecated("'getWaveformNSCL' has been renamed to 'get_waveforms_nscl'. "
-                "Use that instead.")
-    def getWaveformNSCL(self, *args, **kwargs):
-        return self.get_waveforms_nscl(*args, **kwargs)
 
     def get_waveforms_nscl(self, seedname, starttime, duration):
         """

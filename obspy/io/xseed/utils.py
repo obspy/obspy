@@ -6,7 +6,7 @@ Various additional utilities for ObsPy xseed.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -65,7 +65,7 @@ def datetime_2_string(dt, compact=False):
         raise Exception("Invalid datetime %s: %s" % (type(dt), str(dt)))
 
 
-def compare_SEED(seed1, seed2):
+def compare_seed(seed1, seed2):
     """
     Compares two SEED files.
 
@@ -148,7 +148,7 @@ def lookup_code(blockettes, blkt_number, field_name, lookup_code,
     return None
 
 
-def format_RESP(number, digits=4):
+def format_resp(number, digits=4):
     """
     Formats a number according to the RESP format.
     """
@@ -222,7 +222,7 @@ def unique_list(seq):
     return list(keys.keys())
 
 
-def is_RESP(filename):
+def is_resp(filename):
     """
     Check if a file at the specified location appears to be a RESP file.
 

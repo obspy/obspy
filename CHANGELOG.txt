@@ -1,5 +1,118 @@
 master:
  - General:
+   * Read support for Guralp Compressed Format (GCF) waveform data,
+     obspy.io.gcf (see #1449)
+ - obspy.core:
+   * Stream/Trace.write() can now autodetect file format from file extension.
+   * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
+     get matplotlib datetime float representation (which can be used in
+     time-based matplotlib axes, e.g. by Stream.plot()).
+   * Trace.times() has new options `type` and `reftime` to support fetching an
+     array of sampletimes in various different timing varieties ("relative":
+     the old default, float relative to trace starttime or `reftime` in
+     seconds; "utcdatetime": absolute times as UTCDateTime objects;
+     "timestamp": array of float POSIX timestamps, compare
+     `UTCDateTime.timestamp`; "matplotlib": array of float matplotlib dates,
+     useful for plotting on matplotlib time axes; see #1307)
+   * A trace's stats.network/station/location/channel can now also be set in
+     one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
+     see #1439).
+ - obspy.clients.fdsn:
+   * The mass downloader now has `exclude_networks` and `exclude_stations`
+     arguments to not download certain pieces of data. (see #1305)
+   * The mass downloader can now download stations that are part of a given
+     inventory object.
+ - obspy.imaging.cm
+   * new colormap: viridis_white. This is a modification of viridis that
+     goes to white instead of yellow but remains perceptually uniform. It
+     is especially useful for printing when an image should merge with the
+     white background.
+ - obspy.imaging.waveform
+   * Support for filling the wiggles when plotting sections (horizontal and
+     vertical, see #1445).
+ - obspy.io.css
+    * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.quakeml
+    * Read and write support for nested custom tags (see #1463)
+ - obspy.io.segy:
+    * Iterative reading of large SEG-Y and SU files with
+      `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
+      (see #1400).
+ - obspy.scripts:
+   * obspy-scan command line script now also plots and prints overlaps
+     alongside gaps (see #1366)
+
+1.0.2: (doi: 10.5281/zenodo.49636)
+ - obspy.core:
+   * Added workaround for numpy issue where many FFTs of various lengths fill
+     a cache that never gets cleared, effectively creating a memory leak
+     (see #1424).
+ - obspy.clients.fdsn:
+   * Fixing issue with location codes potentially resulting in unwanted data
+     to be requested. (see #1422)
+ - obspy.db:
+   * Fixed a bug in obspy-indexer command line script (see #1369,
+     command line script was not working, probably since 0.10.0)
+ - obspy.io.ascii:
+   * Fixed a bug that lead to wrong header information in output files when
+     writing non-integer sampling rate data to SLIST or TSPAIR formats
+     (see #1447)
+ - obspy.io.mseed:
+   * Fixed a bug in obspy-mseed-recordanalyzer (see #1386)
+ - obspy.io.nlloc:
+   * Use geographic coordinates from the NonLinLoc Hypocenter-Phase file if
+     no custom coordinate converter is provided.
+ - obspy.io.sac:
+   * Try to set SAC distances (dist, az, baz, gcarc) on read, if "lcalda" is
+     true.  If "dist" header is found, distances aren't calculated.
+ - obspy.signal:
+   * PPSD.plot(): fix plotting of percentiles, mode and mean and setting
+     period limits when using "xaxis_frequency=True" (see #1406, #1416)
+
+1.0.1: (doi: 10.5281/zenodo.48254)
+ - General:
+   * Some methods might have unnecessarily upcasted float32 arrays to float64.
+     Now methods for which it makes sense and which don't lose accuracy don't
+     upcast float32 arrays. Integers are still upcasted. Trace.resample() will
+     also no longer return the original dtype which might have resulted in a
+     large loss of accuracy but it now always returns float64 arrays.
+     (see #1302)
+ - obspy.core:
+   * Trace.normalize() does no longer divide by zero in case an all-zeros
+     data trace is being used. (see #1343)
+   * Inventory.select() and consorts now behave as expected even with empty
+     child elements. (see #1126, #1348)
+   * Code formatting is no longer checked for clean release versions. Thus
+     updates to the linters no longer break the tests for releases.
+     (see #1312)
+   * remove_response(..., pre_file=None, plot=True) works again. (see #1320)
+ - obspy.clients.arclink:
+   * Restored ArcLink encryption support. (see #1352, #1347)
+ - obspy.clients.fdsn:
+   * Local URLs are now recognized as valid URLs. (see #1309)
+   * Some bug fixes for the mass downloader. (see #1293, #1304)
+   * The NOA node has been added to the list of known nodes.
+     (see 2347a25714bc3e16068031f4b6138fafd627d34e)
+ - obspy.io.sac:
+   * More automatic merging of SAC and ObsPy headers. The new `obspy.io.sac`
+     modules thus behaves more like the old one and more in line with
+     expectations of users. (see #1285)
+   * No more out of bounds errors when assigning coordinates. (see #1300)
+   * The evdp header can be set again. (see #1345)
+   * Correctly propagating sampling rate changes to the SAC headers.
+     (see #1317)
+   * Always set nvhdr, leven, lovrok, iftype to ensure valid SAC files.
+     (see #1204)
+ - obspy.io.xseed:
+   * The Parser.get_paz() method now works with multiple blockette 53s.
+     (see #1281)
+ - obspy.taup
+   * Fixed wrong azimuth direction for paths > 180 degrees distance (see #1289)
+   * Azimuth is appended to arrivals as well (see #1289)
+   * Fixed issue with taup cache function on Python 2.7. (see #1308)
+
+1.0.0: (doi: 10.5281/zenodo.46151)
+ - General:
    * Requirements have been increased to reflect latest distributions:
      * Removed support for Python 2.6.
      * Added support for Python 3.5.
@@ -18,9 +131,12 @@ master:
    * Support for additional event data formats:
      - CMTSOLUTION files used by many waveform solvers.
      - ESRI shapefile write support, useful in GIS applications (see #1066)
+     - Google Earth KML output.
    * Support for additional station data format:
      - The FDSN web service station text format can now be read.
      - Read support for the NIED's moment tensor TEXT format (see #1125)
+     - Google Earth KML output.
+     - Read support for SeisComP3 inventory files.
  - obspy.core:
    * New method for generating sliding windows from Stream/Trace windows.
      (see #860)
@@ -29,6 +145,11 @@ master:
    * Trace.remove_response() now has `plot` option to show/output a plot of all
      individual steps of instrument response removal in frequency domain
      (see #1116).
+   * New method Stream/Trace.remove_sensitivity() to remove instrument
+     sensitivity
+   * Fix incorrect parsing of some non-ISO8601 date/time strings. (see #1215)
+   * Added plotting method to Event (customizable subplots from a selection
+     of map, beachball and farfield radiation plots, see #1192)
  - obspy.clients.fdsn:
    * Replace FDSN webservice shortcut `NERIES` with `EMSC` and deprecate the
      `NERIES` shortcut, will be removed in a future release (see #1146).
@@ -37,6 +158,8 @@ master:
      format. This has limited information but is much faster.
    * New mass downloader to assist in downloading data across a large number
      of FDSN web services.
+   * Catch invalid URLs when initialising Client and avoid confusing error
+     messages (see #1162)
  - obspy.clients.filesystem.sds:
    * New client to read data from local SDS directory structure (see #1135).
    * Command line script `obspy-sds-report` to generate html page with
@@ -45,16 +168,23 @@ master:
  - obspy.clients.neries:
    * Removed the dedicated client. Data can still be accessed by using the FDSN
      client.
+ - obspy.clients.syngine:
+   * New client for the IRIS Syngine service to retrieve custom synthetic
+     seismograms.
  - obspy.imaging:
    * Experimental support for Cartopy when plotting maps. Use the `method`
      argument to functions that plot maps to select between Basemap or Cartopy.
    * New default colormap for all plots. A backport of the new viridis colormap
      from matplotlib is available for those using older matplotlib releases.
+   * Added plotting routines for farfield radiation patterns of moment tensors
  - obspy.io.kml:
    * New module for Google KML output of Inventory and Catalog objects
      (e.g. for use in Google Earth)
  - obspy.io.mseed:
    * Upgrade to libmseed 2.16
+ - obspy.io.seiscomp.sc3ml:
+   * New module reading SeisComP3 inventory files to ObsPy inventory objects
+     (see #1182).
  - obspy.io.shapefile:
    * New module for ESRI shapefile write support (see #1066)
  - obspy.io.stationtxt:
@@ -130,8 +260,10 @@ master:
      surface waves (see #986.)
    * Fix incorrect branch splitting which also caused issues for extremely
      shallow phases (see #1057.)
+   * Proper cache for model splits resulting in much faster calculations if
+     the source depth is repeatedly the same (see #1248).
 
-0.10.x:
+0.10.3: (doi: 10.5281/zenodo.46150)
   - obspy.core:
     * Fix reading of multiple catalog files using globs (see #1065).
     * Fixed a bug when using
@@ -145,10 +277,10 @@ master:
       initializing with floating point seconds, i.e. with microseconds,
       that could lead to microseconds being off by 1 microsecond
       (see #1096)
-    * Correct gap/overlap time returned by Stream.getGaps() and printed
-      by Stream.printGaps() which was incorrect by one time the sampling
+    * Correct gap/overlap time returned by Stream.get_gaps() and printed
+      by Stream.print_gaps() which was incorrect by one time the sampling
       interval (see #1151)
-    * Stream.getGaps(): return overlaps specified in units of samples
+    * Stream.get_gaps(): return overlaps specified in units of samples
       as negative integers (see #1151)
   - obspy.fdsn:
     * More detailed error messages on failing requests (see #1079)
@@ -163,7 +295,7 @@ master:
       (see #1102).
     * Updated to libmseed 2.17.
   - obspy.signal:
-    * Bug fixed within rotate.rotate2ZNE(). Additionally it can now also
+    * Bug fixed within rotate.rotate2zne(). Additionally it can now also
       perform the inverse rotation (see #1061).
     * Bug fixed in triggering. When using option `max_len_delete` and a trigger
       occurred right before the end of data, one trigger was potentially lost
@@ -360,7 +492,7 @@ master:
    * write support for SACPZ ASCII representation of channel responses.
  - obspy.taup:
    * Replaced Fortran implementation with much more powerful Python port of
-	 Java TauP. This enabled us to drop all Fortran code, which simplifies
+     Java TauP. This enabled us to drop all Fortran code, which simplifies
      releases and builds tremendously.
  - obspy.xseed:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899
@@ -540,7 +672,7 @@ master:
      most operating systems
  - obspy.fdsn:
    * new client module to access servers based on the FDSN web service
-     definition (http://www.fdsn.org/webservices/)
+     definition (https://www.fdsn.org/webservices/)
  - obspy.gse2:
    * read/write STA2 header line which is officially mandatory but in
      pratice often not used

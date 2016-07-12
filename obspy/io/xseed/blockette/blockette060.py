@@ -68,7 +68,7 @@ class Blockette060(Blockette):
         ]),
     ]
 
-    def parse_SEED(self, data, length=0, *args, **kwargs):  # @UnusedVariable
+    def parse_seed(self, data, length=0, *args, **kwargs):  # @UnusedVariable
         """
         Read Blockette 60.
         """
@@ -93,7 +93,7 @@ class Blockette060(Blockette):
                 self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
 
-    def get_SEED(self, *args, **kwargs):  # @UnusedVariable
+    def get_seed(self, *args, **kwargs):  # @UnusedVariable
         """
         Writes Blockette 60.
         """
@@ -116,7 +116,7 @@ class Blockette060(Blockette):
         data = header + data
         return data
 
-    def get_XML(self, xseed_version, *args, **kwargs):  # @UnusedVariable
+    def get_xml(self, xseed_version, *args, **kwargs):  # @UnusedVariable
         """
         Write XML.
         """
@@ -140,7 +140,7 @@ class Blockette060(Blockette):
                     set_xpath('dictionary', self.stages[_i][_j])
         return node
 
-    def parse_XML(self, xml_doc,
+    def parse_xml(self, xml_doc,
                   version='1.0', *args, **kwargs):  # @UnusedVariable
         """
         Read XML of blockette 60.
@@ -159,7 +159,7 @@ class Blockette060(Blockette):
                 else:
                     self.stages[-1].append(get_xpath(inner_child.text))
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -191,7 +191,7 @@ class Blockette060(Blockette):
                             blockette.response_lookup_key == response_key:
                         try:
                             string += \
-                                blockette.get_RESP(station, channel,
+                                blockette.get_resp(station, channel,
                                                    abbreviations)
                             found_abbrev = True
                         except AttributeError:

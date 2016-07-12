@@ -10,29 +10,29 @@ see [McNamara2004]_.
 
 .. doctest::
 
-    >>> from obspy.core import read
-    >>> from obspy.xseed import Parser
+    >>> from obspy import read
+    >>> from obspy.io.xseed import Parser
     >>> from obspy.signal import PPSD
 
 Read data and select a trace with the desired station/channel combination:
 
 .. doctest::
 
-    >>> st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
+    >>> st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.037")
     >>> tr = st.select(id="BW.KW1..EHZ")[0]
 
 Metadata can be provided as an
 :class:`~obspy.core.inventory.inventory.Inventory` (e.g. from a StationXML file
-or from a request to a FDSN web service), a :class:`~obspy.io.xseed.Parser`
-(e.g. from a dataless SEED file), a filename of a local RESP file (or a legacy
-poles and zeros dictionary). Then we initialize a new
-:class:`~obspy.signal.spectral_estimation.PPSD` instance. The ppsd object will
-then make sure that only appropriate data go into the probabilistic psd
-statistics.
+or from a request to a FDSN web service), a
+:class:`~obspy.io.xseed.parser.Parser` (e.g. from a dataless SEED file), a
+filename of a local RESP file (or a legacy poles and zeros dictionary). Then we
+initialize a new :class:`~obspy.signal.spectral_estimation.PPSD` instance. The
+ppsd object will then make sure that only appropriate data go into the
+probabilistic psd statistics.
 
 .. doctest::
 
-    >>> parser = Parser("http://examples.obspy.org/dataless.seed.BW_KW1")
+    >>> parser = Parser("https://examples.obspy.org/dataless.seed.BW_KW1")
     >>> ppsd = PPSD(tr.stats, metadata=parser)
 
 Now we can add data (either trace or stream objects) to the ppsd estimate. This
@@ -69,7 +69,7 @@ Additional information from other files/sources can be added step by step.
 
 .. doctest::
 
-    >>> st = read("http://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
+    >>> st = read("https://examples.obspy.org/BW.KW1..EHZ.D.2011.038")
     >>> ppsd.add(st)
     True
         

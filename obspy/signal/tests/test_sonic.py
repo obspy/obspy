@@ -22,7 +22,7 @@ class SonicTestCase(unittest.TestCase):
     Test fk analysis, main function is sonic() in array_analysis.py
     """
 
-    def arrayProcessing(self, prewhiten, method):
+    def array_processing(self, prewhiten, method):
         np.random.seed(2348)
 
         geometry = np.array([[0.0, 0.0, 0.0],
@@ -95,8 +95,8 @@ class SonicTestCase(unittest.TestCase):
             print('\n', out[:, 1:])
         return out
 
-    def test_sonicBf(self):
-        out = self.arrayProcessing(prewhiten=0, method=0)
+    def test_sonic_bf(self):
+        out = self.array_processing(prewhiten=0, method=0)
         raw = """
 9.68742255e-01 1.95739086e-05 1.84349488e+01 1.26491106e+00
 9.60822403e-01 1.70468277e-05 1.84349488e+01 1.26491106e+00
@@ -108,8 +108,8 @@ class SonicTestCase(unittest.TestCase):
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
 
-    def test_sonicBfPrew(self):
-        out = self.arrayProcessing(prewhiten=1, method=0)
+    def test_sonic_bf_prew(self):
+        out = self.array_processing(prewhiten=1, method=0)
         raw = """
 1.40997967e-01 1.95739086e-05 1.84349488e+01 1.26491106e+00
 1.28566503e-01 1.70468277e-05 1.84349488e+01 1.26491106e+00
@@ -121,8 +121,8 @@ class SonicTestCase(unittest.TestCase):
         ref = np.loadtxt(io.StringIO(raw), dtype=np.float32)
         self.assertTrue(np.allclose(ref, out[:, 1:]))
 
-    def test_sonicCapon(self):
-        out = self.arrayProcessing(prewhiten=0, method=1)
+    def test_sonic_capon(self):
+        out = self.array_processing(prewhiten=0, method=1)
         raw = """
 9.06938200e-01 9.06938200e-01  1.49314172e+01  1.55241747e+00
 8.90494375e+02 8.90494375e+02 -9.46232221e+00  1.21655251e+00
@@ -135,8 +135,8 @@ class SonicTestCase(unittest.TestCase):
         # XXX relative tolerance should be lower!
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
 
-    def test_sonicCaponPrew(self):
-        out = self.arrayProcessing(prewhiten=1, method=1)
+    def test_sonic_capon_prew(self):
+        out = self.array_processing(prewhiten=1, method=1)
         raw = """
 1.30482688e-01 9.06938200e-01  1.49314172e+01  1.55241747e+00
 8.93029978e-03 8.90494375e+02 -9.46232221e+00  1.21655251e+00
@@ -149,7 +149,7 @@ class SonicTestCase(unittest.TestCase):
         # XXX relative tolerance should be lower!
         self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
 
-    def test_getSpoint(self):
+    def test_get_spoint(self):
         stime = UTCDateTime(1970, 1, 1, 0, 0)
         etime = UTCDateTime(1970, 1, 1, 0, 0) + 10
         data = np.empty(20)

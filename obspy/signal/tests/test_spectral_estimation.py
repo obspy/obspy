@@ -22,14 +22,13 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
-from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window)
+from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def __get_sample_data():
+def _internal_get_sample_data():
     """
     Returns some real data (trace and poles and zeroes) for PPSD testing.
 
@@ -67,7 +66,7 @@ def __get_sample_data():
     return tr, paz
 
 
-_sample_data = __get_sample_data()
+_sample_data = _internal_get_sample_data()
 
 
 def _get_sample_data():
@@ -75,7 +74,7 @@ def _get_sample_data():
     return tr.copy(), deepcopy(paz)
 
 
-def __get_ppsd():
+def _internal_get_ppsd():
     """
     Returns ready computed ppsd for testing purposes.
     """
@@ -87,7 +86,7 @@ def __get_ppsd():
     return ppsd
 
 
-_ppsd = __get_ppsd()
+_ppsd = _internal_get_ppsd()
 
 
 def _get_ppsd():
@@ -118,9 +117,10 @@ class PsdTestCase(unittest.TestCase):
         point longer. I dont know were this can come from, for now this last
         sample in the psd is ignored.
         """
-        SAMPLING_RATE = 100.0
-        NFFT = 512
-        NOVERLAP = 0
+        from matplotlib.mlab import psd
+        sampling_rate = 100.0
+        nfft = 512
+        noverlap = 0
         file_noise = os.path.join(self.path, "pitsa_noise.npy")
         fn_psd_pitsa = "pitsa_noise_psd_samprate_100_nfft_512_noverlap_0.npy"
         file_psd_pitsa = os.path.join(self.path, fn_psd_pitsa)
@@ -128,13 +128,9 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
-                               window=welch_taper, noverlap=NOVERLAP)
-            self.assertEqual(len(w), 1)
-            self.assertTrue('This wrapper is no longer necessary.' in
-                            str(w[0].message))
+        psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
+                           window=welch_taper, noverlap=noverlap,
+                           sides="onesided", scale_by_freq=True)
 
         psd_pitsa = np.load(file_psd_pitsa)
 
@@ -166,7 +162,7 @@ class PsdTestCase(unittest.TestCase):
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
-    def test_PPSD(self):
+    def test_ppsd(self):
         """
         Test PPSD routine with some real data.
         """
@@ -184,7 +180,7 @@ class PsdTestCase(unittest.TestCase):
         ppsd = _get_ppsd()
         # read results and compare
         result_hist = np.load(file_histogram)
-        self.assertEqual(len(ppsd.times), 4)
+        self.assertEqual(len(ppsd.times_processed), 4)
         self.assertEqual(ppsd.nfft, 65536)
         self.assertEqual(ppsd.nlap, 49152)
         np.testing.assert_array_equal(ppsd.current_histogram, result_hist)
@@ -216,23 +212,23 @@ class PsdTestCase(unittest.TestCase):
             ppsd.save_npz(filename)
             ppsd_loaded = PPSD.load_npz(filename)
             ppsd_loaded.calculate_histogram()
-            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(len(ppsd_loaded.times_processed), 4)
             self.assertEqual(ppsd_loaded.nfft, 65536)
             self.assertEqual(ppsd_loaded.nlap, 49152)
             np.testing.assert_array_equal(ppsd_loaded.current_histogram,
                                           result_hist)
-            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+            np.testing.assert_array_equal(ppsd_loaded.db_bin_edges,
                                           binning['spec_bins'])
-            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+            np.testing.assert_array_equal(ppsd_loaded.period_bin_centers,
                                           binning['period_bins'])
 
-    def test_PPSD_w_IRIS(self):
+    def test_ppsd_w_iris(self):
         # Bands to be used this is the upper and lower frequency band pairs
         fres = zip([0.1, 0.05], [0.2, 0.1])
 
-        file_dataANMO = os.path.join(self.path, 'IUANMO.seed')
+        file_data_anmo = os.path.join(self.path, 'IUANMO.seed')
         # Read in ANMO data for one day
-        st = read(file_dataANMO)
+        st = read(file_data_anmo)
 
         # Use a canned ANMO response which will stay static
         paz = {'gain': 86298.5, 'zeros': [0, 0],
@@ -252,9 +248,9 @@ class PsdTestCase(unittest.TestCase):
         perinv = 1 / per
 
         # Read in the results obtained from a Mustang flat file
-        file_dataIRIS = os.path.join(self.path, 'IRISpdfExample')
+        file_data_iris = os.path.join(self.path, 'IRISpdfExample')
         data = np.genfromtxt(
-            file_dataIRIS, comments='#', delimiter=',',
+            file_data_iris, comments='#', delimiter=',',
             dtype=[(native_str("freq"), np.float64),
                    (native_str("power"), np.int32),
                    (native_str("hits"), np.int32)])
@@ -273,13 +269,11 @@ class PsdTestCase(unittest.TestCase):
 
         # For each frequency pair we want to compare the mean of the bands
         for fre in fres:
-            pervalGoodOBSPY = []
-
             # determine which bins we want to compare
             mask = (fre[0] < perinv) & (perinv < fre[1])
 
             # Get the values for the bands from the PPSD
-            pervalGoodOBSPY = perval[mask]
+            per_val_good_obspy = perval[mask]
 
             percenlist = []
             # Now we sort out all of the data from the IRIS flat file
@@ -290,10 +284,10 @@ class PsdTestCase(unittest.TestCase):
                 tempvalslist = np.repeat(power[mask_], hits[mask_])
                 percenlist.append(np.percentile(tempvalslist, 50))
             # Here is the actual test
-            np.testing.assert_allclose(np.mean(pervalGoodOBSPY),
+            np.testing.assert_allclose(np.mean(per_val_good_obspy),
                                        np.mean(percenlist), rtol=0.0, atol=1.2)
 
-    def test_PPSD_w_IRIS_against_obspy_results(self):
+    def test_ppsd_w_iris_against_obspy_results(self):
         """
         Test against results obtained after merging of #1108.
         """
@@ -335,11 +329,7 @@ class PsdTestCase(unittest.TestCase):
                 continue
             self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
-        # (also test various means of initialization, basically testing the
-        #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            ppsd = PPSD(st[0].stats, paz=metadata)
-            ppsd = PPSD(st[0].stats, parser=metadata)
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:
@@ -360,7 +350,7 @@ class PsdTestCase(unittest.TestCase):
                 self.assertEqual(getattr(ppsd, key),
                                  getattr(results_full, key))
 
-    def test_PPSD_save_and_load_npz(self):
+    def test_ppsd_save_and_load_npz(self):
         """
         Test PPSD.load_npz() and PPSD.save_npz()
         """
@@ -382,7 +372,7 @@ class PsdTestCase(unittest.TestCase):
             else:
                 self.assertEqual(getattr(ppsd, key), getattr(ppsd_loaded, key))
 
-    def test_PPSD_restricted_stacks(self):
+    def test_ppsd_restricted_stacks(self):
         """
         Test PPSD.calculate_histogram() with restrictions to what data should
         be stacked. Also includes image tests.
@@ -437,15 +427,20 @@ class PsdTestCase(unittest.TestCase):
                            period_lim=(0.01, 50))
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png') as ic:
+                             'ppsd_restricted_stack.png', reltol=1.5) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
             # OK) test by changing the left x limit a bit further out (by two
             # days, axis is in mpl days). See e.g.
-            # http://tests.obspy.org/30657/#1
+            # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            finally:
+                np.seterr(**_t)
 
         # test it again, checking that updating an existing plot with different
         # stack selection works..
@@ -453,27 +448,41 @@ class PsdTestCase(unittest.TestCase):
         #     matches (like above):
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png') as ic:
+                             'ppsd_restricted_stack.png', reltol=1.5,
+                             plt_close_all_exit=False) as ic:
             fig = ppsd.plot(show=False, **plot_kwargs)
             # some matplotlib/Python version combinations lack the left-most
             # tick/label "Jan 2015". Try to circumvent and get the (otherwise
             # OK) test by changing the left x limit a bit further out (by two
             # days, axis is in mpl days). See e.g.
-            # http://tests.obspy.org/30657/#1
+            # https://tests.obspy.org/30657/#1
             fig.axes[1].set_xlim(left=fig.axes[1].get_xlim()[0] - 2)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            finally:
+                np.seterr(**_t)
         #  b) now reuse figure and set the histogram with a different stack,
         #     image test should fail:
         ppsd.calculate_histogram(**stack_criteria_list[3])
         try:
             with ImageComparison(self.path_images,
-                                 'ppsd_restricted_stack.png') as ic:
+                                 'ppsd_restricted_stack.png',
+                                 adjust_tolerance=False,
+                                 plt_close_all_enter=False,
+                                 plt_close_all_exit=False) as ic:
                 # rms of the valid comparison above is ~31,
                 # rms of the invalid comparison we test here is ~36
                 if MATPLOTLIB_VERSION == [1, 1, 1]:
                     ic.tol = 33
                 ppsd._plot_histogram(fig=fig, draw=True)
-                fig.savefig(ic.name)
+                _t = np.geterr()
+                np.seterr(under="ignore")
+                try:
+                    fig.savefig(ic.name)
+                except:
+                    np.seterr(**_t)
         except ImageComparisonException:
             pass
         else:
@@ -483,11 +492,17 @@ class PsdTestCase(unittest.TestCase):
         #     image test should pass agin:
         ppsd.calculate_histogram(**stack_criteria_list[1])
         with ImageComparison(self.path_images,
-                             'ppsd_restricted_stack.png') as ic:
+                             'ppsd_restricted_stack.png', reltol=1.5,
+                             plt_close_all_enter=False) as ic:
             ppsd._plot_histogram(fig=fig, draw=True)
-            fig.savefig(ic.name)
+            _t = np.geterr()
+            np.seterr(under="ignore")
+            try:
+                fig.savefig(ic.name)
+            except:
+                np.seterr(**_t)
 
-    def test_PPSD_add_npz(self):
+    def test_ppsd_add_npz(self):
         """
         Test PPSD.add_npz().
         """
@@ -537,6 +552,28 @@ class PsdTestCase(unittest.TestCase):
             np.testing.assert_array_equal(_binned_psds, ppsd._binned_psds)
             np.testing.assert_array_equal(_times_processed,
                                           ppsd._times_processed)
+
+    def test_issue1216(self):
+        tr, paz = _get_sample_data()
+        st = Stream([tr])
+        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
+        ppsd.add(st)
+        # After adding data internal representation of hist stack is None
+        self.assertIsNone(ppsd._current_hist_stack)
+        # Accessing the current_histogram property calculates the default stack
+        self.assertIsNotNone(ppsd.current_histogram)
+        self.assertIsNotNone(ppsd._current_hist_stack)
+        # Adding the same data again does not invalidate the internal stack
+        ppsd.add(st)
+        self.assertIsNotNone(ppsd._current_hist_stack)
+        # Adding new data invalidates the internal stack
+        tr.stats.starttime += 3600
+        st2 = Stream([tr])
+        ppsd.add(st2)
+        self.assertIsNone(ppsd._current_hist_stack)
+        # Accessing current_histogram again calculates the stack
+        self.assertIsNotNone(ppsd.current_histogram)
+        self.assertIsNotNone(ppsd._current_hist_stack)
 
 
 def suite():

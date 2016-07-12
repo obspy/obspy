@@ -9,16 +9,17 @@ import sys
 import unittest
 import warnings
 
+from matplotlib import rcParams
+
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
                               read_events)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
+from obspy.core.event.base import QuantityError
 
 BASEMAP_VERSION = get_basemap_version()
-if BASEMAP_VERSION:
-    from matplotlib import rcParams
 
 CARTOPY_VERSION = get_cartopy_version()
 if CARTOPY_VERSION and CARTOPY_VERSION >= [0, 12, 0]:
@@ -32,6 +33,10 @@ class EventTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Event
     """
     def setUp(self):
+        # directory where the test files are located
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        self.path = path
+        self.image_dir = os.path.join(os.path.dirname(__file__), 'images')
         # Clear the Resource Identifier dict for the tests. NEVER do this
         # otherwise.
         ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
@@ -131,6 +136,17 @@ class EventTestCase(unittest.TestCase):
         self.assertIs(ev.resource_id.get_referred_object(),
                       ev3.resource_id.get_referred_object())
 
+    @unittest.skipIf(not BASEMAP_VERSION, 'basemap not installed')
+    def test_plot_farfield_without_quiver_with_maps(self):
+        """
+        Tests to plot P/S wave farfield radiation pattern, also with beachball
+        and some map plots.
+        """
+        ev = read_events("/path/to/CMTSOLUTION", format="CMTSOLUTION")[0]
+        with ImageComparison(self.image_dir, 'event.png') as ic:
+            ev.plot(kind=[['global'], ['ortho', 'beachball'],
+                          ['p_sphere', 's_sphere']], outfile=ic.name)
+
 
 class OriginTestCase(unittest.TestCase):
     """
@@ -143,7 +159,7 @@ class OriginTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    def test_creationInfo(self):
+    def test_creation_info(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
         self.assertEqual(orig.creation_info, None)
@@ -163,7 +179,7 @@ class OriginTestCase(unittest.TestCase):
         self.assertEqual(orig.creation_info.agency_id, 'muh')
         self.assertEqual(orig['creation_info']['agency_id'], 'muh')
 
-    def test_multipleOrigins(self):
+    def test_multiple_origins(self):
         """
         Parameters of multiple origins should not interfere with each other.
         """
@@ -207,7 +223,7 @@ class CatalogTestCase(unittest.TestCase):
         # Also clear the tracker.
         ResourceIdentifier._ResourceIdentifier__resource_id_tracker.clear()
 
-    def test_creationInfo(self):
+    def test_creation_info(self):
         cat = Catalog()
         cat.creation_info = CreationInfo(author='test2')
         self.assertTrue(isinstance(cat.creation_info, CreationInfo))
@@ -325,7 +341,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertRaises(TypeError, catalog.__iadd__, (event1, event2))
         self.assertRaises(TypeError, catalog.__iadd__, [event1, event2])
 
-    def test_countAndLen(self):
+    def test_count_and_len(self):
         """
         Tests the count and __len__ methods of the Catalog object.
         """
@@ -338,7 +354,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 3)
         self.assertEqual(catalog.count(), 3)
 
-    def test_getitem(self):
+    def test_get_item(self):
         """
         Tests the __getitem__ method of the Catalog object.
         """
@@ -363,7 +379,7 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(isinstance(new_catalog, Catalog))
         self.assertEqual(len(new_catalog), 2)
 
-    def test_slicingWithStep(self):
+    def test_slicing_with_step(self):
         """
         Tests the __getslice__ method of the Catalog object with step.
         """
@@ -581,9 +597,6 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         """
         Test initialization with an invalid seed string. Should raise a
         warning.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
         # An invalid SEED string will issue a warning and fill the object with
         # the default values.
@@ -834,6 +847,26 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             {})
 
 
+class BaseTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.base.
+    """
+    def test_quantity_error_warn_on_non_default_key(self):
+        """
+        """
+        err = QuantityError()
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            err.uncertainty = 0.01
+            err.lower_uncertainty = 0.1
+            err.upper_uncertainty = 0.02
+            err.confidence_level = 80
+            self.assertEqual(len(w), 0)
+            # setting a typoed or custom field should warn!
+            err.confidence_levle = 80
+            self.assertEqual(len(w), 1)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
@@ -843,6 +876,7 @@ def suite():
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(BaseTestCase, 'test'))
     return suite
 
 

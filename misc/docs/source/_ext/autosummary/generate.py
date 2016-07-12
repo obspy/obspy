@@ -18,6 +18,8 @@
     :license: BSD, see LICENSE for details.
 """
 
+from __future__ import (absolute_import, division, print_function)
+
 import optparse
 import os
 import pydoc
@@ -28,6 +30,7 @@ from jinja2 import FileSystemLoader, TemplateNotFound
 from jinja2.sandbox import SandboxedEnvironment
 from sphinx.jinja2glue import BuiltinTemplateLoader
 from sphinx.util.osutil import ensuredir
+from sphinx.util.inspect import safe_getattr
 
 from autosummary import get_documenter, import_by_name
 
@@ -55,11 +58,11 @@ def main(argv=sys.argv):
 
 
 def _simple_info(msg):
-    print msg
+    print(msg)
 
 
 def _simple_warn(msg):
-    print >> sys.stderr, 'WARNING: ' + msg
+    print('WARNING: ' + msg, file=sys.stderr)
 
 # -- Generating output --------------------------------------------------------
 
@@ -114,7 +117,7 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
 
         try:
             name, obj, parent = import_by_name(name)
-        except ImportError, e:
+        except ImportError as e:
             warn('[autosummary] failed to import %r: %s' % (name, e))
             continue
 
@@ -142,26 +145,26 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                         'autosummary/base.rst')
 
             def get_members(obj, typ, include_public=[]):
-                # XXX: whole function is a patch!
+                items = []
+                for name in dir(obj):
+                    try:
+                        documenter = get_documenter(safe_getattr(obj, name),
+                                                    obj)
+                    except AttributeError:
+                        continue
+                    if documenter.objtype == typ:
+                        items.append(name)
+                # XXX: patch start!
                 if typ in ('function', 'class', 'exception'):
-                    # modules seem to work
-                    items = [name for name in dir(obj)
-                             if get_documenter(getattr(obj, name),
-                                               obj).objtype == typ]
                     items = [name for name in items
                              if getattr(obj, name).__module__ == obj.__name__]
-                elif typ == 'method':
-                    # filter methods (__call__) which are defined within this
-                    # class (im_class)
-                    items = [name for name in dir(obj)
-                             if hasattr(getattr(obj, name), '__call__') and
-                             hasattr(getattr(obj, name), 'im_class')]
                 elif typ == 'attribute':
-                    # attribute
-                    items = [name for name in dir(obj)
+                    items = [name for name in items
                              if not hasattr(getattr(obj, name), '__call__')]
+
                 public = [x for x in items
                           if not x.startswith('_') or x.endswith('__')]
+                # XXX: patch end!
                 return public, items
 
             ns = {}
@@ -238,8 +241,8 @@ def find_autosummary_in_docstring(name, module=None, filename=None):
         return find_autosummary_in_lines(lines, module=name, filename=filename)
     except AttributeError:
         pass
-    except ImportError, e:
-        print "Failed to import '%s': %s" % (name, e)
+    except ImportError as e:
+        print("Failed to import '%s': %s" % (name, e))
     return []
 
 

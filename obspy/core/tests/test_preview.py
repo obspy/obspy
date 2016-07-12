@@ -16,7 +16,7 @@ class UtilTestCase(unittest.TestCase):
     Test suite for obspy.core.preview.
     """
 
-    def test_createPreview(self):
+    def test_create_preview(self):
         """
         Test for creating preview.
         """
@@ -55,7 +55,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([59, 29]))
 
-    def test_createPreviewWithMaskedArrays(self):
+    def test_create_preview_with_masked_arrays(self):
         """
         Test for creating preview using masked arrays.
         """
@@ -73,7 +73,7 @@ class UtilTestCase(unittest.TestCase):
         np.testing.assert_array_equal(preview.data,
                                       np.array(4 * [0] + 2 * [-1] + 4 * [0]))
 
-    def test_mergePreviews(self):
+    def test_merge_previews(self):
         """
         Tests the merging of Previews.
         """
@@ -128,7 +128,7 @@ class UtilTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st2[0].data,
                                       np.array([1] * 10 + [-1] * 10 + [2] * 9))
 
-    def test_resamplePreview(self):
+    def test_resample_previews(self):
         """
         Test for resampling preview.
         """
@@ -162,7 +162,7 @@ class UtilTestCase(unittest.TestCase):
         # This method is much more accurate.
         np.testing.assert_array_equal(tr.data, np.array([4] * 50 + [2] * 50))
 
-    def test_mergePreviews2(self):
+    def test_merge_previews_2(self):
         """
         Test case for issue #84.
         """
@@ -190,7 +190,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.npts, 5760)
         self.assertEqual(len(st2[0]), 5760)
 
-    def test_createPreviewWithUnroundedSampleRate(self):
+    def test_create_preview_with_unrounded_sample_rate(self):
         """
         Test for creating preview.
         """
@@ -199,7 +199,7 @@ class UtilTestCase(unittest.TestCase):
         tr.stats.starttime = UTCDateTime("1989-10-06T14:31:14.000000Z")
         create_preview(tr, delta=30)
 
-    def test_createPreviewWithVerySmallSampleRate(self):
+    def test_create_preview_with_very_small_sample_rate(self):
         """
         Test for creating previews with samples per slice less than 1.
         """

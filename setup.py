@@ -12,13 +12,13 @@ al. 2010, Megies et al. 2011).
 The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
-For more information visit http://www.obspy.org.
+For more information visit https://www.obspy.org.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 # Importing setuptools monkeypatches some of distutils commands so things like
 # 'python setup.py develop' work. Wrap in try/except so it is not an actual
@@ -87,17 +87,17 @@ KEYWORDS = [
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'ESRI', 'events', 'FDSN', 'features', 'filter',
-    'focal mechanism', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
+    'focal mechanism', 'GCF', 'GSE1', 'GSE2', 'hob', 'Tau-P', 'imaging',
     'instrument correction', 'instrument simulation', 'IRIS', 'kinemetrics',
     'KML', 'magnitude', 'MiniSEED', 'misfit', 'mopad', 'MSEED', 'NDK', 'NERA',
     'NERIES', 'NonLinLoc', 'NLLOC', 'observatory', 'ORFEUS', 'PDAS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SDS', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
-    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram', 'StationXML',
-    'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform',
-    'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED',
-    'XSEED']
+    'response file', 'RT', 'SAC', 'sc3ml', 'SDS', 'SEED', 'SeedLink', 'SEG-2',
+    'SEG Y', 'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology',
+    'seismogram', 'seismograms', 'shapefile', 'signal', 'slink', 'spectrogram',
+    'StationXML', 'taper', 'taup', 'travel time', 'trigger', 'VERCE', 'WAV',
+    'waveform', 'WaveServer', 'WaveServerV', 'WebDC', 'web service', 'Winston',
+    'XML-SEED', 'XSEED']
 
 INSTALL_REQUIRES = [
     'future>=0.12.4',
@@ -107,9 +107,10 @@ INSTALL_REQUIRES = [
     'lxml',
     'setuptools',
     'sqlalchemy',
-    'decorator']
+    'decorator',
+    'requests']
 EXTRAS_REQUIRE = {
-    'tests': ['flake8>=2', 'pyimgur'],
+    'tests': ['flake8>=2', 'pyimgur', 'pyproj', 'pep8-naming'],
     'arclink': ['m2crypto'],
     'io.shapefile': ['gdal'],
     }
@@ -147,6 +148,7 @@ ENTRY_POINTS = {
         'GSE1 = obspy.io.gse2.core',
         'GSE2 = obspy.io.gse2.core',
         'MSEED = obspy.io.mseed.core',
+        'NNSA_KB_CORE = obspy.io.css.core',
         'PDAS = obspy.io.pdas.core',
         'SAC = obspy.io.sac.core',
         'SACXY = obspy.io.sac.core',
@@ -159,7 +161,8 @@ ENTRY_POINTS = {
         'SH_ASC = obspy.io.sh.core',
         'WAV = obspy.io.wav.core',
         'AH = obspy.io.ah.core',
-        'KNET = obspy.io.nied.knet'
+        'KNET = obspy.io.nied.knet',
+        'GCF = obspy.io.gcf.core'
         ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.io.ascii.core:_is_tspair',
@@ -179,6 +182,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.CSS': [
         'isFormat = obspy.io.css.core:_is_css',
         'readFormat = obspy.io.css.core:_read_css',
+        ],
+    'obspy.plugin.waveform.NNSA_KB_CORE': [
+        'isFormat = obspy.io.css.core:_is_nnsa_kb_core',
+        'readFormat = obspy.io.css.core:_read_nnsa_kb_core',
         ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.io.datamark.core:_is_datamark',
@@ -212,9 +219,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.sac.core:_write_sac',
         ],
     'obspy.plugin.waveform.SACXY': [
-        'isFormat = obspy.io.sac.core:_is_sacXY',
-        'readFormat = obspy.io.sac.core:_read_sacXY',
-        'writeFormat = obspy.io.sac.core:_write_sacXY',
+        'isFormat = obspy.io.sac.core:_is_sac_xy',
+        'readFormat = obspy.io.sac.core:_read_sac_xy',
+        'writeFormat = obspy.io.sac.core:_write_sac_xy',
         ],
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.io.seg2.seg2:_is_seg2',
@@ -260,6 +267,10 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.KNET': [
         'isFormat = obspy.io.nied.knet:_is_knet_ascii',
         'readFormat = obspy.io.nied.knet:_read_knet_ascii',
+        ],
+    'obspy.plugin.waveform.GCF': [
+        'isFormat = obspy.io.gcf.core:_is_gcf',
+        'readFormat = obspy.io.gcf.core:_read_gcf',
         ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.io.quakeml.core',
@@ -323,6 +334,7 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
+        'SC3ML = obspy.io.seiscomp.sc3ml',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
@@ -334,6 +346,10 @@ ENTRY_POINTS = {
         'readFormat = obspy.io.stationxml.core:_read_stationxml',
         'writeFormat = obspy.io.stationxml.core:_write_stationxml',
         ],
+    'obspy.plugin.inventory.SC3ML': [
+        'isFormat = obspy.io.seiscomp.sc3ml:_is_sc3ml',
+        'readFormat = obspy.io.seiscomp.sc3ml:_read_sc3ml',
+        ],
     'obspy.plugin.inventory.SACPZ': [
         'writeFormat = obspy.io.sac.sacpz:_write_sacpz',
         ],
@@ -344,9 +360,9 @@ ENTRY_POINTS = {
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
         ],
     'obspy.plugin.inventory.STATIONTXT': [
-        'isFormat = obspy.io.stationtxt.core:is_FDSN_station_text_file',
+        'isFormat = obspy.io.stationtxt.core:is_fdsn_station_text_file',
         'readFormat = '
-        'obspy.io.stationtxt.core:read_FDSN_station_text_file',
+        'obspy.io.stationtxt.core:read_fdsn_station_text_file',
         ],
     'obspy.plugin.inventory.KML': [
         'writeFormat = obspy.io.kml.core:_write_kml',
@@ -374,8 +390,8 @@ ENTRY_POINTS = {
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
         'lowpass_cheby_2 = obspy.signal.filter:lowpass_cheby_2',
-        'lowpassFIR = obspy.signal.filter:lowpass_FIR',
-        'remezFIR = obspy.signal.filter:remez_FIR',
+        'lowpass_fir = obspy.signal.filter:lowpass_FIR',
+        'remez_fir = obspy.signal.filter:remez_FIR',
         ],
     'obspy.plugin.interpolate': [
         'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
@@ -384,10 +400,10 @@ ENTRY_POINTS = {
         'lanczos = obspy.signal.interpolation:lanczos_interpolation'
         ],
     'obspy.plugin.rotate': [
-        'rotate_NE_RT = obspy.signal.rotate:rotate_NE_RT',
-        'rotate_RT_NE = obspy.signal.rotate:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signal.rotate:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signal.rotate:rotate_LQT_ZNE'
+        'rotate_ne_rt = obspy.signal.rotate:rotate_ne_rt',
+        'rotate_rt_ne = obspy.signal.rotate:rotate_rt_ne',
+        'rotate_zne_lqt = obspy.signal.rotate:rotate_zne_lqt',
+        'rotate_lqt_zne = obspy.signal.rotate:rotate_lqt_zne'
         ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosine_taper',
@@ -410,13 +426,13 @@ ENTRY_POINTS = {
         'triang = scipy.signal:triang',
         ],
     'obspy.plugin.trigger': [
-        'recstalta = obspy.signal.trigger:recursive_STALTA',
-        'carlstatrig = obspy.signal.trigger:carl_STA_trig',
-        'classicstalta = obspy.signal.trigger:classic_STALTA',
-        'delayedstalta = obspy.signal.trigger:delayed_STALTA',
+        'recstalta = obspy.signal.trigger:recursive_sta_lta',
+        'carlstatrig = obspy.signal.trigger:carl_sta_trig',
+        'classicstalta = obspy.signal.trigger:classic_sta_lta',
+        'delayedstalta = obspy.signal.trigger:delayed_sta_lta',
         'zdetect = obspy.signal.trigger:z_detect',
-        'recstaltapy = obspy.signal.trigger:recursive_STALTA_py',
-        'classicstaltapy = obspy.signal.trigger:classic_STALTA_py',
+        'recstaltapy = obspy.signal.trigger:recursive_sta_lta_py',
+        'classicstaltapy = obspy.signal.trigger:classic_sta_lta_py',
         ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
@@ -517,9 +533,6 @@ def configuration(parent_package="", top_path=None):
             export_symbols(path, 'libmseed', 'libmseed.def')
         kwargs['export_symbols'] += \
             export_symbols(path, 'obspy-readbuffer.def')
-        # workaround Win32 and MSVC - see issue #64
-        if '32' in platform.architecture()[0]:
-            kwargs['extra_compile_args'] = ["/fp:strict"]
     if EXTERNAL_LIBS:
         kwargs['libraries'] = ['mseed']
     config.add_extension(_get_lib_name("mseed", add_extension_suffix=False),
@@ -664,13 +677,13 @@ def setupPackage():
         version=get_git_version(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
-        url="http://www.obspy.org",
+        url="https://www.obspy.org",
         author='The ObsPy Development Team',
         author_email='devs@obspy.org',
         license='GNU Lesser General Public License, Version 3 (LGPLv3)',
         platforms='OS Independent',
         classifiers=[
-            'Development Status :: 4 - Beta',
+            'Development Status :: 5 - Production/Stable',
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'Intended Audience :: Developers',

@@ -12,7 +12,7 @@ import unittest
 import matplotlib.pyplot as plt
 
 from obspy.core.util.testing import ImageComparison
-from obspy.imaging.mopad_wrapper import Beach
+from obspy.imaging.mopad_wrapper import beach
 
 
 class MopadTestCase(unittest.TestCase):
@@ -66,7 +66,7 @@ class MopadTestCase(unittest.TestCase):
             y = -100
             for i, t in enumerate(mt):
                 # add the beachball (a collection of two patches) to the axis
-                ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
+                ax.add_collection(beach(t, width=30, xy=(x, y), linewidth=.6))
                 x += 50
                 if (i + 1) % 5 == 0:
                     x = -100

@@ -18,7 +18,7 @@ by a distributed team in a transparent collaborative manner.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -29,6 +29,7 @@ import io
 import os
 import warnings
 
+from collections import Mapping
 from lxml import etree
 
 from obspy.core.event import (Amplitude, Arrival, Axis, Catalog, Comment,
@@ -987,7 +988,13 @@ class Unpickler(object):
             for el in element.iterfind("{%s}*" % ns):
                 # remove namespace from tag name
                 _, name = el.tag.split("}")
-                value = el.text
+                # check if element has children (nested tags)
+                if len(el):
+                    sub_obj = AttribDict()
+                    self._extra(el, sub_obj)
+                    value = sub_obj.extra
+                else:
+                    value = el.text
                 try:
                     extra = obj.setdefault("extra", AttribDict())
                 # Catalog object is not based on AttribDict..
@@ -1171,7 +1178,10 @@ class Pickler(object):
         """
         if not hasattr(obj, "extra"):
             return
-        for key, item in obj.extra.items():
+        self._custom(obj.extra, element)
+
+    def _custom(self, obj, element):
+        for key, item in obj.items():
             value = item["value"]
             ns = item["namespace"]
             attrib = item.get("attrib", {})
@@ -1182,7 +1192,11 @@ class Pickler(object):
             if type_.lower() in ("attribute", "attrib"):
                 element.attrib[tag] = str(value)
             elif type_.lower() == "element":
-                if isinstance(value, bool):
+                # check if value is dictionary-like
+                if isinstance(value, Mapping):
+                    subelement = etree.SubElement(element, tag, attrib=attrib)
+                    self._custom(value, subelement)
+                elif isinstance(value, bool):
                     self._bool(value, element, tag, attrib=attrib)
                 else:
                     self._str(value, element, tag, attrib=attrib)

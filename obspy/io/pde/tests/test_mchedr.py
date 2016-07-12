@@ -24,7 +24,7 @@ except:
     pass
 
 
-class mchedrTestCase(unittest.TestCase):
+class MchedrTestCase(unittest.TestCase):
     """
     Test suite for obspy.mchedr
     """
@@ -318,7 +318,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
                 catalog2 = _read_quakeml(tf)
         self.assertTrue(len(catalog2), 1)
 
-    def test_readEvents(self):
+    def test_read_events(self):
         """
         Tests reading an mchedr document via read_events.
         """
@@ -326,12 +326,13 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
         with warnings.catch_warnings(record=True):
+            warnings.simplefilter('always')
             catalog = read_events(filename)
             self.assertTrue(len(catalog), 1)
 
 
 def suite():
-    return unittest.makeSuite(mchedrTestCase, 'test')
+    return unittest.makeSuite(MchedrTestCase, 'test')
 
 
 if __name__ == '__main__':

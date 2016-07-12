@@ -127,8 +127,8 @@ for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
 entries = parser.data.entries
 
 # write index.rst
-fh = open(os.path.join('source', 'citations.rst'), 'wt')
-fh.write("""
+fh = open(os.path.join('source', 'citations.rst'), 'wb')
+fh.write(b"""
 .. _citations:
 
 .. DON'T EDIT THIS FILE MANUALLY!
@@ -160,6 +160,6 @@ for key in sorted(entries.keys()):
     except:
         print("Error writing %s:" % (key))
         raise
-    fh.write(os.linesep)
+    fh.write(os.linesep.encode('utf-8'))
 
 fh.close()

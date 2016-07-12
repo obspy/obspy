@@ -14,7 +14,7 @@ Low-level module internally used for handling GSE1 files
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -25,7 +25,8 @@ import doctest
 import numpy as np
 
 from obspy import UTCDateTime
-from .libgse2 import uncompress_CM6, verify_checksum
+
+from .libgse2 import uncompress_cm6, verify_checksum
 
 
 def read(fh, verify_chksum=True):
@@ -49,7 +50,7 @@ def read(fh, verify_chksum=True):
     header = read_header(fh)
     dtype = header['gse1']['datatype']
     if dtype == 'CMP6':
-        data = uncompress_CM6(fh, header['npts'])
+        data = uncompress_cm6(fh, header['npts'])
     elif dtype == 'INTV':
         data = read_integer_data(fh, header['npts'])
     else:

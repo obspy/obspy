@@ -19,6 +19,7 @@ doc2dash
 ## obspy.*
 future
 decorator
+requests
 
 lxml
 numpy

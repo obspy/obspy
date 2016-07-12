@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import Float, Integer
-from ..utils import format_RESP
+from ..utils import format_resp
 
 
 RESP = """\
@@ -54,15 +54,15 @@ class Blockette057(Blockette):
         Float(8, "Correction applied", 11, mask='%+1.4e')
     ]
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
         out = RESP % (station, channel,
                       self.stage_sequence_number,
-                      format_RESP(self.input_sample_rate, 6),
+                      format_resp(self.input_sample_rate, 6),
                       self.decimation_factor,
                       self.decimation_offset,
-                      format_RESP(self.estimated_delay, 6),
-                      format_RESP(self.correction_applied, 6))
+                      format_resp(self.estimated_delay, 6),
+                      format_resp(self.correction_applied, 6))
         return out.encode()

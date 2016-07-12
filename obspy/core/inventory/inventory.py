@@ -7,39 +7,43 @@ Provides the Inventory class.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import python_2_unicode_compatible
+from future.utils import python_2_unicode_compatible, native_str
 
 import copy
 import fnmatch
+import os
+from pkg_resources import load_entry_point
 import textwrap
 import warnings
 
-from pkg_resources import load_entry_point
-
 import obspy
 from obspy.core.util.base import (ENTRY_POINTS, ComparingObject,
-                                  _read_from_plugin)
+                                  _read_from_plugin, NamedTemporaryFile,
+                                  download_to_file)
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.obspy_types import ObsPyException, ZeroSamplingRate
 
 from .network import Network
+from .util import _unified_content_strings, _textwrap
 
 # Make sure this is consistent with obspy.io.stationxml! Importing it
 # from there results in hard to resolve cyclic imports.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 
 
-def _createExampleInventory():
+def _create_example_inventory():
     """
     Create an example inventory.
     """
-    return read_inventory('/path/to/BW_GR_misc.xml.gz', format="STATIONXML")
+    data_dir = os.path.join(os.path.dirname(__file__), os.pardir, "data")
+    path = os.path.join(data_dir, "BW_GR_misc.xml")
+    return read_inventory(path, format="STATIONXML")
 
 
 @map_example_filename("path_or_file_object")
@@ -55,7 +59,16 @@ def read_inventory(path_or_file_object=None, format=None):
     """
     if path_or_file_object is None:
         # if no pathname or URL specified, return example catalog
-        return _createExampleInventory()
+        return _create_example_inventory()
+    elif isinstance(path_or_file_object, (str, native_str)) and \
+            "://" in path_or_file_object:
+        # some URL
+        # extract extension if any
+        suffix = \
+            os.path.basename(path_or_file_object).partition('.')[2] or '.tmp'
+        with NamedTemporaryFile(suffix=suffix) as fh:
+            download_to_file(url=path_or_file_object, filename_or_buffer=fh)
+            return read_inventory(fh.name, format=format)
     return _read_from_plugin("inventory", path_or_file_object,
                              format=format)[0]
 
@@ -116,6 +129,9 @@ class Inventory(ComparingObject):
                    "an Inventory.")
             raise TypeError(msg)
         return self
+
+    def __len__(self):
+        return len(self.networks)
 
     def __getitem__(self, index):
         return self.networks[index]
@@ -188,6 +204,7 @@ class Inventory(ComparingObject):
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
                 content_dict[key].sort()
+        content_dict['networks'].sort()
         return content_dict
 
     def __str__(self):
@@ -204,15 +221,21 @@ class Inventory(ComparingObject):
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["networks"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         ret_str += "\n"
         ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n".join([
+            "\t\t\t%s" % _i
+            for _i in _unified_content_strings(contents["stations"])])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(
-            ", ".join(contents["channels"]), initial_indent="\t\t\t",
-            subsequent_indent="\t\t\t", expand_tabs=False))
+        ret_str += "\n".join(_textwrap(
+            ", ".join(_unified_content_strings(contents["channels"])),
+            initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+            expand_tabs=False))
         return ret_str
 
     def _repr_pretty_(self, p, cycle):
@@ -358,8 +381,7 @@ class Inventory(ComparingObject):
             Sending institution: Erdbebendienst Bayern
             Contains:
                 Networks (2):
-                    GR
-                    BW
+                    BW, GR
                 Stations (2):
                     BW.RJOB (Jochberg, Bavaria, BW-Net)
                     GR.WET (Wettzell, Bavaria, GR-Net)
@@ -371,9 +393,17 @@ class Inventory(ComparingObject):
         :func:`~fnmatch.fnmatch`).
 
         :type network: str
+        :param network: Potentially wildcarded network code. If not given,
+            all network codes will be accepted.
         :type station: str
+        :param station: Potentially wildcarded station code. If not given,
+            all station codes will be accepted.
         :type location: str
+        :param location: Potentially wildcarded location code. If not given,
+            all location codes will be accepted.
         :type channel: str
+        :param channel: Potentially wildcarded channel code. If not given,
+            all channel codes will be accepted.
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param time: Only include networks/stations/channels active at given
             point in time.
@@ -403,11 +433,16 @@ class Inventory(ComparingObject):
                                      endtime=endtime):
                     continue
 
+            has_stations = bool(net.stations)
+
             net_ = net.select(
                 station=station, location=location, channel=channel, time=time,
                 starttime=starttime, endtime=endtime,
                 sampling_rate=sampling_rate, keep_empty=keep_empty)
-            if not keep_empty and not net_.stations:
+
+            # If the network previously had stations but no longer has any
+            # and keep_empty is False: Skip the network.
+            if has_stations and not keep_empty and not net_.stations:
                 continue
             networks.append(net_)
         inv = copy.copy(self)

@@ -17,7 +17,7 @@ to m/s.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -33,9 +33,8 @@ import numpy as np
 import scipy.signal
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated
 from obspy.signal import util
-from obspy.signal.detrend import simple as simpleDetrend
+from obspy.signal.detrend import simple as simple_detrend
 from obspy.signal.headers import clibevresp
 from obspy.signal.util import _npts2nfft
 
@@ -46,11 +45,6 @@ from obspy.signal.util import _npts2nfft
 # (PITSA has 2800)
 WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
-
-
-@deprecated("'cosTaper' has been renamed to 'cosine_taper'. Use that instead.")
-def cosTaper(*args, **kwargs):
-    return cosine_taper(*args, **kwargs)
 
 
 def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
@@ -152,12 +146,6 @@ def cosine_taper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     if idx3 == idx4:
         cos_win[idx3] = 0.0
     return cos_win
-
-
-@deprecated("'c_sac_taper' has been renamed to 'cosine_sac_taper'."
-            "Use that instead.")
-def c_sac_taper(*args, **kwargs):
-    return cosine_sac_taper(*args, **kwargs)
 
 
 def cosine_sac_taper(freqs, flimit):
@@ -290,7 +278,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
                                 freqs, nfreqs, rtyp, vbs, start_stage,
                                 stop_stage, stdio_flag, C.c_int(0))
         # optimizing performance, see
-        # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        # https://wiki.python.org/moin/PythonSpeed/PerformanceTips
         try:
             nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
         except ValueError:
@@ -308,12 +296,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     return h
 
 
-@deprecated("'cornFreq2Paz' has been renamed to 'corn_freq_2_paz'."
-            "Use that instead.")
-def cornFreq2Paz(*args, **kwargs):
-    return corn_freq_2_paz(*args, **kwargs)
-
-
 def corn_freq_2_paz(fc, damp=0.707):
     """
     Convert corner frequency and damping to poles and zeros. 2 zeros at
@@ -326,12 +308,6 @@ def corn_freq_2_paz(fc, damp=0.707):
     poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc,
              -(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
-
-
-@deprecated("'pazToFreqResp' has been renamed to 'paz_to_freq_resp'."
-            "Use that instead.")
-def pazToFreqResp(*args, **kwargs):
-    return paz_to_freq_resp(*args, **kwargs)
 
 
 def paz_to_freq_resp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
@@ -390,12 +366,6 @@ def waterlevel(spec, wlev):
     return np.abs(spec).max() * 10.0 ** (-wlev / 20.0)
 
 
-@deprecated("'specInv' has been renamed to 'invert_spectrum'."
-            "Use that instead.")
-def specInv(*args, **kwargs):
-    return invert_spectrum(*args, **kwargs)
-
-
 def invert_spectrum(spec, wlev):
     """
     Invert Spectrum and shrink values under water-level of max spec
@@ -425,18 +395,12 @@ def invert_spectrum(spec, wlev):
     return found
 
 
-@deprecated("'seisSim' has been renamed to 'simulate_seismometer'."
-            "Use that instead.")
-def seisSim(*args, **kwargs):
-    return simulate_seismometer(*args, **kwargs)
-
-
 def simulate_seismometer(
         data, samp_rate, paz_remove=None, paz_simulate=None,
         remove_sensitivity=True, simulate_sensitivity=True, water_level=600.0,
         zero_mean=True, taper=True, taper_fraction=0.05, pre_filt=None,
         seedresp=None, nfft_pow2=False, pitsasim=True, sacsim=False,
-        shsim=False, **_kwargs):
+        shsim=False):
     """
     Simulate/Correct seismometer.
 
@@ -599,7 +563,7 @@ def simulate_seismometer(
     data = np.fft.irfft(data)[0:ndat]
     if pitsasim:
         # linear detrend
-        data = simpleDetrend(data)
+        data = simple_detrend(data)
     if shsim:
         # detrend using least squares
         data = scipy.signal.detrend(data, type="linear")
@@ -609,12 +573,6 @@ def simulate_seismometer(
     if paz_simulate and simulate_sensitivity:
         data *= paz_simulate['sensitivity']
     return data
-
-
-@deprecated("'paz2AmpValueOfFreqResp' has been renamed to "
-            "'paz_2_amplitude_value_of_freq_resp'. Use that instead.")
-def paz2AmpValueOfFreqResp(*args, **kwargs):
-    return paz_2_amplitude_value_of_freq_resp(*args, **kwargs)
 
 
 def paz_2_amplitude_value_of_freq_resp(paz, freq):
@@ -643,12 +601,6 @@ def paz_2_amplitude_value_of_freq_resp(paz, freq):
     for pole in paz['poles']:  # denominator
         fac /= jw - pole
     return abs(fac) * paz['gain']
-
-
-@deprecated("'estimateMagnitude' has been renamed to "
-            "'estimate_magnitude'. Use that instead.")
-def estimateMagnitude(*args, **kwargs):
-    return estimate_magnitude(*args, **kwargs)
 
 
 def estimate_magnitude(paz, amplitude, timespan, h_dist):
@@ -702,12 +654,6 @@ def estimate_magnitude(paz, amplitude, timespan, h_dist):
     magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
         0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
-
-
-@deprecated("'estimateWoodAndersonAmplitude' has been renamed to "
-            "'estimate_wood_anderson_amplitude'. Use that instead.")
-def estimateWoodAndersonAmplitude(*args, **kwargs):
-    return estimate_wood_anderson_amplitude(*args, **kwargs)
 
 
 def estimate_wood_anderson_amplitude(paz, amplitude, timespan):

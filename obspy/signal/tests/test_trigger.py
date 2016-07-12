@@ -16,8 +16,8 @@ import numpy as np
 
 from obspy import Stream, UTCDateTime, read
 from obspy.signal.trigger import (
-    ar_pick, classic_STALTA, classic_STALTA_py, coincidence_trigger, pk_baer,
-    recursive_STALTA, recursive_STALTA_py, trigger_onset)
+    ar_pick, classic_sta_lta, classic_sta_lta_py, coincidence_trigger, pk_baer,
+    recursive_sta_lta, recursive_sta_lta_py, trigger_onset)
 from obspy.signal.util import clibsignal
 
 
@@ -32,31 +32,31 @@ class TriggerTestCase(unittest.TestCase):
         np.random.seed(815)
         self.data = np.random.randn(int(1e5))
 
-    def test_recSTALTAC(self):
+    def test_rec_sta_lta_c(self):
         """
-        Test case for ctypes version of recursive_STALTA
+        Test case for ctypes version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c1 = recursive_STALTA(self.data, nsta, nlta)
+        c1 = recursive_sta_lta(self.data, nsta, nlta)
         self.assertAlmostEqual(c1[99], 0.80810165)
         self.assertAlmostEqual(c1[100], 0.75939449)
         self.assertAlmostEqual(c1[101], 0.91763978)
         self.assertAlmostEqual(c1[102], 0.97465004)
 
-    def test_recSTALTAPy(self):
+    def test_rec_sta_lta_python(self):
         """
-        Test case for python version of recursive_STALTA
+        Test case for python version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c2 = recursive_STALTA_py(self.data, nsta, nlta)
+        c2 = recursive_sta_lta_py(self.data, nsta, nlta)
         self.assertAlmostEqual(c2[99], 0.80810165)
         self.assertAlmostEqual(c2[100], 0.75939449)
         self.assertAlmostEqual(c2[101], 0.91763978)
         self.assertAlmostEqual(c2[102], 0.97465004)
 
-    def test_recSTALTARaise(self):
+    def test_rec_sta_lta_raise(self):
         """
-        Type checking recursive_STALTA
+        Type checking recursive_sta_lta
         """
         ndat = 1
         charfct = np.empty(ndat, dtype=np.float64)
@@ -65,7 +65,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, clibsignal.recstalta,
                           np.array([1], dtype=np.int32), charfct, ndat, 5, 10)
 
-    def test_pkBaer(self):
+    def test_pk_baer(self):
         """
         Test pk_baer against implementation for UNESCO short course
         """
@@ -79,7 +79,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertEqual(nptime, 17545)
         self.assertEqual(pfm, 'IPU0')
 
-    def test_arPick(self):
+    def test_ar_pick(self):
         """
         Test ar_pick against implementation for UNESCO short course
         """
@@ -98,7 +98,7 @@ class TriggerTestCase(unittest.TestCase):
         # self.assertAlmostEqual(stime, 31.2800006866)
         self.assertEqual(int(stime + 0.5), 31)
 
-    def test_triggerOnset(self):
+    def test_trigger_onset(self):
         """
         Test trigger onset function
         """
@@ -133,7 +133,7 @@ class TriggerTestCase(unittest.TestCase):
             plt.legend()
             plt.show()
 
-    def test_coincidenceTrigger(self):
+    def test_coincidence_trigger(self):
         """
         Test network coincidence trigger.
         """
@@ -337,7 +337,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
         self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
 
-    def test_coincidenceTriggerWithSimilarityChecking(self):
+    def test_coincidence_trigger_with_similarity_checking(self):
         """
         Test network coincidence trigger with cross correlation similarity
         checking of given event templates.
@@ -420,13 +420,13 @@ class TriggerTestCase(unittest.TestCase):
                             'BW.UH4..EHZ']}]
         self.assertEqual(trig, remaining_results)
 
-    def test_classicSTALTAPyC(self):
+    def test_classic_sta_lta_c_python(self):
         """
-        Test case for ctypes version of recursive_STALTA
+        Test case for ctypes version of recursive_sta_lta
         """
         nsta, nlta = 5, 10
-        c1 = classic_STALTA(self.data, nsta, nlta)
-        c2 = classic_STALTA_py(self.data, nsta, nlta)
+        c1 = classic_sta_lta(self.data, nsta, nlta)
+        c2 = classic_sta_lta_py(self.data, nsta, nlta)
         self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
         self.assertTrue(np.allclose(ref, c2[99:103]))

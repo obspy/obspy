@@ -9,20 +9,23 @@ import unittest
 
 from obspy import read_events, read_inventory
 from obspy.core.util.misc import TemporaryWorkingDirectory
-from obspy.io.shapefile.core import _write_shapefile
+from obspy.io.shapefile.core import (
+    _write_shapefile, GDAL_VERSION_SUFFICIENT)
 
 try:
     from osgeo import gdal, ogr, osr  # NOQA
 except ImportError:
-    has_GDAL = False
+    HAS_GDAL = False
 else:
-    has_GDAL = True
+    HAS_GDAL = True
     no_filecmp = gdal.VersionInfo() >= '2000000'
 
 
 SHAPEFILE_SUFFIXES = (".shp", ".shx", ".dbf", ".prj")
 
 
+@unittest.skipIf(not HAS_GDAL or not GDAL_VERSION_SUFFICIENT,
+                 'gdal not installed or version is too old')
 class ShapefileTestCase(unittest.TestCase):
     def setUp(self):
         self.path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -30,7 +33,6 @@ class ShapefileTestCase(unittest.TestCase):
         self.catalog_shape_basename = os.path.join(self.path, 'catalog')
         self.inventory_shape_basename = os.path.join(self.path, 'inventory')
 
-    @unittest.skipIf(not has_GDAL, "GDAL not installed")
     def test_write_catalog_shapefile(self):
         cat = read_events()
         with TemporaryWorkingDirectory():
@@ -43,7 +45,6 @@ class ShapefileTestCase(unittest.TestCase):
                         self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
 
-    @unittest.skipIf(not has_GDAL, "GDAL not installed")
     def test_write_catalog_shapefile_via_plugin(self):
         cat = read_events()
         with TemporaryWorkingDirectory():
@@ -56,7 +57,6 @@ class ShapefileTestCase(unittest.TestCase):
                         self.catalog_shape_basename + suffix),
                     msg="%s not binary equal." % ("catalog" + suffix))
 
-    @unittest.skipIf(not has_GDAL, "GDAL not installed")
     def test_write_inventory_shapefile(self):
         inv = read_inventory()
         with TemporaryWorkingDirectory():
@@ -69,7 +69,6 @@ class ShapefileTestCase(unittest.TestCase):
                         self.inventory_shape_basename + suffix),
                     msg="%s not binary equal." % ("inventory" + suffix))
 
-    @unittest.skipIf(not has_GDAL, "GDAL not installed")
     def test_write_inventory_shapefile_via_plugin(self):
         inv = read_inventory()
         with TemporaryWorkingDirectory():

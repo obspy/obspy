@@ -7,7 +7,7 @@ storing in into a standard SQL database.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -437,7 +437,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 stats = os.stat(filepath)
                 stream = read(filepath, **kwargs)
                 # get gap and overlap information
-                gap_list = stream.getGaps()
+                gap_list = stream.get_gaps()
                 # merge channels and replace gaps/overlaps with 0 to prevent
                 # generation of masked arrays
                 stream.merge(fill_value=0)

@@ -7,7 +7,7 @@ NonLinLoc file format support for ObsPy
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -64,16 +64,16 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     :param coordinate_converter: Function to convert (x, y, z)
         coordinates of NonLinLoc output to geographical coordinates and depth
         in meters (longitude, latitude, depth in kilometers).
-        If left `None` NonLinLoc (x, y, z) output is left unchanged (e.g. if
-        it is in geographical coordinates already like for NonLinLoc in
-        global mode).
-        The function should accept three arguments x, y, z and return a
-        tuple of three values (lon, lat, depth in kilometers).
+        If left ``None``, the geographical coordinates in the "GEOGRAPHIC" line
+        of NonLinLoc output are used.
+        The function should accept three arguments x, y, z (each of type
+        :class:`numpy.ndarray`) and return a tuple of three
+        :class:`numpy.ndarray` (lon, lat, depth in kilometers).
     :type picks: list of :class:`~obspy.core.event.Pick`
     :param picks: Original picks used to generate the NonLinLoc location.
         If provided, the output event will include the original picks and the
         arrivals in the output origin will link to them correctly (with their
-        `pick_id` attribute). If not provided, the output event will include
+        ``pick_id`` attribute). If not provided, the output event will include
         (the rather basic) pick information that can be reconstructed from the
         NonLinLoc hypocenter-phase file.
     :rtype: :class:`~obspy.core.event.Catalog`
@@ -137,15 +137,16 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     signature, version, date, time = line.rsplit(" ", 3)
     creation_time = UTCDateTime().strptime(date + time, str("%d%b%Y%Hh%Mm%S"))
 
-    # maximum likelihood origin location info line
-    line = lines["HYPOCENTER"]
-
-    x, y, z = map(float, line.split()[1:7:2])
-
     if coordinate_converter:
-        x, y, z = coordinate_converter(x, y, z)
+        # maximum likelihood origin location in km info line
+        line = lines["HYPOCENTER"]
+        x, y, z = coordinate_converter(*map(float, line.split()[1:7:2]))
+    else:
+        # maximum likelihood origin location lon lat info line
+        line = lines["GEOGRAPHIC"]
+        x, y, z = map(float, line.split()[8:13:2])
 
-    # origin time info line
+    # maximum likelihood origin time info line
     line = lines["GEOGRAPHIC"]
 
     year, month, day, hour, minute = map(int, line.split()[1:6])
@@ -154,9 +155,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
     # distribution statistics line
     line = lines["STATISTICS"]
-    covariance_XX = float(line.split()[7])
-    covariance_YY = float(line.split()[13])
-    covariance_ZZ = float(line.split()[17])
+    covariance_xx = float(line.split()[7])
+    covariance_yy = float(line.split()[13])
+    covariance_zz = float(line.split()[17])
     stats_info_string = str(
         "Note: Depth/Latitude/Longitude errors are calculated from covariance "
         "matrix as 1D marginal (Lon/Lat errors as great circle degrees) "
@@ -205,9 +206,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     # large compared to the covariances.
     o.longitude = x
     try:
-        o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_XX))
+        o.longitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_xx))
     except ValueError:
-        if covariance_XX < 0:
+        if covariance_xx < 0:
             msg = ("Negative value in XX value of covariance matrix, not "
                    "setting longitude error (epicentral uncertainties will "
                    "still be set in origin uncertainty).")
@@ -216,9 +217,9 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
             raise
     o.latitude = y
     try:
-        o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_YY))
+        o.latitude_errors.uncertainty = kilometer2degrees(sqrt(covariance_yy))
     except ValueError:
-        if covariance_YY < 0:
+        if covariance_yy < 0:
             msg = ("Negative value in YY value of covariance matrix, not "
                    "setting longitude error (epicentral uncertainties will "
                    "still be set in origin uncertainty).")
@@ -226,7 +227,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         else:
             raise
     o.depth = z * 1e3  # meters!
-    o.depth_errors.uncertainty = sqrt(covariance_ZZ) * 1e3  # meters!
+    o.depth_errors.uncertainty = sqrt(covariance_zz) * 1e3  # meters!
     o.depth_errors.confidence_level = 68
     o.depth_type = str("from location")
     o.time = time

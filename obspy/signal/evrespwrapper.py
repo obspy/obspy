@@ -77,25 +77,25 @@ ENUM_STAGE_TYPES = {
 }
 
 
-class complex_number(C.Structure):
+class ComplexNumber(C.Structure):
     _fields_ = [
         ("real", C.c_double),
         ("imag", C.c_double),
     ]
 
 
-class pole_zeroType(C.Structure):
+class PoleZeroType(C.Structure):
     _fields_ = [
         ("nzeros", C.c_int),
         ("npoles", C.c_int),
         ("a0", C.c_double),
         ("a0_freq", C.c_double),
-        ("zeros", C.POINTER(complex_number)),
-        ("poles", C.POINTER(complex_number)),
+        ("zeros", C.POINTER(ComplexNumber)),
+        ("poles", C.POINTER(ComplexNumber)),
     ]
 
 
-class coeffType(C.Structure):
+class CoeffType(C.Structure):
     _fields_ = [
         ("nnumer", C.c_int),
         ("ndenom", C.c_int),
@@ -105,7 +105,7 @@ class coeffType(C.Structure):
     ]
 
 
-class firType(C.Structure):
+class FIRType(C.Structure):
     _fields_ = [
         ("ncoeffs", C.c_int),
         ("coeffs", C.POINTER(C.c_double)),
@@ -113,17 +113,17 @@ class firType(C.Structure):
     ]
 
 
-class listType(C.Structure):
+class ListType(C.Structure):
     _fields_ = [
     ]
 
 
-class genericType(C.Structure):
+class GenericType(C.Structure):
     _fields_ = [
     ]
 
 
-class decimationType(C.Structure):
+class DecimationType(C.Structure):
     _fields_ = [
         ("sample_int", C.c_double),
         ("deci_fact", C.c_int),
@@ -133,48 +133,48 @@ class decimationType(C.Structure):
     ]
 
 
-class gainType(C.Structure):
+class GainType(C.Structure):
     _fields_ = [
         ("gain", C.c_double),
         ("gain_freq", C.c_double)
     ]
 
 
-class referType(C.Structure):
+class ReferType(C.Structure):
     _fields_ = [
     ]
 
 
-class blkt_info_union(C.Union):
+class BlktInfoUnion(C.Union):
     _fields_ = [
-        ("pole_zero", pole_zeroType),
-        ("fir", firType),
-        ("decimation", decimationType),
-        ("gain", gainType),
-        ("coeff", coeffType)
+        ("pole_zero", PoleZeroType),
+        ("fir", FIRType),
+        ("decimation", DecimationType),
+        ("gain", GainType),
+        ("coeff", CoeffType)
     ]
 
 
-class blkt(C.Structure):
+class Blkt(C.Structure):
     pass
 
-blkt._fields_ = [
+Blkt._fields_ = [
     ("type", C.c_int),
-    ("blkt_info", blkt_info_union),
-    # ("blkt_info", pole_zeroType),
-    ("next_blkt", C.POINTER(blkt))
+    ("blkt_info", BlktInfoUnion),
+    # ("blkt_info", PoleZeroType),
+    ("next_blkt", C.POINTER(Blkt))
 ]
 
 
-class stage(C.Structure):
+class Stage(C.Structure):
     pass
 
-stage._fields_ = [
+Stage._fields_ = [
     ("sequence_no", C.c_int),
     ("input_units", C.c_int),
     ("output_units", C.c_int),
-    ("first_blkt", C.POINTER(blkt)),
-    ("next_stage", C.POINTER(stage))
+    ("first_blkt", C.POINTER(Blkt)),
+    ("next_stage", C.POINTER(Stage))
 ]
 
 STALEN = 64
@@ -196,10 +196,10 @@ MAXLINELEN = 256
 FIR_NORM_TOL = 0.02
 
 
-class channel(C.Structure):
+class Channel(C.Structure):
     pass
 
-channel._fields_ = [
+Channel._fields_ = [
     ("staname", C.c_char * STALEN),
     ("network", C.c_char * NETLEN),
     ("locid", C.c_char * LOCIDLEN),
@@ -216,7 +216,7 @@ channel._fields_ = [
     ("applied_corr", C.c_double),
     ("sint", C.c_double),
     ("nstages", C.c_int),
-    ("first_stage", C.POINTER(stage)),
+    ("first_stage", C.POINTER(Stage)),
 ]
 
 
@@ -228,7 +228,7 @@ clibevresp.curr_file = C.c_char_p.in_dll(clibevresp, 'curr_file')
 #                      char *out_units, int start_stage, int stop_stage,
 #                      int useTotalSensitivityFlag)
 clibevresp._obspy_calc_resp.argtypes = [
-    C.POINTER(channel),
+    C.POINTER(Channel),
     np.ctypeslib.ndpointer(dtype=np.float64,  # freqs
                            ndim=1,
                            flags=native_str('C_CONTIGUOUS')),
@@ -244,12 +244,12 @@ clibevresp._obspy_calc_resp.restype = C.c_int
 
 
 # int _obspy_check_channel(struct channel *chan)
-clibevresp._obspy_check_channel.argtypes = [C.POINTER(channel)]
+clibevresp._obspy_check_channel.argtypes = [C.POINTER(Channel)]
 clibevresp._obspy_check_channel.restype = C.c_int
 
 
 # int _obspy_norm_resp(struct channel *chan, int start_stage, int stop_stage)
-clibevresp._obspy_norm_resp.argtypes = [C.POINTER(channel), C.c_int, C.c_int]
+clibevresp._obspy_norm_resp.argtypes = [C.POINTER(Channel), C.c_int, C.c_int]
 clibevresp._obspy_norm_resp.restype = C.c_int
 
 

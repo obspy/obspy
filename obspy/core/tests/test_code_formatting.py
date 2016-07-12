@@ -9,14 +9,26 @@ import os
 import re
 import unittest
 
+import obspy
 from obspy.core.util.testing import check_flake8, get_all_py_files
+
+_pattern = re.compile(r"^\d+\.\d+\.\d+$")
+CLEAN_VERSION_NUMBER = bool(_pattern.match(obspy.__version__))
+
+
+def _match_exceptions(filename, exceptions):
+    for pattern in exceptions:
+        if fnmatch.fnmatch(filename, pattern):
+            return True
+    return False
 
 
 class CodeFormattingTestCase(unittest.TestCase):
     """
     Test codebase for compliance with the flake8 tool.
     """
-
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     @unittest.skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
@@ -28,7 +40,9 @@ class CodeFormattingTestCase(unittest.TestCase):
         self.assertGreater(file_count, 10)
         self.assertEqual(error_count, 0, "\n" + message.decode())
 
-    def test_use_ObsPyDeprecationWarning(self):
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
+    def test_use_obspy_deprecation_warning(self):
         """
         Tests that ObsPyDeprecationWarning is used rather than the usual
         DeprecationWarning when using `warnings.warn()`
@@ -52,6 +66,8 @@ class CodeFormattingTestCase(unittest.TestCase):
 
 
 class FutureUsageTestCase(unittest.TestCase):
+    @unittest.skipIf(CLEAN_VERSION_NUMBER,
+                     "No code formatting tests for release builds")
     def test_future_imports_in_every_file(self):
         """
         Tests that every single Python file includes the appropriate future
@@ -69,12 +85,6 @@ class FutureUsageTestCase(unittest.TestCase):
         ]
         exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
 
-        def _match_exceptions(filename):
-            for pattern in exceptions:
-                if fnmatch.fnmatch(filename, pattern):
-                    return True
-            return False
-
         future_import_line = (
             "from __future__ import (absolute_import, division, "
             "print_function, unicode_literals)")
@@ -91,7 +101,7 @@ class FutureUsageTestCase(unittest.TestCase):
 
         failures = []
         for filename in get_all_py_files():
-            if _match_exceptions(filename):
+            if _match_exceptions(filename, exceptions):
                 continue
             with codecs.open(filename, "r", encoding="utf-8") as fh:
                 content = fh.read()
@@ -106,11 +116,60 @@ class FutureUsageTestCase(unittest.TestCase):
         self.assertEqual(len(failures), 0, "\n" + "\n".join(failures))
 
 
-def suite():
+class MatplotlibBackendUsageTestCase(unittest.TestCase):
+    def test_no_pyplot_import_in_any_file(self):
+        """
+        Tests that no Python file spoils matplotlib backend switching by
+        importing e.g. `matplotlib.pyplot` (not enclosed in a def/class
+        statement).
+        """
+        patterns = (
+            r"(?<!# )from pylab\..*? import",
+            r"(?<!# )import pylab",
+            r"(?<!# )from matplotlib import (pyplot)|(backends)",
+            r"(?<!# )import matplotlib\.(pyplot)|(backends)",
+            )
+        msg = ("File '{}' (line {})\nmatches a forbidden matplotlib import "
+               "statement outside of class/def statements\n(breaking "
+               "matplotlib backend switching on some systems):\n    '{}'")
+        exceptions = [
+            os.path.join('io', 'css', 'contrib', 'css28fix.py'),
+            os.path.join('*', 'tests', '*'),
+            os.path.join('*', '*', 'tests', '*'),
+        ]
+        exceptions = [os.path.join("*", "obspy", i) for i in exceptions]
 
+        failures = []
+        for filename in get_all_py_files():
+            if _match_exceptions(filename, exceptions):
+                continue
+            line_number = 1
+            in_docstring = False
+            with codecs.open(filename, "r", encoding="utf-8") as fh:
+                line = fh.readline()
+                while line:
+                    # detect start/end of docstring
+                    if re.match(r"['\"]{3}", line):
+                        in_docstring = not in_docstring
+                    # skip if inside docstring
+                    if not in_docstring:
+                        # stop searching at first unindented class/def
+                        if re.match(r"(class)|(def) ", line):
+                            break
+                        for pattern in patterns:
+                            if re.search(pattern, line):
+                                failures.append(msg.format(
+                                    filename, line_number, line.rstrip()))
+                    line = fh.readline()
+                    line_number += 1
+        self.assertEqual(len(failures), 0, "\n" + "\n\n".join(failures))
+
+
+def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CodeFormattingTestCase, 'test'))
     suite.addTest(unittest.makeSuite(FutureUsageTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MatplotlibBackendUsageTestCase, 'test'))
     return suite
 
 

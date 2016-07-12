@@ -6,7 +6,7 @@ Tools for creating and merging previews.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -20,13 +20,6 @@ import numpy as np
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import deprecated
-
-
-@deprecated("Method 'createPreview' was renamed to 'create_preview'. Use "
-            "that instead.")
-def createPreview(trace, delta=60):
-    return create_preview(trace, delta)
 
 
 def create_preview(trace, delta=60):
@@ -90,12 +83,6 @@ def create_preview(trace, delta=60):
     tr.stats.starttime = UTCDateTime(start_time)
     tr.stats.preview = True
     return tr
-
-
-@deprecated("Method 'mergePreviews' was renamed to 'merge_previews'. Use "
-            "that instead.")
-def mergePreviews(stream):
-    return merge_previews(stream)
 
 
 def merge_previews(stream):
@@ -168,12 +155,6 @@ def merge_previews(stream):
         new_stream.append(new_trace)
     stream.traces = copied_traces
     return new_stream
-
-
-@deprecated("Method 'resamplePreview' was renamed to 'resample_preview'. Use "
-            "that instead.")
-def resamplePreview(trace, samples, method='accurate'):
-    return resample_preview(trace, samples, method)
 
 
 def resample_preview(trace, samples, method='accurate'):

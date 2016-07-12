@@ -8,16 +8,16 @@ A file format description is given by [Pullan1990]_.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2011
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 from future.utils import PY2
 
-import warnings
 from copy import deepcopy
 from struct import unpack
+import warnings
 
 import numpy as np
 

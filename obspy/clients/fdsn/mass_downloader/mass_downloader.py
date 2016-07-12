@@ -8,7 +8,7 @@ services in an automated fashion.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -211,6 +211,11 @@ class MassDownloader(object):
             # waveform data also has the corresponding station information.
             if restrictions.sanitize:
                 helper.sanitize_downloads()
+
+            if not helper:
+                logger.info("Client '%s' - No data could be downloaded." %
+                            client_name)
+                continue
 
             # Filter afterwards if availability information is not reliable.
             # This unfortunately results in already downloaded data being

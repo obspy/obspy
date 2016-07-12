@@ -8,11 +8,13 @@ Fabrizio Bernardi
 Felix Bernauer
 Moritz Beyreuther
 Sébastien Bonaimé
+Lloyd Carothers
 Peter Danecek
 Martin van Driel
 Fabian Engels
 Sven Egdorf
 Laura Ermert
+Tom Eulenfeld
 Marc Grunberg
 Conny Hammer
 Sebastian Heimann
@@ -29,20 +31,24 @@ Simon Kremers
 Victor Kress
 Lars Krieger
 Lion Krischer
+Mathijs Koymans
 Thomas Lecocq
 John Leeman
 Philippe Lesage
 Anthony Lomax
+Rui L. Lopes
 Jonathan MacCarthy
 Alessia Maggi
 Henri Martin
 Tobias Megies
+Matthias Meschede
 Alberto Michelini
 Bernhard Morgenstern
 Nathaniel C. Miller
+Ran Novitsky Nof
 Mark P. Panning
+Giovanni Rapagnani
 Celso Reyes
-Tom Richter
 Adam Ringler
 Nicolas Rothenhäusler
 Emiliano Russo
@@ -61,3 +67,4 @@ Andrew Walker
 Marcus Walther
 Joachim Wassermann
 Mark C. Williams
+Andrew Winkelman

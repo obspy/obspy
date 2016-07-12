@@ -7,12 +7,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
-from .taup_pierce import TauP_Pierce
+from .taup_pierce import TauPPierce
 
 
-class TauP_Path(TauP_Pierce):
+class TauPPath(TauPPierce):
     """
-    Calculate the ray paths for each phase, using TauP_Pierce and TauP_Time.
+    Calculate the ray paths for each phase, using TauPPierce and TauPTime.
     """
     def calculate(self, degrees):
         """
@@ -21,13 +21,13 @@ class TauP_Path(TauP_Pierce):
         self.depth_correct(self.source_depth, self.receiver_depth)
         self.recalc_phases()
         self.arrivals = []
-        self.calcPath(degrees)
+        self.calculate_path(degrees)
 
-    def calcPath(self, degrees):
+    def calculate_path(self, degrees):
         """
         Calculates the ray paths for phases at the given distance by
-        calling the calcPath method of the SeismicPhase class. The results
-        are then in self.arrivals.
+        calling the calculate_path method of the SeismicPhase class. The
+        results are then in self.arrivals.
         """
         self.degrees = degrees
         for phase in self.phases:

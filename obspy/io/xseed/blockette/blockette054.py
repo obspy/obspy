@@ -5,7 +5,7 @@ from future.builtins import *  # NOQA
 
 from .blockette import Blockette
 from ..fields import FixedString, Float, Integer, Loop
-from ..utils import blockette_34_lookup, format_RESP
+from ..utils import blockette_34_lookup, format_resp
 
 
 class Blockette054(Blockette):
@@ -57,7 +57,7 @@ class Blockette054(Blockette):
         ], flat=True)
     ]
 
-    def get_RESP(self, station, channel, abbreviations):
+    def get_resp(self, station, channel, abbreviations):
         """
         Returns RESP string.
         """
@@ -90,13 +90,13 @@ class Blockette054(Blockette):
                 for _i in range(self.number_of_numerators):
                     string += 'B054F08-09  %3s %13s %13s\n' % (
                         _i,
-                        format_RESP(self.numerator_coefficient[_i], 6),
-                        format_RESP(self.numerator_error[_i], 6))
+                        format_resp(self.numerator_coefficient[_i], 6),
+                        format_resp(self.numerator_error[_i], 6))
             else:
                 string += 'B054F08-09  %3s %13s %13s\n' % (
                     0,
-                    format_RESP(self.numerator_coefficient, 6),
-                    format_RESP(self.numerator_error, 6))
+                    format_resp(self.numerator_coefficient, 6),
+                    format_resp(self.numerator_error, 6))
         if self.number_of_denominators:
             string += \
                 '#\t\tDenominator coefficients:\n' + \
@@ -106,12 +106,12 @@ class Blockette054(Blockette):
                 for _i in range(self.number_of_numerators):
                     string += 'B054F11-12  %3s %13s %13s\n' % (
                         _i,
-                        format_RESP(self.denominator_coefficient[_i], 6),
-                        format_RESP(self.denominator_error[_i], 6))
+                        format_resp(self.denominator_coefficient[_i], 6),
+                        format_resp(self.denominator_error[_i], 6))
             else:
                 string += 'B054F11-12  %3s %13s %13s\n' % (
                     0,
-                    format_RESP(self.denominator_coefficient, 6),
-                    format_RESP(self.denominator_error, 6))
+                    format_resp(self.denominator_coefficient, 6),
+                    format_resp(self.denominator_error, 6))
         string += '#\t\t\n'
         return string.encode()

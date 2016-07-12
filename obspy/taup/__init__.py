@@ -7,7 +7,7 @@ obspy.taup - Ray Theoretical Travel Times and Paths
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 This package started out as port of the Java TauP Toolkit by [Crotwell1999]_ so
 please look there for more details about the algorithms used and further
@@ -32,13 +32,20 @@ See below for information on how to build a ``.npz`` model file.
 
 ObsPy currently ships with the following 1D velocity models:
 
-* ``ak135``, see [KennetEngdahlBuland1995]_
-* ``iasp91``, see [KennetEngdahl1991]_
-* ``prem``, see [Dziewonski1981]_
-* ``sp6``, see [MorelliDziewonski1993]_
 * ``1066a``, see [GilbertDziewonski1975]_
 * ``1066b``, see [GilbertDziewonski1975]_
+* ``ak135``, see [KennetEngdahlBuland1995]_
+* ``ak135f``, see [KennetEngdahlBuland1995]_, [MontagnerKennett1995]_, and
+  http://rses.anu.edu.au/seismology/ak135/ak135f.html (not supported)
+* ``ak135f_no_mud``, ``ak135f`` with ``ak135`` used above the 120-km
+  discontinuity; see the SPECFEM3D_GLOBE manual at
+  https://geodynamics.org/cig/software/specfem3d_globe/
 * ``herrin``, see [Herrin1968]_
+* ``iasp91``, see [KennetEngdahl1991]_
+* ``jb``, see [JeffreysBullen1940]_
+* ``prem``, see [Dziewonski1981]_
+* ``pwdk``, see [WeberDavis1990]_
+* ``sp6``, see [MorelliDziewonski1993]_
 
 Travel Times
 ^^^^^^^^^^^^
@@ -190,7 +197,7 @@ Phase naming in obspy.taup
     all credit goes to the authors of that.
 
 A major feature of ``obspy.taup`` is the implementation of a phase name parser
-that allows the user to define essentially arbitrary phases through the Earth.
+that allows the user to define essentially arbitrary phases through a planet.
 Thus, ``obspy.taup`` is extremely flexible in this respect since it is not
 limited to a pre-defined set of phases. Phase names are not hard-coded into the
 software, rather the names are interpreted and the appropriate propagation path
@@ -357,9 +364,25 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+# Module wide default settings.
+_DEFAULT_VALUES = {
+    # Default depths for a couple of discontinuities in earth. These are
+    # only used for the tvel files which have no named discontinuities.
+    # Values are in km.
+    "default_moho": 35,
+    "default_cmb": 2889.0,
+    "default_iocb": 5153.9,
+    # Default material parameters if a model does not set them.
+    "density": 2.6,
+    "qp": 1000.0,
+    "qs": 2000.0,
+    # Slowness tolerance
+    "slowness_tolerance": 1e-16
+}
+
+
 # Convenience imports.
 from .tau import TauPyModel  # NOQA
-from .taup import getTravelTimes, travelTimePlot  # NOQA
 
 
 if __name__ == '__main__':

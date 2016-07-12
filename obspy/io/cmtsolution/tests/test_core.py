@@ -53,6 +53,34 @@ class CmtsolutionTestCase(unittest.TestCase):
         self.assertEqual(data.decode().splitlines(),
                          new_data.decode().splitlines())
 
+    def test_write_no_preferred_focal_mechanism(self):
+        """
+        Tests that writing a CMTSOLUTION file with no preferred (but at least
+        one) focal mechanism works, see #1303.
+        """
+        filename = os.path.join(self.datapath, "CMTSOLUTION")
+        with open(filename, "rb") as fh:
+            data = fh.read()
+
+        cat = obspy.read_events(filename)
+        cat[0].preferred_focal_mechanism_id = None
+
+        with NamedTemporaryFile() as tf:
+            temp_filename = tf.name
+
+        try:
+            cat.write(temp_filename, format="CMTSOLUTION")
+            with open(temp_filename, "rb") as fh:
+                new_data = fh.read()
+        finally:
+            try:
+                os.remove(temp_filename)
+            except:
+                pass
+
+        self.assertEqual(data.decode().splitlines(),
+                         new_data.decode().splitlines())
+
     def test_read_and_write_cmtsolution_from_open_files(self):
         """
         Tests that reading and writing a CMTSOLUTION file does not change

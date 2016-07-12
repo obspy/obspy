@@ -6,7 +6,7 @@ SeisHub database client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -14,7 +14,6 @@ from future.builtins import *  # NOQA
 from future import standard_library
 from future.utils import PY2, native_str
 
-import functools
 import os
 import pickle
 import time
@@ -31,8 +30,6 @@ from lxml.etree import Element, SubElement, tostring
 
 from obspy import Catalog, UTCDateTime, read_events
 from obspy.core.util import guess_delta
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.io.xseed import Parser
 
 
@@ -51,55 +48,11 @@ def _unpickle(data):
     if PY2:
         obj = pickle.loads(data)
     else:
-        # http://api.mongodb.org/python/current/\
+        # https://api.mongodb.org/python/current/\
         # python3.html#why-can-t-i-share-pickled-objectids-\
         # between-some-versions-of-python-2-and-3
         obj = pickle.loads(data, encoding="latin-1")
     return obj
-
-
-def _call_change_get_paz(func):
-    """
-    This is a decorator to intercept a change in the arg list for
-    seishub.client.station.get_paz() with revision [3778].
-
-    * throw a ObsPyDeprecationWarning
-    * make the correct call
-    """
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        # function itself is first arg so len(args) == 3 means we got 2 args.
-        if len(args) > 3:
-            msg = "The arg/kwarg call syntax of get_paz() has changed. " + \
-                  "Please update your code! The old call syntax has been " + \
-                  "deprecated and will stop working with the next version."
-            warnings.warn(msg, ObsPyDeprecationWarning)
-            _self = args[0]
-            network = args[1]
-            station = args[2]
-            datetime = args[3]
-            args = args[4:]
-            if len(args) == 0:
-                location = kwargs.get('location', '')
-                channel = kwargs.get('channel', '')
-            elif len(args) == 1:
-                location = args[0]
-                channel = kwargs.get('channel', '')
-            elif len(args) == 2:
-                location = args[0]
-                channel = args[1]
-            if channel == "":
-                msg = "Requesting PAZ for empty channel codes is not " + \
-                      "supported anymore."
-                warnings.warn(msg, UserWarning)
-            seed_id = ".".join((network, station, location, channel))
-            args = [_self, seed_id, datetime]
-            kwargs = {}
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
 
 
 class Client(object):
@@ -123,7 +76,7 @@ class Client(object):
     >>> from obspy.clients.seishub import Client
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
-    >>> client = Client(timeout=2)
+    >>> client = Client(timeout=20)
     >>>
     >>> st = client.waveform.get_waveforms("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
@@ -189,7 +142,7 @@ class Client(object):
         :rtype: bool
         :return: ``True`` if OK, ``False`` if invalid.
         """
-        (code, _msg) = self._HTTP_request(self.base_url + "/xml/",
+        (code, _msg) = self._http_request(self.base_url + "/xml/",
                                           method="HEAD")
         if code == 200:
             return True
@@ -238,7 +191,7 @@ class Client(object):
         doc = response.read()
         return doc
 
-    def _HTTP_request(self, url, method, xml_string="", headers={}):
+    def _http_request(self, url, method, xml_string="", headers={}):
         """
         Send a HTTP request via urllib2.
 
@@ -279,11 +232,6 @@ class _BaseRESTClient(object):
     def __init__(self, client):
         self.client = client
 
-    @deprecated("'getResource' has been renamed to 'get_resource'. Use "
-                "that instead.")
-    def getResource(self, *args, **kwargs):
-        return self.get_resource(*args, **kwargs)
-
     def get_resource(self, resource_name, format=None, **kwargs):
         """
         Gets a resource.
@@ -302,11 +250,6 @@ class _BaseRESTClient(object):
               resource_name
         return self.client._fetch(url, **kwargs)
 
-    @deprecated("'getXMLResource' has been renamed to 'get_xml_resource'. Use "
-                "that instead.")
-    def getXMLResource(self, *args, **kwargs):
-        return self.get_xml_resource(*args, **kwargs)
-
     def get_xml_resource(self, resource_name, **kwargs):
         """
         Gets a XML resource.
@@ -318,11 +261,6 @@ class _BaseRESTClient(object):
         url = '/xml/' + self.package + '/' + self.resourcetype + '/' + \
               resource_name
         return self.client._objectify(url, **kwargs)
-
-    @deprecated("'putResource' has been renamed to 'put_resource'. Use "
-                "that instead.")
-    def putResource(self, *args, **kwargs):
-        return self.put_resource(*args, **kwargs)
 
     def put_resource(self, resource_name, xml_string, headers={}):
         """
@@ -348,13 +286,8 @@ class _BaseRESTClient(object):
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(
+        return self.client._http_request(
             url, method="PUT", xml_string=xml_string, headers=headers)
-
-    @deprecated("'deleteResource' has been renamed to 'delete_resource'. Use "
-                "that instead.")
-    def deleteResource(self, *args, **kwargs):
-        return self.delete_resource(*args, **kwargs)
 
     def delete_resource(self, resource_name, headers={}):
         """
@@ -369,7 +302,7 @@ class _BaseRESTClient(object):
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(
+        return self.client._http_request(
             url, method="DELETE", headers=headers)
 
 
@@ -387,11 +320,6 @@ master/seishub/plugins/seismology/waveform.py
     def __init__(self, client):
         self.client = client
 
-    @deprecated("'getNetworkIds' has been renamed to 'get_network_ids'. Use "
-                "that instead.")
-    def getNetworkIds(self, *args, **kwargs):
-        return self.get_network_ids(*args, **kwargs)
-
     def get_network_ids(self, **kwargs):
         """
         Gets a list of network ids.
@@ -399,21 +327,9 @@ master/seishub/plugins/seismology/waveform.py
         :rtype: list
         :return: List of containing network ids.
         """
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getNetworkIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['network']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_network_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['network']) for node in root.getchildren()]
-
-    @deprecated("'getStationIds' has been renamed to 'get_station_ids'. "
-                "Use that instead.")
-    def getStationIds(self, *args, **kwargs):
-        return self.get_station_ids(*args, **kwargs)
+        url = '/seismology/waveform/getNetworkIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['network']) for node in root.getchildren()]
 
     def get_station_ids(self, network=None, **kwargs):
         """
@@ -428,21 +344,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getStationIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['station']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_station_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['station']) for node in root.getchildren()]
-
-    @deprecated("'getLocationIds' has been renamed to 'get_location_ids'. Use "
-                "that instead.")
-    def getLocationIds(self, *args, **kwargs):
-        return self.get_location_ids(*args, **kwargs)
+        url = '/seismology/waveform/getStationIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['station']) for node in root.getchildren()]
 
     def get_location_ids(self, network=None, station=None, **kwargs):
         """
@@ -459,21 +363,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getLocationIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['location']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_location_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['location']) for node in root.getchildren()]
-
-    @deprecated("'getChannelIds' has been renamed to 'get_channel_ids'. Use "
-                "that instead.")
-    def getChannelIds(self, *args, **kwargs):
-        return self.get_channel_ids(*args, **kwargs)
+        url = '/seismology/waveform/getLocationIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['location']) for node in root.getchildren()]
 
     def get_channel_ids(self, network=None, station=None, location=None,
                         **kwargs):
@@ -493,21 +385,9 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getChannelIds'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['channel']) for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_channel_ids'
-            root = self.client._objectify(url, **kwargs)
-            return [str(node['channel']) for node in root.getchildren()]
-
-    @deprecated("'getLatency' has been renamed to 'get_latency'. Use "
-                "that instead.")
-    def getLatency(self, *args, **kwargs):
-        return self.get_latency(*args, **kwargs)
+        url = '/seismology/waveform/getChannelIds'
+        root = self.client._objectify(url, **kwargs)
+        return [str(node['channel']) for node in root.getchildren()]
 
     def get_latency(self, network=None, station=None, location=None,
                     channel=None, **kwargs):
@@ -529,27 +409,14 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getLatency'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_latency'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. "
-                "Use that instead.")
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
+        url = '/seismology/waveform/getLatency'
+        root = self.client._objectify(url, **kwargs)
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                for node in root.getchildren()]
 
     def get_waveforms(self, network, station, location=None, channel=None,
                       starttime=None, endtime=None, apply_filter=None,
-                      getPAZ=False, getCoordinates=False,
+                      get_paz=False, get_coordinates=False,
                       metadata_timecheck=True, **kwargs):
         """
         Gets a ObsPy Stream object.
@@ -569,12 +436,12 @@ master/seishub/plugins/seismology/waveform.py
         :param endtime: End date and time.
         :type apply_filter: bool, optional
         :param apply_filter: Apply filter (default is ``False``).
-        :type getPAZ: bool, optional
-        :param getPAZ: Fetch PAZ information and append to
+        :type get_paz: bool, optional
+        :param get_paz: Fetch PAZ information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request (default is ``False``).
-        :type getCoordinates: bool, optional
-        :param getCoordinates: Fetch coordinate information and append to
+        :type get_coordinates: bool, optional
+        :param get_coordinates: Fetch coordinate information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request (default is ``False``).
         :type metadata_timecheck: bool, optional
@@ -606,14 +473,8 @@ master/seishub/plugins/seismology/waveform.py
         kwargs['starttime'] = trim_start - delta
         kwargs['endtime'] = trim_end + delta
 
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getWaveform'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_waveforms'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getWaveform'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
@@ -625,7 +486,7 @@ master/seishub/plugins/seismology/waveform.py
         # trimming needs to be done only if we extend the datetime above
         if channel:
             stream.trim(trim_start, trim_end)
-        if getPAZ:
+        if get_paz:
             for tr in stream:
                 paz = self.client.station.get_paz(seed_id=tr.id,
                                                   datetime=starttime)
@@ -638,7 +499,7 @@ master/seishub/plugins/seismology/waveform.py
                         raise Exception(msg)
                 tr.stats['paz'] = paz
 
-        if getCoordinates:
+        if get_coordinates:
             coords = self.client.station.get_coordinates(
                 network=network, station=station, location=location,
                 datetime=starttime)
@@ -653,11 +514,6 @@ master/seishub/plugins/seismology/waveform.py
             for tr in stream:
                 tr.stats['coordinates'] = coords.copy()
         return stream
-
-    @deprecated("'getPreview' has been renamed to 'get_previews'. Use "
-                "that instead.")
-    def getPreview(self, *args, **kwargs):
-        return self.get_previews(*args, **kwargs)
 
     def get_previews(self, network, station, location=None, channel=None,
                      starttime=None, endtime=None, trace_ids=None, **kwargs):
@@ -685,24 +541,13 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getPreview'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_previews'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
         stream = _unpickle(data)
         return stream
-
-    @deprecated("'getPreviewByIds' has been renamed to 'get_previews_by_ids'. "
-                "Use that instead.")
-    def getPreviewByIds(self, *args, **kwargs):
-        return self.get_previews_by_ids(*args, **kwargs)
 
     def get_previews_by_ids(self, trace_ids=None, starttime=None, endtime=None,
                             **kwargs):
@@ -726,14 +571,8 @@ master/seishub/plugins/seismology/waveform.py
         if 'trace_ids' in kwargs:
             if isinstance(kwargs['trace_ids'], list):
                 kwargs['trace_ids'] = ','.join(kwargs['trace_ids'])
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/waveform/getPreview'
-            data = self.client._fetch(url, **kwargs)
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/waveform/get_previews_by_ids'
-            data = self.client._fetch(url, **kwargs)
+        url = '/seismology/waveform/getPreview'
+        data = self.client._fetch(url, **kwargs)
         if not data:
             raise Exception("No waveform data available")
         # unpickle
@@ -755,11 +594,6 @@ master/seishub/plugins/seismology/waveform.py
     package = 'seismology'
     resourcetype = 'station'
 
-    @deprecated("'getList' has been renamed to 'get_list'. Use "
-                "that instead.")
-    def getList(self, *args, **kwargs):
-        return self.get_list(*args, **kwargs)
-
     def get_list(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
@@ -775,23 +609,10 @@ master/seishub/plugins/seismology/waveform.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/station/getList'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/station/get_list'
-            root = self.client._objectify(url, **kwargs)
-            return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                    for node in root.getchildren()]
-
-    @deprecated("'getCoordinates' has been renamed to 'get_coordinates'. Use "
-                "that instead.")
-    def getCoordinates(self, *args, **kwargs):
-        return self.get_coordinates(*args, **kwargs)
+        url = '/seismology/station/getList'
+        root = self.client._objectify(url, **kwargs)
+        return [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                for node in root.getchildren()]
 
     def get_coordinates(self, network, station, datetime, location=''):
         """
@@ -853,12 +674,6 @@ master/seishub/plugins/seismology/waveform.py
             coords[key] = metadata[key]
         return coords
 
-    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")
-    def getPAZ(self, *args, **kwargs):
-        return self.get_paz(*args, **kwargs)
-
-    @_call_change_get_paz
     def get_paz(self, seed_id, datetime):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
@@ -875,7 +690,7 @@ master/seishub/plugins/seismology/waveform.py
 
         .. rubric:: Example
 
-        >>> c = Client(timeout=2)
+        >>> c = Client(timeout=20)
         >>> paz = c.station.get_paz('BW.MANZ..EHZ', '20090707')
         >>> paz['zeros']
         [0j, 0j]
@@ -892,8 +707,8 @@ master/seishub/plugins/seismology/waveform.py
         for res in self.client.xml_seeds.get(seed_id, []):
             parser = Parser(res)
             try:
-                paz = parser.getPAZ(seed_id=seed_id,
-                                    datetime=UTCDateTime(datetime))
+                paz = parser.get_paz(seed_id=seed_id,
+                                     datetime=UTCDateTime(datetime))
                 return paz
             except:
                 continue
@@ -918,7 +733,7 @@ master/seishub/plugins/seismology/waveform.py
         if res not in reslist:
             reslist.append(res)
         parser = Parser(res)
-        paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
+        paz = parser.get_paz(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
 
 
@@ -935,11 +750,6 @@ master/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'
-
-    @deprecated("'getList' has been renamed to 'get_list'. Use "
-                "that instead.")
-    def getList(self, *args, **kwargs):
-        return self.get_list(*args, **kwargs)
 
     def get_list(self, limit=50, offset=None, localisation_method=None,
                  author=None, min_datetime=None, max_datetime=None,
@@ -972,18 +782,10 @@ master/seishub/plugins/seismology/event.py
         for key, value in locals().items():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
-        # server side obspy < 0.11
-        try:
-            url = '/seismology/event/getList'
-            root = self.client._objectify(url, **kwargs)
-            results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                       for node in root.getchildren()]
-        # server side obspy >= 0.11
-        except:
-            url = '/seismology/event/get_list'
-            root = self.client._objectify(url, **kwargs)
-            results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
-                       for node in root.getchildren()]
+        url = '/seismology/event/getList'
+        root = self.client._objectify(url, **kwargs)
+        results = [dict(((k, v.pyval) for k, v in node.__dict__.items()))
+                   for node in root.getchildren()]
         for res in results:
             res['resource_name'] = str(res['resource_name'])
         if limit == len(results) or \
@@ -992,11 +794,6 @@ master/seishub/plugins/seismology/event.py
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
         return results
-
-    @deprecated("'getEvents' has been renamed to 'get_events'. Use "
-                "that instead.")
-    def getEvents(self, *args, **kwargs):
-        return self.get_events(*args, **kwargs)
 
     def get_events(self, **kwargs):
         """
@@ -1021,11 +818,6 @@ master/seishub/plugins/seismology/event.py
         for resource_name in resource_names:
             cat.extend(read_events(self.get_resource(resource_name)))
         return cat
-
-    @deprecated("'getKML' has been renamed to 'get_kml'. Use "
-                "that instead.")
-    def getKML(self, *args, **kwargs):
-        return self.get_kml(*args, **kwargs)
 
     def get_kml(self, nolabels=False, **kwargs):
         """
@@ -1058,7 +850,7 @@ master/seishub/plugins/seismology/event.py
         SubElement(iconstyle, "scale").text = "0.5"
         icon = SubElement(iconstyle, "Icon")
         SubElement(icon, "href").text = \
-            "http://maps.google.com/mapfiles/kml/shapes/earthquake.png"
+            "https://maps.google.com/mapfiles/kml/shapes/earthquake.png"
         hotspot = SubElement(iconstyle, "hotSpot")
         hotspot.set("x", "0.5")
         hotspot.set("y", "0")
@@ -1134,11 +926,6 @@ master/seishub/plugins/seismology/event.py
 
         # generate and return KML string
         return tostring(kml, pretty_print=True, xml_declaration=True)
-
-    @deprecated("'saveKML' has been renamed to 'save_kml'. Use "
-                "that instead.")
-    def saveKML(self, *args, **kwargs):
-        return self.save_kml(*args, **kwargs)
 
     def save_kml(self, filename, overwrite=False, **kwargs):
         """

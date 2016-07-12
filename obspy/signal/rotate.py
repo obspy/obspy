@@ -15,7 +15,7 @@ Various Seismogram Rotation Functions
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -26,7 +26,7 @@ from math import cos, pi, sin
 import numpy as np
 
 
-def rotate_NE_RT(n, e, ba):
+def rotate_ne_rt(n, e, ba):
     """
     Rotates horizontal components of a seismogram.
 
@@ -52,7 +52,7 @@ def rotate_NE_RT(n, e, ba):
     return r, t
 
 
-def rotate_RT_NE(n, e, ba):
+def rotate_rt_ne(n, e, ba):
     """
     Rotates horizontal components of a seismogram.
 
@@ -60,13 +60,13 @@ def rotate_RT_NE(n, e, ba):
     components.
 
     This is the inverse transformation of the transformation described
-    in :func:`rotate_NE_RT`.
+    in :func:`rotate_ne_rt`.
     """
     ba = 360.0 - ba
-    return rotate_NE_RT(n, e, ba)
+    return rotate_ne_rt(n, e, ba)
 
 
-def rotate_ZNE_LQT(z, n, e, ba, inc):
+def rotate_zne_lqt(z, n, e, ba, inc):
     """
     Rotates all components of a seismogram.
 
@@ -108,13 +108,13 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     return l, q, t
 
 
-def rotate_LQT_ZNE(l, q, t, ba, inc):
+def rotate_lqt_zne(l, q, t, ba, inc):
     """
     Rotates all components of a seismogram.
 
     The components will be rotated from LQT to ZNE.
     This is the inverse transformation of the transformation described
-    in :func:`rotate_ZNE_LQT`.
+    in :func:`rotate_zne_lqt`.
     """
     if len(l) != len(q) or len(l) != len(t):
         raise TypeError("L, Q and T component have different length!?!")
@@ -130,7 +130,7 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
     return z, n, e
 
 
-def _dip_azimuth2ZSE_base_vector(dip, azimuth):
+def _dip_azimuth2zse_base_vector(dip, azimuth):
     """
     Helper function converting a vector described with azimuth and dip of unit
     length to a vector in the ZSE (Vertical, South, East) base.
@@ -142,17 +142,17 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
 
     >>> r = lambda x: np.array([_i if _i != -0.0 else 0.0\
         for _i in np.round(x, 10)])
-    >>> r(_dip_azimuth2ZSE_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(-90, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([ 1., 0., 0.])
-    >>> r(_dip_azimuth2ZSE_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(90, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([-1., 0., 0.])
-    >>> r(_dip_azimuth2ZSE_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(0, 0)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., -1., 0.])
-    >>> r(_dip_azimuth2ZSE_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(0, 180)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 1., 0.])
-    >>> r(_dip_azimuth2ZSE_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(0, 90)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 0., 1.])
-    >>> r(_dip_azimuth2ZSE_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
+    >>> r(_dip_azimuth2zse_base_vector(0, 270)) #doctest: +NORMALIZE_WHITESPACE
     array([ 0., 0., -1.])
     """
     dip = np.deg2rad(dip)
@@ -163,7 +163,7 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
                      np.sin(azimuth) * np.cos(dip)])
 
 
-def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
+def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
                azimuth_3, dip_3, inverse=False):
     """
     Rotates an arbitrarily oriented three-component vector to ZNE.
@@ -199,38 +199,42 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
 
     An input of ZNE yields an output of ZNE
 
-    >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 0, 0, \
+    >>> rotate2zne(np.arange(3), 0, -90, np.arange(3) * 2, 0, 0, \
             np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 1., 2.]), array([ 0., 2., 4.]), array([ 0., 3., 6.]))
 
     An input of ZSE yields an output of ZNE
 
-    >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 180, 0, \
+    >>> rotate2zne(np.arange(3), 0, -90, np.arange(3) * 2, 180, 0, \
             np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 1., 2.]), array([ 0., -2., -4.]), array([ 0., 3., 6.]))
 
     Mixed up components should get rotated to ZNE.
 
-    >>> rotate2ZNE(np.arange(3), 0, 0, np.arange(3) * 2, 90, 0, \
+    >>> rotate2zne(np.arange(3), 0, 0, np.arange(3) * 2, 90, 0, \
             np.arange(3) * 3, 0, -90) # doctest: +NORMALIZE_WHITESPACE
     (array([ 0., 3., 6.]), array([ 0., 1., 2.]), array([ 0., 2., 4.]))
     """
+    if len(set(len(i_) for i_ in (data_1, data_2, data_3))) != 1:
+        msg = "All three data arrays must be of same length."
+        raise ValueError(msg)
+
     # Internally works in Vertical, South, and East components; a right handed
     # coordinate system.
 
     # Define the base vectors of the old base in terms of the new base vectors.
-    base_vector_1 = _dip_azimuth2ZSE_base_vector(dip_1, azimuth_1)
-    base_vector_2 = _dip_azimuth2ZSE_base_vector(dip_2, azimuth_2)
-    base_vector_3 = _dip_azimuth2ZSE_base_vector(dip_3, azimuth_3)
+    base_vector_1 = _dip_azimuth2zse_base_vector(dip_1, azimuth_1)
+    base_vector_2 = _dip_azimuth2zse_base_vector(dip_2, azimuth_2)
+    base_vector_3 = _dip_azimuth2zse_base_vector(dip_3, azimuth_3)
 
     # Build transformation matrix.
-    T = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
+    _t = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
 
     if not inverse:
-        x, y, z = np.dot(T, [data_1, data_2, data_3])
+        x, y, z = np.dot(_t, [data_1, data_2, data_3])
         y *= -1
     else:
-        x, y, z = np.dot(np.linalg.inv(T), [data_1, -data_2, data_3])
+        x, y, z = np.dot(np.linalg.inv(_t), [data_1, -data_2, data_3])
 
     # Replace all negative zeros. These might confuse some further
     # processing programs.

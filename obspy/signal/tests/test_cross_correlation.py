@@ -23,7 +23,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.path_images = os.path.join(os.path.dirname(__file__), 'images')
 
-    def test_xcorrPickCorrection(self):
+    def test_xcorr_pick_correction(self):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.
@@ -54,7 +54,7 @@ class CrossCorrelationTestCase(unittest.TestCase):
         self.assertEqual(tr1, tr1_copy)
         self.assertEqual(tr2, tr2_copy)
 
-    def test_xcorrPickCorrection_images(self):
+    def test_xcorr_pick_correction_images(self):
         """
         Test cross correlation pick correction on a set of two small local
         earthquakes.

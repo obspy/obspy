@@ -27,7 +27,7 @@ DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 CODENAME=`lsb_release -cs`
 # the lsb-release package in raspbian wheezy
-# (http://www.raspberrypi.org/downloads) does not report the codename
+# (https://www.raspberrypi.org/downloads) does not report the codename
 # correctly, so fix this
 if [ "$CODENAME" == "n/a" ] && [ `arch` == "armv6l" ]; then CODENAME=wheezy; fi
 BUILDDIR=/tmp/python-obspy_build
@@ -59,7 +59,7 @@ git clean -fxd
 # first of all selectively use debian build instructions for either
 # buildsystem=python_distutils (older Debuntu releases) or buildsystem=pybuild
 # (newer Debuntu releases)
-if [ "$CODENAME" == "squeeze" ] || [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
+if [ "$CODENAME" == "wheezy" ] || [ "$CODENAME" == "precise" ]
 then
     # old build style, python2 only
     cp -a debian/python_distutils/* debian/

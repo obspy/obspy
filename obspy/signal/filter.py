@@ -15,7 +15,7 @@ Various Seismogram Filtering Functions
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -210,7 +210,7 @@ def envelope(data):
     return data
 
 
-def remezFIR(data, freqmin, freqmax, df):
+def remez_fir(data, freqmin, freqmax, df):
     """
     The minimax optimal bandpass using Remez algorithm. (experimental)
 
@@ -283,7 +283,7 @@ def remezFIR(data, freqmin, freqmax, df):
     return convolve(filt, data)
 
 
-def lowpassFIR(data, freq, df, winlen=2048):
+def lowpass_fir(data, freq, df, winlen=2048):
     """
     FIR-Lowpass Filter. (experimental)
 
@@ -302,7 +302,7 @@ def lowpassFIR(data, freq, df, winlen=2048):
     .. versionadded:: 0.6.2
     """
     # Source: Travis Oliphant
-    # http://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
+    # https://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
     #
     # There is not currently an FIR-filter design program in SciPy. One
     # should be constructed as it is not hard to implement (of course making

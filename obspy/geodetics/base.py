@@ -6,7 +6,7 @@ Various geodetic utilities for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -17,7 +17,7 @@ import warnings
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
+from obspy.core.util.misc import to_int_or_zero
 
 
 # checking for geographiclib
@@ -25,18 +25,18 @@ try:
     import geographiclib  # @UnusedImport # NOQA
     from geographiclib.geodesic import Geodesic
     HAS_GEOGRAPHICLIB = True
+    try:
+        GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = [1, 34] <= list(map(
+            to_int_or_zero, geographiclib.__version__.split(".")))
+    except AttributeError:
+        GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = False
 except ImportError:
     HAS_GEOGRAPHICLIB = False
+    GEOGRAPHICLIB_VERSION_AT_LEAST_1_34 = False
 
 
 WGS84_A = 6378137.0
 WGS84_F = 1 / 298.257223563
-
-
-@deprecated("'calcVincentyInverse' has been renamed to "
-            "'calc_vincenty_inverse'. Use that instead.")
-def calcVincentyInverse(lat1, lon1, lat2, lon2):
-    return calc_vincenty_inverse(lat1, lon1, lat2, lon2)
 
 
 def calc_vincenty_inverse(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
@@ -119,11 +119,11 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     lat2 = math.radians(lat2)
     lon2 = math.radians(lon2)
 
-    TanU1 = (1 - f) * math.tan(lat1)
-    TanU2 = (1 - f) * math.tan(lat2)
+    tan_u1 = (1 - f) * math.tan(lat1)
+    tan_u2 = (1 - f) * math.tan(lat2)
 
-    U1 = math.atan(TanU1)
-    U2 = math.atan(TanU2)
+    u_1 = math.atan(tan_u1)
+    u_2 = math.atan(tan_u2)
 
     dlon = lon2 - lon1
     last_dlon = -4000000.0  # an impossible value
@@ -135,44 +135,45 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     try:
         while (last_dlon < -3000000.0 or dlon != 0 and
                abs((last_dlon - dlon) / dlon) > 1.0e-9):
-            sqr_sin_sigma = pow(math.cos(U2) * math.sin(dlon), 2) + \
-                pow((math.cos(U1) * math.sin(U2) - math.sin(U1) *
-                     math.cos(U2) * math.cos(dlon)), 2)
-            Sin_sigma = math.sqrt(sqr_sin_sigma)
-            Cos_sigma = math.sin(U1) * math.sin(U2) + math.cos(U1) * \
-                math.cos(U2) * math.cos(dlon)
-            sigma = math.atan2(Sin_sigma, Cos_sigma)
-            Sin_alpha = math.cos(U1) * math.cos(U2) * math.sin(dlon) / \
+            sqr_sin_sigma = pow(math.cos(u_2) * math.sin(dlon), 2) + \
+                pow((math.cos(u_1) * math.sin(u_2) - math.sin(u_1) *
+                     math.cos(u_2) * math.cos(dlon)), 2)
+            sin_sigma = math.sqrt(sqr_sin_sigma)
+            cos_sigma = math.sin(u_1) * math.sin(u_2) + math.cos(u_1) * \
+                math.cos(u_2) * math.cos(dlon)
+            sigma = math.atan2(sin_sigma, cos_sigma)
+            sin_alpha = math.cos(u_1) * math.cos(u_2) * math.sin(dlon) / \
                 math.sin(sigma)
-            alpha = math.asin(Sin_alpha)
-            Cos2sigma_m = math.cos(sigma) - \
-                (2 * math.sin(U1) * math.sin(U2) / pow(math.cos(alpha), 2))
-            C = (f / 16) * pow(math.cos(alpha), 2) * \
+            alpha = math.asin(sin_alpha)
+            cos2sigma_m = math.cos(sigma) - \
+                (2 * math.sin(u_1) * math.sin(u_2) / pow(math.cos(alpha), 2))
+            c = (f / 16) * pow(math.cos(alpha), 2) * \
                 (4 + f * (4 - 3 * pow(math.cos(alpha), 2)))
             last_dlon = dlon
-            dlon = omega + (1 - C) * f * math.sin(alpha) * \
-                (sigma + C * math.sin(sigma) *
-                    (Cos2sigma_m + C * math.cos(sigma) *
-                        (-1 + 2 * pow(Cos2sigma_m, 2))))
+            dlon = omega + (1 - c) * f * math.sin(alpha) * \
+                (sigma + c * math.sin(sigma) *
+                    (cos2sigma_m + c * math.cos(sigma) *
+                        (-1 + 2 * pow(cos2sigma_m, 2))))
 
             u2 = pow(math.cos(alpha), 2) * (a * a - b * b) / (b * b)
-            A = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
-            B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
-            delta_sigma = B * Sin_sigma * \
-                (Cos2sigma_m + (B / 4) *
-                    (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) *
-                        Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
-                        (-3 + 4 * pow(Cos2sigma_m, 2))))
+            _a = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 *
+                                                  (320 - 175 * u2)))
+            _b = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
+            delta_sigma = _b * sin_sigma * \
+                (cos2sigma_m + (_b / 4) *
+                    (cos_sigma * (-1 + 2 * pow(cos2sigma_m, 2)) - (_b / 6) *
+                        cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
+                        (-3 + 4 * pow(cos2sigma_m, 2))))
 
-            dist = b * A * (sigma - delta_sigma)
+            dist = b * _a * (sigma - delta_sigma)
             alpha12 = math.atan2(
-                (math.cos(U2) * math.sin(dlon)),
-                (math.cos(U1) * math.sin(U2) - math.sin(U1) * math.cos(U2) *
-                 math.cos(dlon)))
+                (math.cos(u_2) * math.sin(dlon)),
+                (math.cos(u_1) * math.sin(u_2) -
+                 math.sin(u_1) * math.cos(u_2) * math.cos(dlon)))
             alpha21 = math.atan2(
-                (math.cos(U1) * math.sin(dlon)),
-                (-math.sin(U1) * math.cos(U2) + math.cos(U1) * math.sin(U2) *
-                 math.cos(dlon)))
+                (math.cos(u_1) * math.sin(dlon)),
+                (-math.sin(u_1) * math.cos(u_2) +
+                 math.cos(u_1) * math.sin(u_2) * math.cos(dlon)))
             iterlimit -= 1
             if iterlimit < 0:
                 # iteration limit reached
@@ -198,12 +199,6 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     alpha21 = alpha21 * 360 / (2.0 * math.pi)
 
     return dist, alpha12, alpha21
-
-
-@deprecated("'gps2DistAzimuth' has been renamed to "
-            "'gps2dist_azimuth'. Use that instead.")
-def gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    return gps2dist_azimuth(lat1, lon1, lat2, lon2)
 
 
 def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
@@ -235,6 +230,12 @@ def gps2dist_azimuth(lat1, lon1, lat2, lon2, a=WGS84_A, f=WGS84_F):
         slower.
     """
     if HAS_GEOGRAPHICLIB:
+        if lat1 > 90 or lat1 < -90:
+            msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
+            raise ValueError(msg)
+        if lat2 > 90 or lat2 < -90:
+            msg = "Latitude of Point 2 out of bounds! (-90 <= lat2 <=90)"
+            raise ValueError(msg)
         result = Geodesic(a=a, f=f).Inverse(lat1, lon1, lat2, lon2)
         azim = result['azi1']
         if azim < 0:

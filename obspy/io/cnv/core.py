@@ -6,14 +6,14 @@ CNV file format support for ObsPy
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import warnings
 from bisect import bisect_right
+import warnings
 
 
 def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
@@ -117,7 +117,7 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
             phase = phase_mapping.get(p.phase_hint, None)
             if phase is None:
                 msg = "Skipping pick (%s) with unmapped phase hint: %s"
-                msg = msg % (p.waveform_id.getSEEDString(), p.phase_hint)
+                msg = msg % (p.waveform_id.get_seed_string(), p.phase_hint)
                 warnings.warn(msg)
                 continue
             station = p.waveform_id.station_code
@@ -131,7 +131,7 @@ def _write_cnv(catalog, filename, phase_mapping=None, ifx_list=None,
                 msg = ("Problem with pick (%s): Calculated travel time '%s' "
                        "does not fit in the '%%6.2f' fixed format field. "
                        "Skipping this pick.")
-                msg = msg % (p.waveform_id.getSEEDString(), dt)
+                msg = msg % (p.waveform_id.get_seed_string(), dt)
                 warnings.warn(msg)
                 continue
             picks.append("".join([station.ljust(4), phase, str(weight), dt]))

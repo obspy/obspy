@@ -27,7 +27,7 @@ import numpy as np
 from obspy.core.compatibility import from_buffer
 from obspy import UTCDateTime
 
-from . import header as HD
+from . import header as HD  # noqa
 from .util import SacIOError, SacInvalidContentError
 from .util import is_valid_enum_int
 
@@ -267,7 +267,6 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     Write the header and (optionally) data arrays to a SAC binary file.
 
     :param dest: Full path or File-like object to SAC binary file on disk.
-        If data is None, file mode should be 'wb+'.
     :type dest: str or file
     :param hf: SAC float header array
     :type hf: :class:`numpy.ndarray` of floats
@@ -293,9 +292,8 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     existing binary file with data in it.
 
     """
-    # this function is a hot mess.  clean up the logic.
-
     # deal with file name versus File-like object, and file mode
+    # file open modes in Python: http://stackoverflow.com/a/23566951/745557
     if data is None:
         # file exists, just modify it (don't start from scratch)
         fmode = 'rb+'
@@ -328,28 +326,26 @@ def write_sac(dest, hf, hi, hs, data=None, byteorder=None):
     except IOError:
         raise SacIOError("Cannot open file: " + dest)
 
-    if data is None and f.mode != 'rb+':
-        # msg = "File mode must be 'wb+' for data=None."
-        # raise ValueError(msg)
-        msg = "Writing header-only file. Use 'wb+' file mode to update header."
-        warnings.warn(msg)
-
     # TODO: make sure all data have the same/desired byte order
 
     # actually write everything
     try:
-        f.write(hf.data)
-        f.write(hi.data)
-        f.write(hs.data)
+        f.write(memoryview(hf))
+        f.write(memoryview(hi))
+        f.write(memoryview(hs))
         if data is not None:
             # TODO: this long way of writing it is to make sure that
             # 'f8' data, for example, is correctly cast as 'f4'
-            f.write(data.astype(data.dtype.byteorder + 'f4').data)
+            f.write(memoryview(data.astype(data.dtype.byteorder + 'f4')))
     except Exception as e:
         if is_file_name:
             f.close()
         msg = "Cannot write SAC-buffer to file: "
-        raise SacIOError(msg, f.name, e)
+        if hasattr(f, "name"):
+            name = f.name
+        else:
+            name = "Unknown file name (file-like object?)"
+        raise SacIOError(msg, name, e)
 
     if is_file_name:
         f.close()
@@ -376,6 +372,7 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     """
     # TODO: fix prodigious use of file open/close for "with" statements.
 
+    # file open modes in Python: http://stackoverflow.com/a/23566951/745557
     if data is None:
         # file exists, just modify it (don't start from scratch)
         fmode = 'r+'
@@ -391,10 +388,6 @@ def write_sac_ascii(dest, hf, hi, hs, data=None):
     except TypeError:
         f = dest
         is_file_name = False
-
-    if data is None and f.mode != 'r+':
-        msg = "Writing header-only file. Use 'wb+' file mode to update header."
-        warnings.warn(msg)
 
     try:
         np.savetxt(f, np.reshape(hf, (14, 5)), fmt=native_str("%#15.7g"),
@@ -521,7 +514,8 @@ def dict_to_header_arrays(header=None, byteorder='='):
                     #                                          'strict')
                     hs[HD.STRHDRS.index(hdr)] = value
             else:
-                raise ValueError("Unrecognized header name: {}.".format(hdr))
+                msg = "Unrecognized header name: {}. Ignored.".format(hdr)
+                warnings.warn(msg)
 
     return hf, hi, hs
 
@@ -555,14 +549,14 @@ def validate_sac_content(hf, hi, hs, data, *tests):
     """
     # TODO: move this to util.py and write and use individual test functions,
     # so that all validity checks are in one place?
-    ALL = ('delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime')
+    _all = ('delta', 'logicals', 'data_hdrs', 'enums', 'reftime', 'reltime')
 
     if 'all' in tests:
-        tests = ALL
+        tests = _all
 
     if not tests:
         raise ValueError("No validation tests specified.")
-    elif any([(itest not in ALL) for itest in tests]):
+    elif any([(itest not in _all) for itest in tests]):
         msg = "Unrecognized validataion test specified"
         raise ValueError(msg)
 
@@ -581,10 +575,10 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 
     if 'data_hdrs' in tests:
         try:
-            isMIN = hf[HD.FLOATHDRS.index('depmin')] == data.min()
-            isMAX = hf[HD.FLOATHDRS.index('depmax')] == data.max()
-            isMEN = hf[HD.FLOATHDRS.index('depmen')] == data.mean()
-            if not all([isMIN, isMAX, isMEN]):
+            is_min = hf[HD.FLOATHDRS.index('depmin')] == data.min()
+            is_max = hf[HD.FLOATHDRS.index('depmax')] == data.max()
+            is_mean = hf[HD.FLOATHDRS.index('depmen')] == data.mean()
+            if not all([is_min, is_max, is_mean]):
                 msg = "Data headers don't match data array."
                 raise SacInvalidContentError(msg)
         except (AttributeError, ValueError) as e:
@@ -628,10 +622,10 @@ def validate_sac_content(hf, hi, hs, data, *tests):
                 hdr = 'b'
             elif iztype_val == 11:
                 hdr = 'o'
-            elif val == 12:
+            elif iztype_val == 12:
                 hdr = 'a'
-            elif val in range(13, 23):
-                hdr = 'it'+str(val-13)
+            elif iztype_val in range(13, 23):
+                hdr = 'it' + str(iztype_val - 13)
 
             if hi[HD.FLOATHDRS.index(hdr)] == HD.INULL:
                 msg = "Reference header '{}' for iztype '{}' not set."

@@ -13,7 +13,7 @@ class UtilTestCase(unittest.TestCase):
     Test suite for obspy.db.util.
     """
 
-    def test_parseMappingData(self):
+    def test_parse_mapping(self):
         """
         Tests for function parse_mapping_data.
         """

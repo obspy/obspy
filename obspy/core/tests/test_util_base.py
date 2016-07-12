@@ -31,7 +31,7 @@ class UtilBaseTestCase(unittest.TestCase):
     Test suite for obspy.core.util.base
     """
     @unittest.skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
-    def test_getMatplotlibVersion(self):
+    def test_get_matplotlib_version(self):
         """
         Tests for the get_matplotlib_version() function as it continues to
         cause problems.
@@ -64,7 +64,7 @@ class UtilBaseTestCase(unittest.TestCase):
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
 
-    def test_NamedTemporaryFile_ContextManager(self):
+    def test_named_temporay_file__context_manager(self):
         """
         Tests the automatic closing/deleting of NamedTemporaryFile using the
         context manager.

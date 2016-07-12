@@ -20,17 +20,10 @@ import numpy as np
 
 from obspy import UTCDateTime
 from obspy.core.util import score_at_percentile
-from obspy.core.util.decorator import deprecated
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
                       SAMPLESIZES, UNSUPPORTED_ENCODINGS, clibmseed)
-
-
-@deprecated("'getStartAndEndTime' has been renamed to "
-            "'get_start_and_end_time'. Use that instead.")
-def getStartAndEndTime(*args, **kwargs):
-    return get_start_and_end_time(*args, **kwargs)
 
 
 def get_start_and_end_time(file_or_file_object):
@@ -100,12 +93,6 @@ def get_start_and_end_time(file_or_file_object):
         (info['number_of_records'] - 1) * info['record_length'])
     endtime = info['endtime']
     return starttime, endtime
-
-
-@deprecated("'getTimingAndDataQuality' has been renamed to "
-            "'get_timing_and_data_quality'. Use that instead.")
-def getTimingAndDataQuality(*args, **kwargs):
-    return get_timing_and_data_quality(*args, **kwargs)
 
 
 def get_timing_and_data_quality(file_or_file_object):
@@ -274,12 +261,6 @@ def get_timing_and_data_quality(file_or_file_object):
     result['timing_quality_upper_quantile'] = \
         score_at_percentile(timing_quality, 75, issorted=False)
     return result
-
-
-@deprecated("'getRecordInformation' has been renamed to "
-            "'get_record_information'. Use that instead.")
-def getRecordInformation(*args, **kwargs):
-    return get_record_information(*args, **kwargs)
 
 
 def get_record_information(file_or_file_object, offset=0, endian=None):
@@ -530,7 +511,7 @@ def _ctypes_array_2_numpy_array(buffer_, buffer_elements, sampletype):
     return numpy_array
 
 
-def _convert_MSR_to_dict(m):
+def _convert_msr_to_dict(m):
     """
     Internal method used for setting header attributes.
     """
@@ -544,7 +525,7 @@ def _convert_MSR_to_dict(m):
     return h
 
 
-def _convert_datetime_to_MSTime(dt):
+def _convert_datetime_to_mstime(dt):
     """
     Takes a obspy.util.UTCDateTime object and returns an epoch time in ms.
 
@@ -554,7 +535,7 @@ def _convert_datetime_to_MSTime(dt):
     return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
 
 
-def _convert_MSTime_to_datetime(timestring):
+def _convert_mstime_to_datetime(timestring):
     """
     Takes a Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
 
@@ -1206,12 +1187,6 @@ def _convert_flags_to_raw_byte(expected_flags, user_flags, recstart, recend):
     return flag_byte
 
 
-@deprecated("'shiftTimeOfFile' has been renamed to "
-            "'shift_time_of_file'. Use that instead.")
-def shiftTimeOfFile(*args, **kwargs):
-    return shift_time_of_file(*args, **kwargs)
-
-
 def shift_time_of_file(input_file, output_file, timeshift):
     """
     Takes a MiniSEED file and shifts the time of every record by the given
@@ -1269,7 +1244,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
 
     byteorder = info["byteorder"]
     sys_byteorder = "<" if (sys.byteorder == "little") else ">"
-    doSwap = False if (byteorder == sys_byteorder) else True
+    do_swap = False if (byteorder == sys_byteorder) else True
 
     # This is in this scenario somewhat easier to use than BytesIO because one
     # can directly modify the data array.
@@ -1294,7 +1269,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
 
         current_time_shift = current_record[40:44]
         current_time_shift.dtype = np.int32
-        if doSwap:
+        if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift = current_time_shift[0]
 
@@ -1328,7 +1303,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
             year.dtype = np.uint16
             julday.dtype = np.uint16
             msecs.dtype = np.uint16
-            if doSwap:
+            if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
@@ -1343,7 +1318,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
             second[0] = dtime.second
             msecs[0] = dtime.microsecond / 100
             # Swap again.
-            if doSwap:
+            if do_swap:
                 year = year.byteswap(False)
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
@@ -1363,7 +1338,7 @@ def shift_time_of_file(input_file, output_file, timeshift):
         # Now modify the time correction flag.
         current_time_shift += timeshift
         current_time_shift = np.array([current_time_shift], np.int32)
-        if doSwap:
+        if do_swap:
             current_time_shift = current_time_shift.byteswap(False)
         current_time_shift.dtype = np.uint8
         current_record[40:44] = current_time_shift[:]

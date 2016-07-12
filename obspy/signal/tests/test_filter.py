@@ -26,7 +26,7 @@ class FilterTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
 
-    def test_bandpassVsPitsa(self):
+    def test_bandpass_vs_pitsa(self):
         """
         Test Butterworth bandpass filter against Butterworth bandpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -53,7 +53,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_bandpassZPHSHVsPitsa(self):
+    def test_bandpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase bandpass filter against Butterworth
         zero-phase bandpass filter of PITSA. Note that the corners value is
@@ -86,7 +86,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_lowpassVsPitsa(self):
+    def test_lowpass_vs_pitsa(self):
         """
         Test Butterworth lowpass filter against Butterworth lowpass filter of
         PITSA. Note that the corners value is twice the value of the filter
@@ -112,7 +112,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_lowpassZPHSHVsPitsa(self):
+    def test_lowpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase lowpass filter against Butterworth
         zero-phase lowpass filter of PITSA. Note that the corners value is
@@ -144,7 +144,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_highpassVsPitsa(self):
+    def test_highpass_vs_pitsa(self):
         """
         Test Butterworth highpass filter against Butterworth highpass filter
         of PITSA. Note that the corners value is twice the value of the filter
@@ -170,7 +170,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_highpassZPHSHVsPitsa(self):
+    def test_highpass_zphsh_vs_pitsa(self):
         """
         Test Butterworth zero-phase highpass filter against Butterworth
         zero-phase highpass filter of PITSA. Note that the corners value is
@@ -202,7 +202,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
-    def test_envelopeVsPitsa(self):
+    def test_envelope_vs_pitsa(self):
         """
         Test Envelope filter against PITSA.
         The rms is not so good, but the fit is still good in most parts.
@@ -222,7 +222,7 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
 
-    def test_lowpassCheby2(self):
+    def test_lowpass_cheby_2(self):
         """
         Check magnitudes of basic lowpass cheby2
         """

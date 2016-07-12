@@ -14,7 +14,7 @@ C code (Kw2asc.c (see "KW2ASC.SRC" File in /doc section)).
     Kinemetrics(c)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------

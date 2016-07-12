@@ -17,8 +17,8 @@ READ_THE_DOCS = os.environ.get('READTHEDOCS', None) == 'True'
 
 # Force the use the agg backend which somehow on some systems is not selected
 # by the sphinx plotting routine.
-import matplotlib.pyplot as plt
-plt.switch_backend("agg")
+import matplotlib
+matplotlib.use("agg")
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -108,11 +108,17 @@ modindex_common_prefix = ['obspy.']
 
 # File formats to generate.
 plot_formats = [('png', 110), ('hires.png', 200)]
+if READ_THE_DOCS:
+    plot_formats += [('pdf', 200)]
 
 # Classes to use for gallery. Bootstrap-specific.
 gallery_plot_classes = ['col-xs-12',  # One column on extra-small
                         'col-sm-6',   # Two columns on small
                         'col-md-4']   # Three columns on medium and up
+
+# Use MathJax CDN script over HTTPS. (Remove when depending on Sphinx >= 1.3).
+mathjax_path = ('https://cdn.mathjax.org/mathjax/latest/MathJax.js?'
+                'config=TeX-AMS-MML_HTMLorMML')
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -174,7 +180,7 @@ html_theme_options = {
     # Options are "nav" (default), "footer" or anything else to exclude.
     'source_link_position': 'none',
 
-    # Bootswatch (http://bootswatch.com/) theme.
+    # Bootswatch (https://bootswatch.com/) theme.
     #
     # Options are nothing with "" (default) or the name of a valid theme
     # such as "amelia" or "cosmo" or "united".
@@ -320,8 +326,8 @@ man_pages = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python': ('https://docs.python.org/2.7/', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.org/', None),
     'sqlalchemy': ('http://docs.sqlalchemy.org/en/latest/', None),
 }

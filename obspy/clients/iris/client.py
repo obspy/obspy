@@ -6,7 +6,7 @@ IRIS Web service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -325,8 +325,8 @@ class Client(object):
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         # convert UTCDateTime to string for query
-        kwargs['starttime'] = UTCDateTime(starttime).format_IRIS_web_service()
-        kwargs['endtime'] = UTCDateTime(endtime).format_IRIS_web_service()
+        kwargs['starttime'] = UTCDateTime(starttime).format_iris_web_service()
+        kwargs['endtime'] = UTCDateTime(endtime).format_iris_web_service()
         # output
         if filename:
             kwargs['output'] = output
@@ -360,7 +360,7 @@ class Client(object):
         (http://service.iris.edu/irisws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
-        `RESP <http://www.iris.edu/ds/nodes/dmc/kb/questions/60/>`_
+        `RESP <https://ds.iris.edu/ds/nodes/dmc/kb/questions/60>`_
         format (as used by evalresp). Users can query for channel response by
         network, station, channel, location and time.
 
@@ -424,18 +424,18 @@ class Client(object):
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
-                    UTCDateTime(endtime).format_IRIS_web_service()
+                    UTCDateTime(endtime).format_iris_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif 'time' in kwargs:
             try:
                 kwargs['time'] = \
-                    UTCDateTime(kwargs['time']).format_IRIS_web_service()
+                    UTCDateTime(kwargs['time']).format_iris_web_service()
             except:
                 pass
         # build up query
@@ -538,18 +538,18 @@ class Client(object):
         if starttime and endtime:
             try:
                 kwargs['starttime'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['starttime'] = starttime
             try:
                 kwargs['endtime'] = \
-                    UTCDateTime(endtime).format_IRIS_web_service()
+                    UTCDateTime(endtime).format_iris_web_service()
             except:
                 kwargs['endtime'] = endtime
         elif starttime:
             try:
                 kwargs['time'] = \
-                    UTCDateTime(starttime).format_IRIS_web_service()
+                    UTCDateTime(starttime).format_iris_web_service()
             except:
                 kwargs['time'] = starttime
         data = self._fetch("sacpz", **kwargs)
@@ -620,7 +620,7 @@ class Client(object):
         (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
-        `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
+        `Flinn-Engdahl <https://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
         seismic region code or region name.
 
         :type lat: float
@@ -830,7 +830,7 @@ class Client(object):
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
-        `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+        `Bode Plots <https://en.wikipedia.org/wiki/Bode_plots>`_.
 
         :type network: str
         :param network: Network code, e.g. ``'IU'``.
@@ -954,7 +954,7 @@ class Client(object):
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         try:
-            kwargs['time'] = UTCDateTime(time).format_IRIS_web_service()
+            kwargs['time'] = UTCDateTime(time).format_iris_web_service()
         except:
             kwargs['time'] = time
         kwargs['minfreq'] = float(minfreq)

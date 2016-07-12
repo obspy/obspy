@@ -167,7 +167,7 @@ Gallery
     net.plot(projection="ortho")
 
 .. gallery-plot::
-    :target: packages/autogen/obspy.core.event.Catalog.plot.html
+    :target: packages/autogen/obspy.core.event.catalog.Catalog.plot.html
     :alt: Basemap preview plot of Catalog class
 
     from obspy import read_events
@@ -223,10 +223,84 @@ Gallery
 
     polynomial(tr.data, order=3, plot=True)
 
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.core.event.event.Event.plot.html
+    :alt: Event plot
+
+    from obspy import read_events
+    event = read_events("/path/to/CMTSOLUTION")[0]
+    event.plot(kind=[['global'], ['p_sphere', 'p_quiver']])
+
 .. image:: /_static/sds_report.png
     :target: packages/autogen/obspy.scripts.sds_html_report.html
     :alt: SDS html report
     :scale: 50%
+
+Colormap comparison
+===================
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import _colormap_plot_overview
+    _colormap_plot_overview()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_cwt
+    _colormap_plot_cwt([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_array_response
+    _colormap_plot_array_response([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_similarity
+    _colormap_plot_similarity([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_time
+    _colormap_plot_beamforming_time([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_polar
+    _colormap_plot_beamforming_polar([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r, pqlx
+    from obspy.imaging.cm import _colormap_plot_ppsd
+    _colormap_plot_ppsd([viridis, viridis_r, viridis_white, viridis_white_r, pqlx])
 
 .. raw:: html
 

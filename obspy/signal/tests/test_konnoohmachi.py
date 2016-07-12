@@ -27,7 +27,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_smoothingWindow(self):
+    def test_smoothing_window(self):
         """
         Tests the creation of the smoothing window.
         """
@@ -69,7 +69,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
         self.assertTrue(np.all(window >= 0.0))
         np.seterr(**temp)
 
-    def test_smoothingMatrix(self):
+    def test_smoothing_matrix(self):
         """
         Tests some aspects of the matrix.
         """

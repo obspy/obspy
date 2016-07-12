@@ -17,7 +17,7 @@ lower-level packet handling see
     The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 
 The obspy.clients.seedlink development has been supported by the NERA project
 ["Network of European Research Infrastructures for Earthquake Risk Assessment

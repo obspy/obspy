@@ -29,7 +29,7 @@ class ClientTestCase(unittest.TestCase):
         UTCDateTime.DEFAULT_PRECISION = 6
 
     @skip_on_network_error
-    def test_getWaveform(self):
+    def test_get_waveform(self):
         """
         Tests get_waveforms method.
         """
@@ -82,7 +82,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(stream[2].stats.channel, 'EHE')
 
     @skip_on_network_error
-    def test_saveWaveform(self):
+    def test_save_waveform(self):
         """
         Tests save_waveforms method.
         """

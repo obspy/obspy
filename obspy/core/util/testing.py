@@ -6,7 +6,7 @@ Testing utilities for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -34,6 +34,27 @@ from obspy.core.util.misc import CatchOutput, get_untracked_files_from_git, \
 
 
 MATPLOTLIB_VERSION = get_matplotlib_version()
+# this dictionary contains the locations of checker routines that determine
+# whether the module's tests can be executed or not (e.g. because test server
+# is unreachable, necessary ports are blocked, etc.).
+# A checker routine should return either an empty string (tests can and will
+# be executed) or a message explaining why tests can not be executed (all
+# tests of corresponding module will be skipped).
+MODULE_TEST_SKIP_CHECKS = {
+    'clients.seishub':
+        'obspy.clients.seishub.tests.test_client._check_server_availability',
+    }
+# List of flake8 error codes to ignore. Keep it as small as possible - there
+# usually is little reason to fight flake8.
+FLAKE8_IGNORE_CODES = [
+    # E402 module level import not at top of file
+    # This is really annoying when using the standard library import hooks
+    # from the future package.
+    "E402"
+    ]
+FLAKE8_EXCLUDE_FILES = [
+    "*/__init__.py",
+    ]
 
 
 def add_unittests(testsuite, module_name):
@@ -54,17 +75,16 @@ def add_unittests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_unittests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests",
+    module_tests = __import__(module_name + ".tests",
                               fromlist=[native_str("obspy")])
-    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
+    filename_pattern = os.path.join(module_tests.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
-    for module_name in module_names:
-        module = __import__(module_name,
-                            fromlist=[native_str("obspy")])
-        testsuite.addTest(module.suite())
+    module_names = (".".join([module_name, "tests", name]) for name in names)
+    for _module_name in module_names:
+        _module = __import__(_module_name,
+                             fromlist=[native_str("obspy")])
+        testsuite.addTest(_module.suite())
 
 
 def add_doctests(testsuite, module_name):
@@ -85,12 +105,11 @@ def add_doctests(testsuite, module_name):
     >>> suite = unittest.TestSuite()
     >>> add_doctests(suite, "obspy.core")
     """
-    MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist=[native_str("obspy")])
-    MODULE_PATH = MODULE.__path__[0]
-    MODULE_PATH_LEN = len(MODULE_PATH)
+    module = __import__(module_name, fromlist=[native_str("obspy")])
+    module_path = module.__path__[0]
+    module_path_len = len(module_path)
 
-    for root, _dirs, files in os.walk(MODULE_PATH):
+    for root, _dirs, files in os.walk(module_path):
         # skip directories without __init__.py
         if '__init__.py' not in files:
             continue
@@ -109,12 +128,12 @@ def add_doctests(testsuite, module_name):
             if not file.endswith('.py'):
                 continue
             # get module name
-            parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
-            module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
+            parts = root[module_path_len:].split(os.sep)[1:]
+            _module_name = ".".join([module_name] + parts + [file[:-3]])
             try:
-                module = __import__(module_name,
-                                    fromlist=[native_str("obspy")])
-                testsuite.addTest(doctest.DocTestSuite(module))
+                _module = __import__(_module_name,
+                                     fromlist=[native_str("obspy")])
+                testsuite.addTest(doctest.DocTestSuite(_module))
             except ValueError:
                 pass
 
@@ -123,7 +142,7 @@ def write_png(arr, filename):
     """
     Custom write_png() function. matplotlib < 1.3 cannot write RGBA png files.
 
-    Modified from http://stackoverflow.com/a/19174800/1657047
+    Modified from https://stackoverflow.com/a/19174800
     """
     import zlib
     import struct
@@ -220,9 +239,9 @@ def compare_images(expected, actual, tol):
         return None
 
     # Save diff image, expand differences in luminance domain
-    absDiffImage = np.abs(expected_image - actual_image)
-    absDiffImage *= 10.0
-    save_image_np = np.clip(absDiffImage, 0.0, 1.0)
+    abs_diff_image = np.abs(expected_image - actual_image)
+    abs_diff_image *= 10.0
+    save_image_np = np.clip(abs_diff_image, 0.0, 1.0)
     # Hard-code the alpha channel to fully solid
     save_image_np[:, :, 3] = 1.0
 
@@ -254,6 +273,13 @@ class ImageComparison(NamedTemporaryFile):
     :type adjust_tolerance: bool, optional
     :param adjust_tolerance: Adjust the tolerance based on the matplotlib
         version. Can optionally be turned off to simply compare two images.
+    :type plt_close_all_enter: bool
+    :param plt_close_all_enter: Whether to close all open figures when entering
+        context (:func:`matplotlib.pyplot.close` with "all" as first argument.
+    :type plt_close_all_exit: bool
+    :param plt_close_all_exit: Whether to call :func:`matplotlib.pyplot.close`
+        with "all" as first argument (close all figures) or no arguments (close
+        active figure). Has no effect if ``plt_close=False``.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -286,7 +312,8 @@ class ImageComparison(NamedTemporaryFile):
     ...     # image is compared against baseline image automatically
     """
     def __init__(self, image_path, image_name, reltol=1,
-                 adjust_tolerance=True, *args, **kwargs):
+                 adjust_tolerance=True, plt_close_all_enter=True,
+                 plt_close_all_exit=True, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -297,6 +324,8 @@ class ImageComparison(NamedTemporaryFile):
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
         self.tol = reltol * 3.0
+        self.plt_close_all_enter = plt_close_all_enter
+        self.plt_close_all_exit = plt_close_all_exit
 
         # Higher tolerance for older matplotlib versions. This is pretty
         # high but the pictures are at least guaranteed to be generated and
@@ -305,6 +334,12 @@ class ImageComparison(NamedTemporaryFile):
         if adjust_tolerance:
             if MATPLOTLIB_VERSION < [1, 3, 0]:
                 self.tol *= 30
+            # Matplotlib 1.5 changes the text positioning a bit. This
+            # results in many tests failing. Instead of changing all baseline
+            # images (which we'll have to do for mpl 2.0 in any case) we
+            # just up the tolerance a bit.
+            elif MATPLOTLIB_VERSION[:2] == [1, 5]:
+                self.tol *= 17
 
     def __enter__(self):
         """
@@ -343,6 +378,13 @@ class ImageComparison(NamedTemporaryFile):
             rcParams['text.hinting_factor'] = 8
         except KeyError:
             warnings.warn("could not set rcParams['text.hinting_factor']")
+
+        if self.plt_close_all_enter:
+            import matplotlib.pyplot as plt
+            try:
+                plt.close("all")
+            except:
+                pass
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
@@ -360,14 +402,25 @@ class ImageComparison(NamedTemporaryFile):
                 msg = self.compare()
         # we can still upload images if comparison fails on two different sized
         # images
-        except ValueError as e:
+        except ImageComparisonException as e:
             failed = True
-            if "operands could not be broadcast together" in msg:
+            if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
                 msg += ("\tExpected:  {expected}\n"
                         "\tActual:    {actual}\n"
                         "\tDiff:      {diff}\n").format(**upload_links)
+                raise ImageComparisonException(msg)
+            raise
+        # we can still upload actual image if baseline image does not exist
+        except IOError as e:
+            failed = True
+            if "Baseline image" in msg and "does not exist." in msg:
+                msg = str(e) + "\n"
+                upload_links = self._upload_images()
+                msg += ("\tExpected:  ---\n"
+                        "\tActual:    {actual}\n"
+                        "\tDiff:      ---\n").format(**upload_links)
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
@@ -383,7 +436,7 @@ class ImageComparison(NamedTemporaryFile):
                 failed = False
             if failed:
                 # base message on deviation of baseline and actual image
-                msg = ("Image comparision failed.\n"
+                msg = ("Image comparison failed.\n"
                        "\tRMS:       {rms}\n"
                        "\tTolerance: {tol}\n").format(**msg)
                 # optionally, copy failed images from /tmp and append
@@ -406,10 +459,14 @@ class ImageComparison(NamedTemporaryFile):
         # finally clean up after the image test, whether failed or not.
         # if specified move generated output to source tree
         finally:
-            import matplotlib.pyplot as plt
             self.close()  # flush internal buffer
             self._fileobj.close()
-            plt.close()
+            if self.plt_close_all_exit:
+                import matplotlib.pyplot as plt
+                try:
+                    plt.close("all")
+                except:
+                    pass
             if self.keep_output:
                 if failed or not self.keep_only_failed:
                     self._copy_tempfiles()
@@ -503,11 +560,6 @@ class ImageComparison(NamedTemporaryFile):
             return msg % (e.__class__.__name__, str(e))
         return links
 
-
-FLAKE8_EXCLUDE_FILES = [
-    "*/__init__.py",
-    ]
-
 try:
     import flake8
 except ImportError:
@@ -515,15 +567,6 @@ except ImportError:
 else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
-
-# List of flake8 error codes to ignore. Keep it as small as possible - there
-# usually is little reason to fight flake8.
-FLAKE8_IGNORE_CODES = [
-    # E402 module level import not at top of file
-    # This is really annoying when using the standard library import hooks
-    # from the future package.
-    "E402"
-]
 
 
 def check_flake8():
@@ -579,18 +622,6 @@ def check_flake8():
     return report, out.stdout
 
 
-# this dictionary contains the locations of checker routines that determine
-# whether the module's tests can be executed or not (e.g. because test server
-# is unreachable, necessary ports are blocked, etc.).
-# A checker routine should return either an empty string (tests can and will
-# be executed) or a message explaining why tests can not be executed (all
-# tests of corresponding module will be skipped).
-MODULE_TEST_SKIP_CHECKS = {
-    'seishub':
-        'obspy.clients.seishub.tests.test_client._check_server_availability',
-    }
-
-
 def compare_xml_strings(doc1, doc2):
     """
     Simple helper function to compare two XML strings.
@@ -626,7 +657,7 @@ def compare_xml_strings(doc1, doc2):
         raise AssertionError("Strings are not equal.\n" + err_msg)
 
 
-def remove_unique_IDs(xml_string, remove_creation_time=False):
+def remove_unique_ids(xml_string, remove_creation_time=False):
     """
     Removes unique ID parts of e.g. 'publicID="..."' attributes from xml
     strings.

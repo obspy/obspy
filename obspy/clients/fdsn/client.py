@@ -7,7 +7,7 @@ FDSN Web service client for ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -20,7 +20,8 @@ import copy
 import gzip
 import io
 import os
-from socket import timeout as SocketTimeout
+import re
+from socket import timeout as socket_timeout
 import textwrap
 import threading
 import warnings
@@ -63,9 +64,9 @@ class CustomRedirectHandler(urllib.request.HTTPRedirectHandler):
 
         # be conciliant with URIs containing a space
         newurl = newurl.replace(' ', '%20')
-        CONTENT_HEADERS = ("content-length", "content-type")
+        content_headers = ("content-length", "content-type")
         newheaders = dict((k, v) for k, v in req.headers.items()
-                          if k.lower() not in CONTENT_HEADERS)
+                          if k.lower() not in content_headers)
 
         # Also redirect the data of the request which the standard library
         # interestingly enough does not do.
@@ -101,6 +102,35 @@ class Client(object):
     # Dictionary caching any discovered service. Therefore repeatedly
     # initializing a client with the same base URL is cheap.
     __service_discovery_cache = {}
+
+    RE_UINT8 = '(?:25[0-5]|2[0-4]\d|[0-1]?\d{1,2})'
+    RE_HEX4 = '(?:[\d,a-f]{4}|[1-9,a-f][0-9,a-f]{0,2}|0)'
+
+    RE_IPv4 = '(?:' + RE_UINT8 + '(?:\.' + RE_UINT8 + '){3})'
+    RE_IPv6 = \
+        '(?:\[' + RE_HEX4 + '(?::' + RE_HEX4 + '){7}\]' + \
+        '|\[(?:' + RE_HEX4 + ':){0,5}' + RE_HEX4 + '::\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,5}\]' + \
+        '|\[::' + RE_HEX4 + '(?::' + RE_HEX4 + '){0,3}:' + RE_IPv4 + '\]' + \
+        '|\[' + RE_HEX4 + ':' + \
+        '(?:' + RE_HEX4 + ':|:' + RE_HEX4 + '){0,4}' + \
+        ':' + RE_HEX4 + '\])'
+
+    URL_REGEX = 'https?://' + \
+                '(' + RE_IPv4 + \
+                '|' + RE_IPv6 + \
+                '|localhost' + \
+                '|\w+' + \
+                '|(?:\w(?:[\w-]{0,61}[\w])?\.){1,}([a-z]{2,6}))' + \
+                '(?::\d{2,5})?' + \
+                '(/[\w\.-]+)*/?$'
+
+    @classmethod
+    def _validate_base_url(cls, base_url):
+        if re.match(cls.URL_REGEX, base_url, re.IGNORECASE):
+            return True
+        else:
+            return False
 
     def __init__(self, base_url="IRIS", major_versions=None, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False,
@@ -168,34 +198,22 @@ class Client(object):
         # the client more convenient.
         self.__version_cache = {}
 
-        # handle switch of SCEC to SCEDC, see #998
-        if base_url.upper() == "SCEC":
-            base_url = "SCEDC"
-            msg = ("FDSN short-URL 'SCEC' has been replaced by 'SCEDC'. "
-                   "Please change to 'Client('SCEDC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # NIEP was misspelled for a while.
-        elif base_url.upper() == "NEIP":
-            base_url = "NIEP"
-            msg = ("FDSN short-URL 'NEIP' has been replaced by 'NIEP'. "
-                   "Please change to 'Client('NIEP')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-        # Deprecate FDSN URL-shortcut 'NERIES' in favour of 'EMSC', see #1146.
-        # TODO: remove in 0.12.x or 1.x release
-        elif base_url.upper() == "NERIES":
-            base_url = "EMSC"
-            msg = ("FDSN short-URL 'NERIES' has been replaced by 'EMSC'. "
-                   "Please change to 'Client('EMSC')'. This re-routing will "
-                   "be removed in a future release.")
-            warnings.warn(msg)
-
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
+        else:
+            if base_url.isalpha():
+                msg = "The FDSN service shortcut `{}` is unknown."\
+                      .format(base_url)
+                raise ValueError(msg)
 
         # Make sure the base_url does not end with a slash.
         base_url = base_url.strip("/")
+        # Catch invalid URLs to avoid confusing error messages
+        if not self._validate_base_url(base_url):
+            msg = "The FDSN service base URL `{}` is not a valid URL."\
+                  .format(base_url)
+            raise ValueError(msg)
+
         self.base_url = base_url
 
         # Only add the authentication handler if required.
@@ -300,11 +318,11 @@ class Client(object):
             of degrees from the geographic point defined by the latitude and
             longitude parameters.
         :type mindepth: float, optional
-        :param mindepth: Limit to events with depth more than the specified
-            minimum.
+        :param mindepth: Limit to events with depth, in kilometers, larger than
+            the specified minimum.
         :type maxdepth: float, optional
-        :param maxdepth: Limit to events with depth less than the specified
-            maximum.
+        :param maxdepth: Limit to events with depth, in kilometers, smaller
+            than the specified maximum.
         :type minmagnitude: float, optional
         :param minmagnitude: Limit to events with a magnitude larger than the
             specified minimum.
@@ -488,18 +506,18 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated.
+            comma-separated (e.g. ``"IU,TA"``).
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"ANMO,PFO"``).
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. As a special case ``“--“`` (two
-            dashes) will be translated to a string of two space characters to
-            match blank location IDs.
+            identifiers are comma-separated (e.g. ``"00,01"``).  As a
+            special case ``“--“`` (two dashes) will be translated to a string
+            of two space characters to match blank location IDs.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type minlatitude: float
         :param minlatitude: Limit to stations with a latitude larger than the
             specified minimum.
@@ -629,16 +647,17 @@ class Client(object):
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
-            comma-separated. Wildcards are allowed.
+            comma-separated (e.g. ``"IU,TA"``). Wildcards are allowed.
         :type station: str
         :param station: Select one or more SEED station codes. Multiple codes
-            are comma-separated. Wildcards are allowed.
+            are comma-separated (e.g. ``"ANMO,PFO"``). Wildcards are allowed.
         :type location: str
         :param location: Select one or more SEED location identifiers. Multiple
-            identifiers are comma-separated. Wildcards are allowed.
+            identifiers are comma-separated (e.g. ``"00,01"``). Wildcards are
+            allowed.
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
-            are comma-separated.
+            are comma-separated (e.g. ``"BHZ,HHZ"``).
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Limit results to time series samples on or after the
             specified start time
@@ -744,7 +763,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information
@@ -895,7 +914,7 @@ class Client(object):
             station, location, channel, starttime and endtime.
 
         (2) As a valid request string/file as defined in the
-            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            `FDSNWS documentation <https://www.fdsn.org/webservices/>`_.
             The request information can be provided as a..
 
             - a string containing the request information
@@ -917,8 +936,7 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
@@ -948,13 +966,12 @@ class Client(object):
             Sending institution: IRIS-DMC (IRIS-DMC)
             Contains:
                 Networks (2):
-                    GR
-                    IU
+                    GR, IU
                 Stations (2):
                     GR.GRA1 (GRAFENBERG ARRAY, BAYERN)
                     IU.ANMO (Albuquerque, New Mexico, USA)
                 Channels (5):
-                    GR.GRA1..BHE, GR.GRA1..BHN, GR.GRA1..BHZ, IU.ANMO.00.BHZ,
+                    GR.GRA1..BHZ, GR.GRA1..BHN, GR.GRA1..BHE, IU.ANMO.00.BHZ,
                     IU.ANMO.10.BHZ
         >>> inv = client.get_stations_bulk("/tmp/request.txt") \
         ...     # doctest: +SKIP
@@ -1113,6 +1130,14 @@ class Client(object):
                     raise TypeError(msg)
             # Now attempt to convert the parameter to the correct type.
             this_type = service_params[key]["type"]
+
+            # Try to decode to be able to work with bytes.
+            if this_type is native_str:
+                try:
+                    value = value.decode()
+                except AttributeError:
+                    pass
+
             try:
                 value = this_type(value)
             except:
@@ -1122,7 +1147,7 @@ class Client(object):
             # Now convert to a string that is accepted by the webservice.
             value = convert_to_string(value)
             if isinstance(value, (str, native_str)):
-                if not value:
+                if not value and key != "location":
                     continue
             final_parameter_set[key] = value
 
@@ -1172,8 +1197,8 @@ class Client(object):
         for service in services:
             if service not in FDSNWS:
                 continue
-            SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
-            SERVICE_OPTIONAL = OPTIONAL_PARAMETERS[service]
+            service_default = DEFAULT_PARAMETERS[service]
+            service_optional = OPTIONAL_PARAMETERS[service]
 
             msg.append("Parameter description for the "
                        "'%s' service (v%s) of '%s':" % (
@@ -1191,17 +1216,17 @@ class Client(object):
 
             printed_something = False
 
-            for name in SERVICE_DEFAULT:
+            for name in service_default:
                 if name in self.services[service]:
                     available_default_parameters.append(name)
                 else:
                     missing_default_parameters.append(name)
 
-            for name in SERVICE_OPTIONAL:
+            for name in service_optional:
                 if name in self.services[service]:
                     optional_parameters.append(name)
 
-            defined_parameters = SERVICE_DEFAULT + SERVICE_OPTIONAL
+            defined_parameters = service_default + service_optional
             for name in self.services[service].keys():
                 if name not in defined_parameters:
                     additional_parameters.append(name)
@@ -1392,7 +1417,7 @@ class Client(object):
                             raise
                     except urllib.error.URLError as e:
                         wadl_queue.put((url, "timeout"))
-                    except SocketTimeout as e:
+                    except socket_timeout as e:
                         wadl_queue.put((url, "timeout"))
             return ThreadURL()
 
@@ -1614,6 +1639,11 @@ def download_url(url, opener, timeout=10, headers={}, debug=False,
     if debug is True:
         print("Downloading %s %s requesting gzip compression" % (
             url, "with" if use_gzip else "without"))
+        if data:
+            print("Sending along the following payload:")
+            print("-" * 70)
+            print(data.decode())
+            print("-" * 70)
 
     try:
         request = urllib.request.Request(url=url, headers=headers)

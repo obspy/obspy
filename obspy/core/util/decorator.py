@@ -6,12 +6,12 @@ Decorator used in ObsPy.
     The ObsPy Development Team (devs@obspy.org)
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
+from future.utils import PY2, native_str
 
 import functools
 import inspect
@@ -48,9 +48,13 @@ def deprecated(warning_msg=None):
             msg = func.__doc__
         elif warning_msg:
             msg = warning_msg
+            if PY2 and inspect.ismethod(func):
+                func.im_func.__doc__ = warning_msg
+            else:
+                func.__doc__ = warning_msg
         else:
             msg = "Call to deprecated function %s." % func.__name__
-        warnings.warn(msg, category=ObsPyDeprecationWarning)
+        warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         return func(*args, **kwargs)
     return _deprecated
 
@@ -94,10 +98,12 @@ def deprecated_keywords(keywords):
                     nkw = keywords[kw]
                     if nkw is None:
                         warnings.warn(msg2 % (kw, fname),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
-                                      category=ObsPyDeprecationWarning)
+                                      category=ObsPyDeprecationWarning,
+                                      stacklevel=3)
                         kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
@@ -150,6 +156,11 @@ def uncompress_file(func, filename, *args, **kwargs):
                     if not tarinfo.isfile():
                         continue
                     data = tar.extractfile(tarinfo).read()
+                    # Skip empty files - we don't need them no matter what
+                    # and it guards against rare cases where waveforms files
+                    # are also slightly valid tar-files.
+                    if not data:
+                        continue
                     obj_list.append(data)
         except:
             pass

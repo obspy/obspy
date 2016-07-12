@@ -10,7 +10,7 @@ it understandable in the first place.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2014-2015
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -21,11 +21,13 @@ with standard_library.hooks():
 
 import collections
 import copy
+import fnmatch
 from multiprocessing.pool import ThreadPool
-import numpy as np
 import os
 import time
 import timeit
+
+import numpy as np
 
 import obspy
 from obspy.core.util import Enum
@@ -530,8 +532,7 @@ class ClientDownloadHelper(object):
         # There are essentially two possibilities. If no station exists yet,
         # it will choose the largest subset of stations satisfying the
         # minimum inter-station distance constraint.
-        if not existing_stations and \
-                not any([_i.has_existing_time_intervals for _i in stations]):
+        if not existing_stations:
             # Build k-d-tree and query for the neighbours of each point within
             # the minimum distance.
             kd_tree = utils.SphericalNearestNeighbour(stations)
@@ -741,7 +742,7 @@ class ClientDownloadHelper(object):
         curr_chunks_mb = 0
 
         # Don't request more than 50 chunks at once to not choke the servers.
-        MAX_CHUNK_LENGTH = 50
+        max_chunk_length = 50
 
         counter = collections.Counter()
 
@@ -773,7 +774,7 @@ class ClientDownloadHelper(object):
                     curr_chunks_mb += \
                         sr * duration * 4.0 / 3.0 / 1024.0 / 1024.0
                     if curr_chunks_mb >= chunk_size_in_mb or \
-                            len(chunks_curr) >= MAX_CHUNK_LENGTH:
+                            len(chunks_curr) >= max_chunk_length:
                         chunks.append(chunks_curr)
                         chunks_curr = []
                         curr_chunks_mb = 0
@@ -1074,6 +1075,14 @@ class ClientDownloadHelper(object):
                 "Client '{0}' - Failed getting availability: %s".format(
                     self.client_name), str(e))
             return
+        # This sometimes fires if a service returns some random stuff which
+        # is not a valid station file.
+        except Exception as e:
+            self.logger.error(
+                "Client '{0}' - Failed getting availability due to "
+                "unexpected exception: %s".format(self.client_name), str(e))
+            return
+
         self.logger.info("Client '%s' - Successfully requested availability "
                          "(%.2f seconds)" % (self.client_name, end - start))
 
@@ -1082,7 +1091,32 @@ class ClientDownloadHelper(object):
                      for _i in self.restrictions]
 
         for network in inv:
+            # Skip network if so desired.
+            skip_network = False
+            for pattern in self.restrictions.exclude_networks:
+                if fnmatch.fnmatch(network.code, pattern):
+                    skip_network = True
+                    break
+            if skip_network:
+                continue
+
             for station in network:
+                # Skip station if so desired.
+                skip_station = False
+                for pattern in self.restrictions.exclude_stations:
+                    if fnmatch.fnmatch(station.code, pattern):
+                        skip_station = True
+                        break
+                if skip_station:
+                    continue
+
+                # If an inventory is given, only keep stations part of the
+                # inventory.
+                if self.restrictions.limit_stations_to_inventory is not None \
+                        and (network.code, station.code) not in \
+                        self.restrictions.limit_stations_to_inventory:
+                    continue
+
                 # Skip the station if it is not in the desired domain.
                 if needs_filtering is True and \
                         not self.domain.is_in_domain(station.latitude,

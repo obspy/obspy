@@ -16,38 +16,38 @@ class SLClientTestCase(unittest.TestCase):
 
     @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_info(self):
-        slClient = SLClient(loglevel='DEBUG')
-        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
-        slClient.infolevel = "ID"
-        slClient.verbose = 2
-        slClient.initialize()
-        slClient.run()
+        sl_client = SLClient(loglevel='DEBUG')
+        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+        sl_client.infolevel = "ID"
+        sl_client.verbose = 2
+        sl_client.initialize()
+        sl_client.run()
 
     @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_time_window(self):
-        slClient = SLClient()
-        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
-        slClient.multiselect = ("GE_STU:BHZ")
+        sl_client = SLClient()
+        sl_client.slconn.set_sl_address("geofon.gfz-potsdam.de:18000")
+        sl_client.multiselect = ("GE_STU:BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).format_seedlink()
-        slClient.end_time = (dt - 60.0).format_seedlink()
-        slClient.verbose = 2
-        slClient.initialize()
-        slClient.run()
+        sl_client.begin_time = (dt - 120.0).format_seedlink()
+        sl_client.end_time = (dt - 60.0).format_seedlink()
+        sl_client.verbose = 2
+        sl_client.initialize()
+        sl_client.run()
 
     @unittest.skipIf(__name__ != '__main__', 'test must be started manually')
     def test_issue708(self):
-        slClient = SLClient()
-        slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
-        slClient.multiselect = ("G_FDF:00BHZ, G_SSB:00BHZ")
+        sl_client = SLClient()
+        sl_client.slconn.set_sl_address("rtserve.iris.washington.edu:18000")
+        sl_client.multiselect = ("G_FDF:00BHZ, G_SSB:00BHZ")
         # set a time window from 2 min - 1 min in the past
         dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).format_seedlink()
-        slClient.end_time = (dt - 60.0).format_seedlink()
-        slClient.verbose = 2
-        slClient.initialize()
-        slClient.run()
+        sl_client.begin_time = (dt - 120.0).format_seedlink()
+        sl_client.end_time = (dt - 60.0).format_seedlink()
+        sl_client.verbose = 2
+        sl_client.initialize()
+        sl_client.run()
 
 
 def suite():
