@@ -40,7 +40,7 @@ else:
 
 data = requests.get(
     "https://api.github.com/repos/obspy/obspy/pulls",
-    params={"state": "open", "sort": "created", "direction": "desc",
+    params={"state": "open", "sort": "updated", "direction": "desc",
             "per_page": 100},
     headers=headers)
 try:
