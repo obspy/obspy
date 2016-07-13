@@ -100,7 +100,6 @@ install:
         requests
   - source activate test-environment
   # install packages not available via conda
-  - pip install coveralls
   - pip install codecov
   - pip install geographiclib
   # current pyimgur stable release has a py3 incompatibility
@@ -161,7 +160,6 @@ after_success:
   - mv .coverage ../.coverage.empty
   - cd ..
   - coverage combine
-  - coveralls
   - codecov
 
 notifications:
