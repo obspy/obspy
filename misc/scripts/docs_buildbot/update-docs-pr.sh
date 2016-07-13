@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # check if a PR build is already running
-test -f $HOME/update-docs-pr.pid && echo "doc building aborted: pid file exists" && exit 1
+test -f $HOME/update-docs-pr.pid && echo "PR docs checking/building aborted: pid file exists" && exit 1
 
 cd $HOME
 anaconda3/bin/python update_pull_request_metadata.py
@@ -31,9 +31,10 @@ do
     PR=${FILE##*/}
     PR=${PR%.*}
     DATETIME=`date --iso-8601=seconds`
+    echo "Starting docs build for PR $PR"
     bash $HOME/update-docs.sh -p $PR
     STATUS=`echo $?`
-    echo $STATUS
+    echo "Docs build for PR $PR exited with status: $STATUS"
     if [ ! "$STATUS" = "-1" ]
     then
         # double check that output is really where it should be before marking

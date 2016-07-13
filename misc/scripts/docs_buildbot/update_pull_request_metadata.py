@@ -12,9 +12,14 @@ def check_docs_build_requested(issue_number, headers=None):
     :rtype: bool
     """
     url = "https://api.github.com/repos/obspy/obspy/issues/{:d}/comments"
-    data = requests.get(url.format(issue_number), params={"per_page": 100},
-                        headers=headers)
-    data = data.json()
+    data_ = requests.get(url.format(issue_number),
+                         params={"per_page": 100}, headers=headers)
+    data = data_.json()
+    url = data_.links.get("next", {}).get("url", None)
+    while url:
+        data_ = requests.get(url, headers=headers)
+        data += data_.json()
+        url = data_.links.get("next", {}).get("url", None)
     if not isinstance(data, list):
         from pprint import pprint
         msg = "Unexpected response from github API:\n{}".format(pprint(data))
@@ -45,6 +50,10 @@ except:
     raise
 data = data.json()
 
+pr_numbers = [d['number'] for d in data]
+print("Checking the following open PRs if a docs build is requested and "
+      "needed: {}".format(str(pr_numbers)))
+
 for d in data:
     # extract the pieces we need from the PR data
     number = d['number']
@@ -63,6 +72,9 @@ for d in data:
         print(commit_data.json())
         raise
     commit_data = commit_data.json()
+    time = commit_data['committer']['date']
+    print("PR #{} requests a docs build, latest commit {} at {}.".format(
+        number, commit, time))
     time = int(UTCDateTime(commit_data['committer']['date']).timestamp)
 
     filename = os.path.join("pull_request_docs", str(number))
@@ -81,7 +93,11 @@ for d in data:
     if os.path.exists(filename_done):
         time_done = UTCDateTime(os.stat(filename_done).st_atime)
         if time_done > time:
+            print("PR #{} was last built at {} and does not need a "
+                  "new build.".format(number, time_done))
             continue
     # ..otherwise touch the .todo file
     with open(filename_todo, "wb"):
-        pass
+        print("PR #{} build has been queued.".format(number))
+
+print("Done checking which PRs require a docs build.")

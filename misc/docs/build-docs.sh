@@ -96,6 +96,8 @@ fi
 
 # run develop.sh
 cd $GITDIR
+git status
+git log -1 | cat
 # export LDFLAGS="-lgcov"  # coverage on C code (make c_coverage)
 #$BASEDIR/bin/python setup.py develop --verbose
 python setup.py develop --verbose || exit 1
