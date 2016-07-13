@@ -45,8 +45,28 @@ class DataQualityEncoder(json.JSONEncoder):
 
 class MSEEDMetadata(object):
     """
-    A container for MSEED specific metadata including QC.
+    A container for mSEED specific metadata, including quality control
+    parameters.
+
+    .. rubric:: Example
+
+    >>> from obspy.signal.quality_control import
+    ...     MSEEDMetadata #doctest: +SKIP
+    >>> mseedqc = MSEEDMetadata(['path/to/file',
+    ...                         'path/to/file2']) #doctest: +SKIP
+
+    The class requires a list of files for calculating metrics.
+    Add optional parameters ``starttime="YYYY-MM-DDThh:mm:ss`` and
+    ``endtime="YYYY-MM-DDThh:mm:ss"`` or ``obspy.core.utcdatetime.UTCDateTime``
+    to limit metric calculation to this window. Continuous segments are
+    returned when add_c_segments=True and mSEED header flags information
+    is returned when ``add_flags=True``.
+
+    To print the calculated metrics call the method
+
+    >>> mseedqc.get_json_meta() #doctest: +SKIP
     """
+
     def __init__(self, files, starttime=None, endtime=None,
                  add_c_segments=True, add_flags=False):
         """
@@ -66,21 +86,6 @@ class MSEEDMetadata(object):
         :type add_c_segments: bool
         :param add_flags: Include miniSEED header statistics in result.
         :type add_flags: bool
-
-        .. rubric:: Example
-
-        >>> from obspy.signal.quality_control import
-        ...     MSEEDMetadata #doctest: +SKIP
-        >>> mseedqc = MSEEDMetadata(['path/to/file',
-        ...                         'path/to/file2']) #doctest: +SKIP
-        >>> mseedqc.get_json_meta() #doctest: +SKIP
-
-        The class requires a list of files for calculating metrics.
-        Add optional parameters ``starttime="YYYY-MM-DDThh:mm:ss`` and
-        ``endtime="YYYY-MM-DDThh:mm:ss"`` or obspy.core.utcdatetime.UTCDateTime
-        to limit metric calculation to this window. Continuous segments are
-        returned when add_c_segments=True and mSEED header flags information
-        is returned when ``add_flags=True``.
         """
 
         self.data = obspy.Stream()
@@ -277,7 +282,7 @@ class MSEEDMetadata(object):
     @property
     def number_of_records(self):
         """
-        Number of records across files.
+        Number of records across files before slicing.
         """
         return sum(tr.stats.mseed.number_of_records for tr in self.data)
 
@@ -309,8 +314,10 @@ class MSEEDMetadata(object):
         meta = self.meta
 
         # Save first and last sample of the trace
-        meta['first_sample'] = self.data[0].stats.starttime
-        meta['last_sample'] = self.data[-1].stats.endtime
+        # Look for the maximum endtime and minimum starttime in case
+        # traces are not in order.
+        meta['first_sample'] = min(tr.stats.starttime for tr in self.data)
+        meta['last_sample'] = max(tr.stats.endtime for tr in self.data)
 
         # Add some other parameters to the metadata object
         meta['seed_id'] = self.data[0].id
