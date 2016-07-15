@@ -501,6 +501,20 @@ class CatalogBasemapTestCase(unittest.TestCase):
                      resolution='c', water_fill_color='#98b7e2', label=None,
                      color='date')
 
+    def test_catalog_plot_ortho_longitude_wrap(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters, using Basemap, with longitudes that need the mean to be
+        computed in a circular fashion.
+        """
+        cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
+        with ImageComparison(self.image_dir,
+                             'catalog-basemap_long-wrap.png') as ic:
+            rcParams['savefig.dpi'] = 40
+            cat.plot(method='basemap', outfile=ic.name, projection='ortho',
+                     resolution='c', label=None, title='', colorbar=False,
+                     water_fill_color='b')
+
     def test_catalog_plot_local(self):
         """
         Tests the catalog preview plot, local projection, some more non-default
@@ -554,6 +568,20 @@ class CatalogCartopyTestCase(unittest.TestCase):
             cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
                      resolution='c', water_fill_color='#98b7e2', label=None,
                      color='date')
+
+    def test_catalog_plot_ortho_longitude_wrap(self):
+        """
+        Tests the catalog preview plot, ortho projection, some non-default
+        parameters, using Cartopy, with longitudes that need the mean to be
+        computed in a circular fashion.
+        """
+        cat = read_events('/path/to/events_longitude_wrap.zmap', format='ZMAP')
+        with ImageComparison(self.image_dir,
+                             'catalog-cartopy_long-wrap.png') as ic:
+            rcParams['savefig.dpi'] = 40
+            cat.plot(method='cartopy', outfile=ic.name, projection='ortho',
+                     resolution='c', label=None, title='', colorbar=False,
+                     water_fill_color='b')
 
     def test_catalog_plot_local(self):
         """
