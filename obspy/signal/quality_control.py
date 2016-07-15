@@ -138,7 +138,8 @@ class MSEEDMetadata(object):
         # Do some sanity checks. The class only works with data from a
         # single location so we have to make sure that the existing data on
         # this object and the newly added all have the same identifier.
-        ids = [t.id + "." + str(t.stats.mseed.dataquality) for t in self.data]
+        ids = [tr.id + "." + str(tr.stats.mseed.dataquality) for tr in
+               self.data]
         if len(set(ids)) != 1:
             raise ValueError("All traces must have the same SEED id and "
                              "quality.")
