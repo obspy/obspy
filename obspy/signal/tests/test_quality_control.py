@@ -109,6 +109,29 @@ class QualityControlTestCase(unittest.TestCase):
             self.assertEqual(mseed_metadata.meta['percent_availability'],
                              45.0 / 66.0 * 100.0)
 
+    def test_raise_unmatching_ids(self):
+        """
+        Test error raised for multiple stream identifiers
+        """
+        with NamedTemporaryFile() as tf1, NamedTemporaryFile() as tf2:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0),
+                                "network": "NL", "station": "HGN",
+                                "location": "02", "channel": "BHZ"}).write(
+                    tf1.name, format="mseed", encoding="STEIM1", reclen=256)
+            obspy.Trace(data=np.arange(10, dtype=np.float32),
+                        header={"starttime": obspy.UTCDateTime(100),
+                                "sampling_rate": 2.0, "network": "BW",
+                                "station": "ALTM", "location": "00",
+                                "channel": "EHE"}).write(
+                    tf2.name, format="mseed", encoding="FLOAT32", reclen=1024)
+
+            with self.assertRaises(ValueError) as e:
+                MSEEDMetadata([tf1.name, tf2.name])
+
+        self.assertEqual(e.exception.args[0],
+                         "All traces must have the same SEED id and quality.")
+
     def test_gaps_between_multiple_files(self):
         """
         Test gap counting between multiple files. Simple test but there is
