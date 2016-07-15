@@ -292,6 +292,8 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
+        if self.type == 'section':
+            self.fig.subplots_adjust(bottom=0.12)
         with warnings.catch_warnings(record=True):
             warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
                                     UserWarning, "matplotlib.dates")
