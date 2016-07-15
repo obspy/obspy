@@ -22,8 +22,10 @@ from future.builtins import *  # NOQA
 import json
 
 import numpy as np
-import obspy
+
+from obspy import Stream, UTCDateTime, read
 from obspy.io.mseed.util import get_flags_c
+from operator import attrgetter
 
 
 class DataQualityEncoder(json.JSONEncoder):
@@ -37,7 +39,7 @@ class DataQualityEncoder(json.JSONEncoder):
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, obspy.UTCDateTime):
+        elif isinstance(obj, UTCDateTime):
             return str(obj)
         else:
             return super(DataQualityEncoder, self).default(obj)
@@ -47,6 +49,24 @@ class MSEEDMetadata(object):
     """
     A container for mSEED specific metadata, including quality control
     parameters.
+
+    Reads the MiniSEED files and extracts the data quality metrics. All
+    miniseed files must have a matching stream ID and quality.
+
+    :param files: The MiniSEED files.
+    :type files: list
+    :param starttime: Only use records whose end time is larger then this
+        given time. Also specifies the new official start time of the
+        metadata object.
+    :type starttime: :class:`obspy.core.utcdatetime.UTCDateTime`
+    :param endtime: Only use records whose start time is smaller then this
+        given time. Also specifies the new official end time of the
+        metadata object
+    :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
+    :param add_c_segments: Calculate metrics for each continuous segment.
+    :type add_c_segments: bool
+    :param add_flags: Include miniSEED header statistics in result.
+    :type add_flags: bool
 
     .. rubric:: Example
 
@@ -71,32 +91,17 @@ class MSEEDMetadata(object):
                  add_c_segments=True, add_flags=False):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
-
-        :param files: The MiniSEED files.
-        :type files: list
-        :param starttime: Only use records whose end time is larger then this
-            given time. Also specifies the new official start time of the
-            metadata object.
-        :type starttime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: Only use records whose start time is smaller then this
-            given time. Also specifies the new official end time of the
-            metadata object
-        :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
-        :param add_c_segments: Calculate metrics for each continuous segment.
-        :type add_c_segments: bool
-        :param add_flags: Include miniSEED header statistics in result.
-        :type add_flags: bool
         """
 
-        self.data = obspy.Stream()
+        self.data = Stream()
         self.all_files = files
         self.files = []
 
         # Allow anything UTCDateTime can parse.
         if starttime is not None:
-            starttime = obspy.UTCDateTime(starttime)
+            starttime = UTCDateTime(starttime)
         if endtime is not None:
-            endtime = obspy.UTCDateTime(endtime)
+            endtime = UTCDateTime(endtime)
 
         self.window_start = starttime
         self.window_end = endtime
@@ -112,8 +117,8 @@ class MSEEDMetadata(object):
         # Will raise if not a MiniSEED files.
         for file in files:
 
-            st = obspy.read(file, starttime=starttime, endtime=endtime_left,
-                            format="mseed", nearest_sample=False)
+            st = read(file, starttime=starttime, endtime=endtime_left,
+                      format="mseed", nearest_sample=False)
 
             # Empty stream or maybe there is no data in the stream for the
             # requested time span.
@@ -136,11 +141,11 @@ class MSEEDMetadata(object):
         ids = set(tr.id + "." + tr.stats.mseed.dataquality for tr in self.data)
         if len(ids) != 1:
             raise ValueError("All traces must have the same SEED id and "
-                             "quality")
+                             "quality.")
 
-        self.data.sort(keys=['endtime'])
-        end_stats = self.data[-1].stats
-        self.endtime = endtime or end_stats.endtime + end_stats.delta
+        # Get the last sample and add delta
+        final_trace = max(self.data, key=attrgetter('stats.endtime')).stats
+        self.endtime = endtime or final_trace.endtime + final_trace.delta
 
         self.data.sort()
 
@@ -172,7 +177,7 @@ class MSEEDMetadata(object):
         Function to get all gaps and overlaps in the user
         specified (or forced) window.
         """
-        self.all_data = obspy.Stream()
+        self.all_data = Stream()
 
         body_gap = []
         body_overlap = []
@@ -181,7 +186,7 @@ class MSEEDMetadata(object):
         # for the entire segment. Later we will narrow it to our window if
         # it has been specified
         for file in self.all_files:
-            self.all_data.extend(obspy.read(file, format="mseed"))
+            self.all_data.extend(read(file, format="mseed"))
 
         # Sort the data by so the start times are in order
         self.all_data.sort()
