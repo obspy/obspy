@@ -1143,22 +1143,24 @@ class WaveformPlotting(object):
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
-        if self.sect_plot_dx is None:
-            ticks = np.int_(np.linspace(tick_min, tick_max, 10))
-        else:
-            ticks = np.arange(tick_min, tick_max, self.sect_plot_dx)
+        ticks = None
+        if self.sect_plot_dx:
+            xmin, xmax = ax.get_xlim()
+            ticks = np.concatenate((
+                np.arange(-self.sect_plot_dx, xmin, -self.sect_plot_dx)[::-1],
+                np.arange(0, xmax, self.sect_plot_dx)))
             if len(ticks) > 100:
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        self.set_offset_ticks(ticks)
+            self.set_offset_ticks(ticks)
         # Setting up tick labels
         self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
             self.set_offset_label('Offset [km]')
-            self.set_offset_ticklabels(ticks)
         else:
             self.set_offset_label(u'Offset [°]')
+        if ticks is not None:
             self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
