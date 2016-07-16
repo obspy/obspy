@@ -12,10 +12,28 @@ from numpy.fft import rfft, rfftfreq
 
 
 def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
-                  fig=None, ax=None, title=None, show=True):
+                  fig=None, ax=None, title=None, show=True, retspec=False):
 
     """
-     Compute and plot the spectrum of the input data
+     Compute and plot the spectrum of the input data.
+
+     :param data: Input data
+     :type samp_rate: float
+     :param samp_rate: Samplerate in Hz
+     :type outfile: str
+     :param outfile: String for the filename of output file, if None
+        interactive plotting is activated.
+     :type fmt: str
+     :param fmt: Format of image to save
+     :type fig: :class:`matplotlib.figure.Figure`
+     :param ax: Plot into given figure
+     :type ax: :class:`matplotlib.axes.Axes`
+     :param ax: Plot into given axes
+     :type title: str
+     :param title: Set the plot title
+     :type show: bool
+     :param show: Do not call `plt.show()` at end of routine. That way, further
+        modifications can be done to the figure before showing it.
      """
 
     # enforce float for samp_rate
@@ -24,6 +42,7 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     # Compute the FFT
     frq = rfftfreq(data.size, d=1./samp_rate)
     X = rfft(data)/samp_rate  # fft computing and normalization
+    X = rfft(data)/(2*data.size)
 
     if fig is None:
         fig = plt.figure()
@@ -52,4 +71,8 @@ def plot_spectrum(data, samp_rate, outfile=None, fmt=None,
     if show:
         plt.show()
 
-    return fig, ax, frq, abs(X)
+    if retspec:
+        return fig, ax, frq, abs(X)
+
+    else:
+        return fig, ax
