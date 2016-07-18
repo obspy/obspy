@@ -22,7 +22,7 @@ from math import pi
 import numpy as np
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import (CustomComplex, CustomFloat,
+from obspy.core.util.obspy_types import (ComplexWithUncertainties, CustomFloat,
                                          FloatWithUncertainties,
                                          FloatWithUncertaintiesAndUnit,
                                          ObsPyException,
@@ -258,10 +258,10 @@ class PolesZerosResponseStage(ResponseStage):
 
     @zeros.setter
     def zeros(self, value):
-        for x in value:
-            if not isinstance(x, CustomComplex):
-                msg = "Zeros must be of CustomComplex type."
-                raise TypeError(msg)
+        value = list(value)
+        for i, x in enumerate(value):
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._zeros = value
 
     @property
@@ -270,11 +270,19 @@ class PolesZerosResponseStage(ResponseStage):
 
     @poles.setter
     def poles(self, value):
-        for x in value:
-            if not isinstance(x, CustomComplex):
-                msg = "Poles must be of CustomComplex type."
-                raise TypeError(msg)
+        value = list(value)
+        for i, x in enumerate(value):
+            if not isinstance(x, ComplexWithUncertainties):
+                value[i] = ComplexWithUncertainties(x)
         self._poles = value
+
+    @property
+    def normalization_frequency(self):
+        return self._normalization_frequency
+
+    @normalization_frequency.setter
+    def normalization_frequency(self, value):
+        self._normalization_frequency = Frequency(value)
 
     @property
     def pz_transfer_function_type(self):

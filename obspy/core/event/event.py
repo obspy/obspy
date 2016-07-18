@@ -34,7 +34,10 @@ __Event = _event_type_class_factory(
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
-                      ("creation_info", CreationInfo)],
+                      ("creation_info", CreationInfo),
+                      ("preferred_origin_id", ResourceIdentifier),
+                      ("preferred_magnitude_id", ResourceIdentifier),
+                      ("preferred_focal_mechanism_id", ResourceIdentifier)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'focal_mechanisms', 'origins', 'magnitudes',
                     'station_magnitudes'])
@@ -51,88 +54,41 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
     :type event_type: str, optional
-    :param event_type: Describes the type of an event. Allowed values are the
-        following:
-
-        * ``"not existing"``
-        * ``"not reported"``
-        * ``"earthquake"``
-        * ``"anthropogenic event"``
-        * ``"collapse"``
-        * ``"cavity collapse"``
-        * ``"mine collapse"``
-        * ``"building collapse"``
-        * ``"explosion"``
-        * ``"accidental explosion"``
-        * ``"chemical explosion"``
-        * ``"controlled explosion"``
-        * ``"experimental explosion"``
-        * ``"industrial explosion"``
-        * ``"mining explosion"``
-        * ``"quarry blast"``
-        * ``"road cut"``
-        * ``"blasting levee"``
-        * ``"nuclear explosion"``
-        * ``"induced or triggered event"``
-        * ``"rock burst"``
-        * ``"reservoir loading"``
-        * ``"fluid injection"``
-        * ``"fluid extraction"``
-        * ``"crash"``
-        * ``"plane crash"``
-        * ``"train crash"``
-        * ``"boat crash"``
-        * ``"other event"``
-        * ``"atmospheric event"``
-        * ``"sonic boom"``
-        * ``"sonic blast"``
-        * ``"acoustic noise"``
-        * ``"thunder"``
-        * ``"avalanche"``
-        * ``"snow avalanche"``
-        * ``"debris avalanche"``
-        * ``"hydroacoustic event"``
-        * ``"ice quake"``
-        * ``"slide"``
-        * ``"landslide"``
-        * ``"rockslide"``
-        * ``"meteorite"``
-        * ``"volcanic eruption"``
-
+    :param event_type: Describes the type of an event.
+        See :class:`~obspy.core.event.header.EventType` for allowed values.
     :type event_type_certainty: str, optional
     :param event_type_certainty: Denotes how certain the information on event
-        type is. Allowed values are the following:
-
-        * ``"suspected"``
-        * ``"known"``
-
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+        type is.
+        See :class:`~obspy.core.event.header.EventTypeCertainty` for allowed
+        values.
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     :type event_descriptions: list of
-        :class:`~obspy.core.event.EventDescription`
+        :class:`~obspy.core.event.event.EventDescription`
     :param event_descriptions: Additional event description, like earthquake
         name, Flinn-Engdahl region, etc.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type picks: list of :class:`~obspy.core.event.Pick`
+    :type picks: list of :class:`~obspy.core.event.origin.Pick`
     :param picks: Picks associated with the event.
-    :type amplitudes: list of :class:`~obspy.core.event.Amplitude`
+    :type amplitudes: list of :class:`~obspy.core.event.magnitude.Amplitude`
     :param amplitudes: Amplitudes associated with the event.
-    :type focal_mechanisms: list of :class:`~obspy.core.event.FocalMechanism`
+    :type focal_mechanisms: list of
+        :class:`~obspy.core.event.source.FocalMechanism`
     :param focal_mechanisms: Focal mechanisms associated with the event
-    :type origins: list of :class:`~obspy.core.event.Origin`
+    :type origins: list of :class:`~obspy.core.event.origin.Origin`
     :param origins: Origins associated with the event.
-    :type magnitudes: list of :class:`~obspy.core.event.Magnitude`
+    :type magnitudes: list of :class:`~obspy.core.event.magnitude.Magnitude`
     :param magnitudes: Magnitudes associated with the event.
     :type station_magnitudes: list of
-        :class:`~obspy.core.event.StationMagnitude`
+        :class:`~obspy.core.event.magnitude.StationMagnitude`
     :param station_magnitudes: Station magnitudes associated with the event.
 
     .. note::
@@ -141,6 +97,8 @@ class Event(__Event):
         standard and how to output it to QuakeML see the
         :ref:`ObsPy Tutorial <quakeml-extra>`.
     """
+    do_not_warn_on = ["_format", "extra"]
+
     def short_str(self):
         """
         Returns a short string representation of the current Event.
@@ -182,31 +140,25 @@ class Event(__Event):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_origin_id).\
-                get_referred_object()
-        except AttributeError:
+        if self.preferred_origin_id is None:
             return None
+        return self.preferred_origin_id.get_referred_object()
 
     def preferred_magnitude(self):
         """
         Returns the preferred magnitude
         """
-        try:
-            return ResourceIdentifier(self.preferred_magnitude_id).\
-                get_referred_object()
-        except AttributeError:
+        if self.preferred_magnitude_id is None:
             return None
+        return self.preferred_magnitude_id.get_referred_object()
 
     def preferred_focal_mechanism(self):
         """
         Returns the preferred focal mechanism
         """
-        try:
-            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-                get_referred_object()
-        except AttributeError:
+        if self.preferred_focal_mechanism_id is None:
             return None
+        return self.preferred_focal_mechanism_id.get_referred_object()
 
     def plot(self, kind=[['ortho', 'beachball'], ['p_sphere', 's_sphere']],
              subplot_size=4.0, show=True, outfile=None, **kwargs):
@@ -353,16 +305,9 @@ class EventDescription(__EventDescription):
     :type text: str, optional
     :param text: Free-form text with earthquake description.
     :type type: str, optional
-    :param type: Category of earthquake description. Values
-        can be taken from the following:
-
-        * ``"felt report"``
-        * ``"Flinn-Engdahl region"``
-        * ``"local time"``
-        * ``"tectonic summary"``
-        * ``"nearest cities"``
-        * ``"earthquake name"``
-        * ``"region name"``
+    :param type: Category of earthquake description.
+        See :class:`~obspy.core.event.header.EventDescriptionType` for allowed
+        values.
 
     .. note::
 

@@ -323,6 +323,39 @@ class CoreTestCase(unittest.TestCase):
         testdata = [n * tr.stats.calib for n in testdata]
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
+    def test_write_and_read_correct_network(self):
+        """
+        Tests that writing and reading the STA2 line works (otherwise the
+        network code of the data is missing), even if some details like e.g.
+        latitude are not present.
+        """
+        tr = Trace(np.arange(5, dtype=np.int32))
+        tr.stats.network = "BW"
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            tr.write(tmpfile, format='GSE2')
+            tr = read(tmpfile)[0]
+        self.assertEqual(tr.stats.network, "BW")
+
+    def test_read_gse2_int_datatype(self):
+        """
+        Test reading of GSE2 files with data type INT.
+        """
+        gse2file = os.path.join(self.path, 'data', 'boa___00_07a.gse')
+        testdata = [-4, -4, 1, 3, 2, -3, -6, -4, 2, 5]
+        # read
+        st = read(gse2file, verify_checksum=True)
+        st.verify()
+        tr = st[0]
+        self.assertEqual(tr.stats['station'], 'BBOA')
+        self.assertEqual(tr.stats.npts, 6784)
+        self.assertAlmostEqual(tr.stats['sampling_rate'], 50.0)
+        self.assertEqual(tr.stats.get('channel'), 'CPZ')
+        self.assertAlmostEqual(tr.stats.get('calib'), 0.313)
+        self.assertEqual(str(tr.stats.starttime),
+                         '1990-04-07T00:07:33.000000Z')
+        self.assertEqual(tr.data[0:10].tolist(), testdata)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

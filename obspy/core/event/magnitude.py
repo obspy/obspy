@@ -54,15 +54,16 @@ class Magnitude(__Magnitude):
     originID. It is either a combination of different magnitude estimations, or
     it represents the reported magnitude for the given event.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
     :type mag: float
     :param mag: Resulting magnitude value from combining values of type
-        :class:`~obspy.core.event.StationMagnitude`. If no estimations are
-        available, this value can represent the reported magnitude.
+        :class:`~obspy.core.event.magnitude.StationMagnitude`.
+        If no estimations are available, this value can represent the
+        reported magnitude.
     :type mag_errors: :class:`~obspy.core.event.base.QuantityError`
     :param mag_errors: AttribDict containing error quantities.
     :type magnitude_type: str, optional
@@ -79,10 +80,12 @@ class Magnitude(__Magnitude):
         * coda magnitude (``'Mc'``)
         * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
 
-    :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and
         magnitude_type.
@@ -93,31 +96,20 @@ class Magnitude(__Magnitude):
     :param azimuthal_gap: Azimuthal gap for this magnitude computation.
         Unit: deg
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Magnitude. Allowed values are
-        the following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
-    :type evaluation_status:
-        :class:`~obspy.core.event_header.EvaluationStatus`, optional
-    :param evaluation_status: Evaluation status of Magnitude. Allowed values
-        are the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param evaluation_mode: Evaluation mode of Magnitude.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
+    :type evaluation_status: str, optional
+    :param evaluation_status: Evaluation status of Magnitude.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
     :type station_magnitude_contributions: list of
-        :class:`~obspy.core.event.StationMagnitudeContribution`.
+        :class:`~obspy.core.event.magnitude.StationMagnitudeContribution`.
     :param station_magnitude_contributions: StationMagnitudeContribution
         instances associated with the Magnitude.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 
@@ -146,12 +138,14 @@ class StationMagnitude(__StationMagnitude):
     """
     This class describes the magnitude derived from a single waveform stream.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param resource_id: Resource identifier of StationMagnitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
         `resource_id` attribute in case it is not specified will be skipped.
-    :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type origin_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
@@ -159,21 +153,25 @@ class StationMagnitude(__StationMagnitude):
     :type mag_errors: :class:`~obspy.core.event.base.QuantityError`
     :param mag_errors: AttribDict containing error quantities.
     :type station_magnitude_type: str, optional
-    :param station_magnitude_type: See :class:`~obspy.core.event.Magnitude`
-    :type amplitude_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :param station_magnitude_type: See
+        :class:`~obspy.core.event.magnitude.Magnitude`
+    :type amplitude_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param amplitude_id: Identifies the data source of the StationMagnitude.
         For magnitudes derived from amplitudes in waveforms (e.g., local
         magnitude ML), amplitudeID points to publicID in class Amplitude.
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param method_id: See :class:`~obspy.core.event.Magnitude`
-    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
+    :param method_id: See :class:`~obspy.core.event.magnitude.Magnitude`
+    :type waveform_id: :class:`~obspy.core.event.base.WaveformStreamID`,
+        optional
     :param waveform_id: Identifies the waveform stream. This element can be
         helpful if no amplitude is referenced, or the amplitude is not
         available in the context. Otherwise, it would duplicate the waveform_id
         provided there and can be omitted.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
 
@@ -197,8 +195,8 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
     This class describes the weighting of magnitude values from several
     StationMagnitude objects for computing a network magnitude estimation.
 
-    :type station_magnitude_id: :class:`~obspy.core.event.ResourceIdentifier`,
-        optional
+    :type station_magnitude_id:
+        :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param station_magnitude_id: Refers to the resource_id of a
         StationMagnitude object.
     :type residual: float, optional
@@ -246,7 +244,7 @@ class Amplitude(__Amplitude):
     single amplitude measurement or a measurement of the visible signal
     duration for duration magnitudes.
 
-    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :type resource_id: :class:`~obspy.core.event.base.ResourceIdentifier`
     :param resource_id: Resource identifier of Amplitude.
     :type force_resource_id: bool, optional
     :param force_resource_id: If set to False, the automatic initialization of
@@ -285,31 +283,17 @@ class Amplitude(__Amplitude):
         mean value over a time interval (mean), integrating the trace over a
         time interval (integral), specifying just a time interval (duration),
         or evaluating a period (period).
-        Possible values are:
-
-        * ``"point"``,
-        * ``"mean"``,
-        * ``"duration"``,
-        * ``"period"``,
-        * ``"integral"``,
-        * ``"other"``
-
+        See :class:`~obspy.core.event.header.AmplitudeCategory` for allowed
+        values.
     :type unit: str, optional
     :param unit: Amplitude unit. This attribute provides the most likely
         measurement units for the physical quantity described in the
         genericAmplitude attribute. Possible values are specified as
         combinations of SI base units.
-        Possible values are:
-
-        * ``"m"``,
-        * ``"s"``,
-        * ``"m/s"``,
-        * ``"m/(s*s)"``,
-        * ``"m*s"``,
-        * ``"dimensionless"``,
-        * ``"other"``
-
-    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+        See :class:`~obspy.core.event.header.AmplitudeUnit` for allowed
+        values.
+    :type method_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param method_id: Describes the method of amplitude determination.
     :type period: float, optional
     :param period: Dominant period in the timeWindow in case of amplitude
@@ -317,16 +301,18 @@ class Amplitude(__Amplitude):
     :type snr: float, optional
     :param snr: Signal-to-noise ratio of the spectrogram at the location the
         amplitude was measured.
-    :type time_window: :class:`~obspy.core.event.TimeWindow`, optional
+    :type time_window: :class:`~obspy.core.event.base.TimeWindow`, optional
     :param time_window: Description of the time window used for amplitude
         measurement. Recommended for duration magnitudes.
-    :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type pick_id: :class:`~obspy.core.event.base.ResourceIdentifier`, optional
     :param pick_id: Refers to the ``resource_id`` of an associated
-        :class:`~obspy.core.event.Pick` object.
-    :type waveform_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+        :class:`~obspy.core.event.origin.Pick` object.
+    :type waveform_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param waveform_id: Identifies the waveform stream on which the amplitude
         was measured.
-    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :type filter_id: :class:`~obspy.core.event.base.ResourceIdentifier`,
+        optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
     :type scaling_time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
@@ -349,26 +335,16 @@ class Amplitude(__Amplitude):
         * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
 
     :type evaluation_mode: str, optional
-    :param evaluation_mode: Evaluation mode of Amplitude. Allowed values are
-        the following:
-
-        * ``"manual"``
-        * ``"automatic"``
-
+    :param evaluation_mode: Evaluation mode of Amplitude.
+        See :class:`~obspy.core.event.header.EvaluationMode` for allowed
+        values.
     :type evaluation_status: str, optional
-    :param evaluation_status: Evaluation status of Amplitude. Allowed values
-        are the following:
-
-        * ``"preliminary"``
-        * ``"confirmed"``
-        * ``"reviewed"``
-        * ``"final"``
-        * ``"rejected"``
-        * ``"reported"``
-
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param evaluation_status: Evaluation status of Amplitude.
+        See :class:`~obspy.core.event.header.EvaluationStatus` for allowed
+        values.
+    :type comments: list of :class:`~obspy.core.event.base.Comment`, optional
     :param comments: Additional comments.
-    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :type creation_info: :class:`~obspy.core.event.base.CreationInfo`, optional
     :param creation_info: CreationInfo for the Amplitude object.
 
     .. note::

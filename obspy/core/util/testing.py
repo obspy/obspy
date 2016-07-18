@@ -407,9 +407,11 @@ class ImageComparison(NamedTemporaryFile):
             if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
-                msg += ("\tExpected:  {expected}\n"
+                msg += ("\tFile:      {}\n"
+                        "\tExpected:  {expected}\n"
                         "\tActual:    {actual}\n"
-                        "\tDiff:      {diff}\n").format(**upload_links)
+                        "\tDiff:      {diff}\n").format(self.image_name,
+                                                        **upload_links)
                 raise ImageComparisonException(msg)
             raise
         # we can still upload actual image if baseline image does not exist
@@ -418,9 +420,11 @@ class ImageComparison(NamedTemporaryFile):
             if "Baseline image" in msg and "does not exist." in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
-                msg += ("\tExpected:  ---\n"
+                msg += ("\tFile:      {}\n"
+                        "\tExpected:  ---\n"
                         "\tActual:    {actual}\n"
-                        "\tDiff:      ---\n").format(**upload_links)
+                        "\tDiff:      ---\n").format(self.image_name,
+                                                     **upload_links)
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
@@ -437,8 +441,9 @@ class ImageComparison(NamedTemporaryFile):
             if failed:
                 # base message on deviation of baseline and actual image
                 msg = ("Image comparison failed.\n"
+                       "\tFile:      {}\n"
                        "\tRMS:       {rms}\n"
-                       "\tTolerance: {tol}\n").format(**msg)
+                       "\tTolerance: {tol}\n").format(self.image_name, **msg)
                 # optionally, copy failed images from /tmp and append
                 # the local paths
                 if self.keep_output:

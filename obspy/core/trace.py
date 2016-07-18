@@ -1409,6 +1409,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     @_add_processing_info
+    @raise_if_masked
     def filter(self, type, **options):
         """
         Filter the data of the current trace.
