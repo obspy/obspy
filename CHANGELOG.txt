@@ -11,6 +11,9 @@
  - obspy.clients.fdsn:
    * Fixing issue with location codes potentially resulting in unwanted data
      to be requested. (see #1422)
+   * Included low-gain seismometers in default channel filters in
+     mass-downloader, also included non-oriented channels by default
+     (see #1373).
  - obspy.db:
    * Fixed a bug in obspy-indexer command line script (see #1369,
      command line script was not working, probably since 0.10.0)
