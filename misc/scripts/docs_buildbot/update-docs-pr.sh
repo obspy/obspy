@@ -40,7 +40,7 @@ do
         # double check that output is really where it should be before marking
         # build as done (in case the docs build gets terminated from outside
         # leading to a non-"-1" return code)
-        if [ -f $HOME/htdocs/docs/pull_requests/${PR}/index.html ]
+        if [ -f $HOME/update-docs-pr/src/obspy/misc/docs/build/html/index.html ]
         then
             touch -d "$DATETIME" $HOME/pull_request_docs/${PR}.done
             rm $HOME/pull_request_docs/${PR}.todo
