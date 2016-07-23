@@ -19,9 +19,11 @@ with standard_library.hooks():
 
 import csv
 import io
+import re
 import warnings
 
 import obspy
+from obspy import UTCDateTime
 from obspy.core.inventory import (Inventory, Network, Station, Channel,
                                   Response, Equipment, Site,
                                   InstrumentSensitivity)
@@ -250,6 +252,104 @@ def read_fdsn_station_text_file(path_or_file_object):
         # Cannot really happen - just a safety measure.
         raise NotImplementedError("Unkown level: " + str(level))
     return inv
+
+
+def inventory_to_station_text(inventory_or_network):
+    """
+    Function to convert inventory or network to station text representation.
+
+    :type inventory_or_network:
+        :class:`~obspy.core.inventory.inventory.Inventory` or
+        :class:`~obspy.core.inventory.network.Network`
+    """
+    if isinstance(inventory_or_network, Inventory):
+        networks = inventory_or_network.networks
+    elif isinstance(inventory_or_network, Network):
+        networks = [inventory_or_network.networks]
+    else:
+        raise TypeError()
+
+    items = []
+
+    # assemble items to write
+    for net in networks:
+        if not net.stations:
+            items.append((net, None, None))
+            continue
+        for sta in net.stations:
+            if not sta.channels:
+                items.append((net, sta, None))
+                continue
+            for cha in sta.channels:
+                items.append((net, sta, cha))
+
+    def _to_str(item):
+        if item is None:
+            return ""
+        x = str(item)
+        if isinstance(item, UTCDateTime):
+            x = x.rstrip("Z")
+            x = re.sub(r'\.0+$', '', x)
+            x = re.sub(r'T00:00:00$', '', x)
+        return x
+
+    # depending on the items write with channel/station/network detail level
+    # write with channel detail level
+    if any(cha is not None for net, sta, cha in items):
+        header = ("#Network|Station|Location|Channel|Latitude|Longitude|"
+                  "Elevation|Depth|Azimuth|Dip|SensorDescription|Scale|"
+                  "ScaleFrequency|ScaleUnits|SampleRate|StartTime|EndTime")
+        lines = [header]
+        for net, sta, cha in items:
+            # omit stations with no channels and warn
+            if cha is None:
+                msg = ("Writing inventory with channel detail level and "
+                       "encountered some networks/stations without channels. "
+                       "These will be omitted in the output.")
+                warnings.warn(msg)
+                continue
+            resp = cha and cha.response
+            sensitivity = resp and resp.instrument_sensitivity
+            line = "|".join(_to_str(x) for x in (
+                net.code, sta.code, cha.location_code, cha.code,
+                cha.latitude is not None and cha.latitude or sta.latitude,
+                cha.longitude is not None and cha.longitude or sta.longitude,
+                cha.elevation is not None and cha.elevation or sta.elevation,
+                cha.depth, cha.azimuth, cha.dip,
+                cha.sensor and cha.sensor.type,
+                sensitivity and sensitivity.value,
+                sensitivity and sensitivity.frequency,
+                sensitivity and sensitivity.input_units,
+                cha.sample_rate, cha.start_date, cha.end_date))
+            lines.append(line)
+    # write with station detail level
+    elif any(sta is not None for net, sta, cha in items):
+        header = ("#Network|Station|Latitude|Longitude|Elevation|StartTime|"
+                  "EndTime")
+        lines = [header]
+        for net, sta, cha in items:
+            # omit networks with no stations and warn
+            if sta is None:
+                msg = ("Writing inventory with station detail level and "
+                       "encountered some networks without stations. "
+                       "These will be omitted in the output.")
+                warnings.warn(msg)
+                continue
+            line = "|".join(_to_str(x) for x in (
+                net.code, sta.code, sta.latitude, sta.longitude, sta.elevation,
+                sta.site and sta.site.name, sta.start_date, sta.end_date))
+            lines.append(line)
+    # write with network detail level
+    else:
+        header = "#Network|Description|StartTime|EndTime|TotalStations"
+        lines = [header]
+        for net, sta, cha in items:
+            line = "|".join(_to_str(x) for x in (
+                net.code, net.description, net.start_date, net.end_date,
+                net.total_number_of_stations))
+            lines.append(line)
+
+    return "\n".join(lines)
 
 
 if __name__ == '__main__':
