@@ -156,9 +156,9 @@ def _internal_read_single_cmtsolution(buf):
     # The first line encodes the preliminary epicenter.
     line = buf.readline()
 
-    hypocenter_catalog = line[:4].strip().decode()
+    hypocenter_catalog = line[:5].strip().decode()
 
-    origin_time = line[4:].strip().split()[:6]
+    origin_time = line[5:].strip().split()[:6]
     values = list(map(int, origin_time[:-1])) + \
         [float(origin_time[-1])]
     try:
@@ -167,7 +167,7 @@ def _internal_read_single_cmtsolution(buf):
         warnings.warn("Could not determine origin time from line: %s. Will "
                       "be set to zero." % line)
         origin_time = UTCDateTime(0)
-    line = line.split()[7:]
+    line = line[28:].split()
     latitude, longitude, depth, body_wave_mag, surface_wave_mag = \
         map(float, line[:5])
 
