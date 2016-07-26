@@ -1219,7 +1219,7 @@ class SeismicArray(object):
                 ampn = np.abs(fcoeffn[nst, nwin, :])
                 ampe = np.abs(fcoeffe[nst, nwin, :])
                 # window width can be chosen but must be at least 2 and even:
-                ww =  int(round(whiten/deltaf))
+                ww = int(round(whiten/deltaf))
                 if ww == 0:
                     ww = 2
                 if ww % 2:
@@ -1350,9 +1350,12 @@ class SeismicArray(object):
 
         # for final Power Spectral Density output using half-sided spectrum,
         # traces are normalized by SQRT(fs*windowing-function factor*0.5)
-        fcoeffz = np.fft.fft(alldata_z, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
-        fcoeffn = np.fft.fft(alldata_n, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
-        fcoeffe = np.fft.fft(alldata_e, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
+        fcoeffz = np.fft.fft(alldata_z, n=nsamp, axis=-1) / \
+            np.sqrt(fs * (cosine_taper(nsamp) ** 2).sum() * 0.5)
+        fcoeffn = np.fft.fft(alldata_n, n=nsamp, axis=-1) / \
+            np.sqrt(fs * (cosine_taper(nsamp) ** 2).sum() * 0.5)
+        fcoeffe = np.fft.fft(alldata_e, n=nsamp, axis=-1) / \
+            np.sqrt(fs * (cosine_taper(nsamp) ** 2).sum() * 0.5)
         fcoeffz = fcoeffz[:, :, index]
         fcoeffn = fcoeffn[:, :, index]
         fcoeffe = fcoeffe[:, :, index]
@@ -1360,12 +1363,12 @@ class SeismicArray(object):
 
         if whiten:
             if whiten >= fr[-1]-fr[0]:
-                msg = 'Moving frequency window is %s, it equals or exceeds the entire frequency range and was set to 0.01 now.'
+                msg = ('Moving frequency window is %s, it equals or exceeds '
+                       'the entire frequency range and was set to 0.01 now.')
                 warnings.warn(msg % whiten)
                 whiten = 0.01
-            fcoeffz, fcoeffn, fcoeffe = self._three_c_dowhiten(fcoeffz,
-                                                               fcoeffn,
-                                                               fcoeffe, deltaf, whiten)
+            fcoeffz, fcoeffn, fcoeffe = self._three_c_dowhiten(
+                fcoeffz, fcoeffn, fcoeffe, deltaf, whiten)
         if phaseonly:
             fcoeffz = np.exp(1j*np.angle(fcoeffz))
             fcoeffn = np.exp(1j*np.angle(fcoeffn))
@@ -1526,7 +1529,8 @@ class SeismicArray(object):
     def three_component_beamforming(self, stream_n, stream_e, stream_z, wlen,
                                     smin, smax, sstep, wavetype, freq_range,
                                     n_min_stns=5, win_average=1, win_frac=1,
-                                    whiten=False, phaseonly=False, coherency=False):
+                                    whiten=False, phaseonly=False,
+                                    coherency=False):
         """
         Do three-component beamforming following [Esmersoy1985]_.
 
@@ -1563,11 +1567,12 @@ class SeismicArray(object):
          present in a time window, otherwise that window is skipped.
         :param win_average: number of windows to average covariance matrix over
         :param win_frac: fraction of sliding window to use for step
-        :param whiten: if set to a number, the 3-component data spectra are jointly
-         whitened along the frequency axis with a moving window of frequency width 'whiten'
+        :param whiten: if set to a number, the 3-component data spectra are
+         jointly whitened along the frequency axis with a moving window of
+         frequency width 'whiten'
         :param phaseonly: whether to totally disregard data amplitudes
-        :param coherency: whether to normalise the beam power by the total array
-         power on the components corresponding to the polarization choice
+        :param coherency: whether to normalise the beam power by the total
+         array power on the components corresponding to the polarization choice
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
         object containing the beamforming results, with dimensions of
         backazimuth range, slowness range, number of windows and number of
@@ -2314,7 +2319,7 @@ class SeismicArray(object):
                                 beamres.T, 40, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
             ax.contour(theo_backazi, u,
-                                beamres.T, 40, cmap=cmap)
+                       beamres.T, 40, cmap=cmap)
             ax.set_theta_zero_location('N')
             ax.set_theta_direction(-1)
             ax.set_rmax(u[-1])
