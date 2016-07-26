@@ -92,7 +92,7 @@ class SeismicArray(object):
             return "Empty seismic array '{}'".format(self.name)
         ret_str = "Seismic Array '{name}' with ".format(name=self.name)
         ret_str += "{count} Stations, ".format(count=len(self.geometry))
-        ret_str += "aperture: {aperture:.2f} km.".format(
+        ret_str += "Aperture: {aperture:.2f} km.".format(
             aperture=self.aperture)
         return ret_str
 
@@ -153,27 +153,51 @@ class SeismicArray(object):
                           'traces in stream.')
         self.inventory = inv
 
-    def plot(self):
+    def plot(self, projection="local", show=True, **kwargs):
         """
-        Plot the array's station/channel locations as well as it's geometric
-        and centre of gravity.
+        Plot the geographical layout of the array.
+
+        Shows all the array's stations as well as it's geometric center and its
+        center of gravity.
+
+        :type projection: str, optional
+        :param projection: The map projection. Currently supported are:
+
+            * ``"global"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
+
+            Defaults to ``"local"``
+        :type show: bool
+        :param show: Whether to show the figure after plotting or not. Can be
+            used to do further customization of the plot before showing it.
+
+        All other keyword arguments are passed to the
+        :meth:`obspy.core.inventory.inventory.Inventory.plot` method.
         """
-        import matplotlib.pyplot as plt
-        if self.inventory:
-            self.inventory.plot(projection="local", show=False)
-            bmap = plt.gca().basemap
+        # Piggy-back on the inventory plotting. Currently requires basemap.
+        fig = self.inventory.plot(projection=projection, show=False,
+                                  method="basemap", **kwargs)
+        bmap = fig.bmap
 
-            grav = self.center_of_gravity
-            x, y = bmap(grav["longitude"], grav["latitude"])
-            bmap.scatter(x, y, marker="x", c="red", s=40, zorder=20)
-            plt.text(x, y, "Center of Gravity", color="red")
+        grav = self.center_of_gravity
+        x, y = bmap(grav["longitude"], grav["latitude"])
+        bmap.scatter(x, y, marker="x", c="red", s=100, zorder=20)
+        bmap.ax.text(x, y, " Center of Gravity", color="red", ha="left",
+                     fontweight=900)
 
-            geo = self.geometrical_center
-            x, y = bmap(geo["longitude"], geo["latitude"])
-            bmap.scatter(x, y, marker="x", c="green", s=40, zorder=20)
-            plt.text(x, y, "Geometrical Center", color="green")
+        geo = self.geometrical_center
+        x, y = bmap(geo["longitude"], geo["latitude"])
+        bmap.scatter(x, y, marker="x", c="green", s=100, zorder=20)
+        bmap.ax.text(x, y, "Geometrical Center ", color="green", ha="right",
+                     fontweight=900)
 
+        bmap.ax.set_title(str(self).splitlines()[0].strip())
+
+        if show:
+            import matplotlib.pyplot as plt
             plt.show()
+        return fig
 
     def _get_geometry(self):
         """
