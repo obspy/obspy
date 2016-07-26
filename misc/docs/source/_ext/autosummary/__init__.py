@@ -537,7 +537,7 @@ def process_generate_options(app):
 
     from .generate import generate_autosummary_docs
 
-    genfiles = [genfile + (not genfile.endswith(tuple(ext)) and ext or '')
+    genfiles = [genfile + (not genfile.endswith(ext) and ext or '')
                 for genfile in genfiles]
 
     generate_autosummary_docs(genfiles, builder=app.builder,

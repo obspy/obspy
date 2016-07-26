@@ -20,6 +20,7 @@ from scipy.stats import circmean
 
 from obspy.core.util.misc import to_int_or_zero
 
+
 # checking for geographiclib
 try:
     import geographiclib  # @UnusedImport # NOQA
