@@ -18,24 +18,23 @@ import math
 import tempfile
 import os
 import shutil
+import warnings
+
 import numpy as np
 import scipy as sp
 from scipy import interpolate
-from obspy.imaging import cm
-from matplotlib.ticker import MaxNLocator
-from obspy.core import UTCDateTime
-from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
-from obspy.signal.util import util_geo_km, next_pow_2
-from obspy.core import Trace
-from obspy.core.inventory import Inventory
 from scipy.integrate import cumtrapz
-from obspy.core import Stream
+import matplotlib.dates as mdates
+from matplotlib.ticker import MaxNLocator, MultipleLocator
+
+from obspy.core import Trace, Stream, UTCDateTime
+from obspy.core.inventory import Inventory
+from obspy.core.util import AttribDict
+from obspy.geodetics import gps2dist_azimuth, degrees2kilometers
+from obspy.imaging import cm
 from obspy.signal.headers import clibsignal
 from obspy.signal.invsim import cosine_taper
-from obspy.core.util import AttribDict
-import warnings
-import matplotlib.dates as mdates
-from matplotlib.ticker import MultipleLocator
+from obspy.signal.util import util_geo_km, next_pow_2
 
 
 class SeismicArray(object):
@@ -182,15 +181,15 @@ class SeismicArray(object):
 
         grav = self.center_of_gravity
         x, y = bmap(grav["longitude"], grav["latitude"])
-        bmap.scatter(x, y, marker="x", c="red", s=100, zorder=20)
+        bmap.scatter(x, y, marker="x", c="red", s=100, zorder=200)
         bmap.ax.text(x, y, " Center of Gravity", color="red", ha="left",
-                     fontweight=900)
+                     fontweight=900, zorder=200)
 
         geo = self.geometrical_center
         x, y = bmap(geo["longitude"], geo["latitude"])
-        bmap.scatter(x, y, marker="x", c="green", s=100, zorder=20)
+        bmap.scatter(x, y, marker="x", c="green", s=100, zorder=200)
         bmap.ax.text(x, y, "Geometrical Center ", color="green", ha="right",
-                     fontweight=900)
+                     fontweight=900, zorder=200)
 
         bmap.ax.set_title(str(self).splitlines()[0].strip())
 
