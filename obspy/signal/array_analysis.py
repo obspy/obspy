@@ -25,6 +25,7 @@ import scipy as sp
 from scipy import interpolate
 from scipy.integrate import cumtrapz
 import matplotlib.dates as mdates
+import matplotlib.patheffects as PathEffects
 from matplotlib.ticker import MaxNLocator, MultipleLocator
 
 from obspy.core import Trace, Stream, UTCDateTime
@@ -179,17 +180,23 @@ class SeismicArray(object):
                                   method="basemap", **kwargs)
         bmap = fig.bmap
 
+        path_effects = [PathEffects.withStroke(linewidth=3,
+                                               foreground="white")]
+
         grav = self.center_of_gravity
         x, y = bmap(grav["longitude"], grav["latitude"])
-        bmap.scatter(x, y, marker="x", c="red", s=100, zorder=200)
-        bmap.ax.text(x, y, " Center of Gravity", color="red", ha="left",
-                     fontweight=900, zorder=200)
+        bmap.scatter(x, y, marker="x", c="blue", s=100, zorder=201,
+                     linewidths=2)
+        bmap.ax.text(x, y, " Center of Gravity", color="blue", ha="left",
+                     weight="heavy", zorder=200,
+                     path_effects=path_effects)
 
         geo = self.geometrical_center
         x, y = bmap(geo["longitude"], geo["latitude"])
-        bmap.scatter(x, y, marker="x", c="green", s=100, zorder=200)
+        bmap.scatter(x, y, marker="x", c="green", s=100, zorder=201,
+                     linewidths=2)
         bmap.ax.text(x, y, "Geometrical Center ", color="green", ha="right",
-                     fontweight=900, zorder=200)
+                     fontweight=900, zorder=200, path_effects=path_effects)
 
         bmap.ax.set_title(str(self).splitlines()[0].strip())
 

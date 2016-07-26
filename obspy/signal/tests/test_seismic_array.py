@@ -10,9 +10,12 @@ from future.builtins import *  # NOQA
 import io
 import os
 import unittest
+
 import numpy as np
+import matplotlib.pyplot as plt
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.util.testing import ImageComparison
 from obspy.signal.array_analysis import SeismicArray
 from obspy.signal.util import util_lon_lat
 from obspy import read
@@ -31,6 +34,7 @@ class SeismicArrayTestCase(unittest.TestCase):
     def setUp(self):
         self.path = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                  'data'))
+        self.path_images = os.path.join(os.path.dirname(__file__), 'images')
 
         def create_simple_array(coords, sys='xy'):
             """
@@ -417,6 +421,16 @@ class SeismicArrayTestCase(unittest.TestCase):
         self.assertEqual(out.max_pow_slow, 0.3)
         np.testing.assert_array_almost_equal(out.max_rel_power, 1.22923997,
                                              decimal=8)
+
+    def test_array_plotting(self):
+        """
+        Tests the plotting of arrays.
+        """
+        arr = SeismicArray('pfield', inventory=read_inventory(
+            os.path.join(self.path, 'pfield_inv_for_instaseis.xml')))
+        with ImageComparison(self.path_images, "seismic_array_map.png") as ic:
+            arr.plot()
+            plt.savefig(ic.name)
 
 
 def suite():
