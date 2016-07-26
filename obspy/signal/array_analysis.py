@@ -1208,7 +1208,7 @@ class SeismicArray(object):
         return np.array(res)
 
     @staticmethod
-    def _three_c_dowhiten(fcoeffz, fcoeffn, fcoeffe, deltaf):
+    def _three_c_dowhiten(fcoeffz, fcoeffn, fcoeffe, deltaf, whiten):
         """
         Amplitude spectra whitening with moving average and window width ww
         and weighting factor: 1/((Z+E+N)/3)
@@ -1218,9 +1218,8 @@ class SeismicArray(object):
                 ampz = np.abs(fcoeffz[nst, nwin, :])
                 ampn = np.abs(fcoeffn[nst, nwin, :])
                 ampe = np.abs(fcoeffe[nst, nwin, :])
-                # todo: why choose this constant?
-                ww = int(round(0.01 / deltaf))
-                # Window width must be at least 2:
+                # window width can be chosen but must be at least 2 and even:
+                ww =  int(round(whiten/deltaf))
                 if ww == 0:
                     ww = 2
                 if ww % 2:
@@ -1249,7 +1248,7 @@ class SeismicArray(object):
 
     def _three_c_do_bf(self, stream_n, stream_e, stream_z, win_len, win_frac,
                        u, sub_freq_range, n_min_stns, polarisation,
-                       whiten, coherency, win_average,
+                       whiten, phaseonly, coherency, win_average,
                        datalen_sec, uindex, verbose=False):
         # backazimuth range to search
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
@@ -1348,19 +1347,30 @@ class SeismicArray(object):
         index = np.where((freq_range >= lowcorner) &
                          (freq_range <= highcorner))[0]
         fr = freq_range[index]
-        fcoeffz = np.fft.fft(alldata_z, n=nsamp, axis=-1) / nsamp
-        fcoeffn = np.fft.fft(alldata_n, n=nsamp, axis=-1) / nsamp
-        fcoeffe = np.fft.fft(alldata_e, n=nsamp, axis=-1) / nsamp
+        
+        # for final Power Spectral Density output using half-sided spectrum, 
+        # traces are normalized by SQRT(fs*windowing-function factor*0.5)
+        fcoeffz = np.fft.fft(alldata_z, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
+        fcoeffn = np.fft.fft(alldata_n, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
+        fcoeffe = np.fft.fft(alldata_e, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
         fcoeffz = fcoeffz[:, :, index]
         fcoeffn = fcoeffn[:, :, index]
         fcoeffe = fcoeffe[:, :, index]
         deltaf = 1. / (nsamp * deltat)
 
         if whiten:
+	    if whiten >= fr[-1]-fr[0]:
+	        msg = 'Moving frequency window is %s, it equals or exceeds the entire frequency range and was set to 0.01 now.' 
+                warnings.warn(msg % whiten)
+                whiten = 0.01
             fcoeffz, fcoeffn, fcoeffe = self._three_c_dowhiten(fcoeffz,
                                                                fcoeffn,
-                                                               fcoeffe, deltaf)
-
+                                                               fcoeffe, deltaf, whiten)    
+        if phaseonly:
+            fcoeffz = np.exp(1j*np.angle(fcoeffz))
+            fcoeffn = np.exp(1j*np.angle(fcoeffn))
+            fcoeffe = np.exp(1j*np.angle(fcoeffe))
+  
         # slowness vector u and slowness vector component scale u_x and u_y
         theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
         u_y = -np.cos(theo_backazi)
@@ -1379,7 +1389,7 @@ class SeismicArray(object):
         steering = u_y * y_offsets + u_x * x_offsets
 
         # polarizations [Z,E,N]
-        # incident angle P-wave/S-wave or atan(H/V) Rayleigh-wave
+        # incident angle or atan(H/V) 
         incs = np.arange(5, 90, 10) * math.pi / 180.
 
         def pol_love(azi):
@@ -1515,8 +1525,8 @@ class SeismicArray(object):
 
     def three_component_beamforming(self, stream_n, stream_e, stream_z, wlen,
                                     smin, smax, sstep, wavetype, freq_range,
-                                    n_min_stns=7, win_average=1, win_frac=1,
-                                    whiten=True, coherency=False):
+                                    n_min_stns=5, win_average=1, win_frac=1,
+                                    whiten=False, phaseonly=False, coherency=False):
         """
         Do three-component beamforming following [Esmersoy1985]_.
 
@@ -1526,8 +1536,10 @@ class SeismicArray(object):
         sampling distance). (hint: check length with trace.stats.npts)
         The given streams are not modified in place. All trimming, filtering,
         downsampling should be done previously.
-        The beamforming can distinguish Love, prograde/retrograde Rayleigh, P
-        and SV waves.
+        The beamforming can distinguish horizontally transversal (SH), 
+        prograde/retrograde elliptical, longitudinal (P) and vertically 
+        transversal (SV) polarization and performs grid searchs over slowness,
+        azimuth and incidence angle, respectively arctangent of the H/V ratio.
         Station location information is taken from the array's inventory, so
         that must contain station or channel location information about all
         traces used (or more, the inventory is then non-permanently 'pruned').
@@ -1542,7 +1554,7 @@ class SeismicArray(object):
         :param smin: minimum slowness of the slowness grid [s/km]
         :param smax: maximum slowness [s/km]
         :param sstep: slowness step [s/km]
-        :param wavetype: 'love', 'rayleigh_prograde', 'rayleigh_retrograde',
+        :param wavetype: 'SH', 'elliptic_retrograde', 'elliptic_prograde',
          'P', or 'SV'
         :param freq_range: Frequency band (min, max) that is used for
          beamforming and returned. Ideally, use the frequency band of the
@@ -1551,15 +1563,18 @@ class SeismicArray(object):
          present in a time window, otherwise that window is skipped.
         :param win_average: number of windows to average covariance matrix over
         :param win_frac: fraction of sliding window to use for step
-        :param whiten: whether to whiten the frequency spectrum
-        :param coherency: whether to normalise the powers
+        :param whiten: if set to a number, the 3-component data spectra are jointly
+         whitened along the frequency axis with a moving window of frequency width 'whiten'
+        :param phaseonly: whether to totally disregard data amplitudes
+        :param coherency: whether to normalise the beam power by the total array
+         power on the components corresponding to the polarization choice
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
         object containing the beamforming results, with dimensions of
         backazimuth range, slowness range, number of windows and number of
         discrete frequencies; as well as frequency and incidence angle arrays
-        (the latter will be zero for Love waves).
+        (the latter will be zero for SH waves).
         """
-        pol_dict = {'love': 0, 'rayleigh_retrograde': 1, 'rayleigh_prograde':
+        pol_dict = {'sh': 0, 'elliptic_retrograde': 1, 'elliptic_prograde':
                     2, 'p': 3, 'sv': 4}
         if wavetype.lower() not in pol_dict:
             raise ValueError('Invalid option for wavetype: {}'
@@ -1637,6 +1652,7 @@ class SeismicArray(object):
                                     n_min_stns=n_min_stns,
                                     polarisation=pol_dict[wavetype.lower()],
                                     whiten=whiten,
+                                    phaseonly=phaseonly,
                                     coherency=coherency,
                                     win_average=win_average,
                                     datalen_sec=datalen_sec,
@@ -2286,8 +2302,7 @@ class SeismicArray(object):
             omega = 2. * math.pi * f
             r = np.ones((steering.shape[1], steering.shape[1]))
             for vel in range(len(u)):
-                e_steer = np.exp(-1j * steering * omega * u[vel])
-                w = e_steer
+                w = np.exp(-1j * steering * omega * u[vel])
                 wt = w.T.copy()
                 beamres[:, vel] = 1. / (
                     steering.shape[1] * steering.shape[1]) * abs(
@@ -2296,22 +2311,20 @@ class SeismicArray(object):
             ax = fig.add_subplot(1, 1, 1, projection='polar')
             cmap = cm.viridis
             contf = ax.contourf(theo_backazi, u,
-                                beamres.T, 100, cmap=cmap, antialiased=True,
+                                beamres.T, 40, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
-            ax.contour(theo_backazi, u, beamres.T, 100,
-                       cmap=cmap)
+            ax.contour(theo_backazi, u,
+                                beamres.T, 40, cmap=cmap)    
             ax.set_theta_zero_location('N')
             ax.set_theta_direction(-1)
-            ax.set_rgrids([0.1, 0.2, 0.3, 0.4, 0.5],
-                          labels=['0.1', '0.2', '0.3', '0.4', '0.5'],
-                          color='r')
             ax.set_rmax(u[-1])
             # This means that if u does not start at 0, the plot will show a
             # hole in the middle rather than stitching it up.
             ax.set_rmin(-0)
             fig.colorbar(contf)
             ax.grid(True)
-            ax.set_title('Transfer function for frequency ' + str(f) + '.')
+            ax.set_title('Transfer function at f = ' + str(f) + '.')
+            plt.tight_layout()
         plt.show()
 
     def plot_transfer_function_wavenumber(self, klim, kstep):
@@ -3457,14 +3470,14 @@ class BeamformerResult(object):
                 for plot_freq in plot_frequencies:
                     # works because freqs is a range
                     ifreq = np.searchsorted(self.freqs, plot_freq)
-                    _actual_plotting(beamresnz[:, :, ifreq],
+                    _actual_plotting(np.squeeze(beamresnz[:, :, ifreq]),
                                      '{} beamforming result, averaged over all'
                                      ' time windows\n for frequency {} Hz.'
                                      .format(self.method, self.freqs[ifreq]))
 
         if average_freqs and not average_windows:
             for iwin in range(len(beamresnz[0, 0, :])):
-                _actual_plotting(beamresnz[:, :, iwin],
+                _actual_plotting(np.squeeze(beamresnz[:, :, iwin]),
                                  '{} beamforming result, averaged over all '
                                  'frequencies,\n for window {} '
                                  '(starting {})'
