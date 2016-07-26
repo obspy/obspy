@@ -1347,8 +1347,8 @@ class SeismicArray(object):
         index = np.where((freq_range >= lowcorner) &
                          (freq_range <= highcorner))[0]
         fr = freq_range[index]
-        
-        # for final Power Spectral Density output using half-sided spectrum, 
+
+        # for final Power Spectral Density output using half-sided spectrum,
         # traces are normalized by SQRT(fs*windowing-function factor*0.5)
         fcoeffz = np.fft.fft(alldata_z, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
         fcoeffn = np.fft.fft(alldata_n, n=nsamp, axis=-1) / np.sqrt(fs*(cosine_taper(nsamp)**2).sum()*0.5)
@@ -1359,18 +1359,18 @@ class SeismicArray(object):
         deltaf = 1. / (nsamp * deltat)
 
         if whiten:
-	    if whiten >= fr[-1]-fr[0]:
-	        msg = 'Moving frequency window is %s, it equals or exceeds the entire frequency range and was set to 0.01 now.' 
+            if whiten >= fr[-1]-fr[0]:
+                msg = 'Moving frequency window is %s, it equals or exceeds the entire frequency range and was set to 0.01 now.'
                 warnings.warn(msg % whiten)
                 whiten = 0.01
             fcoeffz, fcoeffn, fcoeffe = self._three_c_dowhiten(fcoeffz,
                                                                fcoeffn,
-                                                               fcoeffe, deltaf, whiten)    
+                                                               fcoeffe, deltaf, whiten)
         if phaseonly:
             fcoeffz = np.exp(1j*np.angle(fcoeffz))
             fcoeffn = np.exp(1j*np.angle(fcoeffn))
             fcoeffe = np.exp(1j*np.angle(fcoeffe))
-  
+
         # slowness vector u and slowness vector component scale u_x and u_y
         theo_backazi = theo_backazi.reshape((theo_backazi.size, 1))
         u_y = -np.cos(theo_backazi)
@@ -1389,7 +1389,7 @@ class SeismicArray(object):
         steering = u_y * y_offsets + u_x * x_offsets
 
         # polarizations [Z,E,N]
-        # incident angle or atan(H/V) 
+        # incident angle or atan(H/V)
         incs = np.arange(5, 90, 10) * math.pi / 180.
 
         def pol_love(azi):
@@ -1536,8 +1536,8 @@ class SeismicArray(object):
         sampling distance). (hint: check length with trace.stats.npts)
         The given streams are not modified in place. All trimming, filtering,
         downsampling should be done previously.
-        The beamforming can distinguish horizontally transversal (SH), 
-        prograde/retrograde elliptical, longitudinal (P) and vertically 
+        The beamforming can distinguish horizontally transversal (SH),
+        prograde/retrograde elliptical, longitudinal (P) and vertically
         transversal (SV) polarization and performs grid searchs over slowness,
         azimuth and incidence angle, respectively arctangent of the H/V ratio.
         Station location information is taken from the array's inventory, so
@@ -2314,7 +2314,7 @@ class SeismicArray(object):
                                 beamres.T, 40, cmap=cmap, antialiased=True,
                                 linstyles='dotted')
             ax.contour(theo_backazi, u,
-                                beamres.T, 40, cmap=cmap)    
+                                beamres.T, 40, cmap=cmap)
             ax.set_theta_zero_location('N')
             ax.set_theta_direction(-1)
             ax.set_rmax(u[-1])
