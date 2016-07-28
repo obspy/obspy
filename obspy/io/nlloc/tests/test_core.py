@@ -242,6 +242,20 @@ class NLLOCTestCase(unittest.TestCase):
         got = [a.pick_id for a in arrivals]
         self.assertEqual(expected, got)
 
+    def test_read_nlloc_with_multiple_events(self):
+        """
+        Test reading a NLLOC_HYP file with multiple hypocenters in it.
+        """
+        got = read_events(get_example_file("vanua.sum.grid0.loc.hyp"),
+                          format="NLLOC_HYP")
+        self.assertEqual(len(got), 3)
+        self.assertEqual(got[0].origins[0].longitude, 167.049)
+        self.assertEqual(got[1].origins[0].longitude, 166.905)
+        self.assertEqual(got[2].origins[0].longitude, 166.858)
+        self.assertEqual(got[0].origins[0].latitude, -14.4937)
+        self.assertEqual(got[1].origins[0].latitude, -15.0823)
+        self.assertEqual(got[2].origins[0].latitude, -15.1529)
+
 
 def suite():
     return unittest.makeSuite(NLLOCTestCase, "test")
