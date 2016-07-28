@@ -168,23 +168,16 @@ def _clean_str(value, strip_whitespace=True):
     Trace that the user may have manually added.
     """
     try:
-        # value is a str
-        null_term = value.find('\x00')
-    except TypeError:
-        # value is a bytes
-        null_term = value.find(b'\x00')
-    except UnicodeError:
-        null_term = value.decode('ASCII', 'replace').find(b'\x00')
-
-    if null_term >= 0:
-        value = value[:null_term] + b" " * len(value[null_term:])
-    if strip_whitespace:
-        value = value.strip()
-
-    try:
-        value = value.decode()
+        value = value.decode('ASCII', 'replace')
     except AttributeError:
         pass
+
+    null_term = value.find('\x00')
+    if null_term >= 0:
+        value = value[:null_term] + " " * len(value[null_term:])
+
+    if strip_whitespace:
+        value = value.strip()
 
     return value
 
