@@ -321,7 +321,8 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         c2 = Channel("10", "SHE", time_intervals)
         c3 = Channel("00", "BHZ", time_intervals)
         c4 = Channel("", "HHE", time_intervals)
-        channels = [c1, c2, c3, c4]
+        c5 = Channel("", "ELZ", time_intervals)
+        channels = [c1, c2, c3, c4, c5]
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[

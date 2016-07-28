@@ -1098,7 +1098,7 @@ class SACTrace(object):
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
     def read(cls, source, headonly=False, ascii=False, byteorder=None,
-             checksize=False):
+             checksize=False, debug_strings=False):
         """
         Construct an instance from a binary or ASCII file on disk.
 
@@ -1118,6 +1118,11 @@ class SACTrace(object):
         :param checksize: If True, check that the theoretical file size from
             the header matches the size on disk. Only valid for binary files.
         :type checksize: bool
+        :param debug_strings: By default, non-ASCII and null-termination
+            characters are removed from character header fields, and those
+            beginning with '-12345' are considered unset. If True, they
+            are instead passed without modification.  Good for debugging.
+        :type debug_strings: bool
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
             or header arrays are wrong size.
@@ -1149,6 +1154,12 @@ class SACTrace(object):
             hf, hi, hs, data = _io.read_sac(source, headonly=headonly,
                                             byteorder=byteorder,
                                             checksize=checksize)
+        if not debug_strings:
+            for i, val in enumerate(hs):
+                val = _ut._clean_str(val, strip_whitespace=False)
+                if val.startswith(native_str('-12345')):
+                    val = HD.SNULL
+                hs[i] = val
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:

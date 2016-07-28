@@ -1,0 +1,41 @@
+ PDEW2015  1  1  9 42  0.70  55.2900  163.0600  10.0 0.0 4.8 OFF EAST COAST OF KAMCHA
+event name:     201501010942A
+time shift:      5.3400
+half duration:   0.6000
+latitude:       55.0700
+longitude:     163.9400
+depth:          29.4000
+Mrr:       2.030000e+23
+Mtt:      -4.180000e+22
+Mpp:      -1.610000e+23
+Mrt:       8.890000e+22
+Mrp:       8.990000e+22
+Mtp:      -9.020000e+22
+
+ SWEQ2015  1  1  9 47 44.00 -13.7500 -111.7500  10.0 0.0 5.0 CENTRAL EAST PACIFIC RIS
+event name:     201501010947A
+time shift:     -0.3400
+half duration:   0.6000
+latitude:      -13.4500
+longitude:    -111.9900
+depth:          17.4200
+Mrr:      -5.980000e+22
+Mtt:       8.270000e+22
+Mpp:      -2.280000e+22
+Mrt:      -3.510000e+22
+Mrp:      -5.020000e+22
+Mtp:       2.160000e+23
+
+ PDEW2015  1  1 10  8 27.70 -13.6800 -111.9300  10.0 0.0 4.8 CENTRAL EAST PACIFIC RIS
+event name:     201501011007A
+time shift:      0.6600
+half duration:   0.7000
+latitude:      -13.4000
+longitude:    -111.9200
+depth:          24.5400
+Mrr:      -2.630000e+22
+Mtt:       3.960000e+22
+Mpp:      -1.330000e+22
+Mrt:      -7.310000e+22
+Mrp:      -7.630000e+22
+Mtp:       2.230000e+23
