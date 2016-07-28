@@ -94,31 +94,61 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         if hasattr(data, "decode"):
             data = data.decode()
 
-    lines = data.splitlines()
+    # split lines and remove empty ones
+    lines = [line for line in data.splitlines() if line.strip()]
 
     # remember picks originally used in location, if provided
     original_picks = picks
     if original_picks is None:
         original_picks = []
 
-    # determine indices of block start/end of the NLLOC output file
-    indices_hyp = [None, None]
+    cat = Catalog()
+    while lines:
+        while not lines[0].startswith("NLLOC "):
+            line = lines.pop(0)
+            msg = ("Ignoring an unexpected line in NLLOC_HYP "
+                   "file:\n'{}'".format(line))
+            warnings.warn(msg)
+        for i, line in enumerate(lines):
+            if line.startswith("END_NLLOC"):
+                break
+        else:
+            msg = ("NLLOC HYP file seems corrupt,"
+                   " could not detect 'END_NLLOC' line.")
+            raise RuntimeError(msg)
+        event = _read_single_hypocenter(
+            lines[:i+1], coordinate_converter=coordinate_converter,
+            original_picks=original_picks)
+        cat.append(event)
+        lines = lines[i+1:]
+    cat.creation_info.creation_time = UTCDateTime()
+    cat.creation_info.version = "ObsPy %s" % __version__
+    return cat
+
+
+def _read_single_hypocenter(lines, coordinate_converter, original_picks):
+    """
+    Given a list of lines (starting with a 'NLLOC' line and ending with a
+    'END_NLLOC' line), parse them into an Event.
+    """
+    try:
+        # some paranoid checks..
+        assert lines[0].startswith("NLLOC ")
+        assert lines[-1].startswith("END_NLLOC")
+        for line in lines[1:-1]:
+            assert not line.startswith("NLLOC ")
+            assert not line.startswith("END_NLLOC")
+    except:
+        msg = ("This should not have happened, please report this as a bug at "
+               "https://github.com/obspy/obspy/issues.")
+        raise Exception(msg)
+
     indices_phases = [None, None]
     for i, line in enumerate(lines):
-        if line.startswith("NLLOC "):
-            indices_hyp[0] = i
-        elif line.startswith("END_NLLOC"):
-            indices_hyp[1] = i
-        elif line.startswith("PHASE "):
+        if line.startswith("PHASE "):
             indices_phases[0] = i
         elif line.startswith("END_PHASE"):
             indices_phases[1] = i
-    if any([i is None for i in indices_hyp]):
-        msg = ("NLLOC HYP file seems corrupt,"
-               " could not detect 'NLLOC' and 'END_NLLOC' lines.")
-        raise RuntimeError(msg)
-    # strip any other lines around NLLOC block
-    lines = lines[indices_hyp[0]:indices_hyp[1]]
 
     # extract PHASES lines (if any)
     if any(indices_phases):
@@ -130,7 +160,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     else:
         phases_lines = []
 
-    lines = dict([line.split(None, 1) for line in lines])
+    lines = dict([line.split(None, 1) for line in lines[:-1]])
     line = lines["SIGNATURE"]
 
     line = line.rstrip().split('"')[1]
@@ -184,7 +214,6 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
 
     # assign origin info
     event = Event()
-    cat = Catalog(events=[event])
     o = Origin()
     event.origins = [o]
     o.origin_uncertainty = OriginUncertainty()
@@ -193,8 +222,6 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     oq = o.quality
     o.comments.append(Comment(text=stats_info_string))
 
-    cat.creation_info.creation_time = UTCDateTime()
-    cat.creation_info.version = "ObsPy %s" % __version__
     event.creation_info = CreationInfo(creation_time=creation_time,
                                        version=version)
     event.creation_info.version = version
@@ -300,7 +327,7 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         event.picks.append(pick)
         arrival.pick_id = pick.resource_id
 
-    return cat
+    return event
 
 
 def write_nlloc_obs(catalog, filename, **kwargs):
