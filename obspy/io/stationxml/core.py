@@ -13,6 +13,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import inspect
 import io
 import math
@@ -896,8 +897,7 @@ def _float_to_str(x):
 def _write_polezero_list(parent, obj):
     def _polezero2tag(parent, tag, obj_):
         attribs = {}
-        if hasattr(obj_, "number") and obj_.number is not None:
-            attribs["number"] = str(obj_.number)
+        attribs["number"] = str(obj_.number)
         sub = etree.SubElement(parent, tag, attribs)
         attribs_real = {}
         attribs_imag = {}
@@ -916,9 +916,29 @@ def _write_polezero_list(parent, obj):
         etree.SubElement(sub, "Imaginary", attribs_imag).text = \
             _float_to_str(obj_.imag)
 
-    for obj_ in obj.zeros:
+    # Assign numbers if not given - stationxml requires them. Create copies
+    # to not modify the original objects.
+    zeros = copy.deepcopy(obj.zeros)
+    poles = copy.deepcopy(obj.poles)
+
+    # All or nothing - either all have numbers or we manually assign them
+    # starting with the zeros.
+    #
+    # This is done here to catch all cases - otherwise it would have to be
+    # done at poles + zeros assignment time and that would be pretty nasty
+    # as it would have to work across poles and zeros.
+    if not all([hasattr(i, "number") and i.number is not None
+                for i in zeros + poles]):
+        # Start numbers for both at zero - other variants are out there but
+        # this is what IRIS does.
+        for i, v in enumerate(zeros):
+            v.number = i
+        for i, v in enumerate(poles):
+            v.number = i
+
+    for obj_ in zeros:
         _polezero2tag(parent, "Zero", obj_)
-    for obj_ in obj.poles:
+    for obj_ in poles:
         _polezero2tag(parent, "Pole", obj_)
 
 
