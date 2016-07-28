@@ -174,7 +174,7 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
     else:
         # maximum likelihood origin location lon lat info line
         line = lines["GEOGRAPHIC"]
-        x, y, z = map(float, line.split()[8:13:2])
+        y, x, z = map(float, line.split()[8:13:2])
 
     # maximum likelihood origin time info line
     line = lines["GEOGRAPHIC"]

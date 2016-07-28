@@ -15,11 +15,11 @@
           <value>2006-07-15T17:21:20.195670Z</value>
         </time>
         <latitude>
-          <value>7.736781</value>
+          <value>51.657659</value>
           <uncertainty>0.00724156630677</uncertainty>
         </latitude>
         <longitude>
-          <value>51.657659</value>
+          <value>7.736781</value>
           <uncertainty>0.00989286468574</uncertainty>
         </longitude>
         <depth>
