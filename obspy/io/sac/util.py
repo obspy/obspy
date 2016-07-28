@@ -159,24 +159,25 @@ def is_same_byteorder(bo1, bo2):
     return (bo1.lower() in le) == (bo2.lower() in le)
 
 
-def _clean_str(value):
-    # Remove null values and whitespace, return a str
-    try:
-        # value is a str
-        null_term = value.find('\x00')
-    except TypeError:
-        # value is a bytes
-        # null_term = value.decode().find('\x00')
-        null_term = value.find(b'\x00')
+def _clean_str(value, strip_whitespace=True):
+    """
+    Remove null values and whitespace, return a str
 
-    if null_term >= 0:
-        value = value[:null_term]
-    value = value.strip()
-
+    This fn is used in two places: in SACTrace.read, to sanitize strings for
+    SACTrace, and in sac_to_obspy_header, to sanitize strings for making a
+    Trace that the user may have manually added.
+    """
     try:
-        value = value.decode()
+        value = value.decode('ASCII', 'replace')
     except AttributeError:
         pass
+
+    null_term = value.find('\x00')
+    if null_term >= 0:
+        value = value[:null_term] + " " * len(value[null_term:])
+
+    if strip_whitespace:
+        value = value.strip()
 
     return value
 

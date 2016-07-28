@@ -34,6 +34,8 @@ class CoreTestCase(unittest.TestCase):
         self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
         self.fileseis = os.path.join(self.path, "data", "seism.sac")
+        self.file_notascii = os.path.join(self.path, "data",
+                                          "non_ascii.sac")
         self.testdata = np.array(
             [-8.74227766e-08, -3.09016973e-01,
              -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
@@ -861,6 +863,16 @@ class CoreTestCase(unittest.TestCase):
                     buf1.seek(0, 0)
 
                     self.assertEqual(buf.read(), buf1.read())
+
+    def test_not_ascii(self):
+        """
+        Read file with non-ascii and null-termination characters.
+        See ObsPy issue #1432
+        """
+        tr = read(self.file_notascii, format='SAC')[0]
+        self.assertEqual(tr.stats.station, 'ALS')
+        self.assertEqual(tr.stats.channel, 'HHE')
+        self.assertEqual(tr.stats.network, '')
 
 
 def suite():
