@@ -307,7 +307,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         arrival.time_residual = float(line[16])
         arrival.time_weight = float(line[17])
         pick = Pick()
-        wid = WaveformStreamID(station_code=station)
+        # network codes are not used by NonLinLoc, so they can not be known
+        # when reading the .hyp file.. to conform with QuakeML standard set an
+        # empty network code
+        wid = WaveformStreamID(network_code="", station_code=station)
         date, hourmin, sec = map(str, line[6:9])
         t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
         pick.waveform_id = wid
