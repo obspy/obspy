@@ -16,6 +16,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 from math import sqrt
 
+import numpy as np
+
 from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
@@ -103,24 +105,28 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         original_picks = []
 
     cat = Catalog()
-    while lines:
-        while not lines[0].startswith("NLLOC "):
-            line = lines.pop(0)
-            msg = ("Ignoring an unexpected line in NLLOC_HYP "
-                   "file:\n'{}'".format(line))
-            warnings.warn(msg)
-        for i, line in enumerate(lines):
-            if line.startswith("END_NLLOC"):
-                break
-        else:
-            msg = ("NLLOC HYP file seems corrupt,"
-                   " could not detect 'END_NLLOC' line.")
-            raise RuntimeError(msg)
+    lines_start = [i for i, line in enumerate(lines)
+                   if line.startswith("NLLOC ")]
+    lines_end = [i for i, line in enumerate(lines)
+                 if line.startswith("END_NLLOC")]
+    if len(lines_start) != len(lines_end):
+        msg = ("NLLOC HYP file '{}' seems corrupt, number of 'NLLOC' lines "
+               "does not match number of 'END_NLLOC' lines").format(filename)
+        raise Exception(msg)
+    start_end_indices = []
+    for start, end in zip(lines_start, lines_end):
+        start_end_indices.append(start)
+        start_end_indices.append(end)
+    if any(np.diff(start_end_indices) < 1):
+        msg = ("NLLOC HYP file '{}' seems corrupt, inconsistent "
+               "positioning of 'NLLOC' and 'END_NLLOC' lines "
+               "detected.").format(filename)
+        raise Exception(msg)
+    for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
-            lines[:i+1], coordinate_converter=coordinate_converter,
+            lines[start:end+1], coordinate_converter=coordinate_converter,
             original_picks=original_picks)
         cat.append(event)
-        lines = lines[i+1:]
     cat.creation_info.creation_time = UTCDateTime()
     cat.creation_info.version = "ObsPy %s" % __version__
     return cat
