@@ -38,6 +38,8 @@ master: (doi: 10.5281/zenodo.165135)
      vertical, see #1445).
  - obspy.io.gse2
     * Read support for GSE2.0 bulletin (see #1528)
+ - obspy.io.nlloc
+    * Also parse author information and COMMENT line (see #1484)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.stationxml
