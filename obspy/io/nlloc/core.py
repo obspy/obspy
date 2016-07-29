@@ -83,18 +83,19 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
         try:
-            with open(filename, "rt") as fh:
+            with open(filename, "rb") as fh:
                 data = fh.read()
+            data = data.decode("UTF-8")
         except:
             try:
-                data = filename.decode()
+                data = filename.decode("UTF-8")
             except:
                 data = str(filename)
             data = data.strip()
     else:
         data = filename.read()
         if hasattr(data, "decode"):
-            data = data.decode()
+            data = data.decode("UTF-8")
 
     # split lines and remove empty ones
     lines = [line for line in data.splitlines() if line.strip()]

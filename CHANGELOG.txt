@@ -42,6 +42,8 @@
      no custom coordinate converter is provided. (see #1390)
    * Fix reading NonLinLoc Hypocenter-Phase files with more than one
      hypocenter in it. (see #1480)
+   * Fix reading NonLinLoc Hypocenter-Phase files with unicode characters in
+     them. (see #1483)
  - obspy.io.quakeml:
    * Fixed issue with improperly raised warnings when the same file is read
      twice. (#1376)
