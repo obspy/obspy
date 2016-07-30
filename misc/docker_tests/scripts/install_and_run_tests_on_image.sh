@@ -3,6 +3,8 @@ red='\e[0;31m'
 green='\e[0;32m'
 no_color='\e[0m'
 
+pip install https://github.com/Damgaard/PyImgur/archive/master.zip
+
 # Install ObsPy and run the tests.
 cd /obspy
 
