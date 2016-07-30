@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# remove log directories older than 14 days (to avoid cluttering with GB of
+# data on buildbots that are run regularly)
+find logs/2[0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]T[012][0-9]-[0-5][0-9]-[0-5][0-9]Z -type d -not -newermt `date --date='14 days ago' --rfc-3339=date` -exec rm -rf {} \;
+
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
 # Remove all test images stored locally. Otherwise they'll end up on the
