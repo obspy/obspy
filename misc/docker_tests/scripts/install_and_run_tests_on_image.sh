@@ -23,8 +23,10 @@ obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.
 
 if [ $? != 0 ]; then
     echo -e "${red}Tests failed!${no_color}"
+    touch /failure
 else
     echo -e "${green}Tests successful!${no_color}"
+    touch /success
 fi
 
 echo "Done with everything!"

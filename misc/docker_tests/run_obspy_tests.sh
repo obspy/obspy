@@ -16,6 +16,7 @@ DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+LOG_DIR_BASE=logs/$DATETIME
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
@@ -24,7 +25,6 @@ DOCKER=`which docker.io || which docker`
 # Execute Python once and import ObsPy to trigger building the RELEASE-VERSION
 # file.
 python -c "import obspy"
-
 
 # Create temporary folder.
 rm -rf $TEMP_PATH
@@ -55,6 +55,8 @@ else
     echo "Bad value for OBSPY_DOCKER_TEST_SOURCE_TREE: $OBSPY_DOCKER_TEST_SOURCE_TREE"
     exit 1
 fi
+FULL_VERSION=`cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION`
+COMMIT=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
 
 
 # Copy the install script.
@@ -91,7 +93,7 @@ run_tests_on_image () {
     sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
     # Where to save the logs, and a random ID for the containers.
-    LOG_DIR=logs/$DATETIME/$image_name
+    LOG_DIR=${LOG_DIR_BASE}/$image_name
     mkdir -p $LOG_DIR
     ID=$RANDOM-$RANDOM-$RANDOM
 
@@ -101,6 +103,8 @@ run_tests_on_image () {
 
     $DOCKER cp $ID:/INSTALL_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
+    $DOCKER cp $ID:/failure $LOG_DIR
+    $DOCKER cp $ID:/success $LOG_DIR
 
     $DOCKER cp $ID:/obspy/obspy/imaging/tests/images/testrun $LOG_DIR/imaging_testrun
     $DOCKER cp $ID:/obspy/obspy/core/tests/images/testrun $LOG_DIR/core_testrun
@@ -147,5 +151,24 @@ for image_name in $($DOCKER images | grep obspy | awk '{print $2}'); do
     fi
     run_tests_on_image $image_name;
 done
+
+# set commit status
+# helper function to determine overall success/failure across all images
+# env variable OBSPY_COMMIT_STATUS_TOKEN has to be set for authorization
+overall_status() {
+    ls ${LOG_DIR_BASE}/*/failure 2>&1 > /dev/null && return 1
+    ls ${LOG_DIR_BASE}/*/success 2>&1 > /dev/null && return 0
+    return 1
+}
+COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION}"
+if overall_status ;
+then
+    COMMIT_STATUS=success
+    COMMIT_STATUS_DESCRIPTION="Docker tests succeeded:"
+else
+    COMMIT_STATUS=failed
+    COMMIT_STATUS_DESCRIPTION="Docker tests failed:"
+fi
+curl -H "Content-Type: application/json" -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request POST --data "{\"state\": \"${COMMIT_STATUS}\", \"context\": \"docker-testbot\", \"description\": \"${COMMIT_STATUS_DESCRIPTION}\", \"target_url\": \"${COMMIT_STATUS_TARGET_URL}\"}" https://api.github.com/repos/obspy/obspy/statuses/${COMMIT}
 
 rm -rf $TEMP_PATH
