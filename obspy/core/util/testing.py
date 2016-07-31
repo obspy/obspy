@@ -406,13 +406,13 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
-                upload_links = self._upload_images()
+                upload_result = self._upload_images()
                 if isinstance(upload_result, dict):
                     msg += ("\tFile:      {}\n"
                             "\tExpected:  {expected}\n"
                             "\tActual:    {actual}\n"
                             "\tDiff:      {diff}\n").format(self.image_name,
-                                                            **upload_links)
+                                                            **upload_result)
                 else:
                     msg += upload_result
                 raise ImageComparisonException(msg)
@@ -422,13 +422,13 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             if "Baseline image" in msg and "does not exist." in msg:
                 msg = str(e) + "\n"
-                upload_links = self._upload_images()
+                upload_result = self._upload_images()
                 if isinstance(upload_result, dict):
                     msg += ("\tFile:      {}\n"
                             "\tExpected:  ---\n"
                             "\tActual:    {actual}\n"
                             "\tDiff:      ---\n").format(self.image_name,
-                                                         **upload_links)
+                                                         **upload_result)
                 else:
                     msg += upload_result
                 raise ImageComparisonException(msg)
