@@ -407,11 +407,14 @@ class ImageComparison(NamedTemporaryFile):
             if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
-                msg += ("\tFile:      {}\n"
-                        "\tExpected:  {expected}\n"
-                        "\tActual:    {actual}\n"
-                        "\tDiff:      {diff}\n").format(self.image_name,
-                                                        **upload_links)
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(self.image_name,
+                                                            **upload_links)
+                else:
+                    msg += upload_result
                 raise ImageComparisonException(msg)
             raise
         # we can still upload actual image if baseline image does not exist
@@ -420,11 +423,14 @@ class ImageComparison(NamedTemporaryFile):
             if "Baseline image" in msg and "does not exist." in msg:
                 msg = str(e) + "\n"
                 upload_links = self._upload_images()
-                msg += ("\tFile:      {}\n"
-                        "\tExpected:  ---\n"
-                        "\tActual:    {actual}\n"
-                        "\tDiff:      ---\n").format(self.image_name,
-                                                     **upload_links)
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  ---\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      ---\n").format(self.image_name,
+                                                         **upload_links)
+                else:
+                    msg += upload_result
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
@@ -539,16 +545,11 @@ class ImageComparison(NamedTemporaryFile):
         """
         try:
             import pyimgur
-            import requests
-        except Exception as e:
-            msg = ("Upload to imgur failed (caught %s: %s).")
-            return msg % (e.__class__.__name__, str(e))
-        # try to get imgur client id from environment
-        imgur_clientid = \
-            os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
-        # upload images and return urls
-        links = {}
-        try:
+            # try to get imgur client id from environment
+            imgur_clientid = \
+                os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            # upload images and return urls
+            links = {}
             imgur = pyimgur.Imgur(imgur_clientid)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
