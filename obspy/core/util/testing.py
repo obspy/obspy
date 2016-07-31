@@ -560,7 +560,7 @@ class ImageComparison(NamedTemporaryFile):
                 up = imgur.upload_image(self.diff_filename,
                                         title=self.diff_filename)
                 links['diff'] = up.link
-        except (requests.exceptions.SSLError, Exception) as e:
+        except Exception as e:
             msg = ("Upload to imgur failed (caught %s: %s).")
             return msg % (e.__class__.__name__, str(e))
         return links
