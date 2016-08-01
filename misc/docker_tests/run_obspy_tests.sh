@@ -4,9 +4,9 @@ DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-# all output to log file
-exec > $LOG_DIR_BASE/docker.log 2>&1
-
+# This bracket is closed at the very end and causes a redirection of everything
+# to the logfile as well as stdout.
+{
 # remove log directories older than 14 days (to avoid cluttering with GB of
 # data on buildbots that are run regularly)
 find logs/2[0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]T[012][0-9]-[0-5][0-9]-[0-5][0-9]Z -type d -not -newermt `date --date='14 days ago' --rfc-3339=date` -exec rm -rf {} \;
@@ -182,3 +182,5 @@ fi
 curl -H "Content-Type: application/json" -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request POST --data "{\"state\": \"${COMMIT_STATUS}\", \"context\": \"docker-testbot\", \"description\": \"${COMMIT_STATUS_DESCRIPTION}\", \"target_url\": \"${COMMIT_STATUS_TARGET_URL}\"}" https://api.github.com/repos/obspy/obspy/statuses/${COMMIT}
 
 rm -rf $TEMP_PATH
+
+} 2>&1 | tee -a $LOG_DIR_BASE/docker.log
