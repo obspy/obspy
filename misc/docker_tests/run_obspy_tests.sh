@@ -20,6 +20,7 @@ while getopts "t:e:" opt; do
         ;;
     esac
 done
+shift $(expr $OPTIND - 1 )
 
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
