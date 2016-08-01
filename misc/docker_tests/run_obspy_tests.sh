@@ -1,5 +1,12 @@
 #!/bin/bash
 
+DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+LOG_DIR_BASE=logs/$DATETIME
+mkdir -p $LOG_DIR_BASE
+
+# all output to log file
+exec > $LOG_DIR_BASE/docker.log 2>&1
+
 # remove log directories older than 14 days (to avoid cluttering with GB of
 # data on buildbots that are run regularly)
 find logs/2[0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]T[012][0-9]-[0-5][0-9]-[0-5][0-9]Z -type d -not -newermt `date --date='14 days ago' --rfc-3339=date` -exec rm -rf {} \;
@@ -15,8 +22,6 @@ rm -rf $OBSPY_PATH/obspy/station/tests/images/testrun
 DOCKERFILE_FOLDER=base_images
 TEMP_PATH=temp
 NEW_OBSPY_PATH=$TEMP_PATH/obspy
-DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-LOG_DIR_BASE=logs/$DATETIME
 
 # Determine the docker binary name. The official debian packages use docker.io
 # for the binary's name due to some legacy docker package.
