@@ -22,6 +22,16 @@ Running it without any commands will execute the test suite on all available ima
 $ ./run_obspy_tests.sh
 ```
 
+Additionally arguments can be passed to `obspy-runtests` in the Docker images
+with the `-e` argument. To for example only the MiniSEED test suite on CentOS
+7, do
+
+```bash
+$ ./run_obspy_tests.sh -eio.mseed centos_7
+```
+
+Make sure to use the `-e` argument before the list of images to run on.
+
 If the image is not yet available it will be created automatically. The
 `base_images` directory contains all available images receipts.
 
