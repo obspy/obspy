@@ -7,9 +7,9 @@ mkdir -p $LOG_DIR_BASE
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
 {
-# remove log directories older than 14 days (to avoid cluttering with GB of
-# data on buildbots that are run regularly)
-find logs/2[0-9][0-9][0-9]-[01][0-9]-[0-3][0-9]T[012][0-9]-[0-5][0-9]-[0-5][0-9]Z -type d -not -newermt `date --date='14 days ago' --rfc-3339=date` -exec rm -rf {} \;
+# Delete all but the last 15 log directories. The `+16` is intentional. Fully
+# POSIX compliant version adapted from http://stackoverflow.com/a/34862475/1657047
+ls -tp logs | tail -n +16 | xargs -I % rm -rf -- logs/%
 
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
