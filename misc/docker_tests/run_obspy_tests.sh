@@ -84,7 +84,7 @@ create_image () {
     if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
-        printf "\e[101m\e[30m  Image '$image_name'will be created.\e[0m\n"
+        printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
         $DOCKER build -t obspy:$image_name $image_path
     fi
 }
