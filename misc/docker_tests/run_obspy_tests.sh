@@ -4,6 +4,16 @@ DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
+# Parse the additional args later passed to `obspy-runtests` in
+# the docker images.
+extra_args=""
+while getopts "e:" opt; do
+    case "$opt" in
+    e)  extra_args=', "'$OPTARG'"'
+        ;;
+    esac
+done
+
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
 {
@@ -95,7 +105,7 @@ run_tests_on_image () {
     image_name=$1;
     printf "\n\e[101m\e[30m  >>> Running tests for image '"$image_name"'...\e[0m\n"
     # Copy dockerfile and render template.
-    sed 's/{{IMAGE_NAME}}/'$image_name'/g' scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
+    sed "s/{{IMAGE_NAME}}/$image_name/g; s/{{EXTRA_ARGS}}/$extra_args/g" scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
     # Where to save the logs, and a random ID for the containers.
     LOG_DIR=${LOG_DIR_BASE}/$image_name

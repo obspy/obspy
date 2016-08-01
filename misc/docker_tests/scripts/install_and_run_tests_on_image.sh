@@ -16,7 +16,7 @@ fi
 
 cd
 
-obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) 2>&1 | tee /TEST_LOG.txt
+obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) $1 2>&1 | tee /TEST_LOG.txt
 
 
 if [ $? != 0 ]; then
