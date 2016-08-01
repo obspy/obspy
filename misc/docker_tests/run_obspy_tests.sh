@@ -1,5 +1,6 @@
 #!/bin/bash
 
+CURDIR=`pwd`
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
@@ -7,9 +8,15 @@ mkdir -p $LOG_DIR_BASE
 # Parse the additional args later passed to `obspy-runtests` in
 # the docker images.
 extra_args=""
-while getopts "e:" opt; do
+while getopts "t:e:" opt; do
     case "$opt" in
     e)  extra_args=', "'$OPTARG'"'
+        ;;
+    t)  TARGET=(${OPTARG//:/ })
+        REPO=${TARGET[0]}
+        SHA=${TARGET[1]}
+        TARGET=true
+        OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
         ;;
     esac
 done
@@ -61,18 +68,33 @@ then
     cp $OBSPY_PATH/setup.py $NEW_OBSPY_PATH/setup.py
     cp $OBSPY_PATH/MANIFEST.in $NEW_OBSPY_PATH/MANIFEST.in
     rm -f $NEW_OBSPY_PATH/obspy/lib/*.so
+    COMMIT=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
 elif [ "$OBSPY_DOCKER_TEST_SOURCE_TREE" == "clone" ]
 then
     git clone file://$OBSPY_PATH $NEW_OBSPY_PATH
     # we're cloning so we have a non-dirty version actually
     cat $OBSPY_PATH/obspy/RELEASE-VERSION | sed 's#\.dirty$##' > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
+    if [ "$TARGET" = true ] ; then
+        cd $NEW_OBSPY_PATH
+        git remote add TEMP git://github.com/$REPO/obspy
+        git fetch TEMP
+        git checkout $SHA
+        git remote remove TEMP || git remote rm TEMP
+        git clean -fdx
+        git status
+        cd $CURDIR
+        # write RELEASE-VERSION file in temporary obspy clone without
+        # installation, same magic as done in setup.py
+        python -c "import os, sys; sys.path.insert(0, os.path.join(\"${NEW_OBSPY_PATH}\", 'obspy', 'core', 'util')); from version import get_git_version; sys.path.pop(0); print(get_git_version())" > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
+        cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
+    fi
+    COMMIT=`cd $NEW_OBSPY_PATH && git log -1 --pretty=format:%H`
 else
     echo "Bad value for OBSPY_DOCKER_TEST_SOURCE_TREE: $OBSPY_DOCKER_TEST_SOURCE_TREE"
     exit 1
 fi
+cd $CURDIR
 FULL_VERSION=`cat $NEW_OBSPY_PATH/obspy/RELEASE-VERSION`
-COMMIT=`cd $OBSPY_PATH && git log -1 --pretty=format:%H`
-
 
 # Copy the install script.
 cp scripts/install_and_run_tests_on_image.sh $TEMP_PATH/install_and_run_tests_on_image.sh

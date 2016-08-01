@@ -30,7 +30,19 @@ with the `-e` argument. To for example only the MiniSEED test suite on CentOS
 $ ./run_obspy_tests.sh -eio.mseed centos_7
 ```
 
+A specific commit from a specific obspy fork (or main repo) can be tested using
+the `-t` (for "target") argument.
+
 Make sure to use the `-e` argument before the list of images to run on.
+
+```bash
+$ # test a commit that is in the obspy main repo
+$ ./run_obspy_tests.sh -tobspy:bdc6dd855c00c831bcc007b607d83f6070b5b1c0
+$ # test a commit that only exists in a fork (but might be the tip of a PR)
+$ ./run_obspy_tests.sh -tclaudiodsf:2fa3d3bdaded126a9ebdaf73cf60403c1acb3457
+```
+
+Make sure to use the `-t` argument before the list of images to run on.
 
 If the image is not yet available it will be created automatically. The
 `base_images` directory contains all available images receipts.
