@@ -160,7 +160,12 @@ overall_status() {
     ls ${LOG_DIR_BASE}/*/success 2>&1 > /dev/null && return 0
     return 1
 }
-COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION}"
+# encode parameter part of the URL, using requests as it is installed anyway..
+# (since we use python to import obspy to generate RELEASE-VERSION above)
+# it's just looking up the correct quoting function from urllib depending on
+# py2/3 and works with requests >= 1.0 (which is from 2012)
+FULL_VERSION_URLENCODED=`python -c "from requests.compat import quote; print(quote(\"${FULL_VERSION}\"))"`
+COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION_URLENCODED}"
 if overall_status ;
 then
     COMMIT_STATUS=success
