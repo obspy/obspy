@@ -22,6 +22,44 @@ Running it without any commands will execute the test suite on all available ima
 $ ./run_obspy_tests.sh
 ```
 
+Additionally arguments can be passed to `obspy-runtests` in the Docker images
+with the `-e` argument. To for example only the MiniSEED test suite on CentOS
+7, do:
+
+```bash
+$ ./run_obspy_tests.sh -eio.mseed centos_7
+```
+Or to also provide a pull request url to `obspy-runtests` with the `-e`
+argument and using quotes (including bash variable replacement) to mark the
+start and end of the `-e` option, do (again with just a single distribution)
+the following:
+
+```bash
+$ export PR=1460
+$ ./run_obspy_tests.sh -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" centos_7
+```
+
+A specific commit from a specific obspy fork (or main repo) can be tested using
+the `-t` (for "target") argument.
+
+Make sure to use the `-e` argument before the list of images to run on.
+
+```bash
+$ # test a commit that is in the obspy main repo
+$ ./run_obspy_tests.sh -tobspy:bdc6dd855c00c831bcc007b607d83f6070b5b1c0
+$ # test a commit that only exists in a fork (but might be the tip of a PR)
+$ ./run_obspy_tests.sh -tclaudiodsf:2fa3d3bdaded126a9ebdaf73cf60403c1acb3457
+```
+
+Make sure to use the `-t` argument before the list of images to run on.
+
+The `-t` and `-e` options can also be combined, e.g.:
+
+```bash
+$ # see http://tests.obspy.org/46691/ for the result of this command:
+$ ./run_obspy_tests.sh -ttrichter:e6da3ddb5 -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" fedora_24
+```
+
 If the image is not yet available it will be created automatically. The
 `base_images` directory contains all available images receipts.
 
