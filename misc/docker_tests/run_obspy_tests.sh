@@ -76,12 +76,21 @@ then
     # we're cloning so we have a non-dirty version actually
     cat $OBSPY_PATH/obspy/RELEASE-VERSION | sed 's#\.dirty$##' > $NEW_OBSPY_PATH/obspy/RELEASE-VERSION
     if [ "$TARGET" = true ] ; then
-        cd $NEW_OBSPY_PATH
-        git remote add TEMP git://github.com/$REPO/obspy
-        git fetch TEMP
+        # get a fresh and clean obspy main repo clone (e.g. to avoid unofficial
+        # tags tampering with version number lookup)
+        rm -rf $NEW_OBSPY_PATH
+        git clone git://github.com/obspy/obspy $NEW_OBSPY_PATH || exit 1
+        # be nice, make sure to only run git commands when successfully changed
+        # to new temporary clone, exit otherwise
+        cd $NEW_OBSPY_PATH || exit 1
+        if [ "$REPO" != "obspy" ]
+        then
+            git remote add $REPO git://github.com/$REPO/obspy
+            git fetch $REPO
+        fi
+        # everything comes from a clean clone, so there should be no need to
+        # git-clean the repo
         git checkout $SHA
-        git remote remove TEMP || git remote rm TEMP
-        git clean -fdx
         git status
         cd $CURDIR
         # write RELEASE-VERSION file in temporary obspy clone without
