@@ -634,6 +634,44 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(len(inv.networks), 1)
         self.assertEqual(inv[0].code, "XX")
 
+    def test_numbers_are_written_to_poles_and_zeros(self):
+        """
+        Poles and zeros have a number attribute. Make sure this is written,
+        even if set with a custom complex list.
+        """
+        # Read default inventory and cut down to a single channel.
+        inv = obspy.read_inventory()
+        inv.networks = inv[:1]
+        inv[0].stations = inv[0][:1]
+        inv[0][0].channels = inv[0][0][:1]
+
+        # Manually set the poles and zeros - thus these are cast to our
+        # custom classes but number are not yet set.
+        inv[0][0][0].response.response_stages[0].poles = [0 + 1j, 2 + 3j]
+        inv[0][0][0].response.response_stages[0].zeros = [0 + 1j, 2 + 3j]
+
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml")
+            buf.seek(0, 0)
+            data = buf.read().decode()
+
+        # Ugly test - remove all whitespace and make sure the four following
+        # lines are part of the written output.
+        data = re.sub('\s+', ' ', data)
+
+        self.assertIn(
+            '<Zero number="0"> <Real>0.0</Real> '
+            '<Imaginary>1.0</Imaginary> </Zero>', data)
+        self.assertIn(
+            '<Zero number="1"> <Real>2.0</Real> '
+            '<Imaginary>3.0</Imaginary> </Zero>', data)
+        self.assertIn(
+            '<Pole number="0"> <Real>0.0</Real> '
+            '<Imaginary>1.0</Imaginary> </Pole>', data)
+        self.assertIn(
+            '<Pole number="1"> <Real>2.0</Real> '
+            '<Imaginary>3.0</Imaginary> </Pole>', data)
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

@@ -16,6 +16,8 @@ from future.builtins import *  # NOQA @UnusedWildImport
 import warnings
 from math import sqrt
 
+import numpy as np
+
 from obspy import Catalog, UTCDateTime, __version__
 from obspy.core.event import (Arrival, Comment, CreationInfo, Event, Origin,
                               OriginQuality, OriginUncertainty, Pick,
@@ -81,18 +83,19 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
     if not hasattr(filename, "read"):
         # Check if it exists, otherwise assume its a string.
         try:
-            with open(filename, "rt") as fh:
+            with open(filename, "rb") as fh:
                 data = fh.read()
+            data = data.decode("UTF-8")
         except:
             try:
-                data = filename.decode()
+                data = filename.decode("UTF-8")
             except:
                 data = str(filename)
             data = data.strip()
     else:
         data = filename.read()
         if hasattr(data, "decode"):
-            data = data.decode()
+            data = data.decode("UTF-8")
 
     # split lines and remove empty ones
     lines = [line for line in data.splitlines() if line.strip()]
@@ -103,24 +106,28 @@ def read_nlloc_hyp(filename, coordinate_converter=None, picks=None, **kwargs):
         original_picks = []
 
     cat = Catalog()
-    while lines:
-        while not lines[0].startswith("NLLOC "):
-            line = lines.pop(0)
-            msg = ("Ignoring an unexpected line in NLLOC_HYP "
-                   "file:\n'{}'".format(line))
-            warnings.warn(msg)
-        for i, line in enumerate(lines):
-            if line.startswith("END_NLLOC"):
-                break
-        else:
-            msg = ("NLLOC HYP file seems corrupt,"
-                   " could not detect 'END_NLLOC' line.")
-            raise RuntimeError(msg)
+    lines_start = [i for i, line in enumerate(lines)
+                   if line.startswith("NLLOC ")]
+    lines_end = [i for i, line in enumerate(lines)
+                 if line.startswith("END_NLLOC")]
+    if len(lines_start) != len(lines_end):
+        msg = ("NLLOC HYP file '{}' seems corrupt, number of 'NLLOC' lines "
+               "does not match number of 'END_NLLOC' lines").format(filename)
+        raise Exception(msg)
+    start_end_indices = []
+    for start, end in zip(lines_start, lines_end):
+        start_end_indices.append(start)
+        start_end_indices.append(end)
+    if any(np.diff(start_end_indices) < 1):
+        msg = ("NLLOC HYP file '{}' seems corrupt, inconsistent "
+               "positioning of 'NLLOC' and 'END_NLLOC' lines "
+               "detected.").format(filename)
+        raise Exception(msg)
+    for start, end in zip(lines_start, lines_end):
         event = _read_single_hypocenter(
-            lines[:i+1], coordinate_converter=coordinate_converter,
+            lines[start:end+1], coordinate_converter=coordinate_converter,
             original_picks=original_picks)
         cat.append(event)
-        lines = lines[i+1:]
     cat.creation_info.creation_time = UTCDateTime()
     cat.creation_info.version = "ObsPy %s" % __version__
     return cat
@@ -300,7 +307,10 @@ def _read_single_hypocenter(lines, coordinate_converter, original_picks):
         arrival.time_residual = float(line[16])
         arrival.time_weight = float(line[17])
         pick = Pick()
-        wid = WaveformStreamID(station_code=station)
+        # network codes are not used by NonLinLoc, so they can not be known
+        # when reading the .hyp file.. to conform with QuakeML standard set an
+        # empty network code
+        wid = WaveformStreamID(network_code="", station_code=station)
         date, hourmin, sec = map(str, line[6:9])
         t = UTCDateTime().strptime(date + hourmin, "%Y%m%d%H%M") + float(sec)
         pick.waveform_id = wid

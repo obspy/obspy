@@ -55,7 +55,7 @@ class PPSDTestCase(unittest.TestCase):
         _t = np.geterr()
         np.seterr(all="ignore")
         try:
-            with ImageComparison(self.path, 'ppsd_freq.png', reltol=1.5) as ic:
+            with ImageComparison(self.path, 'ppsd_freq.png', reltol=2.0) as ic:
                 self.ppsd.plot(
                     show=False, show_coverage=False, show_histogram=True,
                     show_percentiles=True, percentiles=[20, 40],
