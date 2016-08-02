@@ -128,7 +128,7 @@ run_tests_on_image () {
     image_name=$1;
     printf "\n\e[101m\e[30m  >>> Running tests for image '"$image_name"'...\e[0m\n"
     # Copy dockerfile and render template.
-    sed "s/{{IMAGE_NAME}}/$image_name/g; s/{{EXTRA_ARGS}}/$extra_args/g" scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
+    sed "s#{{IMAGE_NAME}}#$image_name#g; s#{{EXTRA_ARGS}}#$extra_args#g" scripts/Dockerfile_run_tests.tmpl > $TEMP_PATH/Dockerfile
 
     # Where to save the logs, and a random ID for the containers.
     LOG_DIR=${LOG_DIR_BASE}/$image_name
