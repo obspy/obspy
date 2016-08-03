@@ -1251,11 +1251,13 @@ class StationTestCase(unittest.TestCase):
         logger = mock.MagicMock()
 
         with mock.patch("obspy.clients.fdsn.mass_downloader"
-                        ".utils.safe_delete") as p:
+                        ".utils.safe_delete") as p1, \
+                mock.patch("obspy.io.mseed.util.get_start_and_end_time") as p2:
+            p2.return_value = (obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             # By default, nothing will happen.
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 0)
-            p.reset_mock()
+            self.assertEqual(p1.call_count, 0)
+            p1.reset_mock()
 
             # The whole purpose of the method is to make sure that each
             # MiniSEED files has a corresponding StationXML file. MiniSEED
@@ -1270,18 +1272,19 @@ class StationTestCase(unittest.TestCase):
             # Right now no channel has been marked missing, thus nothing should
             # happen.
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 0)
-            p.reset_mock()
+            self.assertEqual(p1.call_count, 0)
+            p1.reset_mock()
 
             # Mark one as missing and the corresponding information should
             # be deleted
-            station.miss_station_information[("", "BHZ")] = True
+            station.miss_station_information[("", "BHZ")] = (
+                obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 2)
+            self.assertEqual(p1.call_count, 2)
             # The status of the channel should be adjusted
             self.assertEqual(c1.intervals[0].status, STATUS.DOWNLOAD_REJECTED)
             self.assertEqual(c1.intervals[1].status, STATUS.DOWNLOAD_REJECTED)
-            p.reset_mock()
+            p1.reset_mock()
 
     def test_prepare_mseed_download(self):
         """

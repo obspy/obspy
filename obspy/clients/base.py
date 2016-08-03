@@ -218,6 +218,9 @@ class HTTPClient(with_metaclass(ABCMeta, RemoteBaseClient)):
             if data is None:
                 r = requests.get(**_request_args)
             else:
+                # Compatibility with old request versions.
+                if hasattr(data, "read"):
+                    data = data.read()
                 _request_args["data"] = data
                 r = requests.post(**_request_args)
         except TypeError:
