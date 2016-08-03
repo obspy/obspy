@@ -30,6 +30,8 @@ from ..base import WaveformClient, HTTPClient, DEFAULT_USER_AGENT, \
 
 def get_json(r):
     if hasattr(r, "json"):
+        if isinstance(r.json, dict):
+            return r.json
         return r.json()
 
     c = r.content
