@@ -277,8 +277,7 @@ class ClientTestCase(unittest.TestCase):
         payload = []
 
         def side_effect(*args, **kwargs):
-            kwargs["data"].seek(0, 0)
-            payload[:] = [kwargs["data"].read().decode()]
+            payload[:] = [kwargs["data"].decode()]
             return r
 
         # Test simple lists first.
