@@ -24,6 +24,7 @@ import re
 import shutil
 import unittest
 import warnings
+from distutils.version import LooseVersion
 
 from lxml import etree
 import numpy as np
@@ -615,8 +616,10 @@ def check_flake8():
                     break
             else:
                 files.append(py_file)
-    flake8_style = get_style_guide(parse_argv=False,
-                                   config_file=flake8.main.DEFAULT_CONFIG)
+    flake8_kwargs = {'parse_argv': False}
+    if LooseVersion(flake8.__version__) < LooseVersion('2.5.5'):
+        flake8_kwargs['config_file'] = flake8.main.DEFAULT_CONFIG
+    flake8_style = get_style_guide(**flake8_kwargs)
     flake8_style.options.ignore = tuple(set(
         flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
 
