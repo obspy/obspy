@@ -787,6 +787,22 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 277)
         self.assertEqual(tr.stats.sampling_rate, 40.0)
 
+    def test_read_file_with_various_noise_records(self):
+        """
+        Tests reading a custom made file with noise records.
+        """
+        # This file has the following layout:
+        # 1. 128 byte NOISE record
+        # 2. 512 byte normal record - station NV30
+        # 3. 256 byte NOISE record
+        # 4. 512 byte normal record - station NV31
+        # 5. 512 byte NOISE record
+        # 6. 512 byte NOISE record
+        # 7. 512 byte normal record - station NV32
+        # 8. 1024 byte NOISE record
+        # 9. 512 byte normal record - station NV33
+        file = os.path.join(self.path, "data", "various_noise_records.mseed")
+        st = read(file)
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')

@@ -79,12 +79,31 @@ def __is_mseed(fp, file_size):  # NOQA
     # Sequence number must contains a single number or be empty
     seqnr = header[0:6].replace(b'\x00', b' ').strip()
     if not seqnr.isdigit() and seqnr != b'':
+        # This might be a completely empty sequence - in that case jump 128
+        # bytes and try again.
+        fp.seek(-7, 1)
+        try:
+            _t = fp.read(128).decode().strip()
+        except:
+            return False
+        if not _t:
+            return __is_mseed(fp=fp, file_size=file_size)
         return False
     # Check for any valid control header types.
     if header[6:7] in [b'D', b'R', b'Q', b'M']:
         return True
+    elif header[6:7] == b" ":
+        # If empty, it might be a noise record. Check the rest of 128 bytes
+        # (min record size) and try again.
+        try:
+            _t = fp.read(128 - 7).decode().strip()
+        except:
+            return False
+        if not _t:
+            return __is_mseed(fp=fp, file_size=file_size)
+        return False
     # Check if Full-SEED
-    if not header[6:7] == b'V':
+    elif header[6:7] != b'V':
         return False
     # Parse the whole file and check whether it has has a data record.
     fp.seek(1, 1)
