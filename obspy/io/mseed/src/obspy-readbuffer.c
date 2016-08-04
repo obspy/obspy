@@ -294,7 +294,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Otherwise assume the smallest possible record length and assure that enough
         // data is present.
         else {
-            if (offset + 128 > buflen) {
+            if (offset + MINRECLEN > buflen) {
                 ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
                           "is not enough to constitute a full SEED record. Corrupt data? "
                           "Record will be skipped.\n", buflen - offset);
