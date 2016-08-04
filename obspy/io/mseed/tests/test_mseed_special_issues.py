@@ -815,6 +815,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.testing.assert_allclose(st[0].data, st[2].data)
         np.testing.assert_allclose(st[0].data, st[3].data)
 
+
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
 
