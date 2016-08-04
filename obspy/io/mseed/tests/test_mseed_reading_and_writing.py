@@ -227,10 +227,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Mini-SEED file names.
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
-                           'timingquality.mseed']
+                           'timingquality.mseed', 'fullseed.mseed',
+                           'blockette008.mseed', 'fullseed.mseed']
+
         # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
-                               '__init__.py']
+                               '__init__.py',
+                               os.path.join('data', 'not.mseed'),
+                               os.path.join('data', 'not2.mseed'),
+                               os.path.join('data', 'not3.mseed'),
+                               os.path.join('data', 'not4.mseed')]
+
         # Loop over Mini-SEED files
         for _i in mseed_filenames:
             filename = os.path.join(self.path, 'data', _i)
