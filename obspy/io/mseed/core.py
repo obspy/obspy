@@ -55,9 +55,9 @@ def _is_mseed(filename):
         try:
             if hasattr(filename, "getbuffer"):
                 file_size = filename.getbuffer().nbytes
-            elif hasattr(filename, "fileno"):
+            try:
                 file_size = os.fstat(filename.fileno()).st_size
-            else:
+            except:
                 _p = filename.tell()
                 filename.seek(0, 2)
                 file_size = filename.tell()
