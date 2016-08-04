@@ -314,6 +314,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for _i in range(5):
             self.assertEqual(stream[0].data[_i], data[_i])
 
+        # Make sure it can also read from open files.
+        with io.open(testfile, "rb") as fh:
+            stream = _read_mseed(fh)
+        stream.verify()
+        self.assertEqual(stream[0].stats.network, 'NL')
+        self.assertEqual(stream[0].stats['station'], 'HGN')
+        self.assertEqual(stream[0].stats.get('location'), '00')
+        self.assertEqual(stream[0].stats.npts, 11947)
+        self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
+        self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
+        for _i in range(5):
+            self.assertEqual(stream[0].data[_i], data[_i])
+
+        # And from BytesIO.
+        with io.open(testfile, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                stream = _read_mseed(buf)
+        stream.verify()
+        self.assertEqual(stream[0].stats.network, 'NL')
+        self.assertEqual(stream[0].stats['station'], 'HGN')
+        self.assertEqual(stream[0].stats.get('location'), '00')
+        self.assertEqual(stream[0].stats.npts, 11947)
+        self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
+        self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
+        for _i in range(5):
+            self.assertEqual(stream[0].data[_i], data[_i])
+
     def test_read_partial_time_window_from_file(self):
         """
         Uses obspy.io.mseed.mseed._read_mseed to read only read a certain time
