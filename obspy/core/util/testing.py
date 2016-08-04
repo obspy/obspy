@@ -571,8 +571,9 @@ try:
 except ImportError:
     HAS_FLAKE8 = False
 else:
+    flake8_version = LooseVersion(flake8.__version__)
     # Only accept flake8 version >= 2.0
-    HAS_FLAKE8 = flake8.__version__ >= '2'
+    HAS_FLAKE8 = flake8_version >= LooseVersion('2')
 
 
 def check_flake8():
@@ -584,8 +585,6 @@ def check_flake8():
     if PY2:
         import pyflakes.checker  # @UnusedImport
         pyflakes.checker.PY2 = True
-    import flake8.main
-    from flake8.engine import get_style_guide
 
     test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
     obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
@@ -616,9 +615,16 @@ def check_flake8():
                     break
             else:
                 files.append(py_file)
+
+    if flake8_version >= LooseVersion('3.0.0'):
+        from flake8.api.legacy import get_style_guide
+    else:
+        from flake8.engine import get_style_guide
     flake8_kwargs = {'parse_argv': False}
-    if LooseVersion(flake8.__version__) < LooseVersion('2.5.5'):
+    if flake8_version < LooseVersion('2.5.5'):
+        import flake8.main
         flake8_kwargs['config_file'] = flake8.main.DEFAULT_CONFIG
+
     flake8_style = get_style_guide(**flake8_kwargs)
     flake8_style.options.ignore = tuple(set(
         flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
