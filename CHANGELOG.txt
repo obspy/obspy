@@ -1,3 +1,7 @@
+1.0.3:
+ - obspy.io.mseed:
+   * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
+
 1.0.2: (doi: 10.5281/zenodo.49636)
  - obspy.core:
    * Added workaround for numpy issue where many FFTs of various lengths fill
