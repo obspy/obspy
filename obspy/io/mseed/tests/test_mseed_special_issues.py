@@ -804,6 +804,17 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         file = os.path.join(self.path, "data", "various_noise_records.mseed")
         st = read(file)
 
+        self.assertTrue(len(st), 4)
+        self.assertTrue(st[0].stats.station, "NV30")
+        self.assertTrue(st[1].stats.station, "NV31")
+        self.assertTrue(st[2].stats.station, "NV32")
+        self.assertTrue(st[3].stats.station, "NV33")
+
+        # Data is the same across all records.
+        np.testing.assert_allclose(st[0].data, st[1].data)
+        np.testing.assert_allclose(st[0].data, st[2].data)
+        np.testing.assert_allclose(st[0].data, st[3].data)
+
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
 
