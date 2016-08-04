@@ -278,7 +278,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
 
         if (MS_ISVALIDBLANK(mseed + offset)) {
-            offset += 512;
+            offset += MINRECLEN;
             continue;
         }
 
