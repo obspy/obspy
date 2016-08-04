@@ -19,19 +19,11 @@ from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.core.util.deprecation_helpers import (
     DynamicAttributeImportRerouteModule, ObsPyDeprecationWarning)
-from . import util
+from . import util, InternalMSEEDReadingError, InternalMSEEDReadingWarning
 from .headers import (DATATYPES, ENCODINGS, HPTERROR, HPTMODULUS, SAMPLETYPE,
                       SEED_CONTROL_HEADERS, UNSUPPORTED_ENCODINGS,
                       VALID_CONTROL_HEADERS, VALID_RECORD_LENGTHS, Selections,
                       SelectTime, Blkt100S, Blkt1001S, clibmseed)
-
-
-class InternalMSEEDReadingError(Exception):
-    pass
-
-
-class InternalMSEEDReadingWarning(UserWarning):
-    pass
 
 
 def _is_mseed(filename):

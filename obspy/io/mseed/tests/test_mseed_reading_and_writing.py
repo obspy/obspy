@@ -17,9 +17,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.io.mseed import util
-from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed, \
-    InternalMSEEDReadingWarning
+from obspy.io.mseed import util, InternalMSEEDReadingWarning
+from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
