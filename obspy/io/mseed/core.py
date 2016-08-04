@@ -8,6 +8,7 @@ from future.builtins import *  # NOQA
 from future.utils import native_str
 
 import ctypes as C
+import io
 import os
 import warnings
 from struct import pack
@@ -44,57 +45,84 @@ def _is_mseed(filename):
 
     Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
-    with open(filename, 'rb') as fp:
-        header = fp.read(7)
-        # File has less than 7 characters
-        if len(header) != 7:
-            return False
-        # Sequence number must contains a single number or be empty
-        seqnr = header[0:6].replace(b'\x00', b' ').strip()
-        if not seqnr.isdigit() and seqnr != b'':
-            return False
-        # Check for any valid control header types.
-        if header[6:7] in [b'D', b'R', b'Q', b'M']:
-            return True
-        # Check if Full-SEED
-        if not header[6:7] == b'V':
-            return False
-        # Parse the whole file and check whether it has has a data record.
-        fp.seek(1, 1)
-        _i = 0
-        # search for blockettes 010 or 008
-        while True:
-            if fp.read(3) in [b'010', b'008']:
-                break
-            # the next for bytes are the record length
-            # as we are currently at position 7 (fp.read(3) fp.read(4))
-            # we need to subtract this first before we seek
-            # to the appropriate position
-            try:
-                fp.seek(int(fp.read(4)) - 7, 1)
-            except:
-                return False
-            _i += 1
-            # break after 3 cycles
-            if _i == 3:
-                return False
-        # Try to get a record length.
-        fp.seek(8, 1)
+    # Open filehandler or use an existing file like object.
+    if not hasattr(filename, 'read'):
+        file_size = os.path.getsize(filename)
+        with io.open(filename, 'rb') as fh:
+            return __is_mseed(fh, file_size=file_size)
+    else:
+        initial_pos = filename.tell()
         try:
-            record_length = pow(2, int(fp.read(2)))
+            if hasattr(filename, "getbuffer"):
+                file_size = filename.getbuffer().nbytes
+            elif hasattr(filename, "fileno"):
+                file_size = os.fstat(filename.fileno()).st_size
+            else:
+                _p = filename.tell()
+                filename.seek(0, 2)
+                file_size = filename.tell()
+                filename.seek(_p, 0)
+            return __is_mseed(filename, file_size)
+        finally:
+            # Reset pointer.
+            filename.seek(initial_pos, 0)
+
+
+def __is_mseed(fp, file_size):  # NOQA
+    """
+    Internal version of _is_mseed working only with open file-like object.
+    """
+    header = fp.read(7)
+    # File has less than 7 characters
+    if len(header) != 7:
+        return False
+    # Sequence number must contains a single number or be empty
+    seqnr = header[0:6].replace(b'\x00', b' ').strip()
+    if not seqnr.isdigit() and seqnr != b'':
+        return False
+    # Check for any valid control header types.
+    if header[6:7] in [b'D', b'R', b'Q', b'M']:
+        return True
+    # Check if Full-SEED
+    if not header[6:7] == b'V':
+        return False
+    # Parse the whole file and check whether it has has a data record.
+    fp.seek(1, 1)
+    _i = 0
+    # search for blockettes 010 or 008
+    while True:
+        if fp.read(3) in [b'010', b'008']:
+            break
+        # the next for bytes are the record length
+        # as we are currently at position 7 (fp.read(3) fp.read(4))
+        # we need to subtract this first before we seek
+        # to the appropriate position
+        try:
+            fp.seek(int(fp.read(4)) - 7, 1)
         except:
             return False
-        file_size = os.path.getsize(filename)
-        # Jump to the second record.
-        fp.seek(record_length + 6)
-        # Loop over all records and return True if one record is a data
-        # record
-        while fp.tell() < file_size:
-            flag = fp.read(1)
-            if flag in [b'D', b'R', b'Q', b'M']:
-                return True
-            fp.seek(record_length - 1, 1)
+        _i += 1
+        # break after 3 cycles
+        if _i == 3:
+            return False
+
+    # Try to get a record length.
+    fp.seek(8, 1)
+    try:
+        record_length = pow(2, int(fp.read(2)))
+    except:
         return False
+
+    # Jump to the second record.
+    fp.seek(record_length + 6, 0)
+    # Loop over all records and return True if one record is a data
+    # record
+    while fp.tell() < file_size:
+        flag = fp.read(1)
+        if flag in [b'D', b'R', b'Q', b'M']:
+            return True
+        fp.seek(record_length - 1, 1)
+    return False
 
 
 def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,

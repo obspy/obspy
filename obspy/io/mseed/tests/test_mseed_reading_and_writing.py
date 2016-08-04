@@ -242,6 +242,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             is_mseed = _is_mseed(filename)
             self.assertFalse(is_mseed)
 
+        # Also test it from an open file.
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, 'data', _i)
+            with io.open(filename, "rb") as fh:
+                is_mseed = _is_mseed(fh)
+            self.assertTrue(is_mseed)
+        for _i in non_mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            with io.open(filename, "rb") as fh:
+                is_mseed = _is_mseed(fh)
+            self.assertFalse(is_mseed)
+
+        # And from a BytesIO.
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, 'data', _i)
+            with io.open(filename, "rb") as fh:
+                with io.BytesIO(fh.read()) as buf:
+                    buf.seek(0, 0)
+                    is_mseed = _is_mseed(buf)
+            self.assertTrue(is_mseed)
+        for _i in non_mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            with io.open(filename, "rb") as fh:
+                with io.BytesIO(fh.read()) as buf:
+                    buf.seek(0, 0)
+                    is_mseed = _is_mseed(buf)
+            self.assertFalse(is_mseed)
+
     def test_read_single_record_to_msr(self):
         """
         Tests readSingleRecordtoMSR against start and end times.
@@ -916,6 +944,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # fullseed starting with blockette 010
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(_is_mseed(file))
+        return
         # fullseed starting with blockette 008
         file = os.path.join(self.path, 'data', 'blockette008.mseed')
         self.assertTrue(_is_mseed(file))
