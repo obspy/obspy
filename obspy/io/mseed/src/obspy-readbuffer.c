@@ -277,6 +277,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             }
         }
 
+        if (MS_ISVALIDBLANK(mseed + offset)) {
+            offset += 512;
+            continue;
+        }
+
         // Pass (buflen - offset) because msr_parse() expects only a single record. This
         // way libmseed can take care to not overstep bounds.
         retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);

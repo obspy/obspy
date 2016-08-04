@@ -773,6 +773,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertEqual(tr2.stats.starttime, starttime)
             self.assertEqual(tr2, tr)
 
+    def test_reading_noise_records(self):
+        """
+        Tests reading a noise record. See #1495.
+        """
+        file = os.path.join(self.path, "data",
+                            "single_record_plus_noise_record.mseed")
+        st = read(file)
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.id, "IM.NV32..BHE")
+        self.assertEqual(tr.stats.npts, 277)
+        self.assertEqual(tr.stats.sampling_rate, 40.0)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
