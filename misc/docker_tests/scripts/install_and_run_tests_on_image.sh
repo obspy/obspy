@@ -8,7 +8,8 @@ cd /obspy
 
 pip install -v -e . 2>&1 | tee /INSTALL_LOG.txt
 
-if [ $? != 0 ]; then
+# need to check PIPESTATUS, $? is overwritten by tee and always 0
+if [ ${PIPESTATUS[0]} != 0 ]; then
     echo -e "${red}Installation failed!${no_color}"
 else
     echo -e "${green}Installation successful!${no_color}"
@@ -19,7 +20,8 @@ cd
 obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) $1 2>&1 | tee /TEST_LOG.txt
 
 
-if [ $? != 0 ]; then
+# need to check PIPESTATUS, $? is overwritten by tee and always 0
+if [ ${PIPESTATUS[0]} != 0 ]; then
     echo -e "${red}Tests failed!${no_color}"
     touch /failure
 else
