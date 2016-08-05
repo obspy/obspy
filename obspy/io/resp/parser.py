@@ -94,7 +94,7 @@ def make_xseed(resp_blockettelist):
         data = io.BytesIO(b34.encode('utf-8'))
         b34_obj = blockette.Blockette034(debug=DEBUG,
                                          record_type='A')
-        b34_obj.parse_SEED(data, expected_length=len(b34))
+        b34_obj.parse_seed(data, expected_length=len(b34))
         seedparser.temp['abbreviations'].append(b34_obj)
     seedparser.temp['stations'].append([])
     root_attribute = seedparser.temp['stations'][-1]
@@ -138,13 +138,13 @@ def make_xseed(resp_blockettelist):
                         # RESP does not use the same length for floats
                         # as SEED does
                         bfield.length = len(resp_value)
-                    bfield.parse_SEED(blockette_obj, data_resp_value)
+                    bfield.parse_seed(blockette_obj, data_resp_value)
                     if bfield in unused_fields:
                         unused_fields.remove(bfield)
                     break
         for bfield in unused_fields:
             # Set unused fields to default
-            bfield.parse_SEED(blockette_obj, None)
+            bfield.parse_seed(blockette_obj, None)
 
         # This is not correct for more than rdseed -R, although it will parse
         # Also will not separate stations blockettes by station
@@ -158,7 +158,7 @@ def make_xseed(resp_blockettelist):
         seedparser.blockettes.setdefault(blockette_obj.id,
                                          []).append(blockette_obj)
 
-    seedparser._update_internal_SEED_structure()
+    seedparser._update_internal_seed_structure()
     return seedparser
 
 if __name__ == '__main__':

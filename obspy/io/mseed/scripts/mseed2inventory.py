@@ -426,6 +426,36 @@ def get_manifest_of_dir(dir):
     print("MSEED:", numseed)
     return manifest
 
+def get_manifest_of_filelist(filelist):
+    '''
+    Similar to get_manifest_of_dir but takes a list file names.
+    '''
+    manifest = Manifest()
+    # global numseen
+    numseen = 0
+    # global numseed
+    numseed = 0
+    try:
+        for fullname in filelist:
+            print(fullname)
+            numseen += 1
+            if not isfile(fullname):
+                continue
+            mseed = MSeed(fullname)
+            if mseed.is_mseed:
+                numseed += 1
+                manifest.merge(mseed.manifest)
+            else:
+                del mseed
+
+    except KeyboardInterrupt:
+        print('Caught Ctrl-C...')
+    manifest.reduce21span()
+    print(manifest)
+    print("Saw: ", numseen)
+    print("MSEED:", numseed)
+    return manifest
+
 
 def make_inventory(manifest):
     # Standard orientations
@@ -511,12 +541,59 @@ def inventory_from_mseed(directory, sens_resp, dl_resp):
     return inv
 
 if __name__ == '__main__':
-    sensRESP = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
-                'tool/PDCC-3.8/NRL/edu.iris/sensors/guralp'
-                '/RESP.XX.NS007..BHZ.CMG3T.120.1500')
-    dl_resp = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
-               'tool/PDCC-3.8/NRL/edu.iris/dataloggers/reftek'
-               '/RESP.XX.NR012..HHZ.130.1.500')
-    inv = inventory_from_mseed(argv[1], sensRESP, dl_resp)
+    # hardcoded testing
+    # sensRESP = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
+                # 'tool/PDCC-3.8/NRL/edu.iris/sensors/guralp'
+                # '/RESP.XX.NS007..BHZ.CMG3T.120.1500')
+    # dl_resp = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
+               # 'tool/PDCC-3.8/NRL/edu.iris/dataloggers/reftek'
+               # '/RESP.XX.NR012..HHZ.130.1.500')
+    # inv = inventory_from_mseed(argv[1], sensRESP, dl_resp)
+    # print(inv)
+    # inv.write('XE.station.xml', format='STATIONXML')
+
+
+    # Command arg, and inputs
+    from argparse import ArgumentParser, FileType
+    VERSION = '2016.218'
+
+    print('Currently works for multiple stations, but only 1 response '
+          'with 1 sample rate '
+          'i.e. 1 datalogger/sens resp.')
+    print()
+
+
+    parser = ArgumentParser(
+        description='Creates StationXML from NRLresps and mseed. '
+        'Can use multiple stations but only 1 channel response.')
+    parser.add_argument('msfile', nargs='+', help='MS file to scan.')
+    parser.add_argument('-s', dest='sensor_resp')
+    parser.add_argument('-d', dest='datalogger_resp')
+    parser.add_argument('-o', dest='outfile')
+    args = parser.parse_args()
+
+    manifest = get_manifest_of_filelist(args.msfile)
+    inv = make_inventory(manifest)
+    inv_resp = inventory.response.response_from_resp(args.sensor_resp, args.datalogger_resp)
+
+    # Only one response so all channels must be the same
+    print('Original inv:')
     print(inv)
-    inv.write('XE.station.xml', format='STATIONXML')
+    print()
+
+    # Use the first channel code found, and filter for just that code
+    chan_glob = inv.networks[0].stations[0].channels[0].code[:2]
+
+    inv = inv.select(channel=chan_glob + '*')
+    print('Creating StationXML for %(chan_glob)s*' % locals())
+    print(inv)
+    print()
+    for net in inv.networks:
+        for sta in net.stations:
+            for chan in sta.channels:
+                chan.response = inv_resp
+    print(inv)
+    netcodes = '^'.join(net.code for net in inv.networks)
+    if args.outfile is None:
+        outfile = '%(netcodes)s.%(chan_glob)s_.xml' % locals()
+    inv.write(outfile, format='STATIONXML')

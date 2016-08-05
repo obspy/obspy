@@ -1241,7 +1241,7 @@ class Response(ComparingObject):
         stage_objects = []
 
         for stage_number in stage_list:
-            st = ew.stage()
+            st = ew.Stage()
             st.sequence_no = stage_number
 
             stage_blkts = []
@@ -1253,7 +1253,7 @@ class Response(ComparingObject):
             st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # Map the transfer function type.
                 transfer_fct_mapping = {
                     "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
@@ -1271,22 +1271,22 @@ class Response(ComparingObject):
                 pz.a0_freq = blockette.normalization_frequency
 
                 # XXX: Find a better way to do this.
-                poles = (ew.complex_number * len(blockette.poles))()
+                poles = (ew.ComplexNumber * len(blockette.poles))()
                 for i, value in enumerate(blockette.poles):
                     poles[i].real = value.real
                     poles[i].imag = value.imag
 
-                zeros = (ew.complex_number * len(blockette.zeros))()
+                zeros = (ew.ComplexNumber * len(blockette.zeros))()
                 for i, value in enumerate(blockette.zeros):
                     zeros[i].real = value.real
                     zeros[i].imag = value.imag
 
                 pz.poles = C.cast(C.pointer(poles),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
                 pz.zeros = C.cast(C.pointer(zeros),
-                                  C.POINTER(ew.complex_number))
+                                  C.POINTER(ew.ComplexNumber))
             elif isinstance(blockette, CoefficientsTypeResponseStage):
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 # This type can have either an FIR or an IIR response. If
                 # the number of denominators is 0, it is a FIR. Otherwise
                 # an IIR.
@@ -1384,7 +1384,7 @@ class Response(ComparingObject):
                            "be specified.")
                     raise ValueError(msg)
             else:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                 decimation_blkt = blkt.blkt_info.decimation
 
@@ -1405,7 +1405,7 @@ class Response(ComparingObject):
             # Add the gain if it is available.
             if blockette.stage_gain is not None and \
                     blockette.stage_gain_frequency is not None:
-                blkt = ew.blkt()
+                blkt = ew.Blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
                 gain_blkt = blkt.blkt_info.gain
                 gain_blkt.gain = blockette.stage_gain
@@ -1424,11 +1424,11 @@ class Response(ComparingObject):
             stage_objects.append(st)
 
         # Attach the instrument sensitivity as stage 0 at the end.
-        st = ew.stage()
+        st = ew.Stage()
         st.sequence_no = 0
         st.input_units = 0
         st.output_units = 0
-        blkt = ew.blkt()
+        blkt = ew.Blkt()
         blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
         gain_blkt = blkt.blkt_info.gain
         gain_blkt.gain = self.instrument_sensitivity.value
@@ -1436,7 +1436,7 @@ class Response(ComparingObject):
         st.first_blkt = C.pointer(blkt)
         stage_objects.append(st)
 
-        chan = ew.channel()
+        chan = ew.Channel()
         if not stage_objects:
             msg = "At least one stage is needed."
             raise ValueError(msg)
