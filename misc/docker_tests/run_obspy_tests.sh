@@ -216,10 +216,10 @@ COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?version=${FULL_VERSION_URLENCO
 if overall_status ;
 then
     COMMIT_STATUS=success
-    COMMIT_STATUS_DESCRIPTION="Docker tests succeeded:"
+    COMMIT_STATUS_DESCRIPTION="Docker tests succeeded"
 else
-    COMMIT_STATUS=failed
-    COMMIT_STATUS_DESCRIPTION="Docker tests failed:"
+    COMMIT_STATUS=failure
+    COMMIT_STATUS_DESCRIPTION="Docker tests failed"
 fi
 curl -H "Content-Type: application/json" -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request POST --data "{\"state\": \"${COMMIT_STATUS}\", \"context\": \"docker-testbot\", \"description\": \"${COMMIT_STATUS_DESCRIPTION}\", \"target_url\": \"${COMMIT_STATUS_TARGET_URL}\"}" https://api.github.com/repos/obspy/obspy/statuses/${COMMIT}
 
