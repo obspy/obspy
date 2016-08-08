@@ -1313,12 +1313,12 @@ class WaveformPlotting(object):
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
             if self.fillcolor_pos:
-                self.fillfun(time, data, self._tr_offsets_norm[_tr],
-                             where=data > self._tr_offsets_norm[_tr],
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data > self._tr_offsets[_tr],
                              facecolor=self.fillcolor_pos)
             if self.fillcolor_neg:
-                self.fillfun(time, data, self._tr_offsets_norm[_tr],
-                             where=data < self._tr_offsets_norm[_tr],
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data < self._tr_offsets[_tr],
                              facecolor=self.fillcolor_neg)
 
         # Set correct axes orientation
