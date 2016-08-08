@@ -617,6 +617,9 @@ def run(argv=None, interactive=True):
                         help='verbose mode')
     parser.add_argument('-q', '--quiet', action='store_true',
                         help='quiet mode')
+    parser.add_argument('--raise-all-warnings', action='store_true',
+                        help='All warnings are raised as exceptions when this '
+                             'flag is set. Only for debugging purposes.')
 
     # filter options
     filter = parser.add_argument_group('Module Filter',
@@ -678,9 +681,7 @@ def run(argv=None, interactive=True):
     if args.verbose:
         verbosity = 2
         # raise all NumPy warnings
-        np.seterr(all='raise')
-        # raise user and deprecation warnings
-        warnings.simplefilter("error", UserWarning)
+        np.seterr(all='warn')
     elif args.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
@@ -694,6 +695,12 @@ def run(argv=None, interactive=True):
         np.seterr(all='print')
         # ignore user warnings
         warnings.simplefilter("ignore", UserWarning)
+    # whether to raise any warning that's appearing
+    if args.raise_all_warnings:
+        # raise all NumPy warnings
+        np.seterr(all='raise')
+        # raise user and deprecation warnings
+        warnings.simplefilter("error", UserWarning)
     # check for send report option or environmental settings
     if args.report or 'OBSPY_REPORT' in os.environ.keys():
         report = True
