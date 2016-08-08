@@ -326,6 +326,22 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     result['errors'] = errors
     result['failures'] = failures
     result['skipped'] = skipped
+    # try to append info on skipped tests:
+    result['skipped_tests_details'] = []
+    try:
+        for module, testresult_ in ttrs.items():
+            if testresult_.skipped:
+                for skipped_test, skip_message in testresult_.skipped:
+                    result['skipped_tests_details'].append(
+                        (module, skipped_test.__module__,
+                         skipped_test.__class__.__name__,
+                         skipped_test._testMethodName, skip_message))
+    except:
+        exc_type, exc_value, exc_tb = sys.exc_info()
+        print("\n".join(traceback.format_exception(exc_type, exc_value,
+                                                   exc_tb)))
+        result['skipped_tests_details'] = []
+
     if ci_url is not None:
         result['ciurl'] = ci_url
     if pr_url is not None:
