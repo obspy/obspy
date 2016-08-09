@@ -38,7 +38,7 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk
+from obspy.core.util import create_empty_data_chunk, get_matplotlib_version
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
@@ -49,6 +49,7 @@ DATELOCATOR_WARNING_MSG = (
     "AutoDateLocator was unable to pick an appropriate interval for this date "
     "range. It may be necessary to add an interval value to the "
     "AutoDateLocator's intervald dictionary.")
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class WaveformPlotting(object):
@@ -1287,12 +1288,22 @@ class WaveformPlotting(object):
         """
         ax = self.fig.gca()
         # Matplotlib 1.5.x does not support interpolation on fill_betweenx
-        # Should be integrated by version 2.1 (see PR#6560)
+        # Should be integrated by version 2.1
+        # (see https://github.com/matplotlib/matplotlib/pull/6560)
+        fill_kwargs = {"lw": 0}
+        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
+        # It seems to not render the filled PolyCollection
+        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
+        # #1502). To circumvent this, use a line color with alpha 0 (and a very
+        # small linewidth).
+        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
+            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
+
         if self.sect_orientation == 'vertical':
-            self.fillfun = functools.partial(ax.fill_betweenx, lw=0)
+            self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)
         else:
-            self.fillfun = functools.partial(ax.fill_between, lw=0,
-                                             interpolate=True)
+            self.fillfun = functools.partial(ax.fill_between, interpolate=True,
+                                             **fill_kwargs)
         # Calculate normalizing factor
         self.__sect_normalize_traces()
         # Calculate scaling factor
