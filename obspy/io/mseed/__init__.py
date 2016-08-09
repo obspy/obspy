@@ -146,6 +146,14 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 
+class InternalMSEEDReadingError(Exception):
+    pass
+
+
+class InternalMSEEDReadingWarning(UserWarning):
+    pass
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

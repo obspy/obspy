@@ -324,21 +324,36 @@ def _get_record_information(file_object, offset=0, endian=None):
     info = {}
 
     # Apply the offset.
-    file_object.seek(offset, 1)
-    record_start += offset
+    if offset:
+        file_object.seek(offset, 1)
+        record_start += offset
 
     # Get the size of the buffer.
     file_object.seek(0, 2)
     info['filesize'] = int(file_object.tell() - record_start)
     file_object.seek(record_start, 0)
 
-    # check current position
-    if info['filesize'] % 256 != 0:
+    _code = file_object.read(8)[6:7]
+    # Reset the offset if starting somewhere in the middle of the file.
+    if info['filesize'] % 128 != 0:
         # if a multiple of minimal record length 256
         record_start = 0
-    elif file_object.read(8)[6:7] not in [b'D', b'R', b'Q', b'M']:
+    elif _code not in [b'D', b'R', b'Q', b'M', b' ']:
         # if valid data record start at all starting with D, R, Q or M
         record_start = 0
+    # Might be a noise record or completely empty.
+    elif _code == b' ':
+        try:
+            _t = file_object.read(120).decode().strip()
+        except:
+            raise ValueError("Invalid MiniSEED file.")
+        if not _t:
+            info = _get_record_information(file_object=file_object,
+                                           endian=endian)
+            file_object.seek(initial_position, 0)
+            return info
+        else:
+            raise ValueError("Invalid MiniSEED file.")
     file_object.seek(record_start, 0)
 
     # check if full SEED or Mini-SEED
