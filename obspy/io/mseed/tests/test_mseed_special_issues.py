@@ -22,9 +22,10 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
+from obspy.io.mseed import InternalMSEEDReadingError, \
+    InternalMSEEDReadingWarning
 from obspy.io.mseed import util
-from obspy.io.mseed.core import _read_mseed, _write_mseed, \
-    InternalMSEEDReadingError, InternalMSEEDReadingWarning
+from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -772,6 +773,47 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
 
             self.assertEqual(tr2.stats.starttime, starttime)
             self.assertEqual(tr2, tr)
+
+    def test_reading_noise_records(self):
+        """
+        Tests reading a noise record. See #1495.
+        """
+        file = os.path.join(self.path, "data",
+                            "single_record_plus_noise_record.mseed")
+        st = read(file)
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.id, "IM.NV32..BHE")
+        self.assertEqual(tr.stats.npts, 277)
+        self.assertEqual(tr.stats.sampling_rate, 40.0)
+
+    def test_read_file_with_various_noise_records(self):
+        """
+        Tests reading a custom made file with noise records.
+        """
+        # This file has the following layout:
+        # 1. 256 byte NOISE record
+        # 2. 512 byte normal record - station NV30
+        # 3. 128 byte NOISE record
+        # 4. 512 byte normal record - station NV31
+        # 5. 512 byte NOISE record
+        # 6. 512 byte NOISE record
+        # 7. 512 byte normal record - station NV32
+        # 8. 1024 byte NOISE record
+        # 9. 512 byte normal record - station NV33
+        file = os.path.join(self.path, "data", "various_noise_records.mseed")
+        st = read(file)
+
+        self.assertTrue(len(st), 4)
+        self.assertTrue(st[0].stats.station, "NV30")
+        self.assertTrue(st[1].stats.station, "NV31")
+        self.assertTrue(st[2].stats.station, "NV32")
+        self.assertTrue(st[3].stats.station, "NV33")
+
+        # Data is the same across all records.
+        np.testing.assert_allclose(st[0].data, st[1].data)
+        np.testing.assert_allclose(st[0].data, st[2].data)
+        np.testing.assert_allclose(st[0].data, st[3].data)
 
 
 def suite():

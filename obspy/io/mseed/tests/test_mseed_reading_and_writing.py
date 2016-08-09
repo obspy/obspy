@@ -17,9 +17,8 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read
 from obspy.core import AttribDict
 from obspy.core.util import CatchOutput, NamedTemporaryFile
-from obspy.io.mseed import util
-from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed, \
-    InternalMSEEDReadingWarning
+from obspy.io.mseed import util, InternalMSEEDReadingWarning
+from obspy.io.mseed.core import _is_mseed, _read_mseed, _write_mseed
 from obspy.io.mseed.headers import ENCODINGS, clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
 
@@ -228,10 +227,17 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Mini-SEED file names.
         mseed_filenames = ['BW.BGLD.__.EHE.D.2008.001.first_10_records',
                            'gaps.mseed', 'qualityflags.mseed', 'test.mseed',
-                           'timingquality.mseed']
+                           'timingquality.mseed', 'blockette008.mseed',
+                           'fullseed.mseed', 'various_noise_records.mseed']
+
         # Non Mini-SEED file names.
         non_mseed_filenames = ['test_mseed_reading_and_writing.py',
-                               '__init__.py']
+                               '__init__.py',
+                               os.path.join('data', 'not.mseed'),
+                               os.path.join('data', 'not2.mseed'),
+                               os.path.join('data', 'not3.mseed'),
+                               os.path.join('data', 'not4.mseed')]
+
         # Loop over Mini-SEED files
         for _i in mseed_filenames:
             filename = os.path.join(self.path, 'data', _i)
@@ -241,6 +247,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for _i in non_mseed_filenames:
             filename = os.path.join(self.path, _i)
             is_mseed = _is_mseed(filename)
+            self.assertFalse(is_mseed)
+
+        # Also test it from an open file.
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, 'data', _i)
+            with io.open(filename, "rb") as fh:
+                is_mseed = _is_mseed(fh)
+            self.assertTrue(is_mseed)
+        for _i in non_mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            with io.open(filename, "rb") as fh:
+                is_mseed = _is_mseed(fh)
+            self.assertFalse(is_mseed)
+
+        # And from a BytesIO.
+        for _i in mseed_filenames:
+            filename = os.path.join(self.path, 'data', _i)
+            with io.open(filename, "rb") as fh:
+                with io.BytesIO(fh.read()) as buf:
+                    buf.seek(0, 0)
+                    is_mseed = _is_mseed(buf)
+            self.assertTrue(is_mseed)
+        for _i in non_mseed_filenames:
+            filename = os.path.join(self.path, _i)
+            with io.open(filename, "rb") as fh:
+                with io.BytesIO(fh.read()) as buf:
+                    buf.seek(0, 0)
+                    is_mseed = _is_mseed(buf)
             self.assertFalse(is_mseed)
 
     def test_read_single_record_to_msr(self):
@@ -270,6 +304,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = [2787, 2776, 2774, 2780, 2783]
         # Read the file directly to a Stream object.
         stream = _read_mseed(testfile)
+        stream.verify()
+        self.assertEqual(stream[0].stats.network, 'NL')
+        self.assertEqual(stream[0].stats['station'], 'HGN')
+        self.assertEqual(stream[0].stats.get('location'), '00')
+        self.assertEqual(stream[0].stats.npts, 11947)
+        self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
+        self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
+        for _i in range(5):
+            self.assertEqual(stream[0].data[_i], data[_i])
+
+        # Make sure it can also read from open files.
+        with io.open(testfile, "rb") as fh:
+            stream = _read_mseed(fh)
+        stream.verify()
+        self.assertEqual(stream[0].stats.network, 'NL')
+        self.assertEqual(stream[0].stats['station'], 'HGN')
+        self.assertEqual(stream[0].stats.get('location'), '00')
+        self.assertEqual(stream[0].stats.npts, 11947)
+        self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
+        self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
+        for _i in range(5):
+            self.assertEqual(stream[0].data[_i], data[_i])
+
+        # And from BytesIO.
+        with io.open(testfile, "rb") as fh:
+            with io.BytesIO(fh.read()) as buf:
+                buf.seek(0, 0)
+                stream = _read_mseed(buf)
         stream.verify()
         self.assertEqual(stream[0].stats.network, 'NL')
         self.assertEqual(stream[0].stats['station'], 'HGN')
@@ -917,6 +979,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # fullseed starting with blockette 010
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(_is_mseed(file))
+        return
         # fullseed starting with blockette 008
         file = os.path.join(self.path, 'data', 'blockette008.mseed')
         self.assertTrue(_is_mseed(file))
