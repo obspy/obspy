@@ -24,8 +24,8 @@ echo "" >> $LOG
 #          "login": "obspy",
 #      ...
 # finally extract the interesting parts with sed and regex
-TARGETS=`echo $DATA | sed 's#\s##g' | grep -s --only-matching --extended-regexp '"comments_url":"[^"]*","statuses_url":"[^"]*","head":{"label":"[^"]*","ref":"[^"]*","sha":"[a-z0-9]{40}"' | sed 's#.*/issues/\([0-9]*\)/comments".*"head":{"label":"\([^:]*\):.*"sha":"\([a-z0-9]\{40\}\)"#\1-\2:\3#'`
-# output is PRNUMBER-FORK:SHA
+TARGETS=`echo $DATA | sed 's#\s##g' | grep -s --only-matching --extended-regexp '"comments_url":"[^"]*","statuses_url":"[^"]*","head":{"label":"[^"]*","ref":"[^"]*","sha":"[a-z0-9]{40}"' | sed 's#.*/issues/\([0-9]*\)/comments".*"head":{"label":"\([^:]*\):.*"sha":"\([a-z0-9]\{40\}\)"#\1_\2:\3#'`
+# output is PRNUMBER_FORK:SHA
 echo $TARGETS >> $LOG
 echo "" >> $LOG
 
@@ -33,8 +33,8 @@ echo "" >> $LOG
 # returns 0 if no such status exists, i.e. build needed
 # returns 1 if such status exists, i.e. no build needed
 target_needs_build() {
-    # split target which is e.g. 1484-obspy:8fb11420de52392bdb61424f1cfc824a1987a02e
-    PR_REPO_SHA=(${1//-/ })
+    # split target which is e.g. 1484_obspy:8fb11420de52392bdb61424f1cfc824a1987a02e
+    PR_REPO_SHA=(${1//_/ })
     REPO_SHA=${PR_REPO_SHA[1]}
     REPO_SHA=(${REPO_SHA//:/ })
     SHA=${REPO_SHA[1]}
