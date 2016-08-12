@@ -38,7 +38,8 @@ target_needs_build() {
     REPO_SHA=${PR_REPO_SHA[1]}
     REPO_SHA=(${REPO_SHA//:/ })
     SHA=${REPO_SHA[1]}
-    curl --silent --show-error --no-buffer -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request GET "https://api.github.com/repos/obspy/obspy/commits/${SHA}/status" 2>> $LOG | grep -q -s '"context":[ ]*"docker-testbot"' >> $LOG 2>&1
+    STATUS=`curl --silent --show-error --no-buffer -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request GET "https://api.github.com/repos/obspy/obspy/commits/${SHA}/status" 2>> $LOG`
+    echo $STATUS | sed 's#\s##g' | grep -s --only-matching --extended-regexp '"state":[^}]*"context":"docker-testbot"' | grep -q -v "pending"
     if [ $? = 0 ]; then return 1; else return 0; fi
 }
 
