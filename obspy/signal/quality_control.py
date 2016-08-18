@@ -357,9 +357,9 @@ class MSEEDMetadata(object):
         flags = get_flags(self.files, starttime=self.starttime,
                           endtime=self.endtime)
 
-        data_quality_flags_seconds = flags["dq_flags_percentages"]
-        activity_flags_seconds = flags["ac_flags_percentages"]
-        io_and_clock_flags_seconds = flags["io_flags_percentages"]
+        data_quality_flags_seconds = flags["data_quality_flags_percentages"]
+        activity_flags_seconds = flags["activity_flags_percentages"]
+        io_and_clock_flags_seconds = flags["io_and_clock_flags_percentages"]
         timing_correction = flags["timing_correction"]
 
         # Only calculate the timing quality statistics if each files has the
@@ -367,14 +367,14 @@ class MSEEDMetadata(object):
         # would created tinted statistics. There is still a chance that some
         # records in a file have timing qualities set and others not but
         # that should be small.
-        if flags["timing_quality"] is not None:
-            timing_quality = flags["timing_quality"]
-            timing_quality_mean = timing_quality.mean()
-            timing_quality_min = timing_quality.min()
-            timing_quality_max = timing_quality.max()
-            timing_quality_median = np.median(timing_quality)
-            timing_quality_lower_quartile = np.percentile(timing_quality, 25)
-            timing_quality_upper_quartile = np.percentile(timing_quality, 75)
+        if flags["timing_quality"]:
+            tq = flags["timing_quality"]
+            timing_quality_mean = tq["mean"]
+            timing_quality_min = tq["min"]
+            timing_quality_max = tq["max"]
+            timing_quality_median = tq["median"]
+            timing_quality_lower_quartile = tq["lower_quartile"]
+            timing_quality_upper_quartile = tq["upper_quartile"]
         else:
             timing_quality_mean = None
             timing_quality_min = None
@@ -390,9 +390,9 @@ class MSEEDMetadata(object):
         meta['miniseed_header_counts'] = {}
         ref = meta['miniseed_header_counts']
         ref['timing_correction'] = flags['timing_correction_count']
-        ref['activity_flags'] = flags['ac_flags_counts']
-        ref['io_and_clock_flags'] = flags['io_flags_counts']
-        ref['data_quality_flags'] = flags['dq_flags_counts']
+        ref['activity_flags'] = flags['activity_flags_counts']
+        ref['io_and_clock_flags'] = flags['io_and_clock_flags_counts']
+        ref['data_quality_flags'] = flags['data_quality_flags_counts']
 
         # Set miniseed header percentages
         meta['miniseed_header_percentages'] = {}
