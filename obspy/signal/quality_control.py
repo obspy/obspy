@@ -3,7 +3,9 @@
 Quality control module for ObsPy.
 
 Currently requires MiniSEED files as that is the dominant data format in
-data centers.
+data centers. Please see the documentation of the
+:class:`~obspy.signal.quality_control.MSEEDMetadata` class for usage
+instructions.
 
 :authors:
     Luca Trani (trani@knmi.nl)
@@ -53,8 +55,8 @@ class MSEEDMetadata(object):
     Reads the MiniSEED files and extracts the data quality metrics. All
     MiniSEED files must have a matching stream ID and quality.
 
-    :param files: The MiniSEED files.
-    :type files: list
+    :param files: One ore more MiniSEED files.
+    :type files: str or list of str
     :param starttime: Only use records whose end time is larger then this
         given time. Also specifies the new official start time of the
         metadata object.
@@ -65,7 +67,7 @@ class MSEEDMetadata(object):
     :type endtime: :class:`obspy.core.utcdatetime.UTCDateTime`
     :param add_c_segments: Calculate metrics for each continuous segment.
     :type add_c_segments: bool
-    :param add_flags: Include miniSEED header statistics in result.
+    :param add_flags: Include MiniSEED header statistics in result.
     :type add_flags: bool
 
     .. rubric:: Example
@@ -73,16 +75,21 @@ class MSEEDMetadata(object):
     >>> from obspy.signal.quality_control import
     ...     MSEEDMetadata #doctest: +SKIP
     >>> mseedqc = MSEEDMetadata(['path/to/file',
-    ...                         'path/to/file2']) #doctest: +SKIP
+    ...                          'path/to/file2']) # doctest: +SKIP
 
     The class requires a list of files for calculating metrics.
     Add optional parameters ``starttime="YYYY-MM-DDThh:mm:ss`` and
     ``endtime="YYYY-MM-DDThh:mm:ss"`` or ``obspy.core.utcdatetime.UTCDateTime``
     to limit metric calculation to this window. Continuous segments are
-    returned when add_c_segments=True and mSEED header flags information
+    returned when ``add_c_segments=True`` and MiniSEED header flags information
     is returned when ``add_flags=True``.
 
-    To print the calculated metrics call the method
+    The calculated metrics are then available in the ``.meta`` dictionary.
+
+    >>> mseedqc.meta  # doctest: +SKIP
+
+    This is intended to be serialized as JSON. Retrieve the JSON string (to
+    for example store it in a database or save to a file) with:
 
     >>> mseedqc.get_json_meta() #doctest: +SKIP
     """
