@@ -19,6 +19,7 @@ from struct import pack, unpack
 import numpy as np
 
 from obspy import UTCDateTime
+from obspy.core.util.decorator import ObsPyDeprecationWarning
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
                       FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
@@ -1635,6 +1636,32 @@ def _convert_and_check_encoding_for_writing(encoding):
             raise ValueError(msg)
         encoding = encoding_strings[encoding]
     return encoding
+
+
+def get_timing_and_data_quality(file_or_file_object):
+    warnings.warn("The obspy.io.mseed.util.get_timing_and_data_quality() "
+                  "function is deprecated and will be removed with the next "
+                  "release. Please use the "
+                  "improved obspy.io.mseed.util.get_flags() method instead.",
+                  ObsPyDeprecationWarning)
+    flags = get_flags(files=file_or_file_object, io_flags=False,
+                      activity_flags=False, data_quality_flags=True,
+                      timing_quality=True)
+
+    ret_val = {}
+    ret_val["data_quality_flags"] = \
+        list(flags["data_quality_flags_counts"].values())
+
+    if flags["timing_quality"]:
+        tq = flags["timing_quality"]
+        ret_val["timing_quality_average"] = tq["mean"]
+        ret_val["timing_quality_lower_quantile"] = tq["lower_quartile"]
+        ret_val["timing_quality_max"] = tq["max"]
+        ret_val["timing_quality_median"] = tq["median"]
+        ret_val["timing_quality_min"] = tq["min"]
+        ret_val["timing_quality_upper_quantile"] = tq["lower_quartile"]
+
+    return ret_val
 
 
 if __name__ == '__main__':
