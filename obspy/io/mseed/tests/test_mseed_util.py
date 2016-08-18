@@ -194,7 +194,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # the 9th record is set. The last nine records have 0 to 8 set bits,
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
-        self.assertEqual(result['data_quality_flags'], {
+        self.assertEqual(result['data_quality_flags_counts'], {
             "amplifier_saturation_detected": 9,
             "digitizer_clipping_detected": 8,
             "spikes_detected": 7,
@@ -209,7 +209,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         result = util.get_flags(filename, timing_quality=False,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=True)
-        self.assertEqual(result['data_quality_flags'], {
+        self.assertEqual(result['data_quality_flags_counts'], {
             "amplifier_saturation_detected": 0,
             "digitizer_clipping_detected": 0,
             "spikes_detected": 0,
@@ -257,7 +257,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
             self.assertEqual(result["record_count"], 112)
 
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 55,
                 "digitizer_clipping_detected": 72,
                 "spikes_detected": 55,
@@ -267,7 +267,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "digital_filter_charging": 4,
                 "time_tag_uncertain": 8})
 
-            self.assertEqual(result['activity_flags'], {
+            self.assertEqual(result['activity_flags_counts'], {
                 "calibration_signals_present": 1,
                 "time_correction_applied": 2,
                 "beginning_event": 3,
@@ -276,7 +276,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "negative_leap": 11,
                 "event_in_progress": 5})
 
-            self.assertEqual(result['io_and_clock_flags'], {
+            self.assertEqual(result['io_and_clock_flags_counts'], {
                 "station_volume_parity_error": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
@@ -289,7 +289,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             result = util.get_flags(tf.name, starttime=starttime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 55,
                 "digitizer_clipping_detected": 72,
                 "spikes_detected": 55,
@@ -304,7 +304,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             result = util.get_flags(tf.name, starttime=starttime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 0,
                 "digitizer_clipping_detected": 0,
                 "spikes_detected": 0,
@@ -320,7 +320,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             result = util.get_flags(tf.name, endtime=endtime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 0,
                 "digitizer_clipping_detected": 0,
                 "spikes_detected": 0,
@@ -334,7 +334,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             result = util.get_flags(tf.name, starttime=endtime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 55,
                 "digitizer_clipping_detected": 72,
                 "spikes_detected": 55,
@@ -384,7 +384,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
             self.assertEqual(result["record_count"], 112)
 
-            self.assertEqual(result['data_quality_flags'], {
+            self.assertEqual(result['data_quality_flags_counts'], {
                 "amplifier_saturation_detected": 55,
                 "digitizer_clipping_detected": 72,
                 "spikes_detected": 55,
@@ -394,7 +394,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "digital_filter_charging": 4,
                 "time_tag_uncertain": 8})
 
-            self.assertEqual(result['activity_flags'], {
+            self.assertEqual(result['activity_flags_counts'], {
                 "calibration_signals_present": 1,
                 "time_correction_applied": 2,
                 "beginning_event": 3,
@@ -403,7 +403,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 "negative_leap": 11,
                 "event_in_progress": 5})
 
-            self.assertEqual(result['io_and_clock_flags'], {
+            self.assertEqual(result['io_and_clock_flags_counts'], {
                 "station_volume_parity_error": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
@@ -418,7 +418,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
                 self.assertEqual(result["record_count"], 112)
 
-                self.assertEqual(result['data_quality_flags'], {
+                self.assertEqual(result['data_quality_flags_counts'], {
                     "amplifier_saturation_detected": 55,
                     "digitizer_clipping_detected": 72,
                     "spikes_detected": 55,
@@ -428,7 +428,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                     "digital_filter_charging": 4,
                     "time_tag_uncertain": 8})
 
-                self.assertEqual(result['activity_flags'], {
+                self.assertEqual(result['activity_flags_counts'], {
                     "calibration_signals_present": 1,
                     "time_correction_applied": 2,
                     "beginning_event": 3,
@@ -437,7 +437,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                     "negative_leap": 11,
                     "event_in_progress": 5})
 
-                self.assertEqual(result['io_and_clock_flags'], {
+                self.assertEqual(result['io_and_clock_flags_counts'], {
                     "station_volume_parity_error": 1,
                     "long_record_read": 33,
                     "short_record_read": 2,
@@ -483,6 +483,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         result = util.get_flags(filename, timing_quality=True,
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=False)
+
         # Test all values separately.
         np.testing.assert_allclose(
             sorted(result["timing_quality"]["all_values"]),

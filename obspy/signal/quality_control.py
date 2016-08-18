@@ -24,7 +24,7 @@ import json
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read
-from obspy.io.mseed.util import get_flags_c
+from obspy.io.mseed.util import get_flags
 from operator import attrgetter
 
 
@@ -354,8 +354,8 @@ class MSEEDMetadata(object):
 
     def _extract_mseed_flags(self):
 
-        flags = get_flags_c(self.files, starttime=self.starttime,
-                            endtime=self.endtime)
+        flags = get_flags(self.files, starttime=self.starttime,
+                          endtime=self.endtime)
 
         data_quality_flags_seconds = flags["dq_flags_percentages"]
         activity_flags_seconds = flags["ac_flags_percentages"]
