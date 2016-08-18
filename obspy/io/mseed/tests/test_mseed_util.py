@@ -36,16 +36,16 @@ def _create_mseed_file(filename, record_count, sampling_rate=1.0,
     """
     all_flags = {
         "data_quality_flags": {"offset": 38, "flags": [
-            "amplifier_saturation_detected", "digitizer_clipping_detected",
-            "spikes_detected", "glitches_detected", "missing_data_present",
+            "amplifier_saturation", "digitizer_clipping",
+            "spikes", "glitches", "missing_padded_data",
             "telemetry_sync_error", "digital_filter_charging",
-            "time_tag_uncertain"]},
+            "suspect_time_tag"]},
         "activity_flags": {"offset": 36, "flags": [
-            "calibration_signals_present", "time_correction_applied",
-            "beginning_event", "end_event", "positive_leap", "negative_leap",
+            "calibration_signal", "time_correction_applied",
+            "event_begin", "event_end", "positive_leap", "negative_leap",
             "event_in_progress"]},
         "io_and_clock_flags": {"offset": 37, "flags": [
-            "station_volume_parity_error", "long_record_read",
+            "station_volume", "long_record_read",
             "short_record_read", "start_time_series", "end_time_series",
             "clock_locked"]}
     }
@@ -195,14 +195,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # starting with 0 bits, bit 0 is set, bits 0 and 1 are set...
         # Altogether the file contains 44 set bits.
         self.assertEqual(result['data_quality_flags_counts'], {
-            "amplifier_saturation_detected": 9,
-            "digitizer_clipping_detected": 8,
-            "spikes_detected": 7,
-            "glitches_detected": 6,
-            "missing_data_present": 5,
+            "amplifier_saturation": 9,
+            "digitizer_clipping": 8,
+            "spikes": 7,
+            "glitches": 6,
+            "missing_padded_data": 5,
             "telemetry_sync_error": 4,
             "digital_filter_charging": 3,
-            "time_tag_uncertain": 2})
+            "suspect_time_tag": 2})
 
         # No set quality flags should result in a list of zeros.
         filename = os.path.join(self.path, 'data', 'test.mseed')
@@ -210,14 +210,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                 io_flags=False, activity_flags=False,
                                 data_quality_flags=True)
         self.assertEqual(result['data_quality_flags_counts'], {
-            "amplifier_saturation_detected": 0,
-            "digitizer_clipping_detected": 0,
-            "spikes_detected": 0,
-            "glitches_detected": 0,
-            "missing_data_present": 0,
+            "amplifier_saturation": 0,
+            "digitizer_clipping": 0,
+            "spikes": 0,
+            "glitches": 0,
+            "missing_padded_data": 0,
             "telemetry_sync_error": 0,
             "digital_filter_charging": 0,
-            "time_tag_uncertain": 0})
+            "suspect_time_tag": 0})
 
     def test_get_flags(self):
         """
@@ -229,24 +229,24 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 tf.name, record_count=112, seed=3412,
                 starttime="2015-10-16T00:00:00", skiprecords=5, flags={
                     'data_quality_flags': {
-                        "amplifier_saturation_detected": 55,
-                        "digitizer_clipping_detected": 72,
-                        "spikes_detected": 55,
-                        "glitches_detected": 63,
-                        "missing_data_present": 55,
+                        "amplifier_saturation": 55,
+                        "digitizer_clipping": 72,
+                        "spikes": 55,
+                        "glitches": 63,
+                        "missing_padded_data": 55,
                         "telemetry_sync_error": 63,
                         "digital_filter_charging": 4,
-                        "time_tag_uncertain": 8},
+                        "suspect_time_tag": 8},
                     'activity_flags': {
-                        "calibration_signals_present": 1,
+                        "calibration_signal": 1,
                         "time_correction_applied": 2,
-                        "beginning_event": 3,
-                        "end_event": 53,
+                        "event_begin": 3,
+                        "event_end": 53,
                         "positive_leap": 4,
                         "negative_leap": 11,
                         "event_in_progress": 5},
                     'io_and_clock_flags': {
-                        "station_volume_parity_error": 1,
+                        "station_volume": 1,
                         "long_record_read": 33,
                         "short_record_read": 2,
                         "start_time_series": 3,
@@ -258,26 +258,26 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(result["record_count"], 112)
 
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 55,
-                "digitizer_clipping_detected": 72,
-                "spikes_detected": 55,
-                "glitches_detected": 63,
-                "missing_data_present": 55,
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "time_tag_uncertain": 8})
+                "suspect_time_tag": 8})
 
             self.assertEqual(result['activity_flags_counts'], {
-                "calibration_signals_present": 1,
+                "calibration_signal": 1,
                 "time_correction_applied": 2,
-                "beginning_event": 3,
-                "end_event": 53,
+                "event_begin": 3,
+                "event_end": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
                 "event_in_progress": 5})
 
             self.assertEqual(result['io_and_clock_flags_counts'], {
-                "station_volume_parity_error": 1,
+                "station_volume": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
                 "start_time_series": 3,
@@ -290,14 +290,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 55,
-                "digitizer_clipping_detected": 72,
-                "spikes_detected": 55,
-                "glitches_detected": 63,
-                "missing_data_present": 55,
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "time_tag_uncertain": 8})
+                "suspect_time_tag": 8})
 
             # Nothing is present.
             starttime = '2015-10-17T00:00:00'
@@ -305,14 +305,14 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 0,
-                "digitizer_clipping_detected": 0,
-                "spikes_detected": 0,
-                "glitches_detected": 0,
-                "missing_data_present": 0,
+                "amplifier_saturation": 0,
+                "digitizer_clipping": 0,
+                "spikes": 0,
+                "glitches": 0,
+                "missing_padded_data": 0,
                 "telemetry_sync_error": 0,
                 "digital_filter_charging": 0,
-                "time_tag_uncertain": 0})
+                "suspect_time_tag": 0})
 
             # There are exactly 10 records at the front which have nothing.
             # Thus reading until that point should yield nothing.
@@ -321,28 +321,28 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 0,
-                "digitizer_clipping_detected": 0,
-                "spikes_detected": 0,
-                "glitches_detected": 0,
-                "missing_data_present": 0,
+                "amplifier_saturation": 0,
+                "digitizer_clipping": 0,
+                "spikes": 0,
+                "glitches": 0,
+                "missing_padded_data": 0,
                 "telemetry_sync_error": 0,
                 "digital_filter_charging": 0,
-                "time_tag_uncertain": 0})
+                "suspect_time_tag": 0})
 
             # Reading after that point should yield everything.
             result = util.get_flags(tf.name, starttime=endtime,
                                     io_flags=False, activity_flags=False,
                                     timing_quality=False)
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 55,
-                "digitizer_clipping_detected": 72,
-                "spikes_detected": 55,
-                "glitches_detected": 63,
-                "missing_data_present": 55,
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "time_tag_uncertain": 8})
+                "suspect_time_tag": 8})
 
     def test_get_flags_from_files_and_file_like_objects(self):
         """
@@ -353,24 +353,24 @@ class MSEEDUtilTestCase(unittest.TestCase):
                     tf.name, record_count=112, seed=3412,
                     starttime="2015-10-16T00:00:00", skiprecords=5, flags={
                         'data_quality_flags': {
-                            "amplifier_saturation_detected": 55,
-                            "digitizer_clipping_detected": 72,
-                            "spikes_detected": 55,
-                            "glitches_detected": 63,
-                            "missing_data_present": 55,
+                            "amplifier_saturation": 55,
+                            "digitizer_clipping": 72,
+                            "spikes": 55,
+                            "glitches": 63,
+                            "missing_padded_data": 55,
                             "telemetry_sync_error": 63,
                             "digital_filter_charging": 4,
-                            "time_tag_uncertain": 8},
+                            "suspect_time_tag": 8},
                         'activity_flags': {
-                            "calibration_signals_present": 1,
+                            "calibration_signal": 1,
                             "time_correction_applied": 2,
-                            "beginning_event": 3,
-                            "end_event": 53,
+                            "event_begin": 3,
+                            "event_end": 53,
                             "positive_leap": 4,
                             "negative_leap": 11,
                             "event_in_progress": 5},
                         'io_and_clock_flags': {
-                            "station_volume_parity_error": 1,
+                            "station_volume": 1,
                             "long_record_read": 33,
                             "short_record_read": 2,
                             "start_time_series": 3,
@@ -385,26 +385,26 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self.assertEqual(result["record_count"], 112)
 
             self.assertEqual(result['data_quality_flags_counts'], {
-                "amplifier_saturation_detected": 55,
-                "digitizer_clipping_detected": 72,
-                "spikes_detected": 55,
-                "glitches_detected": 63,
-                "missing_data_present": 55,
+                "amplifier_saturation": 55,
+                "digitizer_clipping": 72,
+                "spikes": 55,
+                "glitches": 63,
+                "missing_padded_data": 55,
                 "telemetry_sync_error": 63,
                 "digital_filter_charging": 4,
-                "time_tag_uncertain": 8})
+                "suspect_time_tag": 8})
 
             self.assertEqual(result['activity_flags_counts'], {
-                "calibration_signals_present": 1,
+                "calibration_signal": 1,
                 "time_correction_applied": 2,
-                "beginning_event": 3,
-                "end_event": 53,
+                "event_begin": 3,
+                "event_end": 53,
                 "positive_leap": 4,
                 "negative_leap": 11,
                 "event_in_progress": 5})
 
             self.assertEqual(result['io_and_clock_flags_counts'], {
-                "station_volume_parity_error": 1,
+                "station_volume": 1,
                 "long_record_read": 33,
                 "short_record_read": 2,
                 "start_time_series": 3,
@@ -419,26 +419,26 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 self.assertEqual(result["record_count"], 112)
 
                 self.assertEqual(result['data_quality_flags_counts'], {
-                    "amplifier_saturation_detected": 55,
-                    "digitizer_clipping_detected": 72,
-                    "spikes_detected": 55,
-                    "glitches_detected": 63,
-                    "missing_data_present": 55,
+                    "amplifier_saturation": 55,
+                    "digitizer_clipping": 72,
+                    "spikes": 55,
+                    "glitches": 63,
+                    "missing_padded_data": 55,
                     "telemetry_sync_error": 63,
                     "digital_filter_charging": 4,
-                    "time_tag_uncertain": 8})
+                    "suspect_time_tag": 8})
 
                 self.assertEqual(result['activity_flags_counts'], {
-                    "calibration_signals_present": 1,
+                    "calibration_signal": 1,
                     "time_correction_applied": 2,
-                    "beginning_event": 3,
-                    "end_event": 53,
+                    "event_begin": 3,
+                    "event_end": 53,
                     "positive_leap": 4,
                     "negative_leap": 11,
                     "event_in_progress": 5})
 
                 self.assertEqual(result['io_and_clock_flags_counts'], {
-                    "station_volume_parity_error": 1,
+                    "station_volume": 1,
                     "long_record_read": 33,
                     "short_record_read": 2,
                     "start_time_series": 3,

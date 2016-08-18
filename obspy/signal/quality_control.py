@@ -406,50 +406,6 @@ class MSEEDMetadata(object):
         ref['data_quality_flags'] = data_quality_flags_seconds
         ref['io_and_clock_flags'] = io_and_clock_flags_seconds
 
-        # Similarly, set MiniSEED header flag counts
-        # Small function to change flag names from the get_flags routine
-        # to match the schema
-        self._fix_flag_names('percentages')
-        self._fix_flag_names('counts')
-
-    def _get_flag_map(self, flag_id):
-        """
-        function to map flag name to alternative name
-        """
-        name_reference = {
-            'amplifier_saturation_detected': 'amplifier_saturation',
-            'digitizer_clipping_detected': 'digitizer_clipping',
-            'spikes_detected': 'spikes',
-            'glitches_detected': 'glitches',
-            'missing_data_present': 'missing_padded_data',
-            'time_tag_uncertain': 'suspect_time_tag',
-            'calibration_signals_present': 'calibration_signal',
-            'beginning_event': 'event_begin',
-            'end_event': 'event_end',
-            'station_volume_parity_error': 'station_volume',
-        }
-
-        if flag_id in name_reference:
-            return name_reference[flag_id]
-        else:
-            return flag_id
-
-    def _fix_flag_names(self, suffix):
-        """
-        Supplementary function to fix flag parameter names
-        Parameters with a key in the name_ref will be changed to its value
-        """
-        # Loop over all keys and replace where required according to
-        # the name_reference
-        for group, flags in self.meta['miniseed_header_' + suffix].items():
-            if group not in ["activity_flags", "data_quality_flags",
-                             "io_and_clock_flags"]:
-                continue
-            new_flags = {}
-            for param in flags:
-                new_flags[self._get_flag_map(param)] = flags[param]
-            self.meta['miniseed_header_' + suffix][group] = new_flags
-
     def _compute_sample_metrics(self):
         """
         Computes metrics on samples contained in the specified time window

@@ -192,14 +192,14 @@ def get_flags(files, starttime=None, endtime=None,
     >>> flags = get_flags(filename)
     >>> for k, v in flags["data_quality_flags_counts"].items():
     ...     print(k, v)
-    amplifier_saturation_detected 9
-    digitizer_clipping_detected 8
-    spikes_detected 7
-    glitches_detected 6
-    missing_data_present 5
+    amplifier_saturation 9
+    digitizer_clipping 8
+    spikes 7
+    glitches 6
+    missing_padded_data 5
     telemetry_sync_error 4
     digital_filter_charging 3
-    time_tag_uncertain 2
+    suspect_time_tag 2
 
     Reading a file with Blockette 1001 will return timing quality statistics if
     requested.
@@ -301,28 +301,28 @@ def get_flags(files, starttime=None, endtime=None,
 
     # Create collections for the flags
     dq_flags_counts = collections.OrderedDict([
-        ("amplifier_saturation_detected", 0),
-        ("digitizer_clipping_detected", 0),
-        ("spikes_detected", 0),
-        ("glitches_detected", 0),
-        ("missing_data_present", 0),
+        ("amplifier_saturation", 0),
+        ("digitizer_clipping", 0),
+        ("spikes", 0),
+        ("glitches", 0),
+        ("missing_padded_data", 0),
         ("telemetry_sync_error", 0),
         ("digital_filter_charging", 0),
-        ("time_tag_uncertain", 0)
+        ("suspect_time_tag", 0)
     ])
     dq_flags_seconds = collections.OrderedDict([
-        ("amplifier_saturation_detected", 0),
-        ("digitizer_clipping_detected", 0),
-        ("spikes_detected", 0),
-        ("glitches_detected", 0),
-        ("missing_data_present", 0),
+        ("amplifier_saturation", 0),
+        ("digitizer_clipping", 0),
+        ("spikes", 0),
+        ("glitches", 0),
+        ("missing_padded_data", 0),
         ("telemetry_sync_error", 0),
         ("digital_filter_charging", 0),
-        ("time_tag_uncertain", 0)
+        ("suspect_time_tag", 0)
     ])
 
     io_flags_counts = collections.OrderedDict([
-        ("station_volume_parity_error", 0),
+        ("station_volume", 0),
         ("long_record_read", 0),
         ("short_record_read", 0),
         ("start_time_series", 0),
@@ -330,7 +330,7 @@ def get_flags(files, starttime=None, endtime=None,
         ("clock_locked", 0)
     ])
     io_flags_seconds = collections.OrderedDict([
-        ("station_volume_parity_error", 0),
+        ("station_volume", 0),
         ("long_record_read", 0),
         ("short_record_read", 0),
         ("start_time_series", 0),
@@ -339,19 +339,19 @@ def get_flags(files, starttime=None, endtime=None,
     ])
 
     ac_flags_counts = collections.OrderedDict([
-        ("calibration_signals_present", 0),
+        ("calibration_signal", 0),
         ("time_correction_applied", 0),
-        ("beginning_event", 0),
-        ("end_event", 0),
+        ("event_begin", 0),
+        ("event_end", 0),
         ("positive_leap", 0),
         ("negative_leap", 0),
         ("event_in_progress", 0)
     ])
     ac_flags_seconds = collections.OrderedDict([
-        ("calibration_signals_present", 0),
+        ("calibration_signal", 0),
         ("time_correction_applied", 0),
-        ("beginning_event", 0),
-        ("end_event", 0),
+        ("event_begin", 0),
+        ("event_end", 0),
         ("positive_leap", 0),
         ("negative_leap", 0),
         ("event_in_progress", 0)
