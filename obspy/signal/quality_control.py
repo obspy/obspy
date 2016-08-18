@@ -184,7 +184,7 @@ class MSEEDMetadata(object):
         # for the entire segment. Later we will narrow it to our window if
         # it has been specified
         for file in self.all_files:
-            self.all_data.extend(read(file, format="mseed"))
+            self.all_data.extend(read(file, format="mseed", headonly=True))
 
         # Sort the data by so the start times are in order
         self.all_data.sort()
