@@ -135,7 +135,7 @@ def get_flags(files, starttime=None, endtime=None,
     file and return the total count for each flag type. The following flags
     are extracted:
 
-    Data quality flags
+    **Data quality flags:**
 
     ========  =================================================
     Bit       Description
@@ -150,7 +150,7 @@ def get_flags(files, starttime=None, endtime=None,
     [Bit 7]   Time tag is questionable
     ========  =================================================
 
-    Activity flags
+    **Activity flags:**
 
     ========  =================================================
     Bit       Description
@@ -162,8 +162,9 @@ def get_flags(files, starttime=None, endtime=None,
     [Bit 4]   A positive leap second happened during this record
     [Bit 5]   A negative leap second happened during this record
     [Bit 6]   Event in progress
+    ========  =================================================
 
-    I/O and clock flags
+    **I/O and clock flags:**
 
     ========  =================================================
     Bit       Description
@@ -174,6 +175,7 @@ def get_flags(files, starttime=None, endtime=None,
     [Bit 3]   Start of time series
     [Bit 4]   End of time series
     [Bit 5]   Clock locked
+    ========  =================================================
 
     .. rubric:: Timing quality
 
