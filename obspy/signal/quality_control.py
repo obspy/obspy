@@ -20,12 +20,12 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import json
+from operator import attrgetter
 
 import numpy as np
 
 from obspy import Stream, UTCDateTime, read
 from obspy.io.mseed.util import get_flags
-from operator import attrgetter
 
 
 class DataQualityEncoder(json.JSONEncoder):
@@ -47,11 +47,11 @@ class DataQualityEncoder(json.JSONEncoder):
 
 class MSEEDMetadata(object):
     """
-    A container for mSEED specific metadata, including quality control
+    A container for MiniSEED specific metadata, including quality control
     parameters.
 
     Reads the MiniSEED files and extracts the data quality metrics. All
-    miniseed files must have a matching stream ID and quality.
+    MiniSEED files must have a matching stream ID and quality.
 
     :param files: The MiniSEED files.
     :type files: list
@@ -86,13 +86,11 @@ class MSEEDMetadata(object):
 
     >>> mseedqc.get_json_meta() #doctest: +SKIP
     """
-
     def __init__(self, files, starttime=None, endtime=None,
                  add_c_segments=True, add_flags=False):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
         """
-
         self.data = Stream()
         self.all_files = files
         self.files = []
@@ -116,7 +114,6 @@ class MSEEDMetadata(object):
 
         # Will raise if not a MiniSEED files.
         for file in files:
-
             st = read(file, starttime=starttime, endtime=endtime_left,
                       format="mseed", nearest_sample=False)
 
@@ -129,7 +126,7 @@ class MSEEDMetadata(object):
 
             # Only extend traces with data (npts > 0)
             for tr in st:
-                if(tr.stats.npts != 0):
+                if tr.stats.npts != 0:
                     self.data.extend([tr])
 
         if not self.data:
@@ -314,7 +311,6 @@ class MSEEDMetadata(object):
         """
         Collect information from the MiniSEED headers.
         """
-
         self._extract_mseed_stream_stats()
 
         meta = self.meta
@@ -353,7 +349,6 @@ class MSEEDMetadata(object):
             sorted(list(set([tr.stats.mseed.encoding for tr in self.data])))
 
     def _extract_mseed_flags(self):
-
         flags = get_flags(self.files, starttime=self.starttime,
                           endtime=self.endtime)
 
@@ -386,7 +381,7 @@ class MSEEDMetadata(object):
         meta = self.meta
         meta['num_records'] = flags['record_count']
 
-        # Set miniseed header counts
+        # Set MiniSEED header counts
         meta['miniseed_header_counts'] = {}
         ref = meta['miniseed_header_counts']
         ref['timing_correction'] = flags['timing_correction_count']
@@ -394,7 +389,7 @@ class MSEEDMetadata(object):
         ref['io_and_clock_flags'] = flags['io_and_clock_flags_counts']
         ref['data_quality_flags'] = flags['data_quality_flags_counts']
 
-        # Set miniseed header percentages
+        # Set MiniSEED header percentages
         meta['miniseed_header_percentages'] = {}
         ref = meta['miniseed_header_percentages']
         ref['timing_correction'] = timing_correction
@@ -406,12 +401,12 @@ class MSEEDMetadata(object):
         ref['timing_quality_upper_quartile'] = timing_quality_upper_quartile
 
         # According to schema @ maybe refactor this to less verbose flag
-        # names. Sets miniseed header flag percentages
+        # names. Sets MiniSEED header flag percentages
         ref['activity_flags'] = activity_flags_seconds
         ref['data_quality_flags'] = data_quality_flags_seconds
         ref['io_and_clock_flags'] = io_and_clock_flags_seconds
 
-        # Similarly, set miniseed header flag counts
+        # Similarly, set MiniSEED header flag counts
         # Small function to change flag names from the get_flags routine
         # to match the schema
         self._fix_flag_names('percentages')
@@ -459,7 +454,6 @@ class MSEEDMetadata(object):
         """
         Computes metrics on samples contained in the specified time window
         """
-
         # Make sure there is no integer division by chance.
         npts = float(self.number_of_samples)
 
@@ -548,10 +542,9 @@ class MSEEDMetadata(object):
         :param tr: custom dictionary with start, end, data, and sampling_rate
             of a continuous trace
         """
-
         seg = {}
 
-        # Set continous segments start & end
+        # Set continuous segments start & end
         # limit to specified window start/end if set
         if self.window_start is not None:
             seg['segment_start'] = max(self.window_start, tr['start'])
