@@ -21,11 +21,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import collections
 import io
 import json
 from operator import attrgetter
 import os
-import typing
 from uuid import uuid4
 
 import numpy as np
@@ -601,7 +601,7 @@ class MSEEDMetadata(object):
 
         # If passed as a dictionary, serialize and derialize to get the
         # mapping from Python object to JSON type.
-        if isinstance(qc_metrics, typing.Mapping):
+        if isinstance(qc_metrics, collections.Mapping):
             qc_metrics = json.loads(self.get_json_meta(validate=False))
         elif hasattr(qc_metrics, "read"):
             qc_metrics = json.load(qc_metrics)
