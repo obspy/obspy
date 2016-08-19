@@ -21,13 +21,20 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import io
 import json
 from operator import attrgetter
+import os
+import typing
+from uuid import uuid4
 
 import numpy as np
 
-from obspy import Stream, UTCDateTime, read
+from obspy import Stream, UTCDateTime, read, __version__
 from obspy.io.mseed.util import get_flags
+
+
+_PRODUCER = "ObsPy %s" % __version__
 
 
 class DataQualityEncoder(json.JSONEncoder):
@@ -57,6 +64,17 @@ class MSEEDMetadata(object):
 
     :param files: One ore more MiniSEED files.
     :type files: str or list of str
+    :type id: str, optional
+    :param id: A unique identifier of the to be created QC object. It is
+        not verified, that it actually is unique. The user has to take care of
+        that. If no id is given, uuid.uuid4() will be used to
+        create one which assures uniqueness within one Python run.
+        If no fixed id is provided, the ID will be built from prefix
+        and a random uuid hash.
+    :type prefix: str, optional
+    :param prefix: An optional identifier that will be put in front of any
+        automatically created id. The prefix will only have an effect
+        if `id` is not specified (for a fixed ID string).
     :param starttime: Only use records whose end time is larger then this
         given time. Also specifies the new official start time of the
         metadata object.
@@ -69,6 +87,9 @@ class MSEEDMetadata(object):
     :type add_c_segments: bool
     :param add_flags: Include MiniSEED header statistics in result.
     :type add_flags: bool
+    :param waveform_type: The type of waveform data, e.g. ``"seismic"``,
+        ``"infrasound"``, ...
+    :type waveform_type: str
 
     .. rubric:: Example
 
@@ -93,8 +114,10 @@ class MSEEDMetadata(object):
 
     >>> mseedqc.get_json_meta() #doctest: +SKIP
     """
-    def __init__(self, files, starttime=None, endtime=None,
-                 add_c_segments=True, add_flags=False):
+    def __init__(self, files, id=None, prefix="smi:local/qc",
+                 starttime=None, endtime=None,
+                 add_c_segments=True, add_flags=False,
+                 waveform_type="seismic"):
         """
         Reads the MiniSEED files and extracts the data quality metrics.
         """
@@ -161,7 +184,17 @@ class MSEEDMetadata(object):
         self.starttime = starttime or self.data[0].stats.starttime
         self.total_time = self.endtime - self.starttime
 
-        self.meta = {}
+        if id is None:
+            id = prefix + "/" + str(uuid4())
+
+        # Fill with the meta information.
+        self.meta = {
+            "wfmetadata_id": id,
+            "producer": _PRODUCER,
+            "waveform_type": waveform_type,
+            "waveform_format": "miniSEED",
+            "version": "1.0.0"
+        }
 
         # Get sample left of the user specified starttime
         # This will allow us to determine start continuity in our window
@@ -347,7 +380,7 @@ class MSEEDMetadata(object):
             meta['num_records'] = None
 
         # The following are lists and may contain multiple unique entries.
-        meta['sampling_rate'] = \
+        meta['sample_rate'] = \
             sorted(list(set([tr.stats.sampling_rate for tr in self.data])))
         meta['record_length'] = \
             sorted(list(set([tr.stats.mseed.record_length
@@ -510,16 +543,16 @@ class MSEEDMetadata(object):
         # Set continuous segments start & end
         # limit to specified window start/end if set
         if self.window_start is not None:
-            seg['segment_start'] = max(self.window_start, tr['start'])
+            seg['start_time'] = max(self.window_start, tr['start'])
         else:
-            seg['segment_start'] = tr['start']
+            seg['start_time'] = tr['start']
 
         if self.window_end is not None:
-            seg['segment_end'] = min(self.window_end, tr['end'])
+            seg['end_time'] = min(self.window_end, tr['end'])
         else:
-            seg['segment_end'] = tr['end']
+            seg['end_time'] = tr['end']
 
-        seg['sampling_rate'] = tr['s_rate']
+        seg['sample_rate'] = tr['s_rate']
         seg['sample_min'] = tr['data'].min()
         seg['sample_max'] = tr['data'].max()
         seg['sample_mean'] = tr['data'].mean()
@@ -530,11 +563,11 @@ class MSEEDMetadata(object):
         seg['sample_upper_quartile'] = np.percentile(tr['data'], 75)
         seg['sample_stdev'] = tr['data'].std()
         seg['num_samples'] = len(tr['data'])
-        seg['segment_length'] = seg['segment_end'] - seg['segment_start']
+        seg['segment_length'] = seg['end_time'] - seg['start_time']
 
         return seg
 
-    def get_json_meta(self):
+    def get_json_meta(self, validate=False):
         """
         Serialize the meta dictionary to JSON.
 
