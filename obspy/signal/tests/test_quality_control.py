@@ -18,7 +18,7 @@ from obspy.io.mseed.tests.test_mseed_util import _create_mseed_file
 from obspy.signal.quality_control import MSEEDMetadata
 
 try:
-    import jsonschema
+    import jsonschema  # NOQA
     HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
