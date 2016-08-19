@@ -1,0 +1,557 @@
+{
+	"id": "wfmetadata-schema-uri",
+	"$schema": "http://json-schema.org/draft-04/schema#",
+	"title": "Waveform Metadata Json Schema",
+	"description": "This schema represents Waveform Metadata characterising traces with their QC",
+	"type": "object",
+	
+	"properties": {
+		"wfmetadata_id": {
+			"description": "Unique identifier of the metadata document. This can be a DOI, a Handle or any other type of PID",
+			"$ref": "#/definitions/stringLiteral",
+			"format": "uri"
+		},
+		"producer": {
+			"description": "The producer of this document. For instance it can be: a software, a person or an organization",
+			"type": "object",
+			"additionalProperties": {
+				"$ref": "#/definitions/agent"
+			}
+		},
+		"waveform_type": {
+			"description": "Describes the type of waveform. E.g.: seismic, infrasound",
+			"$ref": "#/definitions/stringLiteral",
+			"additionalProperties": false
+			
+		},
+		"waveform_format": {
+			"description": "Describes the waveform format. E.g.: miniSEED",
+			"type": {
+			 "enum":["miniSEED"]
+			},
+			"additionalProperties": false
+			
+		},
+		"version": {
+			"description": "The version of the metadata document. E.g.: 1.0.0",
+			"type": {
+			"enum":["1.0.0"]
+			},
+			"additionalProperties": true
+		},
+		"start_time": {
+			"description": "Start time of the window used for metric computation for this entry in UTC",
+			"$ref": "#/definitions/timeLiteral"
+		},
+		"end_time": {
+			"description": "End time of the window used for metric computation for this entry in UTC",
+			"$ref": "#/definitions/timeLiteral"
+		},
+		"network": {
+			"description": "Network code",
+			"$ref": "#/definitions/stringLiteral",
+			"pattern": "[A-Z0-9]{1,6}"
+		},
+		"station": {
+			"description": "Station code",
+			"$ref": "#/definitions/stringLiteral",
+			"pattern": "[A-Z0-9]{1,5}"
+		},
+		"channel": {
+			"description": "Channel code",
+			"$ref": "#/definitions/stringLiteral",
+			"pattern": "[A-Z0-9]{3}"
+		},
+		"location": {
+			"description": "Location code",
+			"$ref": "#/definitions/stringLiteral",
+			"pattern": "[A-Z0-9]{0,2}"
+		},
+		"quality": {
+			"description": "SEED quality indicator. This is SEED format specific",
+			"type": {
+			"enum": [
+				"D",
+				"R",
+				"Q",
+				"M"
+			]},
+			"additionalProperties": false
+		},
+		"sample_rate": {
+			"description": "Array of unique sample rates",
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/definitions/positiveDouble"
+			},
+			"uniqueItems": true,
+			"additionalProperties": false
+		},
+		"num_samples": {
+			"description": "Number of data samples",
+			"$ref": "#/definitions/positiveInteger"
+		},
+		"encoding": {
+			"description": "Array of unique encodings. E.g.in SEED: int32, int64, float32, float64, opaque (for log channels).",
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/definitions/stringLiteral"
+			},
+			"uniqueItems": true,
+			"additionalProperties": false
+		},
+		"num_records": {
+  		"description": "Number of records. This is SEED format specific",
+   		"$ref": "#/definitions/positiveInteger"
+		},
+		"record_length": {
+			"description": "Array of unique record lengths. This is SEED format specific",
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"$ref": "#/definitions/positiveInteger"
+			},
+			"uniqueItems": true,
+			"additionalProperties": false
+		},
+		"num_gaps": {
+			"description": "Number of data gaps",
+			"$ref": "#/definitions/positiveInteger"
+
+		},
+		"max_gap": {
+			"description": "Duration of the largest gap in seconds",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"num_overlaps": {
+			"description": "Number of data overlaps",
+			"$ref": "#/definitions/positiveInteger"
+		},
+		"max_overlap": {
+			"description": "Duration of the largest overlap in seconds",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"sum_gaps": {
+			"description": "Total duration of gaps in seconds",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"sum_overlaps": {
+			"description": "Total duration of overlaps in seconds",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"sample_max": {
+			"description": "Maximum sample value",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_min": {
+			"description": "Minimum sample value",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_mean": {
+			"description": "Mean of the sample values",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_rms": {
+			"description": "Rms of the sample values",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"sample_lower_quartile": {
+			"description": "Lower quartile of the sample values",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_upper_quartile": {
+			"description": "Upper quartile of the sample values",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_median": {
+			"description": "50th percentile of the sample values",
+			"$ref": "#/definitions/numberLiteral"
+		},
+		"sample_stdev": {
+			"description": "Standard deviation of the sample values",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		"miniseed_header_percentages": {
+			"type": "object",
+			"properties": {
+			"timing_correction": {
+				"description": "Percentage of data for which field 16 in the record header is non-zero",
+				"$ref": "#/definitions/numberLiteral"
+			},		
+			"timing_quality_mean": {
+				"description": "Mean of the timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+			"timing_quality_min": {
+				"description": "Minimum of the timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+			"timing_quality_max": {
+				"description": "Maximum of the timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+			"timing_quality_median": {
+				"description": "The 50th percentile of all timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+			"timing_quality_lower_quartile": {
+				"description": "The 25th percentile of all timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+			"timing_quality_upper_quartile": {
+				"description": "The 75th percentile of all timing quality percentage values stored in mSEED blockettes 1001",
+				"$ref": "#/definitions/numberLiteral"
+			},
+				"data_quality_flags": {
+					"type": "object",
+					"properties": {
+						"amplifier_saturation": {
+							"description": "Percentage of data for which bit 0 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"digitizer_clipping": {
+							"description": "Percentage of data for which bit 1 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"spikes": {
+							"description": "Percentage of data for which bit 2 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"glitches": {
+							"description": "Percentage of data for which bit 3 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"missing_padded_data": {
+							"description": "Percentage of data for which bit 4 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"telemetry_sync_error": {
+							"description": "Percentage of data for which bit 5 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"digital_filter_charging": {
+							"description": "Percentage of data for which bit 6 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"suspect_time_tag": {
+							"description": "Percentage of data for which bit 7 in the DQ flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						}
+					},
+					"required":[
+						"amplifier_saturation", 
+						"digitizer_clipping", 
+						"spikes",
+						"glitches",
+						"missing_padded_data",
+						"telemetry_sync_error", 
+						"digital_filter_charging",
+						"suspect_time_tag"
+						]
+					
+				},
+				"activity_flags": {
+					"type": "object",
+					"properties": {
+						"calibration_signal": {
+							"description": "Percentage of data for which bit 0 in the Activity flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"time_correction_applied": {
+							"description": "Percentage of data for which bit 1 in the Activity flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"event_begin": {
+							"description": "Percentage of data for which bit 2 in the Activity flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"event_end": {
+							"description": "Percentage of data for which bit 3 in the Activity flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"positive_leap": {
+							"description": "Percentage of data for which bit 4 in the Activity flag is set to 1",	
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"negative_leap": {
+							"description": "Percentage of data for which bit 5 in the Activity flag is set to 1",	
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"event_in_progress": {
+							"description": "Percentage of records for which bit 6 in the Activity flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						}
+					},
+					"required":[
+						"calibration_signal", 
+						"time_correction_applied", 
+						"event_begin",
+						"event_end",
+						"positive_leap",
+						"negative_leap", 
+						"event_in_progress"
+						]
+					
+				},
+				"io_and_clock_flags": {
+					"type": "object",
+					"properties": {
+						"station_volume": {
+							"description": "Percentage of records for which bit 0 in the I/O and Clock flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"long_record_read": {							
+						   "description": "Percentage of records for which bit 1 in the I/O and Clock flag is set to 1",
+						   "$ref": "#/definitions/positivePercentage"
+						},
+						"short_record_read": {
+							"description": "Percentage of records for which bit 2 in the I/O and Clock flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"start_time_series": {
+							"description": "Percentage of records for which bit 3 in the I/O and Clock flag is set to 1",
+					        "$ref": "#/definitions/positivePercentage"
+						},
+						"end_time_series": {
+							"description": "Percentage of records for which bit 4 in the I/O and Clock flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						},
+						"clock_locked": {
+							"description": "Percentage of records for which bit 5 in the I/O & Clock flag is set to 1",
+							"$ref": "#/definitions/positivePercentage"
+						}
+					},
+					"required":[
+						"station_volume", 
+						"long_record_read", 
+						"short_record_read",
+						"start_time_series",
+						"end_time_series",
+						"clock_locked"
+						]
+					
+				}
+			},
+			"required":[
+			     "timing_correction", 
+			     "timing_quality_mean", 
+			     "timing_quality_min",
+			     "timing_quality_max",
+			     "timing_quality_median",
+			     "timing_quality_lower_quartile",
+			     "timing_quality_upper_quartile",
+			     "data_quality_flags",
+			     "activity_flags",
+			     "io_and_clock_flags"
+			     ]
+			
+		},
+		"percent_availability": {
+			"description": "Percentage of available data samples",
+			"$ref": "#/definitions/positiveDouble"
+		},
+		
+		"c_segments": {
+			"description": "Continuous segments within the requested time interval",
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+				    "sample_rate": {
+						"description": "Sample rate in the continuous segment",
+						"$ref": "#/definitions/positiveDouble"
+					},
+				    	
+				    "sample_min": {
+						"description": "Minimum of samples in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+					"sample_max": {
+						"description": "Maximum of samples in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+		            "sample_mean": {
+						"description": "Mean of the sample values in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+					"sample_rms": {
+						"description": "Rms of the sample values in a continuous segment",
+						"$ref": "#/definitions/positiveDouble"
+					},
+					"sample_lower_quartile": {
+						"description": "Lower quartile of the sample values in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+					"sample_upper_quartile": {
+						"description": "Upper quartile of the sample values in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+					"sample_median": {
+						"description": "50th percentile of the sample values in a continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					},
+					"start_time": {
+						"description": "Time of the first sample of the segment in UTC",
+						"$ref": "#/definitions/timeLiteral"
+					},
+					"end_time": {
+						"description": "Time of the last sample of the segment in UTC",
+						"$ref": "#/definitions/timeLiteral"
+					},
+					"num_samples": {
+						"description": "Number of data samples in the continuous segment",
+						"$ref": "#/definitions/positiveInteger"
+					},
+					"sample_stdev": {
+						"description": "Standard deviation of samples in the continuous segment",
+						"$ref": "#/definitions/positiveDouble"
+					},
+					"segment_length": {
+						"description": "Length in seconds of the specific continuous segment",
+						"$ref": "#/definitions/numberLiteral"
+					}
+				},
+				"required":[
+				    "sample_rate",
+					"start_time",
+					"end_time",
+					"num_samples",
+					"segment_length"
+					]
+			}
+		}
+
+	},
+	"definitions": {
+		"agent": {
+			"$ref": "#/definitions/entity"
+		},
+		"typedLiteral": {
+			"type": "object",
+			"properties": {
+				"$": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"format": "uri"
+				},
+				"lang": {
+					"type": "string"
+				}
+			},
+			"required": ["$"],
+			"additionalProperties": false
+		},
+		"stringLiteral": {
+			"type": "string",
+			"additionalProperties": false
+		},
+		"numberLiteral": {
+			"oneOf":[
+			{"type": "number"},
+			{"type": "null"}
+			],
+			"additionalProperties": false
+		},
+		"booleanLiteral": {
+			"type": "boolean",
+			"additionalProperties": false
+		},
+		"timeLiteral": {
+			"type": "string",
+			"format": "date-time",
+			"additionalProperties": false
+		},
+		"literalArray": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"anyOf": [{
+					"$ref": "#/definitions/stringLiteral"
+				}, {
+					"$ref": "#/definitions/numberLiteral"
+				}, {
+					"$ref": "#/definitions/booleanLiteral"
+				}, {
+					"$ref": "#/definitions/typedLiteral"
+				}]
+			}
+		},
+		"attributeValues": {
+			"anyOf": [{
+				"$ref": "#/definitions/stringLiteral"
+			}, {
+				"$ref": "#/definitions/numberLiteral"
+			}, 
+		      {
+				"$ref": "#/definitions/timeLiteral"
+			},	
+			{
+				"$ref": "#/definitions/booleanLiteral"
+			}, {
+				"$ref": "#/definitions/typedLiteral"
+			}, {
+				"$ref": "#/definitions/literalArray"
+			}]
+		},
+		"entity": {
+			
+			"title": "entity",
+			"additionalProperties": {
+				"$ref": "#/definitions/attributeValues"
+			}
+		},
+		"positiveInteger": {
+			"oneOf":[		
+			{"type": "integer",
+			"minimum": 0,
+			"exclusiveMinimum": false},
+			{"type": "null" }
+			],
+			"additionalProperties": false
+		},
+		"positiveDouble": {
+		"oneOf":[
+			{"type": "number",
+			"minimum": 0,
+			"exclusiveMinimum": false},
+			{"type": "null" }
+			],
+			"additionalProperties": false
+		},
+		"positivePercentage": {
+			"oneOf":[			
+			{"type": "number",
+			"minimum": 0,
+			"maximum": 100,
+			"exclusiveMinimum": false,
+			"exclusiveMaximum": false},
+			{"type": "null" }
+			],
+			"additionalProperties": false
+		}
+	},
+	"required": [
+		"producer",
+		"version",
+		"waveform_format",
+		"start_time",
+		"end_time",
+		"network",
+		"station",
+		"channel",
+		"location",
+		"sample_rate",
+ 		"max_gap",
+		"max_overlap",
+		"percent_availability",
+		"num_samples",
+		"num_gaps",
+		"num_overlaps",
+		"sum_gaps",
+		"sum_overlaps"
+	]
+}
