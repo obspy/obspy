@@ -577,7 +577,7 @@ class MSEEDMetadata(object):
 
         :return: JSON containing the MSEED metadata
         """
-        meta = json.dumps(self.meta, cls=DataQualityEncoder)
+        meta = json.dumps(self.meta, cls=DataQualityEncoder, indent=4)
 
         if validate:
             self.validate_qc_metrics(meta)
