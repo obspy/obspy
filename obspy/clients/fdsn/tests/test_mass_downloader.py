@@ -28,6 +28,7 @@ import numpy as np
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
 from obspy.clients.fdsn.mass_downloader.utils import (
@@ -2524,6 +2525,41 @@ class DownloadHelperTestCase(unittest.TestCase):
         self.assertFalse("RESIF" in d._initialized_clients)
         self.assertFalse("GFZ" in d._initialized_clients)
         self.assertTrue("ORFEUS" in d._initialized_clients)
+
+    @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
+                autospec=True)
+    @mock.patch("logging.Logger.info")
+    @mock.patch("logging.Logger.warning")
+    def test_initialization_with_existing_clients(self, log_w, log_p, patch):
+        def side_effect(self, *args, **kwargs):
+            self.services = {"dataselect": "dummy", "station": "dummy"}
+        patch.side_effect = side_effect
+
+        client = Client("IRIS", user="random", password="something")
+
+        self.assertEqual(patch.call_count, 1)
+        patch.reset_mock()
+        self.assertEqual(patch.call_count, 0)
+
+        # Make sure to not change the log-level but also to hide the log
+        # output for the tests.
+        logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
+        _l = logger.level
+        logger.setLevel(logging.CRITICAL)
+        try:
+            d = MassDownloader(providers=["GFZ", client, "ORFEUS"])
+        finally:
+            logger.setLevel(_l)
+
+        # Should have been called twice.
+        self.assertEqual(patch.call_count, 2)
+
+        self.assertEqual(
+            list(d._initialized_clients.keys()),
+            ['GFZ', 'http://service.iris.edu', 'ORFEUS'])
+        # Make sure it is the same object.
+        self.assertIs(d._initialized_clients["http://service.iris.edu"],
+                      client)
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)
