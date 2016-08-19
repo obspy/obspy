@@ -4,7 +4,7 @@
 	"title": "Waveform Metadata Json Schema",
 	"description": "This schema represents Waveform Metadata characterising traces with their QC",
 	"type": "object",
-	
+
 	"properties": {
 		"wfmetadata_id": {
 			"description": "Unique identifier of the metadata document. This can be a DOI, a Handle or any other type of PID",
@@ -22,21 +22,17 @@
 			"description": "Describes the type of waveform. E.g.: seismic, infrasound",
 			"$ref": "#/definitions/stringLiteral",
 			"additionalProperties": false
-			
+
 		},
 		"waveform_format": {
 			"description": "Describes the waveform format. E.g.: miniSEED",
-			"type": {
-			 "enum":["miniSEED"]
-			},
+			"enum":["miniSEED"],
 			"additionalProperties": false
-			
+
 		},
 		"version": {
 			"description": "The version of the metadata document. E.g.: 1.0.0",
-			"type": {
-			"enum":["1.0.0"]
-			},
+			"enum":["1.0.0"],
 			"additionalProperties": true
 		},
 		"start_time": {
@@ -69,13 +65,12 @@
 		},
 		"quality": {
 			"description": "SEED quality indicator. This is SEED format specific",
-			"type": {
 			"enum": [
 				"D",
 				"R",
 				"Q",
 				"M"
-			]},
+			],
 			"additionalProperties": false
 		},
 		"sample_rate": {
@@ -179,7 +174,7 @@
 			"timing_correction": {
 				"description": "Percentage of data for which field 16 in the record header is non-zero",
 				"$ref": "#/definitions/numberLiteral"
-			},		
+			},
 			"timing_quality_mean": {
 				"description": "Mean of the timing quality percentage values stored in mSEED blockettes 1001",
 				"$ref": "#/definitions/numberLiteral"
@@ -241,16 +236,16 @@
 						}
 					},
 					"required":[
-						"amplifier_saturation", 
-						"digitizer_clipping", 
+						"amplifier_saturation",
+						"digitizer_clipping",
 						"spikes",
 						"glitches",
 						"missing_padded_data",
-						"telemetry_sync_error", 
+						"telemetry_sync_error",
 						"digital_filter_charging",
 						"suspect_time_tag"
 						]
-					
+
 				},
 				"activity_flags": {
 					"type": "object",
@@ -272,11 +267,11 @@
 							"$ref": "#/definitions/positivePercentage"
 						},
 						"positive_leap": {
-							"description": "Percentage of data for which bit 4 in the Activity flag is set to 1",	
+							"description": "Percentage of data for which bit 4 in the Activity flag is set to 1",
 							"$ref": "#/definitions/positivePercentage"
 						},
 						"negative_leap": {
-							"description": "Percentage of data for which bit 5 in the Activity flag is set to 1",	
+							"description": "Percentage of data for which bit 5 in the Activity flag is set to 1",
 							"$ref": "#/definitions/positivePercentage"
 						},
 						"event_in_progress": {
@@ -285,15 +280,15 @@
 						}
 					},
 					"required":[
-						"calibration_signal", 
-						"time_correction_applied", 
+						"calibration_signal",
+						"time_correction_applied",
 						"event_begin",
 						"event_end",
 						"positive_leap",
-						"negative_leap", 
+						"negative_leap",
 						"event_in_progress"
 						]
-					
+
 				},
 				"io_and_clock_flags": {
 					"type": "object",
@@ -302,7 +297,7 @@
 							"description": "Percentage of records for which bit 0 in the I/O and Clock flag is set to 1",
 							"$ref": "#/definitions/positivePercentage"
 						},
-						"long_record_read": {							
+						"long_record_read": {
 						   "description": "Percentage of records for which bit 1 in the I/O and Clock flag is set to 1",
 						   "$ref": "#/definitions/positivePercentage"
 						},
@@ -324,19 +319,19 @@
 						}
 					},
 					"required":[
-						"station_volume", 
-						"long_record_read", 
+						"station_volume",
+						"long_record_read",
 						"short_record_read",
 						"start_time_series",
 						"end_time_series",
 						"clock_locked"
 						]
-					
+
 				}
 			},
 			"required":[
-			     "timing_correction", 
-			     "timing_quality_mean", 
+			     "timing_correction",
+			     "timing_quality_mean",
 			     "timing_quality_min",
 			     "timing_quality_max",
 			     "timing_quality_median",
@@ -346,13 +341,13 @@
 			     "activity_flags",
 			     "io_and_clock_flags"
 			     ]
-			
+
 		},
 		"percent_availability": {
 			"description": "Percentage of available data samples",
 			"$ref": "#/definitions/positiveDouble"
 		},
-		
+
 		"c_segments": {
 			"description": "Continuous segments within the requested time interval",
 			"type": "array",
@@ -363,7 +358,7 @@
 						"description": "Sample rate in the continuous segment",
 						"$ref": "#/definitions/positiveDouble"
 					},
-				    	
+
 				    "sample_min": {
 						"description": "Minimum of samples in a continuous segment",
 						"$ref": "#/definitions/numberLiteral"
@@ -485,10 +480,10 @@
 				"$ref": "#/definitions/stringLiteral"
 			}, {
 				"$ref": "#/definitions/numberLiteral"
-			}, 
+			},
 		      {
 				"$ref": "#/definitions/timeLiteral"
-			},	
+			},
 			{
 				"$ref": "#/definitions/booleanLiteral"
 			}, {
@@ -498,14 +493,14 @@
 			}]
 		},
 		"entity": {
-			
+
 			"title": "entity",
 			"additionalProperties": {
 				"$ref": "#/definitions/attributeValues"
 			}
 		},
 		"positiveInteger": {
-			"oneOf":[		
+			"oneOf":[
 			{"type": "integer",
 			"minimum": 0,
 			"exclusiveMinimum": false},
@@ -523,7 +518,7 @@
 			"additionalProperties": false
 		},
 		"positivePercentage": {
-			"oneOf":[			
+			"oneOf":[
 			{"type": "number",
 			"minimum": 0,
 			"maximum": 100,
