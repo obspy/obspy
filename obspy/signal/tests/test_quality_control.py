@@ -17,6 +17,12 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.io.mseed.tests.test_mseed_util import _create_mseed_file
 from obspy.signal.quality_control import MSEEDMetadata
 
+try:
+    import jsonschema
+    HAS_JSONSCHEMA = True
+except ImportError:
+    HAS_JSONSCHEMA = False
+
 
 class QualityControlTestCase(unittest.TestCase):
     """
@@ -826,6 +832,26 @@ class QualityControlTestCase(unittest.TestCase):
             md = MSEEDMetadata(files=[tf.name])
 
         self.assertTrue(md.get_json_meta())
+
+    @unittest.skipIf(not HAS_JSONSCHEMA,
+                     reason="Test requires the jsonschema module")
+    def test_schema_validation(self):
+        with NamedTemporaryFile() as tf:
+            obspy.Trace(data=np.arange(10, dtype=np.int32),
+                        header={"starttime": obspy.UTCDateTime(0)}).write(
+                tf.name, format="mseed")
+
+            md = MSEEDMetadata(files=[tf.name])
+
+            # One can either directly validate the metrics.
+            md.validate_qc_metrics(md.meta)
+            # Or do it during the serialization.
+            md.get_json_meta(validate=True)
+
+            # Also try with extracting the flags.
+            md = MSEEDMetadata(files=[tf.name], add_flags=True)
+            md.validate_qc_metrics(md.meta)
+            md.get_json_meta(validate=True)
 
 
 def suite():
