@@ -571,6 +571,10 @@ class MSEEDMetadata(object):
         """
         Serialize the meta dictionary to JSON.
 
+        :param validate: Validate the JSON string against the schema before
+            returning.
+        :type validate: bool
+
         :return: JSON containing the MSEED metadata
         """
         meta = json.dumps(self.meta, cls=DataQualityEncoder)
