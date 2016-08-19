@@ -13,10 +13,7 @@
 		},
 		"producer": {
 			"description": "The producer of this document. For instance it can be: a software, a person or an organization",
-			"type": "object",
-			"additionalProperties": {
-				"$ref": "#/definitions/agent"
-			}
+            "$ref": "#/definitions/agent"
 		},
 		"waveform_type": {
 			"description": "Describes the type of waveform. E.g.: seismic, infrasound",
