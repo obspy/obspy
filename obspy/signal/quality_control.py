@@ -573,7 +573,38 @@ class MSEEDMetadata(object):
 
         :return: JSON containing the MSEED metadata
         """
-        return json.dumps(self.meta, cls=DataQualityEncoder)
+        meta = json.dumps(self.meta, cls=DataQualityEncoder)
+
+        if validate:
+            self.validate_qc_metrics(meta)
+
+        return meta
+
+    def validate_qc_metrics(self, qc_metrics):
+        """
+        Validate the passed metrics against the JSON schema.
+
+        :param qc_metrics: The quality metrics to be validated.
+        :type qc_metrics: dict, str, or file-like object
+        """
+        import jsonschema
+
+        schema_path = os.path.join(os.path.dirname(__file__), "data",
+                                   "wf_metadata_schema.json")
+
+        with io.open(schema_path, "rt") as fh:
+            schema = json.load(fh)
+
+        # If passed as a dictionary, serialize and derialize to get the
+        # mapping from Python object to JSON type.
+        if isinstance(qc_metrics, typing.Mapping):
+            qc_metrics = json.loads(self.get_json_meta(validate=False))
+        elif hasattr(qc_metrics, "read"):
+            qc_metrics = json.load(qc_metrics)
+        else:
+            qc_metrics = json.loads(qc_metrics)
+
+        jsonschema.validate(qc_metrics, schema)
 
 
 if __name__ == '__main__':
