@@ -64,7 +64,8 @@ class MassDownloader(object):
         more then one provider it will always be downloaded from the
         provider that comes first in the list.
     :param debug: Debug flag passed to the underlying FDSN web service clients.
-    :type providers: list of str
+    :type providers: list of str or :class:`~obspy.clients.fdsn.client.Client`
+        instances
     """
     def __init__(self, providers=None, debug=False):
         self.debug = debug
