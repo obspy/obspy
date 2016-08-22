@@ -18,6 +18,11 @@ component integrated into a bigger project.
     (https://www.gnu.org/copyleft/lesser.html)
 
 
+.. contents:: Contents
+    :local:
+    :depth: 2
+
+
 Why Would You Want to Use This?
 -------------------------------
 
@@ -467,7 +472,7 @@ and downloading whatever it offers. A bit more detail:
 
 
 Logging
-~~~~~~~
+-------
 
 The download helpers utilizes Python's `logging facilities
 <https://docs.python.org/2/library/logging.html>`__. By default it will log to
@@ -481,8 +486,23 @@ the corresponding logger after you import the download helpers module:
 >>> logger.setLevel(logging.DEBUG)  # doctest: +SKIP
 
 
+Authentication
+--------------
+
+To make the mass downloader work for restricted data, just initialize it
+with existing :class:`~obspy.clients.fdsn.client.Client` instances that have
+credentials. Note that you can mix already initialized clients with varying
+credientials and just passing the name of the FDSN services to query.
+
+>>> from obspy.clients.fdsn import Client
+>>> client_orfeus = Client("ORFEUS", user="random", password="some_pw")
+>>> client_eth = Client("ETH", user="from_me", password="to_you")
+>>> mdl = MassDownloader(providers=[client_orfeus, "IRIS", client_eth]) \
+    # doctest: +SKIP
+
+
 Further Documentation
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Further functionality of this module is documented at a couple of other places:
 
