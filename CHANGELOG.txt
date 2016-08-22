@@ -23,7 +23,7 @@ master:
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given
      inventory object.
- - obspy.imaging.cm
+ - obspy.imaging.cm:
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
      is especially useful for printing when an image should merge with the
@@ -31,17 +31,26 @@ master:
  - obspy.imaging.waveform
    * Support for filling the wiggles when plotting sections (horizontal and
      vertical, see #1445).
- - obspy.io.css
-    * Read support for NNSA KB Core format waveform data. (see #1332)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.segy:
     * Iterative reading of large SEG-Y and SU files with
       `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
       (see #1400).
+ - obspy.io.css:
+   * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.mseed:
+   * New generic get_flags() utility function able to retrieve statistics
+     about all fixed header flags and the timing quality. This makes the
+     get_timing_and_data_quality() function obsolete which is thus
+     deprecated and will be removed with the next release. The get_flags()
+     function is also much faster. (see #1141)
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
+ - obspy.signal:
+   * New obspy.signal.quality_control module to compute quality metrics from
+     MiniSEED files. (see #1141)
 
 1.0.3:
  - obspy.io.mseed:

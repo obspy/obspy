@@ -561,9 +561,10 @@ clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
                                        C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
 
-clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
-                                C.POINTER(C.POINTER(MSRecord)),
-                                C.c_int, C.c_int, C.c_int]
+clibmseed.msr_parse.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1), C.c_int,
+    C.POINTER(C.POINTER(MSRecord)),
+    C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
 #####################################
