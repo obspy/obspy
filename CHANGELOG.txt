@@ -3,10 +3,11 @@ master:
    * Read support for Guralp Compressed Format (GCF) waveform data,
      obspy.io.gcf (see #1449)
  - obspy.core:
-   * Stream/Trace.write() can now autodetect file format from file extension.
+   * Stream/Trace.write() can now autodetect file format from file extension
+     (see #1321).
    * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
      get matplotlib datetime float representation (which can be used in
-     time-based matplotlib axes, e.g. by Stream.plot()).
+     time-based matplotlib axes, e.g. by Stream.plot(); see #1339).
    * Trace.times() has new options `type` and `reftime` to support fetching an
      array of sampletimes in various different timing varieties ("relative":
      the old default, float relative to trace starttime or `reftime` in
