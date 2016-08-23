@@ -23,6 +23,7 @@ master:
      arguments to not download certain pieces of data. (see #1305)
    * The mass downloader can now download stations that are part of a given
      inventory object.
+   * The mass downloader now also works with restricted data. (See #1350)
  - obspy.imaging.cm:
    * new colormap: viridis_white. This is a modification of viridis that
      goes to white instead of yellow but remains perceptually uniform. It
