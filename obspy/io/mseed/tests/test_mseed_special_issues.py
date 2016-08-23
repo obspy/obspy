@@ -815,6 +815,59 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.testing.assert_allclose(st[0].data, st[2].data)
         np.testing.assert_allclose(st[0].data, st[3].data)
 
+    def test_mseed_zero_data_offset(self):
+        """
+        Tests that a data offset of zero in the fixed header does not
+        confuse ObsPy.
+
+        The file contains three records: a normal one, followed by one with
+        a data-offset of zero, followed by another normal one.
+
+        This currently results in three returned traces:
+
+        * CH.PANIX..LHZ |
+          2016-08-21T01:41:19.000000Z - 2016-08-21T01:45:30.000000Z |
+          1.0 Hz, 252 samples
+        * CH.PANIX..LHZ |
+          2016-08-21T01:43:37.000000Z - 2016-08-21T01:43:37.000000Z |
+          1.0 Hz, 0 samples
+        * CH.PANIX..LHZ |
+          2016-08-21T01:45:31.000000Z - 2016-08-21T01:49:52.000000Z |
+          1.0 Hz, 262 samples
+        """
+        file = os.path.join(self.path, "data", "bizarre",
+                            "mseed_data_offset_0.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 3)
+
+        tr = st[0]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:41:19.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:45:30.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 252)
+
+        tr = st[1]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:43:37.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:43:37.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 0)
+
+        tr = st[2]
+        self.assertEqual(tr.id, "CH.PANIX..LHZ")
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime("2016-08-21T01:45:31.000000Z"))
+        self.assertEqual(tr.stats.endtime,
+                         UTCDateTime("2016-08-21T01:49:52.000000Z"))
+        self.assertEqual(tr.stats.npts, len(tr.data))
+        self.assertEqual(tr.stats.npts, 262)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
