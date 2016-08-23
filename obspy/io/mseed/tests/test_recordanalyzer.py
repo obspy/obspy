@@ -103,6 +103,96 @@ CALCULATED VALUES
         self.assertEqual(expected.encode('utf-8'),
                          out.stdout)
 
+    def test_record_with_data_offset_zero(self):
+        """
+        The test file has a middle record which has data offset zero. Make
+        sure it can be read, as well as the following record.
+        """
+        filename = os.path.join(os.path.dirname(__file__), 'data', 'bizarre',
+                                'mseed_data_offset_0.mseed')
+
+        with CatchOutput() as out:
+            obspy_recordanalyzer(['-n', '1', filename])
+
+        expected = '''FILE: %s
+Record Number: 1
+Record Offset: 512 byte
+Header Endianness: Big Endian
+
+FIXED SECTION OF DATA HEADER
+	Sequence number: 1
+	Data header/quality indicator: D
+	Station identifier code: PANIX
+	Location identifier: 
+	Channel identifier: LHZ
+	Network code: CH
+	Record start time: 2016-08-21T01:43:37.000000Z
+	Number of samples: 0
+	Sample rate factor: 1
+	Sample rate multiplier: 1
+	Activity flags: 4
+	I/O and clock flags: 0
+	Data quality flags: 0
+	Number of blockettes that follow: 2
+	Time correction: 0
+	Beginning of data: 0
+	First blockette: 48
+
+BLOCKETTES
+	1000:	Encoding Format: 11
+		Word Order: 1
+		Data Record Length: 9
+	201:	NOT YET IMPLEMENTED
+
+CALCULATED VALUES
+	Corrected Starttime: 2016-08-21T01:43:37.000000Z
+
+''' % (filename,)  # noqa
+        self.assertEqual(expected.encode('utf-8'),
+                         out.stdout)
+
+        with CatchOutput() as out:
+            obspy_recordanalyzer(['-n', '2', filename])
+
+        expected = '''FILE: %s
+Record Number: 2
+Record Offset: 1024 byte
+Header Endianness: Big Endian
+
+FIXED SECTION OF DATA HEADER
+	Sequence number: 189
+	Data header/quality indicator: D
+	Station identifier code: PANIX
+	Location identifier: 
+	Channel identifier: LHZ
+	Network code: CH
+	Record start time: 2016-08-21T01:45:31.000000Z
+	Number of samples: 262
+	Sample rate factor: 1
+	Sample rate multiplier: 1
+	Activity flags: 68
+	I/O and clock flags: 32
+	Data quality flags: 0
+	Number of blockettes that follow: 2
+	Time correction: 0
+	Beginning of data: 64
+	First blockette: 48
+
+BLOCKETTES
+	1000:	Encoding Format: 11
+		Word Order: 1
+		Data Record Length: 9
+	1001:	Timing quality: 100
+		mu_sec: 0
+		Frame count: 7
+
+CALCULATED VALUES
+	Corrected Starttime: 2016-08-21T01:45:31.000000Z
+
+''' % (filename,)  # noqa
+        self.assertEqual(expected.encode('utf-8'),
+                         out.stdout)
+
 
 def suite():
     return unittest.makeSuite(RecordAnalyserTestCase, 'test')
