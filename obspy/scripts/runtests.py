@@ -164,6 +164,7 @@ def _get_suites(verbosity=1, names=[]):
     suites = {}
     ut = unittest.TestLoader()
     status = True
+    import_failures = {}
     for name in names:
         suite = []
         if name in ALL_MODULES:
@@ -176,28 +177,30 @@ def _get_suites(verbosity=1, names=[]):
             suite.append(ut.loadTestsFromName(test, None))
         except Exception:
             status = False
+            msg = (">>> Cannot import test suite for module obspy.%s due "
+                   "to:" % name)
+            msg += "\n" + "-" * len(msg)
+            # Extract traceback from the exception.
+            exc_info = sys.exc_info()
+            stack = traceback.extract_stack()
+            tb = traceback.extract_tb(exc_info[2])
+            full_tb = stack[:-1] + tb
+            exc_line = traceback.format_exception_only(*exc_info[:2])
+            tb = "".join(traceback.format_list(full_tb))
+            tb += "\n"
+            tb += "".join(exc_line)
+            info = msg + "\n" + tb
+            import_failures[name] = info
             if verbosity:
-                msg = (">>> Cannot import test suite for module obspy.%s due "
-                       "to:" % name)
-                msg += "\n" + "-" * len(msg)
                 print(msg)
-                # Extract traceback from the exception.
-                exc_info = sys.exc_info()
-                stack = traceback.extract_stack()
-                tb = traceback.extract_tb(exc_info[2])
-                full_tb = stack[:-1] + tb
-                exc_line = traceback.format_exception_only(*exc_info[:2])
-                tb = "".join(traceback.format_list(full_tb))
-                tb += "\n"
-                tb += "".join(exc_line)
                 print(tb)
         else:
             suites[name] = ut.suiteClass(suite)
-    return suites, status
+    return suites, status, import_failures
 
 
 def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
-                   ci_url=None, pr_url=None):
+                   ci_url=None, pr_url=None, import_failures=None):
     # import additional libraries here to speed up normal tests
     from future import standard_library
     with standard_library.hooks():
@@ -206,6 +209,8 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     import codecs
     from xml.etree import ElementTree
     from xml.sax.saxutils import escape
+    if import_failures is None:
+        import_failures = {}
     timestamp = int(time.time())
     result = {'timestamp': timestamp}
     result['slowest_tests'] = [("%0.3fs" % dt, "%s" % desc)
@@ -230,9 +235,23 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
     result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
         result['obspy'][module] = {}
+        result['obspy'][module]['installed'] = installed
+        # add a failed-to-import test module to report with an error
+        if module in import_failures:
+            result['obspy'][module]['timetaken'] = 0
+            result['obspy'][module]['tested'] = True
+            result['obspy'][module]['tests'] = 1
+            # can't say how many tests would have been in that suite so just
+            # leave 0
+            result['obspy'][module]['skipped'] = 0
+            result['obspy'][module]['failures'] = {}
+            result['obspy'][module]['errors'] = {
+                'f%s' % (errors): import_failures[module]}
+            tests += 1
+            errors += 1
+            continue
         if module not in ttrs:
             continue
-        result['obspy'][module]['installed'] = installed
         # test results
         ttr = ttrs[module]
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
@@ -341,7 +360,7 @@ def _create_report(ttrs, timetaken, log, server, hostname, sorted_tests,
         'tests': tests,
         'failures': failures,
         'errors': errors,
-        'modules': len(ttrs),
+        'modules': len(ttrs) + len(import_failures),
         'xml': xml_doc
     })
     headers = {"Content-type": "application/x-www-form-urlencoded",
@@ -535,7 +554,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites, status = _get_suites(verbosity, tests)
+    suites, status, import_failures = _get_suites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -578,7 +597,7 @@ def run_tests(verbosity=1, tests=[], report=False, log=None,
             report = True
     if report:
         _create_report(ttr, total_time, log, server, hostname, sorted_tests,
-                       ci_url, pr_url)
+                       ci_url, pr_url, import_failures)
     # make obspy-runtests exit with 1 if a test suite could not be added,
     # indicating failure
     if status is False:

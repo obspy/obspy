@@ -2,8 +2,8 @@ language: c
 
 branches:
   only:
-    - "master"
-    - "maintenance_1.0.x"
+    - master
+    - /^maintenance_[0-9]+\.[0-9]+\.x$/
 
 matrix:
   include:
@@ -98,9 +98,9 @@ install:
         docopt
         coverage
         requests
+        jsonschema
   - source activate test-environment
   # install packages not available via conda
-  - pip install coveralls
   - pip install codecov
   - pip install geographiclib
   # current pyimgur stable release has a py3 incompatibility
@@ -147,21 +147,17 @@ script:
   - mkdir empty
   - cd empty
   - export MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
-  - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      export RUNTESTSOPTIONS="--ci-url=\"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}\"";
-    else
-      export RUNTESTSOPTIONS="--ci-url=\"https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}\" --pr-url=\"https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}\"";
-    fi;
   - echo $MODULELIST
-  - echo $RUNTESTSOPTIONS
-  - echo "coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r ${RUNTESTSOPTIONS}"
-  - coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r ${RUNTESTSOPTIONS}
+  - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
+    else
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-ur="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}";
+    fi;
 
 after_success:
   - mv .coverage ../.coverage.empty
   - cd ..
   - coverage combine
-  - coveralls
   - codecov
 
 notifications:

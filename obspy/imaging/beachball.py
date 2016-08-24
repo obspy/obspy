@@ -144,6 +144,7 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         size = 100
 
     # Return as collection
+    plot_dc_used = True
     if mt:
         (T, N, P) = mt2axes(mt)
         if np.fabs(N.val) < EPSILON and np.fabs(T.val + P.val) < EPSILON:
@@ -151,15 +152,14 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         else:
             colors, p = plot_mt(T, N, P, size,
                                 plot_zerotrace=True, xy=xy, width=width)
+            plot_dc_used = False
     else:
         colors, p = plot_dc(np1, size=size, xy=xy, width=width)
 
+    col = collections.PatchCollection(p, match_original=False)
     if nofill:
-        # XXX: not tested with plot_mt
-        col = collections.PatchCollection([p[1]], match_original=False)
         col.set_facecolor('none')
     else:
-        col = collections.PatchCollection(p, match_original=False)
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
         col.set_facecolors(fc)
@@ -182,6 +182,14 @@ def beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     col.set_alpha(alpha)
     col.set_linewidth(linewidth)
     col.set_zorder(zorder)
+
+    # warn about color blending bug, see #1464
+    if alpha != 1 and not nofill and not plot_dc_used:
+        msg = ("There is a known bug when plotting semi-transparent patches "
+               "for non-DC sources, which leads to blending of pressure and "
+               "tension color, see issue #1464.")
+        warnings.warn(msg)
+
     return col
 
 
@@ -645,42 +653,44 @@ def plot_dc(np1, size=200, xy=(0, 0), width=200):
             np.power(np.sin(phi), 2) + np.power(np.cos(phi), 2) *
             np.power(90 - d_2, 2) / np.power(90, 2)))
 
-    inc = 1
-    (x_1, y_1) = pol2cart(phi + s_1 * D2R, l1)
+    collect = []
+    # plot paths, once for tension areas and once for pressure areas
+    for m_ in ((m + 1) % 2, m):
+        inc = 1
+        (x_1, y_1) = pol2cart(phi + s_1 * D2R, l1)
 
-    if m == 1:
-        lo = s_1 - 180
-        hi = s_2
-        if lo > hi:
-            inc = -1
-        th1 = np.arange(s_1 - 180, s_2, inc)
-        (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
-        th2 = np.arange(s_2 + 180, s_1, -inc)
-    else:
-        hi = s_1 - 180
-        lo = s_2 - 180
-        if lo > hi:
-            inc = -1
-        th1 = np.arange(hi, lo, -inc)
-        (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
-        (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
-        x_2 = x_2[::-1]
-        y_2 = y_2[::-1]
-        th2 = np.arange(s_2, s_1, inc)
-    (xs_2, ys_2) = pol2cart(th2 * D2R, 90 * np.ones((1, len(th2))))
-    x = np.concatenate((x_1, xs_1[0], x_2, xs_2[0]))
-    y = np.concatenate((y_1, ys_1[0], y_2, ys_2[0]))
+        if m_ == 1:
+            lo = s_1 - 180
+            hi = s_2
+            if lo > hi:
+                inc = -1
+            th1 = np.arange(s_1 - 180, s_2, inc)
+            (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+            (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
+            th2 = np.arange(s_2 + 180, s_1, -inc)
+        else:
+            hi = s_1 - 180
+            lo = s_2 - 180
+            if lo > hi:
+                inc = -1
+            th1 = np.arange(hi, lo, -inc)
+            (xs_1, ys_1) = pol2cart(th1 * D2R, 90 * np.ones((1, len(th1))))
+            (x_2, y_2) = pol2cart(phi + s_2 * D2R, l2)
+            x_2 = x_2[::-1]
+            y_2 = y_2[::-1]
+            th2 = np.arange(s_2, s_1, inc)
+        (xs_2, ys_2) = pol2cart(th2 * D2R, 90 * np.ones((1, len(th2))))
+        x = np.concatenate((x_1, xs_1[0], x_2, xs_2[0]))
+        y = np.concatenate((y_1, ys_1[0], y_2, ys_2[0]))
 
-    x = x * d / 90
-    y = y * d / 90
+        x = x * d / 90
+        y = y * d / 90
 
-    # calculate resolution
-    res = [value / float(size) for value in width]
+        # calculate resolution
+        res = [value / float(size) for value in width]
 
-    # construct the patches
-    collect = [patches.Ellipse(xy, width=width[0], height=width[1])]
-    collect.append(xy2patch(y, x, res, xy))
+        # construct the patch
+        collect.append(xy2patch(y, x, res, xy))
     return ['b', 'w'], collect
 
 

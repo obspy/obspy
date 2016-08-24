@@ -27,6 +27,7 @@ from matplotlib.ticker import (FormatStrFormatter, Formatter, FuncFormatter,
 
 from obspy import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
+from obspy.geodetics.base import mean_longitude
 
 BASEMAP_VERSION = get_basemap_version()
 if BASEMAP_VERSION:
@@ -316,7 +317,7 @@ def _plot_basemap_into_axes(
             bmap = Basemap(projection='ortho',
                            resolution=_BASEMAP_RESOLUTIONS[resolution],
                            area_thresh=1000.0, lat_0=round(np.mean(lats), 4),
-                           lon_0=round(np.mean(lons), 4), ax=ax)
+                           lon_0=round(mean_longitude(lons), 4), ax=ax)
         elif projection == 'local':
             if min(lons) < -150 and max(lons) > 150:
                 max_lons = max(np.array(lons) % 360)
@@ -576,7 +577,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
         proj = ccrs.Mollweide(**proj_kwargs)
     elif projection == 'ortho':
         proj_kwargs['central_latitude'] = np.mean(lats)
-        proj_kwargs['central_longitude'] = np.mean(lons)
+        proj_kwargs['central_longitude'] = mean_longitude(lons)
         proj = ccrs.Orthographic(**proj_kwargs)
     elif projection == 'local':
         if min(lons) < -150 and max(lons) > 150:
@@ -619,7 +620,7 @@ def plot_cartopy(lons, lats, size, color, labels=None, projection='global',
     elif isinstance(projection, type):
         if 'central_longitude' in proj_kwargs:
             if proj_kwargs['central_longitude'] == 'auto':
-                proj_kwargs['central_longitude'] = np.mean(lons)
+                proj_kwargs['central_longitude'] = mean_longitude(lons)
         if 'central_latitude' in proj_kwargs:
             if proj_kwargs['central_latitude'] == 'auto':
                 proj_kwargs['central_latitude'] = np.mean(lats)

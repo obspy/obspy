@@ -42,7 +42,8 @@ else:
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
 MINI_SEED_CONTROL_HEADERS = [ord('D'), ord('R'), ord('Q'), ord('M')]
-VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
+VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS + \
+    [ord(' ')]
 
 # expected data types for libmseed id: (numpy, ctypes)
 DATATYPES = {b"a": C.c_char, b"i": C.c_int32, b"f": C.c_float,
@@ -560,9 +561,10 @@ clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
                                        C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
 
-clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
-                                C.POINTER(C.POINTER(MSRecord)),
-                                C.c_int, C.c_int, C.c_int]
+clibmseed.msr_parse.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1), C.c_int,
+    C.POINTER(C.POINTER(MSRecord)),
+    C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
 
 #####################################

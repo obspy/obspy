@@ -22,11 +22,9 @@ from future.builtins import *  # NOQA
 
 import doctest
 
-import numpy as np
-
 from obspy import UTCDateTime
 
-from .libgse2 import uncompress_cm6, verify_checksum
+from .libgse2 import uncompress_cm6, verify_checksum, read_integer_data
 
 
 def read(fh, verify_chksum=True):
@@ -54,31 +52,12 @@ def read(fh, verify_chksum=True):
     elif dtype == 'INTV':
         data = read_integer_data(fh, header['npts'])
     else:
-        raise Exception("Unsupported data type %s in GSE1 file" % dtype)
+        msg = "Unsupported data type %s in GSE1 file" % (dtype)
+        raise NotImplementedError(msg)
     # test checksum only if enabled
     if verify_chksum:
         verify_checksum(fh, data, version=1)
     return header, data
-
-
-def read_integer_data(fh, npts):
-    """
-    Reads npts points of uncompressed integers from given file handler.
-    """
-    # find next DAT1 section within file
-    data = []
-    in_data_section = False
-
-    while len(data) < npts:
-        buf = fh.readline()
-        if buf.startswith(b"DAT1"):
-            in_data_section = True
-            continue
-        if not in_data_section:
-            continue
-        data.extend(buf.strip().split(b" "))
-
-    return np.array(data, dtype=np.int32)
 
 
 def read_header(fh):

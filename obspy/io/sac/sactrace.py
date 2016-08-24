@@ -66,107 +66,133 @@ Read/write SAC files
     # write a binary SAC file for a Sun machine
     sac.write(filename, byteorder='big')
 
+Build a SACTrace from a header dictionary and data array
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. rubric:: Example
+
+>>> header = {'kstnm': 'ANMO', 'kcmpnm': 'BHZ', 'stla': 40.5, 'stlo': -108.23,
+...           'evla': -15.123, 'evlo': 123, 'evdp': 50, 'nzyear': 2012,
+...           'nzjday': 123, 'nzhour': 13, 'nzmin': 43, 'nzsec': 17,
+...           'nzmsec': 100, 'delta': 1.0/40}
+>>> sac = SACTrace(data=np.random.random(100), **header)
+>>> print(sac)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+Reference Time = 05/02/2012 (123) 13:43:17.100000
+   iztype IB: begin time
+b          = 0.0
+delta      = 0.0250000...
+e          = 2.4750000...
+evdp       = 50.0
+evla       = -15.123000...
+evlo       = 123.0
+iftype     = itime
+internal0  = 2.0
+iztype     = ib
+kcmpnm     = BHZ
+kstnm      = ANMO
+lcalda     = False
+leven      = True
+lovrok     = True
+lpspol     = True
+npts       = 100
+nvhdr      = 6
+nzhour     = 13
+nzjday     = 123
+nzmin      = 43
+nzmsec     = 100
+nzsec      = 17
+nzyear     = 2012
+stla       = 40.5
+stlo       = -108.23000...
+
 Reference-time and relative time headers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. rubric:: Example
 
-    sac = SACTrace(nzyear=2000, nzjday=1, nzhour=0, nzmin=0, nzsec=0, nzmsec=0,
-                   t1=23.5, data=numpy.arange(100))
-
-    sac.reftime
-    sac.b, sac.e, sac.t1
-
-::
-
-    2000-01-01T00:00:00.000000Z
-    (0.0, 99.0, 23.5)
+>>> sac = SACTrace(nzyear=2000, nzjday=1, nzhour=0, nzmin=0, nzsec=0,
+...                nzmsec=0, t1=23.5, data=np.arange(100))
+>>> print(sac.reftime)
+2000-01-01T00:00:00.000000Z
+>>> sac.b, sac.e, sac.t1
+(0.0, 99.0, 23.5)
 
 Move reference time by relative seconds, relative time headers are
 preserved.
 
-.. code:: python
+.. rubric:: Example
 
-    sac.reftime -= 2.5
-    sac.b, sac.e, sac.t1
-
-::
-
-    (2.5, 101.5, 26.0)
+>>> sac = SACTrace(nzyear=2000, nzjday=1, nzhour=0, nzmin=0, nzsec=0,
+...                nzmsec=0, t1=23.5, data=np.arange(100))
+>>> sac.reftime -= 2.5
+>>> sac.b, sac.e, sac.t1
+(2.5, 101.5, 26.0)
 
 Set reference time to new absolute time, relative time headers are
 preserved.
 
-.. code:: python
+.. rubric:: Example
 
-    sac.reftime = UTCDateTime(2000, 1, 1, 0, 2, 0, 0)
-    sac.b, sac.e
-
-::
-
-    (-120.0, -21.0, -96.5)
+>>> sac = SACTrace(nzyear=2000, nzjday=1, nzhour=0, nzmin=0, nzsec=0,
+...                nzmsec=0, t1=23.5, data=np.arange(100))
+>>> # set the reftime two minutes later
+>>> sac.reftime = UTCDateTime(2000, 1, 1, 0, 2, 0, 0)
+>>> sac.b, sac.e, sac.t1
+(-120.0, -21.0, -96.5)
 
 Quick header viewing
 ~~~~~~~~~~~~~~~~~~~~
 
 Print non-null header values.
 
-.. code:: python
+.. rubric:: Example
 
-    sac = SACTrace()
-    print sac
-
-::
-
-    Reference Time = 01/01/2000 (001) 00:00:00.000000
-        iztype IB: begin time
-    b          = 0.0
-    cmpaz      = 0.0
-    cmpinc     = 0.0
-    delta      = 1.0
-    e          = 99.0
-    iftype     = itime
-    internal0  = 2.0
-    iztype     = ib
-    kcmpnm     = Z
-    lcalda     = False
-    leven      = True
-    lovrok     = True
-    lpspol     = True
-    npts       = 100
-    nvhdr      = 6
-    nzhour     = 0
-    nzjday     = 1
-    nzmin      = 0
-    nzmsec     = 0
-    nzsec      = 0
-    nzyear     = 2000
+>>> sac = SACTrace()
+>>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
+Reference Time = 01/01/1970 (001) 00:00:00.000000
+   iztype IB: begin time
+b          = 0.0
+delta      = 1.0
+e          = 0.0
+iftype     = itime
+internal0  = 2.0
+iztype     = ib
+lcalda     = False
+leven      = True
+lovrok     = True
+lpspol     = True
+npts       = 0
+nvhdr      = 6
+nzhour     = 0
+nzjday     = 1
+nzmin      = 0
+nzmsec     = 0
+nzsec      = 0
+nzyear     = 1970
 
 Print relative time header values.
 
-.. code:: python
+.. rubric:: Example
 
-    sac.lh('picks')
-
-::
-
-    Reference Time = 01/01/1970 (001) 00:00:00.000000
-        iztype IB: begin time
-        a          = None
-        b          = 0.0
-        e          = 0.0
-        f          = None
-        o          = None
-        t0         = None
-        t1         = None
-        t2         = None
-        t3         = None
-        t4         = None
-        t5         = None
-        t6         = None
-        t7         = None
-        t8         = None
-        t9         = None
+>>> sac = SACTrace()
+>>> sac.lh('picks')  # doctest: +NORMALIZE_WHITESPACE
+Reference Time = 01/01/1970 (001) 00:00:00.000000
+   iztype IB: begin time
+a          = None
+b          = 0.0
+e          = 0.0
+f          = None
+o          = None
+t0         = None
+t1         = None
+t2         = None
+t3         = None
+t4         = None
+t5         = None
+t6         = None
+t7         = None
+t8         = None
+t9         = None
 
 Header values as attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,7 +242,7 @@ Great for interactive use, with (ipython) tab-completion...
     sac.kcmpnm            sac.nzmin             sac.write
     sac.kdatrd            sac.nzmsec
 
-...and documentation!
+...and documentation (in IPython)!
 
 .. code:: python
 
@@ -228,6 +254,7 @@ Great for interactive use, with (ipython) tab-completion...
     String form: <property object at 0x106404940>
     Docstring:
     I    Reference time equivalence:
+
     * IUNKN (5): Unknown
     * IB (9): Begin time
     * IDAY (10): Midnight of reference GMT day
@@ -238,96 +265,72 @@ Great for interactive use, with (ipython) tab-completion...
 Convert to/from ObsPy Traces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. rubric:: Example
 
-    from obspy import read
-    tr = read()[0]
-    print tr.stats
+>>> from obspy import read
+>>> tr = read()[0]
+>>> print(tr.stats)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+         network: BW
+         station: RJOB
+        location:
+         channel: EHZ
+       starttime: 2009-08-24T00:20:03.000000Z
+         endtime: 2009-08-24T00:20:32.990000Z
+   sampling_rate: 100.0
+           delta: 0.01
+            npts: 3000
+           calib: 1.0
+    back_azimuth: 100.0
+     inclination: 30.0
+        response: Channel Response
+            ...
 
-::
 
-             network: BW
-             station: RJOB
-            location:
-             channel: EHZ
-           starttime: 2009-08-24T00:20:03.000000Z
-             endtime: 2009-08-24T00:20:32.990000Z
-       sampling_rate: 100.0
-               delta: 0.01
-                npts: 3000
-               calib: 1.0
-        back_azimuth: 100.0
-         inclination: 30.0
+>>> sac = SACTrace.from_obspy_trace(tr)
+>>> print(sac)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+Reference Time = 08/24/2009 (236) 00:20:03.000000
+   iztype IB: begin time
+b          = 0.0
+delta      = 0.009999999...
+e          = 29.989999...
+iftype     = itime
+iztype     = ib
+kcmpnm     = EHZ
+knetwk     = BW
+kstnm      = RJOB
+lcalda     = True
+leven      = True
+lovrok     = True
+lpspol     = False
+npts       = 3000
+nvhdr      = 6
+nzhour     = 0
+nzjday     = 236
+nzmin      = 20
+nzmsec     = 0
+nzsec      = 3
+nzyear     = 2009
+scale      = 1.0
 
-.. code:: python
-
-    sac = SACTrace.from_obspy_trace(tr)
-    print sac
-
-::
-
-    Reference Time = 08/24/2009 (236) 00:20:03.000000
-        iztype IB: begin time
-    b          = 0.0
-    cmpaz      = 0.0
-    cmpinc     = 0.0
-    delta      = 0.00999999977648
-    depmax     = 1293.77099609
-    depmen     = -4.49556303024
-    depmin     = -1515.81311035
-    e          = 29.9899993297
-    iftype     = itime
-    internal0  = 2.0
-    iztype     = ib
-    kcmpnm     = EHZ
-    knetwk     = BW
-    kstnm      = RJOB
-    lcalda     = False
-    leven      = True
-    lovrok     = True
-    lpspol     = True
-    npts       = 3000
-    nvhdr      = 6
-    nzhour     = 0
-    nzjday     = 236
-    nzmin      = 20
-    nzmsec     = 0
-    nzsec      = 3
-    nzyear     = 2009
-    scale      = 1.0
-
-.. code:: python
-
-    tr2 = sac.to_obspy_trace()
-    print tr2.stats
-
-::
-
-             network: BW
-             station: RJOB
-            location:
-             channel: EHZ
-           starttime: 2009-08-24T00:20:03.000000Z
-             endtime: 2009-08-24T00:20:32.990000Z
-       sampling_rate: 100.0
-               delta: 0.01
-                npts: 3000
-               calib: 1.0
-                 sac: AttribDict({'cmpaz': 0.0, 'nzyear': 2009, 'nzjday': 236,
-                 'iztype': 9, 'evla': 0.0, 'nzhour': 0, 'lcalda': 0,
-                 'evlo': 0.0, 'scale': 1.0, 'nvhdr': 6, 'depmin': -1515.8131,
-                 'kcmpnm': 'EHZ', 'nzsec': 3, 'internal0': 2.0,
-                 'depmen': -4.495563, 'cmpinc': 0.0,
-                 'depmax': 1293.771, 'iftype': 1, 'delta': 0.0099999998,
-                 'nzmsec': 0, 'lpspol': 1, 'b': 0.0, 'e': 29.99, 'leven': 1,
-                 'kstnm': 'RJOB', 'nzmin': 20, 'lovrok': 1, 'npts': 3000,
-                 'knetwk': 'BW'})
-
+>>> tr2 = sac.to_obspy_trace()
+>>> print(tr2.stats)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+         network: BW
+         station: RJOB
+        location:
+         channel: EHZ
+       starttime: 2009-08-24T00:20:03.000000Z
+         endtime: 2009-08-24T00:20:32.990000Z
+   sampling_rate: 100.0
+           delta: 0.01
+            npts: 3000
+           calib: 1.0
+             sac: AttribDict(...)
 
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future.utils import native_str
 
 import sys
 import warnings
@@ -369,7 +372,7 @@ from . import arrayio as _io
 # floats
 def _floatgetter(hdr):
     def get_float(self):
-        value = self._hf[HD.FLOATHDRS.index(hdr)]
+        value = float(self._hf[HD.FLOATHDRS.index(hdr)])
         if value == HD.FNULL:
             value = None
         return value
@@ -387,7 +390,7 @@ def _floatsetter(hdr):
 # ints
 def _intgetter(hdr):
     def get_int(self):
-        value = self._hi[HD.INTHDRS.index(hdr)]
+        value = int(self._hi[HD.INTHDRS.index(hdr)])
         if value == HD.INULL:
             value = None
         return value
@@ -459,10 +462,10 @@ def _strgetter(hdr):
     def get_str(self):
         try:
             # value is a bytes
-            value = self._hs[HD.STRHDRS.index(hdr)].decode()
+            value = native_str(self._hs[HD.STRHDRS.index(hdr)].decode())
         except AttributeError:
             # value is a str
-            value = self._hs[HD.STRHDRS.index(hdr)]
+            value = native_str(self._hs[HD.STRHDRS.index(hdr)])
 
         if value == HD.SNULL:
             value = None
@@ -500,15 +503,17 @@ def _make_data_func(func, hdr):
     def do_data_func(self):
         try:
             value = func(self.data)
+            if not isinstance(value, int):
+                value = float(value)
         except TypeError:
-            # data=None (headonly=True)
+            # data is None, get the value from header
             try:
-                value = self._hf[HD.FLOATHDRS.index(hdr)]
-                null = HD.INULL
+                value = float(self._hf[HD.FLOATHDRS.index(hdr)])
+                null = HD.FNULL
             except ValueError:
                 # hdr is 'npts', the only integer
-                # Will this also trip if a data-centric header is misspelled?
-                value = self._hi[HD.INTHDRS.index(hdr)]
+                # XXX: this also trip if a data-centric header is misspelled?
+                value = int(self._hi[HD.INTHDRS.index(hdr)])
                 null = HD.INULL
             if value == null:
                 value = None
@@ -720,18 +725,15 @@ class SACTrace(object):
         ..rubric:: Example
 
         >>> sac = SACTrace(nzyear=1995, nzmsec=50, data=np.arange(100))
-        >>> print(sac) # doctest: +SKIP
+        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
         Reference Time = 01/01/1995 (001) 00:00:00.050000
-                iztype IB: begin time
+           iztype IB: begin time
         b          = 0.0
-        cmpaz      = 0.0
-        cmpinc     = 0.0
         delta      = 1.0
         e          = 99.0
         iftype     = itime
         internal0  = 2.0
         iztype     = ib
-        kcmpnm     = Z
         lcalda     = False
         leven      = True
         lovrok     = True
@@ -929,9 +931,9 @@ class SACTrace(object):
                       doc=HD.DOC['ievreg'])
     ievtyp = property(_enumgetter('ievtyp'), _enumsetter('ievtyp'),
                       doc=HD.DOC['ievtyp'])
-    iqual = property(_enumgetter('iqual'), _enumsetter('iqual'),
+    iqual = property(_intgetter('iqual'), _intsetter('iqual'),
                      doc=HD.DOC['iqual'])
-    isynth = property(_enumgetter('isythn'), _enumsetter('isynth'),
+    isynth = property(_enumgetter('isynth'), _enumsetter('isynth'),
                       doc=HD.DOC['isynth'])
     imagtyp = property(_enumgetter('imagtyp'), _enumsetter('imagtyp'),
                        doc=HD.DOC['imagtyp'])
@@ -1096,7 +1098,7 @@ class SACTrace(object):
     # --------------------------- I/O METHODS ---------------------------------
     @classmethod
     def read(cls, source, headonly=False, ascii=False, byteorder=None,
-             checksize=False):
+             checksize=False, debug_strings=False):
         """
         Construct an instance from a binary or ASCII file on disk.
 
@@ -1116,18 +1118,32 @@ class SACTrace(object):
         :param checksize: If True, check that the theoretical file size from
             the header matches the size on disk. Only valid for binary files.
         :type checksize: bool
+        :param debug_strings: By default, non-ASCII and null-termination
+            characters are removed from character header fields, and those
+            beginning with '-12345' are considered unset. If True, they
+            are instead passed without modification.  Good for debugging.
+        :type debug_strings: bool
 
         :raises: :class:`SacIOError` if checksize failed, byteorder was wrong,
             or header arrays are wrong size.
 
         .. rubric:: Example
 
-        >>> sac = SACTrace.read(filename, headonly=True) # doctest: +SKIP
-        >>> try: # doctest: +SKIP
-                sac.validate('data_hdrs') # doctest: +SKIP
-            except SacInvalidContentError: # doctest: +SKIP
-                sac = SACTrace.read(filename, headonly=False) # doctest: +SKIP
-                sac.validate('data_hdrs') # doctest: +SKIP
+        >>> from obspy.core.util import get_example_file
+        >>> from obspy.io.sac.util import SacInvalidContentError
+        >>> file_ = get_example_file("test.sac")
+        >>> sac = SACTrace.read(file_, headonly=True)
+        >>> sac.data is None
+        True
+        >>> sac = SACTrace.read(file_, headonly=False)
+        >>> sac.data  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        array([ -8.74227766e-08,  -3.09016973e-01,  -5.87785363e-01,
+                -8.09017122e-01,  -9.51056600e-01,  -1.00000000e+00,
+                -9.51056302e-01,  -8.09016585e-01,  -5.87784529e-01,
+                ...
+                 8.09022486e-01,   9.51059461e-01,   1.00000000e+00,
+                 9.51053500e-01,   8.09011161e-01,   5.87777138e-01,
+                 3.09007347e-01], dtype=float32)
 
         See also: :meth:`SACTrace.validate`
 
@@ -1138,6 +1154,12 @@ class SACTrace(object):
             hf, hi, hs, data = _io.read_sac(source, headonly=headonly,
                                             byteorder=byteorder,
                                             checksize=checksize)
+        if not debug_strings:
+            for i, val in enumerate(hs):
+                val = _ut._clean_str(val, strip_whitespace=False)
+                if val.startswith(native_str('-12345')):
+                    val = HD.SNULL
+                hs[i] = val
 
         sac = cls._from_arrays(hf, hi, hs, data)
         if sac.dist is None:
@@ -1206,19 +1228,28 @@ class SACTrace(object):
 
         .. rubric:: Example
 
-        >>> sac = SACTrace._from_arrays() # doctest: +SKIP
-        >>> print(sac) # doctest: +SKIP
+        >>> sac = SACTrace._from_arrays()
+        >>> print(sac)  # doctest: +NORMALIZE_WHITESPACE
         Reference Time = XX/XX/XX (XXX) XX:XX:XX.XXXXXX
-                iztype not set
-            lcalda     = False
-            leven      = False
-            lovrok     = False
-            lpspol     = False
+            iztype not set
+        lcalda     = True
+        leven      = False
+        lovrok     = False
+        lpspol     = False
 
         """
-        # TODO: handle byte order independently instead of just from "hf".
-        # XXX: assumes hf was provided.
-        hf0, hi0, hs0 = _io.init_header_arrays(byteorder=hf.dtype.byteorder)
+        # use the first byteorder we find, or system byteorder if we
+        # never find any
+        bo = '='
+        for arr in (hf, hi, hs, data):
+            try:
+                bo = arr.dtype.byteorder
+                break
+            except AttributeError:
+                # arr is None (not supplied)
+                pass
+        hf0, hi0, hs0 = _io.init_header_arrays(byteorder=bo)
+        # TODO: hf0, hi0, hs0 = _io.init_header_array_values(hf0, hi0, hs0)
 
         if hf is None:
             hf = hf0
@@ -1298,8 +1329,12 @@ class SACTrace(object):
 
         .. rubric:: Example
 
-        >>> sac = SACTrace() # doctest: +SKIP
-        >>> tr = sac.to_obspy_trace() # doctest: +SKIP
+        >>> from obspy.core.util import get_example_file
+        >>> file_ = get_example_file("test.sac")
+        >>> sac = SACTrace.read(file_, headonly=True)
+        >>> tr = sac.to_obspy_trace()
+        >>> print(tr)  # doctest: +ELLIPSIS
+        .STA..Q | 1978-07-18T08:00:10.000000Z - ... | 1.0 Hz, 100 samples
 
         """
         # make the obspy test for tests/data/testxy.sac pass
@@ -1354,20 +1389,25 @@ class SACTrace(object):
 
         .. rubric:: Example
 
-        >>> sac = SACTrace.read(filename) # doctest: +SKIP
-        >>> try: # doctest: +SKIP
-                sac.validate('delta') # doctest: +SKIP
-            except SacInvalidContentError as e: # doctest: +SKIP
-                # i'm sure this is what they meant:-)
-                sac.delta *= -1.0 # doctest: +SKIP
-                sac.validate('delta') # doctest: +SKIP
-
-        >>> sac.data += 5.0 # doctest: +SKIP
-        >>> try: # doctest: +SKIP
-                sac.validate('data_hdrs') # doctest: +SKIP
-            except SacInvalidContentError: # doctest: +SKIP
-                sac._flush_headers() # doctest: +SKIP
-                sac.validate('data_hdrs') # doctest: +SKIP
+        >>> from obspy.core.util import get_example_file
+        >>> from obspy.io.sac.util import SacInvalidContentError
+        >>> file_ = get_example_file("LMOW.BHE.SAC")
+        >>> sac = SACTrace.read(file_)
+        >>> # make the time step invalid, catch it, and fix it
+        >>> sac.delta *= -1.0
+        >>> try:
+        ...     sac.validate('delta')
+        ... except SacInvalidContentError as e:
+        ...     sac.delta *= -1.0
+        ...     sac.validate('delta')
+        >>> # make the data and depmin/men/max not match, catch the validation
+        >>> # error, then fix (flush) the headers so that they validate
+        >>> sac.data += 5.0
+        >>> try:
+        ...     sac.validate('data_hdrs')
+        ... except SacInvalidContentError:
+        ...     sac._flush_headers()
+        ...     sac.validate('data_hdrs')
 
         """
         _io.validate_sac_content(self._hf, self._hi, self._hs, self.data,
@@ -1450,28 +1490,40 @@ class SACTrace(object):
 
         .. rubric:: Example
 
-        >>> sac = SACTrace.read('tests/data/test.sac') # doctest: +SKIP
-        >>> sac.lh() # doctest: +SKIP
-        Reference Time = 07/18/1978 (199) 08:00:00.000000
-         unrecognized iztype: None
-        b	= 10.0
-        delta	= 1.0
-        depmax	= 1.0
-        depmin	= -1.0
-        e	= 109.0
-        istreg	= 1
-        kcmpnm	= Q
-        kevnm	= FUNCGEN: SINE
-        kstnm	= STA
-        npts	= 100
-        nvhdr	= 6
-        nzhour	= 8
-        nzjday	= 199
-        nzmin	= 0
-        nzmsec	= 0
-        nzsec	= 0
-        nzyear	= 1978
-
+        >>> from obspy.core.util import get_example_file
+        >>> file_ = get_example_file("LMOW.BHE.SAC")
+        >>> sac = SACTrace.read(file_)
+        >>> sac.lh()  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Reference Time = 04/10/2001 (100) 00:23:00.465000
+           iztype IB: begin time
+        a          = 0.0
+        b          = 0.0
+        delta      = 0.009999999...
+        depmax     = 0.003305610...
+        depmen     = 0.00243799...
+        depmin     = 0.00148824...
+        e          = 0.98999997...
+        iftype     = itime
+        iztype     = ib
+        kcmpnm     = BHE
+        kevnm      = None
+        kstnm      = LMOW
+        lcalda     = True
+        leven      = True
+        lpspol     = False
+        nevid      = 0
+        norid      = 0
+        npts       = 100
+        nvhdr      = 6
+        nzhour     = 0
+        nzjday     = 100
+        nzmin      = 23
+        nzmsec     = 465
+        nzsec      = 0
+        nzyear     = 2001
+        stla       = -39.409999...
+        stlo       = 175.75
+        unused23   = 0
         """
         # https://ds.iris.edu/files/sac-manual/commands/listhdr.html
         print(self._format_header_str(hdrlist))
@@ -1486,9 +1538,9 @@ class SACTrace(object):
     def __repr__(self):
         # XXX: run self._flush_headers first?
         # TODO: make this somehow more readable.
-        h = self._header
+        h = sorted(self._header.items())
         fmt = ", {}={!r}" * len(h)
-        argstr = fmt.format(*chain.from_iterable(h.items()))[2:]
+        argstr = fmt.format(*chain.from_iterable(h))[2:]
         return self.__class__.__name__ + "(" + argstr + ")"
 
     def copy(self):
@@ -1529,10 +1581,14 @@ class SACTrace(object):
         ...it is recommended to just make sure your target reference header is
         set and correct, and set the iztype:
 
-        >>> sac.o = UTCDateTime(year=1982, julday=123,  # doctest: +SKIP
-                                hour=13, minute=37,  # doctest: +SKIP
-                                second=10, microsecond=103)  # doctest: +SKIP
-        >>> sac.iztype = 'io' # doctest: +SKIP
+        >>> from obspy import UTCDateTime
+        >>> from obspy.core.util import get_example_file
+        >>> file_ = get_example_file("test.sac")
+        >>> sac = SACTrace.read(file_)
+        >>> sac.o = UTCDateTime(year=1982, julday=123,
+        ...                     hour=13, minute=37,
+        ...                     second=10, microsecond=103)
+        >>> sac.iztype = 'io'
 
         The iztype setter will deal with shifting the time values.
 

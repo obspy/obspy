@@ -9,7 +9,7 @@ import datetime
 
 import numpy as np
 
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.geodetics import gps2dist_azimuth, kilometer2degrees
 
@@ -211,6 +211,22 @@ class SACTraceTestCase(unittest.TestCase):
         # values are set. NOTE: still have a problem when others are "None".
         sac = SACTrace(lcalda=True, stla=stla)
         self.assertRaises(SacHeaderError, sac._set_distances, force=True)
+
+    def test_propagate_modified_stats_strings_to_sactrace(self):
+        """
+        If you build a SACTrace from an ObsPy Trace that has certain string
+        headers mismatched between the Stats header and an existing Stats.sac
+        header, channel and kcmpnm for example, the resulting SACTrace values
+        should come from Stats. Addresses GitHub issue #1457.
+        """
+        tr = read(self.fileseis)[0]
+        # modify the header values by adding a single meaningless character
+        for sachdr, statshdr in [('kstnm', 'station'), ('knetwk', 'network'),
+                                 ('kcmpnm', 'channel'), ('khole', 'location')]:
+            modified_value = tr.stats[statshdr] + '1'
+            tr.stats[statshdr] = modified_value
+            sac = SACTrace.from_obspy_trace(tr)
+            self.assertEqual(getattr(sac, sachdr), modified_value)
 
 
 def suite():

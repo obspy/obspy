@@ -62,7 +62,8 @@ def init_header_arrays(arrays=('float', 'int', 'str'), byteorder='='):
             for i, hdr in enumerate(HD.INTHDRS):
                 if hdr.startswith('l'):
                     hi[i] = 0
-            # TODO: initialize enumerated values to something?
+            # TODO: make an init_header_array_values function that sets sane
+            #   initial values, including lcalda, nvhdr, leven, etc..
             # calculate distances by default
             hi[HD.INTHDRS.index('lcalda')] = 1
             out.append(hi)
@@ -443,8 +444,8 @@ def header_arrays_to_dict(hf, hi, hs, nulls=False):
 
     """
     if nulls:
-        items = [(key, val) for (key, val) in zip(HD.FLOATHDRS, hf)] + \
-                [(key, val) for (key, val) in zip(HD.INTHDRS, hi)] + \
+        items = list(zip(HD.FLOATHDRS, hf)) + \
+                list(zip(HD.INTHDRS, hi)) + \
                 [(key, val.decode()) for (key, val) in zip(HD.STRHDRS, hs)]
     else:
         # more readable
@@ -575,16 +576,17 @@ def validate_sac_content(hf, hi, hs, data, *tests):
 
     if 'data_hdrs' in tests:
         try:
-            is_min = hf[HD.FLOATHDRS.index('depmin')] == data.min()
-            is_max = hf[HD.FLOATHDRS.index('depmax')] == data.max()
-            is_mean = hf[HD.FLOATHDRS.index('depmen')] == data.mean()
+            is_min = np.allclose(hf[HD.FLOATHDRS.index('depmin')], data.min())
+            is_max = np.allclose(hf[HD.FLOATHDRS.index('depmax')], data.max())
+            is_mean = np.allclose(hf[HD.FLOATHDRS.index('depmen')],
+                                  data.mean())
             if not all([is_min, is_max, is_mean]):
                 msg = "Data headers don't match data array."
                 raise SacInvalidContentError(msg)
         except (AttributeError, ValueError) as e:
             msg = "Data array is None, empty array, or non-array. " + \
                   "Cannot check data headers."
-            raise ValueError(msg)
+            raise SacInvalidContentError(msg)
 
     if 'enums' in tests:
         for hdr in HD.ACCEPTED_VALS:

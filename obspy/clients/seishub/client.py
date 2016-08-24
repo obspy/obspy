@@ -800,7 +800,7 @@ master/seishub/plugins/seismology/event.py
         Fetches a catalog with event information. Parameters to narrow down
         the request are the same as for :meth:`get_list`.
 
-        ..warning::
+        .. warning::
             Only works when connecting to a SeisHub server of version 1.4.0
             or higher (serving event data as QuakeML).
 

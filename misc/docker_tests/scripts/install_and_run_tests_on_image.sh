@@ -6,8 +6,12 @@ no_color='\e[0m'
 # Install ObsPy and run the tests.
 cd /obspy
 
-pip install -v -e . > /INSTALL_LOG.txt 2>&1
+# In the following, we're checking some return statuses of commands that are
+# piped into `tee`. To avoid testing `tee`'s return status set "pipefail"
+# option.
+set -o pipefail
 
+pip install -v -e . 2>&1 | tee /INSTALL_LOG.txt
 if [ $? != 0 ]; then
     echo -e "${red}Installation failed!${no_color}"
 else
@@ -16,13 +20,13 @@ fi
 
 cd
 
-obspy-runtests -r --keep-images --node=docker-$(cat /container_name.txt) > /TEST_LOG.txt 2>&1
-
-
+obspy-runtests -r --keep-images --no-flake8 --node=docker-$(cat /container_name.txt) $1 2>&1 | tee /TEST_LOG.txt
 if [ $? != 0 ]; then
     echo -e "${red}Tests failed!${no_color}"
+    touch /failure
 else
     echo -e "${green}Tests successful!${no_color}"
+    touch /success
 fi
 
 echo "Done with everything!"

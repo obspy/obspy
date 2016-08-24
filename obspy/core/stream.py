@@ -1077,7 +1077,7 @@ class Stream(object):
             ``(latitude, longitude)``.
         :type plot_dx: int, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
-            Either km or degree, depending on ``dist_degree``.
+            Either m or degree, depending on ``dist_degree``.
         :type recordstart: int or float, optional
         :param recordstart: Seconds to crop from the beginning.
         :type recordlength: int or float, optional
@@ -2050,6 +2050,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return self
 
+    @raise_if_masked
     def filter(self, type, **options):
         """
         Filter the data of all traces in the Stream.

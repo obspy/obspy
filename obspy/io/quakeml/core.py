@@ -523,7 +523,7 @@ class Unpickler(object):
         self._extra(element, obj)
         return obj
 
-    def _origin(self, element):
+    def _origin(self, element, arrivals):
         """
         Converts an etree.Element into an Origin object.
 
@@ -539,7 +539,7 @@ class Unpickler(object):
         ... </origin>'''
         >>> xml_doc = etree.fromstring(XML)
         >>> unpickler = Unpickler(xml_doc)
-        >>> origin = unpickler._origin(xml_doc)
+        >>> origin = unpickler._origin(xml_doc, arrivals=[])
         >>> print(origin.latitude)
         34.23
         """
@@ -566,6 +566,7 @@ class Unpickler(object):
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         obj.origin_uncertainty = self._origin_uncertainty(element)
+        obj.arrivals = arrivals
         obj.resource_id = element.get('publicID')
         self._extra(element, obj)
         return obj
@@ -933,12 +934,18 @@ class Unpickler(object):
             # origins
             event.origins = []
             for origin_el in self._xpath('origin', event_el):
-                origin = self._origin(origin_el)
-                # arrivals
-                origin.arrivals = []
+                # Have to be created before the origin is created to avoid a
+                # rare issue where a warning is read when the same event is
+                # read twice - the warnings does not occur if two referred
+                # to objects compare equal - for this the arrivals have to
+                # be bound to the event before the resource id is assigned.
+                arrivals = []
                 for arrival_el in self._xpath('arrival', origin_el):
                     arrival = self._arrival(arrival_el)
-                    origin.arrivals.append(arrival)
+                    arrivals.append(arrival)
+
+                origin = self._origin(origin_el, arrivals=arrivals)
+
                 # append origin with arrivals
                 event.origins.append(origin)
             # magnitudes
@@ -1109,13 +1116,13 @@ class Pickler(object):
         if obj is None:
             return
         attrib = {}
-        if obj.network_code:
+        if obj.network_code is not None:
             attrib['networkCode'] = obj.network_code
-        if obj.station_code:
+        if obj.station_code is not None:
             attrib['stationCode'] = obj.station_code
         if obj.location_code is not None:
             attrib['locationCode'] = obj.location_code
-        if obj.channel_code:
+        if obj.channel_code is not None:
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
         # WaveformStreamID has a non-mandatory resource_id

@@ -1198,9 +1198,9 @@ class SeismicPhase(object):
                     self.tau_model.cmb_depth)
                 path_list.append(diff_td)
 
-            elif(branch_num == self.tau_model.moho_branch - 1 and
+            elif(branch_num == self.tau_model.moho_branch and
                  i < len(self.branch_seq) - 1 and
-                 self.branch_seq[i + 1] == self.tau_model.moho_branch - 1 and
+                 self.branch_seq[i + 1] == self.tau_model.moho_branch and
                  ("Pn" in self.name or "Sn" in self.name)):
                 # Can't have both Pn and Sn in a wave, so one of these is 0.
                 num_found = max(self.name.count("Pn"), self.name.count("Sn"))

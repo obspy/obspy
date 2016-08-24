@@ -137,9 +137,47 @@ class Enum(object):
         >>> enum = Enum(["c", "a", "b"])
         >>> print(enum)
         Enum(["c", "a", "b"])
+        >>> enum = Enum(["not existing",
+        ...              "not reported",
+        ...              "earthquake",
+        ...              "controlled explosion",
+        ...              "experimental explosion",
+        ...              "industrial explosion"])
+        >>> print(enum)  # doctest: +NORMALIZE_WHITESPACE
+        Enum(["not existing", "not reported", ..., "experimental explosion",
+              "industrial explosion"])
         """
+        return self.__repr__()
+
+    def __repr__(self):
+        """
+        >>> enum = Enum(["c", "a", "b"])
+        >>> print(repr(enum))
+        Enum(["c", "a", "b"])
+        >>> enum = Enum(["not existing",
+        ...              "not reported",
+        ...              "earthquake",
+        ...              "controlled explosion",
+        ...              "experimental explosion",
+        ...              "industrial explosion"])
+        >>> print(repr(enum))  # doctest: +NORMALIZE_WHITESPACE
+        Enum(["not existing", "not reported", ..., "experimental explosion",
+              "industrial explosion"])
+        """
+        def _repr_list_of_keys(keys):
+            return ", ".join('"{}"'.format(_i) for _i in keys)
+
         keys = list(self.__enums.keys())
-        return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
+        key_repr = _repr_list_of_keys(keys)
+        index = int(len(keys))
+        while len(key_repr) > 100:
+            if index == 0:
+                key_repr = "..."
+                break
+            index -= 1
+            key_repr = (_repr_list_of_keys(keys[:index]) + ", ..., " +
+                        _repr_list_of_keys(keys[-index:]))
+        return "Enum([{}])".format(key_repr)
 
     def _repr_pretty_(self, p, cycle):
         p.text(str(self))

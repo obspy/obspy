@@ -967,6 +967,47 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertTrue(hasattr(cat, 'nsmap'))
         self.assertEqual(getattr(cat, 'nsmap')['ns0'], nsmap['ns0'])
 
+    def test_read_same_file_twice_to_same_variable(self):
+        """
+        Reading the same file twice to the same variable should not raise a
+        warning.
+        """
+        sio = io.BytesIO(b"""<?xml version='1.0' encoding='utf-8'?>
+        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
+                   xmlns="http://quakeml.org/xmlns/bed/1.2">
+          <eventParameters publicID="smi:local/catalog">
+            <event publicID="smi:local/event">
+              <origin publicID="smi:local/origin">
+                <time>
+                  <value>1970-01-01T00:00:00.000000Z</value>
+                </time>
+                <latitude>
+                  <value>0.0</value>
+                </latitude>
+                <longitude>
+                  <value>0.0</value>
+                </longitude>
+                <depth>
+                  <value>0.0</value>
+                </depth>
+                <arrival publicID="smi:local/arrival">
+                  <pickID>smi:local/pick</pickID>
+                  <phase>P</phase>
+                </arrival>
+              </origin>
+            </event>
+          </eventParameters>
+        </q:quakeml>
+        """)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat1 = read_events(sio)  # NOQA
+            cat2 = read_events(sio)  # NOQA
+
+        # No warning should have been raised.
+        self.assertEqual(len(w), 0)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

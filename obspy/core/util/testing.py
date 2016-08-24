@@ -24,6 +24,7 @@ import re
 import shutil
 import unittest
 import warnings
+from distutils.version import LooseVersion
 
 from lxml import etree
 import numpy as np
@@ -406,10 +407,15 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             if "is not equal to the expected shape" in msg:
                 msg = str(e) + "\n"
-                upload_links = self._upload_images()
-                msg += ("\tExpected:  {expected}\n"
-                        "\tActual:    {actual}\n"
-                        "\tDiff:      {diff}\n").format(**upload_links)
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  {expected}\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      {diff}\n").format(self.image_name,
+                                                            **upload_result)
+                else:
+                    msg += upload_result
                 raise ImageComparisonException(msg)
             raise
         # we can still upload actual image if baseline image does not exist
@@ -417,10 +423,15 @@ class ImageComparison(NamedTemporaryFile):
             failed = True
             if "Baseline image" in msg and "does not exist." in msg:
                 msg = str(e) + "\n"
-                upload_links = self._upload_images()
-                msg += ("\tExpected:  ---\n"
-                        "\tActual:    {actual}\n"
-                        "\tDiff:      ---\n").format(**upload_links)
+                upload_result = self._upload_images()
+                if isinstance(upload_result, dict):
+                    msg += ("\tFile:      {}\n"
+                            "\tExpected:  ---\n"
+                            "\tActual:    {actual}\n"
+                            "\tDiff:      ---\n").format(self.image_name,
+                                                         **upload_result)
+                else:
+                    msg += upload_result
                 raise ImageComparisonException(msg)
             raise
         # simply reraise on any other unhandled exceptions
@@ -437,8 +448,9 @@ class ImageComparison(NamedTemporaryFile):
             if failed:
                 # base message on deviation of baseline and actual image
                 msg = ("Image comparison failed.\n"
+                       "\tFile:      {}\n"
                        "\tRMS:       {rms}\n"
-                       "\tTolerance: {tol}\n").format(**msg)
+                       "\tTolerance: {tol}\n").format(self.image_name, **msg)
                 # optionally, copy failed images from /tmp and append
                 # the local paths
                 if self.keep_output:
@@ -534,16 +546,11 @@ class ImageComparison(NamedTemporaryFile):
         """
         try:
             import pyimgur
-            import requests
-        except Exception as e:
-            msg = ("Upload to imgur failed (caught %s: %s).")
-            return msg % (e.__class__.__name__, str(e))
-        # try to get imgur client id from environment
-        imgur_clientid = \
-            os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
-        # upload images and return urls
-        links = {}
-        try:
+            # try to get imgur client id from environment
+            imgur_clientid = \
+                os.environ.get("OBSPY_IMGUR_CLIENTID") or "53b182544dc5d89"
+            # upload images and return urls
+            links = {}
             imgur = pyimgur.Imgur(imgur_clientid)
             if os.path.exists(self.baseline_image):
                 up = imgur.upload_image(self.baseline_image, title=self.name)
@@ -555,7 +562,7 @@ class ImageComparison(NamedTemporaryFile):
                 up = imgur.upload_image(self.diff_filename,
                                         title=self.diff_filename)
                 links['diff'] = up.link
-        except (requests.exceptions.SSLError, Exception) as e:
+        except Exception as e:
             msg = ("Upload to imgur failed (caught %s: %s).")
             return msg % (e.__class__.__name__, str(e))
         return links
@@ -565,8 +572,9 @@ try:
 except ImportError:
     HAS_FLAKE8 = False
 else:
+    flake8_version = LooseVersion(flake8.__version__)
     # Only accept flake8 version >= 2.0
-    HAS_FLAKE8 = flake8.__version__ >= '2'
+    HAS_FLAKE8 = flake8_version >= LooseVersion('2')
 
 
 def check_flake8():
@@ -578,8 +586,6 @@ def check_flake8():
     if PY2:
         import pyflakes.checker  # @UnusedImport
         pyflakes.checker.PY2 = True
-    import flake8.main
-    from flake8.engine import get_style_guide
 
     test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
     obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
@@ -610,8 +616,17 @@ def check_flake8():
                     break
             else:
                 files.append(py_file)
-    flake8_style = get_style_guide(parse_argv=False,
-                                   config_file=flake8.main.DEFAULT_CONFIG)
+
+    if flake8_version >= LooseVersion('3.0.0'):
+        from flake8.api.legacy import get_style_guide
+    else:
+        from flake8.engine import get_style_guide
+    flake8_kwargs = {'parse_argv': False}
+    if flake8_version < LooseVersion('2.5.5'):
+        import flake8.main
+        flake8_kwargs['config_file'] = flake8.main.DEFAULT_CONFIG
+
+    flake8_style = get_style_guide(**flake8_kwargs)
     flake8_style.options.ignore = tuple(set(
         flake8_style.options.ignore).union(set(FLAKE8_IGNORE_CODES)))
 

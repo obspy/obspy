@@ -195,6 +195,9 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+if "filter" in locals():
+    del filter
+
 from .spectral_estimation import PPSD
 
 

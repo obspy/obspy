@@ -38,7 +38,7 @@ from matplotlib.ticker import MaxNLocator, ScalarFormatter
 import scipy.signal as signal
 
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core.util import create_empty_data_chunk
+from obspy.core.util import create_empty_data_chunk, get_matplotlib_version
 from obspy.geodetics import FlinnEngdahl, kilometer2degrees, locations2degrees
 from obspy.imaging.util import (ObsPyAutoDateFormatter, _id_key, _timestring)
 
@@ -49,6 +49,7 @@ DATELOCATOR_WARNING_MSG = (
     "AutoDateLocator was unable to pick an appropriate interval for this date "
     "range. It may be necessary to add an interval value to the "
     "AutoDateLocator's intervald dictionary.")
+MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 class WaveformPlotting(object):
@@ -104,6 +105,8 @@ class WaveformPlotting(object):
         self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
+        if self.sect_plot_dx is not None and not self.sect_dist_degree:
+            self.sect_plot_dx /= 1e3
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
         self.sect_recordlength = kwargs.get('recordlength', None)
@@ -282,6 +285,8 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
+        if self.type == 'section':
+            self.fig.subplots_adjust(bottom=0.12)
         with warnings.catch_warnings(record=True):
             warnings.filterwarnings("ignore", DATELOCATOR_WARNING_MSG,
                                     UserWarning, "matplotlib.dates")
@@ -1103,33 +1108,32 @@ class WaveformPlotting(object):
 
         # Setting up plot axes
         if self.sect_offset_min is not None:
-            self.set_offset_lim(
-                left=self.__sect_offset_to_fraction(self._offset_min))
+            self.set_offset_lim(left=self._offset_min)
         if self.sect_offset_max is not None:
-            self.set_offset_lim(
-                right=self.__sect_offset_to_fraction(self._offset_max))
+            self.set_offset_lim(right=self._offset_max)
         # Set up offset ticks
-        tick_min, tick_max = \
-            self.__sect_fraction_to_offset(np.array(self.get_offset_lim()))
+        tick_min, tick_max = np.array(self.get_offset_lim())
         if tick_min != 0.0 and self.sect_plot_dx is not None:
             tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
         # Define tick vector for offset axis
-        if self.sect_plot_dx is None:
-            ticks = np.int_(np.linspace(tick_min, tick_max, 10))
-        else:
-            ticks = np.arange(tick_min, tick_max, self.sect_plot_dx)
+        ticks = None
+        if self.sect_plot_dx:
+            xmin, xmax = ax.get_xlim()
+            ticks = np.concatenate((
+                np.arange(-self.sect_plot_dx, xmin, -self.sect_plot_dx)[::-1],
+                np.arange(0, xmax, self.sect_plot_dx)))
             if len(ticks) > 100:
                 self.fig.clf()
                 msg = 'Too many ticks! Try changing plot_dx.'
                 raise ValueError(msg)
-        self.set_offset_ticks(self.__sect_offset_to_fraction(ticks))
+            self.set_offset_ticks(ticks)
         # Setting up tick labels
         self.set_time_label('Time [s]')
         if not self.sect_dist_degree:
             self.set_offset_label('Offset [km]')
-            self.set_offset_ticklabels(ticks / 1e3)
         else:
             self.set_offset_label(u'Offset [°]')
+        if ticks is not None:
             self.set_offset_ticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
@@ -1196,8 +1200,11 @@ class WaveformPlotting(object):
                 (self._tr_offsets <= self._offset_max))
         self._tr_offsets = self._tr_offsets[mask]
         self.stream = [tr for m, tr in zip(mask, self.stream) if m]
-        # Normalized offsets for plotting
-        self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
+        # Use km on distance axis, if not degrees
+        if not self.sect_dist_degree:
+            self._tr_offsets /= 1e3
+            self._offset_min /= 1e3
+            self._offset_max /= 1e3
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list
@@ -1229,9 +1236,11 @@ class WaveformPlotting(object):
     def __sect_scale_traces(self):
         """
         The traces have to be scaled to fit between 0-1., each trace
-        gets 1./num_traces space. adjustable by scale=1.0.
+        gets distance-range/num_traces space. adjustable by scale=1.0.
         """
-        self._sect_scale = self.sect_user_scale / (self._tr_num * 1.5)
+        self._sect_scale = (
+            (self._offset_max - self._offset_min) * self.sect_user_scale /
+            (self._tr_num * 1.5))
 
     def __sect_init_time(self):
         """
@@ -1266,12 +1275,6 @@ class WaveformPlotting(object):
         cmap = get_cmap('Paired', lut=len(colors))
         self.sect_color = {k: cmap(i) for i, k in enumerate(sorted(colors))}
 
-    def __sect_offset_to_fraction(self, offset):
-        """
-        Helper function to return offsets from fractions
-        """
-        return offset / self._tr_offsets.max()
-
     def __sect_fraction_to_offset(self, fraction):
         """
         Helper function to return fractions from offsets
@@ -1285,12 +1288,22 @@ class WaveformPlotting(object):
         """
         ax = self.fig.gca()
         # Matplotlib 1.5.x does not support interpolation on fill_betweenx
-        # Should be integrated by version 2.1 (see PR#6560)
+        # Should be integrated by version 2.1
+        # (see https://github.com/matplotlib/matplotlib/pull/6560)
+        fill_kwargs = {"lw": 0}
+        # There's a strange problem with matplotlib 1.4.1 and 1.4.2.
+        # It seems to not render the filled PolyCollection
+        # objects if linewidth is set to 0 (see http://tests.obspy.org/48219/,
+        # #1502). To circumvent this, use a line color with alpha 0 (and a very
+        # small linewidth).
+        if [1, 4, 1] <= MATPLOTLIB_VERSION < [1, 4, 3]:
+            fill_kwargs = {"edgecolor": (0, 0, 0, 0), "lw": 0.01}
+
         if self.sect_orientation == 'vertical':
-            self.fillfun = functools.partial(ax.fill_betweenx, lw=0)
+            self.fillfun = functools.partial(ax.fill_betweenx, **fill_kwargs)
         else:
-            self.fillfun = functools.partial(ax.fill_between, lw=0,
-                                             interpolate=True)
+            self.fillfun = functools.partial(ax.fill_between, interpolate=True,
+                                             **fill_kwargs)
         # Calculate normalizing factor
         self.__sect_normalize_traces()
         # Calculate scaling factor
@@ -1301,7 +1314,7 @@ class WaveformPlotting(object):
             # Scale, normalize and shift traces by offset for plotting
             data = ((self._tr_data[_tr] / self._tr_normfac[_tr] *
                      self._sect_scale) +
-                    self._tr_offsets_norm[_tr])
+                    self._tr_offsets[_tr])
             time = self._tr_times[_tr]
             if self.sect_orientation == 'vertical':
                 lines += ax.plot(data, time)
@@ -1311,12 +1324,12 @@ class WaveformPlotting(object):
                 raise NotImplementedError("sect_orientiation '%s' is not "
                                           "valid." % self.sect_orientation)
             if self.fillcolor_pos:
-                self.fillfun(time, data, self._tr_offsets_norm[_tr],
-                             where=data > self._tr_offsets_norm[_tr],
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data > self._tr_offsets[_tr],
                              facecolor=self.fillcolor_pos)
             if self.fillcolor_neg:
-                self.fillfun(time, data, self._tr_offsets_norm[_tr],
-                             where=data < self._tr_offsets_norm[_tr],
+                self.fillfun(time, data, self._tr_offsets[_tr],
+                             where=data < self._tr_offsets[_tr],
                              facecolor=self.fillcolor_neg)
 
         # Set correct axes orientation

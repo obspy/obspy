@@ -28,6 +28,7 @@ import numpy as np
 import obspy
 from obspy.core.compatibility import mock
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.clients.fdsn import Client
 from obspy.clients.fdsn.mass_downloader import (domain, Restrictions,
                                                 MassDownloader)
 from obspy.clients.fdsn.mass_downloader.utils import (
@@ -321,7 +322,8 @@ class DownloadHelpersUtilTestCase(unittest.TestCase):
         c2 = Channel("10", "SHE", time_intervals)
         c3 = Channel("00", "BHZ", time_intervals)
         c4 = Channel("", "HHE", time_intervals)
-        channels = [c1, c2, c3, c4]
+        c5 = Channel("", "ELZ", time_intervals)
+        channels = [c1, c2, c3, c4, c5]
 
         filtered_channels = filter_channel_priority(
             channels, key="channel", priorities=[
@@ -1250,11 +1252,13 @@ class StationTestCase(unittest.TestCase):
         logger = mock.MagicMock()
 
         with mock.patch("obspy.clients.fdsn.mass_downloader"
-                        ".utils.safe_delete") as p:
+                        ".utils.safe_delete") as p1, \
+                mock.patch("obspy.io.mseed.util.get_start_and_end_time") as p2:
+            p2.return_value = (obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             # By default, nothing will happen.
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 0)
-            p.reset_mock()
+            self.assertEqual(p1.call_count, 0)
+            p1.reset_mock()
 
             # The whole purpose of the method is to make sure that each
             # MiniSEED files has a corresponding StationXML file. MiniSEED
@@ -1269,18 +1273,19 @@ class StationTestCase(unittest.TestCase):
             # Right now no channel has been marked missing, thus nothing should
             # happen.
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 0)
-            p.reset_mock()
+            self.assertEqual(p1.call_count, 0)
+            p1.reset_mock()
 
             # Mark one as missing and the corresponding information should
             # be deleted
-            station.miss_station_information[("", "BHZ")] = True
+            station.miss_station_information[("", "BHZ")] = (
+                obspy.UTCDateTime(1), obspy.UTCDateTime(2))
             station.sanitize_downloads(logger)
-            self.assertEqual(p.call_count, 2)
+            self.assertEqual(p1.call_count, 2)
             # The status of the channel should be adjusted
             self.assertEqual(c1.intervals[0].status, STATUS.DOWNLOAD_REJECTED)
             self.assertEqual(c1.intervals[1].status, STATUS.DOWNLOAD_REJECTED)
-            p.reset_mock()
+            p1.reset_mock()
 
     def test_prepare_mseed_download(self):
         """
@@ -2520,6 +2525,41 @@ class DownloadHelperTestCase(unittest.TestCase):
         self.assertFalse("RESIF" in d._initialized_clients)
         self.assertFalse("GFZ" in d._initialized_clients)
         self.assertTrue("ORFEUS" in d._initialized_clients)
+
+    @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
+                autospec=True)
+    @mock.patch("logging.Logger.info")
+    @mock.patch("logging.Logger.warning")
+    def test_initialization_with_existing_clients(self, log_w, log_p, patch):
+        def side_effect(self, *args, **kwargs):
+            self.services = {"dataselect": "dummy", "station": "dummy"}
+        patch.side_effect = side_effect
+
+        client = Client("IRIS", user="random", password="something")
+
+        self.assertEqual(patch.call_count, 1)
+        patch.reset_mock()
+        self.assertEqual(patch.call_count, 0)
+
+        # Make sure to not change the log-level but also to hide the log
+        # output for the tests.
+        logger = logging.getLogger("obspy.clients.fdsn.mass_downloader")
+        _l = logger.level
+        logger.setLevel(logging.CRITICAL)
+        try:
+            d = MassDownloader(providers=["GFZ", client, "ORFEUS"])
+        finally:
+            logger.setLevel(_l)
+
+        # Should have been called twice.
+        self.assertEqual(patch.call_count, 2)
+
+        self.assertEqual(
+            list(d._initialized_clients.keys()),
+            ['GFZ', 'http://service.iris.edu', 'ORFEUS'])
+        # Make sure it is the same object.
+        self.assertIs(d._initialized_clients["http://service.iris.edu"],
+                      client)
 
     @mock.patch("obspy.clients.fdsn.client.Client._discover_services",
                 autospec=True)
