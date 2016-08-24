@@ -1716,7 +1716,8 @@ class Response(ComparingObject):
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
 
-def response_from_respfile(sensor_resp_file, datalogger_resp_file, frequency=None):
+def response_from_respfile(sensor_resp_file, datalogger_resp_file,
+                           frequency=None):
     """
     Returns a Response object from 2 RESP files from the NRL
     Calls response_from_resp() with data read from files
