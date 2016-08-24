@@ -26,6 +26,7 @@ from time import strftime, strptime, gmtime
 from obspy.core import inventory
 from obspy.core.inventory.util import Site
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.io.resp.nrl import NRL
 
 
 class SeisTime:
@@ -527,12 +528,25 @@ def make_inventory(manifest):
     inv = inventory.Inventory(net_list, source='PIC')
     return inv
 
+def attach_response(inv, sensor_nick, dl_nick, gain):
+    # inv is populated inventory object lacking responses
+    # will add sensor & dl to all channels
+    nrl = NRL(local=False)
+    for net in inv.networks:
+        for sta in net.stations:
+            for chan in sta.channels:
+                sr = chan.sample_rate
+                sens_resp = nrl.sensor_from_short(sensor_nick)
+                dl_resp = nrl.datalogger_from_short(dl_nick, gain, sr)
+                inv_resp = inventory.response.response_from_resp(sens_resp, dl_resp)
+                chan.response = inv_resp
+
 
 def inventory_from_mseed(directory, sens_resp, dl_resp):
     manifest = get_manifest_of_dir(directory)
     inv = make_inventory(manifest)
     # Attach response to inventory
-    inv_resp = inventory.response.response_from_resp(sens_resp, dl_resp)
+    inv_resp = inventory.response.response_from_respfile(sens_resp, dl_resp)
     inv_of_wf = inv.select(channel='CH*')
     for net in inv_of_wf.networks:
         for sta in net.stations:
@@ -560,6 +574,8 @@ if __name__ == '__main__':
     print('Currently works for multiple stations, but only 1 response '
           'with 1 sample rate '
           'i.e. 1 datalogger/sens resp.')
+    print('Dataloggers:', ', '.join(NRL.dl_shortcuts.keys()))
+    print('Sensors:', ', '.join(NRL.sensor_shortcuts.keys()))
     print()
 
 
@@ -567,14 +583,23 @@ if __name__ == '__main__':
         description='Creates StationXML from NRLresps and mseed. '
         'Can use multiple stations but only 1 channel response.')
     parser.add_argument('msfile', nargs='+', help='MS file to scan.')
-    parser.add_argument('-s', dest='sensor_resp')
-    parser.add_argument('-d', dest='datalogger_resp')
+    parser.add_argument('-s', dest='sensor_nick', required=True)
+    parser.add_argument('-d', dest='datalogger_nick', required=True)
+    parser.add_argument('-g', dest='gain', required=False, default=1, type=int)
     parser.add_argument('-o', dest='outfile')
+    # parser.epilog = 'DL names: ' + ', '.join(
+        # dl for dl in NRL.dl_shortcuts.keys())
+    # parser.epilog += ' Sensor names: ' + ', '.join(
+        # s for s in NRL.sensor_shortcuts.keys())
     args = parser.parse_args()
 
     manifest = get_manifest_of_filelist(args.msfile)
     inv = make_inventory(manifest)
-    inv_resp = inventory.response.response_from_resp(args.sensor_resp, args.datalogger_resp)
+    # inv_resp = inventory.response.response_from_respfile(args.sensor_resp, args.datalogger_resp)
+
+    attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
+
+
 
     # Only one response so all channels must be the same
     print('Original inv:')

@@ -19,55 +19,54 @@ import re
 
 from obspy.io.xseed import (parser, blockette, fields)
 
-DEBUG = True
+DEBUG = False
 
 
-def read_resp(filename):
-    with open(filename) as respfile:
-        # List of blockettes which is a list of fields
-        blockettelist = list()
-        # List of fields
-        blockettefieldlist = list()
-        last_blockette_id = None
-        for line in respfile:
-            # print(line, end='')
-            m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
-            if m:
-                g = m.groups()
-                blockette_number = g[0]
-                if blockette_number != last_blockette_id:
-                    # A new blockette starting
-                    if len(blockettefieldlist) > 0:
-                        # print("new blockette")
-                        blockettelist.append(blockettefieldlist)
-                        blockettefieldlist = list()
-                    last_blockette_id = blockette_number
-                if not g[2]:
-                    # Single field per line
-                    value = re.search(r":\s*(\S*)", g[3]).groups()[0]
-                    # print( (blockette_number, g[1], value) )
-                    blockettefieldlist.append((blockette_number, g[1], value))
-                else:
-                    # Multiple fields per line
-                    first_field = int(g[1])
-                    last_field = int(g[2])
-                    fields = g[3].split()
-                    values = fields[-(last_field - first_field + 1):]
-                    for i, value in enumerate(values):
-                        # print( (blockette_number, first_field + i, value) )
-                        blockettefieldlist.append(
-                            (blockette_number, first_field + i, value))
-            elif re.match(r"^#.*\+", line):
-                # Comment line with a + in it means blockette is
-                # finished start a new one
+def read_resp(data):
+    # List of blockettes which is a list of fields
+    blockettelist = list()
+    # List of fields
+    blockettefieldlist = list()
+    last_blockette_id = None
+    for line in data.splitlines():
+        # print(line, end='')
+        m = re.match(r"^B(\d+)F(\d+)(?:-(\d+))?(.*)", line)
+        if m:
+            g = m.groups()
+            blockette_number = g[0]
+            if blockette_number != last_blockette_id:
+                # A new blockette starting
                 if len(blockettefieldlist) > 0:
                     # print("new blockette")
                     blockettelist.append(blockettefieldlist)
                     blockettefieldlist = list()
-                # print()
-        # Add last blockette
-        if len(blockettefieldlist) > 0:
-            blockettelist.append(blockettefieldlist)
+                last_blockette_id = blockette_number
+            if not g[2]:
+                # Single field per line
+                value = re.search(r":\s*(\S*)", g[3]).groups()[0]
+                # print( (blockette_number, g[1], value) )
+                blockettefieldlist.append((blockette_number, g[1], value))
+            else:
+                # Multiple fields per line
+                first_field = int(g[1])
+                last_field = int(g[2])
+                fields = g[3].split()
+                values = fields[-(last_field - first_field + 1):]
+                for i, value in enumerate(values):
+                    # print( (blockette_number, first_field + i, value) )
+                    blockettefieldlist.append(
+                        (blockette_number, first_field + i, value))
+        elif re.match(r"^#.*\+", line):
+            # Comment line with a + in it means blockette is
+            # finished start a new one
+            if len(blockettefieldlist) > 0:
+                # print("new blockette")
+                blockettelist.append(blockettefieldlist)
+                blockettefieldlist = list()
+            # print()
+    # Add last blockette
+    if len(blockettefieldlist) > 0:
+        blockettelist.append(blockettefieldlist)
     return blockettelist
 
 

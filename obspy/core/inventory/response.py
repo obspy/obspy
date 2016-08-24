@@ -1710,16 +1710,27 @@ class Response(ComparingObject):
         return paz_to_sacpz_string(paz, self.instrument_sensitivity)
 
 
-def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
+def response_from_respfile(sensor_resp_file, datalogger_resp_file, frequency=None):
+    """
+    Returns a Response object from 2 RESP files from the NRL
+    Calls response_from_resp() with data read from files
+    """
+    with open(sensor_resp_file, 'r') as sf:
+        with open(datalogger_resp_file, 'r') as df:
+            return response_from_resp(sf.read(), df.read(),
+                                      frequency=frequency)
+
+
+def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
     """
     Returns a Response object built using a sensor,
     and datalogger NRL type RESP format file.
     Many caveats and assumptions; Only tested with subset of NRL RESP files
     for VEL instruments. Does not handle blockettes 61,62
     :type sensor_resp_file: str
-    :param sensor_resp_file: Filename of NRL RESP for sensor
+    :param sensor_resp_file: Contents of NRL RESP for sensor
     :type datalogger_resp_file: str
-    :param datalogger_resp_file: Filename of NRL RESP for datalogger
+    :param datalogger_resp_file: Contents of NRL RESP for datalogger
     :type frequency: float, optional
     :param frequency: Frequency of gain to calculate stage0 gain.
     """
@@ -1743,9 +1754,9 @@ def response_from_resp(sensor_resp_file, datalogger_resp_file, frequency=None):
     def lookup_unit(abbr, lookup):
         return lookup_code(abbr, 34, 'unit_name', 'unit_lookup_code', lookup)
 
-    sensor_blockettelist = parser.read_resp(sensor_resp_file)
+    sensor_blockettelist = parser.read_resp(sensor_resp_data)
     sensor_xseedparser = parser.make_xseed(sensor_blockettelist)
-    dl_blockettelist = parser.read_resp(datalogger_resp_file)
+    dl_blockettelist = parser.read_resp(datalogger_resp_data)
     dl_xseedparser = parser.make_xseed(dl_blockettelist)
 
     resp_stages = list()
