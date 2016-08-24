@@ -571,9 +571,8 @@ if __name__ == '__main__':
     from argparse import ArgumentParser, FileType
     VERSION = '2016.218'
 
-    print('Currently works for multiple stations, but only 1 response '
-          'with 1 sample rate '
-          'i.e. 1 datalogger/sens resp.')
+    print('Currently works for multiple stations, '
+          'but only 1 das, sensor, gain combination.')
     print('Dataloggers:', ', '.join(NRL.dl_shortcuts.keys()))
     print('Sensors:', ', '.join(NRL.sensor_shortcuts.keys()))
     print()
@@ -599,26 +598,7 @@ if __name__ == '__main__':
 
     attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
 
-
-
-    # Only one response so all channels must be the same
-    print('Original inv:')
-    print(inv)
-    print()
-
-    # Use the first channel code found, and filter for just that code
-    chan_glob = inv.networks[0].stations[0].channels[0].code[:2]
-
-    inv = inv.select(channel=chan_glob + '*')
-    print('Creating StationXML for %(chan_glob)s*' % locals())
-    print(inv)
-    print()
-    for net in inv.networks:
-        for sta in net.stations:
-            for chan in sta.channels:
-                chan.response = inv_resp
-    print(inv)
-    netcodes = '^'.join(net.code for net in inv.networks)
+    netcodes = '_'.join(net.code for net in inv.networks)
     if args.outfile is None:
-        outfile = '%(netcodes)s.%(chan_glob)s_.xml' % locals()
+        outfile = '%(netcodes)s.xml' % locals()
     inv.write(outfile, format='STATIONXML')
