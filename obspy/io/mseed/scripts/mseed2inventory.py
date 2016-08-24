@@ -21,7 +21,6 @@ from operator import attrgetter
 from os import walk
 from os.path import join, isfile, getsize
 from struct import Struct
-from sys import argv
 from time import strftime, strptime, gmtime
 from obspy.core import inventory
 from obspy.core.inventory.util import Site
@@ -427,6 +426,7 @@ def get_manifest_of_dir(dir):
     print("MSEED:", numseed)
     return manifest
 
+
 def get_manifest_of_filelist(filelist):
     '''
     Similar to get_manifest_of_dir but takes a list file names.
@@ -528,6 +528,7 @@ def make_inventory(manifest):
     inv = inventory.Inventory(net_list, source='PIC')
     return inv
 
+
 def attach_response(inv, sensor_nick, dl_nick, gain):
     # inv is populated inventory object lacking responses
     # will add sensor & dl to all channels
@@ -538,7 +539,8 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
                 sr = chan.sample_rate
                 sens_resp = nrl.sensor_from_short(sensor_nick)
                 dl_resp = nrl.datalogger_from_short(dl_nick, gain, sr)
-                inv_resp = inventory.response.response_from_resp(sens_resp, dl_resp)
+                inv_resp = inventory.response.response_from_resp(
+                    sens_resp, dl_resp)
                 chan.response = inv_resp
 
 
@@ -555,20 +557,8 @@ def inventory_from_mseed(directory, sens_resp, dl_resp):
     return inv
 
 if __name__ == '__main__':
-    # hardcoded testing
-    # sensRESP = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
-                # 'tool/PDCC-3.8/NRL/edu.iris/sensors/guralp'
-                # '/RESP.XX.NS007..BHZ.CMG3T.120.1500')
-    # dl_resp = ('/Users/lloyd/work/workMOONBASE/PDCC/2015/FULL PDCC '
-               # 'tool/PDCC-3.8/NRL/edu.iris/dataloggers/reftek'
-               # '/RESP.XX.NR012..HHZ.130.1.500')
-    # inv = inventory_from_mseed(argv[1], sensRESP, dl_resp)
-    # print(inv)
-    # inv.write('XE.station.xml', format='STATIONXML')
-
-
     # Command arg, and inputs
-    from argparse import ArgumentParser, FileType
+    from argparse import ArgumentParser
     VERSION = '2016.218'
 
     print('Currently works for multiple stations, '
@@ -576,7 +566,6 @@ if __name__ == '__main__':
     print('Dataloggers:', ', '.join(NRL.dl_shortcuts.keys()))
     print('Sensors:', ', '.join(NRL.sensor_shortcuts.keys()))
     print()
-
 
     parser = ArgumentParser(
         description='Creates StationXML from NRLresps and mseed. '
@@ -586,16 +575,10 @@ if __name__ == '__main__':
     parser.add_argument('-d', dest='datalogger_nick', required=True)
     parser.add_argument('-g', dest='gain', required=False, default=1, type=int)
     parser.add_argument('-o', dest='outfile')
-    # parser.epilog = 'DL names: ' + ', '.join(
-        # dl for dl in NRL.dl_shortcuts.keys())
-    # parser.epilog += ' Sensor names: ' + ', '.join(
-        # s for s in NRL.sensor_shortcuts.keys())
     args = parser.parse_args()
 
     manifest = get_manifest_of_filelist(args.msfile)
     inv = make_inventory(manifest)
-    # inv_resp = inventory.response.response_from_respfile(args.sensor_resp, args.datalogger_resp)
-
     attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
 
     netcodes = '_'.join(net.code for net in inv.networks)

@@ -97,7 +97,7 @@ class NRL:
 
     def read_resp_local(self, path):
         # Returns Unicode string of RESP
-        with open(path,'r') as f:
+        with open(path, 'r') as f:
             return f.read()
 
     def read_resp_url(self, url):
@@ -151,7 +151,8 @@ class NRL:
         """
         Returns a unicode string of contents of RESP file
         """
-        return self.read_resp(self.datalogger_path_from_short(shortname, gain, sr))
+        return self.read_resp(self.datalogger_path_from_short(
+            shortname, gain, sr))
 
     def sensor_path(self, answers):
         # Returns path of response file

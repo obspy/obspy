@@ -5,10 +5,8 @@ from future.builtins import *  # NOQA
 
 import unittest
 
-import os
-
-from obspy.io.resp.nrl import NRL
-from obspy.io.resp.parser import read_resp
+# from obspy.io.resp.nrl import NRL
+# from obspy.io.resp.parser import read_resp
 
 
 class ParserTestCase(unittest.TestCase):
@@ -17,6 +15,7 @@ class ParserTestCase(unittest.TestCase):
 
     """
     pass
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
