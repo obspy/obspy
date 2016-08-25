@@ -533,14 +533,23 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
     # inv is populated inventory object lacking responses
     # will add sensor & dl to all channels
     nrl = NRL(local=False)
+    # Cache responses computed to reuse key (sens_nick, dl_nick, gain, sr)
+    resp_dict = {}
     for net in inv.networks:
         for sta in net.stations:
             for chan in sta.channels:
                 sr = chan.sample_rate
                 sens_resp = nrl.sensor_from_short(sensor_nick)
                 dl_resp = nrl.datalogger_from_short(dl_nick, gain, sr)
-                inv_resp = inventory.response.response_from_resp(
-                    sens_resp, dl_resp)
+                # Check cache before expensive computation
+                if resp_dict.has_key((sensor_nick, dl_nick, gain, sr)):
+                    # Use cached response
+                    inv_resp = resp_dict[(sensor_nick, dl_nick, gain, sr)]
+                else:
+                    # Response not computed create and cache.
+                    inv_resp = inventory.response.response_from_resp(
+                        sens_resp, dl_resp)
+                    resp_dict[(sensor_nick, dl_nick, gain, sr)] = inv_resp
                 chan.response = inv_resp
 
 
