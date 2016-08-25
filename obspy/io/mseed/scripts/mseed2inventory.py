@@ -593,4 +593,6 @@ if __name__ == '__main__':
     netcodes = '_'.join(net.code for net in inv.networks)
     if args.outfile is None:
         outfile = '%(netcodes)s.xml' % locals()
+    else:
+        outfile = args.outfile
     inv.write(outfile, format='STATIONXML')
