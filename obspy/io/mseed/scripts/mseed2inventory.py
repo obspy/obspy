@@ -591,8 +591,5 @@ if __name__ == '__main__':
     attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
 
     netcodes = '_'.join(net.code for net in inv.networks)
-    if args.outfile is None:
-        outfile = '%(netcodes)s.xml' % locals()
-    else:
-        outfile = args.outfile
+    outfile = args.outfile or '%(netcodes)s.xml' % locals()
     inv.write(outfile, format='STATIONXML')
