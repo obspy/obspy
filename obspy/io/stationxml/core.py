@@ -1328,7 +1328,7 @@ def _obj2tag(parent, tag_name, tag_value):
 
 
 def _format_time(value):
-    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    return value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
 
 
 # Remove once 0.11 has been released.
