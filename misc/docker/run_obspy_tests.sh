@@ -5,6 +5,8 @@ DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
+DOCKER_REPOSITORY=obspy-tests
+
 # Parse the additional args later passed to `obspy-runtests` in
 # the docker images.
 extra_args=""
@@ -122,12 +124,12 @@ list_not_contains() {
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$($DOCKER images | grep obspy | grep $image_name)
+    has_image=$($DOCKER images | grep ${DOCKER_REPOSITORY} | grep $image_name)
     if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
         printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
-        $DOCKER build -t obspy:$image_name $image_path
+        $DOCKER build -t ${DOCKER_REPOSITORY}:$image_name $image_path
     fi
 }
 
@@ -190,7 +192,7 @@ done
 printf "\n\e[44m\e[30mSTEP 2: EXECUTING THE TESTS\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images | grep obspy | awk '{print $2}'); do
+for image_name in $($DOCKER images | grep ${DOCKER_REPOSITORY} | awk '{print $2}'); do
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
