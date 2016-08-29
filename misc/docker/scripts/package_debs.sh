@@ -11,7 +11,7 @@ cd /obspy/misc/debian
 # option.
 set -o pipefail
 
-./deb__build_debs.sh | tee /LOG.txt
+./deb__build_debs.sh $1 2>&1 | tee /LOG.txt
 if [ $? != 0 ]; then
     echo -e "${red}Deb packaging failed!${no_color}"
     touch /failure

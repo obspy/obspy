@@ -16,6 +16,7 @@ while getopts "t:" opt; do
         SHA=${TARGET[1]}
         TARGET=true
         OBSPY_DOCKER_TEST_SOURCE_TREE="clone"
+        extra_args=', "-f '$REPO' -t '$SHA'"'
         ;;
     esac
 done
@@ -130,7 +131,7 @@ package_debs_on_image () {
     image_name=$1;
     printf "\n\e[101m\e[30m  >>> Packaging debs for image '"$image_name"'...\e[0m\n"
     # Copy dockerfile and render template.
-    sed "s#{{IMAGE_NAME}}#$image_name#g" scripts/Dockerfile_package_debs.tmpl > $TEMP_PATH/Dockerfile
+    sed "s#{{IMAGE_NAME}}#$image_name#g; s#{{EXTRA_ARGS}}#$extra_args#g" scripts/Dockerfile_package_debs.tmpl > $TEMP_PATH/Dockerfile
 
     # Where to save the logs, and a random ID for the containers.
     LOG_DIR=${LOG_DIR_BASE}/$image_name
@@ -166,7 +167,7 @@ for image_name in ${DOCKER_IMAGES}; do
 done
 
 
-# 2. Execute the ObsPy
+# 2. Build ObsPy Deb packages
 printf "\n\e[44m\e[30mSTEP 2: BUILDING DEB PACKAGES\e[0m\n"
 
 # Loop over all ObsPy Docker images.
