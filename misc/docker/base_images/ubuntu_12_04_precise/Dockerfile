@@ -22,5 +22,9 @@ RUN apt-get install -y python
 RUN apt-get install -y python python-dev python-setuptools python-support python-numpy lsb-release gfortran gcc
 RUN apt-get install -y vim git fakeroot equivs lintian help2man quilt git
 RUN apt-get install -y ttf-bitstream-vera
-RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-suds python-sqlalchemy python-nose python-flake8 python-setuptools python-imaging python-mock python-decorator python-requests python-tornado
+RUN apt-get install -y python-matplotlib python-numpy python-scipy python-lxml python-suds python-sqlalchemy python-nose python-setuptools python-imaging python-mock python-decorator python-requests python-tornado
 RUN apt-get install -y debhelper python-all devscripts
+
+# install fake future packages, so that we can properly install built obspy deb
+# packages to test them (we install future via pip)
+RUN cd /tmp && echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb
