@@ -25,9 +25,9 @@ shift $(expr $OPTIND - 1 )
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
 {
-# Delete all but the last 15 log directories. The `+16` is intentional. Fully
+# Delete all but the last 5 log directories. The `+6` is intentional. Fully
 # POSIX compliant version adapted from http://stackoverflow.com/a/34862475/1657047
-ls -tp logs | tail -n +16 | xargs -I % rm -rf -- logs/%
+ls -tp logs | tail -n +6 | xargs -I % rm -rf -- logs/%
 
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
