@@ -2,7 +2,8 @@
 
 CURDIR=`pwd`
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-LOG_DIR_BASE=logs/$DATETIME
+LOG_DIR_ROOT=logs/run_tests
+LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
 DOCKER_REPOSITORY=obspy
@@ -29,7 +30,7 @@ shift $(expr $OPTIND - 1 )
 {
 # Delete all but the last 15 log directories. The `+16` is intentional. Fully
 # POSIX compliant version adapted from http://stackoverflow.com/a/34862475/1657047
-ls -tp logs | tail -n +16 | xargs -I % rm -rf -- logs/%
+ls -tp $LOG_DIR_ROOT | tail -n +16 | xargs -I % rm -rf -- $LOG_DIR_ROOT/%
 
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 

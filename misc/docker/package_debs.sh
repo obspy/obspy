@@ -2,7 +2,8 @@
 
 CURDIR=`pwd`
 DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-LOG_DIR_BASE=logs/$DATETIME
+LOG_DIR_ROOT=logs/package_debs
+LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
 DOCKER_REPOSITORY=obspy
@@ -25,9 +26,9 @@ shift $(expr $OPTIND - 1 )
 # This bracket is closed at the very end and causes a redirection of everything
 # to the logfile as well as stdout.
 {
-# Delete all but the last 5 log directories. The `+6` is intentional. Fully
+# Delete all but the last 3 log directories. The `+4` is intentional. Fully
 # POSIX compliant version adapted from http://stackoverflow.com/a/34862475/1657047
-ls -tp logs | tail -n +6 | xargs -I % rm -rf -- logs/%
+ls -tp $LOG_DIR_ROOT | tail -n +4 | xargs -I % rm -rf -- $LOG_DIR_ROOT/%
 
 OBSPY_PATH=$(dirname $(dirname $(pwd)))
 
