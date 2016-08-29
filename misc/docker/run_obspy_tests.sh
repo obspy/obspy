@@ -5,7 +5,7 @@ DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-DOCKER_REPOSITORY=obspy-tests
+DOCKER_REPOSITORY=obspy
 
 # Parse the additional args later passed to `obspy-runtests` in
 # the docker images.
