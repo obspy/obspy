@@ -11,16 +11,16 @@ cd /obspy/misc/debian
 # option.
 set -o pipefail
 
-./deb__build_debs.sh $1 2>&1 | tee /LOG.txt
+./deb__build_debs.sh $1 2>&1 | tee /BUILD_LOG.txt
 if [ $? != 0 ]; then
     echo -e "${red}Deb packaging failed!${no_color}"
     touch /failure
 else
     echo -e "${green}Deb packaging successful!${no_color}"
     touch /success
-    dpkg -i /tmp/python-obspy_build/packages/python-obspy-dbg_*.deb 2>&1 | tee --append /LOG.txt
-    dpkg -i /tmp/python-obspy_build/packages/python-obspy_*.deb && apt-get install -f && obspy-runtests -r --keep-images --no-flake8 --node=docker-deb-$(cat /container_name.txt) 2>&1 | tee --append /LOG.txt
-    dpkg -i /tmp/python-obspy_build/packages/python3-obspy_*.deb && apt-get install -f && obspy3-runtests -r --keep-images --no-flake8 --node=docker-deb-$(cat /container_name.txt) 2>&1 | tee --append /LOG.txt
+    dpkg -i /tmp/python-obspy_build/packages/python-obspy-dbg_*.deb 2>&1 | tee /TEST_LOG.txt
+    dpkg -i /tmp/python-obspy_build/packages/python-obspy_*.deb && apt-get install -f && obspy-runtests -r --keep-images --no-flake8 --node=docker-deb-$(cat /container_name.txt) 2>&1 | tee --append /TEST_LOG.txt
+    dpkg -i /tmp/python-obspy_build/packages/python3-obspy_*.deb && apt-get install -f && obspy3-runtests -r --keep-images --no-flake8 --node=docker-deb-$(cat /container_name.txt) 2>&1 | tee --append /TEST_LOG.txt
 fi
 
 echo "Done with everything!"

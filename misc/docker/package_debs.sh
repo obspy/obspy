@@ -142,7 +142,8 @@ package_debs_on_image () {
 
     $DOCKER run --name=$ID temp:temp
 
-    $DOCKER cp $ID:/LOG.txt $LOG_DIR
+    $DOCKER cp $ID:/BUILD_LOG.txt $LOG_DIR
+    $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/failure $LOG_DIR
     $DOCKER cp $ID:/success $LOG_DIR
 
