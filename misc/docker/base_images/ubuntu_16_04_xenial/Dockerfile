@@ -2,6 +2,11 @@ FROM ubuntu:16.04
 
 MAINTAINER Lion Krischer
 
+# Set the env variables to non-interactive
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_PRIORITY critical
+ENV DEBCONF_NOWARNINGS yes
+
 # installation for running tests in docker image
 # Can fail on occasion.
 RUN apt-get update && apt-get upgrade -y || true
