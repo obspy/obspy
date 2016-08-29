@@ -5,6 +5,9 @@ DATETIME=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
 LOG_DIR_BASE=logs/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
+DOCKER_REPOSITORY=obspy-deb-packaging
+DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_8_jessie ubuntu_12_04_precise ubuntu_14_04_trusty ubuntu_16_04_xenial"
+
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
 while getopts "t:" opt; do
     case "$opt" in
@@ -112,17 +115,17 @@ list_not_contains() {
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$($DOCKER images | grep deb-packaging | grep $image_name)
+    has_image=$($DOCKER images | grep ${DOCKER_REPOSITORY} | grep $image_name)
     if [ "$has_image" ]; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
         printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
-        $DOCKER build -t deb-packaging:$image_name $image_path
+        $DOCKER build -t ${DOCKER_REPOSITORY}:$image_name $image_path
     fi
 }
 
 
-# Function running test on an image.
+# Function building deb packages on an image.
 package_debs_on_image () {
     image_name=$1;
     printf "\n\e[101m\e[30m  >>> Packaging debs for image '"$image_name"'...\e[0m\n"
@@ -152,8 +155,8 @@ package_debs_on_image () {
 # 1. Build all the base images if they do not yet exist.
 printf "\e[44m\e[30mSTEP 1: CREATING BASE IMAGES\e[0m\n"
 
-for image_path in $DOCKERFILE_FOLDER/*; do
-    image_name=$(basename $image_path)
+for image_name in ${DOCKER_IMAGES}; do
+    image_path=${DOCKERFILE_FOLDER}/${image_name}
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
@@ -164,10 +167,10 @@ done
 
 
 # 2. Execute the ObsPy
-printf "\n\e[44m\e[30mSTEP 2: EXECUTING THE TESTS\e[0m\n"
+printf "\n\e[44m\e[30mSTEP 2: BUILDING DEB PACKAGES\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images | grep deb-packaging | awk '{print $2}'); do
+for image_name in $($DOCKER images | grep ${DOCKER_REPOSITORY} | awk '{print $2}'); do
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
