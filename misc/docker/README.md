@@ -1,67 +1,29 @@
-# ObsPy Test Runner on Docker Images
+# ObsPy Docker Utilities
 
 This directory contains a collections of scripts and Dockerfiles enabling
-developers to test ObsPy on various Unix based operating systems.
+developers to..
+
+ * test ObsPy on various Unix based operating systems, and
+ * build ObsPy deb packages on Debian/Ubuntu distributions
 
 It requires a working installation of [Docker](https://www.docker.com/). It has
 been designed to work with a remote Docker installation so it works fine on OSX
 and I guess Windows as well.
 
-The `run_obspy_tests.sh` script will test the **current state of the
-repository** on the specified Docker image. The following command will execute
-the ObsPy test suite on a CentOS 7 image.
 
+## 1. ObsPy Test Runner on Docker Images
 
-```bash
-$ ./run_obspy_tests.sh centos_7
-```
+The `run_obspy_tests.sh` script will test either
 
-Running it without any commands will execute the test suite on all available images.
+ * the **current state of the repository** on the specified Docker image, or..
+ * test a clean github clone at a certain commit from either the main
+   repository or a fork.
 
-```bash
-$ ./run_obspy_tests.sh
-```
+Test reports will be sent automatically to
+[http://tests.obspy.org](http://tests.obspy.org).
 
-Additionally arguments can be passed to `obspy-runtests` in the Docker images
-with the `-e` argument. To for example only the MiniSEED test suite on CentOS
-7, do:
-
-```bash
-$ ./run_obspy_tests.sh -eio.mseed centos_7
-```
-Or to also provide a pull request url to `obspy-runtests` with the `-e`
-argument and using quotes (including bash variable replacement) to mark the
-start and end of the `-e` option, do (again with just a single distribution)
-the following:
-
-```bash
-$ export PR=1460
-$ ./run_obspy_tests.sh -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" centos_7
-```
-
-A specific commit from a specific obspy fork (or main repo) can be tested using
-the `-t` (for "target") argument.
-
-Make sure to use the `-e` argument before the list of images to run on.
-
-```bash
-$ # test a commit that is in the obspy main repo
-$ ./run_obspy_tests.sh -tobspy:bdc6dd855c00c831bcc007b607d83f6070b5b1c0
-$ # test a commit that only exists in a fork (but might be the tip of a PR)
-$ ./run_obspy_tests.sh -tclaudiodsf:2fa3d3bdaded126a9ebdaf73cf60403c1acb3457
-```
-
-Make sure to use the `-t` argument before the list of images to run on.
-
-The `-t` and `-e` options can also be combined, e.g.:
-
-```bash
-$ # see http://tests.obspy.org/46691/ for the result of this command:
-$ ./run_obspy_tests.sh -ttrichter:e6da3ddb5 -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" fedora_24
-```
-
-If the image is not yet available it will be created automatically. The
-`base_images` directory contains all available images receipts.
+If the respective image is not yet available it will be created automatically.
+The `base_images` directory contains all available images receipts.
 
 ```bash
 $ ls base_images
@@ -94,4 +56,109 @@ logs
     │   ├── INSTALL_LOG.txt
     │   └── TEST_LOG.txt
     ...
+```
+
+### a) Testing the Current State of the local Repository
+
+The following command will execute the ObsPy test suite on a CentOS 7 image.
+
+
+```bash
+$ ./run_obspy_tests.sh centos_7
+```
+
+Running it without any commands will execute the test suite on all available images.
+
+```bash
+$ ./run_obspy_tests.sh
+```
+
+Additionally arguments can be passed to `obspy-runtests` in the Docker images
+with the `-e` argument. To for example only the MiniSEED test suite on CentOS
+7, do:
+
+```bash
+$ ./run_obspy_tests.sh -eio.mseed centos_7
+```
+Or to also provide a pull request url to `obspy-runtests` with the `-e`
+argument and using quotes (including bash variable replacement) to mark the
+start and end of the `-e` option, do (again with just a single distribution)
+the following:
+
+```bash
+$ export PR=1460
+$ ./run_obspy_tests.sh -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" centos_7
+```
+
+### b) Testing a Certain Clean Commit State of a Remote Repository
+
+A specific commit from a specific obspy fork (or main repo) can be tested using
+the `-t` (for "target") argument.
+
+Make sure to use the `-e` argument before the list of images to run on.
+
+```bash
+$ # test a commit that is in the obspy main repo
+$ ./run_obspy_tests.sh -tobspy:bdc6dd855c00c831bcc007b607d83f6070b5b1c0
+$ # test a commit that only exists in a fork (but might be the tip of a PR)
+$ ./run_obspy_tests.sh -tclaudiodsf:2fa3d3bdaded126a9ebdaf73cf60403c1acb3457
+```
+
+Make sure to use the `-t` argument before the list of images to run on.
+
+The `-t` and `-e` options can also be combined, e.g.:
+
+```bash
+$ # see http://tests.obspy.org/46691/ for the result of this command:
+$ ./run_obspy_tests.sh -ttrichter:e6da3ddb5 -e"io.ndk --pr-url=https://github.com/obspy/obspy/pull/${PR}" fedora_24
+```
+
+## 2. ObsPy Deb Packaging based on Docker
+
+The `package_debs.sh` script can be used to build `deb` packages for Debian/Ubuntu.
+
+`deb` packages should ideally be built from a dedicated branch that fixes the
+version number lookup, see e.g.
+[megies deb_1.0.2 branch](https://github.com/megies/obspy/commits/deb_1.0.2).
+
+```bash
+$ ./package_debs.sh -tmegies:deb_1.0.2
+```
+
+Each execution of the script creates a new subdirectory under `logs` containing
+logs for each image used to build `deb` packages, and also containing the built
+packages. The resulting built images are also automatically tested inside the
+Docker images and test reports are sent to
+[http://tests.obspy.org](http://tests.obspy.org).
+
+```bash
+logs
+└── package_debs
+    └── 2016-08-29T21-30-48Z
+        ├── debian_7_wheezy
+        │   ├── BUILD_LOG.txt
+        │   ├── packages
+        │   │   ├── obspy_1.0.2-1~wheezy_amd64.changes
+        │   │   ├── python-obspy_1.0.2-1~wheezy_amd64.deb
+        │   │   └── python-obspy-dbg_1.0.2-1~wheezy_amd64.deb
+        │   ├── success
+        │   └── TEST_LOG.txt
+        ├── debian_7_wheezy_32bit
+        │   ├── BUILD_LOG.txt
+        │   ├── packages
+        │   │   ├── obspy_1.0.2-1~wheezy_i386.changes
+        │   │   ├── python-obspy_1.0.2-1~wheezy_i386.deb
+        │   │   └── python-obspy-dbg_1.0.2-1~wheezy_i386.deb
+        │   ├── success
+        │   └── TEST_LOG.txt
+        ├── docker.log
+        ├── ubuntu_12_04_precise
+        │   ├── BUILD_LOG.txt
+        │   ├── packages
+        │   │   ├── obspy_1.0.2-1~precise_amd64.changes
+        │   │   ├── python-obspy_1.0.2-1~precise_amd64.deb
+        │   │   └── python-obspy-dbg_1.0.2-1~precise_amd64.deb
+        │   ├── success
+        │   └── TEST_LOG.txt
+        ...
 ```
