@@ -874,6 +874,16 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.channel, 'HHE')
         self.assertEqual(tr.stats.network, '')
 
+    def test_sac_booleans_from_trace(self):
+        """
+        SAC booleans "lcalda" and "lpspol" should be "False" and "True",
+        respectively, by default when converting from a "Trace".
+        """
+        tr = Trace()
+        sac = SACTrace.from_obspy_trace(tr)
+        self.assertFalse(sac.lcalda)
+        self.assertTrue(sac.lpspol)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
