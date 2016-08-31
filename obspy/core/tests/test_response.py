@@ -216,6 +216,30 @@ class ResponseTestCase(unittest.TestCase):
         np.testing.assert_allclose(amp, exp_amp, rtol=1E-3)
         np.testing.assert_allclose(phase, exp_ph, rtol=1E-3)
 
+    def test_response_list_raises_error_if_out_of_range(self):
+        """
+        If extrpolating a lot it should raise an error.
+        """
+        inv = read_inventory(os.path.join(self.data_dir, "IM_IL31__BHZ.xml"))
+
+        # The true sampling rate is 40 - this will thus request data that is
+        # too high frequent and thus cannot be extracted from the response
+        # list.
+        sampling_rate = 45.0
+        t_samp = 1.0 / sampling_rate
+        nfft = 100.0
+
+        with self.assertRaises(ValueError) as e:
+            inv[0][0][0].response.get_evalresp_response(
+                t_samp=t_samp, nfft=nfft, output="VEL", start_stage=None,
+                end_stage=None)
+
+        self.assertEqual(
+            str(e.exception),
+            "Cannot calculate the response as it contains a response list "
+            "stage with frequencies only from -0.0096 - 20.0096 Hz. You are "
+            "requesting a response from 0.4500 - 22.5000 Hz.")
+
 
 def suite():
     return unittest.makeSuite(ResponseTestCase, 'test')
