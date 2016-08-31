@@ -957,11 +957,28 @@ class Response(ComparingObject):
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
-                msg = ("ResponseListResponseStage not yet implemented due to "
-                       "missing example data. Please contact the developers "
-                       "with a test data set (waveforms and StationXML "
-                       "metadata).")
-                raise NotImplementedError(msg)
+                blkt = ew.Blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["LIST"]
+
+                rl = blkt.blkt_info.list
+                rl.nresp = len(blockette.response_list_elements)
+
+                freq = (C.c_double * rl.nresp)()
+                amp = (C.c_double * rl.nresp)()
+                phase = (C.c_double * rl.nresp)()
+
+                for i, value in enumerate(blockette.response_list_elements):
+                    freq[i] = float(value.frequency)
+                    amp[i] = float(value.amplitude)
+                    phase[i] = float(value.phase)
+
+                rl.freq = C.cast(C.pointer(freq),
+                                 C.POINTER(C.c_double))
+                rl.amp = C.cast(C.pointer(amp),
+                                C.POINTER(C.c_double))
+                rl.phase = C.cast(C.pointer(phase),
+                                  C.POINTER(C.c_double))
+
             elif isinstance(blockette, FIRResponseStage):
                 blkt = ew.Blkt()
 
