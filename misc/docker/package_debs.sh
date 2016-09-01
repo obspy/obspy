@@ -7,7 +7,7 @@ LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
 DOCKER_REPOSITORY=obspy
-DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_8_jessie ubuntu_12_04_precise ubuntu_14_04_trusty ubuntu_16_04_xenial"
+DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_8_jessie debian_8_jessie_32bit ubuntu_12_04_precise ubuntu_14_04_trusty ubuntu_16_04_xenial"
 
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
 while getopts "t:" opt; do
