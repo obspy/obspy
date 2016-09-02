@@ -6,7 +6,6 @@ LOG_DIR_ROOT=logs/package_debs
 LOG_DIR_BASE=$LOG_DIR_ROOT/$DATETIME
 mkdir -p $LOG_DIR_BASE
 
-DOCKER_REPOSITORY=obspy
 DOCKER_IMAGES="debian_7_wheezy debian_7_wheezy_32bit debian_8_jessie debian_8_jessie_32bit ubuntu_12_04_precise ubuntu_14_04_trusty ubuntu_16_04_xenial"
 
 # Parse the target for deb package building (e.g. "-tmegies:deb_1.0.2")
@@ -114,15 +113,25 @@ list_not_contains() {
 }
 
 
+# Function to check if an image exists
+image_exists () {
+    # "docker images" does not provide useful return codes.. so use a dummy format string and grep
+    if $DOCKER images obspy:$1 --format 'EXISTS' | grep 'EXISTS' 2>&1 > /dev/null ; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
 # Function creating an image if it does not exist.
 create_image () {
     image_name=$1;
-    has_image=$($DOCKER images | grep ${DOCKER_REPOSITORY} | grep $image_name)
-    if [ "$has_image" ]; then
+    if image_exists $image_name ; then
         printf "\e[101m\e[30m  >>> Image '$image_name' already exists.\e[0m\n"
     else
         printf "\e[101m\e[30m  Image '$image_name' will be created.\e[0m\n"
-        $DOCKER build -t ${DOCKER_REPOSITORY}:$image_name $image_path
+        $DOCKER build -t obspy:$image_name ${DOCKERFILE_FOLDER}/${image_name}
     fi
 }
 
@@ -159,7 +168,6 @@ package_debs_on_image () {
 printf "\e[44m\e[30mSTEP 1: CREATING BASE IMAGES\e[0m\n"
 
 for image_name in ${DOCKER_IMAGES}; do
-    image_path=${DOCKERFILE_FOLDER}/${image_name}
     if [ $# != 0 ]; then
         if list_not_contains "$*" $image_name; then
             continue
@@ -173,8 +181,18 @@ done
 printf "\n\e[44m\e[30mSTEP 2: BUILDING DEB PACKAGES\e[0m\n"
 
 # Loop over all ObsPy Docker images.
-for image_name in $($DOCKER images | grep ${DOCKER_REPOSITORY} | awk '{print $2}'); do
+for image_name in $($DOCKER images obspy | awk '{print $2}'); do
+    # skip images that are not in our Debian/Ubuntu build targets
+    if list_not_contains "${DOCKER_IMAGES}" $image_name; then
+        continue
+    fi
+    # skip images that haven't been created yet
+    if ! image_exists $image_name ; then
+        continue
+    fi
+    # if any specific targets are specified on command line..
     if [ $# != 0 ]; then
+        # skip image, if not in list specified on command line
         if list_not_contains "$*" $image_name; then
             continue
         fi
