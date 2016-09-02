@@ -103,7 +103,7 @@ class NRL:
     def read_resp_url(self, url):
         # Returns Unicode string of RESP
         with urlopen(url) as f:
-            return unicode(f.read(), 'ascii')
+            return f.read().decode('ascii')
 
     def print_ini(self, path):
         cp = self.read_ini(path)

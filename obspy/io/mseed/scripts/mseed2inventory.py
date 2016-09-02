@@ -542,7 +542,7 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
                 sens_resp = nrl.sensor_from_short(sensor_nick)
                 dl_resp = nrl.datalogger_from_short(dl_nick, gain, sr)
                 # Check cache before expensive computation
-                if resp_dict.has_key((sensor_nick, dl_nick, gain, sr)):
+                if (sensor_nick, dl_nick, gain, sr) in resp_dict:
                     # Use cached response
                     inv_resp = resp_dict[(sensor_nick, dl_nick, gain, sr)]
                 else:
