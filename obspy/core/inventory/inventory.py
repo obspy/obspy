@@ -676,6 +676,17 @@ class Inventory(ComparingObject):
                            the attribute is extracted from parameter `level`
         :param level: the level at which the attributes are extracted.
         :param default: default value if the attribute is doesn't exist
+        :returns: list of lists. Each sublist contains the attribute values for
+                  each network/station/channel.
+
+        .. rubric:: Basic Usage
+        >>> import obspy
+        >>> inv = obspy.read_inventory()
+        >>> query = inv.get_all(('net.code', 'code'), level='station')
+        >>> query[0]
+        [u'GR', u'GR', u'BW', u'BW', u'BW']
+        >>> query[1]
+        [u'FUR', u'WET', u'RJOB', u'RJOB', u'RJOB']
         """
         query = [[] for attrib in attributes]
         for iattrib, attrib in enumerate(attributes):
