@@ -26,7 +26,7 @@ from obspy import Stream, UTCDateTime, __version__, read
 from obspy.core.util import NamedTemporaryFile, loadtxt
 
 
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
+DEFAULT_USER_AGENT = "ObsPy/%s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',

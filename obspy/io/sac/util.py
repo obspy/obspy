@@ -406,6 +406,9 @@ def obspy_to_sac_header(stats, keep_sac_header=True):
         header['knetwk'] = stats['network'] if stats['network'] else HD.SNULL
         header['khole'] = stats['location'] if stats['location'] else HD.SNULL
 
+        header['lpspol'] = True
+        header['lcalda'] = False
+
     # ObsPy issue 1204
     header['nvhdr'] = 6
     header['leven'] = 1
