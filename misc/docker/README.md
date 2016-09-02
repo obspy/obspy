@@ -162,3 +162,42 @@ logs
         │   └── TEST_LOG.txt
         ...
 ```
+
+### Preparation of a new base image for Debian/Ubuntu
+
+Creation of a new docker base image can be done on a recent Debian/Ubuntu
+(especially with a recent debootstrap installed). The following commands were
+used on a Debian 8 Jessie host.
+
+`debootstrap` has no dependencies worth mentioning and can be updated without
+problems to a newer version. Its version has to be updated from backports or
+`unstable` if a new Ubuntu/Debian version is not yet known to the installed
+`debootstrap` version.
+
+```bash
+$ cd /tmp
+$ CODENAME=`lsb_release -cs`
+$ sudo aptitude install -t ${CODENAME}-backports debootstrap  # optional, if the following doesn't work
+```
+
+When `debootstrap`ping on a Debian host, the Ubuntu archive keyring should be
+used. To create an Ubuntu docker base image:
+
+```bash
+$ cd /tmp
+$ sudo aptitude install ubuntu-archive-keyring
+$ sudo debootstrap --arch=i386 --variant=minbase --components=main,universe --keyring=/usr/share/keyrings/ubuntu-archive-keyring.gpg xenial ubuntu_16_04_xenial_32bit http://archive.ubuntu.com/ubuntu 2>&1 | tee ubuntu_16_04_xenial_32bit.debootstrap.log
+$ sudo tar -C ubuntu_16_04_xenial_32bit -c . | docker import - obspy/base-images:ubuntu_16_04_xenial_32bit
+$ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
+$ docker push obspy/base-images:ubuntu_16_04_xenial_32bit
+```
+
+To create a Debian docker base image:
+
+```bash
+$ cd /tmp
+$ sudo debootstrap --arch=i386 --variant=minbase jessie debian_8_jessie_32bit http://httpredir.debian.org/debian/ 2>&1 | tee debian_8_jessie_32bit.debootstrap.log
+$ sudo tar -C debian_8_jessie_32bit -c . | docker import - obspy/base-images:debian_8_jessie_32bit
+$ docker login  # docker hub user needs write access to "obspy/base-images" of organization "obspy"
+$ docker push obspy/base-images:debian_8_jessie_32bit
+```

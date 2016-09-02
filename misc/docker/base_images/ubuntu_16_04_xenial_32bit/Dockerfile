@@ -1,4 +1,4 @@
-FROM obspy/base-images:debian_8_jessie_32bit
+FROM obspy/base-images:ubuntu_16_04_xenial_32bit
 
 MAINTAINER Tobias Megies
 
@@ -36,8 +36,8 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-setuptools \
     python-sqlalchemy \
     python-suds \
-    python-support \
     python-tornado \
+    python-wheel \
     python3 \
     python3-decorator \
     python3-dev \
@@ -45,13 +45,16 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-lxml \
     python3-matplotlib \
     python3-mock \
+    python3-mpltoolkits.basemap \
     python3-nose \
     python3-numpy \
     python3-pip \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \
+    python3-suds \
     python3-tornado \
+    python3-wheel \
     quilt \
     ttf-bitstream-vera \
     vim \
