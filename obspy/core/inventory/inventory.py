@@ -666,6 +666,52 @@ class Inventory(ComparingObject):
 
         return fig
 
+    def get_all(self, attributes, level='channel', default=None):
+        """
+        Return a list of certain attributes from the inventory.
+
+        :param attributes: a list or tuple of attribute names. Example:
+                           ('net.code', 'code', 'longitude', 'latitude')
+                           if no rootname like net, sta, cha is given,
+                           the attribute is extracted from parameter `level`
+        :param level: the level at which the attributes are extracted.
+        :param default: default value if the attribute is doesn't exist
+        """
+        query = [[] for attrib in attributes]
+        for iattrib, attrib in enumerate(attributes):
+            # split attributes, set the variable name from which
+            # the attribute is extracted (root) and remove (root) from
+            # the attrib_name if necessary
+            attrib_parts = attrib.split('.')
+            if len(attrib_parts) > 1:
+                rootname = attrib_parts[0]
+                attrib_name = '.'.join(attrib_parts[1:])
+            else:
+                rootname = level[:3]
+                attrib_name = attrib
+
+            # loop through inventory according to the depth specified by level
+            if level == 'channel':
+                for net in self.networks:
+                    for sta in net.stations:
+                        for cha in sta.channels:
+                            root = locals()[rootname]
+                            value = getattr(root, attrib_name, default)
+                            query[iattrib].append(value)
+            if level == 'station':
+                for net in self.networks:
+                    for sta in net.stations:
+                        root = locals()[rootname]
+                        value = getattr(root, attrib_name, default)
+                        query[iattrib].append(value)
+            if level == 'network':
+                for net in self.networks:
+                    root = locals()[rootname]
+                    value = getattr(root, attrib, default)
+                    query[iattrib].append(value)
+
+        return query
+
     def plot_response(self, min_freq, output="VEL", network="*", station="*",
                       location="*", channel="*", time=None, starttime=None,
                       endtime=None, axes=None, unwrap_phase=False, show=True,
