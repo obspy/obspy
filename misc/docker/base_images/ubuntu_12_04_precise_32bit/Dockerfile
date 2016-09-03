@@ -1,4 +1,4 @@
-FROM obspy/base-images:debian_7_wheezy_32bit
+FROM obspy/base-images:ubuntu_12_04_precise_32bit
 
 MAINTAINER Tobias Megies
 
