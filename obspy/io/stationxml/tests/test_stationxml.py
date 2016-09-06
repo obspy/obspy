@@ -152,19 +152,9 @@ class StationXMLTestCase(unittest.TestCase):
         # writing of the ObsPy related tags to ease testing.
         file_buffer = io.BytesIO()
 
-        # XXX helper variable to debug writing the full random file, set True
-        # XXX for debug output
-        write_debug_output = False
-
         inv.write(file_buffer, format="StationXML",
-                  validate=(not write_debug_output),
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-
-        if write_debug_output:
-            with open("/tmp/debugout.xml", "wb") as open_file:
-                open_file.write(file_buffer.read())
-            file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
             expected_xml_file_buffer = io.BytesIO(open_file.read())
