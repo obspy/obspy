@@ -129,7 +129,7 @@ class StationXMLTestCase(unittest.TestCase):
         # writing of the ObsPy related tags to ease testing.
         file_buffer = io.BytesIO()
 
-        inv.write(file_buffer, format="StationXML",
+        inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
@@ -152,7 +152,7 @@ class StationXMLTestCase(unittest.TestCase):
         # writing of the ObsPy related tags to ease testing.
         file_buffer = io.BytesIO()
 
-        inv.write(file_buffer, format="StationXML",
+        inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
@@ -667,7 +667,7 @@ class StationXMLTestCase(unittest.TestCase):
         inv[0][0][0].response.response_stages[0].zeros = [0 + 1j, 2 + 3j]
 
         with io.BytesIO() as buf:
-            inv.write(buf, format="stationxml")
+            inv.write(buf, format="stationxml", validate=True)
             buf.seek(0, 0)
             data = buf.read().decode()
 
