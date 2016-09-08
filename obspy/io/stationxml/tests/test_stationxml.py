@@ -22,6 +22,7 @@ import unittest
 
 import obspy
 from obspy.core.inventory import Inventory, Network
+import obspy.io.stationxml.core
 
 
 class StationXMLTestCase(unittest.TestCase):

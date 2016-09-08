@@ -1808,18 +1808,35 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
             b54 = resp_blockettes[stage][54]
             b57 = resp_blockettes[stage][57]
             b58 = resp_blockettes[stage][58]
-            # Numerators are not a list if length 1
+
+            # Make list of numerators
+            numerators = list()
             if b54.number_of_numerators == 1:
-                b54.numerator_coefficient = [b54.numerator_coefficient]
-                b54.numerator_error = [b54.numerator_error]
-            if b54.number_of_denominators == 0:
-                denominator = []
-            elif b54.number_of_denominators == 1:
-                denominator = list(map(FloatWithUncertaintiesAndUnit,
-                                       [b54.denominator_coefficient]))
+                numerators.append(FloatWithUncertaintiesAndUnit(
+                    b54.numerator_coefficient,
+                    lower_uncertainty=b54.numerator_error,
+                    upper_uncertainty=b54.numerator_error))
             else:
-                denominator = list(map(FloatWithUncertaintiesAndUnit,
-                                       b54.denominator_coefficient))
+                for i in range(b54.number_of_numerators):
+                    numerators.append(FloatWithUncertaintiesAndUnit(
+                        b54.numerator_coefficient[i],
+                        lower_uncertainty=b54.numerator_error[i],
+                        upper_uncertainty=b54.numerator_error[i]))
+
+
+            # Make list of denominators
+            denominators = list()
+            if b54.number_of_denominators == 1:
+                denominators.append(FloatWithUncertaintiesAndUnit(
+                    b54.denominator_coefficient,
+                    lower_uncertainty=b54.denominator_error,
+                    upper_uncertainty=b54.denominator_error))
+            else:
+                for i in range(b54.number_of_denominators):
+                    denominators.append(FloatWithUncertaintiesAndUnit(
+                        b54.denominator_coefficient[i],
+                        lower_uncertainty=b54.denominator_error[i],
+                        upper_uncertainty=b54.denominator_error[i]))
 
             response_stage = CoefficientsTypeResponseStage(
                 stage_sequence_number=stage,
@@ -1830,9 +1847,8 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
                 output_units=lookup_unit(dl_xseedparser.abbreviations,
                                          b54.signal_output_units),
                 cf_transfer_function_type=transfer_map[b54.response_type],
-                numerator=list(map(FloatWithUncertaintiesAndUnit,
-                                   b54.numerator_coefficient)),
-                denominator=denominator,
+                numerator=numerators,
+                denominator=denominators,
                 decimation_input_sample_rate=FloatWithUncertainties(
                     b57.input_sample_rate),
                 decimation_factor=b57.decimation_factor,

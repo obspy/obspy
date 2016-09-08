@@ -117,9 +117,9 @@ class NRL:
         cp = self.read_ini(path)
         options = cp.options(choice)
         if 'path' in options:
-            newpath = unicode(cp.get(choice, 'path'))
+            newpath = cp.get(choice, 'path').decode('ascii')
         elif 'resp' in options:
-            newpath = unicode(cp.get(choice, 'resp'))
+            newpath = cp.get(choice, 'resp').decode('ascii')
             # Strip quotes of new path
         if newpath.startswith('"'):
             newpath = newpath[1:]

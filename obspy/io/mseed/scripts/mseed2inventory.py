@@ -458,7 +458,7 @@ def get_manifest_of_filelist(filelist):
     return manifest
 
 
-def make_inventory(manifest):
+def make_inventory(manifest, latitude=0.0, longitude=0.0):
     # Standard orientations
     az = 'az'
     dip = 'dip'
@@ -467,11 +467,12 @@ def make_inventory(manifest):
                           'N': {az: 0.0, dip: 0.0},
                           'E': {az: 90.0, dip: 0.0}
                           })
+    lat = inventory.util.Latitude(latitude)
+    lon = inventory.util.Longitude(longitude)
     # Dummy values for now
-    lat = inventory.util.Latitude(0.0)
-    lon = inventory.util.Longitude(0.0)
     depth = 0.0
     elev = 0
+
     net_list = list()
     for network, net_group in groupby(sorted(manifest.keys()),
                                       key=attrgetter('network')):
@@ -506,6 +507,7 @@ def make_inventory(manifest):
                         depth=depth,
                         azimuth=orient[sncl.channel[2]][az],
                         dip=orient[sncl.channel[2]][dip],
+                        types=['CONTINUOUS', 'GEOPHYSICAL'],
                         sample_rate=sncl.sr,
                         start_date=start,
                         end_date=end))
@@ -554,6 +556,7 @@ def attach_response(inv, sensor_nick, dl_nick, gain):
 
 
 def inventory_from_mseed(directory, sens_resp, dl_resp):
+    # Not called, no longer used
     manifest = get_manifest_of_dir(directory)
     inv = make_inventory(manifest)
     # Attach response to inventory
@@ -564,6 +567,15 @@ def inventory_from_mseed(directory, sens_resp, dl_resp):
             for chan in sta.channels:
                 chan.response = inv_resp
     return inv
+
+def attach_equipment_sensor(inv, sensor_sn='', sensor_nick=''):
+    inv_sensor = inventory.util.Equipment(type=sensor_nick, serial_number=sensor_sn)
+    inv_sensor.description = 'Sensor description'
+    for net in inv.networks:
+        for sta in net.stations:
+            for chan in sta.channels:
+                chan.sensor = inv_sensor
+
 
 if __name__ == '__main__':
     # Command arg, and inputs
@@ -583,11 +595,18 @@ if __name__ == '__main__':
     parser.add_argument('-s', dest='sensor_nick', required=True)
     parser.add_argument('-d', dest='datalogger_nick', required=True)
     parser.add_argument('-g', dest='gain', required=False, default=1, type=int)
+    parser.add_argument('-lat', dest='latitude', required=False, default=0.0,
+                        type=float)
+    parser.add_argument('-long', dest='longitude', required=False, default=0.0,
+                        type=float)
+    parser.add_argument('-sn', dest='sensor_sn', required=False, type=str)
     parser.add_argument('-o', dest='outfile')
     args = parser.parse_args()
 
     manifest = get_manifest_of_filelist(args.msfile)
-    inv = make_inventory(manifest)
+    inv = make_inventory(manifest, latitude=args.latitude,
+                         longitude=args.longitude)
+    attach_equipment_sensor(inv, sensor_sn=args.sensor_sn, sensor_nick=args.sensor_nick)
     attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
 
     netcodes = '_'.join(net.code for net in inv.networks)
