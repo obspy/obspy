@@ -591,10 +591,10 @@ class QualityControlTestCase(unittest.TestCase):
         # Test single continuous segments
         # Gap in beginning, cseg starts at first sample
         cseg = md.meta['c_segments'][0]
-        self.assertTrue(cseg['start_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000))
-        self.assertTrue(cseg['end_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
 
         # Start beyond a sample, but it is padded to the left, no gap
         starttime = obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000)
@@ -607,10 +607,10 @@ class QualityControlTestCase(unittest.TestCase):
         # Test single continuous segments
         # first sample is padded, first cseg starttime is window starttime
         cseg = md.meta['c_segments'][0]
-        self.assertTrue(cseg['start_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000))
-        self.assertTrue(cseg['end_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 630000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
 
         md = MSEEDMetadata([file], add_c_segments=True)
         self.assertTrue(md.meta["num_gaps"] == 0)
@@ -619,10 +619,10 @@ class QualityControlTestCase(unittest.TestCase):
         # Test single continuous segments
         # No window, start time is first sample, end time is last sample + dt
         cseg = md.meta['c_segments'][0]
-        self.assertTrue(cseg['start_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 600000))
-        self.assertTrue(cseg['end_time'],
-                        obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 300000))
+        self.assertEqual(cseg['start_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 1, 625000))
+        self.assertEqual(cseg['end_time'],
+                         obspy.UTCDateTime(2015, 10, 16, 0, 0, 59, 325000))
 
     def test_random_window(self):
         """
