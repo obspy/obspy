@@ -1823,7 +1823,6 @@ def response_from_resp(sensor_resp_data, datalogger_resp_data, frequency=None):
                         lower_uncertainty=b54.numerator_error[i],
                         upper_uncertainty=b54.numerator_error[i]))
 
-
             # Make list of denominators
             denominators = list()
             if b54.number_of_denominators == 1:

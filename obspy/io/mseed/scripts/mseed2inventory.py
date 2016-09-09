@@ -568,8 +568,10 @@ def inventory_from_mseed(directory, sens_resp, dl_resp):
                 chan.response = inv_resp
     return inv
 
+
 def attach_equipment_sensor(inv, sensor_sn='', sensor_nick=''):
-    inv_sensor = inventory.util.Equipment(type=sensor_nick, serial_number=sensor_sn)
+    inv_sensor = inventory.util.Equipment(type=sensor_nick,
+                                          serial_number=sensor_sn)
     inv_sensor.description = 'Sensor description'
     for net in inv.networks:
         for sta in net.stations:
@@ -606,7 +608,8 @@ if __name__ == '__main__':
     manifest = get_manifest_of_filelist(args.msfile)
     inv = make_inventory(manifest, latitude=args.latitude,
                          longitude=args.longitude)
-    attach_equipment_sensor(inv, sensor_sn=args.sensor_sn, sensor_nick=args.sensor_nick)
+    attach_equipment_sensor(inv, sensor_sn=args.sensor_sn,
+                            sensor_nick=args.sensor_nick)
     attach_response(inv, args.sensor_nick, args.datalogger_nick, args.gain)
 
     netcodes = '_'.join(net.code for net in inv.networks)
