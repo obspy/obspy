@@ -489,11 +489,16 @@ class MSEEDMetadata(object):
         if not self.data:
             return
 
+        if self.meta['start_gap'] is None and self.window_start is not None:
+            first_segment_start = self.window_start
+        else:
+            first_segment_start = self.data[0].stats.starttime
+
         # Collect data in arrays of continuous segments
         # Manually set the first segment
         c_seg = {
-            'start': self.data[0].stats.starttime,
-            'data': self.data[0].data,
+            'start': first_segment_start,
+            'data': self.data[0].data
         }
 
         c_segs = []
