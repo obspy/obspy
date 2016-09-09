@@ -334,12 +334,16 @@ ENTRY_POINTS = {
         ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.io.stationxml.core',
+        'STATIONJSON = obspy.io.stationjson.core',
         'SC3ML = obspy.io.seiscomp.sc3ml',
         'SACPZ = obspy.io.sac.sacpz',
         'CSS = obspy.io.css.station',
         'SHAPEFILE = obspy.io.shapefile.core',
         'STATIONTXT = obspy.io.stationtxt.core',
         'KML = obspy.io.kml.core'
+        ],
+    'obspy.plugin.inventory.STATIONJSON': [
+        'writeFormat = obspy.io.stationjson.core:_write_stationjson'
         ],
     'obspy.plugin.inventory.STATIONXML': [
         'isFormat = obspy.io.stationxml.core:_is_stationxml',
