@@ -15,6 +15,7 @@ from matplotlib.cm import get_cmap
 import matplotlib.text
 import numpy as np
 
+from .helper_classes import Arrival
 from .tau_model import TauModel
 from .taup_create import TauPCreate
 from .taup_path import TauPPath
@@ -68,7 +69,7 @@ class _SmartPolarText(matplotlib.text.Text):
 
 class Arrivals(list):
     """
-    List of arrivals returned by :class:`TauPyModel` methods.
+    List like object of arrivals returned by :class:`TauPyModel` methods.
 
     :param arrivals: Initial arrivals to store.
     :type arrivals: :class:`list` of
@@ -83,6 +84,66 @@ class Arrivals(list):
         self.model = model
         self.extend(arrivals)
 
+    def __add__(self, other):
+        if isinstance(other, Arrival):
+            other = Arrivals([other], model=self.model)
+        if not isinstance(other, Arrivals):
+            raise TypeError
+        return self.__class__(super(Arrivals, self).__add__(other),
+                              model=self.model)
+
+    def __iadd__(self, other):
+        if isinstance(other, Arrival):
+            other = Arrivals([other], model=self.model)
+        if not isinstance(other, Arrivals):
+            raise TypeError
+        self.extend(other)
+        return self
+
+    def __mul__(self, num):
+        if not isinstance(num, int):
+            raise TypeError("Integer expected")
+        arr = self.copy()
+        for _i in range(num-1):
+            arr += self.copy()
+        return arr
+
+    def __imul__(self, num):
+        if not isinstance(num, int):
+            raise TypeError("Integer expected")
+        arr = self.copy()
+        for _i in range(num-1):
+            self += arr
+        return self
+
+    def __setitem__(self, index, arrival):
+        if (isinstance(index, slice) and
+                all(isinstance(x, Arrival) for x in arrival)):
+            super(Arrivals, self).__setitem__(index, arrival)
+        elif isinstance(arrival, Arrival):
+            super(Arrivals, self).__setitem__(index, arrival)
+        else:
+            msg = 'Only Arrival objects can be assigned.'
+            raise TypeError(msg)
+
+    def __setslice__(self, i, j, seq):
+        if all(isinstance(x, Arrival) for x in seq):
+            super(Arrivals, self).__setslice__(i, j, seq)
+        else:
+            msg = 'Only Arrival objects can be assigned.'
+            raise TypeError(msg)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return self.__class__(super(Arrivals, self).__getitem__(index),
+                                  model=self.model)
+        else:
+            return super(Arrivals, self).__getitem__(index)
+
+    def __getslice__(self, i, j):
+        return self.__class__(super(Arrivals, self).__getslice__(i, j),
+                              model=self.model)
+
     def __str__(self):
         return (
             "{count} arrivals\n\t{arrivals}"
@@ -92,6 +153,17 @@ class Arrivals(list):
 
     def __repr__(self):
         return "[%s]" % (", ".join([repr(_i) for _i in self]))
+
+    def append(self, arrival):
+        if isinstance(arrival, Arrival):
+            super(Arrivals, self).append(arrival)
+        else:
+            msg = 'Append only supports a single Arrival object as argument.'
+            raise TypeError(msg)
+
+    def copy(self):
+        return self.__class__(super(Arrivals, self).copy(),
+                              model=self.model)
 
     def plot(self, plot_type="spherical", plot_all=True, legend=True,
              label_arrivals=False, ax=None, show=True):
