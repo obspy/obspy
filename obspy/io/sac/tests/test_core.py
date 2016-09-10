@@ -884,6 +884,24 @@ class CoreTestCase(unittest.TestCase):
         self.assertFalse(sac.lcalda)
         self.assertTrue(sac.lpspol)
 
+    def test_sac_file_from_new_header(self):
+        """
+        Writing to disk a new Trace object shouldn't ignore custom header
+        fields, if an arrival time is set. See ObsPy issue #1519
+        """
+        tr = Trace(np.zeros(1000))
+        tr.stats.delta = 0.01
+        tr.stats.station = 'XXX'
+        tr.stats.sac = {'stla': 10., 'stlo': -5., 'a': 12.34}
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
+        self.assertAlmostEqual(tr1.stats.sac.stla, 10., places=4)
+        self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
+        self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
+
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
