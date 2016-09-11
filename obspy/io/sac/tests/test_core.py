@@ -893,10 +893,10 @@ class CoreTestCase(unittest.TestCase):
         tr.stats.delta = 0.01
         tr.stats.station = 'XXX'
         tr.stats.sac = {'stla': 10., 'stlo': -5., 'a': 12.34}
-        with NamedTemporaryFile() as tf:
-            tempfile = tf.name
-            tr.write(tempfile, format='SAC')
-            tr1 = read(tempfile)[0]
+        with io.BytesIO() as tf:
+            tr.write(tf, format='SAC')
+            tf.seek(0)
+            tr1 = read(tf)[0]
         self.assertAlmostEqual(tr1.stats.sac.stla, 10., places=4)
         self.assertAlmostEqual(tr1.stats.sac.stlo, -5., places=4)
         self.assertAlmostEqual(tr1.stats.sac.a, 12.34, places=5)
