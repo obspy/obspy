@@ -558,7 +558,7 @@ def _write_q(stream, filename, data_directory=None, byteorder='=',
             temp += "%s:%s~ " % (SH_IDX[key], value)
         headers.append(temp)
         # get maximal number of trclines
-        nol = len(temp) / 74 + 1
+        nol = len(temp) // 74 + 1
         if nol > minnol:
             minnol = nol
     # first line: magic number, cmtlines, trclines

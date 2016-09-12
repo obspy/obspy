@@ -851,6 +851,41 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, len(tr.data))
         self.assertEqual(tr.stats.npts, 262)
 
+    def test_mseed_zero_data_headonly(self):
+        """
+        Tests that records with no data correctly work in headonly mode.
+        """
+        file = os.path.join(self.path, "data",
+                            "three_records_zero_data_in_middle.mseed")
+
+        expected = [
+            ("BW.BGLD..EHE", UTCDateTime("2007-12-31T23:59:59.765000Z"),
+             UTCDateTime("2008-01-01T00:00:01.820000Z"), 200.0, 412),
+            ("BW.BGLD..EHE", UTCDateTime("2008-01-01T00:00:01.825000Z"),
+             UTCDateTime("2008-01-01T00:00:01.825000Z"), 200.0, 0),
+            ("BW.BGLD..EHE", UTCDateTime("2008-01-01T00:00:03.885000Z"),
+             UTCDateTime("2008-01-01T00:00:05.940000Z"), 200.0, 412)]
+
+        # Default full read.
+        st = read(file)
+        self.assertEqual(len(st), 3)
+        for tr, exp in zip(st, expected):
+            self.assertEqual(tr.id, exp[0])
+            self.assertEqual(tr.stats.starttime, exp[1])
+            self.assertEqual(tr.stats.endtime, exp[2])
+            self.assertEqual(tr.stats.sampling_rate, exp[3])
+            self.assertEqual(tr.stats.npts, exp[4])
+
+        # Headonly read.
+        st = read(file, headonly=True)
+        self.assertEqual(len(st), 3)
+        for tr, exp in zip(st, expected):
+            self.assertEqual(tr.id, exp[0])
+            self.assertEqual(tr.stats.starttime, exp[1])
+            self.assertEqual(tr.stats.endtime, exp[2])
+            self.assertEqual(tr.stats.sampling_rate, exp[3])
+            self.assertEqual(tr.stats.npts, exp[4])
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')

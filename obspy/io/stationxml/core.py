@@ -1325,7 +1325,10 @@ def _obj2tag(parent, tag_name, tag_value):
 
 
 def _format_time(value):
-    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    if value.microsecond == 0:
+        return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    else:
+        return value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
 
 
 if __name__ == '__main__':

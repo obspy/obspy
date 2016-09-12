@@ -22,6 +22,7 @@ import unittest
 
 import obspy
 from obspy.core.inventory import Inventory, Network
+import obspy.io.stationxml.core
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -114,6 +115,31 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
+    def test_subsecond_read_and_write_minimal_file(self):
+        """
+        Test reading and writing of sub-second time in datetime field,
+        using creation time
+
+        """
+        filename = os.path.join(self.data_dir,
+                                "minimal_station_with_microseconds.xml")
+        inv = obspy.read_inventory(filename)
+
+        # Write it again. Also validate it to get more confidence. Suppress the
+        # writing of the ObsPy related tags to ease testing.
+        file_buffer = io.BytesIO()
+
+        inv.write(file_buffer, format="StationXML", validate=True,
+                  _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
+
     def test_read_and_write_full_file(self):
         """
         Test that reading and writing of a full StationXML document with all
@@ -126,19 +152,9 @@ class StationXMLTestCase(unittest.TestCase):
         # writing of the ObsPy related tags to ease testing.
         file_buffer = io.BytesIO()
 
-        # XXX helper variable to debug writing the full random file, set True
-        # XXX for debug output
-        write_debug_output = False
-
-        inv.write(file_buffer, format="StationXML",
-                  validate=(not write_debug_output),
+        inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-
-        if write_debug_output:
-            with open("/tmp/debugout.xml", "wb") as open_file:
-                open_file.write(file_buffer.read())
-            file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
             expected_xml_file_buffer = io.BytesIO(open_file.read())
@@ -651,7 +667,7 @@ class StationXMLTestCase(unittest.TestCase):
         inv[0][0][0].response.response_stages[0].zeros = [0 + 1j, 2 + 3j]
 
         with io.BytesIO() as buf:
-            inv.write(buf, format="stationxml")
+            inv.write(buf, format="stationxml", validate=True)
             buf.seek(0, 0)
             data = buf.read().decode()
 
