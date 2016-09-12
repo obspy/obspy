@@ -526,6 +526,12 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             }
         }
         if ( segmentCurrent != NULL &&
+
+             // This is important for zero data record coupled with not unpacking
+             // the data. It needs to be split in two places: Before the zero data
+             // record and after it.
+             recordCurrent->record->samplecnt > 0 && segmentCurrent->samplecnt > 0 &&
+
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&
