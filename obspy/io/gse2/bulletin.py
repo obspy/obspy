@@ -37,7 +37,7 @@ EVALUATION_MODES = {
 # Convert GSE2 to ObsPy location methods
 LOCATION_METHODS = {
     'i': 'inversion',
-    'p': 'pattern recognation',
+    'p': 'pattern recognition',
     'g': 'ground truth',
     'o': 'other',
 }
