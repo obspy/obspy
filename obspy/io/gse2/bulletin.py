@@ -84,6 +84,10 @@ PICK_ONSETS = {
 }
 
 
+class GSE2BulletinSyntaxError(Exception):
+    """Raised when the file is not a valid GSE2 file"""
+
+
 def _is_gse2(filename):
     """
     Checks whether a file is GSE2.0 format.
@@ -303,11 +307,11 @@ class Unpickler(object):
         line_3_pattern = 'MSG_ID\s\w{1,20}\s?\w{1,8}'
 
         if not re.match(line_1_pattern, first_line):
-            raise SyntaxError('Wrong GSE2.0 header')
+            raise GSE2BulletinSyntaxError('Wrong GSE2.0 header')
         if not re.match(line_2_pattern, next(self.lines)):
-            raise SyntaxError('Wrong message type in header')
+            raise GSE2BulletinSyntaxError('Wrong message type in header')
         if not re.match(line_3_pattern, next(self.lines)):
-            raise SyntaxError('Wrong message ID in header')
+            raise GSE2BulletinSyntaxError('Wrong message ID in header')
 
     def _get_channel(self, station, time):
         """
@@ -873,7 +877,7 @@ class Unpickler(object):
                     if begin_block:
                         # 2 BEGIN without STOP
                         message = self._add_line_nb('Missing STOP tag')
-                        raise SyntaxError(message)
+                        raise GSE2BulletinSyntaxError(message)
                     else:
                         # Enter a BEGIN block
                         begin_block = True
@@ -886,7 +890,7 @@ class Unpickler(object):
                     else:
                         # STOP without BEGIN
                         message = self._add_line_nb('Missing BEGIN tag')
-                        raise SyntaxError(message)
+                        raise GSE2BulletinSyntaxError(message)
                 elif line.startswith('DATA_TYPE'):
                     bulletin_block = line[10:18] == 'BULLETIN'
 
@@ -910,7 +914,7 @@ class Unpickler(object):
 
         except StopIteration:
             message = self._add_line_nb('Unexpected EOF while parsing')
-            raise SyntaxError(message)
+            raise GSE2BulletinSyntaxError(message)
         except:
             self._warn('Unexpected error')
             raise
@@ -919,7 +923,7 @@ class Unpickler(object):
             # BEGIN-STOP block not closed
             text = 'Unexpected EOF while parsing, BEGIN-STOP block not closed'
             message = self._add_line_nb(text)
-            raise SyntaxError(message)
+            raise GSE2BulletinSyntaxError(message)
 
         catalog.resource_id = self._get_res_id('event/evid')
 

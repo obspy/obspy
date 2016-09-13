@@ -13,7 +13,7 @@ import warnings
 
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.io.gse2.bulletin import _read_gse2
+from obspy.io.gse2.bulletin import _read_gse2, GSE2BulletinSyntaxError
 from obspy.core.inventory.inventory import read_inventory
 
 
@@ -647,7 +647,7 @@ class BulletinTestCase(unittest.TestCase):
 
     def test_incomplete_file(self):
         filename = os.path.join(self.path, 'gse_2.0_incomplete.txt')
-        self.assertRaises(SyntaxError, _read_gse2, filename)
+        self.assertRaises(GSE2BulletinSyntaxError, _read_gse2, filename)
 
 
 def suite():
