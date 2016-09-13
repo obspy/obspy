@@ -32,6 +32,8 @@ master:
  - obspy.imaging.waveform
    * Support for filling the wiggles when plotting sections (horizontal and
      vertical, see #1445).
+ - obspy.io.gse2
+    * Read support for GSE2.0 bulletin (see #1528)
  - obspy.io.quakeml
     * Read and write support for nested custom tags (see #1463)
  - obspy.io.segy:
