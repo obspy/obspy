@@ -14,6 +14,7 @@ import warnings
 from obspy.core.event import read_events
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.io.gse2.bulletin import _read_gse2, GSE2BulletinSyntaxError
+from obspy.core.event.header import OriginDepthType, PickPolarity
 from obspy.core.inventory.inventory import read_inventory
 
 
@@ -86,7 +87,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(origin.longitude_errors.uncertainty, None)
         self.assertEqual(origin.depth, 66800)
         self.assertEqual(origin.depth_errors.uncertainty, 83800)
-        self.assertEqual(origin.depth_type, None)
+        self.assertEqual(origin.depth_type, OriginDepthType('from location'))
         self.assertEqual(origin.time_fixed, False)
         self.assertEqual(origin.epicenter_fixed, False)
         self.assertEqual(origin.reference_system_id, None)
@@ -148,7 +149,7 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(pick_1.filter_id, None)
         self.assertEqual(pick_1.method_id, None)
         self.assertEqual(pick_1.horizontal_slowness, 13.8)
-        self.assertEqual(pick_1.backazimuth, None)
+        self.assertEqual(pick_1.backazimuth, 163.7)
         self.assertEqual(pick_1.slowness_method_id, None)
         self.assertEqual(pick_1.onset, 'emergent')
         self.assertEqual(pick_1.phase_hint, 'P')
@@ -171,11 +172,11 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(pick_2.filter_id, None)
         self.assertEqual(pick_2.method_id, None)
         self.assertEqual(pick_2.horizontal_slowness, 23.4)
-        self.assertEqual(pick_2.backazimuth, None)
+        self.assertEqual(pick_2.backazimuth, 153.4)
         self.assertEqual(pick_2.slowness_method_id, None)
         self.assertEqual(pick_2.onset, None)
         self.assertEqual(pick_2.phase_hint, 'S')
-        self.assertEqual(pick_2.polarity, None)
+        self.assertEqual(pick_2.polarity, PickPolarity.POSITIVE)
         self.assertEqual(pick_2.evaluation_mode, None)
         self.assertEqual(pick_2.evaluation_status, None)
         self.assertNotEqual(pick_2.creation_info, None)
@@ -203,10 +204,10 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(arrival_1.takeoff_angle, None)
         self.assertEqual(arrival_1.time_residual, -0.2)
         self.assertEqual(arrival_1.horizontal_slowness_residual, 0.1)
-        self.assertEqual(arrival_1.backazimuth_residual, None)
-        self.assertEqual(arrival_1.time_weight, None)
-        self.assertEqual(arrival_1.horizontal_slowness_weight, None)
+        self.assertEqual(arrival_1.backazimuth_residual, 13.4)
+        self.assertEqual(arrival_1.time_weight, 1)
         self.assertEqual(arrival_1.backazimuth_weight, None)
+        self.assertEqual(arrival_1.horizontal_slowness_weight, None)
         self.assertEqual(arrival_1.earth_model_id, None)
         self.assertNotEqual(arrival_1.creation_info, None)
         self.assertEqual(len(arrival_1.comments), 0)
@@ -222,10 +223,10 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(arrival_2.takeoff_angle, None)
         self.assertEqual(arrival_2.time_residual, -0.6)
         self.assertEqual(arrival_2.horizontal_slowness_residual, -1.0)
-        self.assertEqual(arrival_2.backazimuth_residual, None)
+        self.assertEqual(arrival_2.backazimuth_residual, 3.1)
         self.assertEqual(arrival_2.time_weight, None)
+        self.assertEqual(arrival_2.backazimuth_weight, 1)
         self.assertEqual(arrival_2.horizontal_slowness_weight, None)
-        self.assertEqual(arrival_2.backazimuth_weight, None)
         self.assertEqual(arrival_2.earth_model_id, None)
         self.assertNotEqual(arrival_2.creation_info, None)
         self.assertEqual(len(arrival_2.comments), 0)

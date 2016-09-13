@@ -22,9 +22,15 @@ from obspy.core.event import (Amplitude, Arrival, Catalog, Comment,
                               StationMagnitude, WaveformStreamID)
 from obspy.core.event.header import (
     EvaluationMode, EventDescriptionType, EventType, EventTypeCertainty,
-    OriginUncertaintyDescription, PickOnset)
+    OriginDepthType, OriginUncertaintyDescription, PickOnset, PickPolarity)
 from obspy.core.utcdatetime import UTCDateTime
 
+
+# Convert GSE2 depth flag to ObsPy depth type
+DEPTH_TYPES = {
+    'f': OriginDepthType('operator assigned'),
+    'd': OriginDepthType('constrained by depth phases'),
+}
 
 # Convert GSE2 analysis type to ObsPy evaluation modes
 EVALUATION_MODES = {
@@ -73,6 +79,13 @@ EVENT_TYPES = {
            EventType('landslide')),
     'uk': (None,
            EventType('other')),
+}
+
+
+# Convert GSE2 to ObsPy polarity
+PICK_POLARITIES = {
+    'c': PickPolarity.POSITIVE,
+    'd': PickPolarity.NEGATIVE,
 }
 
 
@@ -514,7 +527,7 @@ class Unpickler(object):
         longitude = line[fields['lon']].strip()
         epicenter_fixed_flag = line[fields['epicenter_fixf']].strip()
         depth = line[fields['depth']].strip()
-        # depth_fixed_flag = line[fields['depth_fixf']].strip()
+        depth_fixed_flag = line[fields['depth_fixf']].strip()
         phase_count = line[fields['n_def']].strip()
         station_count = line[fields['n_sta']].strip()
         azimuthal_gap = line[fields['gap']].strip()
@@ -549,6 +562,10 @@ class Unpickler(object):
             origin.depth = float(depth) * 1000
         except ValueError:
             pass
+        try:
+            origin.depth_type = DEPTH_TYPES[depth_fixed_flag]
+        except KeyError:
+            origin.depth_type = OriginDepthType('from location')
         try:
             origin.quality.used_phase_count = int(phase_count)
             origin.quality.associated_phase_count = int(phase_count)
@@ -724,18 +741,18 @@ class Unpickler(object):
             distance = line[fields['dist']].strip()
             event_azimuth = line[fields['ev_az']].strip()
             evaluation_mode = line[fields['picktype']].strip()
-            # direction = line[fields['direction']].strip()
+            direction = line[fields['direction']].strip()
             onset = line[fields['detchar']].strip()
             phase = line[fields['phase']].strip()
             time = line[fields['time']].strip().replace('/', '-')
             time_residual = line[fields['t_res']].strip()
-            # arrival_azimuth = line[fields['azim']].strip()
-            # azimuth_residual = line[fields['az_res']].strip()
+            arrival_azimuth = line[fields['azim']].strip()
+            azimuth_residual = line[fields['az_res']].strip()
             slowness = line[fields['slow']].strip()
             slowness_residual = line[fields['s_res']].strip()
-            # time_defining_flag = line[fields['t_def']].strip()
-            # azimuth_defining_flag = line[fields['a_def']].strip()
-            # slowness_defining_flag = line[fields['s_def']].strip()
+            time_defining_flag = line[fields['t_def']].strip()
+            azimuth_defining_flag = line[fields['a_def']].strip()
+            slowness_defining_flag = line[fields['s_def']].strip()
             snr = line[fields['snr']].strip()
             amplitude_value = line[fields['amp']].strip()
             period = line[fields['per']].strip()
@@ -780,10 +797,18 @@ class Unpickler(object):
                 except KeyError:
                     pass
                 try:
+                    pick.polarity = PICK_POLARITIES[direction]
+                except KeyError:
+                    pass
+                try:
                     pick.onset = PICK_ONSETS[onset]
                 except KeyError:
                     pass
                 pick.phase_hint = phase
+                try:
+                    pick.backazimuth = float(arrival_azimuth)
+                except ValueError:
+                    pass
                 try:
                     pick.horizontal_slowness = float(slowness)
                 except ValueError:
@@ -817,9 +842,22 @@ class Unpickler(object):
             except ValueError:
                 pass
             try:
+                arrival.backazimuth_residual = float(azimuth_residual)
+            except ValueError:
+                pass
+            try:
                 arrival.horizontal_slowness_residual = float(slowness_residual)
             except ValueError:
                 pass
+
+            if time_defining_flag == 'T':
+                arrival.time_weight = 1
+
+            if azimuth_defining_flag == 'A':
+                arrival.backazimuth_weight = 1
+
+            if slowness_defining_flag == 'S':
+                arrival.horizontal_slowness_weight = 1
 
             public_id = "arrival/%s" % line_id
             arrival.resource_id = self._get_res_id(public_id,
