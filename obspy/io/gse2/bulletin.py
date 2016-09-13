@@ -359,11 +359,15 @@ class Unpickler(object):
             channels = [channel for channel in channels
                         if channel.location_code == location_code]
 
-            # Choose channel code by priority
-            # HHZ > EHZ > ELZ > BHZ > LHZ > SHZ
-            priority = ['HHZ', 'EHZ', 'ELZ', 'BHZ', 'LHZ', 'SHZ']
             codes = [channel.code for channel in channels]
-            code = next((code for code in priority if code in codes), None)
+            code = None
+            if len(codes) == 1:
+                code = codes[0]
+            else:
+                # Choose channel code by priority
+                # HHZ > EHZ > ELZ > BHZ > LHZ > SHZ
+                priority = ['HHZ', 'EHZ', 'ELZ', 'BHZ', 'LHZ', 'SHZ']
+                code = next((code for code in priority if code in codes), None)
 
             if code is None:
                 if len(network) > 1:
@@ -380,7 +384,7 @@ class Unpickler(object):
 
             self._warn('Several stations, location codes or channels have '
                        'been found, choose %s.%s.%s.%s' %
-                       (station, network.code, station, channel.location_code,
+                       (network.code, station, channel.location_code,
                         channel.code))
             return network.code, channel
 

@@ -603,6 +603,52 @@ class BulletinTestCase(unittest.TestCase):
         self.assertEqual(waveform_2.channel_code, None)
         self.assertEqual(waveform_2.location_code, None)
 
+    def test_inventory_with_multiple_channels(self):
+        filename = os.path.join(self.path, 'gse_2.0_non_standard.txt')
+        inventory_filename = os.path.join(self.path,
+                                          'inventory_multiple_channels.xml')
+        inventory = read_inventory(inventory_filename)
+        fields = {
+            'line_1': {
+                'author': slice(105, 113),
+                'id': slice(114, 123),
+            },
+            'line_2': {
+                'az': slice(40, 46),
+                'antype': slice(105, 106),
+                'loctype': slice(107, 108),
+                'evtype': slice(109, 111),
+            },
+            'arrival': {
+                'amp': slice(94, 104),
+            },
+        }
+        warnings.simplefilter("ignore", UserWarning)
+        catalog = _read_gse2(filename, inventory, fields=fields,
+                             event_point_separator=True)
+        warnings.filters.pop(0)
+        self.assertEqual(len(catalog), 2)
+        # Test a station present in the inventory
+        event = catalog[0]
+        self.assertEqual(len(event.picks), 9)
+        pick = event.picks[0]
+        waveform = pick.waveform_id
+        self.assertEqual(waveform.network_code, 'ZU')
+        self.assertEqual(waveform.channel_code, 'HHZ')
+        self.assertEqual(waveform.location_code, '1')
+        # Test a station with several channels
+        pick_2 = event.picks[2]
+        waveform_2 = pick_2.waveform_id
+        self.assertEqual(waveform_2.network_code, 'ZU')
+        self.assertEqual(waveform_2.channel_code, None)
+        self.assertEqual(waveform_2.location_code, None)
+        # Test a station not present in the inventory
+        pick_3 = event.picks[3]
+        waveform_3 = pick_3.waveform_id
+        self.assertEqual(waveform_3.network_code, 'XX')
+        self.assertEqual(waveform_3.channel_code, None)
+        self.assertEqual(waveform_3.location_code, None)
+
     def test_several_begin(self):
         """
         Test with several events.
