@@ -1328,6 +1328,12 @@ class SeismicArray(object):
         # Number of windows is determined by data length minus one window
         # length divided by step length, then adding the one omitted window.
         num_win = int((datalen_sec*fs - nsamp)/nstep) + 1
+        out_wins = int(np.floor(num_win / win_average))
+        if not out_wins > 0:
+            msg = "Zero output windows! Check data length, and parameters " \
+                          "window_length, win_frac and win_average."
+            raise ValueError(msg)
+
         alldata_z = np.zeros((n_stats, num_win, nsamp))
         alldata_n, alldata_e = alldata_z.copy(), alldata_z.copy()
         nst = np.zeros(num_win)
@@ -1392,6 +1398,12 @@ class SeismicArray(object):
         deltaf = 1. / (nsamp * deltat)
 
         if whiten:
+            try:
+                float(whiten)
+            except:
+                msg = ('Whiten parameter must be digits. It was set to 0.01.')
+                warnings.warn(msg)
+                whiten = 0.01
             if whiten >= fr[-1]-fr[0]:
                 msg = ('Moving frequency window is %s, it equals or exceeds '
                        'the entire frequency range and was set to 0.01 now.')
@@ -1425,7 +1437,7 @@ class SeismicArray(object):
         # incident angle or atan(H/V)
         incs = np.arange(5, 90, 10) * math.pi / 180.
 
-        def pol_love(azi):
+        def pol_transverse(azi):
             pol_e = math.cos(theo_backazi[azi])
             pol_n = -1. * math.sin(theo_backazi[azi])
             return pol_e, pol_n
@@ -1450,11 +1462,11 @@ class SeismicArray(object):
             pol_n = math.cos(theo_backazi[azi])
             return pol_e, pol_n
 
-        cz = [0., 1j, 1j, 1., 1.]
-        ch = (pol_love, pol_rayleigh_retro, pol_rayleigh_prog, pol_p, pol_sv)
+        cz = [0., 0., 1j, 1j, 1., 1.]
+        ch = (pol_transverse, pol_rayleigh_retro, pol_rayleigh_retro,
+              pol_rayleigh_prog, pol_p, pol_sv)
 
         nfreq = len(fr)
-        out_wins = int(np.floor(num_win / win_average))
         beamres = np.zeros((len(theo_backazi), u.size, out_wins, nfreq))
         incidence = np.zeros((out_wins, nfreq))
         win_average = int(win_average)
@@ -1495,22 +1507,19 @@ class SeismicArray(object):
                     e_steern = (e_steern.T * np.array([ch[polarisation](azi)[1]
                                 for azi in range(len(theo_backazi))])).T
 
-                    if polarisation == 0:
+                    if polarisation in [0, 1]:
                         w = np.concatenate(
                             (e_steer * cz[polarisation], e_steern, e_steere),
                             axis=1)
                         wt = w.T.copy()
-                        if not coherency:
-                            beamres[:, vel, win / win_average, f] = 1. / (
+                        beamres[:, vel, int(win / win_average), f] = 1. / (
                                 nst[win] * nst[win]) * abs(
                                 (np.conjugate(w) * np.dot(r, wt).T).sum(1))
-                        else:
-                            beamres[:, vel, win / win_average, f] = 1. / (
-                                nst[win]) * abs((np.conjugate(w) *
-                                                 np.dot(r, wt).T).sum(1)) \
-                                / abs(np.sum(np.diag(r[n_stats:, n_stats:])))
+                        if coherency:
+                            beamres[:, vel, int(win / win_average), f] /= \
+                                abs(np.sum(np.diag(r)))
 
-                    elif polarisation in [1, 2, 3]:
+                    elif polarisation in [2, 3, 4]:
                         for inc_angle in range(len(incs)):
                             w = np.concatenate((e_steer * cz[polarisation] *
                                                 np.cos(incs[inc_angle]),
@@ -1520,16 +1529,14 @@ class SeismicArray(object):
                                                 np.sin(incs[inc_angle])),
                                                axis=1)
                             wt = w.T.copy()
-                            if not coherency:
-                                res[:, vel, inc_angle] = 1. / (
+                            res[:, vel, inc_angle] = 1. / (
                                     nst[win] * nst[win]) * abs(
                                     (np.conjugate(w) * np.dot(r, wt).T).sum(1))
-                            else:
-                                res[:, vel, inc_angle] = 1. / (nst[win]) * abs(
-                                    (np.conjugate(w) * np.dot(r, wt).T).sum(
-                                        1)) / abs(np.sum(np.diag(r)))
+                            if coherency:
+                                res[:, vel, inc_angle] /= \
+                                    abs(np.sum(np.diag(r)))
 
-                    elif polarisation == 4:
+                    elif polarisation == 5:
                         for inc_angle in range(len(incs)):
                             w = np.concatenate((e_steer * cz[polarisation] *
                                                 np.sin(incs[inc_angle]),
@@ -1539,20 +1546,19 @@ class SeismicArray(object):
                                                 np.cos(incs[inc_angle])),
                                                axis=1)
                             wt = w.T.copy()
-                            if not coherency:
-                                res[:, vel, inc_angle] = 1. / (
+                            res[:, vel, inc_angle] = 1. / (
                                     nst[win] * nst[win]) * abs(
                                     (np.conjugate(w) * np.dot(r, wt).T).sum(1))
-                            else:
-                                res[:, vel, inc_angle] = 1. / (nst[win]) * abs(
-                                    (np.conjugate(w) * np.dot(r, wt).T).sum(
-                                        1)) / abs(np.sum(np.diag(r)))
+                            if coherency:
+                                res[:, vel, inc_angle] /= \
+                                    abs(np.sum(np.diag(r)))
 
-                if polarisation > 0:
+                if polarisation > 1:
                     i, j, k = np.unravel_index(np.argmax(res[:, uindex, :]),
                                                res.shape)
-                    beamres[:, :, win / win_average, f] = res[:, :, k]
-                    incidence[win / win_average, f] = incs[k] * 180. / math.pi
+                    beamres[:, :, int(win / win_average), f] = res[:, :, k]
+                    incidence[int(win / win_average), f] = incs[k] * 180. / \
+                        math.pi
 
         return beamres, fr, incidence, window_start_times
 
@@ -1570,7 +1576,7 @@ class SeismicArray(object):
         sampling distance). (hint: check length with trace.stats.npts)
         The given streams are not modified in place. All trimming, filtering,
         downsampling should be done previously.
-        The beamforming can distinguish horizontally transversal (SH),
+        The beamforming can distinguish horizontally transversal (SH), radial,
         prograde/retrograde elliptical, longitudinal (P) and vertically
         transversal (SV) polarization and performs grid searchs over slowness,
         azimuth and incidence angle, respectively arctangent of the H/V ratio.
@@ -1588,8 +1594,8 @@ class SeismicArray(object):
         :param smin: minimum slowness of the slowness grid [s/km]
         :param smax: maximum slowness [s/km]
         :param sstep: slowness step [s/km]
-        :param wavetype: 'SH', 'elliptic_retrograde', 'elliptic_prograde',
-         'P', or 'SV'
+        :param wavetype: 'transvers', 'radial', 'elliptic_retrograde',
+         'elliptic_prograde', 'P', or 'SV'
         :param freq_range: Frequency band (min, max) that is used for
          beamforming and returned. Ideally, use the frequency band of the
          pre-filter.
@@ -1601,16 +1607,16 @@ class SeismicArray(object):
          jointly whitened along the frequency axis with a moving window of
          frequency width 'whiten'
         :param phaseonly: whether to totally disregard data amplitudes
-        :param coherency: whether to normalise the beam power by the total
-         array power on the components corresponding to the polarization choice
+        :param coherency: whether to normalise the beam power spectral density
+         by the average station power spectral density of all components
         :return: A :class:`~obspy.signal.array_analysis.BeamformerResult`
         object containing the beamforming results, with dimensions of
         backazimuth range, slowness range, number of windows and number of
         discrete frequencies; as well as frequency and incidence angle arrays
-        (the latter will be zero for SH waves).
+        (the latter will be zero for radial and transversal polarization).
         """
-        pol_dict = {'sh': 0, 'elliptic_retrograde': 1, 'elliptic_prograde':
-                    2, 'p': 3, 'sv': 4}
+        pol_dict = {'transvers': 0, 'radial': 1, 'elliptic_retrograde': 2,
+                    'elliptic_prograde': 3, 'p': 4, 'sv': 5}
         if wavetype.lower() not in pol_dict:
             raise ValueError('Invalid option for wavetype: {}'
                              .format(wavetype))
@@ -3367,21 +3373,27 @@ class BeamformerResult(object):
         if show is True:
             plt.show()
 
-    def plot_power(self, show=True):
+    def plot_power(self, plot_frequency=None, show=True):
         """
         Plot relative power as a function of backazimuth and time, like a
         Vespagram.
 
         Requires full 4D results, at the moment only provided by
         :meth:`three_component_beamforming`.
-
+        :param plot_frequencies: Discrete frequencies for which windows
+         should be plotted, otherwise an average of frequencies is plotted.
         :param show: Whether to call plt.show() immediately.
         """
         import matplotlib.pyplot as plt
         if self.full_beamres is None:
             raise ValueError('Insufficient data. Try other plotting options.')
-        # Prepare data.
-        freqavg = self.full_beamres.mean(axis=3)
+        if plot_frequency is not None:
+            # Prepare data.
+            # works because freqs is a range
+            ifreq = np.searchsorted(self.freqs, float(plot_frequency))
+            freqavg = np.squeeze(self.full_beamres[:, :, :, ifreq])
+        else:
+            freqavg = self.full_beamres.mean(axis=3)
         num_win = self.full_beamres.shape[2]
         # This is 2D, with time windows and baz (in this order)
         # as indices.
@@ -3440,9 +3452,9 @@ class BeamformerResult(object):
          windows.
         :param average_freqs: Whether to plot an average of results over all
          frequencies.
-        :param plot_frequencies: List of discrete frequencies for which windows
-         should be plotted, if not plotting an average of frequencies (ignored
-         if average_freqs is True).
+        :param plot_frequencies: Tuple of discrete frequencies (f1, f2) for
+         which windows should be plotted, if not provided an average of
+         frequencies is plotted (ignored if average_freqs is True).
         :param show: Whether to call plt.show() immediately.
         """
         import matplotlib.pyplot as plt
@@ -3451,10 +3463,9 @@ class BeamformerResult(object):
         if average_freqs is True and plot_frequencies is not None:
             warnings.warn("Ignoring plot_frequencies, only plotting an average"
                           " of all frequencies.")
-        if(type(plot_frequencies) is not list and
-           type(plot_frequencies) is not tuple and
+        if(hasattr(plot_frequencies, '__getitem__') is False and
            plot_frequencies is not None):
-            plot_frequencies = [plot_frequencies]
+            plot_frequencies = tuple([plot_frequencies])
 
         theo_backazi = np.arange(0, 362, 2) * math.pi / 180.
 
