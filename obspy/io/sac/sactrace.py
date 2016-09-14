@@ -1286,13 +1286,15 @@ class SACTrace(object):
         :type keep_sac_header: bool
 
         """
-        try:
-            header = _ut.obspy_to_sac_header(trace.stats, keep_sac_header)
-        except SacError:
-            # not enough time info in old SAC header
-            # XXX: try to do something besides ignore the old header?
-            header = _ut.obspy_to_sac_header(trace.stats,
-                                             keep_sac_header=False)
+        header = _ut.obspy_to_sac_header(trace.stats)
+
+        if keep_sac_header and trace.stats.get('sac'):
+            try:
+                header = _ut.merge_sac_headers(trace.stats.sac, header)
+            except SacError:
+                # not enough time info in old SAC header
+                # XXX: do something besides ignore the old header
+                pass
 
         # handle the data headers
         data = trace.data
