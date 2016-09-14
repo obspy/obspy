@@ -177,8 +177,8 @@ class Client(object):
         address = (self.host, self.port)
         if self.proxy:
             proxy = (self.proxy.hostname, self.proxy.port)
-            auth = (self.proxy.username, self.proxy.password)\
-                    if self.proxy.username else None
+            auth = ((self.proxy.username, self.proxy.password) if
+                    self.proxy.username else None)
 
         success = False
         while not success:

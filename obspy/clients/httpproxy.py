@@ -10,6 +10,9 @@ License:
 J. MacCarthy, modified from https://gist.github.com/frxstrem/4487802
 
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
 
 import socket
 from base64 import b64encode
