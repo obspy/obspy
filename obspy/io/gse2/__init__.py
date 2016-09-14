@@ -90,6 +90,9 @@ You may export the data to the file system using the
 
 Reading bulletin
 ----------------
+Only GSE2.0 bulletins are currently supported. IMS1.0 (or GSE2.1 before
+renaming) bulletins are similar to GSE2.0 but have significant differences.
+
 Read support works via the ObsPy plugin structure:
 
 >>> from obspy import read_events
