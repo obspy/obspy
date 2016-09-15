@@ -255,6 +255,12 @@ class Unpickler(object):
         return "%s, line %s" % (message, self.lines.line_nb)
 
     def _warn(self, message):
+        """
+        Display a warning message with the line number.
+
+        :type message: str
+        :param message: Message to be displayed
+        """
         warnings.warn(self._add_line_nb(message))
 
     def _skip_empty_lines(self):
@@ -271,15 +277,16 @@ class Unpickler(object):
         :param ident: Id of
             the :class:`~obspy.core.event.base.ResourceIdentifier`.
         :type parent: :class:`~obspy.core.event.origin.Origin`,
-            :class:`~obspy.core.event.Event` or any other object with a
-            resource_id attribute.
+            :class:`~obspy.core.event.event.Event` or any other object
+            with a resource_id attribute.
         :param parent: The resource_id attribute of the parent will be
             used as a prefix for the new
             :class:`~obspy.core.event.base.ResourceIdentifier`.
-        :type parent_res_id: :class:`~obspy.core.event.ResourceIdentifier`
+        :type parent_res_id: :class:`~obspy.core.event.base.ResourceIdentifier`
             of the parent.
-        :param parent_res_id: :class:`~obspy.core.event.ResourceIdentifier`
-        :rtype: :class:`~obspy.core.event.ResourceIdentifier`
+        :param parent_res_id:
+            :class:`~obspy.core.event.base.ResourceIdentifier`
+        :rtype: :class:`~obspy.core.event.base.ResourceIdentifier`
         :return: ResourceIdentifier object.
         """
         prefix = self.res_id_prefix
@@ -410,7 +417,7 @@ class Unpickler(object):
         :type first_line: str
         :param first_line: First line of an event block, which contains
             the event id.
-        :rtype: :class:`~obspy.core.event.Event`
+        :rtype: :class:`~obspy.core.event.event.Event`
         :return: The parsed event or None.
         """
         event_id = first_line[5:].strip()
@@ -450,10 +457,10 @@ class Unpickler(object):
         """
         Parse an origin.
 
-        :type event: :class:`~obspy.core.event.Event`
+        :type event: :class:`~obspy.core.event.event.Event`
         :param event: Event of the origin.
         :rtype: :class:`~obspy.core.event.origin.Origin`,
-            :class:`~obspy.core.event.ResourceIdentifier`
+            :class:`~obspy.core.event.base.ResourceIdentifier`
         :returns: Parsed origin or None, resource identifier of the
             origin.
         """
@@ -505,13 +512,14 @@ class Unpickler(object):
 
         :type line: str
         :param line: Line to parse.
-        :type event: :class:`~obspy.core.event.Event`
+        :type event: :class:`~obspy.core.event.event.Event`
         :param event: Event of the origin.
-        :type magnitudes: list of :class:`~obspy.core.event.Magnitude`
+        :type magnitudes: list of
+            :class:`~obspy.core.event.magnitude.Magnitude`
         :param magnitudes: Store magnitudes in a list to keep
             their positions.
         :rtype: :class:`~obspy.core.event.origin.Origin`,
-            :class:`~obspy.core.event.ResourceIdentifier`
+            :class:`~obspy.core.event.base.ResourceIdentifier`
         :returns: Parsed origin or None, resource identifier of the
             origin.
         """
@@ -986,29 +994,28 @@ def _read_gse2(filename, inventory=None, default_network_code='XX',
 
     :type filename: str
     :param filename: File or file-like object in text mode.
-    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`,
-        optionnal
+    :type inventory: :class:`~obspy.core.inventory.inventory.Inventory`
     :param inventory: Inventory used to retrieve network code, location code
         and channel code of stations.
-    :type default_network_code: str, optionnal
+    :type default_network_code: str
     :param default_network_code: Default network code used if stations
         are not found in the inventory.
-    :type default_location_code: str, optionnal
+    :type default_location_code: str
     :param default_location_code: Location code used if stations are
         not found in the inventory.
-    :type default_channel_code: str, optionnal
+    :type default_channel_code: str
     :param default_channel_code: Default channel code used if stations
         are not found in the inventory.
-    :type res_id_prefix: str, optionnal
+    :type res_id_prefix: str
     :param res_id_prefix: Prefix used
         in :class:`~obspy.core.event.base.ResourceIdentifier` attributes.
-    :type fields: dict, optionnal
+    :type fields: dict
     :param fields: dictionary of positions of input fields, used if input file
         is non-standard
-    :type event_point_separator: bool, optionnal
+    :type event_point_separator: bool
     :param event_point_separator: ``True`` if events are separated by
         point rather than 2 empty lines.
-    :type agency: str, optionnal
+    :type agency: str
     :param agency: Agency that generated the file.
     :rtype: :class:`~obspy.core.event.Catalog`
     :return: An ObsPy Catalog object.
