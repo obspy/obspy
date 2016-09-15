@@ -422,6 +422,16 @@ class SeismicArrayTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(out.max_rel_power, 1.22923997,
                                              decimal=8)
 
+    def test_plot_radial_transfer_function(self):
+        """
+        Tests the plotting of radial array transfer functions.
+        """
+        arr = SeismicArray('pfield', inventory=read_inventory(
+            os.path.join(self.path, 'pfield_inv_for_instaseis.xml')))
+        with ImageComparison(self.path_images, "radialtransferfunc.png") as ic:
+            arr.plot_radial_transfer_function(0, 0.6, 0.05, [0.2])
+            plt.savefig(ic.name)
+
     def test_array_plotting(self):
         """
         Tests the plotting of arrays.

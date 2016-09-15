@@ -1369,7 +1369,6 @@ class SeismicArray(object):
             np.array([UTCDateTime(avg_starttime + i * nstep/fs,
                                   precision=len(str(fs).split('.')[0]))
                       for i in range(num_win) if i % win_average == 0])
-
         if verbose:
             print(nst, ' stations/window; average over ', win_average)
 
@@ -1467,8 +1466,9 @@ class SeismicArray(object):
               pol_rayleigh_prog, pol_p, pol_sv)
 
         nfreq = len(fr)
-        beamres = np.zeros((len(theo_backazi), u.size, out_wins, nfreq))
-        incidence = np.zeros((out_wins, nfreq))
+        beamres = np.zeros((len(theo_backazi), u.size,
+                            max(out_wins, len(window_start_times)), nfreq))
+        incidence = np.zeros((max(out_wins, len(window_start_times)), nfreq))
         win_average = int(win_average)
         for f in range(nfreq):
             omega = 2 * math.pi * fr[f]
@@ -3559,7 +3559,7 @@ class BeamformerResult(object):
         """
         if plot_freqs is None:
             plot_freqs = [self.freqs[0], self.freqs[-1]]
-        if type(plot_freqs) is float or type(plot_freqs) is float:
+        if type(plot_freqs) is float or type(plot_freqs) is int:
             plot_freqs = [plot_freqs]
 
         # Need absolute values:
