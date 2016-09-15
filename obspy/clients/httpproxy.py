@@ -13,11 +13,14 @@ J. MacCarthy, modified from https://gist.github.com/frxstrem/4487802
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
+from future import standard_library
+from future.utils import native_str
 
-import socket
 from base64 import b64encode
-import urllib
-import urlparse
+import socket
+with standard_library.hooks():
+    import urllib
+    import urlparse
 
 
 def get_proxy_tuple():
@@ -38,7 +41,7 @@ def valid_address(addr):
     """ Verify that an IP/port tuple is valid """
     is_valid = (isinstance(addr, (list, tuple)) and
                 len(addr) == 2 and
-                isinstance(addr[0].decode(), (str, unicode)) and
+                isinstance(addr[0], (str, native_str)) and
                 isinstance(addr[1], int))
     return is_valid
 
