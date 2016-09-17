@@ -96,7 +96,7 @@ def http_proxy_connect(address, proxy, auth=None):
     if statusline.count(' ') < 2:
         fp.close()
         s.close()
-        raise IOError('Bad response')
+        raise IOError('Bad response. statusline:'.format(statusline))
     version, status, statusmsg = statusline.split(' ', 2)
     if version not in ('HTTP/1.0', 'HTTP/1.1'):
         fp.close()
