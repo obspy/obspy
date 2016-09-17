@@ -188,14 +188,12 @@ class Client(object):
                     # This socket is already connected to the proxy
                 else:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((self.host, self.port))
 
                 with NamedTemporaryFile() as tf:
                     if self.debug:
                         print(ascdate(), asctime(), "connecting temp file",
                               tf.name)
-                    if not self.proxy:
-                        # The proxy-ed socket is already connected
-                        s.connect((self.host, self.port))
                     s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:
