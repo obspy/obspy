@@ -19,18 +19,18 @@ from future.utils import native_str
 from base64 import b64encode
 import socket
 with standard_library.hooks():
-    import urllib
-    import urlparse
+    from urllib.request import getproxies
+    from urllib.parse import urlparse
 
 
 def get_proxy_tuple():
     """
-    Return system http proxy as a urlparse.urlparse tuple or () if unset.
+    Return system http proxy as a urlparse tuple or () if unset.
     """
-    proxydict = urllib.getproxies()
+    proxydict = getproxies()
     proxystr = proxydict.get('http') or proxydict.get('https') or ''
     if proxystr:
-        proxy = urlparse.urlparse(proxystr)
+        proxy = urlparse(proxystr)
     else:
         proxy = ()
 
@@ -46,16 +46,15 @@ def valid_address(addr):
     return is_valid
 
 
-def http_proxy_connect(address, proxy, auth=None, headers={}):
+def http_proxy_connect(address, proxy, auth=None):
     """
     Establish a socket connection through an HTTP proxy.
 
     Arguments:
       address (required)     = The address of the target
       proxy (def: None)      = The address of the proxy server
-      auth (def: None)       = A tuple of the username and password used for
+      auth                   = A tuple of the username and password used for
                                authentication
-      headers (def: {})      = A set of headers that will be sent to the proxy
 
     Returns:
       A 3-tuple of the format:
@@ -77,14 +76,15 @@ def http_proxy_connect(address, proxy, auth=None, headers={}):
         if isinstance(auth, str):
             headers['proxy-authorization'] = auth
         elif auth and isinstance(auth, (tuple, list)) and len(auth) == 2:
-            proxy_authorization = 'Basic ' + b64encode('%s:%s' % auth)
+            auth_b64 = b64encode(bytes(('%s:%s' % auth).encode()))
+            proxy_authorization = 'Basic '.decode() + auth_b64
             headers['proxy-authorization'] = proxy_authorization
         else:
             raise ValueError('Invalid authentication specification')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(proxy)
-    fp = s.makefile('r+')
+    fp = s.makefile('r')
 
     fp.write('CONNECT %s:%d HTTP/1.0\r\n' % address)
     fp.write('\r\n'.join('%s: %s' % (k, v) for (k, v) in headers.items()) +
@@ -101,13 +101,13 @@ def http_proxy_connect(address, proxy, auth=None, headers={}):
     if version not in ('HTTP/1.0', 'HTTP/1.1'):
         fp.close()
         s.close()
-        raise IOError('Unsupported HTTP version')
+        raise IOError('Unsupported HTTP version: {}'.format(version))
     try:
         status = int(status)
     except ValueError:
         fp.close()
         s.close()
-        raise IOError('Bad response')
+        raise IOError('Bad response. status: {}'.format(status))
 
     response_headers = {}
 
