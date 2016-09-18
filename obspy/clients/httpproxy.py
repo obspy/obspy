@@ -77,7 +77,7 @@ def http_proxy_connect(address, proxy, auth=None):
             headers['proxy-authorization'] = auth
         elif auth and isinstance(auth, (tuple, list)) and len(auth) == 2:
             auth_b64 = b64encode(bytes(('%s:%s' % auth).encode()))
-            proxy_authorization = 'Basic '+ auth_b64.decode()
+            proxy_authorization = 'Basic ' + auth_b64.decode()
             headers['proxy-authorization'] = proxy_authorization
         else:
             raise ValueError('Invalid authentication specification')
