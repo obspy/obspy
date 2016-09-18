@@ -52,8 +52,8 @@ def http_proxy_connect(address, proxy, auth=None):
 
     Arguments:
       address (required)     = The address of the target
-      proxy (def: None)      = The address of the proxy server
-      auth                   = A tuple of the username and password used for
+      proxy   (required)     = The address of the proxy server
+      auth  (def: None)      = A tuple of the username and password used for
                                authentication
 
     Returns:
@@ -77,14 +77,14 @@ def http_proxy_connect(address, proxy, auth=None):
             headers['proxy-authorization'] = auth
         elif auth and isinstance(auth, (tuple, list)) and len(auth) == 2:
             auth_b64 = b64encode(bytes(('%s:%s' % auth).encode()))
-            proxy_authorization = 'Basic '.decode() + auth_b64
+            proxy_authorization = 'Basic '+ auth_b64.decode()
             headers['proxy-authorization'] = proxy_authorization
         else:
             raise ValueError('Invalid authentication specification')
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(proxy)
-    fp = s.makefile('r')
+    fp = s.makefile('rw')
 
     fp.write('CONNECT %s:%d HTTP/1.0\r\n' % address)
     fp.write('\r\n'.join('%s: %s' % (k, v) for (k, v) in headers.items()) +
@@ -96,7 +96,7 @@ def http_proxy_connect(address, proxy, auth=None):
     if statusline.count(' ') < 2:
         fp.close()
         s.close()
-        raise IOError('Bad response. statusline:'.format(statusline))
+        raise IOError('Bad response. statusline: {}'.format(statusline))
     version, status, statusmsg = statusline.split(' ', 2)
     if version not in ('HTTP/1.0', 'HTTP/1.1'):
         fp.close()
