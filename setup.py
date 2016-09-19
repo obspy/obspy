@@ -284,7 +284,8 @@ ENTRY_POINTS = {
         'CMTSOLUTION = obspy.io.cmtsolution.core',
         'SHAPEFILE = obspy.io.shapefile.core',
         'KML = obspy.io.kml.core',
-        'FNETMT = obspy.io.nied.fnetmt'
+        'FNETMT = obspy.io.nied.fnetmt',
+        'GSE2 = obspy.io.gse2.bulletin'
         ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.io.quakeml.core:_is_quakeml',
@@ -325,6 +326,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.FNETMT': [
         'isFormat = obspy.io.nied.fnetmt:_is_fnetmt_catalog',
         'readFormat = obspy.io.nied.fnetmt:_read_fnetmt_catalog',
+        ],
+    'obspy.plugin.event.GSE2': [
+        'isFormat = obspy.io.gse2.bulletin:_is_gse2',
+        'readFormat = obspy.io.gse2.bulletin:_read_gse2',
         ],
     'obspy.plugin.event.SHAPEFILE': [
         'writeFormat = obspy.io.shapefile.core:_write_shapefile',
