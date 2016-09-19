@@ -29,6 +29,8 @@ import timeit
 
 import numpy as np
 
+from lxml.etree import XMLSyntaxError
+
 import obspy
 from obspy.core.util import Enum
 
@@ -689,7 +691,17 @@ class ClientDownloadHelper(object):
             download_size += size
 
             # Extract information about that file.
-            info = utils.get_stationxml_contents(filename)
+            try:
+                info = utils.get_stationxml_contents(filename)
+            # Sometimes some services choose to not return XML files - guard
+            # against it and just delete the file. At subsequent runs the
+            # mass downloader will attempt to download it again.
+            except XMLSyntaxError:
+                self.logger.info(
+                    "Client '%s' - File %s is not an XML file - it will be "
+                    "deleted." % (self.client_name, filename))
+                utils.safe_delete(filename)
+                continue
 
             still_missing = {}
             # Make sure all missing information has been downloaded by
