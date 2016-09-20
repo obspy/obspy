@@ -2,6 +2,8 @@
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
    * ObsPy can now read records with a data-offset of zero. (see #1509, #1525)
+   * ObsPy can now read MiniSEED files with micro-second wrap arounds.
+     (see #1531)
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
