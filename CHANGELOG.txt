@@ -18,6 +18,8 @@ master:
    * A trace's stats.network/station/location/channel can now also be set in
      one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
      see #1439).
+   * Instrument correction for response list stages originating from inventory
+     objects (see #1514).
  - obspy.clients.fdsn:
    * The mass downloader now has `exclude_networks` and `exclude_stations`
      arguments to not download certain pieces of data. (see #1305)
