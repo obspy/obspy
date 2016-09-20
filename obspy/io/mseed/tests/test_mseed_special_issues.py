@@ -903,6 +903,31 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.sampling_rate, exp[3])
             self.assertEqual(tr.stats.npts, exp[4])
 
+    def test_read_file_with_microsecond_wrap(self):
+        """
+        This is not strictly valid but I encountered such a file in practice
+        so I guess it happens. Libmseed can also correctly deal with it.
+
+        The test file is a single record with the .0001 seconds field set to
+        10000. SEED strictly allows only 0-9999 in this field.
+        """
+        file = os.path.join(self.path, "data",
+                            "microsecond_wrap.mseed")
+
+        info = util.get_record_information(file)
+        tr = read(file)[0]
+
+        # Make sure libmseed and the internal ObsPy record parser produce
+        # the same result.
+        self.assertEqual(info["starttime"], tr.stats.starttime)
+        self.assertEqual(info["endtime"], tr.stats.endtime)
+
+        # Read with a hex-editor.
+        ref_time = UTCDateTime(year=2008, julday=8, hour=4, minute=58,
+                               second=5 + 1)
+        self.assertEqual(ref_time, info["starttime"])
+        self.assertEqual(ref_time, tr.stats.starttime)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
