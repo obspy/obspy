@@ -424,6 +424,12 @@ def _get_record_information(file_object, offset=0, endian=None):
         # to work for any value of values[5].
         msec = values[5] * 100
         offset = msec // 1000000
+        if offset:
+            warnings.warn(
+                "Record contains a fractional seconds (.0001 secs) of %i - "
+                "the maximum strictly allowed value is 9999. It will be "
+                "interpreted as one or more additional seconds." % values[5],
+                category=UserWarning)
         return UTCDateTime(
             year=values[0], julday=values[1],
             hour=values[2], minute=values[3], second=values[4],

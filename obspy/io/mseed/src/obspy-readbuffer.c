@@ -428,6 +428,14 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             msr->numsamples = retval;
         }
 
+        if ( msr->fsdh->start_time.fract > 9999 ) {
+            ms_log(1, "readMSEEDBuffer(): Record with offset=%d has a "
+                      "fractional second (.0001 seconds) of %d. This is not "
+                      "strictly valid but will be interpreted as one or more "
+                      "additional seconds.",
+                      offset, msr->fsdh->start_time.fract);
+        }
+
         // Add the record length for the next iteration
         offset += msr->reclen;
     }

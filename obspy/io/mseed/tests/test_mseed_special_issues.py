@@ -914,8 +914,27 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         file = os.path.join(self.path, "data",
                             "microsecond_wrap.mseed")
 
-        info = util.get_record_information(file)
-        tr = read(file)[0]
+        with warnings.catch_warnings(record=True) as w_1:
+            warnings.simplefilter("always")
+            info = util.get_record_information(file)
+
+        self.assertEqual(w_1[0].message.args[0],
+                         'Record contains a fractional seconds (.0001 secs) '
+                         'of 10000 - the maximum strictly allowed value is '
+                         '9999. It will be interpreted as one or more '
+                         'additional seconds.')
+
+        with warnings.catch_warnings(record=True) as w_2:
+            tr = read(file)[0]
+
+        # First warning is identical.
+        self.assertEqual(w_1[0].message.args[0], w_2[0].message.args[0])
+        # Second warning is raised by libmseed.
+        self.assertEqual(w_2[1].message.args[0],
+                         'readMSEEDBuffer(): Record with offset=0 has a '
+                         'fractional second (.0001 seconds) of 10000. This '
+                         'is not strictly valid but will be interpreted as '
+                         'one or more additional seconds.')
 
         # Make sure libmseed and the internal ObsPy record parser produce
         # the same result.
