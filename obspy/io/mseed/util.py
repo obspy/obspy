@@ -417,28 +417,37 @@ def _get_record_information(file_object, offset=0, endian=None):
     def fmt(s):
         return native_str('%sHHBBBxHHhhBBBxlxxH' % s)
 
+    def _parse_time(values):
+        # The spec says values[5] (.0001 seconds) must be between 0-9999 but
+        # we've  encountered files which have a value of 10000. We interpret
+        # this as an additional second. The approach here is general enough
+        # to work for any value of values[5].
+        msec = values[5] * 100
+        offset = msec // 1000000
+        if offset:
+            warnings.warn(
+                "Record contains a fractional seconds (.0001 secs) of %i - "
+                "the maximum strictly allowed value is 9999. It will be "
+                "interpreted as one or more additional seconds." % values[5],
+                category=UserWarning)
+        return UTCDateTime(
+            year=values[0], julday=values[1],
+            hour=values[2], minute=values[3], second=values[4],
+            microsecond=msec % 1000000) + offset
+
     if endian is None:
         try:
             endian = ">"
             values = unpack(fmt(endian), data)
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
         except:
             endian = "<"
             values = unpack(fmt(endian), data)
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
     else:
         values = unpack(fmt(endian), data)
         try:
-            starttime = UTCDateTime(
-                year=values[0], julday=values[1],
-                hour=values[2], minute=values[3], second=values[4],
-                microsecond=values[5] * 100)
+            starttime = _parse_time(values)
         except:
             msg = ("Invalid starttime found. The passed byte order is likely "
                    "wrong.")
