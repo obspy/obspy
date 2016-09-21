@@ -925,6 +925,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                          'additional seconds.')
 
         with warnings.catch_warnings(record=True) as w_2:
+            warnings.simplefilter("always")
             tr = read(file)[0]
 
         # First warning is identical.
