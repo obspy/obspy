@@ -692,6 +692,11 @@ def run(argv=None, interactive=True):
                         help='URL to Continuous Integration job page.')
     report.add_argument('--pr-url', default=None,
                         dest="pr_url", help='Github (Pull Request) URL.')
+    report.add_argument('--parse-issue-comments', default=False, type=int,
+                        dest="parse_issue_comments",
+                        help="Parse the corresponding issue number's comments "
+                             "for regex pattern if specific modules should be "
+                             "tested.")
 
     # other options
     others = parser.add_argument_group('Additional Options')
@@ -753,7 +758,8 @@ def run(argv=None, interactive=True):
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
-                     pr_url=args.pr_url)
+                     pr_url=args.pr_url,
+                     parse_github_comments=args.parse_issue_comments)
 
 
 def main(argv=None, interactive=True):

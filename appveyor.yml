@@ -40,4 +40,4 @@ build: false
 
 test_script:
   - "%CMD_IN_ENV% python setup.py develop"
-  - "python -m obspy.scripts.runtests -n appveyor-ci -r %CI_URL% %PR_URL%"
+  - "python -m obspy.scripts.runtests -n appveyor-ci -r %CI_URL% %PR_URL% --parse-issue-comments %APPVEYOR_PULL_REQUEST_NUMBER%"
