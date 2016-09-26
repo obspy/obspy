@@ -109,6 +109,7 @@ from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
+from obspy.core.util.github_api import check_module_tests_requested
 
 
 HARD_DEPENDENCIES = [
@@ -539,7 +540,8 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME, ci_url=None, pr_url=None):
+              hostname=HOSTNAME, ci_url=None, pr_url=None,
+              parse_github_comments=False):
     """
     This function executes ObsPy test suites.
 
@@ -556,14 +558,26 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     :param log: Filename of install log file to append to report.
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
+    :type parse_github_comments: int
+    :param parse_github_comments: Number of github issue, if comments should be
+        parsed online at GitHub for additional submodules for which tests
+        should be run.
     """
-    if tests is None:
-        tests = []
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
+    # if no submodules are specified: use all non-networking modules
+    if not tests:
+        tests = copy.copy(DEFAULT_MODULES)
+    # if requested, check github comments for regex to include specific modules
+    if parse_github_comments is not None and not all:
+        requested, additional_modules = \
+            check_module_tests_requested(parse_github_comments)
+        if requested:
+            if additional_modules is None:
+                all = True
+            else:
+                tests = list(set.union(set(tests), set(additional_modules)))
     if all:
         tests = copy.copy(ALL_MODULES)
-    elif not tests:
-        tests = copy.copy(DEFAULT_MODULES)
     # remove any excluded module
     if exclude:
         for name in exclude:
