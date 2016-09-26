@@ -5,6 +5,12 @@ import warnings
 from obspy import UTCDateTime
 
 
+# regex pattern in comments for requesting a docs build
+pattern_docs_build = r'\+DOCS'
+# regex pattern in comments for requesting tests of specific submodules
+pattern_test_modules = r'\+TESTS:([a-zA-Z0-9_\.,]*)'
+
+
 try:
     # github API token with "repo.status" access right
     token = os.environ["OBSPY_COMMIT_STATUS_TOKEN"]
@@ -17,12 +23,14 @@ else:
     HEADERS = {"Authorization": "token {}".format(token)}
 
 
-def check_docs_build_requested(issue_number):
+def get_comments(issue_number):
     """
-    Check if a docs build was requested for given issue number (by magic string
-    '+DOCS' anywhere in issue comments).
+    Get a list of comments for a specific issue at obspy/obspy on github.
 
-    :rtype: bool
+    :param issue_number: Number of issue (or pull request) to check.
+    :type issue_number: int
+    :rtype: list
+    :returns: List of comment text bodies of specified issue.
     """
     url = "https://api.github.com/repos/obspy/obspy/issues/{:d}/comments"
     data_ = requests.get(url.format(issue_number),
@@ -38,8 +46,56 @@ def check_docs_build_requested(issue_number):
         msg = "Unexpected response from github API:\n{}".format(pprint(data))
         raise Exception(msg)
     comments = [x["body"] for x in data]
-    pattern = r'\+DOCS'
-    return any(re.search(pattern, comment) for comment in comments)
+    return comments
+
+
+def check_module_tests_requested(issue_number):
+    """
+    Check if tests of specific modules were requested for given issue number
+    (e.g. by magic string '+TESTS:clients.fdsn,clients.arclink' anywhere in
+    issue comments).
+
+    :rtype: tuple
+    :returns: Tuple that indicates if specific testsuites are requested, e.g.
+        ``(False, None)`` if no specific tests are requested,
+        ``(True, None)`` if *all* modules (i.e. all default and all networking
+        modules) should be tested, specified by ``'+TESTS:ALL'``,
+        ``(True, ['clients.fdsn', 'clients.arclink'])`` if FDSN and ArcLink
+        submodule tests should be run in addition to the default test suites,
+        specified by ``'+TESTS:clients.fdsn,clients.arclink'``.
+    """
+    comments = get_comments(issue_number)
+    # search comments in reverse order (last comments first),
+    # stop on first match.
+    modules = None
+    for comment in comments[::-1]:
+        match = re.search(pattern_test_modules, comment)
+        if match:
+            modules = match.group(1)
+            break
+    else:
+        return (False, None)
+    # try to make sense of what comes after "+TESTS:"
+    try:
+        if modules.upper() == "ALL":
+            return (True, None)
+        else:
+            return (True, modules.split(","))
+    # otherwise ignore..
+    except:
+        pass
+    return (False, None)
+
+
+def check_docs_build_requested(issue_number):
+    """
+    Check if a docs build was requested for given issue number (by magic string
+    '+DOCS' anywhere in issue comments).
+
+    :rtype: bool
+    """
+    comments = get_comments(issue_number)
+    return any(re.search(pattern_docs_build, comment) for comment in comments)
 
 
 def get_open_pull_requests():
