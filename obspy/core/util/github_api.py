@@ -2,7 +2,6 @@ import os
 import re
 import requests
 import warnings
-from obspy import UTCDateTime
 
 
 # regex pattern in comments for requesting a docs build
@@ -157,6 +156,7 @@ def get_commit_status(commit, context=None):
 def get_commit_time(commit, fork="obspy"):
     """
     """
+    from obspy import UTCDateTime
     url = "https://api.github.com/repos/{fork}/obspy/git/commits/{hash}"
     url = url.format(fork=fork, hash=commit)
     commit_data = requests.get(url, headers=HEADERS)
@@ -174,6 +174,7 @@ def get_issue_numbers_that_need_docs_build(verbose=False):
     Relies on a local directory with some files to mark when PR docs have been
     built etc.
     """
+    from obspy import UTCDateTime
     open_prs = get_open_pull_requests()
     if verbose:
         print("Checking the following open PRs if a docs build is requested "
