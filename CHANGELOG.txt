@@ -66,7 +66,7 @@ master:
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
 - obspy.io.sh:
-   * Fix writing of long headers for python3
+   * Fix writing of long headers for Python 3 (see #1526)
  - obspy.io.stationxml:
    * Datetime fields are written with microseconds to StationXML if
      microseconds are present. (see #1511)
