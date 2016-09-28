@@ -11,13 +11,14 @@ from obspy.core.util.base import DEFAULT_MODULES, ALL_MODULES
 
 
 # regex pattern in comments for requesting a docs build
-pattern_docs_build = r'\+DOCS'
+PATTERN_DOCS_BUILD = r'\+DOCS'
 # regex pattern in comments for requesting tests of specific submodules
-pattern_test_modules = r'\+TESTS:([a-zA-Z0-9_\.,]*)'
+PATTERN_TEST_MODULES = r'\+TESTS:([a-zA-Z0-9_\.,]*)'
 
 
 try:
-    # github API token with "repo.status" access right
+    # github API token with "repo.status" access right (if used to set commit
+    # statuses) or with empty scope; to get around rate limitations
     token = os.environ["OBSPY_COMMIT_STATUS_TOKEN"]
 except KeyError:
     msg = ("Could not get authorization token for ObsPy github API "
@@ -42,7 +43,7 @@ def check_module_tests_requested(issue_number):
     modules_to_test = set(copy.copy(DEFAULT_MODULES))
 
     # process issue body/description
-    match = re.search(pattern_test_modules, issue.body)
+    match = re.search(PATTERN_TEST_MODULES, issue.body)
     if match:
         modules = match.group(1)
         if modules == "ALL":
@@ -51,7 +52,7 @@ def check_module_tests_requested(issue_number):
 
     # process issue comments
     for comment in issue.comments():
-        match = re.search(pattern_test_modules, comment.body)
+        match = re.search(PATTERN_TEST_MODULES, comment.body)
         if match:
             modules = match.group(1)
             if modules == "ALL":
@@ -69,10 +70,10 @@ def check_docs_build_requested(issue_number):
     :rtype: bool
     """
     issue = gh.issue("obspy", "obspy", issue_number)
-    if re.search(pattern_docs_build, issue.body):
+    if re.search(PATTERN_DOCS_BUILD, issue.body):
         return True
     for comment in issue.comments():
-        if re.search(pattern_docs_build, comment.body):
+        if re.search(PATTERN_DOCS_BUILD, comment.body):
             return True
     return False
 
