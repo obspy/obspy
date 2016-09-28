@@ -126,6 +126,11 @@ def _read_sc3ml(path_or_file_object):
 
     :param path_or_file_object: File name or file like object.
     """
+
+    # Raise error when file is not sc3ml
+    if not _is_sc3ml(path_or_file_object):
+        raise ValueError("File is not in valid sc3ml format")
+
     root = etree.parse(path_or_file_object).getroot()
 
     # Fix the namespace as its not always the default namespace. Will need
