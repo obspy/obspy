@@ -1,34 +1,16 @@
 import glob
 import os
-import requests
 import shutil
+
 from obspy import UTCDateTime
+
+from obspy_github_api import get_pull_requests
 
 
 DIRECTORY = "/home/obspy/htdocs/docs/pull_requests"
 
 
-try:
-    # github API token with "repo.status" access right
-    token = os.environ["OBSPY_COMMIT_STATUS_TOKEN"]
-except KeyError:
-    headers = None
-else:
-    headers = {"Authorization": "token {}".format(token)}
-
-
-# without using pagination we only get the last 100 pulls,
-# but this should be enough
-data = requests.get(
-    "https://api.github.com/repos/obspy/obspy/pulls",
-    params={"state": "closed", "sort": "updated", "direction": "desc",
-            "per_page": 100},
-    headers=headers)
-try:
-    assert data.ok
-except:
-    print(data.json())
-    raise
+prs = get_pull_requests(state="closed", sort="updated", direction="desc")
 
 now = UTCDateTime()
 # delete everything belonging to pull requests that have been closed for more
@@ -48,10 +30,10 @@ def delete(path):
         print("Failed to remove '{}' ({}).".format(file_, str(e)))
 
 
-for d in data.json():
+for pr in prs:
     # extract the pieces we need from the PR data
-    number = d['number']
-    time = UTCDateTime(d['closed_at'])
+    number = pr.number
+    time = UTCDateTime(pr.closed_at)
 
     # still pretty freshly closed, so leave it alone
     if time > time_threshold:
