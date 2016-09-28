@@ -138,6 +138,8 @@ install:
   - git branch -vv
   - git remote -vv
   - pip install --no-deps .
+  - pip install https://github.com/obspy/obspy_github_api/archive/master.zip
+  - conda list
   - git status
 
 script:
@@ -146,12 +148,22 @@ script:
   # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
   - mkdir empty
   - cd empty
-  - export MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+  # check if any additional modules should be tested (via github issue comments)
+  - |
+      if [ "$TRAVIS_PULL_REQUEST" != "false" ]
+        # we're building a pull request, so check what modules should be tested
+        then export MODULELIST=`python -c "from obspy_github_api import check_module_tests_requested; print('obspy.' + ',obspy.'.join(check_module_tests_requested($TRAVIS_PULL_REQUEST)))"`
+             export MODULELISTSPACES=`python -c "from obspy_github_api import check_module_tests_requested; print(' '.join(check_module_tests_requested($TRAVIS_PULL_REQUEST)))"`
+        # we're building a branch on the main repo
+        else export MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print('obspy.' + ',obspy.'.join(MODULES))"`
+             export MODULELISTSPACES=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print(' '.join(MODULES))"`; fi \
+      || echo
   - echo $MODULELIST
+  - echo $MODULELISTSPACES
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" $MODULELISTSPACES;
     else
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-ur="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}";
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-ur="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
     fi;
 
 after_success:
