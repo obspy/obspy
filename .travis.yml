@@ -151,7 +151,7 @@ script:
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}";
     else
-      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-ur="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" --parse-issue-comments=${TRAVIS_PULL_REQUEST};
+      coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-ur="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}";
     fi;
 
 after_success:

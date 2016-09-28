@@ -109,7 +109,6 @@ from obspy.core.util import ALL_MODULES, DEFAULT_MODULES, NETWORK_MODULES
 from obspy.core.util.misc import MatplotlibBackend
 from obspy.core.util.testing import MODULE_TEST_SKIP_CHECKS
 from obspy.core.util.version import get_git_version
-from obspy.core.util.github_api import check_module_tests_requested
 
 
 HARD_DEPENDENCIES = [
@@ -540,8 +539,7 @@ class _TextTestRunner:
 def run_tests(verbosity=1, tests=None, report=False, log=None,
               server="tests.obspy.org", all=False, timeit=False,
               interactive=False, slowest=0, exclude=[], tutorial=False,
-              hostname=HOSTNAME, ci_url=None, pr_url=None,
-              parse_github_comments=False):
+              hostname=HOSTNAME, ci_url=None, pr_url=None):
     """
     This function executes ObsPy test suites.
 
@@ -558,26 +556,14 @@ def run_tests(verbosity=1, tests=None, report=False, log=None,
     :param log: Filename of install log file to append to report.
     :type server: str, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
-    :type parse_github_comments: int
-    :param parse_github_comments: Number of github issue, if comments should be
-        parsed online at GitHub for additional submodules for which tests
-        should be run.
     """
+    if tests is None:
+        tests = []
     print("Running {}, ObsPy version '{}'".format(__file__, obspy.__version__))
-    # if no submodules are specified: use all non-networking modules
-    if not tests:
-        tests = copy.copy(DEFAULT_MODULES)
-    # if requested, check github comments for regex to include specific modules
-    if parse_github_comments is not None and not all:
-        requested, additional_modules = \
-            check_module_tests_requested(parse_github_comments)
-        if requested:
-            if additional_modules is None:
-                all = True
-            else:
-                tests = list(set.union(set(tests), set(additional_modules)))
     if all:
         tests = copy.copy(ALL_MODULES)
+    elif not tests:
+        tests = copy.copy(DEFAULT_MODULES)
     # remove any excluded module
     if exclude:
         for name in exclude:
@@ -692,11 +678,6 @@ def run(argv=None, interactive=True):
                         help='URL to Continuous Integration job page.')
     report.add_argument('--pr-url', default=None,
                         dest="pr_url", help='Github (Pull Request) URL.')
-    report.add_argument('--parse-issue-comments', default=False, type=int,
-                        dest="parse_issue_comments",
-                        help="Parse the corresponding issue number's comments "
-                             "for regex pattern if specific modules should be "
-                             "tested.")
 
     # other options
     others = parser.add_argument_group('Additional Options')
@@ -758,8 +739,7 @@ def run(argv=None, interactive=True):
                      args.all, args.timeit, interactive, args.n,
                      exclude=args.exclude, tutorial=args.tutorial,
                      hostname=args.hostname, ci_url=args.ci_url,
-                     pr_url=args.pr_url,
-                     parse_github_comments=args.parse_issue_comments)
+                     pr_url=args.pr_url)
 
 
 def main(argv=None, interactive=True):
