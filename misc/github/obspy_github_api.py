@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
+import copy
 import os
 import re
-import requests
 import warnings
+
+import github3
+
+from obspy import UTCDateTime
+from obspy.core.util.base import DEFAULT_MODULES, ALL_MODULES
 
 
 # regex pattern in comments for requesting a docs build
@@ -18,73 +23,42 @@ except KeyError:
     msg = ("Could not get authorization token for ObsPy github API "
            "(env variable OBSPY_COMMIT_STATUS_TOKEN)")
     warnings.warn(msg)
-    HEADERS = None
-else:
-    HEADERS = {"Authorization": "token {}".format(token)}
+    token = None
 
-
-def get_comments(issue_number):
-    """
-    Get a list of comments for a specific issue at obspy/obspy on github.
-
-    :param issue_number: Number of issue (or pull request) to check.
-    :type issue_number: int
-    :rtype: list
-    :returns: List of comment text bodies of specified issue.
-    """
-    url = "https://api.github.com/repos/obspy/obspy/issues/{:d}/comments"
-    data_ = requests.get(url.format(issue_number),
-                         params={"per_page": 100}, headers=HEADERS)
-    data = data_.json()
-    url = data_.links.get("next", {}).get("url", None)
-    while url:
-        data_ = requests.get(url, headers=HEADERS)
-        data += data_.json()
-        url = data_.links.get("next", {}).get("url", None)
-    if not isinstance(data, list):
-        from pprint import pprint
-        msg = "Unexpected response from github API:\n{}".format(pprint(data))
-        raise Exception(msg)
-    comments = [x["body"] for x in data]
-    return comments
+gh = github3.login(token=token)
 
 
 def check_module_tests_requested(issue_number):
     """
-    Check if tests of specific modules were requested for given issue number
-    (e.g. by magic string '+TESTS:clients.fdsn,clients.arclink' anywhere in
-    issue comments).
+    Check if tests of specific modules are requested for given issue number
+    (e.g. by magic string '+TESTS:clients.fdsn,clients.arclink' or '+TESTS:ALL'
+    anywhere in issue description or comments).
+    Accumulates any occurrences of the above magic strings.
 
-    :rtype: tuple
-    :returns: Tuple that indicates if specific testsuites are requested, e.g.
-        ``(False, None)`` if no specific tests are requested,
-        ``(True, None)`` if *all* modules (i.e. all default and all networking
-        modules) should be tested, specified by ``'+TESTS:ALL'``,
-        ``(True, ['clients.fdsn', 'clients.arclink'])`` if FDSN and ArcLink
-        submodule tests should be run in addition to the default test suites,
-        specified by ``'+TESTS:clients.fdsn,clients.arclink'``.
+    :rtype: list
+    :returns: List of modules names to test for given issue number.
     """
-    comments = get_comments(issue_number)
-    # search comments in reverse order (last comments first),
-    # stop on first match.
-    modules = None
-    for comment in comments[::-1]:
-        match = re.search(pattern_test_modules, comment)
+    issue = gh.issue("obspy", "obspy", issue_number)
+    modules_to_test = set(copy.copy(DEFAULT_MODULES))
+
+    # process issue body/description
+    match = re.search(pattern_test_modules, issue.body)
+    if match:
+        modules = match.group(1)
+        if modules == "ALL":
+            return ALL_MODULES
+        modules_to_test = set.union(modules_to_test, modules.split(","))
+
+    # process issue comments
+    for comment in issue.comments():
+        match = re.search(pattern_test_modules, comment.body)
         if match:
             modules = match.group(1)
-            break
-    else:
-        return (False, None)
-    # try to make sense of what comes after "+TESTS:"
-    try:
-        if modules.upper() == "ALL":
-            return (True, None)
-        else:
-            return (True, modules.split(","))
-    # otherwise ignore..
-    except:
-        pass
-    return (False, None)
+            if modules == "ALL":
+                return ALL_MODULES
+            modules_to_test = set.union(modules_to_test, modules.split(","))
+
+    return sorted(list(modules_to_test))
 
 
 def check_docs_build_requested(issue_number):
@@ -94,8 +68,13 @@ def check_docs_build_requested(issue_number):
 
     :rtype: bool
     """
-    comments = get_comments(issue_number)
-    return any(re.search(pattern_docs_build, comment) for comment in comments)
+    issue = gh.issue("obspy", "obspy", issue_number)
+    if re.search(pattern_docs_build, issue.body):
+        return True
+    for comment in issue.comments():
+        if re.search(pattern_docs_build, comment.body):
+            return True
+    return False
 
 
 def get_open_pull_requests():
@@ -103,24 +82,11 @@ def get_open_pull_requests():
     Fetch a list of issue numbers for open pull requests (max. 100, no
     pagination), recently updated first, along with the PR data.
     """
-    data = requests.get(
-        "https://api.github.com/repos/obspy/obspy/pulls",
-        params={"state": "open", "sort": "updated", "direction": "desc",
-                "per_page": 100},
-        headers=HEADERS)
-    try:
-        assert data.ok
-    except:
-        print(data.json())
-        raise
-    data = data.json()
-    open_prs = []
-    for d in data:
-        number = d['number']
-        fork = d['head']['user']['login']
-        branch = d['head']['ref']
-        commit = d['head']['sha']
-        open_prs.append((number, fork, branch, commit, d))
+    repo = gh.repository("obspy", "obspy")
+    prs = repo.pull_requests(state="open", sort="updated", direction="desc")
+    # (number, fork name, head branch name, head commit SHA)
+    open_prs = [(pr.number, pr.head.user.login, pr.head.ref, pr.head.sha)
+                for pr in prs]
     return open_prs
 
 
@@ -136,38 +102,38 @@ def get_commit_status(commit, context=None):
     :returns: Current commit status (overall or for specific context) as a
         string or ``None`` if given context has no status.
     """
-    url = "https://api.github.com/repos/obspy/obspy/commits/{}/status".format(
-        commit)
-    r = requests.get(url, headers=HEADERS)
-    try:
-        assert r.ok
-    except:
-        print(r.json())
-        raise
-    data = r.json()
+    # github3.py seems to lack support for fetching the "current" statuses for
+    # all contexts.. (which is available in "combined status" for an SHA
+    # through github API)
+    repo = gh.repository("obspy", "obspy")
+    commit = repo.commit(commit)
+    statuses = {}
+    for status in commit.statuses():
+        if (status.context not in statuses or
+                status.updated_at > statuses[status.context].updated_at):
+            statuses[status.context] = status
 
-    if context is None:
-        return data['state']
+    # just return current status for given context
+    if context:
+        if context not in statuses:
+            return None
+        return statuses[context].state
 
-    state = [status['state'] for status in data['statuses']
-             if status['context'] == context]
-    return state and state[0] or None
+    # return a combined status
+    statuses = set(status.state for status in statuses.values())
+    for status in ("pending", "error", "failure", "success"):
+        if status in statuses:
+            return status
+
+    return None
 
 
 def get_commit_time(commit, fork="obspy"):
     """
     """
-    from obspy import UTCDateTime
-    url = "https://api.github.com/repos/{fork}/obspy/git/commits/{hash}"
-    url = url.format(fork=fork, hash=commit)
-    commit_data = requests.get(url, headers=HEADERS)
-    try:
-        assert commit_data.ok
-    except:
-        print(commit_data.json())
-        raise
-    commit_data = commit_data.json()
-    return UTCDateTime(commit_data['committer']['date'])
+    repo = gh.repository(fork, "obspy")
+    commit = repo.commit(commit)
+    return UTCDateTime(commit.commit.committer["date"])
 
 
 def get_issue_numbers_that_need_docs_build(verbose=False):
@@ -175,7 +141,6 @@ def get_issue_numbers_that_need_docs_build(verbose=False):
     Relies on a local directory with some files to mark when PR docs have been
     built etc.
     """
-    from obspy import UTCDateTime
     open_prs = get_open_pull_requests()
     if verbose:
         print("Checking the following open PRs if a docs build is requested "
@@ -254,20 +219,13 @@ def set_commit_status(commit, status, context, description,
                           "skipping.".format(commit, current_status))
                 return
 
-    url = "https://api.github.com/repos/obspy/obspy/statuses/{}".format(commit)
-    data = {"state": status, "context": context, "description": description}
-    if target_url:
-        data["target_url"] = target_url
-    r = requests.post(url, json=data, headers=HEADERS)
-
-    try:
-        assert r.ok
-    except:
-        print(r.json())
-        raise
+    repo = gh.repository(fork, "obspy")
+    commit = repo.commit(commit)
+    repo.create_status(sha=commit.sha, state=status, context=context,
+                       description=description, target_url=target_url)
     if verbose:
         print("Set commit {} status (context '{}') to '{}'.".format(
-            commit, context, status))
+            commit.sha, context, status))
 
 
 def set_all_updated_pull_requests_docker_testbot_pending(verbose=False):
