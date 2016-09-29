@@ -35,7 +35,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-scipy \
     python-setuptools \
     python-sqlalchemy \
-    python-suds \
     python-tornado \
     python-wheel \
     python3 \
@@ -52,7 +51,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python3-requests \
     python3-scipy \
     python3-sqlalchemy \
-    python3-suds \
     python3-tornado \
     python3-wheel \
     quilt \

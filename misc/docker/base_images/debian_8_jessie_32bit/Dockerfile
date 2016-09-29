@@ -35,7 +35,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     python-scipy \
     python-setuptools \
     python-sqlalchemy \
-    python-suds \
     python-support \
     python-tornado \
     python3 \
