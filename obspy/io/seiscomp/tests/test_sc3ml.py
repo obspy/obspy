@@ -42,18 +42,6 @@ class SC3MLTestCase(unittest.TestCase):
                                                    format="STATIONXML")
         self.sc3ml_inventory = read_inventory(sc3ml_path, format="SC3ML")
 
-    def test_read_wrong_format(self):
-        """
-        Attempt to read stationXML as sc3ml
-        Should raise an exception that the file is not valid SC3ML
-        """
-        stationxml_path = os.path.join(self.data_dir, "EB_response_stationXML")
-        with self.assertRaises(ValueError) as e:
-            read_inventory(stationxml_path, format="sc3ml")
-
-        self.assertEqual(e.exception.args[0],
-                         "File is not in valid sc3ml format")
-
     def test_compare_xml(self):
         """
         Easiest way to compare is to write both Inventories back
