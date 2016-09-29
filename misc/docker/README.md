@@ -27,9 +27,11 @@ The `base_images` directory contains all available images receipts.
 
 ```bash
 $ ls base_images
-centos_7                debian_8_jessie   opensuse_13_2          ubuntu_14_04_trusty
-debian_7_wheezy         fedora_22         opensuse_leap          ubuntu_15_10_wily
-debian_7_wheezy_32bit   fedora_23         ubuntu_12_04_precise
+centos_7               debian_8_jessie           fedora_24
+ubuntu_12_04_precise   ubuntu_14_04_trusty_32bit debian_7_wheezy
+debian_8_jessie_32bit  opensuse_13_2             ubuntu_12_04_precise_32bit
+ubuntu_16_04_xenial    debian_7_wheezy_32bit     fedora_23
+opensuse_leap_42_1     ubuntu_14_04_trusty       ubuntu_16_04_xenial_32bit
 ```
 
 Each directory in `base_images` contains a `Dockerfile` with instructions to
