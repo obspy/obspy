@@ -50,3 +50,6 @@ RUN echo "backend: agg" > /etc/matplotlibrc
 # install fake future packages, so that we can properly install built obspy deb
 # packages to test them (we install future via pip)
 RUN cd /tmp && echo "Package: python-future" > python-future.control && equivs-build python-future.control && dpkg -i python-future_*.deb
+# debian package for obspy 1.0.2 still have suds listed as dependency
+# for now mock install it, can be removed when 1.0.3 is released
+RUN cd /tmp && echo "Package: python-suds" > python-suds.control && equivs-build python-suds.control && dpkg -i python-suds_*.deb
