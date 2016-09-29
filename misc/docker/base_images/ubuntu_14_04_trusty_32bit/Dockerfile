@@ -13,7 +13,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     equivs \
     fakeroot \
     gcc \
-    gfortran \
     git \
     help2man \
     lintian \
