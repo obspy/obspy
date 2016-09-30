@@ -32,34 +32,48 @@ git checkout master  # "master" should be set up to track "master" branch of obs
 git pull
 git reset --hard FETCH_HEAD
 git clean -fdx
-cd ${OBSPY_DOCKER}/misc/docker_tests/
+cd ${OBSPY_DOCKER}/misc/docker/
 TARGETS=`bash github_get_all_pr_heads_without_docker-testbot_status.sh`
 for TARGET in $TARGETS
 do
-    echo "##### WORKING ON TARGET: ${TARGET}"
+    echo "##### DOCKER TESTS, WORKING ON TARGET: ${TARGET}"
     # only allowed special character in github user names is dash ('-'),
     # so we use underscore as a separator after the issue number
     # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
     PR_REPO_SHA=(${TARGET//_/ })
     PR=${PR_REPO_SHA[0]}
     REPO_SHA=${PR_REPO_SHA[1]}
-    echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_SHA}"
+    echo "##### DOCKER TESTS, RUNNING DOCKER TESTS FOR TARGET: ${REPO_SHA}"
     bash run_obspy_tests.sh -t${REPO_SHA} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
 done
 # run docker tests on maintenance_1.0.x and master as well
 for BRANCH in obspy:maintenance_1.0.x obspy:master
 do
-    echo "##### RUNNING DOCKER TESTS FOR BRANCH: ${BRANCH}"
+    echo "##### DOCKER TESTS, RUNNING DOCKER TESTS FOR BRANCH: ${BRANCH}"
     bash run_obspy_tests.sh -t$BRANCH
 done
 
 
-# build and test debian packages (needs proper Debian buildbot set up in VM first)
-cd $HOME
-## run tests in chroots
-#bash $HOME/schroot_testrun.sh -f obspy -t master
-# build and test all deb packages
-# bash ./deb_build_testrun.sh
+# build and test debian packages
+cd ${OBSPY_DOCKER}/misc/docker/
+for TARGET in $TARGETS
+do
+    echo "##### DOCKER DEB PACKAGING, WORKING ON TARGET: ${TARGET}"
+    # only allowed special character in github user names is dash ('-'),
+    # so we use underscore as a separator after the issue number
+    # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
+    PR_REPO_SHA=(${TARGET//_/ })
+    PR=${PR_REPO_SHA[0]}
+    REPO_SHA=${PR_REPO_SHA[1]}
+    echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR TARGET: ${REPO_SHA}"
+    bash package_debs.sh -t${REPO_SHA}
+done
+# run docker tests on maintenance_1.0.x and master as well
+for BRANCH in obspy:maintenance_1.0.x obspy:master
+do
+    echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR BRANCH: ${BRANCH}"
+    bash package_debs.sh -t$BRANCH
+done
 
 # sleep for some time, so a login user has a chance to kill the cronjob before
 # it halts the VM

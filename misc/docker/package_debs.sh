@@ -207,12 +207,18 @@ overall_status() {
     return 1
 }
 
+COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?node=docker-deb-"
 if overall_status ;
 then
-    echo "Overall status: Deb packaging succeeded"
+    COMMIT_STATUS=success
+    COMMIT_STATUS_DESCRIPTION="Overall status: Deb packaging succeeded"
 else
-    echo "Overall status: Deb packaging failed"
+    COMMIT_STATUS=failure
+    COMMIT_STATUS_DESCRIPTION="Overall status: Deb packaging failed"
 fi
+echo $COMMIT_STATUS_DESCRIPTION
+
+curl -H "Content-Type: application/json" -H "Authorization: token ${OBSPY_COMMIT_STATUS_TOKEN}" --request POST --data "{\"state\": \"${COMMIT_STATUS}\", \"context\": \"docker-deb-buildbot\", \"description\": \"${COMMIT_STATUS_DESCRIPTION}\", \"target_url\": \"${COMMIT_STATUS_TARGET_URL}\"}" https://api.github.com/repos/obspy/obspy/statuses/${COMMIT}
 
 rm -rf $TEMP_PATH
 
