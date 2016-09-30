@@ -160,6 +160,8 @@ script:
       || echo
   - echo $MODULELIST
   - echo $MODULELISTSPACES
+  # need to set IFS so that space-separated MODULELISTSPACES list is interpreted correctly by run_tests()
+  - export IFS=" "
   - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" $MODULELISTSPACES;
     else
