@@ -1,10 +1,8 @@
 import os
-import re
-import requests
+from datetime import datetime
 
-from obspy import UTCDateTime
-
-from obspy_github_api import check_docs_build_requested, get_pull_requests, get_commit_time
+from obspy_github_api import (
+    check_docs_build_requested, get_pull_requests, get_commit_time)
 
 
 prs = get_pull_requests(state="open")
@@ -23,8 +21,7 @@ for pr in prs:
 
     time = get_commit_time(commit=commit, fork=fork)
     print("PR #{} requests a docs build, latest commit {} at {}.".format(
-        number, commit, time))
-    time = int(time.timestamp)
+        number, commit, str(datetime.fromtimestamp(time))))
 
     filename = os.path.join("pull_request_docs", str(number))
     filename_todo = filename + ".todo"
@@ -40,10 +37,11 @@ for pr in prs:
 
     # check if nothing needs to be done..
     if os.path.exists(filename_done):
-        time_done = UTCDateTime(os.stat(filename_done).st_atime)
+        time_done = os.stat(filename_done).st_atime
         if time_done > time:
             print("PR #{} was last built at {} and does not need a "
-                  "new build.".format(number, time_done))
+                  "new build.".format(
+                      number, str(datetime.fromtimestamp(time_done))))
             continue
     # ..otherwise touch the .todo file
     with open(filename_todo, "wb"):
