@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/Float32-encoded.mseed -D

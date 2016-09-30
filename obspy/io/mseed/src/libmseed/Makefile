@@ -5,7 +5,7 @@
 #   CFLAGS : Specify compiler options to use
 
 MAJOR_VER = 2
-MINOR_VER = 17
+MINOR_VER = 18
 CURRENT_VER = $(MAJOR_VER).$(MINOR_VER)
 COMPAT_VER = $(MAJOR_VER).$(MINOR_VER)
 
@@ -49,8 +49,13 @@ $(LIB_DYN): $(LIB_DOBJS)
 	$(CC) $(CFLAGS) -dynamiclib -compatibility_version $(COMPAT_VER) -current_version $(CURRENT_VER) -install_name $(LIB_DYN_ALIAS) -o $(LIB_DYN) $(LIB_DOBJS)
 	ln -sf $(LIB_DYN) $(LIB_DYN_ALIAS)
 
+test: FORCE
+	@$(MAKE) -C test test
+
 clean:
-	rm -f $(LIB_OBJS) $(LIB_DOBJS) $(LIB_A) $(LIB_SO_FILENAME) $(LIB_SO) $(LIB_SO_ALIAS) $(LIB_DYN) $(LIB_DYN_ALIAS)
+	@rm -f $(LIB_OBJS) $(LIB_DOBJS) $(LIB_A) $(LIB_SO_FILENAME) $(LIB_SO) $(LIB_SO_ALIAS) $(LIB_DYN) $(LIB_DYN_ALIAS)
+	@$(MAKE) -C test clean
+	@echo "All clean."
 
 install:
 	@echo
@@ -67,3 +72,5 @@ install:
 # Standard object building for dynamic library components using -fPIC
 .c.lo:
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+FORCE:

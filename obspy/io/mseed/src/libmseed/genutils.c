@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2015.213
+ * modified: 2016.267
  ***************************************************************************/
 
 #include <stdio.h>
@@ -1191,7 +1191,7 @@ ms_readleapseconds (char *envvarname)
  * Read leap seconds from the specified file and populate the global
  * leapsecondlist.  The file is expected to be standard IETF leap
  * second list format.  The list is usually available from:
- * https://www.ietf.org/timezones/data/leap-seconds.list
+ * http://www.ietf.org/timezones/data/leap-seconds.list
  * 
  * Returns positive number of leap seconds read on success and -1 on error.
  ***************************************************************************/
@@ -1214,7 +1214,7 @@ ms_readleapsecondfile (char *filename)
   
   if ( ! (fp = fopen(filename, "rb")) )
     {
-      ms_log (2, "Cannot open file %s: %s\n", filename, strerror(errno));
+      ms_log (2, "Cannot open leap second file %s: %s\n", filename, strerror(errno));
       return -1;
     }
   
@@ -1291,8 +1291,15 @@ ms_readleapsecondfile (char *filename)
           ms_log (1, "Unrecognized leap second file line: '%s'\n", readline);
         }
     }
-  
-  return count;
+
+    if (ferror (fp))
+    {
+      ms_log (2, "Error reading leap second file (%s): %s\n", filename, strerror (errno));
+    }
+
+    fclose (fp);
+
+    return count;
 }  /* End of ms_readleapsecondfile() */
 
 

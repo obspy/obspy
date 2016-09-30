@@ -1,0 +1,31 @@
+XX_TEST_00_BHZ, 656063, D
+             start time: 2004,210,20:28:09.000000
+      number of samples: 0
+     sample rate factor: 0  (0 samples per second)
+ sample rate multiplier: 0
+         activity flags: [00000000] 8 bits
+    I/O and clock flags: [00000000] 8 bits
+     data quality flags: [00000000] 8 bits
+   number of blockettes: 2
+        time correction: 0
+            data offset: 0
+ first blockette offset: 48
+         BLOCKETTE 1000: (Data Only SEED)
+              next blockette: 56
+                    encoding: ASCII text (val:0)
+                  byte order: Big endian (val:1)
+               record length: 512 (val:9)
+               reserved byte: 0
+          BLOCKETTE 201: (Murdock Event Detection)
+              next blockette: 0
+            signal amplitude: 80
+               signal period: 0.4
+         background estimate: 18
+       event detection flags: [10000000] 8 bits
+                         [Bit 0] 1: Dilation wave
+               reserved byte: 0
+           signal onset time: 2004,210,20:28:06.1850
+                  SNR values: 1  3  2  1  4  0  
+              loopback value: 2
+              pick algorithm: 0
+               detector name: Z_SPWWSS                

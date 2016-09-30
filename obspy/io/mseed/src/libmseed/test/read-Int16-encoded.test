@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/Int16-encoded.mseed -D

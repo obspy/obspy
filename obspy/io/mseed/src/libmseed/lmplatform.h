@@ -14,11 +14,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Library General Public License (GNU-LGPL) for more details.  The
  * GNU-LGPL and further information can be found here:
- * https://www.gnu.org/
+ * http://www.gnu.org/
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2015.134
+ * modified: 2016.053
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -79,8 +79,8 @@ extern "C" {
   #include <windows.h>
   #include <sys/types.h>
 
-  /* MSVC does not support inttypes.h */
-  #if defined(_MSC_VER)
+  /* For MSVC 2012 and earlier define standard int types, otherwise use inttypes.h */
+  #if defined(_MSC_VER) && _MSC_VER <= 1700
     typedef signed char int8_t;
     typedef unsigned char uint8_t;
     typedef signed short int int16_t;

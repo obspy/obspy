@@ -1,3 +1,21 @@
+2016:274: 2.18rc2
+	- Check for environment variables ENCODE_DEBUG and DECODE_DEBUG
+	and set debugging output, at this point it is Steim frame details
+	and differences being encoded/decoded.
+	- Fix padding in steim[12] encoding routines.
+	- Remove unneeded output buffer checks in steim[12] decoding routines.
+
+2016.272: 2.18rc1
+	- Replace data sample packing and unpacking routines from qlib2 with
+	new routines developed from scratch.  All code is now LGPL licensed.
+	- Add test suite with tests for encoding, decoding, parsing, etc.
+	- Update licensing to GNU-LGPL version 3 and include (L)GPL licenses
+	in LICENSE.txt.
+
+2015.053:
+	- Define needed C99 int types for MSVC 2012 or earlier.  Previously
+	this was only done for versions earlier than MSVC 2010.
+
 2015.213: 2.17
 	- Round Fixed Section Data Header start time values to the nearest
 	tenth of millisecond and restrict the microsecond offset value
@@ -29,7 +47,7 @@
 	- Cleanup of lmplatform.h removing unneeded headers and using C99
 	standard headers except for a few platform specific cases.
 	- Convert all printf() and scanf() usage of %lld for 64-bit integers
-	to use the C99 PRId64 and SCNd64 macros for portability (MingGW).
+	to use the C99 PRId64 and SCNd64 macros for portability (MinGW).
 	- Change detection of Linux/Cygwin to set global define LMP_LINUX
 	instead of LMP_GLIB2 (now marked as deprecated).
 	- Change detection of Windows to set global define LMP_WIN instead
@@ -51,7 +69,7 @@
 	contributed by Larry Baker and Eric Thomas.
 	- Change casting of values passed to isdigit() to int intead of
 	unsigned character.  Apparently this was consufing on ARM archs.
-
+	
 2015.061:
 	- Add ms_readleapseconds() and ms_readleapsecondfile() routines to
 	read a leap seconds file into an internal list.
@@ -68,7 +86,7 @@
 
 2014.234: 2.13
 	- Clean up Makefile and example/Makefile, remove all GCC-specific and
-	debug targets.  Makefiles are compatible with both GNU and BSD make.
+	debug targets.  Makefiles are compatible with both GNU and BSD make. 
 	As before, the shared target works only for GCC-compatible compilers.
 	Thanks to Elliott Sales de Andrade for pointing out that shared library
 	targets did not work with parallel builds, prompting this clean up.
@@ -101,8 +119,8 @@
 	- Update docs for transition to 64-bit sample counts done in 2011!
 
 2013.117: 2.11
-	- Initialize internal counters in mst_pack() to avoid their use
-	in error conditions. Thanks to D. Ketchum and M. Potter for help.
+	- Initialize internal counters in mst_pack() to avoid their use 
+	in error conditions. Thanks to D. Ketchum and M. Potter for help. 
 	- Add 'const' qualifier to the msfile argument of the file reading and
 	writing family of routines to stop compiler warnings resulting from
 	generated binding functions.  Thanks to M. Bach for reporting.
@@ -114,7 +132,7 @@
 2013.053: 2.9
 	- Extend parsing of day-of-year style time strings to allow parsing
 	of time fields separated by dashes in addition to allowing the day
-	and time fields to be separated by a 'T' or space.  Modifications
+	and time fields to be separated by a 'T' or space.  Modifications 
 	were made to ms_seedtimestr2hptime().
 	- Extend parsing of year-month-day style time strings to allow parsing
 	of time fields separated by commas.  Modifications were made to
@@ -233,7 +251,7 @@
 	- Default data byte order to big endian when blockette 1000 contains
 	invalid byte order value, previously defaulted to host byte order.
 
-2011.042:
+2011.042: 
 	- Update libmseed.def to match current libmseed.h declaractions.
 	- Cleanup to avoid MSVC warnings.
 
@@ -264,7 +282,7 @@
 	a NULL packedsamples pointer.
 	- Fix bugs when (re)initializing read buffer.
 	- Fix return of file position in ms_readmsr_main()..
-
+	
 2010.365:
 	- Add internal ms_gmtime_r() to replace call to system gmtime_r(). The
 	internal version handles dates beyond year 2038 and avoids the system
@@ -329,11 +347,11 @@
 
 2010.012:
 	- Fix unpacking of 16-bit integer encoded data, thanks to
-	Robert Barsch.
-
+	Robert Barsch. 
+	
 2010.008:
 	- Fix special case of "--" location ID in ms_addselect().
-
+	
 2010.007:
 	- Add SelectTime **ppselecttime argument to ms_matchselect()
 	and msr_matchselect() routines so that the matching time range
@@ -343,7 +361,7 @@
 	- Add a check for ATTRIBUTE_PACKED define (lmplatform.h) and
 	if set add an __attribute__((packed)) qualifier to all structs
 	that are mapped to SEED structures (and cannot be padded).
-	This is useful on platforms such as ARM that pad structures
+	This is useful on platforms such as ARM that pad structures 
 	for alignment by default.  To use add "-DATTRIBUTE_PACKED" to
 	CFLAGS or equivalent.
 	- Fixes to gswapX() routines for platforms where structures
@@ -354,7 +372,7 @@
 2010.005:
 	- Simplify packed file reading in ms_readmsr_main() and allow
 	data sections to be skipped based on a Selection list, packed
-	files are used internally at the IRIS DMC.
+	files are used internally at the IRIS DMC.  
 	- Rename ms_readmsr_r() to ms_readmsr_main() and create a
 	simple wrapper function for ms_readmsr_r().
 
@@ -374,7 +392,7 @@
 	thanks to Roman Racine for the report and suggested fix.
 	The error only accumulated to significant values when packing
 	a large number of records with a single call to msr_pack().
-
+	
 2009.354:
 	- Change return type of internal ms_readpackinfo() to off_t and
 	fix small error return check.
@@ -382,7 +400,7 @@
 2009.353:
 	- Add ms_splitsrcname() routine to split "NET_STA_LOC_CHAN[_QUAL]"
 	into separate components.
-	- Update MINOR_VER version to 4 anticipating the 2.4 release
+	- Update MINOR_VER version to 4 anticipating the 2.4 release 
 	(seem to have forgotten 3).
 
 2009.201: 2.3
@@ -394,7 +412,7 @@
 	- Add diagnostic reporting of data problems in ms_readmsr_r()
 	by calling ms_parse_raw().
 
-2009.174:
+2009.174: 
 	- Fix corner case trace sorting error in mstl_addmsr().
 	- Add ms_nomsamprate() to genutils.c to calculate the sample rate
 	specified as a SEED sample rate factor and multiplier.
@@ -427,7 +445,7 @@
 	the existing MSTraceGroup facility but more efficiently populated,
 	especially when data records are in time order or the time series
 	are very gappy.  The MSTraceList related functions are prefixed
-	with "mstl_" and exist in the new source file tracelist.c.
+	with "mstl_" and exist in the new source file tracelist.c.	
 	- Add mst_printsynclist() and mstl_printsynclist() functions to
 	print trace segment lists in SYNC format.
 
@@ -458,7 +476,7 @@
 2008.163:
 	- Allow data record sequence numbers to be NULL values in addition
 	to ASCII numbers.
-
+ 
 2008.161: 2.1.5
 	- Fix string parsing error for IRIS DMC packed files, thanks Sandy!
 	- Use a merge sort algorithm insteam of the bubble sort previsouly
@@ -485,7 +503,7 @@
 2007.178: 2.1.3
 	- Fix log message bug for unknown encoding format while unpacking,
 	this could cause certain systems to segfault if encountered.
-	- Rename MS_UNPACKENCODINGFORMATFALLBACK macro to
+	- Rename MS_UNPACKENCODINGFORMATFALLBACK macro to 
 	MS_UNPACKENCODINGFALLBACK to match the actual variable name.
 	- Fix handling of fallback encoding format in unpack.c, worked
 	earlier but had regressed to a broken state.
@@ -527,10 +545,10 @@
 	order override variables: MS_PACKHEADERBYTEORDER(X),
 	MS_PACKDATABYTEORDER(X), MS_UNPACKHEADERBYTEORDER(X) and
 	MS_UNPACKDATABYTEORDER(X).
-	- Add macros for setting the unpack encoding format override and
+	- Add macros for setting the unpack encoding format override and 
 	encoding format fallback variables: MS_UNPACKENCODINGFORMAT(X)
 	and MS_UNPACKENCODINGFORMATFALLBACK(X).
-
+	
 2007.074:
 	- Fix typos in the docs referring to msr_readtraces() that should
 	be ms_readtraces(), thanks Richard Boaz.
@@ -595,7 +613,7 @@
         - Add source name to all packing error and diagnostic messages.
 	- Reorganize sanity check code in msr_unpack() to use the
 	MS_ISVALIDHEADER macro.
-	- Add ms_recsrcname() function to calculate the source name for
+	- Add ms_recsrcname() function to calculate the source name for 
 	an unpacked record.
 
 2006.326: 2.0pre6
@@ -608,7 +626,7 @@
 	constitutes a new logging facility that is used throughout the
 	library and can be used by libmseed based programs.  The facility
 	allows the caller to redirect all the log, diagnostic and error
-	output from the library to specific functions.  The facility
+	output from the library to specific functions.  The facility 
 	also allows user specifed prefixes for all output messages.
 
 2006.321:
@@ -636,7 +654,7 @@
 	unsupported encoding error message.
 
 2006.296: 2.0pre3
-	- Add 'quality' flag argument to mst_srcname() to control the
+	- Add 'quality' flag argument to mst_srcname() to control the 
 	addition of the quality indicator in the srcname.
 	- Add 'quality' flag argument to mst_groupsort() to control the
 	inclusion of quality indicator in the sorting.
@@ -653,13 +671,13 @@
 	- Fix dynamic target and update API version in Makefile.
         - Require GCC for shared and dynamic library building.
 	- Include ctype.h header in lmplatform.h for WIN32 platform.
-
+	
 2006.283:
 	- Add function msr_normalize_header() to update the FSDH and
 	blockettes with values at the MSRecord level.
 	- Add 'normalize' flag argument to msr_pack_header() control the
 	calling of msr_normalize_header() when packing.
-	- Change the MSRecord element 'private' to 'prvtptr' to avoid
+	- Change the MSRecord element 'private' to 'prvtptr' to avoid 
 	collision with the C++ reserved word.
 	- Add a 'quality' flag argument to msr_srcname() to control the
 	addition of the quality indicator to the srcname.
@@ -716,7 +734,7 @@
 	- Changed return type of msr_unpack() to int.  Function now
 	returns status/error codes.
 	- Changes to many internal functions to support the new unpacking
-	error code bubble.
+	error code bubble.	
         - Removed the MSRecord.unpackerr element as it is now unneeded.
 	- Found and fixed bug resulting in the assumption that all sample
 	sizes were 8 bytes (which would usually be wrong) during unpacking.
@@ -781,7 +799,7 @@
 	srcname if it is non-zero.
 	- Remove the data quality code specifics from mst_print* functions
 	as it is now included in the source name.
-
+	
 2006.076: version 1.5
 	- No changes, just stamp 1.5.
 
@@ -801,11 +819,11 @@
 	mst_findadjacent() to control matching of data qualities.
 	- Modify mst_printtracelist() and mst_printgaplist() to include
 	data quality flags in their output when they have been set.
-
+	
 2005.336: 1.4.5
 	- Improve the data record verification in ms_find_reclen() to
 	improve the detection of non-data versus data records.  In
-	particular the routine now requires a record to start with
+	particular the routine now requires a record to start with 
 	6 ASCII digits followed by a valid data record indicator
 	followed by either a space or NULL character (even though
 	a NULL here is not valid SEED).
@@ -837,7 +855,7 @@
 	pack has been done).
 	- Do not try to pack Traces with numsamples==0 in
 	mst_packgroup().
-
+	
 2005.289:
 	- Add check for sample count mismatch and decrement
 	mst->samplecnt when packing in mst_pack().
@@ -854,16 +872,16 @@
 	- Test using Open Watcom 1.3 under Win32 (Windows XP).
 	- Add 'dynamic' target in Makefile to build a dynamic lib
         on Mac OSX.
-
+ 
 2005.269: 1.2
 	- Update many unpacking routines so that the MS_SAMPMISMATCH
 	error code is correctly returned and that none of the errors
-	are show stoppers, it is left to the application to decide.
+	are show stoppers, it is left to the application to decide. 
 	- Remove error message when read fails during detection, the
 	end of the file is simply that, no error.
 	- Fix definition of MS_EPOCH2HPTIME and MS_HPTIME2EPOCH in
 	ms_time.3 man page.
-	- Change int64_t types to hptime_t types in documentation.
+	- Change int64_t types to hptime_t types in documentation. 
 
 2005.203: 1.1
 	- Add 'chainpos' argument to msr_addblockette() to control
@@ -887,7 +905,7 @@
 2005.146: 1.0pre4
 	- Add check for an UNPACK_DATA_FORMAT_FALLBACK environment
 	variable that defines a fallback format for when no encoding
-	format is specified in the data record (no Blkt 1000).
+	format is specified in the data record (no blkt 1000).
 	- Set a default format fallback encoding of 10 (Steim 1).
 	If this default gets invoked, the byteorder will fallback
 	to big-endian if it has not been specified.
@@ -940,7 +958,7 @@
 2005.091: 0.9.9
 	- Fix printing of Blockette 500.
 	- Change macro defines to upper case macro names.
-
+	
 2005.080: 0.9.8
 	- Add ms_isratetolerable() macro to perform the default
 	sample rate tolerance check. Update appropriate functions.
@@ -965,7 +983,7 @@
 	for a valid data record header indicator (D,R,Q,etc.)
 	- Example program msi now takes -min and -max options to
 	specify min and max gap/overlap to display in gap list.
-
+	
 2005.047: 0.9.6
 	- Add ms_epoch2hptime() macro to convert Unix/POSIX
 	epoch times to hptimes.

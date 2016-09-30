@@ -1,0 +1,2 @@
+#!/bin/sh
+./lmtestparse data/DWWSSN-encoded.mseed -D
