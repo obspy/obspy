@@ -154,8 +154,10 @@ package_debs_on_image () {
 
     $DOCKER cp $ID:/BUILD_LOG.txt $LOG_DIR
     $DOCKER cp $ID:/TEST_LOG.txt $LOG_DIR
-    $DOCKER cp $ID:/failure $LOG_DIR
-    $DOCKER cp $ID:/success $LOG_DIR
+    $DOCKER cp $ID:/build.failure $LOG_DIR
+    $DOCKER cp $ID:/build.success $LOG_DIR
+    $DOCKER cp $ID:/test.failure $LOG_DIR
+    $DOCKER cp $ID:/test.success $LOG_DIR
 
     $DOCKER cp $ID:/tmp/python-obspy_build/packages $LOG_DIR/packages
 
@@ -200,21 +202,34 @@ for image_name in $($DOCKER images obspy | awk '{print $2}'); do
     package_debs_on_image $image_name;
 done
 
-# helper function to determine overall success/failure across all images
-overall_status() {
-    ls ${LOG_DIR_BASE}/*/failure 2>&1 > /dev/null && return 1
-    ls ${LOG_DIR_BASE}/*/success 2>&1 > /dev/null && return 0
+# helper function to determine overall success/failure of packaging, across all images
+overall_build_status() {
+    ls ${LOG_DIR_BASE}/*/build.failure 2>&1 > /dev/null && return 1
+    ls ${LOG_DIR_BASE}/*/build.success 2>&1 > /dev/null && return 0
+    return 1
+}
+
+# helper function to determine overall success/failure of testsuite on packages, across all images
+overall_test_status() {
+    ls ${LOG_DIR_BASE}/*/test.failure 2>&1 > /dev/null && return 1
+    ls ${LOG_DIR_BASE}/*/test.success 2>&1 > /dev/null && return 0
     return 1
 }
 
 COMMIT_STATUS_TARGET_URL="http://tests.obspy.org/?node=docker-deb-"
-if overall_status ;
+if overall_build_status ;
 then
-    COMMIT_STATUS=success
-    COMMIT_STATUS_DESCRIPTION="Overall status: Deb packaging succeeded"
+    if overall_test_status ;
+    then
+        COMMIT_STATUS=success
+        COMMIT_STATUS_DESCRIPTION="Deb packaging and testing succeeded"
+    else
+        COMMIT_STATUS=failure
+        COMMIT_STATUS_DESCRIPTION="Deb packaging succeeded but tests failed"
+    fi
 else
-    COMMIT_STATUS=failure
-    COMMIT_STATUS_DESCRIPTION="Overall status: Deb packaging failed"
+    COMMIT_STATUS=error
+    COMMIT_STATUS_DESCRIPTION="Deb packaging failed"
 fi
 echo $COMMIT_STATUS_DESCRIPTION
 
