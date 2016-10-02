@@ -507,35 +507,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                 data_quality_flags=False)
         self.assertEqual(result["timing_quality"], {})
 
-    def test_unpack_steim_1(self):
-        """
-        Test decompression of Steim1 strings. Remove 64 Bytes of header
-        by hand, see SEEDManual_V2.4.pdf page 100.
-        """
-        steim1_file = os.path.join(self.path, 'data',
-                                   'BW.BGLD.__.EHE.D.2008.001.first_record')
-        # 64 Bytes header.
-        with open(steim1_file, 'rb') as fp:
-            data_string = fp.read()[64:]
-        data = util._unpack_steim_1(data_string, 412, swapflag=self.swap,
-                                    verbose=0)
-        data_record = _read_mseed(steim1_file)[0].data
-        np.testing.assert_array_equal(data, data_record)
-
-    def test_unpack_steim_2(self):
-        """
-        Test decompression of Steim2 strings. Remove 128 Bytes of header
-        by hand, see SEEDManual_V2.4.pdf page 100.
-        """
-        steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
-        # 128 Bytes header.
-        with open(steim2_file, 'rb') as fp:
-            data_string = fp.read()[128:]
-        data = util._unpack_steim_2(data_string, 5980, swapflag=self.swap,
-                                    verbose=0)
-        data_record = _read_mseed(steim2_file)[0].data
-        np.testing.assert_array_equal(data, data_record)
-
     def test_time_shifting(self):
         """
         Tests the shift_time_of_file() function.

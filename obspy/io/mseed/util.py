@@ -828,50 +828,6 @@ def _convert_mstime_to_datetime(timestring):
     return UTCDateTime(timestring / HPTMODULUS)
 
 
-def _unpack_steim_1(data_string, npts, swapflag=0, verbose=0):
-    """
-    Unpack steim1 compressed data given as string.
-
-    :param data_string: data as string
-    :param npts: number of data points
-    :param swapflag: Swap bytes, defaults to 0
-    :return: Return data as numpy.ndarray of dtype int32
-    """
-    dbuf = data_string
-    datasize = len(dbuf)
-    samplecnt = npts
-    datasamples = np.empty(npts, dtype=np.int32)
-    nsamples = clibmseed.msr_decode_steim1(
-        C.cast(dbuf, C.POINTER(C.c_int32)),
-        datasize, samplecnt, datasamples,
-        npts, None, swapflag)
-    if nsamples != npts:
-        raise Exception("Error in unpack_steim1")
-    return datasamples
-
-
-def _unpack_steim_2(data_string, npts, swapflag=0, verbose=0):
-    """
-    Unpack steim2 compressed data given as string.
-
-    :param data_string: data as string
-    :param npts: number of data points
-    :param swapflag: Swap bytes, defaults to 0
-    :return: Return data as numpy.ndarray of dtype int32
-    """
-    dbuf = data_string
-    datasize = len(dbuf)
-    samplecnt = npts
-    datasamples = np.empty(npts, dtype=np.int32)
-    nsamples = clibmseed.msr_decode_steim2(
-        C.cast(dbuf, C.POINTER(C.c_int32)),
-        datasize, samplecnt, datasamples,
-        npts, None, swapflag)
-    if nsamples != npts:
-        raise Exception("Error in unpack_steim2")
-    return datasamples
-
-
 def set_flags_in_fixed_headers(filename, flags):
     """
     Updates a given MiniSEED file with some fixed header flags.

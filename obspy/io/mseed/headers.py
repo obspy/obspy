@@ -477,16 +477,6 @@ class UDIFF(C.Union):
     ]
 
 
-class FRAME(C.Structure):
-    """
-    Frame in a seed data record.
-    """
-    _fields_ = [
-        ("ctrl", C.c_uint32),  # control word for frame.
-        ("w", UDIFF * 14),  # compressed data.
-    ]
-
-
 # Declare function of libmseed library, argument parsing
 clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
 clibmseed.mst_init.restype = C.POINTER(MSTrace)
