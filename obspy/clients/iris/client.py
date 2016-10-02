@@ -73,11 +73,11 @@ class Client(object):
     >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
     ...                        evtlon=1.4)
     >>> print(result['distance'])
-    2.09554
+    2.10256
     >>> print(result['backazimuth'])
-    5.46946
+    5.46944
     >>> print(result['azimuth'])
-    185.47692
+    185.47695
     """
     def __init__(self, base_url="http://service.iris.edu/irisws",
                  user="", password="", timeout=20, debug=False,
