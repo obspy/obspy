@@ -15,8 +15,8 @@ from future import standard_library
 from future.utils import native_str
 
 import io
-import json
 import platform
+from lxml import objectify
 
 with standard_library.hooks():
     import urllib.parse
@@ -558,7 +558,7 @@ class Client(object):
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Low-level interface for `distaz` Web service of IRIS
-        (http://service.iris.edu/irisws/distaz/) - release 1.0.1 (2010).
+        (http://service.iris.edu/irisws/distaz/) - release 1.0.3 (2016).
 
         This method will calculate the great-circle angular distance, azimuth,
         and backazimuth between two geographic coordinate pairs. All results
@@ -583,6 +583,9 @@ class Client(object):
         Latitudes are converted to geocentric latitudes using the WGS84
         spheroid to correct for ellipticity.
 
+        The distance (in degrees) and distancemeters are the distance
+        between the two points on the spheroid.
+
         .. rubric:: Example
 
         >>> from obspy.clients.iris import Client
@@ -590,27 +593,31 @@ class Client(object):
         >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
         ...                        evtlon=1.4)
         >>> print(result['distance'])
-        2.09554
+        2.10256
+        >>> print(result['distancemeters'])
+        233272.79028
         >>> print(result['backazimuth'])
-        5.46946
+        5.46944
         >>> print(result['azimuth'])
-        185.47692
+        185.47695
+        >>> print(result['ellipsoidname'])
+        WGS84
         """
-        # set JSON as expected content type
-        headers = {'Accept': 'application/json'}
         # build up query
         try:
-            data = self._fetch("distaz", headers=headers, stalat=stalat,
-                               stalon=stalon, evtlat=evtlat, evtlon=evtlon)
+            data = self._fetch("distaz", stalat=stalat, stalon=stalon,
+                               evtlat=evtlat, evtlon=evtlon)
         except urllib.request.HTTPError as e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        data = json.loads(data.decode())
+        data = objectify.fromstring(data.decode())
         results = {}
-        results['distance'] = data['distance']
-        results['backazimuth'] = data['backAzimuth']
-        results['azimuth'] = data['azimuth']
+        results['ellipsoidname'] = data.ellipsoid.attrib['name']
+        results['distance'] = data.distance
+        results['distancemeters'] = data.distanceMeters
+        results['backazimuth'] = data.backAzimuth
+        results['azimuth'] = data.azimuth
         return results
 
     def flinnengdahl(self, lat, lon, rtype="both"):
