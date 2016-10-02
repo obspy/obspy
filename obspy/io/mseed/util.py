@@ -22,7 +22,7 @@ from obspy import UTCDateTime
 from obspy.core.util.decorator import ObsPyDeprecationWarning
 from .headers import (ENCODINGS, ENDIAN, FIXED_HEADER_ACTIVITY_FLAGS,
                       FIXED_HEADER_DATA_QUAL_FLAGS,
-                      FIXED_HEADER_IO_CLOCK_FLAGS, FRAME, HPTMODULUS,
+                      FIXED_HEADER_IO_CLOCK_FLAGS, HPTMODULUS,
                       SAMPLESIZES, UNSUPPORTED_ENCODINGS, MSRecord,
                       MS_NOERROR, clibmseed)
 
@@ -841,13 +841,10 @@ def _unpack_steim_1(data_string, npts, swapflag=0, verbose=0):
     datasize = len(dbuf)
     samplecnt = npts
     datasamples = np.empty(npts, dtype=np.int32)
-    diffbuff = np.empty(npts, dtype=np.int32)
-    x0 = C.c_int32()
-    xn = C.c_int32()
     nsamples = clibmseed.msr_decode_steim1(
-        C.cast(dbuf, C.POINTER(FRAME)), datasize,
-        samplecnt, samplecnt, datasamples, diffbuff,
-        C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(C.c_int32)),
+        datasize, samplecnt, datasamples,
+        npts, None, swapflag)
     if nsamples != npts:
         raise Exception("Error in unpack_steim1")
     return datasamples
@@ -866,13 +863,10 @@ def _unpack_steim_2(data_string, npts, swapflag=0, verbose=0):
     datasize = len(dbuf)
     samplecnt = npts
     datasamples = np.empty(npts, dtype=np.int32)
-    diffbuff = np.empty(npts, dtype=np.int32)
-    x0 = C.c_int32()
-    xn = C.c_int32()
     nsamples = clibmseed.msr_decode_steim2(
-        C.cast(dbuf, C.POINTER(FRAME)), datasize,
-        samplecnt, samplecnt, datasamples, diffbuff,
-        C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(C.c_int32)),
+        datasize, samplecnt, datasamples,
+        npts, None, swapflag)
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples
