@@ -139,9 +139,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(w[0].category, InternalMSEEDReadingWarning)
 
         self.assertEqual(len(data_record), 5980)
-        last10Samples = [2862, 2856, 2844, 2843, 2851,
+        last10samples = [2862, 2856, 2844, 2843, 2851,
                          2853, 2853, 2854, 2857, 2863]
-        np.testing.assert_array_equal(data_record[-10:], last10Samples)
+        np.testing.assert_array_equal(data_record[-10:], last10samples)
 
     def test_one_sample_overlap(self):
         """
