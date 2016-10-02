@@ -246,7 +246,7 @@ class TfPlotTestCase(unittest.TestCase):
     """
     def setUp(self):
         # path to test files
-        self.path = os.path.join(os.path.dirname(__file__), 'data', 'images')
+        self.path = os.path.join(os.path.dirname(__file__), 'images')
 
     def test_plot_tfr(self):
         n = 295
