@@ -25,7 +25,6 @@ import numpy as np
 
 from obspy import UTCDateTime, read
 from obspy.core.util import AttribDict, complexify_string
-from obspy.core.util.decorator import deprecated
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
@@ -377,11 +376,6 @@ class Client(object):
                 warnings.warn(msg % (dcid))
         return data
 
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")  # noqa
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
-
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime, format="MSEED", compressed=True, metadata=False,
                       route=True):
@@ -434,8 +428,6 @@ class Client(object):
             st = client.get_waveforms("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
-        # handle deprecated keywords - one must be True to enable metadata
-        metadata = metadata
         file_stream = io.BytesIO()
         self.save_waveforms(file_stream, network, station, location, channel,
                             starttime, endtime, format=format,
@@ -482,11 +474,6 @@ class Client(object):
                         raise ArcLinkException(MSG_NOPAZ)
                     tr.stats['paz'] = entry.paz
         return stream
-
-    @deprecated("'saveWaveform' has been renamed to 'save_waveforms'. Use "
-                "that instead.")  # noqa
-    def saveWaveform(self, *args, **kwargs):
-        return self.save_waveforms(*args, **kwargs)
 
     def save_waveforms(self, filename, network, station, location, channel,
                        starttime, endtime, format="MSEED", compressed=True,
@@ -593,11 +580,6 @@ class Client(object):
         if is_name:
             fh.close()
 
-    @deprecated("'getRouting' has been renamed to 'get_routing'. Use "
-                "that instead.")  # noqa
-    def getRouting(self, *args, **kwargs):
-        return self.get_routing(*args, **kwargs)
-
     def get_routing(self, network, station, starttime, endtime,
                     modified_after=None):
         """
@@ -700,11 +682,6 @@ class Client(object):
         out = sorted(out, key=lambda x: x.get('priority', 1000))
         return out
 
-    @deprecated("'getQC' has been renamed to 'get_qc'. Use "
-                "that instead.")  # noqa
-    def getQC(self, *args, **kwargs):
-        return self.get_qc(*args, **kwargs)
-
     def get_qc(self, network, station, location, channel, starttime,
                endtime, parameters='*', outages=True, logs=True):
         """
@@ -756,11 +733,6 @@ class Client(object):
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=False)
         return result
-
-    @deprecated("'getMetadata' has been renamed to 'get_metadata'. Use "
-                "that instead.")  # noqa
-    def getMetadata(self, *args, **kwargs):
-        return self.get_metadata(*args, **kwargs)
 
     def get_metadata(self, network, station, location, channel, time,
                      route=True):
@@ -906,11 +878,6 @@ class Client(object):
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    @deprecated("'getPAZ' has been renamed to 'get_paz'. Use "
-                "that instead.")  # noqa
-    def getPAZ(self, *args, **kwargs):
-        return self.get_paz(*args, **kwargs)
-
     def get_paz(self, network, station, location, channel, time,
                 route=True):
         """
@@ -981,11 +948,6 @@ class Client(object):
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
 
-    @deprecated("'saveResponse' has been renamed to 'save_response'. Use "
-                "that instead.")  # noqa
-    def saveResponse(self, *args, **kwargs):
-        return self.save_response(*args, **kwargs)
-
     def save_response(self, filename, network, station, location, channel,
                       starttime, endtime, format='SEED'):
         """
@@ -1036,11 +998,6 @@ class Client(object):
         else:
             with open(filename, "wb") as fp:
                 fp.write(data)
-
-    @deprecated("'getInventory' has been renamed to 'get_inventory'. Use "
-                "that instead.")  # noqa
-    def getInventory(self, *args, **kwargs):
-        return self.get_inventory(*args, **kwargs)
 
     def get_inventory(self, network, station='*', location='*', channel='*',
                       starttime=UTCDateTime(), endtime=UTCDateTime(),
@@ -1358,11 +1315,6 @@ class Client(object):
 
         return data
 
-    @deprecated("'getNetworks' has been renamed to 'get_networks'. Use "
-                "that instead.")  # noqa
-    def getNetworks(self, *args, **kwargs):
-        return self.get_networks(*args, **kwargs)
-
     def get_networks(self, starttime, endtime, route=True):
         """
         Returns a dictionary of available networks within the given time span.
@@ -1381,11 +1333,6 @@ class Client(object):
         """
         return self.get_inventory(network='*', starttime=starttime,
                                   endtime=endtime, route=route)
-
-    @deprecated("'getStations' has been renamed to 'get_stations'. Use "
-                "that instead.")  # noqa
-    def getStations(self, *args, **kwargs):
-        return self.get_stations(*args, **kwargs)
 
     def get_stations(self, starttime, endtime, network, route=True):
         """

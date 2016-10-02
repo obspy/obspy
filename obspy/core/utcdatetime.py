@@ -17,8 +17,6 @@ import datetime
 import math
 import time
 
-from obspy.core.util.decorator import deprecated
-
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1, 0, 0)
 
@@ -1261,16 +1259,6 @@ class UTCDateTime(object):
         """
         return self._get_datetime().isoformat(sep=native_str(sep))
 
-    @deprecated(
-        "'formatFissures' has been renamed to "  # noqa
-        "'format_fissures'. Use that instead.")
-    def formatFissures(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'formatFissures' has been renamed to
-        'format_fissures'. Use that instead.
-        '''
-        return self.format_fissures(*args, **kwargs)
-
     def format_fissures(self):
         """
         Returns string representation for the IRIS Fissures protocol.
@@ -1286,16 +1274,6 @@ class UTCDateTime(object):
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
             (self.year, self.julday, self.hour, self.minute, self.second,
              self.microsecond // 100)
-
-    @deprecated(
-        "'formatArcLink' has been renamed to "  # noqa
-        "'format_arclink'. Use that instead.")
-    def formatArcLink(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'formatArcLink' has been renamed to
-        'format_arclink'. Use that instead.
-        '''
-        return self.format_arclink(*args, **kwargs)
 
     def format_arclink(self):
         """
@@ -1313,16 +1291,6 @@ class UTCDateTime(object):
                                          self.hour, self.minute, self.second,
                                          self.microsecond)
 
-    @deprecated(
-        "'formatSeedLink' has been renamed to "  # noqa
-        "'format_seedlink'. Use that instead.")
-    def formatSeedLink(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'formatSeedLink' has been renamed to
-        'format_seedlink'. Use that instead.
-        '''
-        return self.format_seedlink(*args, **kwargs)
-
     def format_seedlink(self):
         """
         Returns string representation for the SeedLink protocol.
@@ -1339,16 +1307,6 @@ class UTCDateTime(object):
         seconds = int(float(self.second) + float(self.microsecond) / 1.0e6)
         return "%d,%d,%d,%d,%d,%g" % (self.year, self.month, self.day,
                                       self.hour, self.minute, seconds)
-
-    @deprecated(
-        "'formatSEED' has been renamed to "  # noqa
-        "'format_seed'. Use that instead.")
-    def formatSEED(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'formatSEED' has been renamed to
-        'format_seed'. Use that instead.
-        '''
-        return self.format_seed(*args, **kwargs)
 
     def format_seed(self, compact=False):
         """
@@ -1389,16 +1347,6 @@ class UTCDateTime(object):
         elif self.minute:
             return temp + ":%02d" % (self.minute)
         return temp
-
-    @deprecated(
-        "'formatIRISWebService' has been renamed to "  # noqa
-        "'format_iris_web_service'. Use that instead.")
-    def formatIRISWebService(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'formatIRISWebService' has been renamed to
-        'format_iris_web_service'. Use that instead.
-        '''
-        return self.format_iris_web_service(*args, **kwargs)
 
     def format_iris_web_service(self):
         """
@@ -1506,6 +1454,23 @@ class UTCDateTime(object):
             self.datetime -
             self.datetime.replace(hour=0, minute=0, second=0, microsecond=0))
         return timedelta.total_seconds() / 3600.0
+
+    @property
+    def matplotlib_date(self):
+        """
+        Maplotlib date number representation.
+
+        Useful for plotting on matplotlib time-based axes, like created by e.g.
+        :meth:`obspy.core.stream.Stream.plot()`.
+
+        >>> t = UTCDateTime("2009-08-24T00:20:07.700000Z")
+        >>> t.matplotlib_date
+        733643.0139780092
+
+        :rtype: float
+        """
+        from matplotlib.dates import date2num
+        return date2num(self.datetime)
 
 
 if __name__ == '__main__':

@@ -46,18 +46,42 @@ from obspy.imaging.util import ObsPyAutoDateFormatter, \
     decimal_seconds_format_date_first_tick
 
 
-def compress_start_end(x, stop_iteration, merge_overlaps=False):
+def compress_start_end(x, stop_iteration, merge_overlaps=False,
+                       margin_in_seconds=0.0):
     """
     Compress 2-dimensional array of piecewise continuous start/end time pairs
     by merging overlapping and exactly fitting pieces into one.
     This reduces the number of lines needed in the plot considerably and is
     necessary for very large data sets.
     The maximum number of iterations can be specified.
+
+    :type margin_in_seconds: float
+    :param margin_in_seconds: Allowance in seconds that has to be exceeded by
+        adjacent expected next sample time (earlier trace's endtime+delta) and
+        actual next sample time (later trace's starttime) so that the
+        in-between is considered a gap or overlap (e.g. to allow for up to
+        ``0.8`` times the sampling interval for a 100 Hz stream, use
+        ``(1 / 100.0) * 0.8) == 0.008``).
     """
-    diffs = x[1:, 0] - x[:-1, 1]
-    if merge_overlaps:
-        diffs[diffs < 0] = 0
-    inds = np.concatenate([(diffs <= 0), [False]])
+    # matplotlib date numbers are in days
+    margin = margin_in_seconds / (24 * 3600)
+
+    def _get_indices_to_merge(startend):
+        """
+        Return boolean array signaling at which positions a merge of adjacent
+        tuples should be performed.
+        """
+        diffs = x[1:, 0] - x[:-1, 1]
+        if merge_overlaps:
+            # if overlaps should be merged we set any negative diff to zero and
+            # it will be merged in the following commands
+            diffs[diffs < 0] = 0
+        # any diff of expected and actual next sample time that is smaller than
+        # 0+-margin is considered no gap/overlap but rather merged together
+        inds = np.concatenate([(diffs > -margin) & (diffs < margin), [False]])
+        return inds
+
+    inds = _get_indices_to_merge(x)
     i = 0
     while any(inds):
         if i >= stop_iteration:
@@ -74,10 +98,7 @@ def compress_start_end(x, stop_iteration, merge_overlaps=False):
         x[inds, 1] = x[inds_next, 1]
         inds_del = np.nonzero(inds_next)
         x = np.delete(x, inds_del, 0)
-        diffs = x[1:, 0] - x[:-1, 1]
-        if merge_overlaps:
-            diffs[diffs < 0] = 0
-        inds = np.concatenate([(diffs <= 0), [False]])
+        inds = _get_indices_to_merge(x)
     return x
 
 
@@ -111,8 +132,9 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                 print("Skipping file with zero samlingrate: %s" % (file))
             return counter
         _data_list = data_dict.setdefault(_id, [])
-        _data_list.append([date2num(tr.stats.starttime.datetime),
-                           date2num(tr.stats.endtime.datetime)])
+        _data_list.append(
+            [date2num(tr.stats.starttime.datetime),
+             date2num((tr.stats.endtime + tr.stats.delta).datetime)])
     return (counter + 1)
 
 
@@ -139,13 +161,30 @@ def write_npz(file_, data_dict, samp_int_dict):
     npz_dict = data_dict.copy()
     for key in samp_int_dict.keys():
         npz_dict[key + '_SAMP'] = samp_int_dict[key]
+    npz_dict["__version__"] = __version__
     np.savez(file_, **npz_dict)
 
 
 def load_npz(file_, data_dict, samp_int_dict):
     npz_dict = np.load(file_)
+    # check obspy version the npz was done with
+    if "__version__" in npz_dict:
+        version_string = npz_dict["__version__"].item()
+    else:
+        version_string = None
+    # npz data computed with obspy < 1.1.0 are slightly different
+    if version_string is None or \
+            map(int, version_string.split(".")[:3]) < (1, 1, 0):
+        msg = ("Loading npz data computed with ObsPy < 1.1.0. Definition of "
+               "end times of individual time slices was changed by one time "
+               "the sampling interval (see #1366), so it is best to recompute "
+               "the npz from the raw data once.")
+        warnings.warn(msg)
+    # load data from npz
     for key in npz_dict.keys():
-        if key.endswith('_SAMP'):
+        if key == "__version__":
+            continue
+        elif key.endswith('_SAMP'):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
         else:
             data_dict[key] = npz_dict[key].tolist()
@@ -315,7 +354,8 @@ def main(argv=None):
             warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
 
-        startend_compressed = compress_start_end(startend, 1000)
+        startend_compressed = compress_start_end(startend, 1000,
+                                                 merge_overlaps=False)
 
         offset = np.ones(len(startend)) * _i  # generate list of y values
         if not args.no_x:
@@ -336,34 +376,58 @@ def main(argv=None):
             args.end_time and
             args.end_time > data_end and
             args.end_time - data_end)
-        if args.start_time and gap_at_start:
+        if gap_at_start:
             gapsum += gap_at_start
             has_gap = True
-        if args.end_time and gap_at_end:
+        if gap_at_end:
             gapsum += gap_at_end
             has_gap = True
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * _samp_int[:-1]
+        # define a gap as over 0.8 delta after expected sample time
+        gap_indices = diffs > 0.8 * _samp_int[:-1]
         gap_indices = np.append(gap_indices, False)
+        # define an overlap as over 0.8 delta before expected sample time
+        overlap_indices = diffs < -0.8 * _samp_int[:-1]
+        overlap_indices = np.append(overlap_indices, False)
         has_gap |= any(gap_indices)
+        has_gap |= any(overlap_indices)
         if has_gap:
             # don't handle last end time as start of gap
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
-            if args.start_time and gap_at_start:
+            overlaps_end = startend[overlap_indices, 1]
+            overlaps_start = startend[np.roll(overlap_indices, 1), 0]
+            # but now, manually add start/end for gaps at start/end of user
+            # specified start/end times
+            if gap_at_start:
                 gaps_start = np.append(gaps_start, args.start_time)
                 gaps_end = np.append(gaps_end, data_start)
-            if args.end_time and gap_at_end:
+            if gap_at_end:
                 gaps_start = np.append(gaps_start, data_end)
                 gaps_end = np.append(gaps_end, args.end_time)
             if not args.no_gaps:
-                rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_,
-                                   0.8)
-                         for start_, end_ in zip(gaps_start, gaps_end)]
-                ax.add_collection(PatchCollection(rects, color="r"))
+                if len(gaps_start):
+                    # gaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(gaps_start, gaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="r"))
+                if len(overlaps_start):
+                    # overlaps
+                    rects = [
+                        Rectangle((start_, offset[0] - 0.4),
+                                  end_ - start_, 0.8)
+                        for start_, end_ in zip(overlaps_start, overlaps_end)]
+                    ax.add_collection(PatchCollection(rects, color="b"))
             if args.print_gaps:
-                for start_, end_ in zip(gaps_start, gaps_end):
+                _starts = np.concatenate((gaps_start, overlaps_end))
+                _ends = np.concatenate((gaps_end, overlaps_start))
+                sort_order = np.argsort(_starts)
+                _starts = _starts[sort_order]
+                _ends = _ends[sort_order]
+                for start_, end_ in zip(_starts, _ends):
                     start_, end_ = num2date((start_, end_))
                     start_ = UTCDateTime(start_.isoformat())
                     end_ = UTCDateTime(end_.isoformat())

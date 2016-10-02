@@ -39,6 +39,7 @@ The functionality is provided through the following packages:
    obspy.io.ascii
    obspy.io.css
    obspy.io.datamark
+   obspy.io.gcf
    obspy.io.gse2
    obspy.io.kinemetrics
    obspy.io.mseed
@@ -60,6 +61,7 @@ The functionality is provided through the following packages:
 
    obspy.io.cmtsolution
    obspy.io.cnv
+   obspy.io.gse2
    obspy.io.json
    obspy.io.kml
    obspy.io.ndk

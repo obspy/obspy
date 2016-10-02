@@ -18,8 +18,8 @@ from time import sleep
 
 from obspy import Stream, UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated
 from .util import ascdate, asctime
+from ..httpproxy import get_proxy_tuple, http_proxy_connect
 
 
 class Client(object):
@@ -67,11 +67,7 @@ class Client(object):
         self.port = port
         self.timeout = timeout
         self.debug = debug
-
-    @deprecated("'getWaveform' has been renamed to 'get_waveforms'. Use "
-                "that instead.")  # noqa
-    def getWaveform(self, *args, **kwargs):
-        return self.get_waveforms(*args, **kwargs)
+        self.proxy = get_proxy_tuple()
 
     def get_waveforms(self, network, station, location, channel, starttime,
                       endtime):
@@ -131,11 +127,6 @@ class Client(object):
         return self.get_waveforms_nscl(seedname, starttime,
                                        endtime - starttime)
 
-    @deprecated("'getWaveformNSCL' has been renamed to 'get_waveforms_nscl'. "
-                "Use that instead.")  # noqa
-    def getWaveformNSCL(self, *args, **kwargs):
-        return self.get_waveforms_nscl(*args, **kwargs)
-
     def get_waveforms_nscl(self, seedname, starttime, duration):
         """
         Gets a regular expression of channels from a start time for a duration
@@ -181,15 +172,28 @@ class Client(object):
             (seedname, start, duration)
         if self.debug:
             print(ascdate() + " " + asctime() + " line=" + line)
+
+        # prepare for routing through http_proxy_connect
+        address = (self.host, self.port)
+        if self.proxy:
+            proxy = (self.proxy.hostname, self.proxy.port)
+            auth = ((self.proxy.username, self.proxy.password) if
+                    self.proxy.username else None)
+
         success = False
         while not success:
             try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                if self.proxy:
+                    s, _, _ = http_proxy_connect(address, proxy, auth)
+                    # This socket is already connected to the proxy
+                else:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((self.host, self.port))
+
                 with NamedTemporaryFile() as tf:
                     if self.debug:
                         print(ascdate(), asctime(), "connecting temp file",
                               tf.name)
-                    s.connect((self.host, self.port))
                     s.setblocking(0)
                     s.send(line.encode('ascii', 'strict'))
                     if self.debug:

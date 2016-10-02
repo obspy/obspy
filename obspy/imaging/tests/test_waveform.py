@@ -342,6 +342,76 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_color_section.png') as ic:
             st.plot(outfile=ic.name, type='section', color='channel')
 
+    def test_plot_wiggles_negative_section(self):
+        """
+        Tests plotting 10 traces in a horizontal section,
+        with colored wiggles only on the negative side.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._create_stream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(
+                self.path, 'waveform_wiggles_negative_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='horizontal',
+                    fillcolors=(None, "black"))
+
+    def test_plot_wiggles_positive_section(self):
+        """
+        Tests plotting 10 traces in a horizontal section,
+        with colored wiggles only on the positive side.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._create_stream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(
+                self.path, 'waveform_wiggles_positive_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='horizontal',
+                    fillcolors=("black", None))
+
+    def test_plot_wiggles_horizontal_section(self):
+        """
+        Tests plotting 10 traces in a horizontal section with colored wiglets.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._create_stream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(
+                self.path, 'waveform_wiggles_horizontal_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='horizontal',
+                    fillcolors=("blue", "red"))
+
+    def test_plot_wiggles_vertical_section(self):
+        """
+        Tests plotting 10 traces in a vertical section with colored wiglets.
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            this_start = start + 300 * np.sin(np.pi * _i / 9)
+            st += self._create_stream(this_start, this_start + 3600, 100)
+            st[-1].stats.distance = _i * 10e3
+            st[-1].stats.channel = str(_i % 3)
+        # create and compare image
+        with ImageComparison(
+                self.path, 'waveform_wiggles_vertical_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', orientation='vertical',
+                    fillcolors=("blue", "red"))
+
     def test_plot_default_relative(self):
         """
         Plots one hour, starting Jan 1970, with a relative scale.

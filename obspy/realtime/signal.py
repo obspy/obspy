@@ -30,8 +30,6 @@ import sys
 import numpy as np
 
 from obspy.core.trace import Trace, UTCDateTime
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from obspy.realtime.rtmemory import RtMemory
 
 
@@ -636,13 +634,3 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     rtmemory_k4_bar.input[0] = k4_bar_last
 
     return kappa4
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'calculateMwpMag': 'obspy.realtime.signal.calculate_mwp_mag',
-        'mwpIntegral': 'obspy.realtime.signal.mwpintegral'})

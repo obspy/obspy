@@ -15,7 +15,6 @@ from future.builtins import *  # NOQA
 import re
 import warnings
 from struct import unpack
-import sys
 
 import numpy as np
 
@@ -24,8 +23,6 @@ from obspy.core.compatibility import from_buffer
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 INVALID_CHAR_MSG = (
@@ -393,16 +390,6 @@ def _read_y(filename, headonly=False, **kwargs):  # @UnusedVariable
             else:
                 fh.seek(next_tag, 1)
     return Stream([trace])
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'isY': 'obspy.io.y.core._is_y',
-        'readY': 'obspy.io.y.core._read_y'})
 
 
 if __name__ == '__main__':

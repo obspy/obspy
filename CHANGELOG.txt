@@ -1,3 +1,62 @@
+master:
+ - General:
+   * Read support for Guralp Compressed Format (GCF) waveform data,
+     obspy.io.gcf (see #1449)
+ - obspy.core:
+   * Stream/Trace.write() can now autodetect file format from file extension
+     (see #1321).
+   * New convenience property `.matplotlib_date` for `UTCDateTime` objects to
+     get matplotlib datetime float representation (which can be used in
+     time-based matplotlib axes, e.g. by Stream.plot(); see #1339).
+   * Trace.times() has new options `type` and `reftime` to support fetching an
+     array of sampletimes in various different timing varieties ("relative":
+     the old default, float relative to trace starttime or `reftime` in
+     seconds; "utcdatetime": absolute times as UTCDateTime objects;
+     "timestamp": array of float POSIX timestamps, compare
+     `UTCDateTime.timestamp`; "matplotlib": array of float matplotlib dates,
+     useful for plotting on matplotlib time axes; see #1307)
+   * A trace's stats.network/station/location/channel can now also be set in
+     one line using a SEED ID string (e.g. `trace.id = "GR.FUR..HHZ"`,
+     see #1439).
+   * Instrument correction for response list stages originating from inventory
+     objects (see #1514).
+ - obspy.clients.fdsn:
+   * The mass downloader now has `exclude_networks` and `exclude_stations`
+     arguments to not download certain pieces of data. (see #1305)
+   * The mass downloader can now download stations that are part of a given
+     inventory object.
+   * The mass downloader now also works with restricted data. (See #1350)
+ - obspy.imaging.cm:
+   * new colormap: viridis_white. This is a modification of viridis that
+     goes to white instead of yellow but remains perceptually uniform. It
+     is especially useful for printing when an image should merge with the
+     white background.
+ - obspy.imaging.waveform
+   * Support for filling the wiggles when plotting sections (horizontal and
+     vertical, see #1445).
+ - obspy.io.gse2
+    * Read support for GSE2.0 bulletin (see #1528)
+ - obspy.io.quakeml
+    * Read and write support for nested custom tags (see #1463)
+ - obspy.io.segy:
+    * Iterative reading of large SEG-Y and SU files with
+      `obspy.io.segy.segy.iread_segy` and `obspy.io.segy.segy.iread_su`.
+      (see #1400).
+ - obspy.io.css:
+   * Read support for NNSA KB Core format waveform data. (see #1332)
+ - obspy.io.mseed:
+   * New generic get_flags() utility function able to retrieve statistics
+     about all fixed header flags and the timing quality. This makes the
+     get_timing_and_data_quality() function obsolete which is thus
+     deprecated and will be removed with the next release. The get_flags()
+     function is also much faster. (see #1141)
+ - obspy.scripts:
+   * obspy-scan command line script now also plots and prints overlaps
+     alongside gaps (see #1366)
+ - obspy.signal:
+   * New obspy.signal.quality_control module to compute quality metrics from
+     MiniSEED files. (see #1141)
+
 1.0.3:
  - obspy.io.mseed:
    * ObsPy can now also read (Mini)SEED files with noise records. (see #1495)
@@ -9,7 +68,7 @@
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
       inheritance. (see #1507)
 - obspy.io.sh:
-   * Fix writing of long headers for python3
+   * Fix writing of long headers for Python 3 (see #1526)
  - obspy.io.stationxml:
    * Datetime fields are written with microseconds to StationXML if
      microseconds are present. (see #1511)
@@ -509,7 +568,7 @@
    * write support for SACPZ ASCII representation of channel responses.
  - obspy.taup:
    * Replaced Fortran implementation with much more powerful Python port of
-	 Java TauP. This enabled us to drop all Fortran code, which simplifies
+     Java TauP. This enabled us to drop all Fortran code, which simplifies
      releases and builds tremendously.
  - obspy.xseed:
    * add support for Poles and Zeros type "B" (Analog, Hz), see #899

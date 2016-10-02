@@ -11,7 +11,7 @@
 .cache
 .DS_Store
 /.project
-/.pydevproject
+*/.pydevproject
 /.settings
 RELEASE-VERSION
 build/

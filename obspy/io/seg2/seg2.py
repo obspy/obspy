@@ -17,16 +17,12 @@ from future.utils import PY2
 
 from copy import deepcopy
 from struct import unpack
-import sys
 import warnings
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
-from obspy.core.util.decorator import deprecated
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 from .header import MONTHS
 
 
@@ -64,26 +60,6 @@ class SEG2(object):
     """
     def __init__(self):
         pass
-
-    @deprecated(
-        "'readFile' has been renamed to "  # noqa
-        "'read_file'. Use that instead.")
-    def readFile(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readFile' has been renamed to
-        'read_file'. Use that instead.
-        '''
-        return self.read_file(*args, **kwargs)
-
-    @deprecated(
-        "'readFileDescriptorBlock' has been renamed to "  # noqa
-        "'read_file_descriptor_block'. Use that instead.")
-    def readFileDescriptorBlock(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'readFileDescriptorBlock' has been renamed to
-        'read_file_descriptor_block'. Use that instead.
-        '''
-        return self.read_file_descriptor_block(*args, **kwargs)
 
     def read_file(self, file_object):
         """
@@ -211,16 +187,6 @@ class SEG2(object):
         else:
             self.starttime = UTCDateTime(0)
 
-    @deprecated(
-        "'parseNextTrace' has been renamed to "  # noqa
-        "'parse_next_trace'. Use that instead.")
-    def parseNextTrace(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseNextTrace' has been renamed to
-        'parse_next_trace'. Use that instead.
-        '''
-        return self.parse_next_trace(*args, **kwargs)
-
     def parse_next_trace(self):
         """
         Parse the next trace in the trace pointer list and return a Trace
@@ -289,16 +255,6 @@ class SEG2(object):
         tmp.update(header['seg2'])
         header['seg2'] = tmp
         return Trace(data=data, header=header)
-
-    @deprecated(
-        "'parseFreeForm' has been renamed to "  # noqa
-        "'parse_free_form'. Use that instead.")
-    def parseFreeForm(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'parseFreeForm' has been renamed to
-        'parse_free_form'. Use that instead.
-        '''
-        return self.parse_free_form(*args, **kwargs)
 
     def parse_free_form(self, free_form_str, attrib_dict):
         """
@@ -387,13 +343,3 @@ def _read_seg2(filename, **kwargs):  # @UnusedVariable
     st = seg2.read_file(filename)
     warnings.warn(WARNING_HEADER)
     return st
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        "isSEG2": "obspy.io.seg2.seg2._is_seg2",
-        "readSEG2": "obspy.io.seg2.seg2._read_seg2"})

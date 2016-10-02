@@ -19,12 +19,10 @@ import numpy as np
 from obspy import Stream, Trace, UTCDateTime, read, read_inventory
 from obspy.core import Stats
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.deprecation_helpers import ObsPyDeprecationWarning
 from obspy.core.util.testing import (
     ImageComparison, ImageComparisonException, MATPLOTLIB_VERSION)
 from obspy.io.xseed import Parser
-from obspy.signal.spectral_estimation import (PPSD, psd, welch_taper,
-                                              welch_window)
+from obspy.signal.spectral_estimation import (PPSD, welch_taper, welch_window)
 
 
 PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -119,6 +117,7 @@ class PsdTestCase(unittest.TestCase):
         point longer. I dont know were this can come from, for now this last
         sample in the psd is ignored.
         """
+        from matplotlib.mlab import psd
         sampling_rate = 100.0
         nfft = 512
         noverlap = 0
@@ -129,13 +128,9 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
-                               window=welch_taper, noverlap=noverlap)
-            self.assertEqual(len(w), 1)
-            self.assertTrue('This wrapper is no longer necessary.' in
-                            str(w[0].message))
+        psd_obspy, _ = psd(noise, NFFT=nfft, Fs=sampling_rate,
+                           window=welch_taper, noverlap=noverlap,
+                           sides="onesided", scale_by_freq=True)
 
         psd_pitsa = np.load(file_psd_pitsa)
 
@@ -334,21 +329,7 @@ class PsdTestCase(unittest.TestCase):
                 continue
             self.assertEqual(getattr(ppsd, key), getattr(results_paz, key))
         # second: various methods for full response
-        # (also test various means of initialization, basically testing the
-        #  decorator that maps the deprecated keywords)
         for metadata in [parser, inv, resp]:
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, paz=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter('always')
-                ppsd = PPSD(st[0].stats, parser=metadata)
-            self.assertEqual(len(w), 1)
-            self.assertIs(w[0].category, ObsPyDeprecationWarning)
-
             ppsd = PPSD(st[0].stats, metadata)
             ppsd.add(st)
             # commented code to generate the test data:

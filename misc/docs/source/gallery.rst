@@ -244,6 +244,64 @@ Gallery
     :alt: SDS html report
     :scale: 50%
 
+Colormap comparison
+===================
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import _colormap_plot_overview
+    _colormap_plot_overview()
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_cwt
+    _colormap_plot_cwt([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_array_response
+    _colormap_plot_array_response([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_similarity
+    _colormap_plot_similarity([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_time
+    _colormap_plot_beamforming_time([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r
+    from obspy.imaging.cm import _colormap_plot_beamforming_polar
+    _colormap_plot_beamforming_polar([viridis, viridis_r, viridis_white, viridis_white_r])
+
+.. gallery-plot::
+    :target: packages/autogen/obspy.imaging.cm.html
+    :alt: Colormap comparisons
+
+    from obspy.imaging.cm import viridis, viridis_r, viridis_white, viridis_white_r, pqlx
+    from obspy.imaging.cm import _colormap_plot_ppsd
+    _colormap_plot_ppsd([viridis, viridis_r, viridis_white, viridis_white_r, pqlx])
+
 .. raw:: html
 
     </div>

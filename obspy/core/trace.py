@@ -25,8 +25,7 @@ from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, create_empty_data_chunk
 from obspy.core.util.base import _get_function_from_entry_point
-from obspy.core.util.decorator import (
-    deprecated, raise_if_masked, skip_if_no_data)
+from obspy.core.util.decorator import raise_if_masked, skip_if_no_data
 from obspy.core.util.misc import (flat_not_masked_contiguous, get_window_times,
                                   limit_numpy_fft_cache)
 
@@ -785,16 +784,6 @@ class Trace(object):
         out.data = data
         return out
 
-    @deprecated(
-        "'getId' has been renamed to "  # noqa
-        "'get_id'. Use that instead.")
-    def getId(self, *args, **kwargs):
-        '''
-        DEPRECATED: 'getId' has been renamed to
-        'get_id'. Use that instead.
-        '''
-        return self.get_id(*args, **kwargs)
-
     def get_id(self):
         """
         Return a SEED compatible identifier of the trace.
@@ -818,6 +807,41 @@ class Trace(object):
         return out % (self.stats)
 
     id = property(get_id)
+
+    @id.setter
+    def id(self, value):
+        """
+        Set network, station, location and channel codes from a SEED ID.
+
+        Raises an Exception if the provided ID does not contain exactly three
+        dots (or is not of type `str`).
+
+        >>> from obspy import read
+        >>> tr = read()[0]
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> tr.id = "GR.FUR..HHZ"
+        >>> print(tr)  # doctest: +ELLIPSIS
+        GR.FUR..HHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+
+        :type value: str
+        :param value: SEED ID to use for setting `self.stats.network`,
+            `self.stats.station`, `self.stats.location` and
+            `self.stats.channel`.
+        """
+        try:
+            net, sta, loc, cha = value.split(".")
+        except AttributeError:
+            msg = ("Can only set a Trace's SEED ID from a string "
+                   "(and not from {})").format(type(value))
+            raise TypeError(msg)
+        except ValueError:
+            msg = ("Not a valid SEED ID: '{}'").format(value)
+            raise ValueError(msg)
+        self.stats.network = net
+        self.stats.station = sta
+        self.stats.location = loc
+        self.stats.channel = cha
 
     def plot(self, **kwargs):
         """
@@ -874,16 +898,17 @@ class Trace(object):
         from obspy.imaging.spectrogram import spectrogram
         return spectrogram(data=self.data, **kwargs)
 
-    def write(self, filename, format, **kwargs):
+    def write(self, filename, format=None, **kwargs):
         """
         Save current trace into a file.
 
         :type filename: str
         :param filename: The name of the file to write.
-        :type format: str
-        :param format: The format to write must be specified. See
+        :type format: str, optional
+        :param format: The format of the file to write. See
             :meth:`obspy.core.stream.Stream.write` method for possible
-            formats.
+            formats. If format is set to ``None`` it will be deduced
+            from file extension, whenever possible.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -891,6 +916,11 @@ class Trace(object):
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
+
+        The ``format`` argument can be omitted, and the file format will be
+        deduced from file extension, whenever possible.
+
+        >>> tr.write("out.mseed")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
@@ -2363,18 +2393,83 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         return self
 
-    def times(self):
+    def times(self, type="relative", reftime=None):
         """
-        For convenient plotting compute a NumPy array of seconds since
-        starttime corresponding to the samples in Trace.
+        For convenient plotting compute a NumPy array with timing information
+        of all samples in the Trace.
 
+        Time can be either:
+
+          * seconds relative to ``trace.stats.starttime``
+            (``type="relative"``) or to ``reftime``
+          * absolute time as
+            :class:`~obspy.core.utcdatetime.UTCDateTime` objects
+            (``type="utcdatetime"``)
+          * absolute time as POSIX timestamps (
+            :class:`UTCDateTime.timestamp <obspy.core.utcdatetime.UTCDateTime>`
+            ``type="timestamp"``)
+          * absolute time as matplotlib numeric datetime (for matplotlib
+            plotting with absolute time on axes, see :mod:`matplotlib.dates`
+            and :func:`matplotlib.dates.date2num`, ``type="matplotlib"``)
+
+        >>> from obspy import read, UTCDateTime
+        >>> tr = read()[0]
+
+        >>> tr.times()
+        array([  0.00000000e+00,   1.00000000e-02,   2.00000000e-02, ...,
+                 2.99700000e+01,   2.99800000e+01,   2.99900000e+01])
+
+        >>> tr.times(reftime=UTCDateTime("2009-01-01T00"))
+        array([ 20305203.  ,  20305203.01,  20305203.02, ...,  20305232.97,
+                20305232.98,  20305232.99])
+
+        >>> tr.times("utcdatetime")  # doctest: +SKIP
+        array([UTCDateTime(2009, 8, 24, 0, 20, 3),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 10000),
+               UTCDateTime(2009, 8, 24, 0, 20, 3, 20000), ...,
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 970000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 980000),
+               UTCDateTime(2009, 8, 24, 0, 20, 32, 990000)], dtype=object)
+
+        >>> tr.times("timestamp")
+        array([  1.25107320e+09,   1.25107320e+09,   1.25107320e+09, ...,
+                 1.25107323e+09,   1.25107323e+09,   1.25107323e+09])
+
+        >>> tr.times("matplotlib")
+        array([ 733643.01392361,  733643.01392373,  733643.01392384, ...,
+                733643.01427049,  733643.0142706 ,  733643.01427072])
+
+        :type type: str
+        :param type: Determines type of returned time array, see above for
+            valid values.
+        :type reftime: obspy.core.utcdatetime.UTCDateTime
+        :param reftime: When using a relative timing, the time used as the
+            reference for the zero point, i.e., the first sample will be at
+            ``trace.stats.starttime - reftime`` (in seconds).
         :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
         :returns: An array of time samples in an :class:`~numpy.ndarray` if
             the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
-            otherwise.
+            otherwise (``dtype`` of array is either ``float`` or
+            :class:`~obspy.core.utcdatetime.UTCDateTime`).
         """
+        type = type.lower()
         time_array = np.arange(self.stats.npts)
         time_array = time_array / self.stats.sampling_rate
+        if type == "relative":
+            if reftime is not None:
+                time_array += (self.stats.starttime - reftime)
+        elif type == "timestamp":
+            time_array = time_array + self.stats.starttime.timestamp
+        elif type == "utcdatetime":
+            time_array = np.array(
+                [self.stats.starttime + t_ for t_ in time_array])
+        elif type == "matplotlib":
+            from matplotlib.dates import date2num
+            time_array = date2num([(self.stats.starttime + t_).datetime
+                                   for t_ in time_array])
+        else:
+            msg = "Invalid `type`: {}".format(type)
+            raise ValueError(msg)
         # Check if the data is a ma.maskedarray
         if isinstance(self.data, np.ma.masked_array):
             time_array = np.ma.array(time_array, mask=self.data.mask)
@@ -2592,16 +2687,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if plot:
             import matplotlib.pyplot as plt
 
-        if (isinstance(inventory, (str, native_str)) and
-                inventory.upper() in ("DISP", "VEL", "ACC")):
-            from obspy.core.util.deprecation_helpers import \
-                ObsPyDeprecationWarning
-            output = inventory
-            inventory = None
-            msg = ("The order of optional parameters in method "
-                   "remove_response has changed. 'output' is not accepted "
-                   "as first positional argument in the next release.")
-            warnings.warn(msg, category=ObsPyDeprecationWarning, stacklevel=3)
         response = self._get_response(inventory)
         # polynomial response using blockette 62 stage 0
         if not response.response_stages and response.instrument_polynomial:

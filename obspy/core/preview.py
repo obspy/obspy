@@ -20,13 +20,6 @@ import numpy as np
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import deprecated
-
-
-@deprecated("Method 'createPreview' was renamed to 'create_preview'. Use "
-            "that instead.")  # noqa
-def createPreview(trace, delta=60):
-    return create_preview(trace, delta)
 
 
 def create_preview(trace, delta=60):
@@ -90,12 +83,6 @@ def create_preview(trace, delta=60):
     tr.stats.starttime = UTCDateTime(start_time)
     tr.stats.preview = True
     return tr
-
-
-@deprecated("Method 'mergePreviews' was renamed to 'merge_previews'. Use "
-            "that instead.")  # noqa
-def mergePreviews(stream):
-    return merge_previews(stream)
 
 
 def merge_previews(stream):
@@ -168,12 +155,6 @@ def merge_previews(stream):
         new_stream.append(new_trace)
     stream.traces = copied_traces
     return new_stream
-
-
-@deprecated("Method 'resamplePreview' was renamed to 'resample_preview'. Use "
-            "that instead.")  # noqa
-def resamplePreview(trace, samples, method='accurate'):
-    return resample_preview(trace, samples, method)
 
 
 def resample_preview(trace, samples, method='accurate'):

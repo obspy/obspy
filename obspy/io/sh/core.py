@@ -15,15 +15,12 @@ from future.utils import native_str
 
 import io
 import os
-import sys
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import loadtxt
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
@@ -659,21 +656,6 @@ def from_utcdatetime(dt):
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                       dt.minute, dt.second, dt.microsecond / 1000)
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'fromUTCDateTime': 'obspy.io.sh.core.from_utcdatetime',
-        'isASC': 'obspy.io.sh.core._is_asc',
-        'isQ': 'obspy.io.sh.core._is_q',
-        'readASC': 'obspy.io.sh.core._read_asc',
-        'readQ': 'obspy.io.sh.core._read_q',
-        'writeASC': 'obspy.io.sh.core._write_asc',
-        'writeQ': 'obspy.io.sh.core._write_q'})
 
 
 if __name__ == '__main__':

@@ -4,10 +4,6 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import json
-import sys
-
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 from .default import Default
 
@@ -67,12 +63,3 @@ def _write_json(obj, filename, omit_nulls=False, pretty_print=True,
         # Close if a file has been opened by this function.
         if file_opened is True:
             fh.close()
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'writeJSON': 'obspy.io.json.core._write_json'})

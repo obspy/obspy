@@ -130,3 +130,14 @@ Plot & Color Options
 Various options are available to change the appearance of the waveform plot.
 Please see :meth:`~obspy.core.stream.Stream.plot` method for all possible
 options.
+
+--------------------------------
+Custom Plotting using Matplotlib
+--------------------------------
+
+Custom plots can be done using matplotlib, like shown in this minimalistic
+example (see http://matplotlib.org/gallery.html for more advanced plotting
+examples):
+
+.. plot:: tutorial/code_snippets/waveform_plotting_tutorial_7.py
+   :include-source:

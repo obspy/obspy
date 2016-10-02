@@ -25,13 +25,6 @@ from math import cos, pi, sin
 
 import numpy as np
 
-from obspy.core.util.decorator import deprecated
-
-
-@deprecated("rotate_NE_RT() has been renamed to rotate_ne_rt().")
-def rotate_NE_RT(*args, **kwargs):  # noqa
-    return rotate_ne_rt(*args, **kwargs)
-
 
 def rotate_ne_rt(n, e, ba):
     """
@@ -59,11 +52,6 @@ def rotate_ne_rt(n, e, ba):
     return r, t
 
 
-@deprecated("rotate_RT_NE() has been renamed to rotate_rt_ne().")
-def rotate_RT_NE(*args, **kwargs):  # noqa
-    return rotate_rt_ne(*args, **kwargs)
-
-
 def rotate_rt_ne(n, e, ba):
     """
     Rotates horizontal components of a seismogram.
@@ -76,11 +64,6 @@ def rotate_rt_ne(n, e, ba):
     """
     ba = 360.0 - ba
     return rotate_ne_rt(n, e, ba)
-
-
-@deprecated("rotate_ZNE_LQT() has been renamed to rotate_zne_lqt().")
-def rotate_ZNE_LQT(*args, **kwargs):  # noqa
-    return rotate_zne_lqt(*args, **kwargs)
 
 
 def rotate_zne_lqt(z, n, e, ba, inc):
@@ -123,11 +106,6 @@ def rotate_zne_lqt(z, n, e, ba, inc):
     q = z * sin(inc) + n * cos(inc) * cos(ba) + e * cos(inc) * sin(ba)
     t = n * sin(ba) - e * cos(ba)
     return l, q, t
-
-
-@deprecated("rotate_LQT_ZNE() has been renamed to rotate_lqt_zne().")
-def rotate_LQT_ZNE(*args, **kwargs):  # noqa
-    return rotate_lqt_zne(*args, **kwargs)
 
 
 def rotate_lqt_zne(l, q, t, ba, inc):
@@ -183,11 +161,6 @@ def _dip_azimuth2zse_base_vector(dip, azimuth):
     return np.array([-np.sin(dip),
                      -np.cos(azimuth) * np.cos(dip),
                      np.sin(azimuth) * np.cos(dip)])
-
-
-@deprecated("rotate2ZNE() has been renamed to rotate2zne().")
-def rotate2ZNE(*args, **kwargs):  # noqa
-    return rotate2zne(*args, **kwargs)
 
 
 def rotate2zne(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,

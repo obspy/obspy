@@ -19,15 +19,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA @UnusedWildImport
 
-import sys
 import xdrlib
 
 import numpy as np
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.deprecation_helpers import \
-    DynamicAttributeImportRerouteModule
 
 
 def _is_ah(filename):
@@ -372,16 +369,3 @@ def _read_ah2(filename):
             except EOFError:
                 break
         return st
-
-
-# Remove once 0.11 has been released.
-sys.modules[__name__] = DynamicAttributeImportRerouteModule(
-    name=__name__, doc=__doc__, locs=locals(),
-    original_module=sys.modules[__name__],
-    import_map={},
-    function_map={
-        'is_AH': 'obspy.io.ah.core._is_ah',
-        'read_AH': 'obspy.io.ah.core._read_ah',
-        'read_AH1': 'obspy.io.ah.core._read_ah1',
-        'read_AH2': 'obspy.io.ah.core._read_ah2',
-        '_get_AH_version': 'obspy.io.ah.core._get_ah_version'})

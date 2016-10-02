@@ -65,7 +65,7 @@ Doc Strings / Comments
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
           This is a one line doc string.
           """
@@ -77,7 +77,7 @@ Doc Strings / Comments
 
   .. code-block:: python
 
-      def someMethod():
+      def some_method():
           """
           This is just the short story.
 
@@ -128,7 +128,7 @@ explained by an example:
 
 .. code-block:: python
 
-  def formatException(etype, value, tb, limit=None):
+  def format_exception(etype, value, tb, limit=None):
       """
       Format the exception with a traceback.
 
@@ -143,7 +143,7 @@ explained by an example:
 
 which renders like this:
 
-.. function:: formatException(etype, value, tb, limit=None)
+.. function:: format_exception(etype, value, tb, limit=None)
 
    Format the exception with a traceback.
 
@@ -181,8 +181,9 @@ Tests
 
   .. code-block:: python
 
-      def test_doSomething():
-          """XXX: This test does something.
+      def test_do_something():
+          """
+          XXX: This test does something.
 
           But fails badly. See ticket #number.
           """
