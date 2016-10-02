@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from obspy.core.util.testing import ImageComparison
 from obspy.signal.tf_misfit import (eg, em, feg, fem, fpg, fpm, pg, pm, teg,
                                     tem, tfeg, tfem, tfpg, tfpm, tpg, tpm)
-from obspy.signal.tf_misfit import plot_tfr
+from obspy.signal.tf_misfit import plot_tfr, plot_tf_misfits, plot_tf_gofs
 
 
 class TfTestCase(unittest.TestCase):
@@ -247,6 +247,38 @@ class TfPlotTestCase(unittest.TestCase):
     def setUp(self):
         # path to test files
         self.path = os.path.join(os.path.dirname(__file__), 'images')
+        # general constants
+        tmax = 6.
+        self.dt = 0.01
+        npts = int(tmax / self.dt + 1)
+        t = np.linspace(0., tmax, npts)
+        self.fmin = .5
+        self.fmax = 10
+        # constants for the signal
+        a1 = 4.
+        t1 = 2.
+        f1 = 2.
+        phi1 = 0.
+        # amplitude and phase error
+        phase_shift = 0.1
+        amp_fac = 1.2
+
+        # generate the signal
+        h1 = (np.sign(t - t1) + 1) / 2
+        self.st1 = a1 * (t - t1) * np.exp(-2 * (t - t1))
+        self.st1 *= np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * h1
+
+        # reference signal
+        self.st2 = self.st1.copy()
+
+        # generate analytical signal (hilbert transform) and add phase shift
+        self.st1p = hilbert(self.st1)
+        self.st1p = np.real(
+            np.abs(self.st1p) *
+            np.exp((np.angle(self.st1p) + phase_shift * np.pi) * 1j))
+
+        # signal with amplitude error
+        self.st1p /= amp_fac
 
     def test_plot_tfr(self):
         n = 295
@@ -259,6 +291,30 @@ class TfPlotTestCase(unittest.TestCase):
             with ImageComparison(self.path,
                                  'time_frequency_representation.png') as ic:
                 plot_tfr(sig, dt=dt, show=False)
+                plt.savefig(ic.name)
+        finally:
+            np.seterr(**_t)
+
+    def test_plot_tf_misfits(self):
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path,
+                                 'time_frequency_misfits.png') as ic:
+                plot_tf_misfits(self.st1p, self.st2, dt=self.dt,
+                                fmin=self.fmin, fmax=self.fmax, show=False)
+                plt.savefig(ic.name)
+        finally:
+            np.seterr(**_t)
+
+    def test_plot_tf_gofs(self):
+        _t = np.geterr()
+        np.seterr(all="ignore")
+        try:
+            with ImageComparison(self.path,
+                                 'time_frequency_gofs.png') as ic:
+                plot_tf_gofs(self.st1p, self.st2, dt=self.dt, fmin=self.fmin,
+                             fmax=self.fmax, show=False)
                 plt.savefig(ic.name)
         finally:
             np.seterr(**_t)
