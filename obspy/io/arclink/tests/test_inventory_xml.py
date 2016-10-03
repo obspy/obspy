@@ -19,13 +19,10 @@ from __future__ import (absolute_import, division, print_function,
 from future.builtins import *  # NOQA
 
 import inspect
-import io
 import os
 import unittest
 
 from obspy.core.inventory import read_inventory
-from obspy.core.inventory.response import (CoefficientsTypeResponseStage,
-                                           FIRResponseStage)
 
 
 class SC3MLTestCase(unittest.TestCase):
@@ -36,7 +33,8 @@ class SC3MLTestCase(unittest.TestCase):
         """
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
-        self.arclink_xml_path = os.path.join(self.data_dir, "arclink_inventory.xml")
+        self.arclink_xml_path = os.path.join(self.data_dir,
+                                             "arclink_inventory.xml")
         self.station_xml_path = os.path.join(self.data_dir, "gols_station.xml")
 
     def test_auto_read_arclink_xml(self):
@@ -85,7 +83,7 @@ class SC3MLTestCase(unittest.TestCase):
                 self.assertEqual(len(arc.response.response_stages),
                                  len(sc3ml.response.response_stages))
 
-                # Check the 
+                # Check the response stages
                 for arc_resp, sta_resp in zip(arc.response.response_stages,
                                               sc3ml.response.response_stages):
 
@@ -107,12 +105,6 @@ class SC3MLTestCase(unittest.TestCase):
                             self.assertAlmostEqual(arc_cs[1], sta_cs[1])
                         else:
                             self.assertEqual(arc_cs, sta_cs)
-
-                        
-
-
-    def testsPassSoItMustBeGood(self):
-        self.assertTrue(True)
 
 
 def suite():

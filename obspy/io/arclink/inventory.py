@@ -35,7 +35,6 @@ from obspy.core.inventory import (CoefficientsTypeResponseStage,
                                   FilterCoefficient, FIRResponseStage,
                                   PolesZerosResponseStage,
                                   PolynomialResponseStage)
-from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
@@ -395,7 +394,8 @@ def _read_channel(inventory_root, cha_element):
     # obtain the sensorID and link to particular publicID <sensor> element
     # in the inventory base node
     sensor_id = cha_element.get("sensor")
-    sensor_element = inventory_root.find(_ns("sensor[@publicID='" + sensor_id + "']"))
+    sensor_element = inventory_root.find(_ns("sensor[@publicID='" +
+                                         sensor_id + "']"))
     # obtain the poles and zeros responseID and link to particular
     # <responsePAZ> publicID element in the inventory base node
     if sensor_element is not None:
@@ -442,7 +442,7 @@ def _read_channel(inventory_root, cha_element):
     if data_log_element is not None:
         channel.data_logger = _read_datalogger(data_log_element)
         temp = _attr2obj(data_log_element, "maxClockDrift",
-                               ClockDrift)
+                         ClockDrift)
         if channel.sample_rate != 0.0:
             channel.clock_drift_in_seconds_per_sample = \
                 _read_float_var(temp/channel.sample_rate, ClockDrift)
@@ -507,8 +507,10 @@ def _read_instrument_sensitivity(sen_element, cha_element):
         output_units=output_units_name)
 
     # assuming these are equal to frequencyStart/frequencyEnd
-    sensitivity.frequency_range_start = _attr2obj(sen_element, "lowFrequency", float)
-    sensitivity.frequency_range_end = _attr2obj(sen_element, "highFrequency", float)
+    sensitivity.frequency_range_start = _attr2obj(sen_element, "lowFrequency",
+                                                  float)
+    sensitivity.frequency_range_end = _attr2obj(sen_element, "highFrequency",
+                                                float)
 
     return sensitivity
 
@@ -716,11 +718,10 @@ def _read_response_stage(stage, rate, stage_number, input_units,
     if(elem_type == 'responsePAZ'):
 
         # read normalization params
-        normalization_freq = _attr2obj(stage,
-                                             "normalizationFrequency",
-                                             Frequency)
+        normalization_freq = _attr2obj(stage, "normalizationFrequency",
+                                       Frequency)
         normalization_factor = _attr2obj(stage, "normalizationFactor",
-                                        float)
+                                         float)
 
         # Parse the type of the transfer function
         # A: Laplace (rad)
