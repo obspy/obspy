@@ -577,13 +577,13 @@ class Client(object):
         :return: Dictionary containing values for azimuth, backazimuth and
             distance.
 
-        The azimuth is the angle from the station to the event, while the
-        backazimuth is the angle from the event to the station.
+        The ``azimuth`` is the angle from the station to the event, while the
+        ``backazimuth`` is the angle from the event to the station.
 
         Latitudes are converted to geocentric latitudes using the WGS84
         spheroid to correct for ellipticity.
 
-        The distance (in degrees) and distancemeters are the distance
+        The ``distance`` (in degrees) and ``distancemeters`` are the distance
         between the two points on the spheroid.
 
         .. rubric:: Example
