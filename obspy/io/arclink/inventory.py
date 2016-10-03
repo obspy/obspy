@@ -40,6 +40,7 @@ from obspy.io.stationxml.core import _read_floattype
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
 SCHEMA_VERSION = "1.0"
+SCHEMA_NAMESPACE = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 
 
 def _is_inventory_xml(path_or_file_object):
@@ -72,8 +73,8 @@ def _is_inventory_xml(path_or_file_object):
             assert match is not None
         except:
             return False
-        # Convert schema number to a float to have positive comparisons
-        # between, e.g "1" and "1.0".
+        # Match and convert schema number to a float to have positive
+        # comparisons between, e.g "1" and "1.0".
         version = float(re.findall("\d+\.\d+", root.tag)[0])
         if float(version != float(SCHEMA_VERSION)):
             warnings.warn("The inventory file has version %s, ObsPy can "
@@ -90,7 +91,7 @@ def _is_inventory_xml(path_or_file_object):
 
 def validate_arclink_xml(path_or_object):
     """
-    Checks if the given path is a valid sc3ml file.
+    Checks if the given path is a valid arclink_xml file.
 
     Returns a tuple. The first item is a boolean describing if the validation
     was successful or not. The second item is a list of all found validation
@@ -122,20 +123,22 @@ def validate_arclink_xml(path_or_object):
     return (True, ())
 
 
+def _ns(tagname):
+    """
+    Hoisted namespace function used to find elements
+
+    :param tagname: name of tag to be extracted
+    """
+    return "{%s}%s" % (SCHEMA_NAMESPACE, tagname)
+
+
 def _read_inventory_xml(path_or_file_object):
     """
-    Function for reading a stationXML file.
+    Function for reading an Arclink inventory file.
 
     :param path_or_file_object: File name or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
-
-    # Fix the namespace as its not always the default namespace. Will need
-    # to be adjusted if the sc3ml format gets another revision!
-    namespace = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
-
-    def _ns(tagname):
-        return "{%s}%s" % (namespace, tagname)
 
     created = None
     sender = "ObsPy Inventory"
@@ -145,10 +148,10 @@ def _read_inventory_xml(path_or_file_object):
     module = None
     module_uri = None
 
-    # Collect all networks from the sc3ml inventory
+    # Collect all networks from the arcllink inventory
     networks = []
     for net_element in root.findall(_ns("network")):
-        networks.append(_read_network(root, net_element, _ns))
+        networks.append(_read_network(root, net_element))
 
     return obspy.core.inventory.Inventory(networks=networks, source=source,
                                           sender=sender, created=created,
@@ -168,6 +171,8 @@ def _attr2obj(element, attribute, convert):
     try:
         if element.get(attribute) is None:
             return None
+        elif element.get(attribute) == '':
+            return None
         return convert(element.get(attribute))
     except:
         None
@@ -182,16 +187,15 @@ def _tag2obj(element, tag, convert):
     :param tag: name of tag to be read
     :param convert: intrinsic function (e.g. int, str, float)
     """
-
     try:
-        if element.get(attribute) is None:
+        if element.find(tag).text is None:
             return None
         return convert(element.find(tag).text)
     except:
         None
 
 
-def _read_network(inventory_root, net_element, _ns):
+def _read_network(inventory_root, net_element):
 
     """
     Reads the network structure
@@ -218,7 +222,7 @@ def _read_network(inventory_root, net_element, _ns):
     # Collect the stations
     stations = []
     for sta_element in net_element.findall(_ns("station")):
-        stations.append(_read_station(inventory_root, sta_element, _ns))
+        stations.append(_read_station(inventory_root, sta_element))
     network.stations = stations
 
     return network
@@ -230,6 +234,8 @@ def _get_restricted_status(element):
     get the restricted_status (boolean)
     true is evaluated to 'open' and false to 'closed'
     to match stationXML formatting
+
+    :param element: xmltree element status is extracted from
     """
 
     restricted_status = _attr2obj(element, "restricted", str)
@@ -239,7 +245,7 @@ def _get_restricted_status(element):
         return 'closed'
 
 
-def _read_station(inventory_root, sta_element, _ns):
+def _read_station(inventory_root, sta_element):
 
     """
     Reads the station structure
@@ -250,9 +256,10 @@ def _read_station(inventory_root, sta_element, _ns):
     """
 
     # Read location tags
-    longitude = _attr2obj(sta_element, "longitude", float)
-    latitude = _attr2obj(sta_element, "latitude", float)
-    elevation = _attr2obj(sta_element, "elevation", float)
+    longitude = _attr2obj(sta_element, "longitude", Longitude)
+    latitude = _attr2obj(sta_element, "latitude", Latitude)
+    elevation = _attr2obj(sta_element, "elevation", Distance)
+
     station = obspy.core.inventory.Station(code=sta_element.get("code"),
                                            latitude=latitude,
                                            longitude=longitude,
@@ -261,7 +268,6 @@ def _read_station(inventory_root, sta_element, _ns):
 
     # There is no relevant info in the base node
     # Read the start and end date (creation, termination) from tags
-    # "Vault" and "Geology" are not defined in sc3ml ?
     station.start_date = _attr2obj(sta_element, "start", obspy.UTCDateTime)
     station.end_date = _attr2obj(sta_element, "end", obspy.UTCDateTime)
     station.creation_date = _attr2obj(sta_element, "start", obspy.UTCDateTime)
@@ -276,7 +282,7 @@ def _read_station(inventory_root, sta_element, _ns):
     channels = []
     for sen_loc_element in sta_element.findall(_ns("sensorLocation")):
         for channel in sen_loc_element.findall(_ns("stream")):
-            channels.append(_read_channel(inventory_root, channel, _ns))
+            channels.append(_read_channel(inventory_root, channel))
 
     station.channels = channels
 
@@ -320,8 +326,7 @@ def _read_datalogger(equip_element):
     Reads equipment information from datalogger
     Some information is not present > to None
 
-    :param data_log_element: element to be parsed
-    :param _ns: name space
+    :param equip_element: element to be parsed
     """
 
     resource_id = equip_element.get("publicID")
@@ -329,6 +334,7 @@ def _read_datalogger(equip_element):
     manufacturer = _attr2obj(equip_element, "digitizerManufacturer", str)
     model = _attr2obj(equip_element, "digitizerModel", str)
 
+    # A lot of properties are not specified in the ArclinkXML
     return obspy.core.inventory.Equipment(
         resource_id=resource_id, type=model, description=description,
         manufacturer=manufacturer, vendor=None, model=model,
@@ -351,6 +357,8 @@ def _read_sensor(equip_element):
     description = _attr2obj(equip_element, "description", str)
     manufacturer = _attr2obj(equip_element, "manufacturer", str)
     model = _attr2obj(equip_element, "model", str)
+
+    # A lot of properties are not specified in the ArclinkXML
     return obspy.core.inventory.Equipment(
         resource_id=resource_id, type=equipment_type, description=description,
         manufacturer=manufacturer, vendor=None, model=model,
@@ -358,7 +366,7 @@ def _read_sensor(equip_element):
         removal_date=None, calibration_dates=None)
 
 
-def _read_channel(inventory_root, cha_element, _ns):
+def _read_channel(inventory_root, cha_element):
 
     """
     reads channel element from sc3ml format
@@ -374,10 +382,11 @@ def _read_channel(inventory_root, cha_element, _ns):
     location_code = sen_loc_element.get("code")
 
     # get site info from the <sensorLocation> element
-    longitude = _attr2obj(sen_loc_element, "longitude", float)
-    latitude = _attr2obj(sen_loc_element, "latitude", float)
-    elevation = _attr2obj(sen_loc_element, "elevation", float)
+    longitude = _attr2obj(sen_loc_element, "longitude", Longitude)
+    latitude = _attr2obj(sen_loc_element, "latitude", Latitude)
+    elevation = _attr2obj(sen_loc_element, "elevation", Distance)
     depth = _attr2obj(cha_element, "depth", float)
+
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
@@ -470,14 +479,14 @@ def _read_channel(inventory_root, cha_element, _ns):
 
     channel.response = _read_response(inventory_root, sensor_element,
                                       response_element, cha_element,
-                                      data_log_element, _ns,
+                                      data_log_element,
                                       channel.sample_rate,
                                       response_fir_id, response_paz_id)
 
     return channel
 
 
-def _read_instrument_sensitivity(sen_element, cha_element, _ns):
+def _read_instrument_sensitivity(sen_element, cha_element):
 
     """
     reads the instrument sensitivity (gain) from the sensor and channel element
@@ -503,7 +512,7 @@ def _read_instrument_sensitivity(sen_element, cha_element, _ns):
 
 
 def _read_response(root, sen_element, resp_element, cha_element,
-                   data_log_element, _ns, samp_rate, fir, analogue):
+                   data_log_element, samp_rate, fir, analogue):
     """
     reads response from sc3ml format
 
@@ -512,7 +521,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     """
     response = obspy.core.inventory.response.Response()
     response.instrument_sensitivity = _read_instrument_sensitivity(
-        sen_element, cha_element, _ns)
+        sen_element, cha_element)
 
     if resp_element is None:
         return response
@@ -562,7 +571,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     # Input unit: M/S or M/S**2
     # Output unit: V
     if resp_element is not None:
-        paz_response = _read_response_stage(resp_element, _ns, samp_rate,
+        paz_response = _read_response_stage(resp_element, samp_rate,
                                             stage, sensor_units, 'V')
         if paz_response is not None:
             response.response_stages.append(paz_response)
@@ -580,7 +589,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
                        '%s, stopping before stage %i') % (analogue_id, stage)
                 warnings.warn(msg)
                 return response
-            analogue_response = _read_response_stage(analogue_element, _ns,
+            analogue_response = _read_response_stage(analogue_element,
                                                      samp_rate, stage, 'V',
                                                      'V')
             if analogue_response is not None:
@@ -591,7 +600,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     # Input unit: V
     # Output unit: COUNTS
     if data_log_element is not None:
-        coeff_response = _read_response_stage(data_log_element, _ns,
+        coeff_response = _read_response_stage(data_log_element,
                                               samp_rate, stage, 'V',
                                               'COUNTS')
         if coeff_response is not None:
@@ -609,7 +618,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
                    "before stage %i") % (fir_id, stage)
             warnings.warn(msg)
             return response
-        fir_response = _read_response_stage(stage_element, _ns, rate, stage,
+        fir_response = _read_response_stage(stage_element, rate, stage,
                                             'COUNTS', 'COUNTS')
         if fir_response is not None:
             response.response_stages.append(fir_response)
@@ -617,7 +626,7 @@ def _read_response(root, sen_element, resp_element, cha_element,
     return response
 
 
-def _read_response_stage(stage, _ns, rate, stage_number, input_units,
+def _read_response_stage(stage, rate, stage_number, input_units,
                          output_units):
 
     elem_type = stage.tag.split("}")[1]
