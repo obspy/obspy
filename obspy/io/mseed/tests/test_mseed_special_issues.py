@@ -23,6 +23,7 @@ from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.io.mseed import InternalMSEEDReadingError, \
     InternalMSEEDReadingWarning
+from obspy.io.mseed import util
 from obspy.io.mseed.core import _read_mseed, _write_mseed
 from obspy.io.mseed.headers import clibmseed
 from obspy.io.mseed.msstruct import _MSStruct
