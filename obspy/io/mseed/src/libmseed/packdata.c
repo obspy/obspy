@@ -69,7 +69,7 @@ msr_encode_int16 (int32_t *input, int samplecount, int16_t *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength >= sizeof (int16_t); idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int16_t); idx++)
   {
     output[idx] = (int16_t)input[idx];
 
@@ -106,7 +106,7 @@ msr_encode_int32 (int32_t *input, int samplecount, int32_t *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength >= sizeof (int32_t); idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (int32_t); idx++)
   {
     output[idx] = input[idx];
 
@@ -143,7 +143,7 @@ msr_encode_float32 (float *input, int samplecount, float *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength >= sizeof (float); idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (float); idx++)
   {
     output[idx] = input[idx];
 
@@ -180,7 +180,7 @@ msr_encode_float64 (double *input, int samplecount, double *output,
   if (!input || !output || outputlength <= 0)
     return -1;
 
-  for (idx = 0; idx < samplecount && outputlength >= sizeof (double); idx++)
+  for (idx = 0; idx < samplecount && outputlength >= (int)sizeof (double); idx++)
   {
     output[idx] = input[idx];
 
