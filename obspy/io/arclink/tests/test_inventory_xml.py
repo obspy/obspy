@@ -34,7 +34,13 @@ class SC3MLTestCase(unittest.TestCase):
         """
         Read example stationXML/sc3ml format to Inventory
         """
-        pass
+        self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
+            inspect.getfile(inspect.currentframe()))), "data")
+        self.arclink_xml_path = os.path.join(self.data_dir, "arclink_inventory.xml")
+
+    def test_auto_read_arclink_xml(self):
+        inv = read_inventory(self.arclink_xml_path)
+        self.assertIsNotNone(inv)
 
     def testsPassSoItMustBeGood(self):
         self.assertTrue(True)
