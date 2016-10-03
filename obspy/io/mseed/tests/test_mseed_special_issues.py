@@ -962,6 +962,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
         self.assertEqual(tr.stats.starttime,
                          UTCDateTime(1976, 3, 10, 3, 28))
+        self.assertEqual(tr.id, ".GRA1..BHZ")
 
 
 def suite():
