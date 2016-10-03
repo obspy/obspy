@@ -135,9 +135,6 @@ ENTRY_POINTS = {
         'obspy-xseed2dataless = obspy.io.xseed.scripts.xseed2dataless:main',
         'obspy-dataless2resp = obspy.io.xseed.scripts.dataless2resp:main',
         ],
-    'distutils.commands': [
-        'build_man = Help2Man'
-        ],
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.io.ascii.core',
         'SLIST = obspy.io.ascii.core',
