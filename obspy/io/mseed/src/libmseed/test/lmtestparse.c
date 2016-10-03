@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified 2016.272
+ * modified 2016.275
  ***************************************************************************/
 
 #include <errno.h>
@@ -32,7 +32,13 @@ static double timetol     = -1.0; /* Time tolerance for continuous traces */
 static double sampratetol = -1.0; /* Sample rate tolerance for continuous traces */
 
 static int parameter_proc (int argcount, char **argvec);
+static void print_stderr (char *message);
 static void usage (void);
+
+/* Binary I/O for Windows platforms */
+#ifdef LMP_WIN
+  unsigned int _CRT_fmode = _O_BINARY;
+#endif
 
 int
 main (int argc, char **argv)
@@ -43,6 +49,9 @@ main (int argc, char **argv)
   int64_t totalrecs  = 0;
   int64_t totalsamps = 0;
   int retcode;
+
+  /* Redirect libmseed logging facility to stderr for consistency */
+  ms_loginit (print_stderr, NULL, print_stderr, NULL);
 
   /* Process given parameters (command line and parameter file) */
   if (parameter_proc (argc, argv) < 0)
@@ -242,6 +251,16 @@ parameter_proc (int argcount, char **argvec)
 
   return 0;
 } /* End of parameter_proc() */
+
+/***************************************************************************
+ * print_stderr():
+ * Print messsage to stderr.
+ ***************************************************************************/
+static void
+print_stderr (char *message)
+{
+  fprintf (stderr, "%s", message);
+} /* End of print_stderr() */
 
 /***************************************************************************
  * usage():

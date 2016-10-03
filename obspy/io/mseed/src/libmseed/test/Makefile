@@ -21,26 +21,26 @@ TESTS := $(wildcard *.test)
 TESTOUTS := $(TESTS:%.test=%.test.out)
 
 # ASCII color coding for test results, green for PASSED and red for FAILED
-PASSED := "\033[0;32mPASSED\033[0m"
-FAILED := "\033[0;31mFAILED\033[0m"
+PASSED := \033[0;32mPASSED\033[0m
+FAILED := \033[0;31mFAILED\033[0m
 
 test all: $(BINS) $(TESTOUTS)
-	@echo All tests conducted.
+	@printf "All tests conducted.\n"
 
 # Build programs and check for executable
 $(BINS) : % : %.c
 	@$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS); exit 0;
 	@if test -x $@; \
-	  then echo $(PASSED) "Building $<"; \
-	  else echo $(FAILED) "Building $<"; exit 1;\
+	  then printf '$(PASSED) Building $<\n'; \
+	  else printf '$(FAILED) Building $<\n'; exit 1;\
         fi
 
 # Run test scripts, create %.test.out files and compare to %.test.ref references
-$(TESTOUTS) : %.test.out : %.test FORCE
+$(TESTOUTS) : %.test.out : %.test $(BINS) FORCE
 	@$(shell ./$< > $@ 2>&1)
 	@diff $<.ref $@ >/dev/null; if [ $$? -eq 0 ]; \
-          then echo $(PASSED) "Test $<"; \
-          else echo $(FAILED) "Test $<, Compare $<.ref to $@"; exit 0;\
+          then printf '$(PASSED) Test $<\n'; \
+          else printf '$(FAILED) Test $<, Compare $<.ref $@\n'; exit 0;\
         fi
 
 clean:

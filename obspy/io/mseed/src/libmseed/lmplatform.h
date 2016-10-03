@@ -4,21 +4,24 @@
  * Platform specific headers.  This file provides a basic level of platform
  * portability.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public License
- * as published by the Free Software Foundation; either version 2 of
- * the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License (GNU-LGPL) for more details.  The
- * GNU-LGPL and further information can be found here:
- * http://www.gnu.org/
+ * Lesser General Public License (GNU-LGPL) for more details.
  *
- * Written by Chad Trabant, IRIS Data Management Center
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * modified: 2016.053
+ * Copyright (C) 2016 Chad Trabant
+ * IRIS Data Management Center
+ *
+ * modified: 2016.275
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -111,6 +114,8 @@ extern "C" {
   #endif
 
   #if defined(__MINGW32__) || defined(__MINGW64__)
+    #include <fcntl.h>
+
     #define fstat _fstat
     #define stat _stat
   #endif

@@ -190,7 +190,7 @@ msr_encode_float64 (double *input, int samplecount, double *output,
     outputlength -= sizeof (double);
   }
 
-  if (outputlength > 0)
+  if (outputlength)
     memset (&output[idx], 0, outputlength);
 
   return idx;
