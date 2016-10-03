@@ -91,6 +91,7 @@ def _is_inventory_xml(path_or_file_object):
 
 def validate_arclink_xml(path_or_object):
     """
+    !!! CURRENTLY NOT IMPLEMENTED (SCHEMA IS REQUIRED)
     Checks if the given path is a valid arclink_xml file.
 
     Returns a tuple. The first item is a boolean describing if the validation
@@ -144,7 +145,7 @@ def _read_inventory_xml(path_or_file_object):
     sender = "ObsPy Inventory"
 
     # Set source to this script
-    source = "arclink inventory import"
+    source = "Arclink Inventory Import"
     module = None
     module_uri = None
 
@@ -385,7 +386,7 @@ def _read_channel(inventory_root, cha_element):
     longitude = _attr2obj(sen_loc_element, "longitude", Longitude)
     latitude = _attr2obj(sen_loc_element, "latitude", Latitude)
     elevation = _attr2obj(sen_loc_element, "elevation", Distance)
-    depth = _attr2obj(cha_element, "depth", float)
+    depth = _attr2obj(cha_element, "depth", Distance)
 
     channel = obspy.core.inventory.Channel(
         code=code, location_code=location_code, latitude=latitude,
@@ -496,8 +497,9 @@ def _read_instrument_sensitivity(sen_element, cha_element):
     gain = _attr2obj(cha_element, "gain", float)
     frequency = _attr2obj(cha_element, "gainFrequency", float)
 
+    # Get input units and hardcode output units to counts
     input_units_name = _attr2obj(sen_element, "unit", str)
-    output_units_name = str(None)
+    output_units_name = 'COUNTS'
 
     sensitivity = obspy.core.inventory.response.InstrumentSensitivity(
         value=gain, frequency=frequency,
@@ -506,7 +508,7 @@ def _read_instrument_sensitivity(sen_element, cha_element):
 
     # assuming these are equal to frequencyStart/frequencyEnd
     sensitivity.frequency_range_start = _attr2obj(sen_element, "lowFrequency", float)
-    sensitivity.frequency_range_end = _attr2obj(sen_element, "lowFrequency", float)
+    sensitivity.frequency_range_end = _attr2obj(sen_element, "highFrequency", float)
 
     return sensitivity
 
