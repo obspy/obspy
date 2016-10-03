@@ -350,6 +350,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                               "flag(s) in record starting at offset %d. The "
                               "rest of the file will not be read.\n", offset);
                     break;
+                case MINRECLEN:
+                    ms_log(1, "readMSEEDBuffer(): Could not determine record length "
+                              "for record starting at offset %d. The "
+                              "rest of the file will not be read.\n", offset);
+                    break;
                 default:
                     ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
                               "record starting at offset %d. The rest of the "
@@ -411,6 +416,12 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                 }
                 /* If LE host and BE data (or bad byte order value) need swapping */
                 if ( !bigendianhost && msr->byteorder > 0 ) {
+                    swapflag = 1;
+                }
+            }
+            else {
+                /* If no blockette 1000 is present, data is assumed to be big endian. */
+                if ( !bigendianhost ) {
                     swapflag = 1;
                 }
             }
