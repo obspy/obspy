@@ -39,13 +39,13 @@ from obspy.io.stationxml.core import _read_floattype
 
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
 SOFTWARE_URI = "http://www.obspy.org"
-SCHEMA_VERSION = "0.7"
+SCHEMA_VERSION = "1.0"
 
 
 def _is_inventory_xml(path_or_file_object):
     """
-    Simple function checking if the passed object contains a valid sc3ml 0.7
-    file. Returns True of False.
+    Simple function checking if the passed object contains a valid arclink XML
+    1.0 file. Returns True of False.
     The test is not exhaustive - it only checks the root tag but that should
     be good enough for most real world use cases. If the schema is used to
     test for a StationXML file, many real world files are false negatives as
@@ -67,15 +67,16 @@ def _is_inventory_xml(path_or_file_object):
         root = xmldoc.getroot()
         try:
             match = re.match(
-                r'{http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/[-+]?'
-                '[0-9]*\.?[0-9]+}', root.tag)
+                r'{http://geofon.gfz-potsdam.de/ns/Inventory/'
+                '[0-9]*\.?[0-9]+/}', root.tag)
             assert match is not None
         except:
             return False
         # Convert schema number to a float to have positive comparisons
         # between, e.g "1" and "1.0".
-        if float(root.attrib["version"]) != float(SCHEMA_VERSION):
-            warnings.warn("The sc3ml file has version %s, ObsPy can "
+        version = float(re.findall("\d+\.\d+", root.tag)[0])
+        if float(version != float(SCHEMA_VERSION)):
+            warnings.warn("The inventory file has version %s, ObsPy can "
                           "deal with version %s. Proceed with caution." % (
                               root.attrib["version"], SCHEMA_VERSION))
         return True
@@ -87,7 +88,7 @@ def _is_inventory_xml(path_or_file_object):
             pass
 
 
-def validate_sc3ml(path_or_object):
+def validate_arclink_xml(path_or_object):
     """
     Checks if the given path is a valid sc3ml file.
 
@@ -131,7 +132,7 @@ def _read_inventory_xml(path_or_file_object):
 
     # Fix the namespace as its not always the default namespace. Will need
     # to be adjusted if the sc3ml format gets another revision!
-    namespace = "http://geofon.gfz-potsdam.de/ns/seiscomp3-schema/0.7"
+    namespace = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
@@ -146,9 +147,8 @@ def _read_inventory_xml(path_or_file_object):
 
     # Collect all networks from the sc3ml inventory
     networks = []
-    inv_element = root.find(_ns("inventory"))
-    for net_element in inv_element.findall(_ns("network")):
-        networks.append(_read_network(inv_element, net_element, _ns))
+    for net_element in root.findall(_ns("network")):
+        networks.append(_read_network(root, net_element, _ns))
 
     return obspy.core.inventory.Inventory(networks=networks, source=source,
                                           sender=sender, created=created,
