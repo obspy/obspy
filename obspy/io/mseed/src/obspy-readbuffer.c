@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <time.h>
 #include <ctype.h>
 
@@ -376,9 +377,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // determine the record length because there is no next record (this can happen in ObsPy) - handle that
         // case by just calling msr_parse() with an explicit record length set.
         else if ( retcode > 0 && retcode < (buflen - offset)) {
+
+            // Check if the remaining bytes can exactly make up a record length.
             int r_bytes = buflen - offset;
-            if ((r_bytes == 128) || (r_bytes == 256) || (r_bytes == 512) || (r_bytes == 1024) ||
-                    (r_bytes == 2048) || (r_bytes == 4096) || (r_bytes == 8192) || (r_bytes == 16384)) {
+            float exp = log10((float)r_bytes) / log10(2.0);
+            if ((fmodf(exp, 1.0) < 0.0000001) && ((int)roundf(exp) >= 7) && ((int)roundf(exp) <= 256)) {
 
                 retcode = msr_parse((mseed + offset), buflen - offset, &msr, r_bytes, dataflag, verbose);
 
