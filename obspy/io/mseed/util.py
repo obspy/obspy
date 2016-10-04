@@ -519,7 +519,7 @@ def _get_record_information(file_object, offset=0, endian=None):
             if len(buf) in [2 ** _i for _i in range(7, 15)]:
                 reclen = len(buf)
             else:
-                raise ValueError("Could not determine record lenght.")
+                raise ValueError("Could not determine record length.")
         info["record_length"] = reclen
 
     # If samprate not set via blockette 100 calculate the sample rate according

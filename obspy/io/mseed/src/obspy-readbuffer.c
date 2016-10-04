@@ -206,6 +206,54 @@ lil_free(LinkedIDList * lil)
 void empty_print(char *string) {}
 
 
+// Simple function logging nice error messages.
+void log_error(int errcode, int offset) {
+    switch ( errcode ) {
+        case MS_ENDOFFILE:
+            ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
+                      "parsing record starting at offset %d. The rest "
+                      "of the file will not be read.\n", offset);
+            break;
+        case MS_GENERROR:
+            ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
+                      "record starting at offset %d. The rest of the "
+                      "file will not be read.\n", offset);
+            break;
+        case MS_NOTSEED:
+            ms_log(1, "readMSEEDBuffer(): Record starting at offset "
+                      "%d is not valid SEED. The rest of the file "
+                      "will not be read.\n", offset);
+            break;
+        case MS_WRONGLENGTH:
+            ms_log(1, "readMSEEDBuffer(): Length of data read was not "
+                      "correct when parsing record starting at "
+                      "offset %d. The rest of the file will not be "
+                      "read.\n", offset);
+            break;
+        case MS_OUTOFRANGE:
+            ms_log(1, "readMSEEDBuffer(): SEED record length out of "
+                      "range for record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        case MS_UNKNOWNFORMAT:
+            ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
+                      "format for record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        case MS_STBADCOMPFLAG:
+            ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
+                      "flag(s) in record starting at offset %d. The "
+                      "rest of the file will not be read.\n", offset);
+            break;
+        default:
+            ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
+                      "record starting at offset %d. The rest of the "
+                      "file will not be read.\n", errcode, offset);
+            break;
+    }
+}
+
+
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
@@ -311,59 +359,42 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
 
         // Pass (buflen - offset) because msr_parse() expects only a single record. This
         // way libmseed can take care to not overstep bounds.
-        retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
-        if (retcode != MS_NOERROR) {
-            switch ( retcode ) {
-                case MS_ENDOFFILE:
-                    ms_log(1, "readMSEEDBuffer(): Unexpected end of file when "
-                              "parsing record starting at offset %d. The rest "
-                              "of the file will not be read.\n", offset);
-                    break;
-                case MS_GENERROR:
-                    ms_log(1, "readMSEEDBuffer(): Generic error when parsing "
-                              "record starting at offset %d. The rest of the "
-                              "file will not be read.\n", offset);
-                    break;
-                case MS_NOTSEED:
-                    ms_log(1, "readMSEEDBuffer(): Record starting at offset "
-                              "%d is not valid SEED. The rest of the file "
-                              "will not be read.\n", offset);
-                    break;
-                case MS_WRONGLENGTH:
-                    ms_log(1, "readMSEEDBuffer(): Length of data read was not "
-                              "correct when parsing record starting at "
-                              "offset %d. The rest of the file will not be "
-                              "read.\n", offset);
-                    break;
-                case MS_OUTOFRANGE:
-                    ms_log(1, "readMSEEDBuffer(): SEED record length out of "
-                              "range for record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                case MS_UNKNOWNFORMAT:
-                    ms_log(1, "readMSEEDBuffer(): Unknown data encoding "
-                              "format for record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                case MS_STBADCOMPFLAG:
-                    ms_log(1, "readMSEEDBuffer(): Invalid STEIM compression "
-                              "flag(s) in record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                case MINRECLEN:
-                    ms_log(1, "readMSEEDBuffer(): Could not determine record length "
-                              "for record starting at offset %d. The "
-                              "rest of the file will not be read.\n", offset);
-                    break;
-                default:
-                    ms_log(1, "readMSEEDBuffer(): Unknown error '%d' in "
-                              "record starting at offset %d. The rest of the "
-                              "file will not be read.\n", retcode, offset);
-                    break;
-            }
+        // Return values:
+        //   0 : Success, populates the supplied MSRecord.
+        //  >0 : Data record detected but not enough data is present, the
+        //       return value is a hint of how many more bytes are needed.
+        //  <0 : libmseed error code (listed in libmseed.h) is returned.
+        retcode = msr_parse ((mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
+        // Handle error.
+        if (retcode < 0) {
+            log_error(retcode, offset);
             msr_free(&msr);
             break;
         }
+        // msr_parse() returns > 0 if a data record has been detected but the buffer either has not enough
+        // data (this cannot happen with ObsPy's logic) or the last record has no Blockette 1000 and it cannot
+        // determine the record length because there is no next record (this can happen in ObsPy) - handle that
+        // case by just calling msr_parse() with an explicit record length set.
+        else if ( retcode > 0 && retcode < (buflen - offset)) {
+            int r_bytes = buflen - offset;
+            if ((r_bytes == 128) || (r_bytes == 256) || (r_bytes == 512) || (r_bytes == 1024) ||
+                    (r_bytes == 2048) || (r_bytes == 4096) || (r_bytes == 8192) || (r_bytes == 16384)) {
+
+                retcode = msr_parse((mseed + offset), buflen - offset, &msr, r_bytes, dataflag, verbose);
+
+                if ( retcode != 0 ) {
+                    log_error(retcode, offset);
+                    msr_free(&msr);
+                    break;
+                }
+
+            }
+            else {
+                msr_free(&msr);
+                break;
+            }
+        }
+
         if (offset + msr->reclen > buflen) {
             ms_log(1, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
