@@ -167,11 +167,9 @@ script:
       coverage run --rcfile=.coveragerc --source=${MODULELIST} -m obspy.scripts.runtests -n travis-ci -r --ci-url="https://travis-ci.org/${TRAVIS_REPO_SLUG}/jobs/${TRAVIS_JOB_ID}" --pr-url="https://github.com/obspy/obspy/pull/${TRAVIS_PULL_REQUEST}" $MODULELISTSPACES;
     fi;
 
-after_success:
-  - mv .coverage ../.coverage.empty
-  - cd ..
-  - coverage combine
-  - codecov
+after_script:
+  # if coverage file was created, upload data to codecov
+  - ls .coverage && codecov
 
 notifications:
     email: false
