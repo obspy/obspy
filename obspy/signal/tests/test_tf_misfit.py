@@ -285,39 +285,27 @@ class TfPlotTestCase(unittest.TestCase):
         t, dt = np.linspace(0., 20 * np.pi, n, retstep=True)
         sig = np.sin(t)
 
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all='ignore'):
             with ImageComparison(self.path,
                                  'time_frequency_representation.png') as ic:
                 plot_tfr(sig, dt=dt, show=False)
                 plt.savefig(ic.name)
-        finally:
-            np.seterr(**_t)
 
     def test_plot_tf_misfits(self):
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all='ignore'):
             with ImageComparison(self.path,
                                  'time_frequency_misfits.png') as ic:
                 plot_tf_misfits(self.st1p, self.st2, dt=self.dt,
                                 fmin=self.fmin, fmax=self.fmax, show=False)
                 plt.savefig(ic.name)
-        finally:
-            np.seterr(**_t)
 
     def test_plot_tf_gofs(self):
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all='ignore'):
             with ImageComparison(self.path,
                                  'time_frequency_gofs.png') as ic:
                 plot_tf_gofs(self.st1p, self.st2, dt=self.dt, fmin=self.fmin,
                              fmax=self.fmax, show=False)
                 plt.savefig(ic.name)
-        finally:
-            np.seterr(**_t)
 
 
 def suite():
