@@ -1,7 +1,7 @@
 Thank your for contributing to ObsPy!
 
 Before submitting a PR, please review the pull request guidelines:
-https://github.com/obspy/obspy/blob/master/.github/CONTRIBUTING.md#submitting-a-pull-request
+https://github.com/obspy/obspy/blob/master/CONTRIBUTING.md#submitting-a-pull-request
 
 Also, please make sure you are following the ObsPy branching model:
 https://github.com/obspy/obspy/wiki/ObsPy-Git-Branching-Model

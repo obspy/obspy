@@ -172,9 +172,9 @@ fi
 # create github pull request status
 if [ "$BUILD_PR" = true ] ; then
     if [ "$SUCCESS" = true ] ; then
-        python $HOME/update_pull_request_status.py $COMMIT success http://docs.obspy.org/pull-requests/${PR_NUMBER}/
+        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit=$COMMIT, status='success', context='docs-buildbot', description='Check out Pull Request docs build here:', target_url=\"http://docs.obspy.org/pull-requests/${PR_NUMBER}/\")"
     else
-        python $HOME/update_pull_request_status.py $COMMIT error http://docs.obspy.org/pull-requests/${PR_NUMBER}.log
+        python -c "from obspy_github_api import set_commit_status; set_commit_status(commit=$COMMIT, status='error', context='docs-buildbot', description='Log for failed Pull Request docs build here:', target_url=\"http://docs.obspy.org/pull-requests/${PR_NUMBER}.log\")"
     fi
 fi
 
