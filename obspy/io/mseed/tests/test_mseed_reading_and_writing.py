@@ -1430,7 +1430,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # And all the test data.
         test_files = glob.glob(os.path.join(folder, "data", "*.mseed"))
         # And their paths relative to the test folder.
-        rel_test_files = [os.path.relpath(_i, folder) for _i in test_files]
+        rel_test_files = [os.path.normpath(os.path.relpath(_i, folder))
+                          for _i in test_files]
 
         count = 0
 
@@ -1452,12 +1453,13 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             elif content.endswith(".mseed"):
                 test_type = "failure"
 
-            test_file = [_i for _i in rel_test_files if _i in content]
+            test_file = [_i for _i in rel_test_files
+                         if os.path.basename(_i) in content]
             if not test_file:
                 continue
             self.assertEqual(len(test_file), 1, msg=str(test_file))
 
-            test_file = os.path.join(folder, test_file[0])
+            test_file = os.path.normpath(os.path.join(folder, test_file[0]))
             ref_file = filename + ".ref"
 
             assert_valid(test_file, ref_file, test_type)

@@ -615,6 +615,18 @@ def add_data_files(config):
             if folder in dirs:
                 dirs.remove(folder)
 
+    # Force include the contents of some directories.
+    FORCE_INCLUDE_DIRS = [
+        os.path.join(SETUP_DIRECTORY, 'obspy', 'io', 'mseed', 'src',
+                     'libmseed', 'test')]
+
+    for folder in FORCE_INCLUDE_DIRS:
+        for root, _, files in os.walk(folder):
+            for filename in files:
+                config.add_data_files(
+                    os.path.relpath(os.path.join(root, filename),
+                                    SETUP_DIRECTORY))
+
 
 # Auto-generate man pages from --help output
 class Help2ManBuild(build):
