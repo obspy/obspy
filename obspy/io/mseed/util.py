@@ -516,7 +516,7 @@ def _get_record_information(file_object, offset=0, endian=None):
             raise ValueError("Could not detect data record.")
         elif reclen == 0:
             # It might be at the end of the file.
-            if len(buf) in [2 ** _i for _i in range(7, 15)]:
+            if len(buf) in [2 ** _i for _i in range(7, 256)]:
                 reclen = len(buf)
             else:
                 raise ValueError("Could not determine record length.")
