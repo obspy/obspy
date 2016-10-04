@@ -319,18 +319,8 @@ ms_detect ( const char *record, int recbuflen )
 	}
     }
   
-  if ( ! foundlen ) {
-    if ( recbuflen == 128 ||
-         recbuflen == 256 ||
-         recbuflen == 512 ||
-         recbuflen == 1024 ||
-         recbuflen == 2048 ||
-         recbuflen == 4096 ||
-         recbuflen == 8192 ||
-         recbuflen == 16348)
-      return recbuflen;
+  if ( ! foundlen )
     return 0;
-  }
   else
     return reclen;
 }  /* End of ms_detect() */
