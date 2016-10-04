@@ -1455,9 +1455,7 @@ class PPSD(object):
                 label.set_rotation(30)
 
         # Catch underflow warnings due to plotting on log-scale.
-        _t = np.geterr()
-        np.seterr(all="ignore")
-        try:
+        with np.errstate(all="ignore"):
             if filename is not None:
                 plt.savefig(filename)
                 plt.close()
@@ -1467,8 +1465,6 @@ class PPSD(object):
             else:
                 plt.draw()
                 return fig
-        finally:
-            np.seterr(**_t)
 
     def _plot_histogram(self, fig, draw=False, filename=None):
         """

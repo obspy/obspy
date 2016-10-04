@@ -196,10 +196,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 
     if not sphinx:
         # ignoring all NumPy warnings during plot
-        temp = np.geterr()
-        np.seterr(all='ignore')
-        plt.draw()
-        np.seterr(**temp)
+        with np.errstate(all='ignore'):
+            plt.draw()
     if outfile:
         if fmt:
             fig.savefig(outfile, format=fmt)
