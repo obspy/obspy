@@ -43,6 +43,11 @@
   (*(X+45)==' ') && (*(X+46)==' ') && (*(X+47)==' ') )
 
 
+float roundf_(float x)
+{
+   return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
+}
+
 
 // Dummy wrapper around malloc.
 void * allocate_bytes(int count) {
@@ -381,7 +386,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Check if the remaining bytes can exactly make up a record length.
             int r_bytes = buflen - offset;
             float exp = log10((float)r_bytes) / log10(2.0);
-            if ((fmodf(exp, 1.0) < 0.0000001) && ((int)roundf(exp) >= 7) && ((int)roundf(exp) <= 256)) {
+            if ((fmodf(exp, 1.0) < 0.0000001) && ((int)roundf_(exp) >= 7) && ((int)roundf_(exp) <= 256)) {
 
                 retcode = msr_parse((mseed + offset), buflen - offset, &msr, r_bytes, dataflag, verbose);
 
