@@ -50,6 +50,8 @@ master:
      get_timing_and_data_quality() function obsolete which is thus
      deprecated and will be removed with the next release. The get_flags()
      function is also much faster. (see #1141)
+ - obspy.io.xseed:
+   * Added azimuth and dip to the get_coordinates() function.  (see #1315)
  - obspy.scripts:
    * obspy-scan command line script now also plots and prints overlaps
      alongside gaps (see #1366)
