@@ -46,7 +46,8 @@ git pull
 git reset --hard FETCH_HEAD
 git clean -fdx
 cd ${OBSPY_DOCKER}/misc/docker/
-TARGETS=`bash github_get_all_pr_heads_without_docker-testbot_status.sh`
+TARGETS=`bash github_get_build_targets_without_docker-testbot_status.sh`
+# TARGETS also include main branches (currently master and maintenance_1.0.x), if they need a build
 for TARGET in $TARGETS
 do
     echo "##### DOCKER TESTS, WORKING ON TARGET: ${TARGET}"
@@ -58,12 +59,6 @@ do
     REPO_SHA=${PR_REPO_SHA[1]}
     echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_SHA}"
     bash run_obspy_tests.sh -t${REPO_SHA} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
-done
-# run docker tests on maintenance_1.0.x and master as well
-for BRANCH in obspy:maintenance_1.0.x obspy:master
-do
-    echo "##### DOCKER TESTS, RUNNING DOCKER TESTS FOR BRANCH: ${BRANCH}"
-    bash run_obspy_tests.sh -t$BRANCH
 done
 
 
@@ -81,12 +76,7 @@ do
     echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR TARGET: ${REPO_SHA}"
     bash package_debs.sh -t${REPO_SHA}
 done
-# run docker tests on maintenance_1.0.x and master as well
-for BRANCH in obspy:maintenance_1.0.x obspy:master
-do
-    echo "##### DOCKER DEB PACKAGING, PACKAGING AND RUNNING TESTS FOR BRANCH: ${BRANCH}"
-    bash package_debs.sh -t$BRANCH
-done
+
 
 # sleep for some time, so a login user has a chance to kill the cronjob before
 # it halts the VM
