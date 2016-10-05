@@ -90,7 +90,6 @@ def _is_inventory_xml(path_or_file_object):
 
 def validate_arclink_xml(path_or_object):
     """
-    !!! CURRENTLY NOT IMPLEMENTED (SCHEMA IS REQUIRED)
     Checks if the given path is a valid arclink_xml file.
 
     Returns a tuple. The first item is a boolean describing if the validation
@@ -103,7 +102,7 @@ def validate_arclink_xml(path_or_object):
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "data",
-                                   "sc3ml_0.7.xsd")
+                                   "arclink_schema.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 

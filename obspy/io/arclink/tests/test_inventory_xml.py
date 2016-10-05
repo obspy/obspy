@@ -23,6 +23,7 @@ import os
 import unittest
 
 from obspy.core.inventory import read_inventory
+from obspy.io.arclink.inventory import validate_arclink_xml
 
 
 class SC3MLTestCase(unittest.TestCase):
@@ -36,6 +37,9 @@ class SC3MLTestCase(unittest.TestCase):
         self.arclink_xml_path = os.path.join(self.data_dir,
                                              "arclink_inventory.xml")
         self.station_xml_path = os.path.join(self.data_dir, "gols_station.xml")
+
+    def test_validate_inventory_against_schema(self):
+        self.assertTrue(validate_arclink_xml(self.arclink_xml_path))
 
     def test_auto_read_arclink_xml(self):
         arclink_inv = read_inventory(self.arclink_xml_path)
