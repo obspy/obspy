@@ -1,9 +1,11 @@
+# WARNING: this script will remove ALL docker images on a regular basis!
+#
 # this script is currently used in a Debian Linux virtual machine's crontab
 # (which gets started headless once per day):
 # 
 # # a personal github authorization token with "repo:status" OAuth scope has to be provided to work around anonymous github API limits
 # OBSPY_COMMIT_STATUS_TOKEN=....
-# @reboot mv $HOME/docker_testbot.log $HOME/docker_testbot.log.old; bash /path/to/dedicated/obspy/checkout/misc/docker_tests/cronjob_docker_tests.sh > $HOME/docker_testbot.log 2>&1
+# @reboot mv $HOME/docker_testbot.log $HOME/docker_testbot.log.old; cd /path/to/dedicated/obspy/checkout/misc/docker/ && bash ./cronjob_docker_tests.sh > $HOME/docker_testbot.log 2>&1
 
 # sleep for some time, so that the cronjob can be killed if the VM is entered
 # for some manual tampering
@@ -13,7 +15,18 @@ sudo aptitude update && sudo aptitude upgrade -y
 
 # start with a clean slate, remove all cached docker containers and images
 docker rm $(docker ps -qa)
-docker rmi $(docker images -q)
+# only remove images if older than 7 days. data for the images is over 20 GB so
+# we do not want to recreate them on a hourly basis.. ;-)
+DOCKER_IMAGE_DATE_THRESHOLD=`date --date='7 days ago' --rfc-3339=date`
+DOCKER_IMAGE_AGE_FILE=$HOME/docker_obspy_images_created_at
+# somehow `find` returns 0 exit status when the file exists but doesn't match
+# the time criteria, so we need to grep for the textual output on stdout
+if [[ ! `find $DOCKER_IMAGE_AGE_FILE -newermt $DOCKER_IMAGE_DATE_THRESHOLD 2>/dev/null | grep '*'` ]]
+then
+    echo "Removing all docker images!"
+    docker rmi $(docker images -q)
+    touch $DOCKER_IMAGE_AGE_FILE
+fi
 
 # path to a dedicated obspy clone for running docker tests,
 # we run a lot of radical `git clean -fdx` in that repo, so any local changes
