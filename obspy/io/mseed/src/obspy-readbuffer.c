@@ -271,6 +271,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     int retcode = 0;
     int retval = 0;
     flag swapflag = 0;
+    flag bigendianhost = ms_bigendianhost();
 
     // current offset of mseed char pointer
     int offset = 0;
@@ -300,7 +301,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     int datasize;
     int record_count = 0;
 
-    // A negative verbosity suppressed as much as possible.
+    // A negative verbosity suppresses as much as possible.
     if (verbose < 0) {
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
     }
@@ -322,9 +323,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         MS_UNPACKHEADERBYTEORDER(-1);
     }
 
-    //
     // Read all records and save them in a linked list.
-    //
     while (offset < buflen) {
         msr = msr_init(NULL);
         if ( msr == NULL ) {
@@ -441,28 +440,30 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         }
         recordCurrent->record = msr;
 
-        // Determine the byte order swapflag only for the very first record.
-        // The byte order should not change within the file.
-        // XXX: Maybe check for every record?
-        if (swapflag <= 0) {
-            // Returns 0 if the host is little endian, otherwise 1.
-            flag bigendianhost = ms_bigendianhost();
-            // Set the swapbyteflag if it is needed.
-            if ( msr->Blkt1000 != 0) {
-                /* If BE host and LE data need swapping */
-                if ( bigendianhost && msr->byteorder == 0 ) {
-                    swapflag = 1;
-                }
-                /* If LE host and BE data (or bad byte order value) need swapping */
-                if ( !bigendianhost && msr->byteorder > 0 ) {
-                    swapflag = 1;
-                }
+
+        // Figure out if the byte-order of the data has to be swapped.
+        swapflag = 0;
+        // If blockette 1000 is present, use it.
+        if ( msr->Blkt1000 != 0) {
+            /* If BE host and LE data need swapping */
+            if ( bigendianhost && msr->byteorder == 0 ) {
+                swapflag = 1;
             }
-            else {
-                /* If no blockette 1000 is present, data is assumed to be big endian. */
-                if ( !bigendianhost ) {
-                    swapflag = 1;
-                }
+            /* If LE host and BE data (or bad byte order value) need swapping */
+            if ( !bigendianhost && msr->byteorder > 0 ) {
+                swapflag = 1;
+            }
+        }
+        // Otherwise assume the data has the same byte order as the header.
+        // This needs to be done on the raw header bytes as libmseed only returns
+        // header fields in the native byte order.
+        else {
+            unsigned char* _t = (unsigned char*)mseed + offset + 20;
+            unsigned int year = _t[0] | _t[1] << 8;
+            unsigned int day = _t[2] | _t[3] << 8;
+            // Swap data if header needs to be swapped.
+            if (!MS_ISVALIDYEARDAY(year, day)) {
+                swapflag = 1;
             }
         }
 

@@ -964,6 +964,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                          UTCDateTime(1976, 3, 10, 3, 28))
         self.assertEqual(tr.id, ".GRA1..BHZ")
 
+        # Also test the data to make sure the unpacking was successful.
+        np.testing.assert_equal(
+            st[0].data[:10],
+            [-185, -200, -209, -220, -228, -246, -252, -262, -262, -269])
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
