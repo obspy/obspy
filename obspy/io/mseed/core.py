@@ -895,9 +895,9 @@ def _write_mseed(stream, filename, encoding=None, reclen=None, byteorder=None,
             # would result in a loss of accuracy - the floating point
             # comparision is on purpose here as it will always try to
             # preserve all accuracy.
-            # Cast to float32 and back to not add blockette 100 for values
+            # Cast to float32 to not add blockette 100 for values
             # that cannot be represented with 32bits.
-            if ms_sr != float(np.float32(trace.stats.sampling_rate)):
+            if np.float32(ms_sr) != np.float32(trace.stats.sampling_rate):
                 use_blkt_100 = True
 
         if use_blkt_100:

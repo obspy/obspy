@@ -999,47 +999,61 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             sr = 200.0
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
 
             # A more detailed one does.
             sr = 199.9997
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
             # As does a very large one.
             sr = 1E6
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
             # And a very small one.
             sr = 1E-6
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertTrue(has_blkt_100(tempfile))
 
-            # Two more "clean" ones.
+            # Three more "clean" ones.
             sr = 1.0
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
 
             sr = 0.5
             tr.stats.sampling_rate = sr
             tr.write(tempfile, format="mseed")
-            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
-                             np.float32(sr))
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            sr = 0.1
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(
+                np.float32(read(tempfile)[0].stats.sampling_rate),
+                np.float32(sr))
             self.assertFalse(has_blkt_100(tempfile))
 
 
