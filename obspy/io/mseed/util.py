@@ -729,6 +729,23 @@ def _get_record_information(file_object, offset=0, endian=None):
             samp_rate = unpack(native_str('%sf' % endian),
                                file_object.read(4))[0]
 
+    # No blockette 1000 found.
+    if "record_length" not in info:
+        file_object.seek(record_start, 0)
+        # Read 16 kb - should be a safe maximal record length.
+        buf = np.fromstring(file_object.read(2 ** 14), dtype=np.int8)
+        # This is a messy check - we just delegate to libmseed.
+        reclen = clibmseed.ms_detect(buf, len(buf))
+        if reclen < 0:
+            raise ValueError("Could not detect data record.")
+        elif reclen == 0:
+            # It might be at the end of the file.
+            if len(buf) in [2 ** _i for _i in range(7, 256)]:
+                reclen = len(buf)
+            else:
+                raise ValueError("Could not determine record length.")
+        info["record_length"] = reclen
+
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.
     if not samp_rate:

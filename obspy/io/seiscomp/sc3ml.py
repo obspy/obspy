@@ -172,8 +172,11 @@ def _tag2obj(element, tag, convert):
     :param tag: name of tag to be read
     :param convert: intrinsic function (e.g. int, str, float)
     """
-
     try:
+        # Single closing tags e.g. <analogueFilterChain/>.text return None
+        # and will be converted to a string 'None' when convert is str
+        if element.find(tag).text is None:
+            return None
         return convert(element.find(tag).text)
     except:
         None

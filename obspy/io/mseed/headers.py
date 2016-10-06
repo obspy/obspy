@@ -526,7 +526,10 @@ clibmseed.msr_starttime.restype = C.c_int64
 clibmseed.msr_endtime.argtypes = [C.POINTER(MSRecord)]
 clibmseed.msr_endtime.restype = C.c_int64
 
-clibmseed.ms_detect.argtypes = [C.c_char_p, C.c_int]
+clibmseed.ms_detect.argtypes = [
+    np.ctypeslib.ndpointer(dtype=np.int8, ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
+    C.c_int]
 clibmseed.ms_detect.restype = C.c_int
 
 clibmseed.msr_unpack_steim2.argtypes = [

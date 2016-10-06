@@ -931,6 +931,27 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(ref_time, info["starttime"])
         self.assertEqual(ref_time, tr.stats.starttime)
 
+    def test_reading_miniseed_with_no_blockette_1000(self):
+        """
+        Blockette 1000 was only introduced with SEED version 2.3.
+        """
+        file = os.path.join(self.path, "data", "bizarre",
+                            "mseed_no_blkt_1000.mseed")
+        st = read(file)
+
+        self.assertEqual(len(st), 1)
+        tr = st[0]
+        self.assertEqual(tr.stats.npts, 7536)
+        np.testing.assert_allclose(tr.stats.sampling_rate, 20.0)
+        self.assertEqual(tr.stats.starttime,
+                         UTCDateTime(1976, 3, 10, 3, 28))
+        self.assertEqual(tr.id, ".GRA1..BHZ")
+
+        # Also test the data to make sure the unpacking was successful.
+        np.testing.assert_equal(
+            st[0].data[:10],
+            [-185, -200, -209, -220, -228, -246, -252, -262, -262, -269])
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
