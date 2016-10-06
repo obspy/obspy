@@ -38,6 +38,7 @@ import io
 import os
 import re
 from subprocess import STDOUT, CalledProcessError, check_output
+import warnings
 
 
 __all__ = ["get_git_version"]
@@ -152,6 +153,11 @@ def get_git_version(abbrev=10, dirty=True, append_remote_tracking_branch=True):
 
     # If we still don't have anything, that's an error.
     if version is None:
+        warnings.warn("ObsPy could not determine its version number. Make "
+                      "sure it is properly installed. This for example "
+                      "happens when installing from a zip archive "
+                      "of the ObsPy repository which is not a supported way "
+                      "of installing ObsPy.")
         return '0.0.0+archive'
 
     # pip uses its normalized version number (strict PEP440) instead of our
