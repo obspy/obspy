@@ -51,6 +51,7 @@ TARGETS=`bash github_get_build_targets_without_docker-testbot_status.sh`
 for TARGET in $TARGETS
 do
     echo "##### DOCKER TESTS, WORKING ON TARGET: ${TARGET}"
+    date
     # only allowed special character in github user names is dash ('-'),
     # so we use underscore as a separator after the issue number
     # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
@@ -67,6 +68,7 @@ cd ${OBSPY_DOCKER}/misc/docker/
 for TARGET in $TARGETS
 do
     echo "##### DOCKER DEB PACKAGING, WORKING ON TARGET: ${TARGET}"
+    date
     # only allowed special character in github user names is dash ('-'),
     # so we use underscore as a separator after the issue number
     # TARGET is e.g. 1397_andres-h:3f9d48fdaad19051e7f8993dc81119f379d1041b
