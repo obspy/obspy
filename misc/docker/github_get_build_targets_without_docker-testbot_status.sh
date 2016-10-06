@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Gets alist of PR targets and main branches that need a build
+
 LOGDIR=logs
 LOG=$LOGDIR/github_get_all_pr_heads_without_docker-testbot_status.log
 
@@ -51,7 +53,7 @@ target_needs_build() {
 }
 
 echo "PR targets that need a build:" >> $LOG
-for TARGET in $TARGETS
+for TARGET in XXX_obspy:master XXX_obspy:maintenance_1.0.x $TARGETS
 do
     if target_needs_build $TARGET
     then
