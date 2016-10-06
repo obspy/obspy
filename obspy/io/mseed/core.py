@@ -270,7 +270,10 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
     info = util.get_record_information(mseed_object, endian=bo)
 
     # Map the encoding to a readable string value.
-    if info["encoding"] in ENCODINGS:
+    if "encoding" not in info:
+        # Hopefully detected by libmseed.
+        info["encoding"] = None
+    elif info["encoding"] in ENCODINGS:
         info['encoding'] = ENCODINGS[info['encoding']][0]
     elif info["encoding"] in UNSUPPORTED_ENCODINGS:
         msg = ("Encoding '%s' (%i) is not supported by ObsPy. Please send "
@@ -298,10 +301,7 @@ def _read_mseed(mseed_object, starttime=None, endtime=None, headonly=False,
         bfr_np = np.fromstring(mseed_object.read(), dtype=np.int8)
 
     # Get the record length
-    try:
-        record_length = pow(2, int(''.join([chr(_i) for _i in bfr_np[19:21]])))
-    except ValueError:
-        record_length = 4096
+    record_length = info["record_length"]
 
     # Search for data records and pass only the data part to the underlying C
     # routine.
