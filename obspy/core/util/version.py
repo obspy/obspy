@@ -56,10 +56,13 @@ def call_git_describe(abbrev=10, dirty=True,
         p = check_output(['git', 'rev-parse', '--show-toplevel'],
                          cwd=OBSPY_ROOT, stderr=STDOUT)
         path = p.decode().strip()
-    except (OSError, CalledProcessError):
+    except (OSError, CalledProcessError) as e:
+        print("git rev-parse failed")
+        print(e)
         return None
 
     if os.path.normpath(path) != OBSPY_ROOT:
+        print("path check failed", os.path.normpath(path), OBSPY_ROOT)
         return None
 
     command = ['git', 'describe', '--abbrev=%d' % abbrev, '--always', '--tags']
@@ -70,7 +73,9 @@ def call_git_describe(abbrev=10, dirty=True,
                           '--always', '--tags'],
                          cwd=OBSPY_ROOT, stderr=STDOUT)
         line = p.decode().strip()
-    except (OSError, CalledProcessError):
+    except (OSError, CalledProcessError) as e:
+        print("git describe failed")
+        print(e)
         return None
 
     remote_tracking_branch = None
