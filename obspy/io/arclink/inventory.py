@@ -50,8 +50,10 @@ def _is_inventory_xml(path_or_file_object):
     be good enough for most real world use cases. If the schema is used to
     test for a StationXML file, many real world files are false negatives as
     they don't adhere to the standard.
+
     :param path_or_file_object: File name or file like object.
     """
+
     if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
                                                         "seek"):
         current_position = path_or_file_object.tell()
@@ -238,7 +240,7 @@ def _get_restricted_status(element):
     """
 
     restricted_status = _attr2obj(element, "restricted", str)
-    if(restricted_status == 'false'):
+    if restricted_status == 'false':
         return 'open'
     else:
         return 'closed'
@@ -251,7 +253,6 @@ def _read_station(inventory_root, sta_element):
 
     :param inventory_root: base inventory element of sc3ml
     :param sta_element: station element to be read
-    :param _ns: name space
     """
 
     # Read location tags
@@ -298,7 +299,6 @@ def _read_site(sta_element):
     tags in the station_element
 
     :param sta_element: station element
-    :param _ns: namespace
     """
 
     # The region is defined in the parent network element
@@ -370,8 +370,8 @@ def _read_channel(inventory_root, cha_element):
     """
     reads channel element from sc3ml format
 
-    :param sta_element: channel element
-    :param _ns: namespace
+    :param inventory_root: root of the XML document
+    :param cha_element: channel element to be parsed
     """
 
     code = cha_element.get("code")
@@ -490,6 +490,9 @@ def _read_instrument_sensitivity(sen_element, cha_element):
 
     """
     reads the instrument sensitivity (gain) from the sensor and channel element
+
+    :param sen_element: sensor element to be parsed
+    :param cha_element: channel element to be parsed
     """
 
     # Read the gain and gain frequency from attributs
@@ -519,8 +522,14 @@ def _read_response(root, sen_element, resp_element, cha_element,
     """
     reads response from sc3ml format
 
-    :param
-    :param _ns: namespace
+    :param root: XML document root element
+    :param sen_element: sensor element to be used
+    :param resp_element: response element to be parsed
+    :param cha_element: channel element to be used
+    :param data_log_element: datalogger element to be used
+    :param samp_rate: sample rate of stream
+    :param fir: list of FIR filter chain identifiers
+    :param analogue: list of analogue filter chain identifiers
     """
     response = obspy.core.inventory.response.Response()
     response.instrument_sensitivity = _read_instrument_sensitivity(
@@ -631,7 +640,15 @@ def _read_response(root, sen_element, resp_element, cha_element,
 
 def _read_response_stage(stage, rate, stage_number, input_units,
                          output_units):
+    """
+    Private function to read a response stage
 
+    :param stage: response stage element
+    :param rate: stage sample rate
+    :param stage_number: response stage number
+    :param input_units: input units of stage
+    :param output_units output units of stage
+    """
     elem_type = stage.tag.split("}")[1]
 
     stage_sequence_number = stage_number
@@ -647,7 +664,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
     # Determine the decimation parameters
     # This is dependent on the type of stage
     # Decimation delay/correction need to be normalized
-    if(elem_type == "responseFIR"):
+    if elem_type == "responseFIR":
         decimation_factor = _attr2obj(stage, "decimationFactor", int)
         if rate != 0.0:
             temp = _attr2obj(stage, "delay", float) / rate
@@ -668,7 +685,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
         decimation_input_sample_rate = \
             _read_float_var(rate, Frequency)
         decimation_offset = int(0)
-    elif(elem_type == "datalogger"):
+    elif elem_type == "datalogger":
         decimation_factor = int(1)
         decimation_delay = _read_float_var(0.00,
                                            FloatWithUncertaintiesAndUnit,
@@ -679,7 +696,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
         decimation_input_sample_rate = \
             _read_float_var(rate, Frequency)
         decimation_offset = int(0)
-    elif(elem_type == "responsePAZ" or elem_type == "responsePolynomial"):
+    elif elem_type == "responsePAZ" or elem_type == "responsePolynomial":
         decimation_factor = None
         decimation_delay = None
         decimation_corr = None
@@ -710,11 +727,9 @@ def _read_response_stage(stage, rate, stage_number, input_units,
 
     # Different processing for different types of responses
     # currently supported:
-    # PAZ
-    # COEFF
-    # FIR
-    # Polynomial response is not supported, could not find example
-    if(elem_type == 'responsePAZ'):
+    # PAZ, COEFF, FIR, Polynomial response is not supported;
+    # could not find example
+    if elem_type == 'responsePAZ':
 
         # read normalization params
         normalization_freq = _attr2obj(stage, "normalizationFrequency",
@@ -771,7 +786,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             normalization_factor=normalization_factor, zeros=zeros,
             poles=poles, **kwargs)
 
-    elif(elem_type == 'datalogger'):
+    elif elem_type == 'datalogger':
         cf_transfer_function_type = "DIGITAL"
         numerator = []
         denominator = []
@@ -779,7 +794,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
-    elif(elem_type == 'responsePolynomial'):
+    elif elem_type == 'responsePolynomial':
         # Polynomial response (UNTESTED)
         # Currently not implemented in ObsPy (20-11-2015)
         f_low = None
@@ -807,7 +822,7 @@ def _read_response_stage(stage, rate, stage_number, input_units,
             approximation_upper_bound=appr_high, maximum_error=max_err,
             coefficients=coeffs, **kwargs)
 
-    elif(elem_type == 'responseFIR'):
+    elif elem_type == 'responseFIR':
         # For the responseFIR obtain the symmetry and
         # list of coefficients
 
@@ -827,17 +842,22 @@ def _read_response_stage(stage, rate, stage_number, input_units,
         # Write the FIR symmetry to what ObsPy expects
         # A = NONE, B = ODD, C = EVEN
         symmetry = _attr2obj(stage, "symmetry", str)
-        if(symmetry == 'A'):
+        if symmetry == 'A':
             symmetry = 'NONE'
-        elif(symmetry == 'B'):
+        elif symmetry == 'B':
             symmetry = 'ODD'
-        elif(symmetry == 'C'):
+        elif symmetry == 'C':
             symmetry = 'EVEN'
         else:
             raise ValueError('Unknown symmetry metric; expected A, B, or C')
 
         return FIRResponseStage(
             coefficients=coeffs_float, symmetry=symmetry, **kwargs)
+
+    else:
+        msg = "Unsupported response type (%s).\
+               Please contact developers." % elem_type
+        warnings.warn(msg)
 
 
 def _tag2pole_or_zero(paz_element, count):
@@ -850,6 +870,7 @@ def _tag2pole_or_zero(paz_element, count):
     and split by comma, real part is 1st, imaginary 2nd
 
     :param paz_element: string of poles or zeros e.g. (12320, 23020)
+    :param count: sequential numbering of poles/zeros
     """
 
     paz_element = paz_element[1:-1]
