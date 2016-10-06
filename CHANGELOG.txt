@@ -5,6 +5,8 @@
    * ObsPy can now read MiniSEED files with micro-second wrap arounds.
      (see #1531)
    * ObsPy can now read MiniSEED files with no blockette 1000. (see #1544)
+   * ObsPy now always writes Blockette 100 if sampling rate accuracy is
+     otherwise lost. (see #1550)
  - obspy.io.sac:
    * `SACTrace.lpspol` and `lcalda` are `True` and `False` by default, when
       created via `SACTrace.from_obspy_trace` with a `Trace` that has no SAC
