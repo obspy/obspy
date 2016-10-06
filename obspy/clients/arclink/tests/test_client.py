@@ -45,6 +45,10 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime("2010-12-31T23:59:50.495000Z")
         end = start + 100
         stream = client.get_waveforms('GE', 'APE', '', 'BHE', start, end)
+        # seems the response of the server has changed, it contains two traces
+        # with an overlap now but the data is consistent and a cleanup merge
+        # works
+        stream.merge(-1)
         self.assertEqual(len(stream), 1)
         trace = stream[0]
         self.assertLessEqual(trace.stats.starttime, start)
