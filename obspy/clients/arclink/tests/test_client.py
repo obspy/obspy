@@ -647,6 +647,11 @@ class ClientTestCase(unittest.TestCase):
         self.assertIn('paz', st[0].stats)
         self.assertIn('coordinates', st[0].stats)
 
+    # Seems the data used to test this issue has disappeared from the server.
+    # To implement the test again we would need some example test data with
+    # lots of gaps. It is most likely not worth the effort to reimplement this
+    # test.
+    @unittest.expectedFailure
     def test_issue_372(self):
         """
         Test case for issue #372.
