@@ -969,6 +969,79 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             st[0].data[:10],
             [-185, -200, -209, -220, -228, -246, -252, -262, -262, -269])
 
+    def test_writing_of_blockette_100(self):
+        """
+        Tests the writing of blockette 100 if necessary.
+        """
+        def has_blkt_100(filename):
+            ms = _MSStruct(filename)
+            ms.read(-1, 0, 1, 0)
+            blkt_link = ms.msr.contents.blkts
+            has_blkt_100 = False
+            while True:
+                try:
+                    if blkt_link.contents.blkt_type == 100:
+                        has_blkt_100 = True
+                        break
+                    blkt_link = blkt_link.contents.next
+                except ValueError:
+                    break
+            del ms
+            return has_blkt_100
+
+        tr = read()[0]
+        tr.data = tr.data[:10]
+
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+
+            # A "clean" sampling rate does not require blockette 100.
+            sr = 200.0
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            # A more detailed one does.
+            sr = 199.9997
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+
+            # As does a very large one.
+            sr = 1E6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+
+            # And a very small one.
+            sr = 1E-6
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertTrue(has_blkt_100(tempfile))
+
+            # Two more "clean" ones.
+            sr = 1.0
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
+            sr = 0.5
+            tr.stats.sampling_rate = sr
+            tr.write(tempfile, format="mseed")
+            self.assertEqual(read(tempfile)[0].stats.sampling_rate,
+                             np.float32(sr))
+            self.assertFalse(has_blkt_100(tempfile))
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
