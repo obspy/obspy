@@ -155,7 +155,7 @@ msr_decode_float64 (double *input, int samplecount, double *output,
 
   for (idx = 0; idx < samplecount && outputlength > 0; idx++)
   {
-    sample = input[idx];
+    memcpy(&sample, &input[idx], sizeof(double));
 
     if (swapflag)
       ms_gswap8a (&sample);
