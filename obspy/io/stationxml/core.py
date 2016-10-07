@@ -736,7 +736,6 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
                 "xmlns": "http://www.fdsn.org/xml/station/1",
                 "schemaVersion": SCHEMA_VERSION}
         )
-
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
         etree.SubElement(root, "Sender").text = inventory.sender
@@ -750,10 +749,8 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         etree.SubElement(root, "ModuleURI").text = inventory.module_uri
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
-
-    for network in inventory.networks:
+    for network in inventory.networks:  
         _write_network(root, network)
-
     tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
@@ -804,6 +801,7 @@ def _write_network(parent, network):
     attribs = _get_base_node_attributes(network)
     network_elem = etree.SubElement(parent, "Network", attribs)
     _write_base_node(network_elem, network)
+    _write_extra(network_elem, network)
 
     # Add the two, network specific fields.
     if network.total_number_of_stations is not None:
@@ -892,6 +890,7 @@ def _write_station(parent, station):
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
     _write_base_node(station_elem, station)
+    _write_extra(station_elem, station)
 
     _write_floattype(station_elem, station, "latitude", "Latitude")
     _write_floattype(station_elem, station, "longitude", "Longitude")
@@ -938,6 +937,7 @@ def _write_channel(parent, channel):
     attribs['locationCode'] = channel.location_code
     channel_elem = etree.SubElement(parent, "Channel", attribs)
     _write_base_node(channel_elem, channel)
+    _write_extra(channel_elem, channel)
 
     if channel.data_availability is not None:
         da = etree.SubElement(channel_elem, "DataAvailability")
@@ -1233,6 +1233,15 @@ def _write_phone(parent, phone):
     etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number
 
 
+def _write_extra(parent, obj):
+    if hasattr(obj, 'extra'):
+        for name, value in obj.extra.items():
+            if hasattr(value, "type") and value.type == "attribute":
+                parent.set("{{{0}}}{1}".format(value.namespace, name), value.value)
+            else:
+                element = etree.SubElement(parent, "{{{0}}}{1}".format(value.namespace, name)).text = value.value
+            
+
 def _tag2obj(element, tag, convert):
     # we use future.builtins.str and are sure we have unicode here
     try:
@@ -1281,7 +1290,7 @@ def _extra(element, obj):
     Add information stored in custom tags/attributes in obj.extra.
     """
     # search all namespaces in current scope
-    for ns in element.nsmap.values():
+    for prefix, ns in element.nsmap.items():
         # skip any fdsn namespaces,
         # we're not interested in StationXML defined tags here
         if ns.startswith("http://www.fdsn.org/") or \
@@ -1301,6 +1310,7 @@ def _extra(element, obj):
                 else:
                     extra = AttribDict()
                     obj.extra = extra
+            etree.register_namespace(prefix, ns)
             extra[name] = {'value': value,
                            'namespace': '%s' % ns}
             if el.attrib:
