@@ -119,7 +119,7 @@ msr_decode_float32 (float *input, int samplecount, float *output,
 
   for (idx = 0; idx < samplecount && outputlength > 0; idx++)
   {
-    sample = input[idx];
+    memcpy(&sample, &input[idx], sizeof(float));
 
     if (swapflag)
       ms_gswap4a (&sample);
