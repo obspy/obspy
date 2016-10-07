@@ -1237,12 +1237,13 @@ def _write_phone(parent, phone):
 
 
 def _write_extra(parent, obj):
-    if hasattr(obj, 'extra'):
+    if hasattr(obj, "extra"):
         for name, value in obj.extra.items():
+            customAttr = "{%s}%s" % (value.namespace, name)
             if hasattr(value, "type") and value.type == "attribute":
-                parent.set("{{{0}}}{1}".format(value.namespace, name), value.value)
+                parent.set(customAttr, value.value)
             else:
-                element = etree.SubElement(parent, "{{{0}}}{1}".format(value.namespace, name)).text = value.value
+                etree.SubElement(parent, customAttr).text = value.value
             
 
 def _tag2obj(element, tag, convert):
