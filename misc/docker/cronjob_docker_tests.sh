@@ -89,7 +89,7 @@ cd $OBSPY_DOCKER
 python -c 'from obspy_github_api import __version__; assert [int(x) for x in __version__.split(".")[:2]] >= [0, 4]' || exit 1
 
 # run docker tests if requested:
-cd ${OBSPY_DOCKER}/misc/docker/
+cd ${OBSPY_DOCKER}
 if [ "$DOCKER_TESTS" = true ]
 then
     TARGETS=`python -c "from obspy_github_api import get_docker_build_targets; print(get_docker_build_targets(context='docker-testbot', branches=${WORK_ON_BRANCHES}, prs=${WORK_ON_PRS}))"`
@@ -114,7 +114,7 @@ then
 fi
 
 # run docker deb packaging+testing if requested:
-cd ${OBSPY_DOCKER}/misc/docker/
+cd ${OBSPY_DOCKER}
 if [ "$DOCKER_DEB_PACKAGING" = true ]
 then
     TARGETS=`python -c "from obspy_github_api import get_docker_build_targets; print(get_docker_build_targets(context='docker-deb-buildbot', branches=${WORK_ON_BRANCHES}, prs=${WORK_ON_PRS}))"`
