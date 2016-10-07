@@ -749,6 +749,9 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         etree.SubElement(root, "ModuleURI").text = inventory.module_uri
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
+    
+    _write_extra(root, inventory)
+    
     for network in inventory.networks:  
         _write_network(root, network)
     tree = root.getroottree()
