@@ -106,7 +106,7 @@ then
         echo "##### RUNNING DOCKER TESTS FOR TARGET: ${REPO_SHA}"
         if [ "$PR" = "XXX" ]
         then
-            bash run_obspy_tests.sh -t${REPO_SHA}
+            bash run_obspy_tests.sh -t${REPO_SHA} -e"--all"
         else
             bash run_obspy_tests.sh -t${REPO_SHA} -e"--pr-url=https://github.com/obspy/obspy/pull/${PR}"
         fi
