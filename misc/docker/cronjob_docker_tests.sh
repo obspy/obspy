@@ -136,4 +136,4 @@ fi
 
 # sleep for some time, so a login user has a chance to kill the cronjob before
 # it halts the VM
-(sleep 600; sudo halt)
+(sleep 600; sudo halt -p)
