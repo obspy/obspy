@@ -454,10 +454,12 @@ def farfield(mt, points, type):
     ndim, npoints = points.shape
     if ndim == 2:
         # points are given as theta,phi
-        points = np.empty((3, npoints))
-        points[0] = np.sin(points[0]) * np.cos(points[1])
-        points[1] = np.sin(points[0]) * np.sin(points[1])
-        points[2] = np.cos(points[0])
+        _points = np.empty((3, npoints))
+        _points[0] = np.sin(points[0]) * np.cos(points[1])
+        _points[1] = np.sin(points[0]) * np.sin(points[1])
+        _points[2] = np.cos(points[0])
+        points = _points
+        ndim = 3
     elif ndim == 3:
         # points are given as x,y,z, (same system as the moment tensor)
         pass
