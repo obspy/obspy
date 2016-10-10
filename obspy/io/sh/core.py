@@ -404,7 +404,7 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             id = cid
             i += 1
         traces.setdefault(i, '')
-        traces[i] += line[3:].strip()
+        traces[i] += line[3:].rstrip('\n')
     # create stream object
     stream = Stream()
     for id in sorted(traces.keys()):
@@ -417,8 +417,8 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         channel = ['', '', '']
         npts = 0
         for item in traces[id].split('~'):
-            key = item.strip()[0:4]
-            value = item.strip()[5:].strip()
+            key = item.lstrip()[0:4]
+            value = item.lstrip()[5:]
             if key == 'L001':
                 npts = header['npts'] = int(value)
             elif key == 'L000':
