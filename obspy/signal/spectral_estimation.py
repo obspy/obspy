@@ -779,7 +779,7 @@ class PPSD(object):
                 msg = ("Error getting response from provided metadata:\n"
                        "%s: %s\n"
                        "Skipping time segment(s).")
-                msg = msg % (e.__class__.__name__, e.message)
+                msg = msg % (e.__class__.__name__, str(e))
                 warnings.warn(msg)
                 return False
 
