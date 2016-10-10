@@ -19,9 +19,13 @@ import io
 import os
 import re
 import unittest
+import warnings
 
 import obspy
 from obspy.core.inventory import Inventory, Network
+from obspy.io.stationxml.core import _read_stationxml, _write_stationxml
+from obspy.core.util.base import NamedTemporaryFile
+from lxml import etree
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -622,14 +626,52 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
-    def test_stationxml_with_custom_tags(self):
+
+    def test_write_with_extra_tags_and_read(self):
         """
-        Test reading/writing StationXML with additional custom namespace tags.
+        Tests that a StationXML file with additional custom "extra" tags gets
+        written correctly and that when reading it again the extra tags are
+        parsed correctly.
         """
-        filename = os.path.join(
-            self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
-        # don't explicitely specify format
-        inv = obspy.read_inventory(filename)
+        filename = os.path.join(self.data_dir, "IRIS_single_channel_with_response_custom_tags.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            inv = _read_stationxml(filename)
+            self.assertEqual(len(w), 0)
+        # assert that the extra attributes are in the read file
+        self.assertTrue(hasattr(inv, "extra"))
+        self.assertTrue(hasattr(inv[0], "extra"))
+        self.assertTrue(hasattr(inv[0][0], "extra"))
+        self.assertTrue(hasattr(inv[0][0][0], "extra"))
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write file
+            inv.write(tmpfile, format="STATIONXML")
+            # check contents
+            with open(tmpfile, "rb") as fh:
+                # enforce reproducible attribute orders through write_c14n
+                obj = etree.fromstring(fh.read()).getroottree()
+                buf = io.BytesIO()
+                obj.write_c14n(buf)
+                buf.seek(0, 0)
+                content = buf.read()
+            # check namespace definitions in root element
+            expected = [b'xmlns="http://www.fdsn.org/xml/station/1"',
+                        b'xmlns:test="http://just.a.test/xmlns/1"'
+                        ]
+            for line in expected:
+                self.assertIn(line, content)
+            # check additional tags
+            expected = [
+                b'<test:CustomTag>testTag1234</test:CustomTag>',
+                b'test:customAttrib="test123"'
+            ]
+            for line in expected:
+                self.assertIn(line, content)
+            # now, read again to test if it's parsed correctly..
+            inv = _read_stationxml(tmpfile)
+        # assert that the extra attributes are in the new parsed file
         self.assertTrue(hasattr(inv, "extra"))
         self.assertTrue(hasattr(inv[0], "extra"))
         self.assertTrue(hasattr(inv[0][0], "extra"))
