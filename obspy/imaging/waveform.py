@@ -512,7 +512,7 @@ class WaveformPlotting(object):
             except Exception as e:
                 events = None
                 msg = "Could not download the events because of '%s: %s'." % \
-                    (e.__class__.__name__, e.message)
+                    (e.__class__.__name__, str(e))
                 warnings.warn(msg)
         if events:
             for event in events:
