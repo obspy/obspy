@@ -88,7 +88,7 @@ def calc_dist_azi(source_latitude_in_deg, source_longitude_in_deg,
                               receiver_latitude_in_deg,
                               receiver_longitude_in_deg)
         distance_in_deg = g['a12']
-        source_receiver_azimuth = g['azi1']
+        source_receiver_azimuth = g['azi1'] % 360
         receiver_to_source_backazimuth = (g['azi2'] + 180) % 360
 
     else:

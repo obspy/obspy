@@ -17,7 +17,7 @@ import warnings
 import numpy as np
 
 from obspy.taup import TauPyModel
-from obspy.taup.taup_geo import calc_dist
+from obspy.taup.taup_geo import calc_dist, calc_dist_azi
 from obspy.taup.tau import Arrivals
 import obspy.geodetics.base as geodetics
 
@@ -137,6 +137,45 @@ class TauPyModelTestCase(unittest.TestCase):
                                          receiver_longitude_in_deg=33.0,
                                          radius_of_planet_in_km=6.371,
                                          flattening_of_planet=0.0), 35.0, 5)
+
+    def test_taup_geo_calc_dist_azi(self):
+        """Test for calc_dist"""
+        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=20.0,
+                                           source_longitude_in_deg=33.0,
+                                           receiver_latitude_in_deg=55.0,
+                                           receiver_longitude_in_deg=33.0,
+                                           radius_of_planet_in_km=6371.0,
+                                           flattening_of_planet=0.0)
+        self.assertAlmostEqual(dist, 35.0, 5)
+        self.assertAlmostEqual(azi, 0.0, 5)
+        self.assertAlmostEqual(backazi, 180.0, 5)
+        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=55.0,
+                                           source_longitude_in_deg=33.0,
+                                           receiver_latitude_in_deg=20.0,
+                                           receiver_longitude_in_deg=33.0,
+                                           radius_of_planet_in_km=6371.0,
+                                           flattening_of_planet=0.0)
+        self.assertAlmostEqual(dist, 35.0, 5)
+        self.assertAlmostEqual(azi, 180.0, 5)
+        self.assertAlmostEqual(backazi, 0.0, 5)
+        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=-20.0,
+                                           source_longitude_in_deg=33.0,
+                                           receiver_latitude_in_deg=-55.0,
+                                           receiver_longitude_in_deg=33.0,
+                                           radius_of_planet_in_km=6371.0,
+                                           flattening_of_planet=0.0)
+        self.assertAlmostEqual(dist, 35.0, 5)
+        self.assertAlmostEqual(azi, 180.0, 5)
+        self.assertAlmostEqual(backazi, 0.0, 5)
+        dist, azi, backazi = calc_dist_azi(source_latitude_in_deg=-20.0,
+                                           source_longitude_in_deg=33.0,
+                                           receiver_latitude_in_deg=-55.0,
+                                           receiver_longitude_in_deg=33.0,
+                                           radius_of_planet_in_km=6.371,
+                                           flattening_of_planet=0.0)
+        self.assertAlmostEqual(dist, 35.0, 5)
+        self.assertAlmostEqual(azi, 180.0, 5)
+        self.assertAlmostEqual(backazi, 0.0, 5)
 
     @unittest.skipIf(not geodetics.HAS_GEOGRAPHICLIB,
                      'Module geographiclib is not installed')
