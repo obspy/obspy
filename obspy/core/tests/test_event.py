@@ -13,7 +13,7 @@ from matplotlib import rcParams
 
 from obspy.core.event import (Catalog, Comment, CreationInfo, Event, Origin,
                               Pick, ResourceIdentifier, WaveformStreamID,
-                              read_events, Magnitude, FocalMechanism)
+                              read_events, Magnitude, FocalMechanism, source)
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import get_basemap_version, get_cartopy_version
 from obspy.core.util.testing import ImageComparison
@@ -150,6 +150,26 @@ class EventTestCase(unittest.TestCase):
         with ImageComparison(self.image_dir, 'event.png') as ic:
             ev.plot(kind=[['global'], ['ortho', 'beachball'],
                           ['p_sphere', 's_sphere']], outfile=ic.name)
+
+    def test_farfield_2xn_input(self):
+        """
+        Tests to compute P/S wave farfield radiation pattern using (theta,phi)
+        pairs as input
+        """
+        import numpy as np
+        from obspy.core.event import source
+        # Peru 2001/6/23 20:34:23:
+        mt = [2.245, -0.547, -1.698, 1.339, -3.728, 1.444]
+        theta = np.arange(0, 360, 60)
+        phi = np.zeros(len(theta))
+        rays = np.array([theta, phi])
+        result = source.farfield(mt, rays, 'P')
+        ref = np.array([[-0., 1.06567166, -2.26055006, 2.19679324, -0.44435406,
+                         -2.07785517], [-0., 0., -0., 0., -0., -0.],
+                        [-1.698, 3.32980367, -3.16993006, 1.64100194,
+                         -0.15311543,
+                        -0.04592479]])
+        self.assertTrue(np.allclose(result, ref))
 
 
 class OriginTestCase(unittest.TestCase):
