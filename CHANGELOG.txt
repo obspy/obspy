@@ -11,6 +11,7 @@
       inheritance. (see #1507)
 - obspy.io.sh:
    * Fix writing of long headers for python3
+   * Whitespace in header fields is not ignored anymore (see #1552)
  - obspy.io.stationxml:
    * Datetime fields are written with microseconds to StationXML if
      microseconds are present. (see #1511)

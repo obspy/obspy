@@ -387,24 +387,21 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             raise IOError(msg % data_file)
         fh_data = open(data_file, 'rb')
     # loop through read header file
-    fh = open(filename, 'rt')
-    line = fh.readline()
-    cmtlines = int(line[5:7]) - 1
-    # comment lines
-    comments = []
-    for _i in range(0, cmtlines):
-        comments += [fh.readline()]
+    with open(filename, 'rt') as fh:
+        lines = fh.read().splitlines()
+    # number of comment lines
+    cmtlines = int(lines[0][5:7])
     # trace lines
     traces = {}
     i = -1
     id = ''
-    for line in fh:
+    for line in lines[cmtlines:]:
         cid = int(line[0:2])
         if cid != id:
             id = cid
             i += 1
         traces.setdefault(i, '')
-        traces[i] += line[3:].strip()
+        traces[i] += line[3:]
     # create stream object
     stream = Stream()
     for id in sorted(traces.keys()):
@@ -417,8 +414,8 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
         channel = ['', '', '']
         npts = 0
         for item in traces[id].split('~'):
-            key = item.strip()[0:4]
-            value = item.strip()[5:].strip()
+            key = item.lstrip()[0:4]
+            value = item.lstrip()[5:]
             if key == 'L001':
                 npts = header['npts'] = int(value)
             elif key == 'L000':
@@ -476,7 +473,6 @@ def _read_q(filename, headonly=False, data_directory=None, byteorder='=',
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
-    fh.close()
     return stream
 
 
