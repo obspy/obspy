@@ -185,6 +185,7 @@
        <Frequency>0</Frequency>
       </StageGain>
      </Stage>
+     <test:CustomTag>testTag1234</test:CustomTag>
     </Response>
    </Channel>
   </Station>

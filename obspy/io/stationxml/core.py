@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-File dealing with the StationXML format.
+Functions dealing with reading and writing StationXML.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
 
+import copy
 import inspect
 import io
 import math
 import os
+import re
 import warnings
 
 from lxml import etree
@@ -37,7 +39,7 @@ from obspy.core.inventory import (Angle, Azimuth, ClockDrift, Dip,  Distance,
 
 # Define some constants for writing StationXML files.
 SOFTWARE_MODULE = "ObsPy %s" % obspy.__version__
-SOFTWARE_URI = "http://www.obspy.org"
+SOFTWARE_URI = "https://www.obspy.org"
 SCHEMA_VERSION = "1.0"
 
 
@@ -46,14 +48,49 @@ def _is_stationxml(path_or_file_object):
     Simple function checking if the passed object contains a valid StationXML
     1.0 file. Returns True of False.
 
-    This is simply done by validating against the StationXML schema.
+    The test is not exhaustive - it only checks the root tag but that should
+    be good enough for most real world use cases. If the schema is used to
+    test for a StationXML file, many real world files are false negatives as
+    they don't adhere to the standard.
 
     :param path_or_file_object: File name or file like object.
     """
-    return validate_StationXML(path_or_file_object)[0]
+    if hasattr(path_or_file_object, "tell") and hasattr(path_or_file_object,
+                                                        "seek"):
+        current_position = path_or_file_object.tell()
+
+    try:
+        if isinstance(path_or_file_object, etree._Element):
+            xmldoc = path_or_file_object
+        else:
+            try:
+                xmldoc = etree.parse(path_or_file_object)
+            except etree.XMLSyntaxError:
+                return False
+        root = xmldoc.getroot()
+        try:
+            match = re.match(
+                r'{http://www.fdsn.org/xml/station/[0-9]+}FDSNStationXML',
+                root.tag)
+            assert match is not None
+        except:
+            return False
+        # Convert schema number to a float to have positive comparisons
+        # between, e.g "1" and "1.0".
+        if float(root.attrib["schemaVersion"]) != float(SCHEMA_VERSION):
+            warnings.warn("The StationXML file has version %s, ObsPy can "
+                          "deal with version %s. Proceed with caution." % (
+                              root.attrib["schemaVersion"], SCHEMA_VERSION))
+        return True
+    finally:
+        # Make sure to reset file pointer position.
+        try:
+            path_or_file_object.seek(current_position, 0)
+        except:
+            pass
 
 
-def validate_StationXML(path_or_object):
+def validate_stationxml(path_or_object):
     """
     Checks if the given path is a valid StationXML file.
 
@@ -94,7 +131,10 @@ def _read_stationxml(path_or_file_object):
     :param path_or_file_object: File name or file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
-    namespace = root.nsmap[None]
+
+    # Fix the namespace as its not always the default namespace. Will need
+    # to be adjusted if the StationXML format gets another revision!
+    namespace = "http://www.fdsn.org/xml/station/1"
 
     def _ns(tagname):
         return "{%s}%s" % (namespace, tagname)
@@ -115,7 +155,7 @@ def _read_stationxml(path_or_file_object):
     inv = obspy.core.inventory.Inventory(networks=networks, source=source,
                                          sender=sender, created=created,
                                          module=module, module_uri=module_uri)
-    _extra(root, inv)
+    _read_extra(root, inv)
     return inv
 
 
@@ -141,6 +181,11 @@ def _read_base_node(element, object_to_write_to, _ns):
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
+    # Availability.
+    data_availability = element.find(_ns("DataAvailability"))
+    if data_availability is not None:
+        object_to_write_to.data_availability = \
+            _read_data_availability(data_availability, _ns)
 
 
 def _read_network(net_element, _ns):
@@ -154,7 +199,7 @@ def _read_network(net_element, _ns):
     for station in net_element.findall(_ns("Station")):
         stations.append(_read_station(station, _ns))
     network.stations = stations
-    _extra(net_element, network)
+    _read_extra(net_element, network)
     return network
 
 
@@ -191,7 +236,7 @@ def _read_station(sta_element, _ns):
     for channel in sta_element.findall(_ns("Channel")):
         channels.append(_read_channel(channel, _ns))
     station.channels = channels
-    _extra(sta_element, station)
+    _read_extra(sta_element, station)
     return station
 
 
@@ -307,16 +352,11 @@ def _read_channel(cha_element, _ns):
     equipment = cha_element.find(_ns("Equipment"))
     if equipment is not None:
         channel.equipment = _read_equipment(equipment, _ns)
-    # Availability.
-    data_availability = cha_element.find(_ns("DataAvailability"))
-    if data_availability is not None:
-        channel.data_availability = _read_data_availability(
-            data_availability, _ns)
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
     if response is not None:
         channel.response = _read_response(response, _ns)
-    _extra(cha_element, channel)
+    _read_extra(cha_element, channel)
     return channel
 
 
@@ -338,7 +378,7 @@ def _read_response(resp_element, _ns):
         if not len(stage):
             continue
         response.response_stages.append(_read_response_stage(stage, _ns))
-    _extra(resp_element, response)
+    _read_extra(resp_element, response)
     return response
 
 
@@ -381,11 +421,11 @@ def _read_response_stage(stage_elem, _ns):
     poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
     coefficients_elem = stage_elem.find(_ns("Coefficients"))
     response_list_elem = stage_elem.find(_ns("ResponseList"))
-    FIR_elem = stage_elem.find(_ns("FIR"))
+    fir_elem = stage_elem.find(_ns("FIR"))
     polynomial_elem = stage_elem.find(_ns("Polynomial"))
 
     type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
-                  FIR_elem, polynomial_elem]
+                  fir_elem, polynomial_elem]
 
     # iterate and check for an response element and create alias
     for elem in type_elems:
@@ -509,7 +549,7 @@ def _read_response_stage(stage_elem, _ns):
             response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
-    elif elem is FIR_elem:
+    elif elem is fir_elem:
         symmetry = _tag2obj(elem, _ns("Symmetry"), str)
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
@@ -552,7 +592,7 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
         _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
     sensitivity.frequency_range_end = \
         _tag2obj(sensitivity_element, _ns("FrequencyEnd"), float)
-    sensitivity.frequency_range_DB_variation = \
+    sensitivity.frequency_range_db_variation = \
         _tag2obj(sensitivity_element, _ns("FrequencyDBVariation"), float)
     return sensitivity
 
@@ -609,6 +649,9 @@ def _read_operator(operator_element, _ns):
 
 def _read_data_availability(avail_element, _ns):
     extent = avail_element.find(_ns("Extent"))
+    # Recovery from empty Extent tags.
+    if extent is None:
+        return extent
     start = obspy.UTCDateTime(extent.get("start"))
     end = obspy.UTCDateTime(extent.get("end"))
     return obspy.core.inventory.util.DataAvailability(start=start, end=end)
@@ -634,7 +677,7 @@ def _read_equipment(equip_element, _ns):
         manufacturer=manufacturer, vendor=vendor, model=model,
         serial_number=serial_number, installation_date=installation_date,
         removal_date=removal_date, calibration_dates=calibration_dates)
-    _extra(equip_element, obj)
+    _read_extra(equip_element, obj)
     return obj
 
 
@@ -648,7 +691,7 @@ def _read_site(site_element, _ns):
     obj = obspy.core.inventory.Site(name=name, description=description,
                                     town=town, county=county, region=region,
                                     country=country)
-    _extra(site_element, obj)
+    _read_extra(site_element, obj)
     return obj
 
 
@@ -689,10 +732,9 @@ def _read_phone(phone_element, _ns):
 
 
 def _write_stationxml(inventory, file_or_file_object, validate=False,
-                      **kwargs):
+                      nsmap=None, **kwargs):
     """
     Writes an inventory object to a buffer.
-
     :type inventory: :class:`~obspy.core.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
@@ -700,7 +742,22 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
     :param validate: If True, the created document will be validated with the
         StationXML schema before being written. Useful for debugging or if you
         don't trust ObsPy. Defaults to False.
+    :type nsmap: dict
+    :param nsmap: Additional custom namespace abbreviation mappings
+        (e.g. `{"edb": "http://erdbeben-in-bayern.de/xmlns/0.1"}`).
+
     """
+    if nsmap is None:
+        nsmap = {}
+    elif None in nsmap:
+        msg = ("Custom namespace mappings do not allow redefinition of "
+               "default StationXML namespace (key `None`). "
+               "Use other namespace abbreviations for custom namespace tags.")
+        raise ValueError(msg)
+
+    nsmap[None] = "http://www.fdsn.org/xml/station/1" 
+    attrib = {"schemaVersion": SCHEMA_VERSION}
+    
     # Check if any of the channels has a data availability element. In that
     # case the namespaces need to be adjusted.
     data_availability = False
@@ -718,24 +775,20 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         break
 
     if data_availability:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                ("{http://www.w3.org/2001/XMLSchema-instance}"
-                 "schemaLocation"): "http://www.fdsn.org/xml/station/1 "
-                "http://www.fdsn.org/xml/station/fdsn-station+"
-                "availability-1.0.xsd",
-                "schemaVersion": SCHEMA_VERSION},
-            nsmap={None: "http://www.fdsn.org/xml/station/1",
-                   "xsi": "http://www.w3.org/2001/XMLSchema-instance"}
-        )
-    else:
-        root = etree.Element(
-            "FDSNStationXML",
-            attrib={
-                "xmlns": "http://www.fdsn.org/xml/station/1",
-                "schemaVersion": SCHEMA_VERSION}
-        )
+        attrib["{http://www.w3.org/2001/XMLSchema-instance}"
+               "schemaLocation"] = (
+            "http://www.fdsn.org/xml/station/1 "
+            "http://www.fdsn.org/xml/station/fdsn-station+"
+            "availability-1.0.xsd")
+        if "xsi" in nsmap:
+            msg = ("Custom namespace mappings do not allow redefinition of "
+                   "StationXML availability namespace (key `xsi`). Use other "
+                   "namespace abbreviations for custom namespace tags.")
+            raise ValueError(msg)
+        nsmap["xsi"] = "http://www.w3.org/2001/XMLSchema-instance"
+        
+    root = etree.Element("FDSNStationXML", attrib=attrib, nsmap=nsmap)
+        
     etree.SubElement(root, "Source").text = inventory.source
     if inventory.sender:
         etree.SubElement(root, "Sender").text = inventory.sender
@@ -750,10 +803,12 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
     
-    _write_extra(root, inventory)
-    
     for network in inventory.networks:  
         _write_network(root, network)
+        
+    # Add custom namespace tags
+    _write_extra(root, inventory)
+        
     tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
@@ -762,13 +817,19 @@ def _write_stationxml(inventory, file_or_file_object, validate=False,
         buf = io.BytesIO()
         tree.write(buf)
         buf.seek(0)
-        validates, errors = validate_StationXML(buf)
+        validates, errors = validate_stationxml(buf)
         buf.close()
         if validates is False:
             msg = "The created file fails to validate.\n"
             for err in errors:
                 msg += "\t%s\n" % err
             raise Exception(msg)
+        
+    # Register all namespaces with the tree. This allows for additional namespaces
+    # to be added to an inventory that was not created by reading a StationXML file.
+    for prefix, ns in nsmap.items():
+        if prefix and ns:
+            etree.register_namespace(prefix, ns)
 
     tree.write(file_or_file_object, pretty_print=True, xml_declaration=True,
                encoding="UTF-8")
@@ -795,7 +856,6 @@ def _write_base_node(element, object_to_read_from):
             object_to_read_from.description
     for comment in object_to_read_from.comments:
         _write_comment(element, comment)
-
 
 def _write_network(parent, network):
     """
@@ -862,8 +922,7 @@ def _float_to_str(x):
 def _write_polezero_list(parent, obj):
     def _polezero2tag(parent, tag, obj_):
         attribs = {}
-        if hasattr(obj_, "number") and obj_.number is not None:
-            attribs["number"] = str(obj_.number)
+        attribs["number"] = str(obj_.number)
         sub = etree.SubElement(parent, tag, attribs)
         attribs_real = {}
         attribs_imag = {}
@@ -882,9 +941,29 @@ def _write_polezero_list(parent, obj):
         etree.SubElement(sub, "Imaginary", attribs_imag).text = \
             _float_to_str(obj_.imag)
 
-    for obj_ in obj.zeros:
+    # Assign numbers if not given - stationxml requires them. Create copies
+    # to not modify the original objects.
+    zeros = copy.deepcopy(obj.zeros)
+    poles = copy.deepcopy(obj.poles)
+
+    # All or nothing - either all have numbers or we manually assign them
+    # starting with the zeros.
+    #
+    # This is done here to catch all cases - otherwise it would have to be
+    # done at poles + zeros assignment time and that would be pretty nasty
+    # as it would have to work across poles and zeros.
+    if not all([hasattr(i, "number") and i.number is not None
+                for i in zeros + poles]):
+        # Start numbers for both at zero - other variants are out there but
+        # this is what IRIS does.
+        for i, v in enumerate(zeros):
+            v.number = i
+        for i, v in enumerate(poles):
+            v.number = i
+
+    for obj_ in zeros:
         _polezero2tag(parent, "Zero", obj_)
-    for obj_ in obj.poles:
+    for obj_ in poles:
         _polezero2tag(parent, "Pole", obj_)
 
 
@@ -1042,7 +1121,7 @@ def _write_response(parent, resp):
                             else False
                             for key in ['frequency_range_start',
                                         'frequency_range_end',
-                                        'frequency_range_DB_variation']]
+                                        'frequency_range_db_variation']]
         # frequency range group properly described
         if all(freq_range_group):
             etree.SubElement(sub, "FrequencyStart").text = \
@@ -1050,7 +1129,7 @@ def _write_response(parent, resp):
             etree.SubElement(sub, "FrequencyEnd").text = \
                 _float_to_str(ins_sens.frequency_range_end)
             etree.SubElement(sub, "FrequencyDBVariation").text = \
-                _float_to_str(ins_sens.frequency_range_DB_variation)
+                _float_to_str(ins_sens.frequency_range_db_variation)
         # frequency range group not present
         elif not any(freq_range_group):
             pass
@@ -1074,6 +1153,7 @@ def _write_response(parent, resp):
     # write response stages
     for stage in resp.response_stages:
         _write_response_stage(parent, stage)
+    _write_extra(parent, resp)
 
 
 def _write_response_stage(parent, stage):
@@ -1151,7 +1231,7 @@ def _write_response_stage(parent, stage):
     sub_ = etree.SubElement(sub, "StageGain")
     _obj2tag(sub_, "Value", stage.stage_gain)
     _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
-
+    _write_extra(parent, stage)
 
 def _write_external_reference(parent, ref):
     ref_elem = etree.SubElement(parent, "ExternalReference")
@@ -1240,9 +1320,10 @@ def _write_extra(parent, obj):
     if hasattr(obj, "extra"):
         for name, value in obj.extra.items():
             customAttr = "{%s}%s" % (value.namespace, name)
-            if hasattr(value, "type") and value.type == "attribute":
+            if hasattr(value, "type") and \
+                value.type.lower() in ("attribute", "attrib"):
                 parent.set(customAttr, value.value)
-            else:
+            else: #if not a attribute, then create a tag
                 etree.SubElement(parent, customAttr).text = value.value
             
 
@@ -1286,10 +1367,13 @@ def _obj2tag(parent, tag_name, tag_value):
 
 
 def _format_time(value):
-    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    if value.microsecond == 0:
+        return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+    else:
+        return value.strftime("%Y-%m-%dT%H:%M:%S.%f+00:00")
 
 
-def _extra(element, obj):
+def _read_extra(element, obj):
     """
     Add information stored in custom tags/attributes in obj.extra.
     """

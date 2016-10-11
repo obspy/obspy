@@ -7,7 +7,7 @@ Test suite for the StationXML reader and writer.
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
 :license:
     GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
+    (https://www.gnu.org/copyleft/lesser.html)
 """
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
@@ -22,10 +22,11 @@ import unittest
 import warnings
 
 import obspy
+from obspy.core.util import AttribDict
 from obspy.core.inventory import Inventory, Network
-from obspy.io.stationxml.core import _read_stationxml, _write_stationxml
 from obspy.core.util.base import NamedTemporaryFile
 from lxml import etree
+import obspy.io.stationxml.core
 
 
 class StationXMLTestCase(unittest.TestCase):
@@ -118,6 +119,31 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
+    def test_subsecond_read_and_write_minimal_file(self):
+        """
+        Test reading and writing of sub-second time in datetime field,
+        using creation time
+
+        """
+        filename = os.path.join(self.data_dir,
+                                "minimal_station_with_microseconds.xml")
+        inv = obspy.read_inventory(filename)
+
+        # Write it again. Also validate it to get more confidence. Suppress the
+        # writing of the ObsPy related tags to ease testing.
+        file_buffer = io.BytesIO()
+
+        inv.write(file_buffer, format="StationXML", validate=True,
+                  _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = io.BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
+
     def test_read_and_write_full_file(self):
         """
         Test that reading and writing of a full StationXML document with all
@@ -130,19 +156,9 @@ class StationXMLTestCase(unittest.TestCase):
         # writing of the ObsPy related tags to ease testing.
         file_buffer = io.BytesIO()
 
-        # XXX helper variable to debug writing the full random file, set True
-        # XXX for debug output
-        write_debug_output = False
-
-        inv.write(file_buffer, format="StationXML",
-                  validate=(not write_debug_output),
+        inv.write(file_buffer, format="StationXML", validate=True,
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-
-        if write_debug_output:
-            with open("/tmp/debugout.xml", "wb") as open_file:
-                open_file.write(file_buffer.read())
-            file_buffer.seek(0, 0)
 
         with open(filename, "rb") as open_file:
             expected_xml_file_buffer = io.BytesIO(open_file.read())
@@ -166,10 +182,10 @@ class StationXMLTestCase(unittest.TestCase):
             "<Module>")][0]
         self.assertTrue(fnmatch.fnmatch(module_line,
                                         "<Module>ObsPy *</Module>"))
-        module_URI_line = [_i.strip() for _i in lines if _i.strip().startswith(
+        module_uri_line = [_i.strip() for _i in lines if _i.strip().startswith(
             "<ModuleURI>")][0]
-        self.assertEqual(module_URI_line,
-                         "<ModuleURI>http://www.obspy.org</ModuleURI>")
+        self.assertEqual(module_uri_line,
+                         "<ModuleURI>https://www.obspy.org</ModuleURI>")
 
     def test_reading_other_module_tags(self):
         """
@@ -626,6 +642,56 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
+    def test_parse_file_with_no_default_namespace(self):
+        """
+        Tests that reading a file with no default namespace works fine.
+
+        See #1060.
+        """
+        filename = os.path.join(self.data_dir, "no_default_namespace.xml")
+        inv = obspy.read_inventory(filename)
+        # Very small file with almost no content.
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(inv[0].code, "XX")
+
+    def test_numbers_are_written_to_poles_and_zeros(self):
+        """
+        Poles and zeros have a number attribute. Make sure this is written,
+        even if set with a custom complex list.
+        """
+        # Read default inventory and cut down to a single channel.
+        inv = obspy.read_inventory()
+        inv.networks = inv[:1]
+        inv[0].stations = inv[0][:1]
+        inv[0][0].channels = inv[0][0][:1]
+
+        # Manually set the poles and zeros - thus these are cast to our
+        # custom classes but number are not yet set.
+        inv[0][0][0].response.response_stages[0].poles = [0 + 1j, 2 + 3j]
+        inv[0][0][0].response.response_stages[0].zeros = [0 + 1j, 2 + 3j]
+
+        with io.BytesIO() as buf:
+            inv.write(buf, format="stationxml", validate=True)
+            buf.seek(0, 0)
+            data = buf.read().decode()
+
+        # Ugly test - remove all whitespace and make sure the four following
+        # lines are part of the written output.
+        data = re.sub('\s+', ' ', data)
+
+        self.assertIn(
+            '<Zero number="0"> <Real>0.0</Real> '
+            '<Imaginary>1.0</Imaginary> </Zero>', data)
+        self.assertIn(
+            '<Zero number="1"> <Real>2.0</Real> '
+            '<Imaginary>3.0</Imaginary> </Zero>', data)
+        self.assertIn(
+            '<Pole number="0"> <Real>0.0</Real> '
+            '<Imaginary>1.0</Imaginary> </Pole>', data)
+        self.assertIn(
+            '<Pole number="1"> <Real>2.0</Real> '
+            '<Imaginary>3.0</Imaginary> </Pole>', data)
+
     def test_stationxml_with_custom_tags(self):
         """
         Test reading/writing StationXML with additional custom namespace tags.
@@ -639,6 +705,48 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertTrue(hasattr(inv[0][0], "extra"))
         self.assertTrue(hasattr(inv[0][0][0], "extra"))
 
+    def test_write_with_extra_tags_without_read_extra(self):
+        """
+        Tests that custom namespaces that are manually added to an inventory
+        get written correctly. 
+        """
+        # read the default inventory
+        inv = obspy.read_inventory()
+        # manually add extra to the dictionary
+        inv[0].extra = {}
+        # manually add a new custom namespace tag and attribute to the inventory
+        inv[0].extra['mynsTag'] = AttribDict({'value':'mynsTagValue','namespace':'http://test.myns.ns/'})
+        inv[0].extra['mynsAttrib'] = AttribDict({'value':'mynsAttribValue','namespace':'http://test.myns.ns/', 
+                                                 'type':'attribute'})
+        # manually add custom namespace definition
+        mynsmap = {'myns':'http://test.myns.ns/'}
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # write file with manually defined namespace map
+            inv.write(tmpfile, format="STATIONXML", nsmap=mynsmap) 
+            # check contents
+            with open(tmpfile, "rb") as fh:
+                # enforce reproducible attribute orders through write_c14n
+                obj = etree.fromstring(fh.read()).getroottree()
+                buf = io.BytesIO()
+                obj.write_c14n(buf)
+                buf.seek(0, 0)
+                content = buf.read()
+            # check namespace definitions in root element
+            expected = [b'xmlns="http://www.fdsn.org/xml/station/1"',
+                        b'xmlns:myns="http://test.myns.ns/"'
+                        ]
+            for line in expected:
+                self.assertIn(line, content)
+            # check additional tags
+            expected = [
+                b'<myns:mynsTag>mynsTagValue</myns:mynsTag>',
+                b'myns:mynsAttrib="mynsAttribValue"'
+            ]
+            for line in expected:
+                self.assertIn(line, content)       
+        
+        
 
     def test_write_with_extra_tags_and_read(self):
         """
@@ -650,7 +758,7 @@ class StationXMLTestCase(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            inv = _read_stationxml(filename)
+            inv = obspy.read_inventory(filename)
             self.assertEqual(len(w), 0)
         # assert that the extra attributes are in the read file
         self.assertTrue(hasattr(inv, "extra"))
@@ -683,12 +791,13 @@ class StationXMLTestCase(unittest.TestCase):
             for line in expected:
                 self.assertIn(line, content)
             # now, read again to test if it's parsed correctly..
-            inv = _read_stationxml(tmpfile)
+            inv = obspy.read_inventory(tmpfile)
         # assert that the extra attributes are in the new parsed file
         self.assertTrue(hasattr(inv, "extra"))
         self.assertTrue(hasattr(inv[0], "extra"))
         self.assertTrue(hasattr(inv[0][0], "extra"))
         self.assertTrue(hasattr(inv[0][0][0], "extra"))
+        self.assertTrue(hasattr(inv[0][0][0].response, "extra"))
 
 
 def suite():
